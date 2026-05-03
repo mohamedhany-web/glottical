@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\SearchInput;
 use App\Models\EmployeeAgreement;
 use App\Models\EmployeeSalaryDeduction;
 use App\Models\EmployeeSalaryPayment;
@@ -25,7 +26,7 @@ class EmployeeAgreementController extends Controller
             // Sanitization
             $employeeId = filter_var($request->input('employee_id'), FILTER_VALIDATE_INT);
             $status = strip_tags(trim($request->input('status', '')));
-            $search = strip_tags(trim($request->input('search', '')));
+            $search = SearchInput::sanitizeForLike((string) $request->input('search', ''));
 
             $query = EmployeeAgreement::with(['employee', 'creator'])
                 ->withCount(['deductions', 'payments']);
@@ -38,8 +39,7 @@ class EmployeeAgreementController extends Controller
                 $query->where('status', $status);
             }
 
-            if ($search && strlen($search) <= 255) {
-                $search = preg_replace('/[^a-zA-Z0-9\s\u0600-\u06FF]/', '', $search);
+            if ($search !== '') {
                 $query->where(function($q) use ($search) {
                     $q->where('agreement_number', 'like', '%' . $search . '%')
                       ->orWhere('title', 'like', '%' . $search . '%')

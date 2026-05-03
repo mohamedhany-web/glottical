@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\SearchInput;
 use App\Models\Wallet;
 use App\Models\WalletReport;
 use App\Models\WalletTransaction;
@@ -51,9 +52,8 @@ class WalletController extends Controller
 
             // البحث - حماية من XSS و SQL Injection
             if ($request->filled('search')) {
-                $search = strip_tags(trim($request->search));
-                $search = preg_replace('/[^a-zA-Z0-9\u0600-\u06FF\s@.-]/', '', $search);
-                if (strlen($search) > 0 && strlen($search) <= 255) {
+                $search = SearchInput::sanitizeForLike((string) $request->search);
+                if ($search !== '') {
                     $query->where(function ($walletQuery) use ($search) {
                         $walletQuery->where('name', 'like', "%{$search}%")
                             ->orWhere('account_number', 'like', "%{$search}%")

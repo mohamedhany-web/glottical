@@ -10,6 +10,7 @@ use App\Models\StudentCourseEnrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class LearningPathEnrollmentController extends Controller
 {
@@ -22,11 +23,16 @@ class LearningPathEnrollmentController extends Controller
 
         // البحث بالاسم أو رقم الهاتف
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->whereHas('student', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('parent_phone', 'like', "%{$search}%");
+            $search = trim((string) $request->search);
+            $hasParentPhone = Schema::hasColumn('users', 'parent_phone');
+            $query->whereHas('student', function ($q) use ($search, $hasParentPhone) {
+                $q->where(function ($inner) use ($search, $hasParentPhone) {
+                    $inner->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('phone', 'like', '%'.$search.'%');
+                    if ($hasParentPhone) {
+                        $inner->orWhere('parent_phone', 'like', '%'.$search.'%');
+                    }
+                });
             });
         }
 

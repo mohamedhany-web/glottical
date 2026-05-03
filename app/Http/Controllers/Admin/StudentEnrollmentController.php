@@ -12,9 +12,22 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 
 class StudentEnrollmentController extends Controller
 {
+    /** ذاكرة للتحقق من وجود عمود هاتف ولي الأمر (قد لا يكون مهاجراً في كل البيئات). */
+    private static ?bool $usersHasParentPhoneColumn = null;
+
+    private function usersTableHasParentPhoneColumn(): bool
+    {
+        if (self::$usersHasParentPhoneColumn === null) {
+            self::$usersHasParentPhoneColumn = Schema::hasColumn('users', 'parent_phone');
+        }
+
+        return self::$usersHasParentPhoneColumn;
+    }
+
     /**
      * عرض صفحة إدارة تسجيل الطلاب (الأونلاين)
      */
@@ -22,13 +35,26 @@ class StudentEnrollmentController extends Controller
     {
         $query = StudentCourseEnrollment::with(['student', 'course.academicYear', 'course.academicSubject', 'activatedBy']);
 
-        // البحث بالاسم أو رقم الهاتف
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->whereHas('student', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('parent_phone', 'like', "%{$search}%");
+        // البحث بالاسم أو البريد أو الهاتف (مع تجميع OR لتجنب خطأ أسبقية SQL)
+        $search = trim((string) $request->input('search', ''));
+        if ($search !== '') {
+            $digitsOnly = preg_replace('/\D/', '', $search);
+            $hasParentPhone = $this->usersTableHasParentPhoneColumn();
+            $query->whereHas('student', function ($q) use ($search, $digitsOnly, $hasParentPhone) {
+                $q->where(function ($inner) use ($search, $digitsOnly, $hasParentPhone) {
+                    $inner->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('email', 'like', '%'.$search.'%')
+                        ->orWhere('phone', 'like', '%'.$search.'%');
+                    if ($hasParentPhone) {
+                        $inner->orWhere('parent_phone', 'like', '%'.$search.'%');
+                    }
+                    if ($digitsOnly !== '' && strlen($digitsOnly) >= 4 && $digitsOnly !== $search) {
+                        $inner->orWhere('phone', 'like', '%'.$digitsOnly.'%');
+                        if ($hasParentPhone) {
+                            $inner->orWhere('parent_phone', 'like', '%'.$digitsOnly.'%');
+                        }
+                    }
+                });
             });
         }
 
@@ -39,7 +65,7 @@ class StudentEnrollmentController extends Controller
 
         // فلترة حسب الكورس
         if ($request->filled('course_id')) {
-            $query->where('advanced_course_id', $request->course_id);
+            $query->where('advanced_course_id', (int) $request->course_id);
         }
 
         $enrollments = $query->latest('enrolled_at')->paginate(20);
@@ -337,31 +363,46 @@ class StudentEnrollmentController extends Controller
      */
     public function searchStudentByPhone(Request $request)
     {
-        $phone = $request->get('phone');
-        
-        if (!$phone) {
-            return response()->json(['error' => 'رقم الهاتف مطلوب'], 400);
+        $phoneRaw = trim((string) $request->get('phone', ''));
+        $digits = preg_replace('/\D/', '', $phoneRaw);
+
+        if ($phoneRaw === '' || $digits === '') {
+            return response()->json(['success' => false, 'error' => 'رقم الهاتف مطلوب'], 400);
         }
 
-        $student = User::where('role', 'student')
-                      ->where(function($query) use ($phone) {
-                          $query->where('phone', $phone)
-                                ->orWhere('parent_phone', $phone);
-                      })
-                      ->first();
+        $hasParentPhone = $this->usersTableHasParentPhoneColumn();
 
-        if (!$student) {
-            return response()->json(['error' => 'لم يتم العثور على طالب بهذا الرقم'], 404);
+        $student = User::query()
+            ->where('role', 'student')
+            ->where(function ($q) use ($phoneRaw, $digits, $hasParentPhone) {
+                $q->where('phone', $phoneRaw)
+                    ->orWhere('phone', 'like', '%'.$digits.'%');
+                if ($hasParentPhone) {
+                    $q->orWhere('parent_phone', $phoneRaw)
+                        ->orWhere('parent_phone', 'like', '%'.$digits.'%');
+                }
+            })
+            ->first();
+
+        if (! $student) {
+            return response()->json([
+                'success' => false,
+                'error' => 'لم يتم العثور على طالب بهذا الرقم',
+            ], 404);
+        }
+
+        $payload = [
+            'id' => $student->id,
+            'name' => $student->name,
+            'phone' => $student->phone,
+        ];
+        if ($hasParentPhone) {
+            $payload['parent_phone'] = $student->parent_phone;
         }
 
         return response()->json([
             'success' => true,
-            'student' => [
-                'id' => $student->id,
-                'name' => $student->name,
-                'phone' => $student->phone,
-                'parent_phone' => $student->parent_phone,
-            ]
+            'student' => $payload,
         ]);
     }
 }

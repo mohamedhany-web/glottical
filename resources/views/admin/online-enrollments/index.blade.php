@@ -141,7 +141,7 @@
             <div>
                 <label for="search" class="block text-sm font-medium text-gray-700 mb-2">البحث</label>
                 <input type="text" name="search" id="search" value="{{ request('search') }}" 
-                       placeholder="البحث بالاسم أو رقم الهاتف..."
+                       placeholder="الاسم، البريد، أو الهاتف (مع أو بدون مسافات)..."
                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
 
@@ -185,7 +185,7 @@
         <h3 class="text-lg font-semibold text-gray-900 mb-4">البحث السريع بالهاتف</h3>
         <div class="flex gap-4">
             <div class="flex-1">
-                <input type="text" id="quickSearchPhone" placeholder="أدخل رقم هاتف الطالب أو ولي الأمر..."
+                <input type="text" id="quickSearchPhone" placeholder="أدخل رقم هاتف الطالب..."
                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
             <button type="button" onclick="quickSearchByPhone()" 
@@ -225,9 +225,6 @@
                                     <div class="mr-4">
                                         <div class="text-sm font-medium text-gray-900">{{ $enrollment->student->name ?? 'طالب غير محدد' }}</div>
                                         <div class="text-sm text-gray-500">{{ $enrollment->student->phone ?? '—' }}</div>
-                                        @if($enrollment->student?->parent_phone)
-                                            <div class="text-xs text-gray-400">ولي الأمر: {{ $enrollment->student->parent_phone }}</div>
-                                        @endif
                                     </div>
                                 </div>
                             </td>
@@ -344,10 +341,16 @@ function quickSearchByPhone() {
     resultDiv.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-blue-600"></i> جاري البحث...</div>';
     resultDiv.classList.remove('hidden');
     
-    fetch(`{{ route('admin.online-enrollments.search-by-phone') }}?phone=${encodeURIComponent(phone)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+    fetch(`{{ route('admin.online-enrollments.search-by-phone') }}?phone=${encodeURIComponent(phone)}`, {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+        })
+        .then(async (response) => {
+            const data = await response.json().catch(() => ({}));
+            return { ok: response.ok, data };
+        })
+        .then(({ ok, data }) => {
+            if (ok && data.success) {
                 const student = data.student;
                 resultDiv.innerHTML = `
                     <div class="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -355,7 +358,6 @@ function quickSearchByPhone() {
                         <div class="text-sm">
                             <p><strong>الاسم:</strong> ${student.name}</p>
                             <p><strong>هاتف الطالب:</strong> ${student.phone}</p>
-                            ${student.parent_phone ? `<p><strong>هاتف ولي الأمر:</strong> ${student.parent_phone}</p>` : ''}
                         </div>
                         <div class="mt-3">
                             <a href="{{ route('admin.online-enrollments.create') }}?student_id=${student.id}" 
@@ -367,9 +369,10 @@ function quickSearchByPhone() {
                     </div>
                 `;
             } else {
+                const msg = data.error || data.message || 'لم يتم العثور على طالب بهذا الرقم';
                 resultDiv.innerHTML = `
                     <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                        <h4 class="font-medium text-red-900">${data.error}</h4>
+                        <h4 class="font-medium text-red-900">${msg}</h4>
                     </div>
                 `;
             }

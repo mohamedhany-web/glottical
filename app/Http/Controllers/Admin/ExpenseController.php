@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\SearchInput;
 use App\Models\Expense;
 use App\Models\Wallet;
 use App\Models\ActivityLog;
@@ -59,9 +60,8 @@ class ExpenseController extends Controller
 
             // البحث - حماية من XSS و SQL Injection
             if ($request->filled('search')) {
-                $search = strip_tags(trim($request->search));
-                $search = preg_replace('/[^a-zA-Z0-9\u0600-\u06FF\s@.-]/', '', $search);
-                if (strlen($search) > 0 && strlen($search) <= 255) {
+                $search = SearchInput::sanitizeForLike((string) $request->search);
+                if ($search !== '') {
                     $query->where(function($q) use ($search) {
                         $q->where('expense_number', 'like', "%{$search}%")
                           ->orWhere('title', 'like', "%{$search}%")
@@ -279,9 +279,7 @@ class ExpenseController extends Controller
             }
 
             // إنشاء معاملة مالية (مصروف)
-            $transactionNumber = 'TXN-' . str_pad(\App\Models\Transaction::count() + 1, 8, '0', STR_PAD_LEFT);
             $transaction = \App\Models\Transaction::create([
-                'transaction_number' => $transactionNumber,
                 'user_id' => $expense->created_by ?? auth()->id(),
                 'payment_id' => null,
                 'invoice_id' => null,

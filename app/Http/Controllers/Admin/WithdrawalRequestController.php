@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\SearchInput;
 use App\Models\WithdrawalRequest;
 use App\Models\Payment;
 use App\Models\ActivityLog;
@@ -36,7 +37,7 @@ class WithdrawalRequestController extends Controller
             // Sanitization
             $instructorId = filter_var($request->input('instructor_id'), FILTER_VALIDATE_INT);
             $status = strip_tags(trim($request->input('status', '')));
-            $search = strip_tags(trim($request->input('search', '')));
+            $search = SearchInput::sanitizeForLike((string) $request->input('search', ''));
 
             $query = WithdrawalRequest::with(['instructor', 'processedBy', 'payment']);
 
@@ -48,8 +49,7 @@ class WithdrawalRequestController extends Controller
                 $query->where('instructor_id', $instructorId);
             }
 
-            if ($search && strlen($search) <= 255) {
-                $search = preg_replace('/[^a-zA-Z0-9\s\u0600-\u06FF]/', '', $search);
+            if ($search !== '') {
                 $query->where(function($q) use ($search) {
                     $q->where('request_number', 'like', '%' . $search . '%')
                       ->orWhereHas('instructor', function($q) use ($search) {

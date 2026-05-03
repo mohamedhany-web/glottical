@@ -43,8 +43,7 @@
                         @foreach($students as $student)
                             <option value="{{ $student->id }}" 
                                     {{ (old('user_id', request('student_id')) == $student->id) ? 'selected' : '' }}
-                                    data-phone="{{ $student->phone }}"
-                                    data-parent-phone="{{ $student->parent_phone }}">
+                                    data-phone="{{ $student->phone }}">
                                 {{ $student->name }} - {{ $student->phone }}
                             </option>
                         @endforeach
@@ -142,7 +141,7 @@
                     البحث السريع عن المعلم برقم الهاتف
                 </h4>
                 <div class="flex gap-3">
-                    <input type="text" id="quickPhoneSearch" placeholder="أدخل رقم هاتف المعلم أو ولي الأمر..."
+                    <input type="text" id="quickPhoneSearch" placeholder="أدخل رقم هاتف المعلم..."
                            class="flex-1 px-3 py-2 rounded-xl border-2 border-gray-200 bg-white/80 focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition">
                     <button type="button" onclick="searchByPhone()" 
                             class="px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2">
@@ -187,16 +186,11 @@ document.getElementById('user_id').addEventListener('change', function() {
     
     if (this.value) {
         const phone = selectedOption.getAttribute('data-phone');
-        const parentPhone = selectedOption.getAttribute('data-parent-phone');
         
         let details = `
             <p><strong>الاسم:</strong> ${selectedOption.text.split(' - ')[0]}</p>
             <p><strong>هاتف المعلم:</strong> ${phone}</p>
         `;
-        
-        if (parentPhone) {
-            details += `<p><strong>هاتف ولي الأمر:</strong> ${parentPhone}</p>`;
-        }
         
         studentDetails.innerHTML = details;
         studentInfo.classList.remove('hidden');

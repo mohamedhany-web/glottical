@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\SearchInput;
 use App\Models\Notification;
 use App\Models\SupportTicket;
 use App\Models\User;
@@ -49,9 +50,8 @@ class NotificationController extends Controller
 
         // البحث - حماية من XSS و SQL Injection
         if ($request->filled('search')) {
-            $search = strip_tags(trim($request->search));
-            $search = preg_replace('/[^a-zA-Z0-9\u0600-\u06FF\s@.-]/', '', $search); // السماح فقط بالأحرف والأرقام العربية والإنجليزية
-            if (strlen($search) > 0 && strlen($search) <= 255) {
+            $search = SearchInput::sanitizeForLike((string) $request->search);
+            if ($search !== '') {
                 $query->where(function($q) use ($search) {
                     $q->where('title', 'like', '%' . $search . '%')
                       ->orWhere('message', 'like', '%' . $search . '%');

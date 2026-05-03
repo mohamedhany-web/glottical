@@ -131,7 +131,7 @@
         <h3 class="text-lg font-semibold text-gray-900 mb-4">البحث السريع بالهاتف</h3>
         <div class="flex gap-4">
             <div class="flex-1">
-                <input type="text" id="quickSearchPhone" placeholder="أدخل رقم هاتف الطالب أو ولي الأمر..."
+                <input type="text" id="quickSearchPhone" placeholder="أدخل رقم هاتف الطالب..."
                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
             <button type="button" onclick="quickSearchByPhone()" 
@@ -171,9 +171,6 @@
                                     <div class="mr-4">
                                         <div class="text-sm font-medium text-gray-900">{{ $enrollment->student->name }}</div>
                                         <div class="text-sm text-gray-500">{{ $enrollment->student->phone }}</div>
-                                        @if($enrollment->student->parent_phone)
-                                            <div class="text-xs text-gray-400">ولي الأمر: {{ $enrollment->student->parent_phone }}</div>
-                                        @endif
                                     </div>
                                 </div>
                             </td>
@@ -301,7 +298,6 @@ function quickSearchByPhone() {
                         <div class="text-sm">
                             <p><strong>الاسم:</strong> ${student.name}</p>
                             <p><strong>هاتف المعلم:</strong> ${student.phone}</p>
-                            ${student.parent_phone ? `<p><strong>هاتف ولي الأمر:</strong> ${student.parent_phone}</p>` : ''}
                         </div>
                         <div class="mt-3">
                             <a href="{{ route('admin.enrollments.create') }}?student_id=${student.id}" 
