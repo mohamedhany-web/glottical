@@ -104,9 +104,12 @@
         $phpUploadMb = $phpUploadBytes > 0 ? max(1, (int) round($phpUploadBytes / 1024 / 1024)) : null;
     @endphp
     <div
-        @if($useMatDirect) data-cl-mat-wrap="1" data-cl-mat-cfg="{{ e(json_encode($clMatCfg, JSON_UNESCAPED_UNICODE)) }}" @endif
+        @if($useMatDirect) data-cl-mat-wrap="1" @endif
         x-data="{ fileName: '' }"
         class="px-4 sm:px-5 py-5 bg-gradient-to-l from-indigo-50/80 via-white to-violet-50/50 dark:from-indigo-950/20 dark:via-slate-800/40 dark:to-violet-950/20 border-b border-slate-100 dark:border-slate-700">
+        @if($useMatDirect)
+            <script type="application/json" data-cl-mat-cfg-json>@json($clMatCfg)</script>
+        @endif
         <p class="text-sm font-black text-slate-800 dark:text-white mb-3 flex items-center gap-2">
             <i class="fas fa-cloud-upload-alt text-indigo-600 dark:text-indigo-400"></i>
             رفع مادة

@@ -61,7 +61,7 @@ class CurriculumLibraryR2MultipartService
     /**
      * @return array{url: string, headers: array<string, array<string>>}
      */
-    public function presignedUploadPart(string $bucket, string $key, string $uploadId, int $partNumber, string $expires = '+70 minutes'): array
+    public function presignedUploadPart(string $bucket, string $key, string $uploadId, int $partNumber, string $expires = '+24 hours'): array
     {
         $cmd = $this->client()->getCommand('UploadPart', [
             'Bucket' => $bucket,

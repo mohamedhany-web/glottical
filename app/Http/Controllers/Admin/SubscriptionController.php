@@ -181,7 +181,11 @@ class SubscriptionController extends Controller
     public function edit(Subscription $subscription)
     {
         $users = User::where('role', 'student')->where('is_active', true)->get();
-        return view('admin.subscriptions.edit', compact('subscription', 'users'));
+
+        $featuresController = new TeacherFeaturesController();
+        $teacherPlans = $featuresController->getSettings();
+
+        return view('admin.subscriptions.edit', compact('subscription', 'users', 'teacherPlans'));
     }
 
     public function store(Request $request)

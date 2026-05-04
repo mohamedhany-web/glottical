@@ -31,7 +31,7 @@ class CurriculumLibraryMaterialMultipartRoutesTest extends TestCase
         $this->assertArrayHasKey('curriculum_material_max_bytes', $c);
         $this->assertArrayHasKey('curriculum_r2_multipart_threshold_bytes', $c);
         $this->assertArrayHasKey('curriculum_r2_multipart_part_bytes', $c);
-        $this->assertGreaterThan(5 * 1024 * 1024, (int) $c['curriculum_r2_multipart_part_bytes']);
+        $this->assertGreaterThanOrEqual(5 * 1024 * 1024, (int) $c['curriculum_r2_multipart_part_bytes']);
     }
 
     public function test_multipart_service_is_resolvable(): void

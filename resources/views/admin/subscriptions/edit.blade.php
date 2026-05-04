@@ -8,6 +8,62 @@
     $typeOptions = \App\Models\Subscription::typeLabels();
     $cycleOptions = \App\Models\Subscription::billingCycleLabels();
     $subscriptionFeatureKeys = \App\Models\Subscription::normalizeFeatureKeys($subscription->features ?? []);
+    $tp = $teacherPlans ?? [];
+    $fmtPrice = fn ($v) => number_format((float) $v, 0);
+    $starter = $tp['teacher_starter'] ?? null;
+    $pro = $tp['teacher_pro'] ?? null;
+    $sRow = is_array($starter) ? $starter : [];
+    $pRow = is_array($pro) ? $pro : [];
+    $planFeatures = [
+        'teacher_starter' => is_array($sRow['features'] ?? null) ? $sRow['features'] : [
+            'library_access', 'ai_tools', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite', 'teacher_evaluation', 'recommended_to_academies', 'priority_opportunities', 'direct_support',
+        ],
+        'teacher_pro' => is_array($pRow['features'] ?? null) ? $pRow['features'] : [
+            'library_access', 'ai_tools', 'classroom_access', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite', 'teacher_evaluation', 'recommended_to_academies', 'priority_opportunities', 'direct_support',
+        ],
+    ];
+    $planApplyMeta = [];
+    foreach (['teacher_starter', 'teacher_pro'] as $planKey) {
+        if (! isset($tp[$planKey]) || ! is_array($tp[$planKey])) {
+            continue;
+        }
+        $row = $tp[$planKey];
+        $billingCycle = is_string($row['billing_cycle'] ?? null) ? $row['billing_cycle'] : 'monthly';
+        $typeKeys = array_keys($typeOptions);
+        $subscriptionType = in_array($billingCycle, $typeKeys, true) ? $billingCycle : 'monthly';
+        $planApplyMeta[$planKey] = [
+            'subscription_type' => $subscriptionType,
+            'plan_name' => (string) ($row['label'] ?? ''),
+            'price' => (float) ($row['price'] ?? 0),
+            'billing_cycle' => $billingCycle,
+        ];
+    }
+
+    $featureKeysOrder = [
+        'library_access', 'ai_tools', 'classroom_access', 'support', 'teacher_profile',
+        'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite', 'teacher_evaluation',
+        'recommended_to_academies', 'priority_opportunities', 'direct_support',
+    ];
+    $starterF = is_array($sRow['features'] ?? null) ? $sRow['features'] : [];
+    $proF = is_array($pRow['features'] ?? null) ? $pRow['features'] : [];
+    $manualDefaultFeatures = array_values(array_unique(array_merge(
+        array_map('strval', $starterF),
+        array_map('strval', $proF)
+    )));
+    $sDesc = is_array($sRow['feature_descriptions'] ?? null) ? $sRow['feature_descriptions'] : [];
+    $pDesc = is_array($pRow['feature_descriptions'] ?? null) ? $pRow['feature_descriptions'] : [];
+    $featureDisplayLines = [];
+    foreach ($featureKeysOrder as $fk) {
+        $hint = trim((string) ($pDesc[$fk] ?? ''));
+        if ($hint === '') {
+            $hint = trim((string) ($sDesc[$fk] ?? ''));
+        }
+        $featureDisplayLines[$fk] = $hint !== '' ? $hint : __('student.subscription_feature.'.$fk);
+    }
+    $checkedForEdit = array_keys(array_filter((array) old('features', [])));
+    if ($checkedForEdit === []) {
+        $checkedForEdit = $subscriptionFeatureKeys;
+    }
 @endphp
 <div class="container mx-auto px-4 py-8 space-y-6">
     @if ($errors->any())
@@ -43,11 +99,27 @@
                         <label class="block text-sm font-semibold text-gray-700">نمط اشتراك المعلم (اختياري)</label>
                         <select name="teacher_plan_key" x-model="selectedPlan" @change="applyPlan" class="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                             <option value="">بدون — إدخال يدوي</option>
-                            <option value="teacher_starter">الباقة الأساسية — 200 ج.م شهريًا</option>
-                            <option value="teacher_pro">الباقة الشاملة — 600 ج.م شهريًا</option>
+                            @if($starter)
+                                <option value="teacher_starter">
+                                    {{ $starter['label'] ?? 'الباقة الأساسية' }}
+                                    — {{ $fmtPrice($starter['price'] ?? 0) }} ج.م
+                                    @if(!empty($starter['billing_cycle']))
+                                        ({{ $cycleOptions[$starter['billing_cycle']] ?? $starter['billing_cycle'] }})
+                                    @endif
+                                </option>
+                            @endif
+                            @if($pro)
+                                <option value="teacher_pro">
+                                    {{ $pro['label'] ?? 'الباقة الشاملة' }}
+                                    — {{ $fmtPrice($pro['price'] ?? 0) }} ج.م
+                                    @if(!empty($pro['billing_cycle']))
+                                        ({{ $cycleOptions[$pro['billing_cycle']] ?? $pro['billing_cycle'] }})
+                                    @endif
+                                </option>
+                            @endif
                         </select>
                         <p class="mt-1 text-xs text-gray-500">
-                            اختيار باقة يحدّث نوع الاشتراك، اسم الخطة، السعر، ودورة الفوترة للمعلمين بالجنيه المصري.
+                            اختيار باقة يملأ الحقول من <strong>إعدادات باقات المعلمين</strong> الحالية (الأسماء والأسعار ودورة الفوترة والمزايا).
                         </p>
                     </div>
 
@@ -124,58 +196,13 @@
                 <div class="bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 space-y-3">
                     <h2 class="text-sm font-semibold text-gray-900">مزايا الخطة للمعلم</h2>
                     <p class="text-xs text-gray-500">
-                        تحكم في المزايا المفعّلة لهذا الاشتراك (مكتبة المناهج، أدوات AI، البروفايل، الظهور للأكاديميات، ...إلخ).
+                        النصوص التوضيحية تُقرأ من <strong>إعدادات باقات المعلمين</strong> عند توفرها؛ وعند اختيار «إدخال يدوي» تُستعاد مزايا هذا الاشتراك الحالية (أو القيم بعد التحقق من النموذج).
                     </p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[library_access]" value="1" data-sub-feature="library_access" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('library_access', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
-                            <span>{{ __('student.subscription_feature.library_access') }}</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[ai_tools]" value="1" data-sub-feature="ai_tools" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('ai_tools', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
-                            <span>{{ __('student.subscription_feature.ai_tools') }}</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[classroom_access]" value="1" data-sub-feature="classroom_access" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('classroom_access', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
-                            <span>{{ __('student.subscription_feature.classroom_access') }}</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[support]" value="1" data-sub-feature="support" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('support', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
-                            <span>{{ __('student.subscription_feature.support') }}</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[teacher_profile]" value="1" data-sub-feature="teacher_profile" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('teacher_profile', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
-                            <span>{{ __('student.subscription_feature.teacher_profile') }}</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[visible_to_academies]" value="1" data-sub-feature="visible_to_academies" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('visible_to_academies', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
-                            <span>{{ __('student.subscription_feature.visible_to_academies') }}</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[can_apply_opportunities]" value="1" data-sub-feature="can_apply_opportunities" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('can_apply_opportunities', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
-                            <span>{{ __('student.subscription_feature.can_apply_opportunities') }}</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[full_ai_suite]" value="1" data-sub-feature="full_ai_suite" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('full_ai_suite', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
-                            <span>{{ __('student.subscription_feature.full_ai_suite') }}</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[teacher_evaluation]" value="1" data-sub-feature="teacher_evaluation" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('teacher_evaluation', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
-                            <span>{{ __('student.subscription_feature.teacher_evaluation') }}</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[recommended_to_academies]" value="1" data-sub-feature="recommended_to_academies" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('recommended_to_academies', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
-                            <span>{{ __('student.subscription_feature.recommended_to_academies') }}</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[priority_opportunities]" value="1" data-sub-feature="priority_opportunities" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('priority_opportunities', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
-                            <span>{{ __('student.subscription_feature.priority_opportunities') }}</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[direct_support]" value="1" data-sub-feature="direct_support" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('direct_support', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
-                            <span>{{ __('student.subscription_feature.direct_support') }}</span>
-                        </label>
-                    </div>
+                    @include('admin.subscriptions._subscription-feature-checkboxes', [
+                        'featureKeysOrder' => $featureKeysOrder,
+                        'featureDisplayLines' => $featureDisplayLines,
+                        'checkedKeys' => $checkedForEdit,
+                    ])
                     <p class="text-xs text-gray-400 mt-2">
                         جميع المبالغ المالية في النظام تستخدم العملة الأساسية: الجنيه المصري (ج.م).
                     </p>
@@ -235,10 +262,10 @@
 </div>
 <script>
     function editTeacherSubscriptionForm(initialPlanKey) {
-        const PLAN_FEATURES = {
-            teacher_starter: ['library_access', 'ai_tools', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite', 'teacher_evaluation', 'recommended_to_academies', 'priority_opportunities', 'direct_support'],
-            teacher_pro: ['library_access', 'ai_tools', 'classroom_access', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite', 'teacher_evaluation', 'recommended_to_academies', 'priority_opportunities', 'direct_support'],
-        };
+        var PLAN_FEATURES = @json($planFeatures);
+        var PLAN_META = @json($planApplyMeta);
+        var MANUAL_DEFAULT_FEATURES = @json($manualDefaultFeatures);
+        var EDIT_SAVED_FEATURES = @json(\App\Models\Subscription::normalizeFeatureKeys($checkedForEdit));
 
         function syncSubscriptionFeatureCheckboxes(featureList) {
             var set = {};
@@ -258,20 +285,21 @@
                 billing_cycle: '{{ $subscription->billing_cycle }}',
             },
             applyPlan(event) {
-                var key = event.target.value;
-                if (!key || !PLAN_FEATURES[key]) return;
-
-                if (key === 'teacher_starter') {
-                    this.form.subscription_type = 'monthly';
-                    this.form.plan_name = 'الباقة الأساسية';
-                    this.form.price = 200;
-                    this.form.billing_cycle = 'monthly';
-                } else if (key === 'teacher_pro') {
-                    this.form.subscription_type = 'monthly';
-                    this.form.plan_name = 'الباقة الشاملة';
-                    this.form.price = 600;
-                    this.form.billing_cycle = 'monthly';
+                var key = event.target ? event.target.value : '';
+                if (!key) {
+                    this.$nextTick(function () {
+                        syncSubscriptionFeatureCheckboxes(EDIT_SAVED_FEATURES.length ? EDIT_SAVED_FEATURES : MANUAL_DEFAULT_FEATURES);
+                    });
+                    return;
                 }
+                if (!PLAN_FEATURES[key] || !PLAN_META[key]) return;
+
+                var m = PLAN_META[key];
+                this.form.subscription_type = m.subscription_type || 'monthly';
+                this.form.plan_name = m.plan_name || '';
+                this.form.price = parseFloat(m.price) || 0;
+                this.form.billing_cycle = m.billing_cycle || 'monthly';
+
                 this.$nextTick(function () {
                     syncSubscriptionFeatureCheckboxes(PLAN_FEATURES[key]);
                 });

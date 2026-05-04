@@ -146,6 +146,12 @@
     function sleep(ms) {
         return new Promise(function (r) { setTimeout(r, ms); });
     }
+    /** تأخير تصاعدي لإعادة محاولة رفع جزء طويل (انقطاع TCP / موبايل / بروكسي) */
+    function backoffUploadAttempt(attempt) {
+        var base = 900;
+        var ms = Math.min(22000, base * Math.pow(2, attempt - 1));
+        return sleep(ms);
+    }
     function fetchJson(url, options) {
         return fetch(url, options).then(
             function (res) {
@@ -164,7 +170,7 @@
             return fetchJson(url, options).then(
                 function (o) {
                     var code = o.res.status;
-                    var retriable = (code >= 502 && code <= 504) || code === 429;
+                    var retriable = (code >= 502 && code <= 504) || code === 429 || code === 408;
                     if (retriable && n < max) {
                         return sleep(450 * n).then(function () { return attempt(n + 1); });
                     }
@@ -181,7 +187,7 @@
         return attempt(1);
     }
     function putWithProgressRetry(url, body, contentType, extraHeaders, onProgress) {
-        var max = 3;
+        var max = 6;
         function tryLoad(n) {
             return new Promise(function (resolve, reject) {
                 var xhr = new XMLHttpRequest();
@@ -192,15 +198,23 @@
                 xhr.upload.onprogress = function (ev) {
                     if (ev.lengthComputable && onProgress) onProgress(ev.loaded / ev.total);
                 };
+                function retryOrReject(httpErr) {
+                    if (n < max) {
+                        backoffUploadAttempt(n).then(function () { tryLoad(n + 1).then(resolve, reject); });
+                    } else if (httpErr) reject(httpErr);
+                    else reject(new Error('network'));
+                }
                 xhr.onload = function () {
                     if (xhr.status >= 200 && xhr.status < 300) resolve();
-                    else if ((xhr.status >= 502 && xhr.status <= 504) && n < max) {
-                        sleep(500 * n).then(function () { tryLoad(n + 1).then(resolve, reject); });
+                    else if ((xhr.status === 0 || (xhr.status >= 502 && xhr.status <= 504) || xhr.status === 408) && n < max) {
+                        retryOrReject(null);
                     } else reject(new Error('HTTP ' + xhr.status));
                 };
                 xhr.onerror = function () {
-                    if (n < max) sleep(500 * n).then(function () { tryLoad(n + 1).then(resolve, reject); });
-                    else reject(new Error('network'));
+                    retryOrReject(null);
+                };
+                xhr.onabort = function () {
+                    retryOrReject(null);
                 };
                 xhr.send(body);
             });
@@ -208,7 +222,7 @@
         return tryLoad(1);
     }
     function putPartWithProgressRetry(url, blob, extraHeaders, onProgress) {
-        var max = 3;
+        var max = 6;
         function tryPart(n) {
             return new Promise(function (resolve, reject) {
                 var xhr = new XMLHttpRequest();
@@ -218,18 +232,30 @@
                 xhr.upload.onprogress = function (ev) {
                     if (ev.lengthComputable && onProgress) onProgress(ev.loaded / ev.total);
                 };
+                function retryOrReject(httpErr) {
+                    if (n < max) {
+                        backoffUploadAttempt(n).then(function () { tryPart(n + 1).then(resolve, reject); });
+                    } else if (httpErr) reject(httpErr);
+                    else reject(new Error('network'));
+                }
                 xhr.onload = function () {
                     if (xhr.status >= 200 && xhr.status < 300) {
                         var etag = xhr.getResponseHeader('ETag') || xhr.getResponseHeader('etag');
-                        if (!etag) reject(new Error('part_verify'));
-                        else resolve(etag);
-                    } else if ((xhr.status >= 502 && xhr.status <= 504) && n < max) {
-                        sleep(500 * n).then(function () { tryPart(n + 1).then(resolve, reject); });
+                        if (!etag) {
+                            reject(new Error('part_verify'));
+                            return;
+                        }
+                        resolve(etag);
+                        return;
+                    } else if ((xhr.status === 0 || (xhr.status >= 502 && xhr.status <= 504) || xhr.status === 408) && n < max) {
+                        retryOrReject(null);
                     } else reject(new Error('HTTP ' + xhr.status));
                 };
                 xhr.onerror = function () {
-                    if (n < max) sleep(500 * n).then(function () { tryPart(n + 1).then(resolve, reject); });
-                    else reject(new Error('network'));
+                    retryOrReject(null);
+                };
+                xhr.onabort = function () {
+                    retryOrReject(null);
                 };
                 xhr.send(blob);
             });
@@ -364,7 +390,7 @@
             }
             sessionToken = o.j.upload_session_token;
             var totalParts = parseInt(o.j.total_parts, 10) || 1;
-            var partSize = parseInt(o.j.part_size, 10) || (8 * 1024 * 1024);
+            var partSize = parseInt(o.j.part_size, 10) || (6 * 1024 * 1024);
             var partsArr = [];
             function uploadPart(partNum) {
                 if (partNum > totalParts) {
@@ -377,21 +403,36 @@
                 var weight = 1 / totalParts;
                 var ph = 'جاري الرفع… الجزء ' + partNum + ' من ' + totalParts;
                 setPhase(wrap, ph);
-                return fetchJsonRetry(cfg.multipartSignPart, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: jsonHeaders(cfg.csrf),
-                    body: JSON.stringify({
-                        upload_session_token: sessionToken,
-                        part_number: partNum
-                    })
-                })
+                function signPart() {
+                    return fetchJsonRetry(cfg.multipartSignPart, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: jsonHeaders(cfg.csrf),
+                        body: JSON.stringify({
+                            upload_session_token: sessionToken,
+                            part_number: partNum
+                        })
+                    });
+                }
+                return signPart()
                 .then(function (sig) {
                     if (!sig.res.ok || !sig.j.url) {
                         throw new Error((sig.j && sig.j.message) ? sig.j.message : 'تعذّر تجهيز جزء من الملف.');
                     }
                     return putPartWithProgressRetry(sig.j.url, chunk, sig.j.headers || {}, function (frac) {
                         setProgress(wrap, true, base + weight * frac, ph);
+                    }).catch(function (err) {
+                        if (err && err.message === 'HTTP 403') {
+                            return signPart().then(function (sig2) {
+                                if (!sig2.res.ok || !sig2.j.url) {
+                                    throw new Error((sig2.j && sig2.j.message) ? sig2.j.message : 'تعذّر تجهيز جزء من الملف.');
+                                }
+                                return putPartWithProgressRetry(sig2.j.url, chunk, sig2.j.headers || {}, function (frac) {
+                                    setProgress(wrap, true, base + weight * frac, ph);
+                                });
+                            });
+                        }
+                        throw err;
                     });
                 })
                 .then(function (etag) {
@@ -435,11 +476,24 @@
         });
     }
     function runClMatDirectUpload(wrap) {
-        var raw = wrap.getAttribute('data-cl-mat-cfg');
-        if (!raw) return;
+        var raw = '';
+        var jsonEl = wrap.querySelector('script[type="application/json"][data-cl-mat-cfg-json]');
+        if (jsonEl && jsonEl.textContent) raw = jsonEl.textContent.trim();
+        if (!raw) raw = wrap.getAttribute('data-cl-mat-cfg') || '';
+        if (!raw) {
+            setErr(wrap, 'تعذّر تفعيل الرفع. حدّث الصفحة ثم أعد المحاولة.');
+            return;
+        }
         var cfg;
-        try { cfg = JSON.parse(raw); } catch (err) { return; }
-        var form = wrap.querySelector('form');
+        try {
+            cfg = JSON.parse(raw);
+        } catch (err) {
+            setErr(wrap, 'تعذّر قراءة إعدادات الرفع. حدّث الصفحة ثم أعد المحاولة.');
+            return;
+        }
+        cfg.maxBytes = parseInt(cfg.maxBytes, 10) || (150 * 1024 * 1024);
+        cfg.multipartThreshold = parseInt(cfg.multipartThreshold, 10) || 12582912;
+        var form = wrap.querySelector('form[data-cl-mat-form="1"]') || wrap.querySelector('form');
         var fileInput = wrap.querySelector('input[type="file"]');
         if (!form || !fileInput || !fileInput.files || !fileInput.files[0]) {
             setErr(wrap, 'اختر ملفاً أولاً.');
@@ -483,7 +537,13 @@
         }
     });
     document.addEventListener('submit', function (e) {
-        var form = e.target;
+        var form = null;
+        if (e.submitter && typeof e.submitter.closest === 'function') {
+            form = e.submitter.closest('form[data-cl-mat-form="1"]');
+        }
+        if (!form && e.target && typeof e.target.closest === 'function') {
+            form = e.target.closest('form[data-cl-mat-form="1"]');
+        }
         if (!form || form.getAttribute('data-cl-mat-form') !== '1') return;
         var wrap = form.closest('[data-cl-mat-wrap]');
         if (!wrap) return;

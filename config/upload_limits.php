@@ -44,6 +44,7 @@ return [
 
     'curriculum_r2_multipart_threshold_bytes' => (int) env('CURRICULUM_R2_MULTIPART_THRESHOLD_BYTES', 12 * 1024 * 1024),
 
-    'curriculum_r2_multipart_part_bytes' => (int) env('CURRICULUM_R2_MULTIPART_PART_BYTES', 8 * 1024 * 1024),
+    /* أصغر جزء = طلب PUT أقصر (أقل عرضة لانقطاع الشبكة)؛ الحد الأدنى لـ S3 هو 5 ميجابايت لغير الجزء الأخير */
+    'curriculum_r2_multipart_part_bytes' => (int) env('CURRICULUM_R2_MULTIPART_PART_BYTES', 6 * 1024 * 1024),
 
 ];
