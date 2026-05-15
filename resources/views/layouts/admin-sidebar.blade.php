@@ -115,6 +115,14 @@
                 </a>
             </li>
             @endif
+            @if($isFull || $u->hasPermission('manage.homepage-sliders') || $u->hasPermission('manage.site-services'))
+            <li>
+                <a href="{{ route('admin.homepage-sliders.index') }}" class="sidebar-link {{ request()->routeIs('admin.homepage-sliders.*') ? 'active' : '' }}">
+                    <i class="fas fa-images"></i>
+                    <span>سلايدر الرئيسية</span>
+                </a>
+            </li>
+            @endif
             @if($isFull || $u->hasPermission('manage.system-settings'))
             <li>
                 <a href="{{ route('admin.system-settings.edit') }}" class="sidebar-link {{ request()->routeIs('admin.system-settings.*') ? 'active' : '' }}">

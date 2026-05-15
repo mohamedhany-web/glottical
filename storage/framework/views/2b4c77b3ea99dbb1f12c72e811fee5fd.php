@@ -1,4 +1,4 @@
-@php
+<?php
     $isRtl = app()->getLocale() === 'ar';
     $navbarLogoUrl = $navbarLogoUrl ?? \App\Services\AdminPanelBranding::logoPublicUrl();
     $navbarBrandTagline = $navbarBrandTagline ?? \App\Services\PublicFooterSettings::payload()['brand_tagline'];
@@ -23,118 +23,121 @@
         ['href' => route('public.instructors.index'), 'icon' => 'fa-chalkboard-teacher', 'label' => __('landing.nav.instructors')],
         ['href' => route('public.about'), 'icon' => 'fa-circle-info', 'label' => __('public.about')],
     ];
-@endphp
+?>
 <nav id="navbar"
-     class="fixed top-0 inset-x-0 z-[999] transition-all duration-500 {{ $isHome ? 'nav-home' : '' }}"
+     class="fixed top-0 inset-x-0 z-[999] transition-all duration-500 <?php echo e($isHome ? 'nav-home' : ''); ?>"
      style="font-family: 'Cairo', 'Tajawal', 'IBM Plex Sans Arabic', system-ui, sans-serif;">
 
     <div class="max-w-7xl mx-auto px-3 sm:px-5 lg:px-8 relative">
         <div class="flex items-center justify-between gap-2 sm:gap-3 h-14 sm:h-[60px] w-full min-w-0">
 
-            {{-- Logo --}}
-            <a href="{{ route('home') }}" class="flex items-center gap-2 sm:gap-3 group min-w-0 max-w-[min(100%,12rem)] sm:max-w-[14rem] lg:max-w-none shrink-0 relative z-20">
-                @if(!empty($navbarLogoUrl))
+            
+            <a href="<?php echo e(route('home')); ?>" class="flex items-center gap-2 sm:gap-3 group min-w-0 max-w-[min(100%,12rem)] sm:max-w-[14rem] lg:max-w-none shrink-0 relative z-20">
+                <?php if(!empty($navbarLogoUrl)): ?>
                     <span class="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-full ring-1 ring-white/25 shadow-md [box-shadow:0_3px_12px_-4px_rgba(0,0,0,.3)]">
-                        <img src="{{ $navbarLogoUrl }}" alt="{{ config('app.name') }}" class="h-full w-full object-cover object-center" decoding="async">
+                        <img src="<?php echo e($navbarLogoUrl); ?>" alt="<?php echo e(config('app.name')); ?>" class="h-full w-full object-cover object-center" decoding="async">
                     </span>
-                @else
+                <?php else: ?>
                     <div class="relative w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-shadow duration-300" style="background:#F6C945;box-shadow:0 3px 14px -4px rgba(246,201,69,.38)">
                         <span class="text-[#082B63] font-black text-base select-none">G</span>
                     </div>
-                @endif
+                <?php endif; ?>
                 <div class="flex flex-col leading-none min-w-0">
                     <span class="nav-brand text-[15px] sm:text-[17px] font-bold tracking-tight truncate">Glottical</span>
-                    <span class="nav-tag text-[9px] sm:text-[11px] font-medium mt-0.5 leading-tight truncate">{{ $navbarBrandTagline }}</span>
+                    <span class="nav-tag text-[9px] sm:text-[11px] font-medium mt-0.5 leading-tight truncate"><?php echo e($navbarBrandTagline); ?></span>
                 </div>
             </a>
 
-            {{-- Desktop: وسط الشريط — يأخذ المساحة المتبقية دون التداخل مع الشعار أو الأزرار --}}
+            
             <div class="hidden lg:flex flex-1 min-w-0 items-center justify-center px-2 xl:px-4 relative z-10">
                 <div class="flex items-center gap-1.5 xl:gap-2 max-w-full overflow-x-auto overflow-y-visible no-scrollbar py-1 -my-1 justify-center">
                     <div class="relative group/mega">
                         <button type="button" class="nav-link relative px-2.5 xl:px-3.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap shrink-0">
                             <i class="fas fa-th-large text-[12px] opacity-70"></i>
-                            <span>{{ __('landing.academy.nav_categories') }}</span>
+                            <span><?php echo e(__('landing.academy.nav_categories')); ?></span>
                             <i class="fas fa-chevron-down text-[10px] opacity-60"></i>
                         </button>
-                        <div class="mega-panel absolute top-full {{ $isRtl ? 'right-0' : 'left-1/2 -translate-x-1/2' }} mt-2 w-[min(720px,calc(100vw-2rem))] rounded-2xl shadow-2xl shadow-black/40 opacity-0 invisible group-hover/mega:opacity-100 group-hover/mega:visible group-focus-within/mega:opacity-100 group-focus-within/mega:visible translate-y-1 group-hover/mega:translate-y-0 group-focus-within/mega:translate-y-0 transition-all duration-200 z-[1000] p-4 text-start border border-white/12 bg-slate-950/95 backdrop-blur-xl">
+                        <div class="mega-panel absolute top-full <?php echo e($isRtl ? 'right-0' : 'left-1/2 -translate-x-1/2'); ?> mt-2 w-[min(720px,calc(100vw-2rem))] rounded-2xl shadow-2xl shadow-black/40 opacity-0 invisible group-hover/mega:opacity-100 group-hover/mega:visible group-focus-within/mega:opacity-100 group-focus-within/mega:visible translate-y-1 group-hover/mega:translate-y-0 group-focus-within/mega:translate-y-0 transition-all duration-200 z-[1000] p-4 text-start border border-white/12 bg-slate-950/95 backdrop-blur-xl">
                             <div class="grid sm:grid-cols-2 gap-2">
-                                @foreach($megaCategories as $mc)
-                                    <a href="{{ $mc['url'] }}" class="flex gap-3 rounded-xl p-3 transition hover:bg-white/8 border border-transparent hover:border-white/10">
-                                        <span class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-acad-cyan/15 text-acad-cyan"><i class="fas {{ $mc['icon'] }}"></i></span>
+                                <?php $__currentLoopData = $megaCategories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $mc): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <a href="<?php echo e($mc['url']); ?>" class="flex gap-3 rounded-xl p-3 transition hover:bg-white/8 border border-transparent hover:border-white/10">
+                                        <span class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-acad-cyan/15 text-acad-cyan"><i class="fas <?php echo e($mc['icon']); ?>"></i></span>
                                         <span class="min-w-0">
-                                            <span class="block font-extrabold text-sm text-white">{{ $mc['name'] }}</span>
-                                            <span class="block text-xs line-clamp-2 mt-0.5 text-white/55">{{ $mc['desc'] }}</span>
+                                            <span class="block font-extrabold text-sm text-white"><?php echo e($mc['name']); ?></span>
+                                            <span class="block text-xs line-clamp-2 mt-0.5 text-white/55"><?php echo e($mc['desc']); ?></span>
                                         </span>
                                     </a>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </div>
-                            <a href="{{ route('public.courses') }}" class="mt-3 block text-center text-sm font-extrabold py-2 text-acad-yellow hover:text-acad-cyan">{{ __('landing.academy.mega_see_all') }}</a>
+                            <a href="<?php echo e(route('public.courses')); ?>" class="mt-3 block text-center text-sm font-extrabold py-2 text-acad-yellow hover:text-acad-cyan"><?php echo e(__('landing.academy.mega_see_all')); ?></a>
                         </div>
                     </div>
-                    @foreach($navLinks as $link)
-                    <a href="{{ $link['href'] }}"
+                    <?php $__currentLoopData = $navLinks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $link): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <a href="<?php echo e($link['href']); ?>"
                        class="nav-link relative px-2.5 xl:px-3.5 py-2 rounded-xl text-[13px] xl:text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap shrink-0">
-                        <i class="fas {{ $link['icon'] }} text-[12px] opacity-70"></i>
-                        <span>{{ $link['label'] }}</span>
+                        <i class="fas <?php echo e($link['icon']); ?> text-[12px] opacity-70"></i>
+                        <span><?php echo e($link['label']); ?></span>
                     </a>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
 
-            {{-- Desktop: تسجيل + لغة + CTA --}}
+            
             <div class="hidden lg:flex items-center gap-1.5 xl:gap-2 shrink-0 justify-end relative z-20 min-w-0">
-                @if($isHome)
+                <?php if($isHome): ?>
                 <button type="button"
                         class="nav-search-btn inline-flex items-center justify-center w-10 h-10 rounded-lg font-semibold text-sm transition-all duration-200 backdrop-blur-sm border border-white/10 text-white hover:bg-white/10"
                         data-open-search-btn
-                        aria-label="{{ __('landing.academy.nav_search') }}">
+                        aria-label="<?php echo e(__('landing.academy.nav_search')); ?>">
                     <i class="fas fa-search text-sm"></i>
                 </button>
-                @endif
+                <?php endif; ?>
                 <div class="flex shrink-0 items-stretch rounded-xl border border-white/15 overflow-hidden text-xs font-extrabold nav-lang-switch min-w-[6.5rem]">
-                    <a href="{{ $langSwitch('ar') }}" class="nav-lang-item flex-1 flex items-center justify-center px-2 sm:px-3 py-2.5 min-w-[2.75rem] text-center border-e border-white/15 {{ $isRtl ? 'is-active' : '' }}" hreflang="ar">عربي</a>
-                    <a href="{{ $langSwitch('en') }}" class="nav-lang-item flex-1 flex items-center justify-center px-2 sm:px-3 py-2.5 min-w-[2.25rem] text-center {{ ! $isRtl ? 'is-active' : '' }}" hreflang="en">EN</a>
+                    <a href="<?php echo e($langSwitch('ar')); ?>" class="nav-lang-item flex-1 flex items-center justify-center px-2 sm:px-3 py-2.5 min-w-[2.75rem] text-center border-e border-white/15 <?php echo e($isRtl ? 'is-active' : ''); ?>" hreflang="ar">عربي</a>
+                    <a href="<?php echo e($langSwitch('en')); ?>" class="nav-lang-item flex-1 flex items-center justify-center px-2 sm:px-3 py-2.5 min-w-[2.25rem] text-center <?php echo e(! $isRtl ? 'is-active' : ''); ?>" hreflang="en">EN</a>
                 </div>
-                @auth
-                    <a href="{{ route('my-courses.index') }}"
+                <?php if(auth()->guard()->check()): ?>
+                    <a href="<?php echo e(route('my-courses.index')); ?>"
                        class="nav-mycourses inline-flex items-center justify-center w-10 h-10 rounded-lg font-semibold text-sm transition-all duration-200 backdrop-blur-sm border border-white/10"
-                       title="{{ __('landing.academy.nav_my_learning') }}">
+                       title="<?php echo e(__('landing.academy.nav_my_learning')); ?>">
                         <i class="fas fa-play-circle text-sm"></i>
-                        <span class="sr-only">{{ __('landing.academy.nav_my_learning') }}</span>
+                        <span class="sr-only"><?php echo e(__('landing.academy.nav_my_learning')); ?></span>
                     </a>
-                    <a href="{{ url('/dashboard') }}"
+                    <a href="<?php echo e(url('/dashboard')); ?>"
                        class="nav-dash inline-flex items-center gap-2 px-3.5 py-2 rounded-lg font-semibold text-sm transition-all duration-200 backdrop-blur-sm">
                         <i class="fas fa-th-large text-xs opacity-70"></i>
-                        {{ __('landing.nav.dashboard') }}
+                        <?php echo e(__('landing.nav.dashboard')); ?>
+
                     </a>
-                @endauth
-                @guest
-                    <a href="{{ route('login') }}"
+                <?php endif; ?>
+                <?php if(auth()->guard()->guest()): ?>
+                    <a href="<?php echo e(route('login')); ?>"
                        class="nav-login px-2.5 xl:px-3 py-2 rounded-lg font-semibold text-[13px] xl:text-sm transition-all duration-200 whitespace-nowrap shrink-0">
-                        {{ __('landing.nav.login') }}
+                        <?php echo e(__('landing.nav.login')); ?>
+
                     </a>
-                    <a href="{{ route('register') }}"
+                    <a href="<?php echo e(route('register')); ?>"
                        class="nav-cta inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 rounded-xl font-extrabold text-[13px] xl:text-sm transition-all duration-300 tracking-tight whitespace-nowrap shrink-0 max-w-[9.5rem] sm:max-w-none shadow-lg shadow-black/25">
-                        {{ __('landing.academy.nav_join') }}
-                        <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }} text-[11px]"></i>
+                        <?php echo e(__('landing.academy.nav_join')); ?>
+
+                        <i class="fas fa-arrow-<?php echo e($isRtl ? 'left' : 'right'); ?> text-[11px]"></i>
                     </a>
-                @endguest
+                <?php endif; ?>
             </div>
 
             <div class="flex items-center gap-1.5 lg:hidden shrink-0 relative z-20">
-                @if($isHome)
+                <?php if($isHome): ?>
                 <button type="button"
                         class="nav-search-btn w-10 h-10 rounded-xl flex items-center justify-center border border-white/12 bg-white/[0.06] text-white/90 hover:bg-white/10 hover:border-white/20 transition"
                         data-open-search-btn
-                        aria-label="{{ __('landing.academy.nav_search') }}">
+                        aria-label="<?php echo e(__('landing.academy.nav_search')); ?>">
                     <i class="fas fa-search text-lg"></i>
                 </button>
-                @endif
+                <?php endif; ?>
                 <button type="button"
                         id="mobile-menu-toggle"
                         class="nav-mobile-btn w-10 h-10 rounded-xl flex items-center justify-center border border-white/12 bg-white/[0.06] text-white/90 hover:bg-white/10 hover:border-white/20 active:scale-[0.97] transition-all duration-200"
-                        aria-label="{{ __('landing.academy.nav_menu') }}"
+                        aria-label="<?php echo e(__('landing.academy.nav_menu')); ?>"
                         aria-expanded="false"
                         aria-controls="mobile-menu-sidebar">
                     <span id="menu-bars-icon"><i class="fas fa-bars text-lg"></i></span>
@@ -145,12 +148,12 @@
     </div>
 </nav>
 
-{{-- مسافة تحت الشريط الثابت — الصفحة الرئيسية تعتمد على هامش الهيرو السالب فلا نكرر المسافة --}}
-@if(! request()->routeIs('home'))
-<div class="navbar-spacer h-14 sm:h-[60px]"></div>
-@endif
 
-@include('partials.mobile-nav-drawer', [
+<?php if(! request()->routeIs('home')): ?>
+<div class="navbar-spacer h-14 sm:h-[60px]"></div>
+<?php endif; ?>
+
+<?php echo $__env->make('partials.mobile-nav-drawer', [
     'isRtl' => $isRtl,
     'isHome' => $isHome,
     'navbarLogoUrl' => $navbarLogoUrl,
@@ -158,7 +161,7 @@
     'langSwitch' => $langSwitch,
     'megaCategories' => $megaCategories,
     'navLinks' => $navLinks,
-])
+], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
 
 <style>
@@ -305,7 +308,7 @@
 }
 .mob-menu-panel {
     font-family: 'Cairo', 'Tajawal', 'IBM Plex Sans Arabic', system-ui, sans-serif;
-    box-shadow: {{ $isRtl ? '-24px' : '24px' }} 0 48px rgba(0, 0, 0, 0.55);
+    box-shadow: <?php echo e($isRtl ? '-24px' : '24px'); ?> 0 48px rgba(0, 0, 0, 0.55);
     transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
@@ -317,7 +320,7 @@
 .mob-menu-glow {
     background:
         radial-gradient(ellipse 90% 55% at 50% -8%, rgba(0, 212, 255, 0.14), transparent 58%),
-        radial-gradient(ellipse 55% 45% at {{ $isRtl ? '0%' : '100%' }} 100%, rgba(245, 184, 0, 0.1), transparent 52%);
+        radial-gradient(ellipse 55% 45% at <?php echo e($isRtl ? '0%' : '100%'); ?> 100%, rgba(245, 184, 0, 0.1), transparent 52%);
 }
 .mob-menu-dots {
     background-image: radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px);
@@ -532,3 +535,4 @@ body.mob-menu-open { overflow: hidden !important; touch-action: none; }
     window.addEventListener('load', ensureScroll);
 })();
 </script>
+<?php /**PATH C:\xampp\htdocs\glottical\resources\views/components/unified-navbar.blade.php ENDPATH**/ ?>

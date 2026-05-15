@@ -349,6 +349,3 @@ class CoursesSeeder extends Seeder
     }
 }
 
-}
-
-

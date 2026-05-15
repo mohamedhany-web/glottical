@@ -82,6 +82,7 @@ return [
         'sales' => ['manage.leads', 'view.sales-analytics', 'manage.orders'],
         'site-services' => ['manage.site-services'],
         'site-testimonials' => ['manage.site-testimonials', 'manage.site-services'],
+        'homepage-sliders' => ['manage.homepage-sliders', 'manage.site-services'],
         'statistics' => ['view.statistics'],
         'subjects' => ['manage.courses', 'manage.academic-subjects'],
         'students-accounts' => ['manage.students-accounts', 'manage.users'],

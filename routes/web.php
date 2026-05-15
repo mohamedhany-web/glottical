@@ -1220,6 +1220,10 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::resource('site-services', \App\Http\Controllers\Admin\SiteServiceController::class)->except(['show']);
         Route::resource('site-testimonials', \App\Http\Controllers\Admin\SiteTestimonialController::class)->except(['show']);
 
+        Route::post('homepage-sliders/reorder', [\App\Http\Controllers\Admin\HomepageSliderController::class, 'reorder'])->name('homepage-sliders.reorder');
+        Route::post('homepage-sliders/{homepageSlider}/toggle-active', [\App\Http\Controllers\Admin\HomepageSliderController::class, 'toggleActive'])->name('homepage-sliders.toggle-active');
+        Route::resource('homepage-sliders', \App\Http\Controllers\Admin\HomepageSliderController::class)->except(['show']);
+
         Route::get('/system-settings', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'edit'])->name('system-settings.edit');
         Route::put('/system-settings', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'update'])->name('system-settings.update');
         Route::post('/system-settings/two-factor/enable-request', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'requestTwoFactorEnable'])

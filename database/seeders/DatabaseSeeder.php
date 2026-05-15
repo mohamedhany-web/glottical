@@ -109,6 +109,16 @@ class DatabaseSeeder extends Seeder
             $this->command->newLine();
         }
 
+        // 8b. دورات واجهة تجريبية بصور عالية الجودة (اختياري — يحتاج اتصالاً لتنزيل الصور)
+        if ($this->command->confirm('هل تريد إضافة/تحديث دورات الواجهة التجريبية مع الصور؟', false)) {
+            $this->command->info('🖼️  تشغيل ShowcaseDemoCoursesSeeder...');
+            $this->call([
+                ShowcaseDemoCoursesSeeder::class,
+            ]);
+            $this->command->info('✅ تم إنشاء/تحديث دورات الواجهة التجريبية');
+            $this->command->newLine();
+        }
+
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->command->info('✨ تم إكمال عملية Seed بنجاح!');
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');

@@ -1,1 +1,0 @@
- <?php /**PATH C:\xampp\htdocs\Muallimx\resources\views\admin\courses\index.blade.php ENDPATH**/ ?>

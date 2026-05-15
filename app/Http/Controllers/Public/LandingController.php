@@ -10,6 +10,7 @@ use App\Models\PopupAd;
 use App\Models\SiteTestimonial;
 use App\Models\SiteService;
 use App\Models\User;
+use App\Services\HomepageSliderResolver;
 use App\Services\InstructorMarketingRankingService;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -42,11 +43,11 @@ class LandingController extends Controller
 
         $featuredCourses = AdvancedCourse::query()
             ->where('is_active', true)
-            ->with(['instructor:id,name'])
+            ->with(['instructor:id,name', 'courseCategory:id,name'])
             ->withCount('lessons')
             ->orderByDesc('is_featured')
             ->orderByDesc('created_at')
-            ->limit(8)
+            ->limit(24)
             ->get();
 
         $homeCategories = $this->buildHomeCategories();
@@ -70,6 +71,11 @@ class LandingController extends Controller
             'services' => SiteService::active()->count(),
         ];
 
+        $heroSpotlight = app(HomepageSliderResolver::class)->resolve(
+            collect($featuredCourses),
+            collect($landingPaths)
+        );
+
         return view('welcome', compact(
             'popupAd',
             'landingPaths',
@@ -78,7 +84,8 @@ class LandingController extends Controller
             'homeCategories',
             'homeInstructors',
             'homeTestimonials',
-            'homeStats'
+            'homeStats',
+            'heroSpotlight'
         ));
     }
 

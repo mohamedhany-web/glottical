@@ -23,6 +23,7 @@ return [
                 ['label' => 'رسائل التواصل', 'permissions' => ['manage.contact-messages']],
                 ['label' => 'خدمات الموقع', 'permissions' => ['manage.site-services']],
                 ['label' => 'آراء الموقع (الرئيسية)', 'permissions' => ['manage.site-testimonials', 'manage.site-services']],
+                ['label' => 'سلايدر الصفحة الرئيسية', 'permissions' => ['manage.homepage-sliders', 'manage.site-services']],
                 ['label' => 'إعدادات النظام', 'permissions' => ['manage.system-settings']],
                 ['label' => 'صفحة من نحن', 'permissions' => ['manage.about-page']],
                 ['label' => 'الأسئلة الشائعة', 'permissions' => ['manage.faq']],

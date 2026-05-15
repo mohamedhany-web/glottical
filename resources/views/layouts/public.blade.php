@@ -3,7 +3,7 @@
     $publicRtl = $publicLocale === 'ar';
 @endphp
 <!DOCTYPE html>
-<html lang="{{ $publicLocale }}" dir="{{ $publicRtl ? 'rtl' : 'ltr' }}" class="light">
+<html lang="{{ $publicLocale }}" dir="{{ $publicRtl ? 'rtl' : 'ltr' }}" class="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -27,36 +27,48 @@
     <link rel="alternate" hreflang="ar" href="{{ $seoAltBase }}?lang=ar">
     <link rel="alternate" hreflang="en" href="{{ $seoAltBase }}?lang=en">
     <link rel="alternate" hreflang="x-default" href="{{ $seoAltBase }}">
-    <meta name="theme-color" content="#0F172A">
-    <script>
-        (function() {
-            var s = localStorage.getItem('theme');
-            var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            if (s === 'dark' || (!s && d)) {
-                document.documentElement.classList.add('dark');
-                document.documentElement.classList.remove('light');
-            } else {
-                document.documentElement.classList.remove('dark');
-                document.documentElement.classList.add('light');
-            }
-        })();
-    </script>
+    <meta name="theme-color" content="#050b18">
 
     @include('partials.favicon-links')
 
     <!-- الخطوط العربية - تحميل غير معطل للرسم (تحسين FCP/LCP) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700;800&display=swap"></noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Resource Hints للأداء -->
     <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS (ألوان موحّدة مع الصفحة الرئيسية) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        acad: {
+                            blue: '#0B3D91',
+                            blueDark: '#072a66',
+                            blueSoft: '#E8EEF8',
+                            cyan: '#00A3C4',
+                            yellow: '#F5B800',
+                            yellowSoft: '#FFF8E1',
+                            gray: '#F4F6FA',
+                            ink: '#1a2d4d',
+                            navy: '#050b18',
+                            navyMid: '#0f1f3a',
+                            neon: '#00d4ff',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Cairo', 'Tajawal', 'IBM Plex Sans Arabic', 'system-ui', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
     
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -65,16 +77,19 @@
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
 
+    @include('partials.public-academy-surface')
     <!-- Custom Styles from welcome.blade.php -->
     @include('layouts.public-styles')
     @stack('styles')
     @include('partials.seo-jsonld', ['jsonldType' => 'website'])
 </head>
 
-<body class="min-h-screen flex flex-col bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-slate-100 transition-colors"
+<body class="page-academy font-sans antialiased text-white"
       x-data="{ mobileMenu: false, searchQuery: '' }"
       :class="{ 'overflow-hidden': mobileMenu }">
-    
+
+    <div id="scroll-progress" class="fixed top-0 left-0 h-[3px] w-0 z-[100000] bg-gradient-to-l from-acad-yellow to-acad-cyan"></div>
+
     @include('components.unified-navbar')
 
     <!-- Main Content -->
@@ -85,41 +100,20 @@
     <!-- Footer - نفس فوتر الصفحة الرئيسية -->
     @include('components.unified-footer')
 
-    @stack('scripts')
-
     <script>
-        // تأثير الناف بار عند السكرول - محسّن للأداء
-        document.addEventListener('DOMContentLoaded', function() {
-            const navbar = document.getElementById('navbar');
-            if (navbar) {
-                let ticking = false;
-                let isScrolled = false;
-                
-                function handleScroll() {
-                    if (!ticking) {
-                        window.requestAnimationFrame(() => {
-                            const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-                            const shouldBeScrolled = currentScroll > 100;
-                            
-                            if (shouldBeScrolled !== isScrolled) {
-                                if (shouldBeScrolled) {
-                                    navbar.classList.add('scrolled');
-                                } else {
-                                    navbar.classList.remove('scrolled');
-                                }
-                                isScrolled = shouldBeScrolled;
-                            }
-                            
-                            ticking = false;
-                        });
-                        ticking = true;
-                    }
-                }
-                
-                window.addEventListener('scroll', handleScroll, { passive: true });
-            }
-        });
+    (function () {
+        function scrollProgress() {
+            var s = window.pageYOffset || document.documentElement.scrollTop;
+            var h = document.documentElement.scrollHeight - window.innerHeight;
+            var p = h > 0 ? (s / h) * 100 : 0;
+            var b = document.getElementById('scroll-progress');
+            if (b) b.style.width = p + '%';
+        }
+        window.addEventListener('scroll', scrollProgress, { passive: true });
+        scrollProgress();
+    })();
     </script>
+    @stack('scripts')
 </body>
 </html>
 

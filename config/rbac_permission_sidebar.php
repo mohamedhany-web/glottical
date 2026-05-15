@@ -226,6 +226,11 @@ return [
             'icon' => 'fas fa-quote-right',
             'route_patterns' => ['admin.site-testimonials.*'],
         ],
+        'manage.homepage-sliders' => [
+            'route' => 'admin.homepage-sliders.index',
+            'icon' => 'fas fa-images',
+            'route_patterns' => ['admin.homepage-sliders.*'],
+        ],
         'manage.system-settings' => [
             'route' => 'admin.system-settings.edit',
             'icon' => 'fas fa-sliders-h',
