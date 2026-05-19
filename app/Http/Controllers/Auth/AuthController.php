@@ -20,7 +20,7 @@ class AuthController extends Controller
     public function showLogin()
     {
         $authBackgroundUrl = \Illuminate\Support\Facades\Storage::disk('public')->exists(\App\Providers\AppServiceProvider::AUTH_BACKGROUND_STORAGE_PATH)
-            ? asset('storage/' . \App\Providers\AppServiceProvider::AUTH_BACKGROUND_STORAGE_PATH)
+            ? storage_asset(\App\Providers\AppServiceProvider::AUTH_BACKGROUND_STORAGE_PATH)
             : asset('images/brainstorm-meeting.jpg');
         return view('auth.login', compact('authBackgroundUrl'));
     }
@@ -43,7 +43,7 @@ class AuthController extends Controller
         $phoneCountries = config('phone_countries.countries', []);
         $defaultCountry = collect($phoneCountries)->firstWhere('code', config('phone_countries.default_country', 'SA'));
         $authBackgroundUrl = \Illuminate\Support\Facades\Storage::disk('public')->exists(\App\Providers\AppServiceProvider::AUTH_BACKGROUND_STORAGE_PATH)
-            ? asset('storage/' . \App\Providers\AppServiceProvider::AUTH_BACKGROUND_STORAGE_PATH)
+            ? storage_asset(\App\Providers\AppServiceProvider::AUTH_BACKGROUND_STORAGE_PATH)
             : asset('images/brainstorm-meeting.jpg');
         return view('auth.register', compact('phoneCountries', 'defaultCountry', 'authBackgroundUrl', 'pendingReferralCode'));
     }

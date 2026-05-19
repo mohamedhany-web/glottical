@@ -20,7 +20,6 @@ class PublicStorageUrl
 
         $path = str_replace('\\', '/', ltrim($path, '/'));
 
-        // مسار كامل مخزّن بالخطأ في قاعدة البيانات
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             return self::ensureHttpsInProduction($path);
         }
@@ -37,18 +36,20 @@ class PublicStorageUrl
             }
 
             try {
-                $storage = Storage::disk($disk);
-                if (! $storage->exists($path)) {
+                if ($disk === 'public') {
+                    if (self::publicDiskHasFile($path)) {
+                        return self::localWebUrl($path);
+                    }
+
                     continue;
                 }
 
-                if ($disk === 'public') {
-                    return self::localWebUrl($path);
-                }
-
-                $cloudUrl = $storage->url($path);
-                if (is_string($cloudUrl) && $cloudUrl !== '') {
-                    return self::ensureHttpsInProduction($cloudUrl);
+                $storage = Storage::disk($disk);
+                if ($storage->exists($path)) {
+                    $cloudUrl = $storage->url($path);
+                    if (is_string($cloudUrl) && $cloudUrl !== '') {
+                        return self::ensureHttpsInProduction($cloudUrl);
+                    }
                 }
             } catch (\Throwable) {
                 continue;
@@ -58,8 +59,24 @@ class PublicStorageUrl
         return self::localWebUrl($path);
     }
 
+    public static function publicDiskHasFile(string $path): bool
+    {
+        $path = str_replace('\\', '/', ltrim($path, '/'));
+
+        try {
+            if (Storage::disk('public')->exists($path)) {
+                return true;
+            }
+        } catch (\Throwable) {
+        }
+
+        $full = storage_path('app/public/'.str_replace('/', DIRECTORY_SEPARATOR, $path));
+
+        return is_file($full) && is_readable($full);
+    }
+
     /**
-     * رابط ويب لملف داخل storage/app/public — يحترم مجلد التطبيق الفرعي (مثل /glottical/public).
+     * رابط ويب لملف داخل storage/app/public.
      */
     public static function localWebUrl(string $path): string
     {
@@ -72,9 +89,7 @@ class PublicStorageUrl
             }
         }
 
-        $appUrl = rtrim((string) config('app.url'), '/');
-
-        return $appUrl.'/storage/'.$path;
+        return rtrim((string) config('app.url'), '/').'/storage/'.$path;
     }
 
     private static function ensureHttpsInProduction(string $url): string

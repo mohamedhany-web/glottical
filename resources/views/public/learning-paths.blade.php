@@ -845,7 +845,7 @@
                     $thumbnailPath = $thumbnailPath ? str_replace('\\', '/', $thumbnailPath) : null;
                     $hasThumbnail = $thumbnailPath && !empty(trim($thumbnailPath));
                     // إنشاء URL كامل للصورة
-                    $imageUrl = $hasThumbnail ? asset('storage/' . $thumbnailPath) : null;
+                    $imageUrl = $hasThumbnail ? storage_asset($thumbnailPath) : null;
                 @endphp
                 <div class="course-card rounded-3xl overflow-hidden shadow-xl fade-in-up group h-full path-item"
                      data-name="{{ strtolower($path->name) }}"

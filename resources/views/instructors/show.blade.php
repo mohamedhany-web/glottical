@@ -263,7 +263,7 @@
                                 <a href="{{ route('public.course.show', $c->id) }}" class="group flex gap-4 p-4 rounded-2xl border border-slate-100 hover:border-[#283593]/25 hover:shadow-lg transition-all duration-300 bg-white">
                                     <div class="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden flex items-center justify-center" style="background:linear-gradient(135deg,#283593,#1F2A7A)">
                                         @if($cThumb)
-                                            <img src="{{ asset('storage/' . $cThumb) }}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                            <img src="{{ storage_asset($cThumb) }}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                         @else
                                             <i class="fas fa-book text-white/90 text-2xl"></i>
                                         @endif

@@ -97,7 +97,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">صورة الباقة</label>
                 @if($package->thumbnail)
                 <div class="mb-2">
-                    <img src="{{ asset('storage/' . $package->thumbnail) }}" alt="{{ $package->name }}" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                    <img src="{{ storage_asset($package->thumbnail) }}" alt="{{ $package->name }}" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
                 </div>
                 @endif
                 <input type="file" name="thumbnail" accept="image/*" 

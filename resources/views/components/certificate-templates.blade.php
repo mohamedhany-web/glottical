@@ -117,7 +117,7 @@
                     <div class="mt-6">
                         @if(isset($certificate->instructor_signature) && $certificate->instructor_signature)
                         <div class="mb-2">
-                            <img src="{{ asset('storage/' . $certificate->instructor_signature) }}" alt="Instructor Signature" class="h-10 mx-auto object-contain">
+                            <img src="{{ storage_asset($certificate->instructor_signature) }}" alt="Instructor Signature" class="h-10 mx-auto object-contain">
                         </div>
                         @else
                         <div class="signature-line" style="width: 150px; margin: 8px auto;"></div>
@@ -159,7 +159,7 @@
                     <div class="mt-6">
                         @if(isset($certificate->academy_signature) && $certificate->academy_signature)
                         <div class="mb-2">
-                            <img src="{{ asset('storage/' . $certificate->academy_signature) }}" alt="Academy Signature" class="h-10 mx-auto object-contain">
+                            <img src="{{ storage_asset($certificate->academy_signature) }}" alt="Academy Signature" class="h-10 mx-auto object-contain">
                         </div>
                         @else
                         <div class="signature-line" style="width: 150px; margin: 8px auto;"></div>

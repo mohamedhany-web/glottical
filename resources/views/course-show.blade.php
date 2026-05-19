@@ -1,7 +1,7 @@
 @php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
-    $thumbUrl = ($course->thumbnail ?? null) ? asset('storage/' . str_replace('\\','/', $course->thumbnail)) : null;
+    $thumbUrl = $course->thumbnail_url;
     $introVideoUrl = trim((string)($course->video_url ?? ''));
     $introEmbedUrl = \App\Helpers\VideoHelper::getEmbedUrl($introVideoUrl);
     if (!$introEmbedUrl && $introVideoUrl !== '') {
@@ -436,7 +436,7 @@
                                         <a href="{{ route('public.course.show', $related->id) }}" class="flex gap-3 p-3 rounded-xl border border-slate-200/80 hover:border-acad-yellow/45 hover:shadow-md transition-all duration-300 group bg-white/60">
                                             <div class="w-16 h-16 flex-shrink-0 rounded-xl bg-gradient-to-br from-acad-blue to-acad-navy overflow-hidden flex items-center justify-center">
                                                 @if($relThumb)
-                                                    <img src="{{ asset('storage/' . $relThumb) }}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                                                    <img src="{{ storage_asset($relThumb) }}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
                                                 @else
                                                     <i class="fas fa-book text-white/80 text-lg"></i>
                                                 @endif

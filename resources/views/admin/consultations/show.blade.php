@@ -39,8 +39,8 @@
             <div class="sm:col-span-2">
                 <dt class="text-slate-500 mb-2">إيصال الدفع</dt>
                 <dd>
-                    <a href="{{ asset('storage/'.$consultation->payment_proof) }}" target="_blank" rel="noopener" class="inline-block">
-                        <img src="{{ asset('storage/'.$consultation->payment_proof) }}" alt="إيصال" class="max-h-64 rounded-lg border border-slate-200 shadow-sm">
+                    <a href="{{ storage_asset($consultation->payment_proof) }}" target="_blank" rel="noopener" class="inline-block">
+                        <img src="{{ storage_asset($consultation->payment_proof) }}" alt="إيصال" class="max-h-64 rounded-lg border border-slate-200 shadow-sm">
                     </a>
                 </dd>
             </div>

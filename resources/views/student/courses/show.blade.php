@@ -148,7 +148,7 @@
                 <!-- فيديو الكورس -->
                 <div class="course-video-card bg-gradient-to-br from-[#2CA9BD] via-[#65DBE4] to-[#2CA9BD] h-[320px] sm:h-[380px] md:h-[450px] flex items-center justify-center relative group overflow-hidden">
                     @if($advancedCourse->image)
-                        <img src="{{ asset('storage/' . $advancedCourse->image) }}" alt="{{ $advancedCourse->title }}" 
+                        <img src="{{ storage_asset($advancedCourse->image) }}" alt="{{ $advancedCourse->title }}" 
                              class="w-full h-full object-cover absolute inset-0 transition-transform duration-700 group-hover:scale-110">
                         <div class="absolute inset-0 bg-gradient-to-br from-[#2CA9BD]/90 via-[#65DBE4]/85 to-[#2CA9BD]/90 transition-opacity duration-300 group-hover:opacity-75"></div>
                     @else

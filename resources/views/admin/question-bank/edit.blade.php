@@ -231,7 +231,7 @@
                                 </label>
                                 <div class="flex items-start gap-4">
                                     <div class="relative">
-                                        <img src="{{ asset('storage/' . $question->image_url) }}" 
+                                        <img src="{{ storage_asset($question->image_url) }}" 
                                              alt="صورة السؤال" 
                                              class="w-32 h-32 object-cover rounded-lg border border-gray-200">
                                         <button type="button" 

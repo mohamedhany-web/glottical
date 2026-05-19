@@ -210,7 +210,7 @@
                 <div class="text-center mb-6 {{ $package->is_popular ? 'mt-4' : '' }}">
                     @if($package->thumbnail)
                     <div class="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4 feature-icon-hover">
-                        <img src="{{ asset('storage/' . $package->thumbnail) }}" alt="{{ $package->name }}" class="w-full h-full object-cover" loading="lazy" decoding="async">
+                        <img src="{{ storage_asset($package->thumbnail) }}" alt="{{ $package->name }}" class="w-full h-full object-cover" loading="lazy" decoding="async">
                     </div>
                     @else
                     <div class="w-20 h-20 {{ $package->is_popular ? 'bg-white/20' : 'bg-[#283593]' }} rounded-full flex items-center justify-center mx-auto mb-4 feature-icon-hover">

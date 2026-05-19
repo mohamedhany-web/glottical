@@ -25,7 +25,7 @@
             @if($package->thumbnail)
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">صورة الباقة</label>
-                <img src="{{ asset('storage/' . $package->thumbnail) }}" alt="{{ $package->name }}" class="w-full h-64 object-cover rounded-lg border border-gray-300">
+                <img src="{{ storage_asset($package->thumbnail) }}" alt="{{ $package->name }}" class="w-full h-64 object-cover rounded-lg border border-gray-300">
             </div>
             @endif
 

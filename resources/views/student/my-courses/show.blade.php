@@ -21,7 +21,7 @@
                 <!-- صورة الكورس -->
                 <div class="lg:w-2/5 h-52 lg:h-72 bg-sky-100 flex items-center justify-center relative overflow-hidden flex-shrink-0">
                     @if($course->thumbnail)
-                        <img src="{{ asset('storage/' . $course->thumbnail) }}" alt="{{ $course->title }}" class="w-full h-full object-cover">
+                        <img src="{{ storage_asset($course->thumbnail) }}" alt="{{ $course->title }}" class="w-full h-full object-cover">
                     @else
                         <div class="text-sky-600 text-center">
                             <i class="fas fa-graduation-cap text-4xl"></i>

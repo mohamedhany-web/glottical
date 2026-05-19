@@ -189,7 +189,7 @@
                             @if($p->status === 'approved')
                                 <a href="{{ route('admin.salaries.pay', $p) }}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-lg font-medium">دفع وتحويل</a>
                             @elseif($p->status === 'paid' && $p->transfer_receipt_path)
-                                <a href="{{ asset('storage/' . $p->transfer_receipt_path) }}" target="_blank" class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm rounded-lg font-medium">إيصال</a>
+                                <a href="{{ storage_asset($p->transfer_receipt_path) }}" target="_blank" class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm rounded-lg font-medium">إيصال</a>
                             @else
                                 —
                             @endif

@@ -153,7 +153,7 @@
                     <div class="lg:col-span-2 space-y-6">
                         @if($course->thumbnail)
                             <div class="content-card rounded-xl overflow-hidden">
-                                <img src="{{ asset('storage/' . $course->thumbnail) }}" alt="{{ $course->title }}" 
+                                <img src="{{ storage_asset($course->thumbnail) }}" alt="{{ $course->title }}" 
                                      class="w-full h-64 object-cover">
                             </div>
                             @endif

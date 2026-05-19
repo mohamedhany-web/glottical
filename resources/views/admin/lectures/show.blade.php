@@ -173,7 +173,7 @@
                                 @else
                                     <span class="text-xs font-semibold text-gray-600 bg-gray-200 px-2 py-1 rounded-lg">مخفي</span>
                                 @endif
-                                <a href="{{ asset('storage/' . $material->file_path) }}" target="_blank" class="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium text-sm">
+                                <a href="{{ storage_asset($material->file_path) }}" target="_blank" class="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium text-sm">
                                     <i class="fas fa-download"></i>
                                     تحميل
                                 </a>

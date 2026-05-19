@@ -106,7 +106,7 @@
                         </label>
                         @if($academicYear->thumbnail)
                             <div class="mb-3">
-                                <img src="{{ asset('storage/' . $academicYear->thumbnail) }}" alt="Thumbnail" class="w-32 h-32 object-cover rounded-lg border border-gray-200">
+                                <img src="{{ storage_asset($academicYear->thumbnail) }}" alt="Thumbnail" class="w-32 h-32 object-cover rounded-lg border border-gray-200">
                                 <p class="text-xs text-gray-500 mt-1">الصورة الحالية</p>
                             </div>
                         @endif

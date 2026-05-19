@@ -221,7 +221,7 @@
                        :href="'{{ url('/course') }}/' + course.id">
                       <div class="relative aspect-video bg-slate-950/60">
                         <template x-if="course.thumbnail">
-                          <img :src="'{{ asset('storage') }}/' + course.thumbnail"
+                          <img :src="course.thumbnail"
                                :alt="course.title"
                                width="960"
                                height="540"

@@ -32,12 +32,12 @@
 
                 @if($media->type == 'image')
                 <div class="mb-6">
-                    <img src="{{ asset('storage/' . $media->file_path) }}" alt="{{ $media->title }}" class="w-full rounded-lg shadow-lg">
+                    <img src="{{ storage_asset($media->file_path) }}" alt="{{ $media->title }}" class="w-full rounded-lg shadow-lg">
                 </div>
                 @elseif($media->type == 'video')
                 <div class="mb-6">
                     <video controls class="w-full rounded-lg shadow-lg">
-                        <source src="{{ asset('storage/' . $media->file_path) }}" type="{{ $media->mime_type }}">
+                        <source src="{{ storage_asset($media->file_path) }}" type="{{ $media->mime_type }}">
                         متصفحك لا يدعم تشغيل الفيديو
                     </video>
                 </div>
@@ -45,7 +45,7 @@
                 <div class="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-12 text-center mb-6 card-hover">
                     <i class="fas fa-file-alt text-6xl text-gray-400 mb-4"></i>
                     <p class="text-gray-700 mb-4 font-semibold">{{ $media->file_name }}</p>
-                    <a href="{{ asset('storage/' . $media->file_path) }}" download class="btn-primary">
+                    <a href="{{ storage_asset($media->file_path) }}" download class="btn-primary">
                         <i class="fas fa-download ml-2"></i>
                         تحميل الملف
                     </a>

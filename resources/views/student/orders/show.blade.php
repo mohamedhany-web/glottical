@@ -35,10 +35,10 @@
                     <div class="flex flex-col sm:flex-row gap-4">
                         <div class="w-full sm:w-24 h-24 bg-gradient-to-br {{ $order->academic_year_id ? 'from-green-500 to-green-600' : 'from-sky-500 to-sky-600' }} rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
                             @if($order->academic_year_id && $order->learningPath && $order->learningPath->thumbnail)
-                                <img src="{{ asset('storage/' . $order->learningPath->thumbnail) }}" alt="{{ $order->learningPath->name ?? 'مسار تعليمي' }}" 
+                                <img src="{{ storage_asset($order->learningPath->thumbnail) }}" alt="{{ $order->learningPath->name ?? 'مسار تعليمي' }}" 
                                      class="w-full h-full object-cover rounded-xl">
                             @elseif($order->course && $order->course->thumbnail)
-                                <img src="{{ asset('storage/' . $order->course->thumbnail) }}" alt="{{ $order->course->title ?? 'كورس' }}" 
+                                <img src="{{ storage_asset($order->course->thumbnail) }}" alt="{{ $order->course->title ?? 'كورس' }}" 
                                      class="w-full h-full object-cover rounded-xl">
                             @else
                                 <i class="fas {{ $order->academic_year_id ? 'fa-route' : 'fa-play-circle' }} text-white text-3xl"></i>
@@ -210,7 +210,7 @@
                                     $imageUrl = null;
                                     if ($imageExists) {
                                         // استخدام asset أولاً (الرابط الرمزي)
-                                        $imageUrl = asset('storage/' . $order->payment_proof);
+                                        $imageUrl = storage_asset($order->payment_proof);
                                         // إذا كان الرابط الرمزي لا يعمل، استخدم route أو url
                                         if (!file_exists(public_path('storage/' . $order->payment_proof))) {
                                             try {

@@ -231,7 +231,7 @@
                                         @endif
                                     </span>
                                     @if($payment->status === 'paid' && $payment->transfer_receipt_path)
-                                        <a href="{{ asset('storage/' . $payment->transfer_receipt_path) }}" target="_blank" class="block text-xs text-blue-600 hover:underline mt-1"><i class="fas fa-receipt mr-1"></i>الإيصال</a>
+                                        <a href="{{ storage_asset($payment->transfer_receipt_path) }}" target="_blank" class="block text-xs text-blue-600 hover:underline mt-1"><i class="fas fa-receipt mr-1"></i>الإيصال</a>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">

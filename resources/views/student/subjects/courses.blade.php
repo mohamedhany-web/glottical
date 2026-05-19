@@ -69,7 +69,7 @@
                 <div class="bg-white border border-gray-100 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col">
                     <div class="relative h-48 bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center">
                         @if(!empty($course->thumbnail))
-                            <img src="{{ asset('storage/' . $course->thumbnail) }}" alt="{{ $course->title }}" class="absolute inset-0 w-full h-full object-cover opacity-90">
+                            <img src="{{ storage_asset($course->thumbnail) }}" alt="{{ $course->title }}" class="absolute inset-0 w-full h-full object-cover opacity-90">
                         @else
                             <i class="fas fa-play-circle text-white text-6xl"></i>
                         @endif

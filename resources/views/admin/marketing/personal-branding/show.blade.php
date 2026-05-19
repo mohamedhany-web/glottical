@@ -48,7 +48,7 @@
                 @if($personal_branding->photo_path)
                     @php $photoPath = str_replace('\\', '/', trim($personal_branding->photo_path)); @endphp
                     <div class="w-28 h-28 rounded-2xl border border-slate-200 overflow-hidden bg-slate-100 relative">
-                        <img src="{{ asset('storage/' . $photoPath) }}" alt="صورة المدرب" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                        <img src="{{ storage_asset($photoPath) }}" alt="صورة المدرب" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
                         <div class="hidden absolute inset-0 w-full h-full bg-slate-200 flex items-center justify-center text-slate-500"><i class="fas fa-user text-4xl"></i></div>
                     </div>
                 @else

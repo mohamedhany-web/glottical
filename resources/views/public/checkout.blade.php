@@ -4,7 +4,7 @@
     $itemTitle = isset($course) ? ($course->title ?? 'الكورس') : (isset($learningPath) ? ($learningPath->name ?? 'الطلب') : 'الطلب');
     $thumbUrl = null;
     if (isset($course) && ($course->thumbnail ?? null)) {
-        $thumbUrl = asset('storage/' . str_replace('\\', '/', $course->thumbnail));
+        $thumbUrl = storage_asset(str_replace('\\', '/', $course->thumbnail));
     }
     $platformLogoUrl = $platformLogoUrl ?? \App\Services\AdminPanelBranding::logoPublicUrl();
     $appName = config('app.name', 'Muallimx');

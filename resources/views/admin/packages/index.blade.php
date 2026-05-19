@@ -172,7 +172,7 @@
                                     <td class="px-6 py-4">
                                         <div class="flex items-center gap-3">
                                             @if($package->thumbnail)
-                                            <img src="{{ asset('storage/' . $package->thumbnail) }}" alt="{{ $package->name }}" class="w-12 h-12 rounded-lg object-cover">
+                                            <img src="{{ storage_asset($package->thumbnail) }}" alt="{{ $package->name }}" class="w-12 h-12 rounded-lg object-cover">
                                             @else
                                             <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center">
                                                 <i class="fas fa-box text-white"></i>
@@ -448,7 +448,7 @@
                             @else from-red-500 to-red-700
                             @endif">
                             @if($course->thumbnail)
-                                <img src="{{ asset('storage/' . $course->thumbnail) }}" alt="{{ $course->title }}" class="w-full h-full object-cover">
+                                <img src="{{ storage_asset($course->thumbnail) }}" alt="{{ $course->title }}" class="w-full h-full object-cover">
                             @else
                                 <i class="fas fa-code text-white text-4xl"></i>
                             @endif

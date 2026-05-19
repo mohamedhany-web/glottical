@@ -113,7 +113,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($payment->status === 'paid' && $payment->transfer_receipt_path)
-                                <a href="{{ asset('storage/' . $payment->transfer_receipt_path) }}" target="_blank" class="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium"><i class="fas fa-receipt"></i> تحميل الإيصال</a>
+                                <a href="{{ storage_asset($payment->transfer_receipt_path) }}" target="_blank" class="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium"><i class="fas fa-receipt"></i> تحميل الإيصال</a>
                             @else
                                 <span class="text-gray-400 text-sm">—</span>
                             @endif

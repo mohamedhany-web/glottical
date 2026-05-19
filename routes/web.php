@@ -192,7 +192,7 @@ Route::get('/sitemap.xml', function () {
                 'priority' => '0.8',
             ];
             if ($course->thumbnail) {
-                $entry['image_loc'] = asset('storage/'.str_replace('\\', '/', $course->thumbnail));
+                $entry['image_loc'] = storage_asset(str_replace('\\', '/', $course->thumbnail));
                 $entry['image_title'] = $course->title ?? '';
                 $entry['image_caption'] = \Illuminate\Support\Str::limit(strip_tags($course->description ?? ''), 100);
             }
@@ -381,7 +381,7 @@ Route::get('/courses', function (\Illuminate\Http\Request $request) {
             'is_featured' => (bool) ($course->is_featured ?? false),
             'is_free' => (bool) ($course->is_free ?? false),
             'lectures_count' => (int) ($course->lectures_count ?? 0),
-            'thumbnail' => $course->thumbnail ? str_replace('\\', '/', $course->thumbnail) : null,
+            'thumbnail' => $course->thumbnail_url,
             'academic_subject_id' => $course->academic_subject_id ? (int) $course->academic_subject_id : null,
             'academic_subject' => $course->academicSubject ? [
                 'name' => $course->academicSubject->name ?? 'غير محدد',

@@ -110,9 +110,7 @@ class AppServiceProvider extends ServiceProvider
         }
         // حساب رابط اللوجو عند عرض الصفحة (مثل authBackgroundUrl) لضمان ظهور الصورة مع الطلب الحالي
         View::composer(['layouts.instructor-sidebar', 'layouts.student-sidebar', 'layouts.app', 'layouts.admin'], function ($view) use ($disk, $logoPath) {
-            $url = $disk->exists($logoPath)
-                ? storage_public_url($logoPath)
-                : asset('logo-removebg-preview.png');
+            $url = AdminPanelBranding::logoPublicUrl() ?: asset('logo-removebg-preview.png');
             $view->with('platformLogoUrl', $url);
         });
 
@@ -135,21 +133,24 @@ class AppServiceProvider extends ServiceProvider
                 return;
             }
 
-            if (! $this->app->environment(['local', 'development', 'staging'])) {
-                return;
-            }
-
             try {
                 $request = request();
                 if (! $request) {
                     return;
                 }
 
-                // نفس أصل الطلب الحالي (localhost/glottical/public مقابل 127.0.0.1:8000) — يصلح روابط /storage للصور
-                URL::forceRootUrl(rtrim($request->root(), '/'));
+                $root = rtrim($request->root(), '/');
+                URL::forceRootUrl($root);
+                config(['filesystems.disks.public.url' => $root.'/storage']);
             } catch (\Throwable $e) {
-                // لا نكسر التشغيل بسبب محاولة ضبط الأصل
             }
+        });
+
+        View::composer('*', function ($view): void {
+            if (app()->runningInConsole()) {
+                return;
+            }
+            $view->with('storageBaseUrl', storage_base_url());
         });
 
         // Observers للنماذج - مع تحسينات الأداء

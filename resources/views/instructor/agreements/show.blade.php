@@ -284,7 +284,7 @@
                                     <td class="px-6 py-4 text-xs text-slate-600 dark:text-slate-400">{{ $payment->created_at->format('Y-m-d') }}</td>
                                     <td class="px-6 py-4">
                                         @if($payment->status == 'paid' && $payment->transfer_receipt_path)
-                                            <a href="{{ asset('storage/' . $payment->transfer_receipt_path) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold">
+                                            <a href="{{ storage_asset($payment->transfer_receipt_path) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold">
                                                 <i class="fas fa-receipt"></i>
                                                 {{ __('instructor.download_receipt') }}
                                             </a>

@@ -148,7 +148,7 @@
                             @endif
                             @if($req->payment_proof)
                                 <div class="mb-3">
-                                    <a href="{{ asset('storage/' . $req->payment_proof) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 hover:text-sky-800">
+                                    <a href="{{ storage_asset($req->payment_proof) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 hover:text-sky-800">
                                         <i class="fas fa-file-invoice"></i>
                                         عرض إيصال الدفع
                                     </a>

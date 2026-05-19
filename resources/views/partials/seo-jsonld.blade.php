@@ -46,7 +46,7 @@ $_outputScripts = '<script type="application/ld+json">' . json_encode($_baseGrap
 // ── Course Page ───────────────────────────────────────────────────────────
 if ($_jldType === 'course' && isset($course)) {
     $_thumbnail = !empty($course->thumbnail)
-        ? asset('storage/' . str_replace('\\', '/', $course->thumbnail))
+        ? storage_asset(str_replace('\\', '/', $course->thumbnail))
         : $_logoUrl;
 
     $_courseData = [

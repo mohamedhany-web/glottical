@@ -310,7 +310,7 @@ class Question extends Model
         }
         
         // إذا كان ملف محلي
-        return asset('storage/' . $this->image_url);
+        return storage_asset($this->image_url);
     }
 
     /**

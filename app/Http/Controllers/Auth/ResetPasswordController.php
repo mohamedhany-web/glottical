@@ -19,7 +19,7 @@ class ResetPasswordController extends Controller
     {
         $email = $request->query('email', old('email'));
         $authBackgroundUrl = \Illuminate\Support\Facades\Storage::disk('public')->exists(\App\Providers\AppServiceProvider::AUTH_BACKGROUND_STORAGE_PATH)
-            ? asset('storage/' . \App\Providers\AppServiceProvider::AUTH_BACKGROUND_STORAGE_PATH)
+            ? storage_asset(\App\Providers\AppServiceProvider::AUTH_BACKGROUND_STORAGE_PATH)
             : asset('images/brainstorm-meeting.jpg');
         return view('auth.reset-password', [
             'token' => $token,

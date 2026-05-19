@@ -80,11 +80,11 @@
             @forelse($media as $item)
             <a href="{{ route('public.media.show', $item) }}" class="block bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all border border-gray-200 card-hover">
                 @if($item->type == 'image')
-                <img src="{{ asset('storage/' . $item->file_path) }}" alt="{{ $item->title }}" class="w-full h-48 object-cover" loading="lazy" decoding="async">
+                <img src="{{ storage_asset($item->file_path) }}" alt="{{ $item->title }}" class="w-full h-48 object-cover" loading="lazy" decoding="async">
                 @elseif($item->type == 'video')
                 <div class="w-full h-48 bg-gray-200 flex items-center justify-center relative">
                     @if($item->thumbnail_path)
-                    <img src="{{ asset('storage/' . $item->thumbnail_path) }}" alt="{{ $item->title }}" class="w-full h-full object-cover" loading="lazy" decoding="async">
+                    <img src="{{ storage_asset($item->thumbnail_path) }}" alt="{{ $item->title }}" class="w-full h-full object-cover" loading="lazy" decoding="async">
                     @endif
                     <div class="absolute inset-0 flex items-center justify-center">
                         <i class="fas fa-play-circle text-6xl text-white opacity-80"></i>

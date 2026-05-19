@@ -241,7 +241,7 @@
                                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">رفع صورة للكورس</label>
                                 @if($advancedCourse->thumbnail)
                                     <div class="mb-3">
-                                        <img src="{{ asset('storage/' . $advancedCourse->thumbnail) }}" alt="صورة الكورس الحالية"
+                                        <img src="{{ storage_asset($advancedCourse->thumbnail) }}" alt="صورة الكورس الحالية"
                                              class="w-full h-32 object-cover rounded-xl border border-slate-200 dark:border-slate-600">
                                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">الصورة الحالية</p>
                                     </div>

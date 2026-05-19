@@ -69,8 +69,8 @@
             @if($consultation->payment_proof)
             <div class="rounded-xl border border-gray-200 dark:border-gray-600 p-4 sm:p-5">
                 <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2"><i class="fas fa-receipt text-emerald-500"></i> إيصال الدفع المُرسل</h3>
-                <a href="{{ asset('storage/'.$consultation->payment_proof) }}" target="_blank" rel="noopener" class="block">
-                    <img src="{{ asset('storage/'.$consultation->payment_proof) }}" alt="إيصال الدفع" class="max-h-96 w-auto max-w-full rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm mx-auto">
+                <a href="{{ storage_asset($consultation->payment_proof) }}" target="_blank" rel="noopener" class="block">
+                    <img src="{{ storage_asset($consultation->payment_proof) }}" alt="إيصال الدفع" class="max-h-96 w-auto max-w-full rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm mx-auto">
                 </a>
                 <p class="text-xs text-gray-500 mt-2 text-center">اضغط على الصورة لفتحها بحجم كامل</p>
             </div>
