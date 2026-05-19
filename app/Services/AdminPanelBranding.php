@@ -72,12 +72,7 @@ class AdminPanelBranding
 
     private static function publicStorageUrl(string $path): string
     {
-        $req = request();
-        if ($req && $req->getSchemeAndHttpHost()) {
-            return $req->getSchemeAndHttpHost().'/storage/'.$path;
-        }
-
-        return rtrim((string) config('app.url'), '/').'/storage/'.$path;
+        return PublicStorageUrl::localWebUrl($path);
     }
 
     public static function removeLogo(): void

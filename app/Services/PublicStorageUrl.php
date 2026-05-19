@@ -20,6 +20,11 @@ class PublicStorageUrl
 
         $path = str_replace('\\', '/', ltrim($path, '/'));
 
+        // مسار كامل مخزّن بالخطأ في قاعدة البيانات
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return self::ensureHttpsInProduction($path);
+        }
+
         $disks = array_values(array_unique(array_filter([
             $preferredDisk,
             'public',
@@ -50,19 +55,21 @@ class PublicStorageUrl
             }
         }
 
-        // الملف قد يكون على السيرفر لكن فحص exists فشل (صلاحيات) — نُرجع مسار الويب المحلي
         return self::localWebUrl($path);
     }
 
+    /**
+     * رابط ويب لملف داخل storage/app/public — يحترم مجلد التطبيق الفرعي (مثل /glottical/public).
+     */
     public static function localWebUrl(string $path): string
     {
         $path = str_replace('\\', '/', ltrim($path, '/'));
-        $req = request();
 
-        if ($req && $req->getSchemeAndHttpHost()) {
-            $base = rtrim($req->getSchemeAndHttpHost(), '/');
-
-            return $base.'/storage/'.$path;
+        if (! app()->runningInConsole()) {
+            $request = request();
+            if ($request) {
+                return rtrim($request->root(), '/').'/storage/'.$path;
+            }
         }
 
         $appUrl = rtrim((string) config('app.url'), '/');

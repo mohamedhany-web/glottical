@@ -24,7 +24,9 @@
                          class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105 group-hover:brightness-110"
                          sizes="(max-width: 640px) 85vw, 400px"
                          loading="lazy"
-                         decoding="async">
+                         decoding="async"
+                         onerror="this.style.display='none';this.nextElementSibling?.classList.remove('hidden');">
+                    <div class="hidden absolute inset-0 flex items-center justify-center text-white/25 bg-[#152a4a]"><i class="fas fa-play-circle text-5xl"></i></div>
                 @else
                     <div class="absolute inset-0 flex items-center justify-center text-white/25"><i class="fas fa-play-circle text-5xl"></i></div>
                 @endif

@@ -145,19 +145,8 @@ class AppServiceProvider extends ServiceProvider
                     return;
                 }
 
-                $configured = rtrim((string) config('app.url'), '/');
-                $configuredHost = $configured !== '' ? (string) parse_url($configured, PHP_URL_HOST) : '';
-                $currentHost = (string) $request->getHost();
-
-                if ($configuredHost !== '' && $currentHost !== '' && strcasecmp($configuredHost, $currentHost) !== 0) {
-                    $scheme = $request->getScheme();
-                    $port = $request->getPort();
-                    $isDefaultPort = ($scheme === 'https' && (int) $port === 443)
-                        || ($scheme === 'http' && (int) $port === 80);
-                    $root = $scheme.'://'.$currentHost.($isDefaultPort ? '' : ':'.$port);
-
-                    URL::forceRootUrl($root);
-                }
+                // نفس أصل الطلب الحالي (localhost/glottical/public مقابل 127.0.0.1:8000) — يصلح روابط /storage للصور
+                URL::forceRootUrl(rtrim($request->root(), '/'));
             } catch (\Throwable $e) {
                 // لا نكسر التشغيل بسبب محاولة ضبط الأصل
             }
