@@ -51,24 +51,11 @@ class SiteServiceImageStorage
         $path = str_replace('\\', '/', ltrim($path, '/'));
         $disk = self::resolvedDisk();
 
-        if (! Storage::disk($disk)->exists($path)) {
-            if ($disk !== 'public' && Storage::disk('public')->exists($path)) {
-                return self::publicStorageUrl($path);
-            }
-
+        if (! PublicMediaStorage::exists($path)) {
             return null;
         }
 
-        if ($disk === 'public') {
-            return self::publicStorageUrl($path);
-        }
-
-        return Storage::disk($disk)->url($path);
-    }
-
-    private static function publicStorageUrl(string $path): string
-    {
-        return PublicStorageUrl::localWebUrl($path);
+        return PublicStorageUrl::fromPath($path, $disk);
     }
 
     /**

@@ -87,7 +87,11 @@ class AcademicYearController extends Controller
         $data['order'] = $data['order'] ?? 0;
 
         if ($request->hasFile('thumbnail')) {
-            $data['thumbnail'] = $request->file('thumbnail')->store('academic-years', 'public');
+            $data['thumbnail'] = \App\Services\PublicMediaStorage::store(
+                $request->file('thumbnail'),
+                'academic-years',
+                null
+            );
         }
 
         AcademicYear::create($data);
@@ -212,11 +216,11 @@ class AcademicYearController extends Controller
         $data['order'] = $data['order'] ?? 0;
 
         if ($request->hasFile('thumbnail')) {
-            // حذف الصورة القديمة إن وجدت
-            if ($academicYear->thumbnail) {
-                \Storage::disk('public')->delete($academicYear->thumbnail);
-            }
-            $data['thumbnail'] = $request->file('thumbnail')->store('academic-years', 'public');
+            $data['thumbnail'] = \App\Services\PublicMediaStorage::store(
+                $request->file('thumbnail'),
+                'academic-years',
+                $academicYear->thumbnail
+            );
         }
 
         $academicYear->update($data);

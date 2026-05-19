@@ -183,9 +183,12 @@ class PackageController extends Controller
             $validated['card_summary'] = trim($validated['card_summary']) ?: null;
         }
 
-        // رفع الصورة
         if ($request->hasFile('thumbnail')) {
-            $validated['thumbnail'] = $request->file('thumbnail')->store('packages', 'public');
+            $validated['thumbnail'] = \App\Services\PublicMediaStorage::store(
+                $request->file('thumbnail'),
+                'packages',
+                null
+            );
         }
 
         // إنشاء الباقة
@@ -261,13 +264,12 @@ class PackageController extends Controller
             $validated['card_summary'] = trim($validated['card_summary']) ?: null;
         }
 
-        // رفع الصورة
         if ($request->hasFile('thumbnail')) {
-            // حذف الصورة القديمة
-            if ($package->thumbnail) {
-                \Storage::disk('public')->delete($package->thumbnail);
-            }
-            $validated['thumbnail'] = $request->file('thumbnail')->store('packages', 'public');
+            $validated['thumbnail'] = \App\Services\PublicMediaStorage::store(
+                $request->file('thumbnail'),
+                'packages',
+                $package->thumbnail
+            );
         }
 
         // تحديث الباقة
@@ -291,9 +293,8 @@ class PackageController extends Controller
      */
     public function destroy(Package $package)
     {
-        // حذف الصورة
         if ($package->thumbnail) {
-            \Storage::disk('public')->delete($package->thumbnail);
+            \App\Services\PublicMediaStorage::delete($package->thumbnail);
         }
 
         $package->delete();

@@ -73,7 +73,7 @@ class AdminPanelBranding
 
     private static function publicStorageUrl(string $path): string
     {
-        return PublicStorageUrl::localWebUrl($path);
+        return PublicStorageUrl::fromPath($path, self::resolvedDisk()) ?? PublicStorageUrl::localWebUrl($path);
     }
 
     public static function removeLogo(): void

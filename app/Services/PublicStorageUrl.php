@@ -6,7 +6,7 @@ use App\Support\ApplicationUrl;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * روابط ملفات التخزين العام (/storage/...) — تعمل محلياً وعلى الاستضافة.
+ * روابط ملفات التخزين العام — محلي (/storage/...) أو Cloudflare R2.
  */
 class PublicStorageUrl
 {
@@ -25,13 +25,7 @@ class PublicStorageUrl
             return self::ensureHttpsInProduction($path);
         }
 
-        $disks = array_values(array_unique(array_filter([
-            $preferredDisk,
-            'public',
-            ...self::CLOUD_DISKS,
-        ])));
-
-        foreach ($disks as $disk) {
+        foreach (PublicMediaStorage::disksToProbe($preferredDisk) as $disk) {
             if (! in_array($disk, ['public', ...self::CLOUD_DISKS], true)) {
                 continue;
             }
@@ -45,12 +39,8 @@ class PublicStorageUrl
                     continue;
                 }
 
-                $storage = Storage::disk($disk);
-                if ($storage->exists($path)) {
-                    $cloudUrl = $storage->url($path);
-                    if (is_string($cloudUrl) && $cloudUrl !== '') {
-                        return self::ensureHttpsInProduction($cloudUrl);
-                    }
+                if (Storage::disk($disk)->exists($path)) {
+                    return self::cloudAssetUrl($disk, $path);
                 }
             } catch (\Throwable) {
                 continue;
@@ -58,6 +48,48 @@ class PublicStorageUrl
         }
 
         return self::localWebUrl($path);
+    }
+
+    /**
+     * رابط عام للملف على R2/S3 — أو بروكسي عبر /storage/ إن لم يُضبط رابط عام.
+     */
+    public static function cloudAssetUrl(string $disk, string $path): string
+    {
+        $path = str_replace('\\', '/', ltrim($path, '/'));
+        $publicBase = self::cloudPublicBaseUrl($disk);
+
+        if ($publicBase !== null) {
+            return self::ensureHttpsInProduction($publicBase.'/'.$path);
+        }
+
+        return self::localWebUrl($path);
+    }
+
+    /**
+     * قاعدة URL عامة للمتصفح (ليس endpoint الـ API).
+     */
+    public static function cloudPublicBaseUrl(string $disk): ?string
+    {
+        $candidates = [
+            env('R2_PUBLIC_URL'),
+            config("filesystems.disks.{$disk}.url"),
+        ];
+
+        foreach ($candidates as $base) {
+            if (! is_string($base) || trim($base) === '') {
+                continue;
+            }
+
+            $base = rtrim($base, '/');
+
+            if (str_contains($base, 'cloudflarestorage.com')) {
+                continue;
+            }
+
+            return $base;
+        }
+
+        return null;
     }
 
     public static function publicDiskHasFile(string $path): bool
@@ -77,7 +109,7 @@ class PublicStorageUrl
     }
 
     /**
-     * رابط ويب لملف داخل storage/app/public.
+     * رابط بروكسي عبر Laravel (/storage/...) — يقرأ من المحلي أو R2.
      */
     public static function localWebUrl(string $path): string
     {

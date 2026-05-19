@@ -110,12 +110,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | وسائط الموقع العامة (كورسات، باقات، مسارات، سلايدر، …)
+    |--------------------------------------------------------------------------
+    | public = storage/app/public + /storage/...
+    | r2     = Cloudflare R2 (AWS_* ويفضّل R2_PUBLIC_URL أو AWS_URL للرابط المباشر)
+    */
+    'public_media_disk' => env('PUBLIC_MEDIA_DISK', 'r2'),
+
+    'homepage_sliders_disk' => env('HOMEPAGE_SLIDERS_DISK', env('PUBLIC_MEDIA_DISK', 'public')),
+
+    /*
+    |--------------------------------------------------------------------------
     | شعار لوحة التحكم (Admin)
     |--------------------------------------------------------------------------
     | public = storage/app/public + رابط /storage (محلياً: نفّذ php artisan storage:link)
     | r2     = Cloudflare R2 (نفس مفاتيح AWS_* و AWS_URL في .env)
     */
-    'admin_branding_disk' => env('ADMIN_BRANDING_DISK', 'public'),
+    'admin_branding_disk' => env('ADMIN_BRANDING_DISK', env('PUBLIC_MEDIA_DISK', 'public')),
 
     /*
     |--------------------------------------------------------------------------
@@ -124,7 +135,7 @@ return [
     | public = storage/app/public + /storage/...
     | r2     = Cloudflare R2 (نفس AWS_* و AWS_URL و AWS_ENDPOINT)
     */
-    'site_services_disk' => env('SITE_SERVICES_DISK', 'public'),
+    'site_services_disk' => env('SITE_SERVICES_DISK', env('PUBLIC_MEDIA_DISK', 'public')),
 
     /*
     |--------------------------------------------------------------------------
@@ -132,7 +143,7 @@ return [
     |--------------------------------------------------------------------------
     | إن لم تُضبط SITE_TESTIMONIALS_DISK يُستخدم SITE_SERVICES_DISK ثم public.
     */
-    'site_testimonials_disk' => env('SITE_TESTIMONIALS_DISK') ?: env('SITE_SERVICES_DISK', 'public'),
+    'site_testimonials_disk' => env('SITE_TESTIMONIALS_DISK') ?: env('SITE_SERVICES_DISK', env('PUBLIC_MEDIA_DISK', 'public')),
 
     /*
     |--------------------------------------------------------------------------
@@ -141,7 +152,7 @@ return [
     | public = storage/app/public + /storage/... (php artisan storage:link)
     | r2     = Cloudflare R2 (نفس AWS_* و AWS_URL و AWS_ENDPOINT)
     */
-    'portfolio_disk' => env('PORTFOLIO_DISK', 'public'),
+    'portfolio_disk' => env('PORTFOLIO_DISK', env('PUBLIC_MEDIA_DISK', 'public')),
 
     /*
     |--------------------------------------------------------------------------
