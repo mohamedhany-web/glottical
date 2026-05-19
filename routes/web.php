@@ -11,77 +11,10 @@ use Illuminate\Support\Facades\Route;
 | يعمل عند عدم وجود symlink public/storage على الاستضافة
 |--------------------------------------------------------------------------
 */
-Route::get('/storage/{path}', function ($path) {
-    $path = rawurldecode($path);
-    $path = str_replace('..', '', $path);
-    $path = ltrim(str_replace('\\', '/', $path), '/');
-
-    if ($path === '') {
-        abort(404);
-    }
-
-    $mimeFromExtension = static function (string $filePath): string {
-        $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-        $mimeTypes = [
-            'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'gif' => 'image/gif',
-            'webp' => 'image/webp', 'svg' => 'image/svg+xml', 'pdf' => 'application/pdf',
-            'doc' => 'application/msword', 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        ];
-
-        return $mimeTypes[$extension] ?? 'application/octet-stream';
-    };
-
-    $headersFor = static function (string $mimeType, ?string $filename = null): array {
-        $headers = [
-            'Content-Type' => $mimeType,
-            'Cache-Control' => 'public, max-age=31536000, immutable',
-        ];
-        if ($mimeType === 'application/pdf' && $filename) {
-            $headers['Content-Disposition'] = 'inline; filename="'.basename($filename).'"';
-        }
-
-        return $headers;
-    };
-
-    $basePath = storage_path('app/public');
-    $filePath = $basePath.DIRECTORY_SEPARATOR.str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
-    $filePath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $filePath);
-
-    if (@file_exists($filePath) && @is_file($filePath)) {
-        $realPath = @realpath($filePath) ?: $filePath;
-        $allowedPath = @realpath($basePath) ?: $basePath;
-        $normalizedRealPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $realPath);
-        $normalizedAllowedPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $allowedPath);
-
-        if ($allowedPath !== '' && strpos($normalizedRealPath, $normalizedAllowedPath) === 0 && @is_readable($realPath)) {
-            $mimeType = @mime_content_type($realPath) ?: $mimeFromExtension($realPath);
-
-            return response()->file($realPath, $headersFor($mimeType, $realPath));
-        }
-    }
-
-    foreach (['r2', 's3'] as $cloudDisk) {
-        try {
-            $disk = \Illuminate\Support\Facades\Storage::disk($cloudDisk);
-            if ($disk->exists($path)) {
-                $mimeType = $mimeFromExtension($path);
-                $contents = $disk->get($path);
-
-                return response($contents, 200, $headersFor($mimeType, $path));
-            }
-        } catch (\Throwable $e) {
-            if (config('app.debug')) {
-                \Log::warning('Storage cloud read failed', ['disk' => $cloudDisk, 'path' => $path, 'error' => $e->getMessage()]);
-            }
-        }
-    }
-
-    if (config('app.debug')) {
-        \Log::warning('Storage file not found', ['requested_path' => $path]);
-    }
-
-    abort(404, 'File not found');
-})->where('path', '.*')->name('storage.file')->middleware('web');
+Route::get('/storage/{path}', [\App\Http\Controllers\StorageFileController::class, 'show'])
+    ->where('path', '.*')
+    ->name('storage.file')
+    ->middleware('web');
 
 /*
 |--------------------------------------------------------------------------

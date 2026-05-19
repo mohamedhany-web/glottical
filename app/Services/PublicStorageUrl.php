@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Support\ApplicationUrl;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -47,6 +48,18 @@ class PublicStorageUrl
             }
         }
 
+        if (PublicMediaStorage::resolvedDisk() !== 'public') {
+            foreach (self::CLOUD_DISKS as $cloudDisk) {
+                try {
+                    if (Storage::disk($cloudDisk)->exists($path)) {
+                        return self::cloudAssetUrl($cloudDisk, $path);
+                    }
+                } catch (\Throwable) {
+                    continue;
+                }
+            }
+        }
+
         return self::localWebUrl($path);
     }
 
@@ -62,7 +75,28 @@ class PublicStorageUrl
             return self::ensureHttpsInProduction($publicBase.'/'.$path);
         }
 
+        if (in_array($disk, self::CLOUD_DISKS, true)) {
+            $signed = self::cloudSignedUrl($disk, $path);
+            if ($signed !== null) {
+                return $signed;
+            }
+        }
+
         return self::localWebUrl($path);
+    }
+
+    /**
+     * رابط موقّع لـ R2/S3 (bucket خاص) — يعمل مباشرة من المتصفح دون /storage/ على الاستضافة.
+     */
+    public static function cloudSignedUrl(string $disk, string $path): ?string
+    {
+        try {
+            return Storage::disk($disk)->temporaryUrl($path, now()->addDays(7));
+        } catch (\Throwable $e) {
+            Log::debug('cloudSignedUrl failed', ['disk' => $disk, 'path' => $path, 'error' => $e->getMessage()]);
+
+            return null;
+        }
     }
 
     /**
