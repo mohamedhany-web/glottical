@@ -7,6 +7,7 @@ use App\Models\AcademicSubject;
 use App\Models\AdvancedCourse;
 use App\Models\CourseCategory;
 use App\Models\User;
+use App\Services\CourseThumbnailStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -165,7 +166,9 @@ class AdvancedCourseController extends Controller
             'skills' => 'nullable|array',
             'skills.*' => 'nullable|string|max:100',
             'language' => 'nullable|string|max:10',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg|max:'.config('upload_limits.max_upload_kb'),
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:'.config('upload_limits.max_upload_kb'),
+            'thumbnail_link' => 'nullable|url|max:500',
+            'remove_thumbnail' => 'boolean',
             'starts_at' => 'nullable|date',
             'ends_at' => 'nullable|date|after_or_equal:starts_at',
             'is_active' => 'boolean',
@@ -185,7 +188,8 @@ class AdvancedCourseController extends Controller
             'price_after_discount.numeric' => 'سعر بعد الخصم يجب أن يكون رقماً',
             'price_after_discount.min' => 'سعر بعد الخصم لا يمكن أن يكون سالباً',
             'thumbnail.image' => 'يجب أن تكون صورة صحيحة',
-            'thumbnail.mimes' => 'يجب أن تكون الصورة بصيغة jpeg, png أو jpg',
+            'thumbnail.mimes' => 'يجب أن تكون الصورة بصيغة jpeg, png, jpg أو webp',
+            'thumbnail_link.url' => 'رابط الصورة غير صالح',
             'thumbnail.max' => 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت',
             'ends_at.after_or_equal' => 'تاريخ النهاية يجب أن يكون بعد أو يساوي تاريخ البداية',
         ]);
@@ -250,9 +254,7 @@ class AdvancedCourseController extends Controller
             ? array_values(array_filter($request->input('skills', [])))
             : null;
 
-        if ($request->hasFile('thumbnail')) {
-            $data['thumbnail'] = $request->file('thumbnail')->store('courses', 'public');
-        }
+        $data['thumbnail'] = CourseThumbnailStorage::resolveFromRequest($request);
 
         try {
             AdvancedCourse::create($data);
@@ -368,7 +370,9 @@ class AdvancedCourseController extends Controller
             'skills' => 'nullable|array',
             'skills.*' => 'nullable|string|max:100',
             'language' => 'nullable|string|max:10',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg|max:'.config('upload_limits.max_upload_kb'),
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:'.config('upload_limits.max_upload_kb'),
+            'thumbnail_link' => 'nullable|url|max:500',
+            'remove_thumbnail' => 'boolean',
             'starts_at' => 'nullable|date',
             'ends_at' => 'nullable|date|after_or_equal:starts_at',
             'is_active' => 'boolean',
@@ -439,8 +443,8 @@ class AdvancedCourseController extends Controller
             $data['category'] = null;
         }
 
-        if ($request->hasFile('thumbnail')) {
-            $data['thumbnail'] = $request->file('thumbnail')->store('courses', 'public');
+        if ($request->hasFile('thumbnail') || $request->filled('thumbnail_link') || $request->boolean('remove_thumbnail')) {
+            $data['thumbnail'] = CourseThumbnailStorage::resolveFromRequest($request, $advancedCourse->thumbnail);
         }
 
         $advancedCourse->update($data);

@@ -238,17 +238,36 @@
                                 </select>
                             </div>
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">رفع صورة للكورس</label>
-                                @if($advancedCourse->thumbnail)
-                                    <div class="mb-3">
-                                        <img src="{{ storage_asset($advancedCourse->thumbnail) }}" alt="صورة الكورس الحالية"
+                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">صورة غلاف الكورس</label>
+                                @if($advancedCourse->thumbnail_url)
+                                    <div class="mb-3 space-y-2">
+                                        <img src="{{ $advancedCourse->thumbnail_url }}" alt="صورة الكورس الحالية"
                                              class="w-full h-32 object-cover rounded-xl border border-slate-200 dark:border-slate-600">
-                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">الصورة الحالية</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">رابط العرض على الموقع (يُولَّد تلقائياً):</p>
+                                        <input type="text" readonly value="{{ $advancedCourse->thumbnail_url }}" dir="ltr"
+                                               class="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs text-slate-700 dark:text-slate-300">
+                                        @if(!\App\Services\CourseThumbnailStorage::isExternalUrl($advancedCourse->thumbnail))
+                                            <p class="text-xs text-slate-400">المسار المحفوظ: {{ $advancedCourse->thumbnail }}</p>
+                                        @endif
                                     </div>
                                 @endif
-                                <input type="file" name="thumbnail" accept="image/*"
+                                <input type="file" name="thumbnail" accept="image/jpeg,image/png,image/jpg,image/webp"
                                        class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
-                                <p class="text-xs text-slate-500 dark:text-slate-400">PNG أو JPG بحد أقصى 40 ميجابايت.</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">ارفع ملفاً جديداً لاستبدال الصورة الحالية.</p>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">أو رابط صورة خارجي</label>
+                                    <input type="url" name="thumbnail_link" value="{{ old('thumbnail_link', \App\Services\CourseThumbnailStorage::isExternalUrl($advancedCourse->thumbnail) ? $advancedCourse->thumbnail : '') }}" dir="ltr" placeholder="https://..."
+                                           class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2 text-sm text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
+                                    @error('thumbnail_link') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                @if($advancedCourse->thumbnail)
+                                    <label class="inline-flex items-center gap-2 text-sm text-rose-700 cursor-pointer">
+                                        <input type="hidden" name="remove_thumbnail" value="0">
+                                        <input type="checkbox" name="remove_thumbnail" value="1" class="rounded border-slate-300 text-rose-600">
+                                        حذف الصورة الحالية
+                                    </label>
+                                @endif
+                                @error('thumbnail') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                             </div>
                         </div>
                     </div>
