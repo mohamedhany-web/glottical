@@ -8,8 +8,7 @@
     $featuredList = ($featuredCourses ?? collect())->take(24);
     $courseCatalogForJs = [];
     foreach ($featuredList as $course) {
-        $thumbPath = $course->thumbnail ? str_replace('\\', '/', $course->thumbnail) : null;
-        $thumbUrl = $thumbPath ? asset('storage/'.$thumbPath) : '';
+        $thumbUrl = $course->thumbnail_url ?? '';
         $instName = $course->instructor->name ?? '';
         $catName = optional($course->courseCategory)->name;
         $effective = $course->is_free ? 0.0 : (float) ($course->price_after_discount ?? $course->price ?? 0);
@@ -254,8 +253,7 @@
             <div class="hidden lg:flex flex-col gap-3 absolute bottom-28 {{ $isRtl ? 'left-6' : 'right-6' }} z-20 w-[min(100%,280px)] pointer-events-auto">
                 @foreach($featuredList->take(3) as $fc)
                     @php
-                        $fcp = $fc->thumbnail ? str_replace('\\', '/', $fc->thumbnail) : null;
-                        $fcu = $fcp ? asset('storage/'.$fcp) : null;
+                        $fcu = $fc->thumbnail_url;
                     @endphp
                     <a href="{{ route('public.course.show', $fc->id) }}" class="flex items-center gap-3 rounded-xl glass-panel p-3 text-white hover:ring-1 hover:ring-acad-yellow/60 transition shadow-2xl border border-white/10">
                         <div class="w-14 h-14 rounded-lg overflow-hidden bg-white/10 shrink-0 ring-1 ring-white/15">

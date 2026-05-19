@@ -89,7 +89,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer(['auth.login', 'auth.register', 'auth.forgot-password'], function ($view) {
             $path = self::AUTH_BACKGROUND_STORAGE_PATH;
             if (Storage::disk('public')->exists($path)) {
-                $view->with('authBackgroundUrl', asset('storage/'.$path));
+                $view->with('authBackgroundUrl', storage_public_url($path));
             } else {
                 $view->with('authBackgroundUrl', asset('images/brainstorm-meeting.jpg'));
             }
@@ -111,7 +111,7 @@ class AppServiceProvider extends ServiceProvider
         // حساب رابط اللوجو عند عرض الصفحة (مثل authBackgroundUrl) لضمان ظهور الصورة مع الطلب الحالي
         View::composer(['layouts.instructor-sidebar', 'layouts.student-sidebar', 'layouts.app', 'layouts.admin'], function ($view) use ($disk, $logoPath) {
             $url = $disk->exists($logoPath)
-                ? asset('storage/'.$logoPath)
+                ? storage_public_url($logoPath)
                 : asset('logo-removebg-preview.png');
             $view->with('platformLogoUrl', $url);
         });

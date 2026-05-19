@@ -51,11 +51,11 @@ class HomepageSliderResolver
         $heroSpotlight = [];
 
         $courseHeroBg = function ($course) {
-            if (! $course || ! $course->thumbnail) {
+            if (! $course) {
                 return '';
             }
 
-            return asset('storage/'.str_replace('\\', '/', $course->thumbnail));
+            return $course->thumbnail_url ?? storage_public_url($course->thumbnail) ?? '';
         };
 
         if ($featuredList->isNotEmpty()) {

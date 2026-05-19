@@ -203,6 +203,12 @@ class AdvancedCourse extends Model
         return $this->hasMany(Order::class);
     }
 
+    /** رابط صورة الغلاف للواجهة العامة */
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        return storage_public_url($this->thumbnail);
+    }
+
     /**
      * علاقة مع الطلاب المسجلين
      */

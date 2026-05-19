@@ -1,6 +1,5 @@
 @php
-    $thumbPath = $course->thumbnail ? str_replace('\\', '/', $course->thumbnail) : null;
-    $thumbUrl = $thumbPath ? asset('storage/'.$thumbPath) : null;
+    $thumbUrl = $course->thumbnail_url;
     $instName = $course->instructor->name ?? '';
     $rating = $course->rating !== null ? number_format((float) $course->rating, 1) : null;
     $dur = (int) ($course->duration_hours ?? 0);

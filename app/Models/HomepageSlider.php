@@ -124,12 +124,12 @@ class HomepageSlider extends Model
             return $custom;
         }
 
-        if ($this->source_type === self::SOURCE_COURSE && $this->course?->thumbnail) {
-            return asset('storage/'.str_replace('\\', '/', $this->course->thumbnail));
+        if ($this->source_type === self::SOURCE_COURSE && $this->course) {
+            return $this->course->thumbnail_url ?? storage_public_url($this->course->thumbnail) ?? '';
         }
 
         if ($this->source_type === self::SOURCE_PATH && $this->academicYear?->thumbnail) {
-            return asset('storage/'.str_replace('\\', '/', $this->academicYear->thumbnail));
+            return storage_public_url($this->academicYear->thumbnail) ?? '';
         }
 
         return '';

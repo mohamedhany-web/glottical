@@ -68,12 +68,7 @@ class SiteTestimonialImageStorage
 
     private static function publicStorageUrl(string $path): string
     {
-        $req = request();
-        if ($req && $req->getSchemeAndHttpHost()) {
-            return $req->getSchemeAndHttpHost().'/storage/'.$path;
-        }
-
-        return rtrim((string) config('app.url'), '/').'/storage/'.$path;
+        return \App\Services\PublicStorageUrl::fromPath($path, 'public') ?? \App\Services\PublicStorageUrl::localWebUrl($path);
     }
 
     public static function store(UploadedFile $file, ?string $oldPath): string

@@ -60,6 +60,6 @@ class ContributorProfile extends Model
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             return $path;
         }
-        return asset('storage/' . $path);
+        return storage_public_url($path);
     }
 }

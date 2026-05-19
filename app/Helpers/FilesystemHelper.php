@@ -16,3 +16,13 @@ if (!function_exists('community_disk')) {
         return config('filesystems.community_disk', 'local');
     }
 }
+
+if (! function_exists('storage_public_url')) {
+    /**
+     * رابط عرض ملف من storage/app/public أو R2 عبر /storage/...
+     */
+    function storage_public_url(?string $path, ?string $preferredDisk = null): ?string
+    {
+        return \App\Services\PublicStorageUrl::fromPath($path, $preferredDisk);
+    }
+}

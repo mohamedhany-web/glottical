@@ -49,7 +49,7 @@
                     <div class="slider-row flex flex-wrap items-center gap-3 p-4 rounded-2xl border border-slate-200 bg-white hover:border-amber-200 transition cursor-grab active:cursor-grabbing" data-id="{{ $row->id }}">
                         <span class="text-slate-400 drag-handle px-1"><i class="fas fa-grip-vertical"></i></span>
                         <div class="h-14 w-24 shrink-0 rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
-                            @php $thumb = $row->publicImageUrl() ?: ($row->course && $row->course->thumbnail ? asset('storage/'.str_replace('\\','/',$row->course->thumbnail)) : null); @endphp
+                            @php $thumb = $row->publicImageUrl() ?: ($row->course->thumbnail_url ?? null); @endphp
                             @if($thumb)
                                 <img src="{{ $thumb }}" alt="" class="h-full w-full object-cover">
                             @else
