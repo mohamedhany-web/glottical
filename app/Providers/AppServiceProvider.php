@@ -128,24 +128,6 @@ class AppServiceProvider extends ServiceProvider
          | فقد لا يُعاد إرسال كوكي الجلسة بشكل صحيح في بعض الحالات ويظهر 419 عند إرسال النماذج.
          | نُجبر Laravel على استخدام نفس أصل الطلب الحالي في بيئة التطوير فقط.
          */
-        $this->app->booted(function (): void {
-            if ($this->app->runningInConsole()) {
-                return;
-            }
-
-            try {
-                $request = request();
-                if (! $request) {
-                    return;
-                }
-
-                $root = rtrim($request->root(), '/');
-                URL::forceRootUrl($root);
-                config(['filesystems.disks.public.url' => $root.'/storage']);
-            } catch (\Throwable $e) {
-            }
-        });
-
         View::composer('*', function ($view): void {
             if (app()->runningInConsole()) {
                 return;

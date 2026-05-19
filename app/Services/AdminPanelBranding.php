@@ -48,26 +48,27 @@ class AdminPanelBranding
     public static function logoPublicUrl(): ?string
     {
         $path = Setting::getValue(self::SETTING_KEY);
-        if (! is_string($path) || $path === '') {
-            return null;
-        }
+        if (is_string($path) && $path !== '') {
+            $path = str_replace('\\', '/', ltrim($path, '/'));
+            $disk = self::resolvedDisk();
 
-        $path = str_replace('\\', '/', ltrim($path, '/'));
-        $disk = self::resolvedDisk();
+            if (Storage::disk($disk)->exists($path)) {
+                return $disk === 'public'
+                    ? self::publicStorageUrl($path)
+                    : Storage::disk($disk)->url($path);
+            }
 
-        if (! Storage::disk($disk)->exists($path)) {
             if ($disk !== 'public' && Storage::disk('public')->exists($path)) {
                 return self::publicStorageUrl($path);
             }
-
-            return null;
         }
 
-        if ($disk === 'public') {
-            return self::publicStorageUrl($path);
+        $defaultPath = \App\Providers\AppServiceProvider::SITE_LOGO_STORAGE_PATH;
+        if (PublicStorageUrl::publicDiskHasFile($defaultPath)) {
+            return self::publicStorageUrl($defaultPath);
         }
 
-        return Storage::disk($disk)->url($path);
+        return asset('logo-removebg-preview.png');
     }
 
     private static function publicStorageUrl(string $path): string

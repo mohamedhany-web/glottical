@@ -63,6 +63,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/live-recordings/register',
         ]);
         
+        // جذر الروابط (مجلد فرعي على XAMPP) — قبل أي middleware يولّد روابط
+        $middleware->prependToGroup('web', \App\Http\Middleware\SetApplicationRootUrl::class);
+
         // تحديد لغة الموقع من ?lang= أو الجلسة (لجميع الصفحات)
         $middleware->appendToGroup('web', \App\Http\Middleware\SetLocale::class);
         

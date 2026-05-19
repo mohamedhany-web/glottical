@@ -43,13 +43,6 @@ if (! function_exists('storage_base_url')) {
      */
     function storage_base_url(): string
     {
-        if (! app()->runningInConsole()) {
-            $request = request();
-            if ($request) {
-                return rtrim($request->root(), '/').'/storage';
-            }
-        }
-
-        return rtrim((string) config('app.url'), '/').'/storage';
+        return rtrim(\App\Support\ApplicationUrl::resolveRootUrl(), '/').'/storage';
     }
 }

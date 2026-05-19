@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\ApplicationUrl;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -82,14 +83,7 @@ class PublicStorageUrl
     {
         $path = str_replace('\\', '/', ltrim($path, '/'));
 
-        if (! app()->runningInConsole()) {
-            $request = request();
-            if ($request) {
-                return rtrim($request->root(), '/').'/storage/'.$path;
-            }
-        }
-
-        return rtrim((string) config('app.url'), '/').'/storage/'.$path;
+        return rtrim(ApplicationUrl::resolveRootUrl(), '/').'/storage/'.$path;
     }
 
     private static function ensureHttpsInProduction(string $url): string

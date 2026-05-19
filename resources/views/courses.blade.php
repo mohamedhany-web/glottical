@@ -228,7 +228,8 @@
                                sizes="(max-width: 640px) 85vw, 400px"
                                decoding="async"
                                loading="lazy"
-                               class="absolute inset-0 h-full w-full object-cover">
+                               class="absolute inset-0 h-full w-full object-cover"
+                               @@error="$el.style.display='none'">
                         </template>
                         <div class="absolute inset-0 bg-gradient-to-t from-[#050b18] via-transparent to-transparent opacity-90"></div>
                         <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition duration-300 bg-black/50">
