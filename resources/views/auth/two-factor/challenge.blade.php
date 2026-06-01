@@ -1,211 +1,157 @@
-@php $isRtl = app()->getLocale() === 'ar'; @endphp
+@php
+    $isRtl = app()->getLocale() === 'ar';
+    $langSwitch = fn (string $lang) => request()->fullUrlWithQuery(array_merge(request()->query(), ['lang' => $lang]));
+@endphp
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>التحقق بخطوتين — {{ config('app.name', 'Muallimx') }}</title>
-    <meta name="theme-color" content="#283593">
+    <title>{{ __('auth.two_factor') }} — {{ config('app.name') }}</title>
+    <meta name="theme-color" content="#0d1528">
     @include('partials.favicon-links')
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
     tailwind.config = {
         theme: {
             extend: {
                 colors: {
-                    navy: { 950:'#0F172A' },
-                    brand: { 400:'#22d3ee', 500:'#06b6d4', 600:'#0891b2' },
-                    mx: {
-                        navy: '#283593',
-                        indigo: '#1F2A7A',
-                        orange: '#FB5607',
-                        rose: '#FFE5F7'
-                    }
-                }
-            }
-        }
-    }
+                    acad: {
+                        blue: '#0B3D91',
+                        blueDark: '#072a66',
+                        cyan: '#00A3C4',
+                        yellow: '#F5B800',
+                        ink: '#1a2d4d',
+                        navy: '#0d1528',
+                        navyMid: '#1a2d4d',
+                    },
+                },
+                fontFamily: { sans: ['Cairo','Tajawal','IBM Plex Sans Arabic','system-ui','sans-serif'] },
+            },
+        },
+    };
     </script>
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
-
     <style>
-        *{font-family:'Cairo','IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif;margin:0;padding:0;box-sizing:border-box}
-        h1,h2,h3,h4,.font-heading{font-family:'Cairo','Tajawal','IBM Plex Sans Arabic',sans-serif}
-        html,body{height:100%;overflow:hidden}
-        @media(max-width:1023px){html,body{overflow:auto;height:auto}}
-
-        @keyframes float-slow{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-18px) rotate(2deg)}}
-        @keyframes float-delayed{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px) rotate(-1.5deg)}}
-        .float-slow{animation:float-slow 8s ease-in-out infinite}
-        .float-delayed{animation:float-delayed 10s ease-in-out infinite 2s}
-
-        .text-gradient{background:linear-gradient(135deg,#FB5607 0%,#283593 70%,#1F2A7A 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-
-        .input-field{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:14px 16px;font-size:15px;font-weight:500;color:#0f172a;transition:all .25s ease;width:100%}
-        .input-field:hover{border-color:#cbd5e1;background:#f1f5f9}
-        .input-field:focus{outline:none;border-color:#283593;box-shadow:0 0 0 3px rgba(40,53,147,.12);background:#fff}
-        .input-field::placeholder{color:#94a3b8}
-        .input-field.has-error{border-color:#ef4444}
-        .input-field.has-error:focus{box-shadow:0 0 0 3px rgba(239,68,68,.12)}
-
-        .input-2fa{font-size:1.35rem;font-weight:800;letter-spacing:0.35em;text-align:center;padding-top:1rem;padding-bottom:1rem}
-
-        .btn-login{position:relative;overflow:hidden;background:#FB5607;color:#fff;border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;transition:all .3s ease;width:100%}
-        .btn-login:hover{transform:translateY(-1px);box-shadow:0 12px 32px -8px rgba(251,86,7,.4)}
-        .btn-login::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);transition:left .5s}
-        .btn-login:hover::before{left:100%}
+        *{font-family:'Cairo','IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif;box-sizing:border-box}
+        html{min-height:100%;scroll-behavior:smooth}
+        body{margin:0;min-height:100vh}
+        .auth-bg{background:linear-gradient(165deg,#0d1528 0%,#121f38 42%,#1a2d4d 100%)}
+        .auth-dots{background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.055) 1px,transparent 0);background-size:24px 24px}
+        .auth-glow{background:radial-gradient(ellipse 70% 50% at 20% 0%,rgba(0,163,196,.22),transparent 55%),radial-gradient(ellipse 50% 40% at 95% 85%,rgba(245,184,0,.14),transparent 50%)}
+        .input-auth{width:100%;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:1rem 1rem;font-size:1.35rem;font-weight:800;letter-spacing:.35em;text-align:center;color:#0f172a;transition:border-color .2s,box-shadow .2s}
+        .input-auth:hover{border-color:#cbd5e1;background:#f1f5f9}
+        .input-auth:focus{outline:none;border-color:#0B3D91;box-shadow:0 0 0 3px rgba(11,61,145,.12);background:#fff}
+        .input-auth::placeholder{color:#94a3b8;letter-spacing:.2em;font-weight:600}
+        .input-auth.has-error{border-color:#ef4444}
+        .input-auth.has-error:focus{box-shadow:0 0 0 3px rgba(239,68,68,.12)}
     </style>
 </head>
-<body class="bg-white">
-    <div class="flex min-h-screen lg:h-screen">
+<body class="auth-bg text-white antialiased">
+    <div class="fixed inset-0 auth-dots pointer-events-none opacity-90"></div>
+    <div class="fixed inset-0 auth-glow pointer-events-none"></div>
 
-        {{-- لوحة بصرية — نفس خلفية وتخطيط صفحة تسجيل الدخول --}}
-        <div class="hidden lg:flex lg:w-[55%] relative items-center justify-center overflow-hidden" style="background:radial-gradient(circle at 12% 80%,rgba(255,229,247,.45),transparent 32%),radial-gradient(circle at 88% 20%,rgba(40,53,147,.12),transparent 34%),linear-gradient(180deg,#f4f6ff 0%,#fbfbff 60%,#ffffff 100%)">
-            <div class="absolute inset-0 opacity-40" style="background-image:radial-gradient(circle at 1px 1px,rgba(40,53,147,.08) 1px,transparent 0);background-size:30px 30px"></div>
-            <div class="absolute top-[-15%] {{ $isRtl ? 'left-[-8%]' : 'right-[-8%]' }} w-[500px] h-[500px] rounded-full bg-[#283593]/10 blur-[100px] float-slow"></div>
-            <div class="absolute bottom-[-10%] {{ $isRtl ? 'right-[-5%]' : 'left-[-5%]' }} w-[400px] h-[400px] rounded-full bg-[#FB5607]/10 blur-[80px] float-delayed"></div>
-
-            <div class="relative z-10 max-w-md px-10 text-center">
-                <a href="{{ route('home') }}" class="inline-flex items-center gap-3 mb-10 group">
-                    <div class="w-12 h-12 rounded-xl bg-[#FB5607] flex items-center justify-center shadow-lg shadow-orange-500/25 group-hover:shadow-orange-500/40 transition-shadow">
-                        <span class="text-white font-black text-xl">M</span>
-                    </div>
-                    <span class="text-mx-indigo font-extrabold text-2xl">Muallimx</span>
-                </a>
-
-                <h1 class="font-heading text-3xl xl:text-4xl font-black text-mx-indigo leading-tight mb-5">
-                    تحقق من هويتك
-                    <br><span class="text-gradient">بخطوة أمان سريعة</span>
-                </h1>
-                <p class="text-slate-600 text-base leading-relaxed mb-10">
-                    هذه الخطوة تحمي حسابك وتتماشى مع نفس تجربة المنصة التي تراها في الصفحة الرئيسية وتسجيل الدخول.
-                </p>
-
-                <div class="space-y-4">
-                    <div class="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
-                        <span class="w-10 h-10 rounded-xl bg-[#FFE5F7] flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-envelope text-[#FB5607]"></i>
-                        </span>
-                        <div class="text-{{ $isRtl ? 'right' : 'left' }}">
-                            <p class="text-mx-indigo font-bold text-sm">رمز إلى بريدك</p>
-                            <p class="text-slate-500 text-xs">صالح لدقائق — راجع البريد المزعج إن لزم</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
-                        <span class="w-10 h-10 rounded-xl bg-[#EFF2FF] flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-shield-halved text-[#283593]"></i>
-                        </span>
-                        <div class="text-{{ $isRtl ? 'right' : 'left' }}">
-                            <p class="text-mx-indigo font-bold text-sm">حماية الجلسة</p>
-                            <p class="text-slate-500 text-xs">لا يُفتح لوحة التحكم دون الرمز الصحيح</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
-                        <span class="w-10 h-10 rounded-xl bg-[#FFF7ED] flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-fingerprint text-[#FB5607]"></i>
-                        </span>
-                        <div class="text-{{ $isRtl ? 'right' : 'left' }}">
-                            <p class="text-mx-indigo font-bold text-sm">هوية Muallimx</p>
-                            <p class="text-slate-500 text-xs">ألوان وتجربة موحّدة مع بقية الموقع</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-10 sm:py-14">
+        <div class="absolute top-4 {{ $isRtl ? 'left-4' : 'right-4' }} flex items-center gap-1 rounded-xl border border-white/15 bg-white/5 p-1 text-xs font-bold backdrop-blur-md">
+            <a href="{{ $langSwitch('ar') }}" class="px-3 py-1.5 rounded-lg {{ $isRtl ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white' }}" hreflang="ar">عربي</a>
+            <a href="{{ $langSwitch('en') }}" class="px-3 py-1.5 rounded-lg {{ ! $isRtl ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white' }}" hreflang="en">EN</a>
         </div>
 
-        {{-- نموذج التحقق --}}
-        <div class="flex-1 flex flex-col items-center justify-center px-5 sm:px-8 py-10 lg:py-0 bg-white relative overflow-y-auto">
-            <div class="lg:hidden w-full max-w-md mb-8">
-                <a href="{{ route('home') }}" class="inline-flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg">
-                        <span class="text-white font-black text-lg">M</span>
+        <div class="w-full max-w-[440px]">
+            <div class="rounded-[1.65rem] overflow-hidden border border-white/15 shadow-[0_24px_80px_-20px_rgba(0,0,0,.55)] bg-white/[0.97] backdrop-blur-xl">
+                <div class="h-1 w-full bg-gradient-to-l from-acad-yellow via-acad-cyan to-acad-yellow"></div>
+                <div class="px-6 sm:px-8 pt-8 pb-8 text-slate-800">
+                    <div class="flex justify-center">
+                        @include('partials.auth-brand-link', ['size' => 'sm', 'fallback' => 'gradient', 'mb' => 'mb-6'])
                     </div>
-                    <span class="text-navy-950 font-extrabold text-xl" style="font-family:Tajawal,sans-serif">Muallimx</span>
-                </a>
-            </div>
 
-            <div class="w-full max-w-md">
-                <div class="text-center lg:text-{{ $isRtl ? 'right' : 'left' }} mb-8">
-                    <div class="inline-flex lg:hidden items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#283593] to-[#1F2A7A] text-white shadow-lg shadow-indigo-500/25 mb-4">
-                        <i class="fas fa-shield-halved text-xl"></i>
+                    <div class="flex justify-center mb-4">
+                        <span class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-acad-blue to-acad-navyMid text-white shadow-lg shadow-acad-blue/25">
+                            <i class="fas fa-shield-halved text-xl"></i>
+                        </span>
                     </div>
-                    <h2 class="font-heading text-2xl sm:text-3xl font-black text-mx-indigo mb-2">
-                        التحقق بخطوتين
-                    </h2>
-                    @if(!empty($useEmail))
-                        <p class="text-slate-500 text-sm sm:text-base leading-relaxed">
-                            أرسلنا رمزاً مكوّناً من <strong class="text-slate-700">6 أرقام</strong> إلى بريدك. أدخل الرمز للمتابعة.
+
+                    <h1 class="text-center font-black text-2xl sm:text-[1.65rem] text-acad-ink leading-tight mb-2">
+                        {{ __('auth.two_factor_challenge_title') }}
+                    </h1>
+                    <p class="text-center text-slate-500 text-sm mb-8 leading-relaxed">
+                        @if(!empty($useEmail))
+                            {!! __('auth.two_factor_challenge_desc_email') !!}
+                        @else
+                            {{ __('auth.two_factor_challenge_desc_app') }}
+                        @endif
+                    </p>
+
+                    @if($errors->has('code'))
+                        <div class="flex items-center gap-3 p-4 rounded-xl bg-rose-50 border border-rose-200/80 text-rose-800 text-sm font-semibold mb-5">
+                            <i class="fas fa-circle-exclamation text-rose-500 shrink-0"></i>
+                            {{ $errors->first('code') }}
+                        </div>
+                    @endif
+
+                    <form action="{{ route('two-factor.verify') }}" method="POST" class="space-y-5">
+                        @csrf
+                        <div>
+                            <label for="code" class="block text-sm font-bold text-acad-ink mb-2 text-center sm:text-{{ $isRtl ? 'right' : 'left' }}">
+                                {{ __('auth.two_factor_code_label') }}
+                            </label>
+                            <div class="relative">
+                                <span class="absolute {{ $isRtl ? 'right-4' : 'left-4' }} top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                    <i class="fas fa-key text-sm"></i>
+                                </span>
+                                <input type="text"
+                                       name="code"
+                                       id="code"
+                                       inputmode="numeric"
+                                       pattern="[0-9]*"
+                                       maxlength="10"
+                                       autocomplete="one-time-code"
+                                       autofocus
+                                       required
+                                       class="input-auth {{ $isRtl ? 'pr-11' : 'pl-11' }} @error('code') has-error @enderror"
+                                       placeholder="••••••"
+                                       dir="ltr">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full flex items-center justify-center gap-2 rounded-xl bg-acad-yellow text-acad-blue font-black py-3.5 text-base shadow-lg shadow-acad-blue/10 hover:brightness-105 active:scale-[0.99] transition-all">
+                            <span>{{ __('auth.two_factor_confirm') }}</span>
+                            <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }} text-sm"></i>
+                        </button>
+                    </form>
+
+                    @if(empty($useEmail))
+                        <p class="text-xs text-slate-500 mt-6 text-center leading-relaxed">
+                            {!! __('auth.two_factor_recovery_hint') !!}
                         </p>
                     @else
-                        <p class="text-slate-500 text-sm sm:text-base leading-relaxed">
-                            أدخل الرمز المكوّن من 6 أرقام من تطبيق المصادقة أو البريد.
+                        <p class="text-xs text-slate-500 mt-6 text-center leading-relaxed">
+                            {!! __('auth.two_factor_resend_hint', ['login_url' => route('login')]) !!}
                         </p>
                     @endif
-                </div>
 
-                @if($errors->has('code'))
-                    <div class="flex items-center gap-3 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-medium mb-5">
-                        <i class="fas fa-circle-exclamation text-rose-500 flex-shrink-0"></i>
-                        {{ $errors->first('code') }}
+                    <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+                        <a href="{{ route('login') }}" class="inline-flex items-center gap-2 text-sm font-bold text-acad-blue hover:text-acad-cyan transition-colors">
+                            <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }} text-xs"></i>
+                            {{ __('auth.two_factor_back_login') }}
+                        </a>
                     </div>
-                @endif
-
-                <form action="{{ route('two-factor.verify') }}" method="POST" class="space-y-5">
-                    @csrf
-                    <div>
-                        <label for="code" class="block text-sm font-bold text-navy-950 mb-2">رمز التحقق</label>
-                        <div class="relative">
-                            <span class="absolute {{ $isRtl ? 'right-4' : 'left-4' }} top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><i class="fas fa-key text-sm"></i></span>
-                            <input type="text"
-                                   name="code"
-                                   id="code"
-                                   inputmode="numeric"
-                                   pattern="[0-9]*"
-                                   maxlength="10"
-                                   autocomplete="one-time-code"
-                                   autofocus
-                                   required
-                                   class="input-field input-2fa {{ $isRtl ? 'pr-11' : 'pl-11' }} @error('code') has-error @enderror"
-                                   placeholder="••••••"
-                                   dir="ltr">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-login flex items-center justify-center gap-2">
-                        <span>تأكيد والمتابعة</span>
-                        <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }} text-sm"></i>
-                    </button>
-                </form>
-
-                @if(empty($useEmail))
-                    <p class="text-xs text-slate-500 mt-6 text-center leading-relaxed">
-                        إذا فقدت جهازك، استخدم أحد <strong class="text-slate-600">رموز الاسترداد</strong> التي حصلت عليها عند التفعيل.
-                    </p>
-                @else
-                    <p class="text-xs text-slate-500 mt-6 text-center leading-relaxed">
-                        لم يصلك الرمز؟ تحقق من البريد المزعج، أو
-                        <a href="{{ route('login') }}" class="font-bold text-[#283593] hover:text-[#1F2A7A]">أعد تسجيل الدخول</a>
-                        لإرسال رمز جديد.
-                    </p>
-                @endif
-
-                <div class="mt-8 pt-6 border-t border-slate-100 text-center">
-                    <a href="{{ route('login') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-[#283593] hover:text-[#1F2A7A] transition-colors">
-                        <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }} text-xs"></i>
-                        العودة لتسجيل الدخول
-                    </a>
                 </div>
-                <div class="mt-4 text-center">
-                    <a href="{{ route('home') }}" class="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-slate-600 transition-colors">
-                        <i class="fas fa-house text-xs"></i>
-                        الصفحة الرئيسية
-                    </a>
+            </div>
+
+            <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 text-sm">
+                <a href="{{ route('home') }}" class="inline-flex items-center gap-2 text-white/55 hover:text-acad-yellow transition-colors">
+                    <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }} text-xs"></i>
+                    {{ __('auth.back_to_home') }}
+                </a>
+                <span class="hidden sm:inline text-white/25">|</span>
+                <div class="flex items-center gap-2 text-white/45 text-xs max-w-xs text-center sm:text-start">
+                    <i class="fas fa-lock text-acad-cyan/80 shrink-0"></i>
+                    <span>{{ __('auth.two_factor_security_note') }}</span>
                 </div>
             </div>
         </div>

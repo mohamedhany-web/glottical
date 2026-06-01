@@ -1,12 +1,12 @@
 @php
 /*
- * Muallimx — JSON-LD Structured Data
+ * Glottical — JSON-LD Structured Data
  * Usage: @include('partials.seo-jsonld', ['jsonldType' => 'website|course|instructor|about'])
  */
 $_jldType    = $jsonldType ?? 'website';
 $_siteUrl    = url('/');
 $_logoUrl    = asset('images/og-image.jpg');
-$_siteName   = 'Muallimx';
+$_siteName   = config('app.name', 'Glottical');
 
 // ── Base: WebSite + EducationalOrganization ──────────────────────────────
 $_baseGraph = [
@@ -17,7 +17,7 @@ $_baseGraph = [
             '@id'           => $_siteUrl . '/#website',
             'url'           => $_siteUrl,
             'name'          => $_siteName,
-            'description'   => 'منصة عربية متخصصة في تأهيل وتطوير المعلمين للعمل أونلاين باحتراف',
+            'description'   => __('landing.meta.description'),
             'inLanguage'    => ['ar', 'en'],
             'potentialAction' => [
                 '@type'        => 'SearchAction',
@@ -158,16 +158,16 @@ if ($_jldType === 'about') {
         '@type'       => 'AboutPage',
         'url'         => url('/about'),
         'name'        => 'من نحن — ' . $_siteName,
-        'description' => 'تعرف على منصة Muallimx، رسالتنا وقيمنا في تأهيل المعلمين للعمل أونلاين باحتراف',
+        'description' => __('public.about_intro', ['brand' => $_siteName]),
         'mainEntity'  => [
             '@type'       => 'EducationalOrganization',
             '@id'         => $_siteUrl . '/#organization',
             'name'        => $_siteName,
             'url'         => $_siteUrl,
             'foundingDate'=> '2023',
-            'description' => 'منصة عربية متخصصة في تأهيل وتطوير المعلمين للعمل أونلاين',
-            'areaServed'  => ['@type' => 'Place', 'name' => 'العالم العربي'],
-            'knowsAbout'  => ['تعليم إلكتروني', 'تأهيل المعلمين', 'أدوات AI للتعليم', 'منصات التدريس الأونلاين'],
+            'description' => __('landing.meta.description'),
+            'areaServed'  => ['@type' => 'Place', 'name' => 'مصر وأوروبا'],
+            'knowsAbout'  => ['تعليم ألماني', 'تعليم إنجليزي', 'كول سنتر', 'سوق العمل', 'السياحة', 'العمل في ألمانيا'],
         ],
     ];
     $_outputScripts .= '<script type="application/ld+json">' . json_encode($_aboutData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';

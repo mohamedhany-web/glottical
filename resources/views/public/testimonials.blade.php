@@ -6,7 +6,7 @@
 
 @section('title', __('public.testimonials_page_title') . ' - ' . __('public.site_suffix'))
 @section('meta_description', __('public.home_testimonials_sub'))
-@section('meta_keywords', 'آراء, شهادات, ' . $brand . ', معلمين')
+@section('meta_keywords', 'آراء, شهادات, ' . $brand . ', متعلمين, كول سنتر, ألمانيا')
 @section('canonical_url', url('/testimonials'))
 
 @section('content')
@@ -20,7 +20,7 @@
     </div>
 </section>
 
-<section class="py-12 sm:py-16 bg-white dark:bg-slate-900">
+<section class="py-12 sm:py-16 bg-white dark:bg-slate-800">
     <div class="w-full max-w-[1200px] mx-auto px-6 sm:px-8">
         @if($testimonials->isEmpty())
             <div class="text-center py-16 rounded-[24px] border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/50">

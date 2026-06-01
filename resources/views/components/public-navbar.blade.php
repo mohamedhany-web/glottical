@@ -15,9 +15,9 @@
                         <div class="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full pulse-animation"></div>
                     </div>
                     <div>
-                        <h1 class="text-2xl font-black text-blue-900 text-glow">{{ config('app.name', 'Muallimx') }}</h1>
-                        <p class="text-sm text-blue-700 font-medium">منصة تأهيل المعلّمين</p>
-                        <p class="text-xs text-blue-600">تأهيل المعلمين والتدريس الاحترافي أونلاين</p>
+                        <h1 class="text-2xl font-black text-blue-900 text-glow">{{ config('app.name', 'Glottical') }}</h1>
+                        <p class="text-sm text-blue-700 font-medium">{{ __('landing.nav.brand') }}</p>
+                        <p class="text-xs text-blue-600">{{ __('landing.hero.headline') }}</p>
                     </div>
                 </a>
             </div>

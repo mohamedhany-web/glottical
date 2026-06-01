@@ -95,7 +95,7 @@
     <title>{{ __('landing.meta.title') }}</title>
     <meta name="title" content="{{ __('landing.meta.title') }}">
     <meta name="description" content="{{ __('landing.meta.description') }}">
-    <meta name="theme-color" content="#050b18">
+    <meta name="theme-color" content="#0d1528">
     <link rel="canonical" href="{{ url('/') }}">
     <link rel="alternate" hreflang="ar" href="{{ url('/') }}?lang=ar">
     <link rel="alternate" hreflang="en" href="{{ url('/') }}?lang=en">
@@ -126,8 +126,8 @@
                             yellowSoft: '#FFF8E1',
                             gray: '#F4F6FA',
                             ink: '#1a2d4d',
-                            navy: '#050b18',
-                            navyMid: '#0f1f3a',
+                            navy: '#0d1528',
+                            navyMid: '#1a2d4d',
                             neon: '#00d4ff',
                         },
                     },
@@ -144,7 +144,7 @@
     <style>
         [x-cloak]{display:none!important}
         html{scroll-behavior:smooth;overflow-x:hidden}
-        body{overflow-x:hidden;background:linear-gradient(180deg,#050b18 0%,#0a1628 45%,#050b18 100%);min-height:100vh;display:flex;flex-direction:column;color:#e8eef8;font-size:16px;line-height:1.65}
+        body{overflow-x:hidden;background:linear-gradient(180deg,#0d1528 0%,#121f38 45%,#0d1528 100%);min-height:100vh;display:flex;flex-direction:column;color:#e8eef8;font-size:16px;line-height:1.65}
         .font-display{font-family:'Cairo','Tajawal','IBM Plex Sans Arabic',system-ui,sans-serif}
         .container-acad{max-width:1280px;margin-inline:auto;padding-inline:clamp(16px,4vw,28px)}
         .section-y{padding-block:clamp(3.5rem,7vw,5rem)}
@@ -167,7 +167,7 @@
         .path-scroll::-webkit-scrollbar-corner{background:transparent}
         .pricing-pop{box-shadow:0 24px 60px -20px rgba(0,212,255,.25)}
         .grid-12{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:clamp(1rem,2vw,1.5rem)}
-        .stream-cta-band{background:linear-gradient(135deg,#0B3D91 0%,#0a2748 50%,#050b18 100%);position:relative;overflow:hidden}
+        .stream-cta-band{background:linear-gradient(135deg,#0B3D91 0%,#123256 50%,#0d1528 100%);position:relative;overflow:hidden}
         .stream-cta-band::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 80%,rgba(245,184,0,.15),transparent 55%),radial-gradient(ellipse 60% 40% at 85% 20%,rgba(0,212,255,.12),transparent 50%);pointer-events:none}
         .pattern-dots{background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.06) 1px,transparent 0);background-size:24px 24px}
         .netflix-row{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:stretch;gap:1rem;overflow-x:auto;overflow-y:visible;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:rgba(0,212,255,.5) rgba(5,11,24,.82);scroll-behavior:smooth;-webkit-overflow-scrolling:touch;padding:8px 4px 16px;margin-inline:-4px;width:100%;max-width:100%}
@@ -215,7 +215,7 @@
                          fetchpriority="{{ $hi === 0 ? 'high' : 'auto' }}"
                          loading="{{ $hi === 0 ? 'eager' : 'lazy' }}">
                 @else
-                    <div class="absolute inset-0 bg-gradient-to-br from-[#0B3D91] via-[#0a2748] to-[#050b18]"></div>
+                    <div class="absolute inset-0 bg-gradient-to-br from-[#0B3D91] via-[#123256] to-[#0d1528]"></div>
                 @endif
                 @php
                     $accent = $spot['accent_bg'] ?? '';
@@ -229,8 +229,8 @@
                          loading="lazy">
                 @endif
                 <div class="absolute inset-0 bg-gradient-to-br from-[#0B3D91]/18 via-transparent to-[#00d4ff]/10 pointer-events-none"></div>
-                <div class="absolute inset-0 bg-gradient-to-t from-[#050b18] via-[#050b18]/70 to-[#050b18]/12"></div>
-                <div class="absolute inset-0 bg-gradient-to-{{ $isRtl ? 'l' : 'r' }} from-[#050b18] via-[#050b18]/55 to-transparent w-full md:w-[75%]"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-[#0d1528] via-[#0d1528]/70 to-[#0d1528]/12"></div>
+                <div class="absolute inset-0 bg-gradient-to-{{ $isRtl ? 'l' : 'r' }} from-[#0d1528] via-[#0d1528]/55 to-transparent w-full md:w-[75%]"></div>
                 <div class="absolute inset-0 pattern-dots opacity-[0.14] pointer-events-none"></div>
                 <div class="container-acad relative z-10 w-full">
                     <div class="max-w-3xl {{ $isRtl ? 'ms-auto text-right' : 'me-auto text-left' }}">
@@ -365,9 +365,9 @@
                             @if($pImg)
                                 <img src="{{ $pImg }}" alt="" class="absolute inset-0 w-full h-full object-cover">
                             @else
-                                <div class="absolute inset-0 bg-gradient-to-br from-acad-blue to-[#050b18]"></div>
+                                <div class="absolute inset-0 bg-gradient-to-br from-acad-blue to-[#0d1528]"></div>
                             @endif
-                            <div class="absolute inset-0 bg-gradient-to-t from-[#050b18] via-[#050b18]/50 to-transparent"></div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-[#0d1528] via-[#0d1528]/50 to-transparent"></div>
                             <span class="absolute top-3 {{ $isRtl ? 'right-3' : 'left-3' }} text-[10px] font-black uppercase tracking-wide px-2 py-1 rounded-md bg-acad-yellow/95 text-acad-blue">{{ __($a.'.stream_badge_series') }}</span>
                             <div class="absolute bottom-3 start-4 end-4">
                                 <h3 class="text-white font-black text-lg leading-tight drop-shadow-lg">{{ $path->name }}</h3>
@@ -388,7 +388,7 @@
     </section>
 
     {{-- INSTRUCTORS (creators) --}}
-    <section class="section-y bg-[#050b18] border-t border-white/5">
+    <section class="section-y bg-[#0d1528] border-t border-white/5">
         <div class="container-acad">
             <div class="reveal text-center max-w-2xl mx-auto mb-12">
                 <span class="text-acad-cyan font-extrabold text-xs tracking-widest uppercase">{{ __($a.'.instructors_kicker') }}</span>
@@ -410,7 +410,7 @@
                     @endphp
                     <article class="reveal relative rounded-2xl border border-white/10 glass-panel p-6 hover:border-acad-cyan/35 hover:shadow-[0_0_40px_-10px_rgba(0,212,255,.35)] transition text-center overflow-hidden group">
                         <a href="{{ route('public.instructors.show', $p->user) }}" class="block relative z-10">
-                            <div class="mx-auto w-24 h-24 rounded-full overflow-hidden ring-2 ring-acad-yellow/40 shadow-lg bg-[#0f1f3a]">
+                            <div class="mx-auto w-24 h-24 rounded-full overflow-hidden ring-2 ring-acad-yellow/40 shadow-lg bg-[#1a2d4d]">
                                 @if($p->photo_path)
                                     <img src="{{ $p->photo_url }}" alt="{{ $name }}" class="w-full h-full object-cover" loading="lazy" decoding="async">
                                 @else
@@ -430,7 +430,7 @@
                             <div class="mt-2 text-amber-400 text-sm font-bold"><i class="fas fa-star"></i> {{ $avgRating }}</div>
                             <span class="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-acad-yellow text-acad-blue font-extrabold text-sm group-hover:brightness-110 transition">{{ __($a.'.instructor_view_content') }}</span>
                         </a>
-                        <div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#050b18]/92 text-white p-4 opacity-0 group-hover:opacity-100 transition duration-300 backdrop-blur-sm">
+                        <div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#0d1528]/92 text-white p-4 opacity-0 group-hover:opacity-100 transition duration-300 backdrop-blur-sm">
                             <div class="text-center">
                                 <p class="text-3xl font-black">{{ $courseCt }}</p>
                                 <p class="text-xs font-bold text-white/80">{{ __($a.'.instructor_overlay_courses') }}</p>
@@ -448,7 +448,7 @@
 
     {{-- STATS --}}
     <section class="section-y relative overflow-hidden text-white border-t border-white/5">
-        <div class="absolute inset-0 bg-gradient-to-br from-[#0a1628] via-[#0B3D91] to-[#050b18]"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-[#121f38] via-[#0B3D91] to-[#0d1528]"></div>
         <div class="absolute inset-0 pattern-dots opacity-30"></div>
         <div class="absolute inset-0 bg-gradient-to-t from-acad-yellow/5 to-transparent pointer-events-none"></div>
         <div class="container-acad relative z-10">
@@ -526,7 +526,7 @@
     @endif
 
     {{-- PRICING --}}
-    <section class="section-y bg-[#050b18] border-t border-white/5">
+    <section class="section-y bg-[#0d1528] border-t border-white/5">
         <div class="container-acad">
             <div class="reveal text-center max-w-2xl mx-auto mb-14">
                 <span class="text-acad-cyan font-extrabold text-xs tracking-widest uppercase">{{ __($a.'.pricing_kicker') }}</span>
@@ -589,7 +589,7 @@
 
 {{-- Netflix-style full-screen search --}}
 <div id="market-search-overlay" class="fixed inset-0 z-[100050] hidden" aria-hidden="true">
-    <div class="absolute inset-0 bg-[#050b18]/80 backdrop-blur-xl transition-opacity" data-close-search tabindex="-1"></div>
+    <div class="absolute inset-0 bg-[#0d1528]/80 backdrop-blur-xl transition-opacity" data-close-search tabindex="-1"></div>
     <div class="relative z-10 min-h-0 flex flex-col items-stretch pt-16 sm:pt-20 px-3 sm:px-6 pb-8 pointer-events-none">
         <div class="max-w-5xl w-full mx-auto glass-panel rounded-2xl border border-white/15 shadow-2xl pointer-events-auto search-overlay-enter max-h-[min(90vh,840px)] flex flex-col overflow-hidden">
             <div class="flex items-center justify-between gap-3 p-4 border-b border-white/10">
@@ -795,7 +795,7 @@
             var el = document.createElement('a');
             el.href = c.url;
             el.className = 'netflix-item group flex-shrink-0 w-36 sm:w-40 block rounded-xl overflow-hidden border border-white/10 bg-white/5 hover:border-acad-yellow/55 hover:shadow-[0_0_28px_-6px_rgba(245,184,0,0.4)] hover:scale-[1.04] transition duration-300';
-            el.innerHTML = '<div class="relative aspect-[2/3] bg-slate-950/90">' +
+            el.innerHTML = '<div class="relative aspect-[2/3] bg-slate-900/85">' +
                 (c.thumb ? '<img src="' + esc(c.thumb) + '" alt="" class="w-full h-full object-cover">' : '<div class="w-full h-full flex items-center justify-center text-white/20"><i class="fas fa-play-circle text-3xl"></i></div>') +
                 '<div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent"></div>' +
                 (dur ? '<span class="absolute top-2 ' + (isRtl ? 'right-2' : 'left-2') + ' text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-black/60 text-white/95 border border-white/10">' + esc(dur) + '</span>' : '') +

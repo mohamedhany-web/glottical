@@ -35,7 +35,14 @@
             <a href="<?php echo e(route('home')); ?>" class="flex items-center gap-2 sm:gap-3 group min-w-0 max-w-[min(100%,12rem)] sm:max-w-[14rem] lg:max-w-none shrink-0 relative z-20">
                 <?php if(!empty($navbarLogoUrl)): ?>
                     <span class="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-full ring-1 ring-white/25 shadow-md [box-shadow:0_3px_12px_-4px_rgba(0,0,0,.3)]">
-                        <img src="<?php echo e($navbarLogoUrl); ?>" alt="<?php echo e(config('app.name')); ?>" class="h-full w-full object-cover object-center" decoding="async">
+                        <img src="<?php echo e($navbarLogoUrl); ?>"
+                             alt=""
+                             width="36"
+                             height="36"
+                             class="h-full w-full object-cover object-center"
+                             decoding="async"
+                             fetchpriority="high"
+                             onerror="this.onerror=null;this.src='<?php echo e(\App\Services\AdminPanelBranding::inlineFallbackDataUri()); ?>';">
                     </span>
                 <?php else: ?>
                     <div class="relative w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-shadow duration-300" style="background:#F6C945;box-shadow:0 3px 14px -4px rgba(246,201,69,.38)">
@@ -57,7 +64,7 @@
                             <span><?php echo e(__('landing.academy.nav_categories')); ?></span>
                             <i class="fas fa-chevron-down text-[10px] opacity-60"></i>
                         </button>
-                        <div class="mega-panel absolute top-full <?php echo e($isRtl ? 'right-0' : 'left-1/2 -translate-x-1/2'); ?> mt-2 w-[min(720px,calc(100vw-2rem))] rounded-2xl shadow-2xl shadow-black/40 opacity-0 invisible group-hover/mega:opacity-100 group-hover/mega:visible group-focus-within/mega:opacity-100 group-focus-within/mega:visible translate-y-1 group-hover/mega:translate-y-0 group-focus-within/mega:translate-y-0 transition-all duration-200 z-[1000] p-4 text-start border border-white/12 bg-slate-950/95 backdrop-blur-xl">
+                        <div class="mega-panel absolute top-full <?php echo e($isRtl ? 'right-0' : 'left-1/2 -translate-x-1/2'); ?> mt-2 w-[min(720px,calc(100vw-2rem))] rounded-2xl shadow-2xl shadow-black/40 opacity-0 invisible group-hover/mega:opacity-100 group-hover/mega:visible group-focus-within/mega:opacity-100 group-focus-within/mega:visible translate-y-1 group-hover/mega:translate-y-0 group-focus-within/mega:translate-y-0 transition-all duration-200 z-[1000] p-4 text-start border border-white/12 bg-slate-900/92 backdrop-blur-xl">
                             <div class="grid sm:grid-cols-2 gap-2">
                                 <?php $__currentLoopData = $megaCategories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $mc): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <a href="<?php echo e($mc['url']); ?>" class="flex gap-3 rounded-xl p-3 transition hover:bg-white/8 border border-transparent hover:border-white/10">
@@ -165,9 +172,9 @@
 
 
 <style>
-/* Navbar — سطح زجاجي داكن موحّد مع صفحة الأكاديمية (#050b18) */
+/* Navbar — سطح زجاجي داكن موحّد مع صفحة الأكاديمية (#0d1528) */
 #navbar {
-    background: linear-gradient(180deg, rgba(5, 11, 24, 0.97) 0%, rgba(8, 22, 48, 0.94) 100%);
+    background: linear-gradient(180deg, rgba(13, 21, 40, 0.97) 0%, rgba(16, 32, 62, 0.94) 100%);
     backdrop-filter: blur(22px) saturate(185%);
     -webkit-backdrop-filter: blur(22px) saturate(185%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -203,7 +210,7 @@
     transition: opacity .5s ease, filter .5s ease;
 }
 #navbar.nav-home.nav-solid {
-    background: linear-gradient(180deg, rgba(5, 11, 24, 0.97) 0%, rgba(8, 22, 48, 0.94) 100%) !important;
+    background: linear-gradient(180deg, rgba(13, 21, 40, 0.97) 0%, rgba(16, 32, 62, 0.94) 100%) !important;
     backdrop-filter: blur(22px) saturate(185%) !important;
     -webkit-backdrop-filter: blur(22px) saturate(185%) !important;
     border-bottom: 1px solid rgba(255,255,255,0.1) !important;
@@ -259,7 +266,7 @@
 #navbar.nav-home.nav-solid .nav-lang-item.is-active { background: rgba(255,255,255,.15); color: #fff; font-weight: 800; }
 /* شريط أعلى الصفحة (غير الرئيسية): تدرّج خفيف عند أعلى التمرير */
 #navbar.nav-transparent:not(.nav-home) {
-    background: linear-gradient(180deg, rgba(5, 11, 24, 0.9) 0%, rgba(8, 22, 48, 0.82) 100%) !important;
+    background: linear-gradient(180deg, rgba(13, 21, 40, 0.9) 0%, rgba(16, 32, 62, 0.82) 100%) !important;
     backdrop-filter: blur(20px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -267,14 +274,14 @@
 }
 /* الصفحة الرئيسية: شريط شفاف يذوب في الهيرو (لا يغطي الصورة بالأزرق) */
 #navbar.nav-home.nav-transparent {
-    background: linear-gradient(180deg, rgba(5, 11, 24, 0.55) 0%, rgba(5, 11, 24, 0.18) 50%, rgba(5, 11, 24, 0.02) 100%) !important;
+    background: linear-gradient(180deg, rgba(13, 21, 40, 0.55) 0%, rgba(13, 21, 40, 0.18) 50%, rgba(13, 21, 40, 0.02) 100%) !important;
     backdrop-filter: blur(18px) saturate(165%) !important;
     -webkit-backdrop-filter: blur(18px) saturate(165%) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
     box-shadow: 0 12px 40px -28px rgba(0, 0, 0, 0.55), 0 0 40px -20px rgba(0, 212, 255, 0.08) !important;
 }
 #navbar.nav-solid:not(.nav-home) {
-    background: linear-gradient(180deg, rgba(5, 11, 24, 0.99) 0%, rgba(10, 26, 52, 0.97) 100%) !important;
+    background: linear-gradient(180deg, rgba(13, 21, 40, 0.99) 0%, rgba(18, 34, 68, 0.97) 100%) !important;
     backdrop-filter: blur(22px) saturate(185%) !important;
     -webkit-backdrop-filter: blur(22px) saturate(185%) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -298,9 +305,9 @@
     transform: translateX(-50%) scaleX(1);
 }
 
-/* ─── Mobile drawer (موحّد مع #050b18) ─── */
+/* ─── Mobile drawer (موحّد مع #0d1528) ─── */
 .mob-menu-overlay {
-    background: rgba(2, 6, 16, 0.72);
+    background: rgba(8, 14, 28, 0.72);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     transition: opacity 0.28s ease;
@@ -315,7 +322,7 @@
     will-change: transform;
 }
 .mob-menu-inner {
-    background: linear-gradient(165deg, #0c1a32 0%, #050b18 42%, #081220 100%);
+    background: linear-gradient(165deg, #142640 0%, #0d1528 42%, #0e1c30 100%);
 }
 .mob-menu-glow {
     background:

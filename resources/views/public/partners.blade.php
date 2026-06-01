@@ -1,8 +1,8 @@
 ﻿@extends('layouts.public')
 
 @section('title', __('public.partners_page_title') . ' - ' . __('public.site_suffix'))
-@section('meta_description', 'شركاء منصة Muallimx — المؤسسات التعليمية والشركات التي تدعم رسالتنا في تأهيل المعلمين.')
-@section('meta_keywords', 'شركاء, Muallimx, شراكات تعليمية, مؤسسات تعليمية')
+@section('meta_description', 'شركاء ' . config('app.name') . ' — مؤسسات وشركات تدعم ربط التعليم اللغوي بسوق العمل.')
+@section('meta_keywords', 'شركاء, Glottical, شراكات, تعليم ألماني, سوق العمل')
 @section('canonical_url', url('/partners'))
 
 @section('content')

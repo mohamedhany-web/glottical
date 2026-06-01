@@ -13,6 +13,11 @@ class ApplicationUrl
     {
         $request ??= request();
 
+        $configured = rtrim((string) config('app.url'), '/');
+        if ($configured !== '' && app()->environment('production')) {
+            return $configured;
+        }
+
         if ($request) {
             $script = $request->server('SCRIPT_NAME') ?: $request->getScriptName();
             if (is_string($script) && $script !== '' && str_ends_with($script, '/index.php')) {
@@ -23,7 +28,6 @@ class ApplicationUrl
             }
         }
 
-        $configured = rtrim((string) config('app.url'), '/');
         if ($configured !== '') {
             return $configured;
         }

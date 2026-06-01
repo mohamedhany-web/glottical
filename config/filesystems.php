@@ -117,6 +117,15 @@ return [
     */
     'public_media_disk' => env('PUBLIC_MEDIA_DISK', 'r2'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | رابط R2 العام للمتصفح (ليس cloudflarestorage.com)
+    |--------------------------------------------------------------------------
+    | من Cloudflare R2 → bucket → Public access → r2.dev
+    | مثال: https://pub-xxxxxxxx.r2.dev
+    */
+    'r2_public_url' => env('R2_PUBLIC_URL'),
+
     'homepage_sliders_disk' => env('HOMEPAGE_SLIDERS_DISK', env('PUBLIC_MEDIA_DISK', 'public')),
 
     /*

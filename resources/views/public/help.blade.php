@@ -1,4 +1,4 @@
-﻿@extends('layouts.public')
+@extends('layouts.public')
 
 @php
     $brand = config('app.name');
@@ -15,7 +15,7 @@
     .help-hub-card {
         transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
         border: 1px solid rgba(255, 255, 255, 0.12);
-        background: rgba(15, 31, 58, 0.55);
+        background: rgba(26, 45, 77, 0.55);
     }
     .help-hub-card:hover {
         transform: translateY(-4px);

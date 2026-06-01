@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ __('auth.login') }} — {{ config('app.name') }}</title>
-    <meta name="theme-color" content="#050b18">
+    <meta name="theme-color" content="#0d1528">
     @include('partials.favicon-links')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,8 +27,8 @@
                         cyan: '#00A3C4',
                         yellow: '#F5B800',
                         ink: '#1a2d4d',
-                        navy: '#050b18',
-                        navyMid: '#0f1f3a',
+                        navy: '#0d1528',
+                        navyMid: '#1a2d4d',
                     },
                     mx: { indigo: '#1F2A7A', navy: '#283593', orange: '#FB5607' },
                 },
@@ -46,7 +46,7 @@
         html{min-height:100%;scroll-behavior:smooth}
         body{margin:0;min-height:100vh}
         .auth-bg{
-            background:linear-gradient(165deg,#050b18 0%,#0a1628 42%,#0f1f3a 100%);
+            background:linear-gradient(165deg,#0d1528 0%,#121f38 42%,#1a2d4d 100%);
         }
         .auth-dots{
             background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.055) 1px,transparent 0);

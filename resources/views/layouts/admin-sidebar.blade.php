@@ -4,7 +4,7 @@
         <div class="sidebar-logo flex items-center gap-3">
             @if(! empty($adminPanelLogoUrl))
             <div class="w-9 h-9 rounded-[10px] flex items-center justify-center flex-shrink-0 overflow-hidden bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-600 shadow-sm">
-                <img src="{{ $adminPanelLogoUrl }}" alt="" width="36" height="36" class="w-full h-full object-contain p-0.5">
+                <img src="{{ $adminPanelLogoUrl }}" alt="" width="36" height="36" class="w-full h-full object-contain p-0.5" onerror="this.onerror=null;this.src='{{ \App\Services\AdminPanelBranding::inlineFallbackDataUri() }}';">
             </div>
             @else
             <div class="w-9 h-9 rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md shadow-blue-500/25 flex-shrink-0">

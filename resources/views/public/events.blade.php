@@ -1,8 +1,8 @@
 ﻿@extends('layouts.public')
 
 @section('title', __('public.events_page_title') . ' - ' . __('public.site_suffix'))
-@section('meta_description', 'فعاليات وأحداث منصة Muallimx — ورش عمل، ندوات مباشرة، وأيام تدريبية للمعلمين.')
-@section('meta_keywords', 'فعاليات, أحداث, ورش عمل, Muallimx, ندوات مباشرة')
+@section('meta_description', 'فعاليات ' . config('app.name') . ' — ورش لغوية ومهنية، ندوات، وأيام توظيف.')
+@section('meta_keywords', 'فعاليات, Glottical, ورش عمل, كول سنتر, ألمانيا')
 @section('canonical_url', url('/events'))
 
 @section('content')

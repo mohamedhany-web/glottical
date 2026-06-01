@@ -30,14 +30,7 @@ class CurriculumLibraryItemFile extends Model
         if (!$this->path) return null;
         $disk = $this->storage_disk ?: config('filesystems.default');
 
-        try {
-            if ($disk === 'r2') {
-                return Storage::disk('r2')->temporaryUrl($this->path, now()->addHours(2));
-            }
-            return Storage::disk($disk)->url($this->path);
-        } catch (\Throwable $e) {
-            return null;
-        }
+        return \App\Services\PublicStorageUrl::fromPath($this->path, is_string($disk) ? $disk : null);
     }
 
     public function scopePresentations($query)

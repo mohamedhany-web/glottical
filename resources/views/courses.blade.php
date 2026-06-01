@@ -10,10 +10,10 @@
     <title>{{ __('public.courses_page_title') }} - {{ __('public.site_suffix') }}</title>
     <meta name="title"       content="{{ __('public.courses_page_title') }} - {{ __('public.site_suffix') }}">
     <meta name="description" content="{{ __('public.courses_subtitle') }}">
-    <meta name="keywords"    content="كورسات أونلاين, تعلم أونلاين, دورات تعليمية, تدريب معلمين, Muallimx, كورسات عربية">
-    <meta name="author"      content="Muallimx">
+    <meta name="keywords"    content="كورسات ألماني, كورسات إنجليزي, كول سنتر, سوق العمل, ألمانيا, {{ config('app.name', 'Glottical') }}">
+    <meta name="author"      content="{{ config('app.name', 'Glottical') }}">
     <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1">
-    <meta name="theme-color" content="#050b18">
+    <meta name="theme-color" content="#0d1528">
     <link rel="canonical"    href="{{ url('/courses') }}">
     <link rel="alternate" hreflang="ar"        href="{{ url('/courses') }}?lang=ar">
     <link rel="alternate" hreflang="en"        href="{{ url('/courses') }}?lang=en">
@@ -21,23 +21,23 @@
     <!-- Open Graph -->
     <meta property="og:type"             content="website">
     <meta property="og:url"              content="{{ url('/courses') }}">
-    <meta property="og:title"            content="{{ __('public.courses_page_title') }} - Muallimx">
+    <meta property="og:title"            content="{{ __('public.courses_page_title') }} - {{ config('app.name', 'Glottical') }}">
     <meta property="og:description"      content="{{ __('public.courses_subtitle') }}">
     <meta property="og:image"            content="{{ asset('images/og-image.jpg') }}">
-    <meta property="og:image:alt"        content="كورسات Muallimx">
+    <meta property="og:image:alt"        content="كورسات {{ config('app.name', 'Glottical') }}">
     <meta property="og:image:width"      content="1200">
     <meta property="og:image:height"     content="630">
     <meta property="og:locale"           content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
     <meta property="og:locale:alternate" content="{{ $locale === 'ar' ? 'en_US' : 'ar_AR' }}">
-    <meta property="og:site_name"        content="Muallimx">
+    <meta property="og:site_name"        content="{{ config('app.name', 'Glottical') }}">
     <!-- Twitter Card -->
     <meta name="twitter:card"        content="summary_large_image">
-    <meta name="twitter:site"        content="@Muallimx">
+    <meta name="twitter:site"        content="@Glottical">
     <meta name="twitter:url"         content="{{ url('/courses') }}">
-    <meta name="twitter:title"       content="{{ __('public.courses_page_title') }} - Muallimx">
+    <meta name="twitter:title"       content="{{ __('public.courses_page_title') }} - {{ config('app.name', 'Glottical') }}">
     <meta name="twitter:description" content="{{ __('public.courses_subtitle') }}">
     <meta name="twitter:image"       content="{{ asset('images/og-image.jpg') }}">
-    <meta name="twitter:image:alt"   content="كورسات Muallimx">
+    <meta name="twitter:image:alt"   content="كورسات {{ config('app.name', 'Glottical') }}">
     @include('partials.favicon-links')
     <!-- BreadcrumbList JSON-LD -->
     <script type="application/ld+json">
@@ -65,8 +65,8 @@
                             yellowSoft: '#FFF8E1',
                             gray: '#F4F6FA',
                             ink: '#1a2d4d',
-                            navy: '#050b18',
-                            navyMid: '#0f1f3a',
+                            navy: '#0d1528',
+                            navyMid: '#1a2d4d',
                             neon: '#00d4ff',
                         },
                     },
@@ -84,7 +84,7 @@
     <style>
       [x-cloak]{display:none!important}
       html{scroll-behavior:smooth;overflow-x:hidden}
-      body{overflow-x:hidden;background:linear-gradient(180deg,#050b18 0%,#0a1628 45%,#050b18 100%);min-height:100vh;display:flex;flex-direction:column;color:#e8eef8;font-size:16px;line-height:1.65}
+      body{overflow-x:hidden;background:linear-gradient(180deg,#0d1528 0%,#121f38 45%,#0d1528 100%);min-height:100vh;display:flex;flex-direction:column;color:#e8eef8;font-size:16px;line-height:1.65}
       .font-display{font-family:'Cairo','Tajawal','IBM Plex Sans Arabic',system-ui,sans-serif}
       h1,h2,h3,h4,h5,h6,.font-heading{font-family:'Cairo','Tajawal','IBM Plex Sans Arabic',sans-serif}
       .container-acad{max-width:1280px;margin-inline:auto;padding-inline:clamp(16px,4vw,28px)}
@@ -110,7 +110,7 @@
       .netflix-item{scroll-snap-align:start;flex:0 0 auto;width:min(17.5rem,82vw);min-width:min(17.5rem,82vw);max-width:20rem}
       @media(min-width:640px){.netflix-item{width:18.5rem;min-width:18.5rem;max-width:19.5rem}}
       @media(min-width:1024px){.netflix-item{width:20rem;min-width:20rem;max-width:20rem}}
-      .stream-card{border-radius:14px;overflow:hidden;background:#0f1f3a;border:1px solid rgba(255,255,255,.10);box-shadow:0 18px 40px -26px rgba(0,0,0,.65);transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease}
+      .stream-card{border-radius:14px;overflow:hidden;background:#1a2d4d;border:1px solid rgba(255,255,255,.10);box-shadow:0 18px 40px -26px rgba(0,0,0,.65);transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease}
       .stream-card:hover{transform:scale(1.05);border-color:rgba(245,184,0,.55);box-shadow:0 0 0 2px rgba(245,184,0,.55),0 24px 60px -28px rgba(0,212,255,.35)}
       .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
     </style>
@@ -137,10 +137,10 @@
 <main class="flex-1">
   {{-- HERO (streaming catalog) --}}
   <section class="-mt-14 sm:-mt-[60px] pt-24 sm:pt-28 lg:pt-32 pb-10 sm:pb-12 overflow-hidden relative">
-    <div class="absolute inset-0 bg-[#050b18]"></div>
+    <div class="absolute inset-0 bg-[#0d1528]"></div>
     <div class="absolute inset-0 opacity-[0.22] bg-cover bg-center"
          style="background-image:url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=2400&q=82')"></div>
-    <div class="absolute inset-0 bg-gradient-to-t from-[#050b18] via-[#050b18]/85 to-[#050b18]/25"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-[#0d1528] via-[#0d1528]/85 to-[#0d1528]/25"></div>
     <div class="absolute inset-0 pattern-dots opacity-[0.14] pointer-events-none"></div>
     <div class="container-acad relative z-10">
       <div class="max-w-4xl mx-auto text-center reveal">
@@ -219,7 +219,7 @@
                   <template x-for="course in row.items" :key="course.id">
                     <a class="netflix-item stream-card block"
                        :href="'{{ url('/course') }}/' + course.id">
-                      <div class="relative aspect-video bg-slate-950/60">
+                      <div class="relative aspect-video bg-slate-900/50">
                         <template x-if="course.thumbnail">
                           <img :src="course.thumbnail"
                                :alt="course.title"
@@ -231,7 +231,7 @@
                                class="absolute inset-0 h-full w-full object-cover"
                                @@error="$el.style.display='none'">
                         </template>
-                        <div class="absolute inset-0 bg-gradient-to-t from-[#050b18] via-transparent to-transparent opacity-90"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#0d1528] via-transparent to-transparent opacity-90"></div>
                         <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition duration-300 bg-black/50">
                           <span class="px-5 py-2.5 rounded-full bg-acad-yellow text-[#0B3D91] font-black text-sm shadow-lg">
                             <i class="fas fa-play text-xs me-1"></i> {{ __('landing.academy.stream_play') }}
@@ -271,7 +271,7 @@
     <div class="container-acad">
       <div class="reveal rounded-[28px] border border-white/10 glass-panel px-6 sm:px-10 py-10 sm:py-12 text-center overflow-hidden relative">
         <div class="absolute inset-0 pointer-events-none opacity-[0.16] bg-cover bg-center" style="background-image:url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=2000&q=82')"></div>
-        <div class="absolute inset-0 bg-gradient-to-r from-[#050b18]/70 via-transparent to-[#0B3D91]/35 pointer-events-none"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-[#0d1528]/70 via-transparent to-[#0B3D91]/35 pointer-events-none"></div>
         <span class="relative z-10 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-extrabold mb-5 glass-panel border border-white/10">
           <i class="fas fa-rocket"></i> {{ __('public.courses_cta_badge') }}
         </span>

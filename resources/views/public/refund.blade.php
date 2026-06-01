@@ -1,8 +1,8 @@
 ﻿@extends('layouts.public')
 
 @section('title', __('public.refund_page_title') . ' - ' . __('public.site_suffix'))
-@section('meta_description', 'سياسة الاسترداد والإلغاء لمنصة Muallimx — تعرف على شروط استرداد مدفوعاتك.')
-@section('meta_keywords', 'سياسة الاسترداد, استرداد المبلغ, Muallimx, إلغاء الاشتراك')
+@section('meta_description', 'سياسة الاسترداد والإلغاء لمنصة ' . config('app.name') . ' — تعرف على شروط استرداد مدفوعاتك.')
+@section('meta_keywords', 'سياسة الاسترداد, استرداد المبلغ, Glottical, إلغاء الاشتراك')
 @section('canonical_url', url('/refund'))
 
 @section('content')

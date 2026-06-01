@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <title>{{ __('public.services_page_title') }} - {{ __('public.site_suffix') }}</title>
     <meta name="description" content="{{ __('public.services_subtitle') }}">
-    <meta name="theme-color" content="#050b18">
+    <meta name="theme-color" content="#0d1528">
     @include('partials.favicon-links')
     @include('partials.seo-jsonld', ['jsonldType' => 'website'])
 
@@ -29,8 +29,8 @@
                             blueDark: '#072a66',
                             cyan: '#00A3C4',
                             yellow: '#F5B800',
-                            navy: '#050b18',
-                            navyMid: '#0f1f3a',
+                            navy: '#0d1528',
+                            navyMid: '#1a2d4d',
                             neon: '#00d4ff',
                         },
                     },

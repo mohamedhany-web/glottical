@@ -21,15 +21,15 @@
 <a href="{{ route('home') }}" class="inline-flex items-center gap-3 group {{ $mb }}">
     @if($logoUrl)
         <div class="{{ $box }} rounded-xl flex items-center justify-center overflow-hidden {{ $logoWrap }} group-hover:brightness-110 transition-all">
-            <img src="{{ $logoUrl }}" alt="{{ config('app.name') }}" class="w-full h-full object-contain p-1" width="48" height="48" loading="eager" decoding="async">
+            <img src="{{ $logoUrl }}" alt="{{ config('app.name') }}" class="w-full h-full object-contain p-1" width="48" height="48" loading="eager" decoding="async" fetchpriority="high" onerror="this.onerror=null;this.src='{{ \App\Services\AdminPanelBranding::inlineFallbackDataUri() }}';">
         </div>
     @elseif($fallback === 'gradient' && $isSm)
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00A3C4] to-[#0B3D91] flex items-center justify-center shadow-lg shadow-cyan-900/30">
-            <span class="text-white font-black text-lg">M</span>
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-acad-cyan to-acad-blue flex items-center justify-center shadow-lg shadow-cyan-900/30">
+            <span class="text-white font-black text-lg">G</span>
         </div>
     @else
         <div class="{{ $box }} rounded-xl {{ $isDark ? 'bg-gradient-to-br from-acad-yellow to-amber-400' : 'bg-[#FB5607]' }} flex items-center justify-center shadow-lg {{ $isDark ? 'shadow-black/30' : 'shadow-orange-500/25' }} group-hover:opacity-95 transition-opacity">
-            <span class="text-{{ $isDark ? '[#0B3D91]' : 'white' }} font-black {{ $mText }}">M</span>
+            <span class="text-{{ $isDark ? '[#0B3D91]' : 'white' }} font-black {{ $mText }}">G</span>
         </div>
     @endif
     <span class="{{ $nameClass }} {{ $brandText }}" @if($isSm) style="font-family:Tajawal,sans-serif" @endif>{{ config('app.name', 'Muallimx') }}</span>

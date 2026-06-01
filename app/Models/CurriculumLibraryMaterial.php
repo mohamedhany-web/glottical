@@ -60,15 +60,7 @@ class CurriculumLibraryMaterial extends Model
         }
         $disk = $this->storage_disk ?: 'r2';
 
-        try {
-            if ($disk === 'r2') {
-                return Storage::disk('r2')->temporaryUrl($this->path, now()->addHours(2));
-            }
-
-            return Storage::disk($disk)->url($this->path);
-        } catch (\Throwable $e) {
-            return null;
-        }
+        return \App\Services\PublicStorageUrl::fromPath($this->path, $disk);
     }
 
     public static function fileKindFromExtension(string $ext): string

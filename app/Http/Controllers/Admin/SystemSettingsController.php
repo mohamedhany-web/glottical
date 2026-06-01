@@ -10,6 +10,7 @@ use App\Services\AdminPanelBranding;
 use App\Services\FawaterakService;
 use App\Services\PaymentGatewaySettings;
 use App\Services\PlatformSecuritySettings;
+use App\Services\PlatformMediaSettings;
 use App\Services\PublicFooterSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -68,6 +69,7 @@ class SystemSettingsController extends Controller
         $fawaterakGatewayEnabled = Setting::getValue(PaymentGatewaySettings::SETTING_KEY) === '1';
         $fawaterakEnvConfigured = app(FawaterakService::class)->isConfigured();
         $paymentGatewayFeePercent = Setting::getValue(PaymentGatewaySettings::FEE_PERCENT_SETTING_KEY) ?? '';
+        $r2PublicUrl = Setting::getValue(PlatformMediaSettings::SETTING_R2_PUBLIC_URL) ?? '';
 
         return view('admin.system-settings.edit', compact(
             'defaults',
@@ -77,7 +79,8 @@ class SystemSettingsController extends Controller
             'admin2faAppliesToCurrentUserRole',
             'fawaterakGatewayEnabled',
             'fawaterakEnvConfigured',
-            'paymentGatewayFeePercent'
+            'paymentGatewayFeePercent',
+            'r2PublicUrl'
         ));
     }
 
@@ -274,6 +277,7 @@ class SystemSettingsController extends Controller
             'social_tiktok_url' => ['nullable', 'string', 'max:500'],
             'social_telegram_url' => ['nullable', 'string', 'max:500'],
             'social_snapchat_url' => ['nullable', 'string', 'max:500'],
+            'r2_public_url' => ['nullable', 'string', 'max:500'],
         ];
 
         $footerData = [];
@@ -286,12 +290,23 @@ class SystemSettingsController extends Controller
             array_merge($footerData, [
                 'admin_panel_logo' => $request->file('admin_panel_logo'),
                 'remove_admin_panel_logo' => $request->boolean('remove_admin_panel_logo'),
+                'r2_public_url' => $request->input('r2_public_url'),
             ]),
             array_merge($footerRules, [
                 'admin_panel_logo' => ['nullable', 'image', 'max:'.config('upload_limits.max_upload_kb'), 'mimes:jpg,jpeg,png,webp,gif'],
                 'remove_admin_panel_logo' => ['nullable', 'boolean'],
             ])
         )->validate();
+
+        $r2Raw = isset($validated['r2_public_url']) ? trim((string) $validated['r2_public_url']) : '';
+        if ($r2Raw !== '' && str_contains($r2Raw, 'cloudflarestorage.com')) {
+            return back()->withErrors([
+                'r2_public_url' => 'استخدم رابط R2 العام (pub-xxx.r2.dev) وليس cloudflarestorage.com.',
+            ])->withInput();
+        }
+        if ($r2Raw !== '' && ! filter_var($r2Raw, FILTER_VALIDATE_URL)) {
+            return back()->withErrors(['r2_public_url' => 'رابط R2 العام غير صالح.'])->withInput();
+        }
 
         foreach (PublicFooterSettings::editableKeys() as $key) {
             $raw = isset($validated[$key]) && $validated[$key] !== null ? trim((string) $validated[$key]) : '';
@@ -340,6 +355,13 @@ class SystemSettingsController extends Controller
             }
             Setting::setValue(PaymentGatewaySettings::FEE_PERCENT_SETTING_KEY, (string) round($feeVal, 4));
         }
+
+        Setting::setValue(
+            PlatformMediaSettings::SETTING_R2_PUBLIC_URL,
+            $r2Raw !== '' ? rtrim($r2Raw, '/') : null
+        );
+        PlatformMediaSettings::forgetCache();
+        AdminPanelBranding::forgetLogoUrlCache();
 
         PublicFooterSettings::forgetCache();
 

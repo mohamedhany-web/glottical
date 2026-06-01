@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\PublicStorageUrl;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * تقديم ملفات /storage/* من القرص المحلي أو Cloudflare R2.
+ * تقديم ملفات /storage/* — يُفضّل إعادة التوجيه إلى R2/CDN بدل تمرير المحتوى عبر PHP.
  */
 class StorageFileController extends Controller
 {
@@ -48,6 +49,34 @@ class StorageFileController extends Controller
             return $headers;
         };
 
+        foreach (['r2', 's3'] as $cloudDisk) {
+            try {
+                $disk = Storage::disk($cloudDisk);
+                if (! $disk->exists($path)) {
+                    continue;
+                }
+
+                $directUrl = PublicStorageUrl::cloudDirectUrl($cloudDisk, $path);
+                if ($directUrl !== null && ! PublicStorageUrl::isApplicationProxyUrl($directUrl)) {
+                    return redirect()->away($directUrl, 302, [
+                        'Cache-Control' => 'public, max-age=604800',
+                    ]);
+                }
+
+                $mimeType = $mimeFromExtension($path);
+
+                return response($disk->get($path), 200, $headersFor($mimeType, $path));
+            } catch (\Throwable $e) {
+                if (config('app.debug')) {
+                    Log::warning('Storage cloud read failed', [
+                        'disk' => $cloudDisk,
+                        'path' => $path,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
         $basePath = storage_path('app/public');
         $filePath = $basePath.DIRECTORY_SEPARATOR.str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
 
@@ -61,26 +90,6 @@ class StorageFileController extends Controller
                 $mimeType = @mime_content_type($realPath) ?: $mimeFromExtension($realPath);
 
                 return response()->file($realPath, $headersFor($mimeType, $realPath));
-            }
-        }
-
-        foreach (['r2', 's3'] as $cloudDisk) {
-            try {
-                $disk = Storage::disk($cloudDisk);
-                if ($disk->exists($path)) {
-                    $mimeType = $mimeFromExtension($path);
-                    $contents = $disk->get($path);
-
-                    return response($contents, 200, $headersFor($mimeType, $path));
-                }
-            } catch (\Throwable $e) {
-                if (config('app.debug')) {
-                    Log::warning('Storage cloud read failed', [
-                        'disk' => $cloudDisk,
-                        'path' => $path,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
             }
         }
 

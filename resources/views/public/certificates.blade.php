@@ -1,8 +1,8 @@
 ﻿@extends('layouts.public')
 
 @section('title', __('public.certificates_page_title') . ' - ' . __('public.site_suffix'))
-@section('meta_description', 'شهادات Muallimx المعتمدة للمعلمين والطلاب — تحقق من صحة شهادتك أو استعرض الشهادات المتاحة.')
-@section('meta_keywords', 'شهادات معتمدة, Muallimx, شهادة تدريب, شهادة إتمام')
+@section('meta_description', 'شهادات ' . config('app.name') . ' — وثّق مهاراتك اللغوية والمهنية وتحقق من صحة شهادتك.')
+@section('meta_keywords', 'شهادات, Glottical, شهادة إتمام, سوق العمل')
 @section('canonical_url', url('/certificates'))
 
 @section('content')

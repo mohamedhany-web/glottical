@@ -11,7 +11,7 @@
     <meta name="title" content="{{ __('public.instructors_page_title') }} - {{ __('public.site_suffix') }}">
     <meta name="description" content="{{ __('public.instructors_subtitle') }}">
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
-    <meta name="theme-color" content="#050b18">
+    <meta name="theme-color" content="#0d1528">
     <link rel="canonical" href="{{ url('/instructors') }}">
     <link rel="alternate" hreflang="ar" href="{{ url('/instructors') }}?lang=ar">
     <link rel="alternate" hreflang="en" href="{{ url('/instructors') }}?lang=en">
@@ -35,8 +35,8 @@
                             blueDark: '#072a66',
                             cyan: '#00A3C4',
                             yellow: '#F5B800',
-                            navy: '#050b18',
-                            navyMid: '#0f1f3a',
+                            navy: '#0d1528',
+                            navyMid: '#1a2d4d',
                             neon: '#00d4ff',
                         },
                     },

@@ -9,8 +9,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     @php
         $seoTitle = trim($__env->yieldContent('title')) ?: (config('app.name') . ' - ' . __('landing.nav.brand'));
-        $seoDescription = trim($__env->yieldContent('meta_description')) ?: 'منصة عربية لتأهيل وتطوير المعلمين للعمل أونلاين باحتراف.';
-        $seoKeywords = trim($__env->yieldContent('meta_keywords')) ?: 'تأهيل المعلمين, تدريب المعلمين أونلاين, Muallimx';
+        $seoDescription = trim($__env->yieldContent('meta_description')) ?: __('landing.meta.description');
+        $seoKeywords = trim($__env->yieldContent('meta_keywords')) ?: 'تعليم ألماني, تعليم إنجليزي, كول سنتر, سوق العمل, ألمانيا, Glottical';
         $seoImage = trim($__env->yieldContent('meta_image')) ?: asset('images/og-image.jpg');
         $seoType = trim($__env->yieldContent('meta_type')) ?: 'website';
         $seoCanonical = trim($__env->yieldContent('canonical_url')) ?: url()->current();
@@ -27,9 +27,24 @@
     <link rel="alternate" hreflang="ar" href="{{ $seoAltBase }}?lang=ar">
     <link rel="alternate" hreflang="en" href="{{ $seoAltBase }}?lang=en">
     <link rel="alternate" hreflang="x-default" href="{{ $seoAltBase }}">
-    <meta name="theme-color" content="#050b18">
+    <meta name="theme-color" content="{{ config('academy-theme.navy') }}">
 
     @include('partials.favicon-links')
+
+    @php
+        $r2PublicBase = config('filesystems.r2_public_url');
+        $navLogoPreload = \App\Services\AdminPanelBranding::logoPublicUrl();
+    @endphp
+    @if(is_string($r2PublicBase) && $r2PublicBase !== '')
+        @php
+            $r2Host = parse_url($r2PublicBase, PHP_URL_SCHEME).'://'.parse_url($r2PublicBase, PHP_URL_HOST);
+        @endphp
+        <link rel="dns-prefetch" href="{{ $r2Host }}">
+        <link rel="preconnect" href="{{ $r2Host }}" crossorigin>
+    @endif
+    @if(is_string($navLogoPreload) && $navLogoPreload !== '' && ! str_starts_with($navLogoPreload, 'data:'))
+        <link rel="preload" as="image" href="{{ $navLogoPreload }}" fetchpriority="high">
+    @endif
 
     <!-- الخطوط العربية - تحميل غير معطل للرسم (تحسين FCP/LCP) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -57,8 +72,8 @@
                             yellowSoft: '#FFF8E1',
                             gray: '#F4F6FA',
                             ink: '#1a2d4d',
-                            navy: '#050b18',
-                            navyMid: '#0f1f3a',
+                            navy: '{{ config('academy-theme.navy') }}',
+                            navyMid: '{{ config('academy-theme.navy_mid') }}',
                             neon: '#00d4ff',
                         },
                     },
@@ -77,6 +92,7 @@
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
 
+    @include('partials.academy-theme-vars')
     @include('partials.public-academy-surface')
     <!-- Custom Styles from welcome.blade.php -->
     @include('layouts.public-styles')

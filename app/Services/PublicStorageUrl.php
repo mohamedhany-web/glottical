@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Storage;
  */
 class PublicStorageUrl
 {
+    /** مسار البروكسي عبر Laravel — يتجنب تعارض مجلد storage/ على الاستضافة */
+    public const PROXY_PATH = 'media';
+
     /** @var array<int, string> */
     private const CLOUD_DISKS = ['r2', 's3'];
 
@@ -26,40 +29,77 @@ class PublicStorageUrl
             return self::ensureHttpsInProduction($path);
         }
 
-        foreach (PublicMediaStorage::disksToProbe($preferredDisk) as $disk) {
-            if (! in_array($disk, ['public', ...self::CLOUD_DISKS], true)) {
-                continue;
-            }
+        $disk = $preferredDisk ?? PublicMediaStorage::resolvedDisk();
 
-            try {
-                if ($disk === 'public') {
-                    if (self::publicDiskHasFile($path)) {
-                        return self::localWebUrl($path);
-                    }
-
-                    continue;
-                }
-
-                if (Storage::disk($disk)->exists($path)) {
-                    return self::cloudAssetUrl($disk, $path);
-                }
-            } catch (\Throwable) {
-                continue;
+        // مسار سريع: R2/S3 مع رابط عام (بدون exists — يُوفّر طلبات API ويُسرّع الصفحة)
+        if (in_array($disk, self::CLOUD_DISKS, true)) {
+            $direct = self::cloudDirectUrl($disk, $path);
+            if ($direct !== null) {
+                return $direct;
             }
         }
 
-        if (PublicMediaStorage::resolvedDisk() !== 'public') {
-            foreach (self::CLOUD_DISKS as $cloudDisk) {
+        if ($disk === 'public' && self::publicDiskHasFile($path)) {
+            return self::localWebUrl($path);
+        }
+
+        $resolvedDefault = PublicMediaStorage::resolvedDisk();
+        if (in_array($resolvedDefault, self::CLOUD_DISKS, true)) {
+            return self::cloudDirectUrl($resolvedDefault, $path);
+        }
+
+        foreach (PublicMediaStorage::disksToProbe($preferredDisk) as $probeDisk) {
+            if ($probeDisk === $disk) {
+                continue;
+            }
+
+            if (in_array($probeDisk, self::CLOUD_DISKS, true)) {
+                $direct = self::cloudDirectUrl($probeDisk, $path);
+                if ($direct !== null) {
+                    return $direct;
+                }
+
                 try {
-                    if (Storage::disk($cloudDisk)->exists($path)) {
-                        return self::cloudAssetUrl($cloudDisk, $path);
+                    if (Storage::disk($probeDisk)->exists($path)) {
+                        return self::cloudAssetUrl($probeDisk, $path);
                     }
                 } catch (\Throwable) {
                     continue;
                 }
+
+                continue;
+            }
+
+            if ($probeDisk === 'public' && self::publicDiskHasFile($path)) {
+                return self::localWebUrl($path);
             }
         }
 
+        return null;
+    }
+
+    /**
+     * رابط مباشر للمتصفح (CDN عام أو موقّع) — بدون استعلام exists.
+     */
+    public static function cloudDirectUrl(string $disk, string $path): ?string
+    {
+        if (! in_array($disk, self::CLOUD_DISKS, true)) {
+            return null;
+        }
+
+        $path = str_replace('\\', '/', ltrim($path, '/'));
+        $publicBase = self::cloudPublicBaseUrl($disk);
+
+        if ($publicBase !== null) {
+            return self::ensureHttpsInProduction($publicBase.'/'.$path);
+        }
+
+        $signed = self::cloudSignedUrl($disk, $path);
+        if ($signed !== null && ! str_contains($signed, 'cloudflarestorage.com')) {
+            return self::ensureHttpsInProduction($signed);
+        }
+
+        // بدون r2.dev: بروكسي عبر /storage/ (يُخدم من StorageFileController من R2 مباشرة)
         return self::localWebUrl($path);
     }
 
@@ -68,18 +108,9 @@ class PublicStorageUrl
      */
     public static function cloudAssetUrl(string $disk, string $path): string
     {
-        $path = str_replace('\\', '/', ltrim($path, '/'));
-        $publicBase = self::cloudPublicBaseUrl($disk);
-
-        if ($publicBase !== null) {
-            return self::ensureHttpsInProduction($publicBase.'/'.$path);
-        }
-
-        if (in_array($disk, self::CLOUD_DISKS, true)) {
-            $signed = self::cloudSignedUrl($disk, $path);
-            if ($signed !== null) {
-                return $signed;
-            }
+        $direct = self::cloudDirectUrl($disk, $path);
+        if ($direct !== null) {
+            return $direct;
         }
 
         return self::localWebUrl($path);
@@ -105,6 +136,8 @@ class PublicStorageUrl
     public static function cloudPublicBaseUrl(string $disk): ?string
     {
         $candidates = [
+            PlatformMediaSettings::r2PublicBaseUrl(),
+            config('filesystems.r2_public_url'),
             env('R2_PUBLIC_URL'),
             config("filesystems.disks.{$disk}.url"),
         ];
@@ -124,6 +157,17 @@ class PublicStorageUrl
         }
 
         return null;
+    }
+
+    public static function isApplicationProxyUrl(string $url): bool
+    {
+        $root = rtrim(ApplicationUrl::resolveRootUrl(), '/');
+        if ($root === '') {
+            return false;
+        }
+
+        return str_starts_with($url, $root.'/storage/')
+            || str_starts_with($url, $root.'/'.self::PROXY_PATH.'/');
     }
 
     public static function publicDiskHasFile(string $path): bool
@@ -149,7 +193,7 @@ class PublicStorageUrl
     {
         $path = str_replace('\\', '/', ltrim($path, '/'));
 
-        return rtrim(ApplicationUrl::resolveRootUrl(), '/').'/storage/'.$path;
+        return rtrim(ApplicationUrl::resolveRootUrl(), '/').'/'.self::PROXY_PATH.'/'.$path;
     }
 
     private static function ensureHttpsInProduction(string $url): string

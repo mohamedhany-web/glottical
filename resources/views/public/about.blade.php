@@ -6,8 +6,8 @@
 @endphp
 
 @section('title', __('public.about_page_title') . ' - ' . __('public.site_suffix'))
-@section('meta_description', __('public.about_page_title') . ' — ' . $brand . '، رسالتنا في تأهيل المعلمين العرب للعمل أونلاين، وقيمنا في التعليم الإلكتروني.')
-@section('meta_keywords', 'من نحن, ' . $brand . ', تأهيل معلمين, تعليم إلكتروني عربي')
+@section('meta_description', __('public.about_page_title') . ' — ' . $brand . '، منصة لتعليم الألمانية والإنجليزية وربط اللغة بفرص العمل في الكول سنتر، السياحة، وألمانيا.')
+@section('meta_keywords', 'من نحن, ' . $brand . ', تعليم ألماني, تعليم إنجليزي, كول سنتر, سوق العمل, ألمانيا')
 @section('canonical_url', url('/about'))
 
 @push('styles')

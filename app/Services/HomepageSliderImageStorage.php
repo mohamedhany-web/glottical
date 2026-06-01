@@ -46,13 +46,8 @@ class HomepageSliderImageStorage
         }
 
         $path = str_replace('\\', '/', ltrim($path, '/'));
-        $disk = self::resolvedDisk();
 
-        if (! PublicMediaStorage::exists($path)) {
-            return null;
-        }
-
-        return PublicStorageUrl::fromPath($path, $disk);
+        return PublicStorageUrl::fromPath($path, self::resolvedDisk());
     }
 
     public static function store(UploadedFile $file, ?string $oldPath): string

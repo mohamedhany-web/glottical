@@ -55,7 +55,7 @@
 </section>
 
 {{-- مقدمة — كارت مثل CTA الرئيسية --}}
-<section class="py-10 sm:py-12 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+<section class="py-10 sm:py-12 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-800">
     <div class="w-full max-w-[1200px] mx-auto px-6 sm:px-8">
         <div class="rounded-[28px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-[0_20px_44px_-26px_rgba(31,42,122,.28)] px-6 sm:px-10 py-8 sm:py-10">
             <div class="flex flex-col sm:flex-row sm:items-start gap-6">
@@ -71,7 +71,7 @@
 </section>
 
 {{-- البنود — شبكة كروت مثل كروت الإحصائيات في الرئيسية --}}
-<section class="py-12 sm:py-16 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
+<section class="py-12 sm:py-16 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
     <div class="w-full max-w-[1200px] mx-auto px-6 sm:px-8">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 lg:gap-6">
             @php

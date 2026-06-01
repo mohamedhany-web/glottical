@@ -495,17 +495,17 @@ section[id] {
 
 /* Enhanced Dark Theme */
 body.dark-theme {
-    background: #0f172a;
+    background: #1a2332;
     color: #f1f5f9;
 }
 
 body.dark-theme .bg-white {
-    background: #1e293b !important;
+    background: #243044 !important;
     color: #f1f5f9 !important;
 }
 
 body.dark-theme .bg-gray-50 {
-    background: #0f172a !important;
+    background: #1a2332 !important;
 }
 
 body.dark-theme .text-gray-900 {

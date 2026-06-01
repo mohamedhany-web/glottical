@@ -13,12 +13,12 @@ class PublicFooterSettings
     public static function defaults(): array
     {
         return [
-            'footer_brand_tagline' => 'منصة تطوير المعلم العربي',
-            'footer_blurb' => 'تجربة تعليمية عربية تركز على التمكين المهني للمعلم عبر التدريب العملي وأدوات التدريس الحديثة.',
-            'footer_email' => 'info@Muallimx.com',
+            'footer_brand_tagline' => 'تعلّم لغة. احصل على وظيفة. ابدأ مستقبلك.',
+            'footer_blurb' => 'منصة متخصصة في تعليم الألمانية والإنجليزية المرتبطة بسوق العمل — كورسات عملية، جلسات خاصة، واستشارات مهنية للكول سنتر، الدعم الفني، السياحة، وألمانيا.',
+            'footer_email' => 'info@glottical.com',
             'footer_phone' => '01044610507',
             'footer_whatsapp_url' => 'https://wa.me/201044610507',
-            'footer_bottom_tagline' => 'تعليم عربي احترافي يركز على النتائج',
+            'footer_bottom_tagline' => 'اللغة والمهارة المهنية — طريقك إلى سوق العمل',
             'social_facebook_url' => '',
             'social_x_url' => '',
             'social_instagram_url' => '',

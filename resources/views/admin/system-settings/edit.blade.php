@@ -92,6 +92,30 @@
             </div>
         </div>
 
+        {{-- 1ب) رابط R2 العام للصور --}}
+        <div class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-700/30 flex flex-wrap items-center gap-3">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-sm font-black">★</span>
+                <div>
+                    <h3 class="text-base font-black text-slate-900 dark:text-slate-100">رابط عرض الصور (Cloudflare R2)</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">يُستخدم للشعار، سلايدر الصفحة الرئيسية، صور الكورسات، وكل ملفات المنصة. بدونه قد لا تظهر الصور على الاستضافة.</p>
+                </div>
+            </div>
+            <div class="p-6 space-y-3">
+                <label class="block text-sm font-bold text-slate-700 dark:text-slate-200">R2 Public URL</label>
+                <input type="url" name="r2_public_url" value="{{ old('r2_public_url', $r2PublicUrl) }}"
+                       class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm text-slate-800 dark:text-slate-100 font-mono"
+                       placeholder="https://pub-xxxxxxxx.r2.dev">
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    من لوحة Cloudflare: R2 → Bucket → <strong>Public access</strong> → انسخ رابط <code class="text-[10px] bg-slate-100 dark:bg-slate-700 px-1 rounded">r2.dev</code>.
+                    لا تستخدم <code class="text-[10px]">cloudflarestorage.com</code>. يمكن أيضاً ضبط <code class="text-[10px]">R2_PUBLIC_URL</code> في <code class="text-[10px]">.env</code> على السيرفر.
+                </p>
+                @error('r2_public_url')
+                    <p class="text-xs text-rose-600 font-semibold">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
         {{-- 2) الفوتر العام --}}
         <div class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-lg overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-700/30 flex flex-wrap items-center gap-3">

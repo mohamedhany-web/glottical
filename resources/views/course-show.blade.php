@@ -36,7 +36,7 @@
     <meta name="keywords"    content="{{ $course->title ?? 'كورس' }}, تعلم أونلاين, كورسات عربية, Muallimx, {{ $categoryDisplay }}">
     <meta name="author"      content="{{ ($course->instructor->name ?? null) ?? 'Muallimx' }}">
     <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1">
-    <meta name="theme-color" content="#050b18">
+    <meta name="theme-color" content="#0d1528">
     <link rel="canonical"    href="{{ $courseUrl }}">
     <link rel="alternate" hreflang="ar"        href="{{ $courseUrl }}?lang=ar">
     <link rel="alternate" hreflang="en"        href="{{ $courseUrl }}?lang=en">
@@ -79,8 +79,8 @@
                         yellow: '#F5B800',
                         yellowSoft: '#FFF8E1',
                         ink: '#1a2d4d',
-                        navy: '#050b18',
-                        navyMid: '#0f1f3a',
+                        navy: '#0d1528',
+                        navyMid: '#1a2d4d',
                         neon: '#00d4ff',
                     },
                     navy: { 50:'#f0f4ff',100:'#dbe4ff',200:'#bac8ff',300:'#91a7ff',400:'#748ffc',500:'#5c7cfa',600:'#4c6ef5',700:'#4263eb',800:'#3b5bdb',900:'#364fc7',950:'#283593' },

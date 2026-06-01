@@ -4,12 +4,15 @@ namespace App\Services;
 
 use App\Models\Setting;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class AdminPanelBranding
 {
     public const SETTING_KEY = 'admin_panel_logo_path';
+
+    private const LOGO_URL_CACHE_KEY = 'branding.admin_panel_logo_url_v2';
 
     /**
      * قرص التخزين: public محلي، أو r2 لـ Cloudflare R2.
@@ -42,38 +45,56 @@ class AdminPanelBranding
         return $d;
     }
 
+    public static function forgetLogoUrlCache(): void
+    {
+        Cache::forget(self::LOGO_URL_CACHE_KEY);
+    }
+
     /**
-     * رابط عرض الشعار. للقرص المحلي يُفضّل مضيف الطلب الحالي لتفادي كسر الرابط بين localhost و 127.0.0.1.
+     * رابط عرض الشعار (مُخزَّن مؤقتاً لتسريع كل صفحة).
      */
     public static function logoPublicUrl(): ?string
     {
-        $path = Setting::getValue(self::SETTING_KEY);
-        if (is_string($path) && $path !== '') {
-            $path = str_replace('\\', '/', ltrim($path, '/'));
-            $disk = self::resolvedDisk();
-
-            if (Storage::disk($disk)->exists($path)) {
-                return $disk === 'public'
-                    ? self::publicStorageUrl($path)
-                    : Storage::disk($disk)->url($path);
+        return Cache::remember(self::LOGO_URL_CACHE_KEY, 3600, function () {
+            $path = Setting::getValue(self::SETTING_KEY);
+            if (is_string($path) && $path !== '') {
+                $url = self::urlForStoredPath($path);
+                if ($url !== null) {
+                    return $url;
+                }
             }
 
-            if ($disk !== 'public' && Storage::disk('public')->exists($path)) {
-                return self::publicStorageUrl($path);
+            $defaultPath = \App\Providers\AppServiceProvider::SITE_LOGO_STORAGE_PATH;
+            $defaultUrl = self::urlForStoredPath($defaultPath);
+            if ($defaultUrl !== null) {
+                return $defaultUrl;
             }
-        }
 
-        $defaultPath = \App\Providers\AppServiceProvider::SITE_LOGO_STORAGE_PATH;
-        if (PublicStorageUrl::publicDiskHasFile($defaultPath)) {
-            return self::publicStorageUrl($defaultPath);
-        }
-
-        return asset('logo-removebg-preview.png');
+            return self::inlineFallbackDataUri();
+        });
     }
 
-    private static function publicStorageUrl(string $path): string
+    /**
+     * شعار احتياطي مضمّن (لا يعتمد على ملف في public/).
+     */
+    public static function inlineFallbackDataUri(): string
     {
-        return PublicStorageUrl::fromPath($path, self::resolvedDisk()) ?? PublicStorageUrl::localWebUrl($path);
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
+            .'<circle cx="32" cy="32" r="32" fill="#F6C945"/>'
+            .'<text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#082B63">G</text>'
+            .'</svg>';
+
+        return 'data:image/svg+xml;base64,'.base64_encode($svg);
+    }
+
+    /**
+     * رابط عرض صالح للمتصفح (R2 عام أو موقّع أو /storage/ بروكسي).
+     */
+    private static function urlForStoredPath(string $path): ?string
+    {
+        $path = str_replace('\\', '/', ltrim($path, '/'));
+
+        return PublicStorageUrl::fromPath($path, self::resolvedDisk());
     }
 
     public static function removeLogo(): void
@@ -83,54 +104,25 @@ class AdminPanelBranding
             self::deletePhysicalFile($path);
         }
         Setting::setValue(self::SETTING_KEY, null);
+        self::forgetLogoUrlCache();
     }
 
     public static function storeLogo(UploadedFile $file): void
     {
-        $disk = self::resolvedDisk();
-
-        $ext = match ($file->getMimeType()) {
-            'image/jpeg' => 'jpg',
-            'image/png' => 'png',
-            'image/webp' => 'webp',
-            'image/gif' => 'gif',
-            default => strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'png'),
-        };
-        if (! in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
-            $ext = 'png';
-        }
-
-        $name = 'admin-panel-logo.'.$ext;
         $oldPath = Setting::getValue(self::SETTING_KEY);
-
-        if ($disk === 'public') {
-            Storage::disk('public')->makeDirectory('site');
-            $stored = $file->storeAs('site', $name, 'public');
-        } else {
-            $stored = Storage::disk($disk)->putFileAs('site', $file, $name, 'public');
-        }
-
-        if (! is_string($stored) || $stored === '') {
-            throw new \RuntimeException('فشل حفظ ملف الشعار.');
-        }
+        $stored = PublicMediaStorage::store($file, 'site', is_string($oldPath) ? $oldPath : null);
 
         Setting::setValue(self::SETTING_KEY, $stored);
 
         if (is_string($oldPath) && $oldPath !== '' && $oldPath !== $stored) {
             self::deletePhysicalFile($oldPath);
         }
+
+        self::forgetLogoUrlCache();
     }
 
     private static function deletePhysicalFile(string $path): void
     {
-        $path = str_replace('\\', '/', ltrim($path, '/'));
-        foreach (array_unique([self::resolvedDisk(), 'public']) as $d) {
-            if (! in_array($d, ['public', 'r2', 's3'], true)) {
-                continue;
-            }
-            if (Storage::disk($d)->exists($path)) {
-                Storage::disk($d)->delete($path);
-            }
-        }
+        PublicMediaStorage::delete($path);
     }
 }

@@ -30,7 +30,7 @@
             <a href="{{ route('home') }}" class="flex items-center gap-3 min-w-0 group">
                 @if(!empty($navbarLogoUrl))
                     <span class="h-10 w-10 shrink-0 overflow-hidden rounded-full ring-1 ring-white/20 shadow-lg">
-                        <img src="{{ $navbarLogoUrl }}" alt="" class="h-full w-full object-cover" decoding="async">
+                        <img src="{{ $navbarLogoUrl }}" alt="" class="h-full w-full object-cover" decoding="async" fetchpriority="high" onerror="this.onerror=null;this.src='{{ \App\Services\AdminPanelBranding::inlineFallbackDataUri() }}';">
                     </span>
                 @else
                     <span class="h-10 w-10 shrink-0 rounded-full flex items-center justify-center bg-[#F5B800] text-[#0B3D91] font-black text-lg shadow-lg">G</span>
@@ -140,7 +140,7 @@
         </div>
 
         @auth
-        <div class="relative shrink-0 px-4 py-4 border-t border-white/10 bg-[#050b18]/90 mob-menu-safe-bottom">
+        <div class="relative shrink-0 px-4 py-4 border-t border-white/10 bg-[#0d1528]/90 mob-menu-safe-bottom">
             <div class="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/[0.05]">
                 <span class="w-11 h-11 rounded-full flex items-center justify-center text-[#0B3D91] font-black text-sm shrink-0 bg-[#F5B800]">
                     {{ mb_substr(auth()->user()->name, 0, 1) }}

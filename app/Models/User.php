@@ -206,10 +206,8 @@ class User extends Authenticatable
         }
 
         $path = str_replace('\\', '/', ltrim((string) $path, '/'));
-        $base = UserProfileImageStorage::publicUrl($path);
-        if ($base === null) {
-            $base = Storage::disk('public')->url($path);
-        }
+        $base = UserProfileImageStorage::publicUrl($path)
+            ?? \App\Services\PublicStorageUrl::fromPath($path);
         $ts = $this->portfolio_profile_reviewed_at?->timestamp ?? '0';
 
         return $base.(str_contains($base, '?') ? '&' : '?').'v='.$ts;
@@ -230,10 +228,8 @@ class User extends Authenticatable
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             $base = $path;
         } else {
-            $base = UserProfileImageStorage::publicUrl($path);
-            if ($base === null) {
-                $base = Storage::disk('public')->url($path);
-            }
+            $base = UserProfileImageStorage::publicUrl($path)
+                ?? \App\Services\PublicStorageUrl::fromPath($path);
         }
         $ts = $this->updated_at ? $this->updated_at->timestamp : '';
 

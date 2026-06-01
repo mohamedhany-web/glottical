@@ -60,32 +60,8 @@ class AssignmentFileStorage
         }
 
         $path = str_replace('\\', '/', ltrim($path, '/'));
-        $disk = self::resolvedDisk();
 
-        try {
-            if (Storage::disk($disk)->exists($path)) {
-                if ($disk === 'public') {
-                    return self::publicStorageUrl($path);
-                }
-
-                return Storage::disk($disk)->url($path);
-            }
-        } catch (\Throwable) {
-        }
-
-        try {
-            if ($disk !== 'public' && Storage::disk('public')->exists($path)) {
-                return self::publicStorageUrl($path);
-            }
-        } catch (\Throwable) {
-        }
-
-        return null;
-    }
-
-    private static function publicStorageUrl(string $path): string
-    {
-        return PublicStorageUrl::localWebUrl($path);
+        return PublicStorageUrl::fromPath($path, self::resolvedDisk());
     }
 
     /**

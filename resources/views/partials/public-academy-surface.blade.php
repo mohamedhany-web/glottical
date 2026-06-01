@@ -5,7 +5,7 @@
     }
     .page-academy {
         overflow-x: hidden;
-        background: linear-gradient(180deg, #050b18 0%, #0a1628 45%, #050b18 100%);
+        background: linear-gradient(180deg, var(--acad-navy) 0%, var(--acad-navy-gradient) 45%, var(--acad-navy) 100%);
         min-height: 100vh;
         display: flex;
         flex-direction: column;
@@ -22,7 +22,7 @@
         padding-inline: clamp(16px, 4vw, 28px);
     }
     .glass-panel {
-        background: rgba(15, 31, 58, 0.72);
+        background: rgba(var(--acad-navy-mid-rgb), 0.72);
         border: 1px solid rgba(255, 255, 255, 0.12);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
@@ -78,7 +78,7 @@
     .card-stream {
         border-radius: 1rem;
         overflow: hidden;
-        background: rgba(15, 31, 58, 0.55);
+        background: rgba(var(--acad-navy-mid-rgb), 0.55);
         border: 1px solid rgba(255, 255, 255, 0.1);
         box-shadow: 0 18px 40px -26px rgba(0, 0, 0, 0.65);
     }

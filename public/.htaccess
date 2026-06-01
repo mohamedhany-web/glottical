@@ -10,8 +10,8 @@
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # إجبار /storage/* على Laravel (حتى لو وُجد مجلد public/storage أو symlink بدون الملف على السيرفر)
-    RewriteRule ^storage/ index.php [L]
+    # إجبار /media/* و /storage/* على Laravel (تجنب 404 من symlink أو مجلد storage على الاستضافة)
+    RewriteRule ^(media|storage)/ index.php [L]
 
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d

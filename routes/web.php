@@ -11,6 +11,11 @@ use Illuminate\Support\Facades\Route;
 | يعمل عند عدم وجود symlink public/storage على الاستضافة
 |--------------------------------------------------------------------------
 */
+Route::get('/media/{path}', [\App\Http\Controllers\StorageFileController::class, 'show'])
+    ->where('path', '.*')
+    ->name('storage.media')
+    ->middleware('web');
+
 Route::get('/storage/{path}', [\App\Http\Controllers\StorageFileController::class, 'show'])
     ->where('path', '.*')
     ->name('storage.file')

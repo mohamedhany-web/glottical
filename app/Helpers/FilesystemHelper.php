@@ -43,6 +43,6 @@ if (! function_exists('storage_base_url')) {
      */
     function storage_base_url(): string
     {
-        return rtrim(\App\Support\ApplicationUrl::resolveRootUrl(), '/').'/storage';
+        return rtrim(\App\Support\ApplicationUrl::resolveRootUrl(), '/').'/'.\App\Services\PublicStorageUrl::PROXY_PATH;
     }
 }

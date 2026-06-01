@@ -14,7 +14,7 @@
     .faq-acc-item {
         transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
         border: 1px solid rgba(255, 255, 255, 0.12);
-        background: rgba(15, 31, 58, 0.55);
+        background: rgba(26, 45, 77, 0.55);
     }
     .faq-acc-item:hover {
         border-color: rgba(245, 184, 0, 0.35);

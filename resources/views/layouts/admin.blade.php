@@ -548,7 +548,7 @@
 
             @if(! empty($adminPanelLogoUrl))
             <div class="flex items-center shrink-0" title="Muallimx">
-                <img src="{{ $adminPanelLogoUrl }}" alt="" width="36" height="36" class="h-8 w-8 sm:h-9 sm:w-9 rounded-xl object-contain bg-white border border-slate-200/80 dark:border-slate-600 dark:bg-slate-800 shadow-sm">
+                <img src="{{ $adminPanelLogoUrl }}" alt="" width="36" height="36" class="h-8 w-8 sm:h-9 sm:w-9 rounded-xl object-contain bg-white border border-slate-200/80 dark:border-slate-600 dark:bg-slate-800 shadow-sm" onerror="this.onerror=null;this.src='{{ \App\Services\AdminPanelBranding::inlineFallbackDataUri() }}';">
             </div>
             @endif
 
