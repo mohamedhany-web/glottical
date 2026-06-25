@@ -51,16 +51,23 @@ class StorageFileController extends Controller
 
         foreach (['r2', 's3'] as $cloudDisk) {
             try {
-                $disk = Storage::disk($cloudDisk);
-                if (! $disk->exists($path)) {
-                    continue;
-                }
-
                 $directUrl = PublicStorageUrl::cloudDirectUrl($cloudDisk, $path);
                 if ($directUrl !== null && ! PublicStorageUrl::isApplicationProxyUrl($directUrl)) {
                     return redirect()->away($directUrl, 302, [
                         'Cache-Control' => 'public, max-age=604800',
                     ]);
+                }
+
+                $signed = PublicStorageUrl::cloudSignedUrl($cloudDisk, $path);
+                if ($signed !== null) {
+                    return redirect()->away($signed, 302, [
+                        'Cache-Control' => 'public, max-age=604800',
+                    ]);
+                }
+
+                $disk = Storage::disk($cloudDisk);
+                if (! $disk->exists($path)) {
+                    continue;
                 }
 
                 $mimeType = $mimeFromExtension($path);

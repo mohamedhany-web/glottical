@@ -14,9 +14,15 @@ class CourseCheckoutPricingService
      *
      * @return array{ok: bool, message?: string, original_amount: float, coupon_id: ?int, discount_amount: float, wallet_credit_amount: float, final_amount: float, coupon: ?Coupon}
      */
-    public static function resolve(User $user, AdvancedCourse $course, ?string $couponCode, float $walletCreditRequested): array
+    public static function resolve(User $user, AdvancedCourse $course, ?string $couponCode, float $walletCreditRequested, ?string $billingMode = null): array
     {
-        $original = round($course->effectivePurchasePrice(), 2);
+        $billingMode = $billingMode ?? ($course->isMonthlyBilling()
+            ? \App\Services\CourseSubscriptionService::BILLING_MONTHLY
+            : \App\Services\CourseSubscriptionService::BILLING_ONE_TIME);
+
+        $original = round($billingMode === \App\Services\CourseSubscriptionService::BILLING_MONTHLY
+            ? $course->effectiveMonthlyPrice()
+            : $course->effectivePurchasePrice(), 2);
         if ($original <= 0) {
             return [
                 'ok' => false,

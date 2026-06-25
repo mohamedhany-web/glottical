@@ -153,13 +153,17 @@ class AdvancedCourseController extends Controller
             'description' => 'nullable|string',
             'video_url' => 'nullable|url|max:500',
             'objectives' => 'nullable|string',
-            'instructor_id' => 'nullable|exists:users,id',
+            'instructor_id' => 'nullable|exists:users,id|required_if:delivery_type,one_to_one',
             'programming_language' => 'nullable|string|max:100',
             'framework' => 'nullable|string|max:100',
             'duration_hours' => 'nullable|numeric|min:0',
             'duration_minutes' => 'nullable|integer|min:0|max:59',
             'price' => 'nullable|numeric|min:0',
             'price_after_discount' => 'nullable|numeric|min:0',
+            'delivery_type' => 'nullable|in:group,one_to_one',
+            'billing_mode' => 'nullable|in:one_time,monthly',
+            'monthly_price' => 'nullable|numeric|min:0',
+            'monthly_price_after_discount' => 'nullable|numeric|min:0',
             'requirements' => 'nullable|string',
             'prerequisites' => 'nullable|string',
             'what_you_learn' => 'nullable|string',
@@ -209,6 +213,9 @@ class AdvancedCourseController extends Controller
                 'duration_hours',
                 'duration_minutes',
                 'price',
+                'delivery_type',
+                'billing_mode',
+                'monthly_price',
                 'requirements',
                 'prerequisites',
                 'what_you_learn',
@@ -247,6 +254,15 @@ class AdvancedCourseController extends Controller
             return back()->withErrors(['price_after_discount' => 'لا يُستخدم سعر بعد الخصم للكورس المجاني.'])->withInput();
         }
         $data['price_after_discount'] = $this->normalizeOptionalSalePrice($request->input('price_after_discount'), $list);
+        $monthlyList = (float) ($request->input('monthly_price') ?? 0);
+        $data['delivery_type'] = in_array($request->input('delivery_type'), ['group', 'one_to_one'], true)
+            ? $request->input('delivery_type') : 'group';
+        $data['billing_mode'] = in_array($request->input('billing_mode'), ['one_time', 'monthly'], true)
+            ? $request->input('billing_mode') : 'one_time';
+        $data['monthly_price'] = $monthlyList > 0 ? $monthlyList : null;
+        $data['monthly_price_after_discount'] = $monthlyList > 0
+            ? $this->normalizeOptionalSalePrice($request->input('monthly_price_after_discount'), $monthlyList)
+            : null;
         $data['duration_hours'] = $data['duration_hours'] ?? 0;
         $data['duration_minutes'] = $data['duration_minutes'] ?? 0;
         $data['language'] = $data['language'] ?? 'ar';
@@ -357,13 +373,17 @@ class AdvancedCourseController extends Controller
             'description' => 'nullable|string',
             'video_url' => 'nullable|url|max:500',
             'objectives' => 'nullable|string',
-            'instructor_id' => 'nullable|exists:users,id',
+            'instructor_id' => 'nullable|exists:users,id|required_if:delivery_type,one_to_one',
             'programming_language' => 'nullable|string|max:100',
             'framework' => 'nullable|string|max:100',
             'duration_hours' => 'nullable|numeric|min:0',
             'duration_minutes' => 'nullable|integer|min:0|max:59',
             'price' => 'nullable|numeric|min:0',
             'price_after_discount' => 'nullable|numeric|min:0',
+            'delivery_type' => 'nullable|in:group,one_to_one',
+            'billing_mode' => 'nullable|in:one_time,monthly',
+            'monthly_price' => 'nullable|numeric|min:0',
+            'monthly_price_after_discount' => 'nullable|numeric|min:0',
             'requirements' => 'nullable|string',
             'prerequisites' => 'nullable|string',
             'what_you_learn' => 'nullable|string',
@@ -404,6 +424,9 @@ class AdvancedCourseController extends Controller
             'duration_hours',
             'duration_minutes',
             'price',
+            'delivery_type',
+            'billing_mode',
+            'monthly_price',
             'requirements',
             'prerequisites',
             'what_you_learn',
@@ -424,6 +447,15 @@ class AdvancedCourseController extends Controller
             return back()->withErrors(['price_after_discount' => 'لا يُستخدم سعر بعد الخصم للكورس المجاني.'])->withInput();
         }
         $data['price_after_discount'] = $this->normalizeOptionalSalePrice($request->input('price_after_discount'), $list);
+        $monthlyList = (float) ($request->input('monthly_price') ?? 0);
+        $data['delivery_type'] = in_array($request->input('delivery_type'), ['group', 'one_to_one'], true)
+            ? $request->input('delivery_type') : 'group';
+        $data['billing_mode'] = in_array($request->input('billing_mode'), ['one_time', 'monthly'], true)
+            ? $request->input('billing_mode') : 'one_time';
+        $data['monthly_price'] = $monthlyList > 0 ? $monthlyList : null;
+        $data['monthly_price_after_discount'] = $monthlyList > 0
+            ? $this->normalizeOptionalSalePrice($request->input('monthly_price_after_discount'), $monthlyList)
+            : null;
         $data['duration_hours'] = $data['duration_hours'] ?? 0;
         $data['duration_minutes'] = $data['duration_minutes'] ?? 0;
         $data['language'] = $data['language'] ?? 'ar';

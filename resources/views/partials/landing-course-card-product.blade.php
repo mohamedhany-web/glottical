@@ -7,8 +7,8 @@
     $dur = (int) ($course->duration_hours ?? 0);
     $durLabel = $dur > 0 ? $dur.' '.__($a.'.course_duration') : ($course->lessons_count ?? 0).' '.__('landing.lesson_single');
     $catSlug = optional($course->courseCategory)->name ? \Illuminate\Support\Str::slug($course->courseCategory->name) : '';
-    $priceNum = $course->is_free ? 0.0 : (float) ($course->price_after_discount ?? $course->price ?? 0);
-    $showDiscount = ! $course->is_free && $course->price_after_discount && $course->price && (float) $course->price_after_discount < (float) $course->price;
+    $priceNum = $course->is_free ? 0.0 : (float) $course->effectiveCheckoutPrice();
+    $showDiscount = ! $course->is_free && ! $course->isMonthlyBilling() && $course->hasPromotionalPrice();
 @endphp
 <article class="card-course reveal rounded-2xl border border-slate-100 bg-white overflow-hidden relative group"
     data-course-card
@@ -44,6 +44,12 @@
                 @php $pctOff = (float) $course->price > 0 ? (int) round((1 - (float) $course->price_after_discount / (float) $course->price) * 100) : 0; @endphp
                 <span class="text-[11px] font-black px-2 py-0.5 rounded-md bg-rose-100 text-rose-700">-{{ max(0, min(99, $pctOff)) }}%</span>
             @endif
+            @if($course->isMonthlyBilling())
+                <span class="text-[11px] font-black px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700">{{ __('public.course_badge_monthly') }}</span>
+            @endif
+            @if($course->isOneToOne())
+                <span class="text-[11px] font-black px-2 py-0.5 rounded-md bg-violet-100 text-violet-700">{{ __('public.course_badge_one_to_one') }}</span>
+            @endif
         </div>
         <h3 class="mt-3 font-black text-lg text-acad-ink leading-snug line-clamp-2">
             <a href="{{ route('public.course.show', $course->id) }}" class="hover:text-acad-cyan transition">{{ \Illuminate\Support\Str::limit($course->title, 70) }}</a>
@@ -53,13 +59,7 @@
             <span class="text-amber-500 font-bold text-sm">
                 @if($rating !== null)<i class="fas fa-star"></i> {{ $rating }}@else<span class="text-slate-400 text-xs">{{ __('public.no_rating_yet') }}</span>@endif
             </span>
-            <span class="text-acad-blue font-black text-sm tabular-nums">
-                @if($course->is_free)
-                    {{ __('landing.free') }}
-                @else
-                    {{ $fmt((int) $priceNum) }} {{ __('landing.currency') }}
-                @endif
-            </span>
+            <x-advanced-course-card-price :course="$course" size="sm" />
         </div>
         <a href="{{ route('public.course.show', $course->id) }}" class="mt-4 w-full inline-flex justify-center items-center gap-2 py-2.5 rounded-xl bg-acad-yellow text-acad-blue font-extrabold text-sm hover:brightness-105 transition shadow-sm">{{ __($a.'.course_enroll') }}</a>
     </div>

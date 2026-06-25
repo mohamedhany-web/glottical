@@ -17,15 +17,17 @@
             {{-- منطقة الصورة فقط: زر التشغيل يُوسَّط داخلها ولا يتقاطع مع الشريط النصي --}}
             <div class="relative aspect-video w-full shrink-0 bg-[#152a4a] overflow-hidden">
                 @if($thumbUrl)
+                    <div class="media-thumb-skeleton absolute inset-0" aria-hidden="true"></div>
                     <img src="{{ $thumbUrl }}"
                          alt="{{ $course->title }}"
-                         width="960"
-                         height="540"
-                         class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105 group-hover:brightness-110"
+                         width="400"
+                         height="225"
+                         class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105 group-hover:brightness-110 media-thumb-img"
                          sizes="(max-width: 640px) 85vw, 400px"
                          loading="lazy"
                          decoding="async"
-                         onerror="this.style.display='none';this.nextElementSibling?.classList.remove('hidden');">
+                         onload="this.classList.add('is-loaded');this.previousElementSibling?.remove();"
+                         onerror="this.style.display='none';this.previousElementSibling?.remove();this.nextElementSibling?.classList.remove('hidden');">
                     <div class="hidden absolute inset-0 flex items-center justify-center text-white/25 bg-[#152a4a]"><i class="fas fa-play-circle text-5xl"></i></div>
                 @else
                     <div class="absolute inset-0 flex items-center justify-center text-white/25"><i class="fas fa-play-circle text-5xl"></i></div>

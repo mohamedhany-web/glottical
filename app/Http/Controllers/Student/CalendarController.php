@@ -249,6 +249,15 @@ class CalendarController extends Controller
             $events->push($cEvent);
         }
 
+        foreach (\App\Models\OneToOneSession::calendarItemsForUser(
+            $user,
+            $startDate ?? now()->subMonths(1),
+            $endDate ?? now()->addMonths(3),
+            'student'
+        ) as $oEvent) {
+            $events->push($oEvent);
+        }
+
         // ترتيب الأحداث حسب التاريخ
         return $events->sortBy('start_date')->values();
     }

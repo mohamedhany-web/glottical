@@ -76,9 +76,20 @@
                     <div class="mt-1 ms-2 space-y-0.5 border-s border-white/10 ps-3 pb-1">
                         @foreach($megaCategories as $mc)
                         <a href="{{ $mc['url'] }}" class="mob-menu-subitem">
-                            <span class="mob-menu-icon mob-menu-icon--cyan mob-menu-icon--sm"><i class="fas {{ $mc['icon'] }}"></i></span>
+                            @if(!empty($mc['thumb_url']))
+                                <span class="mob-menu-icon mob-menu-icon--cyan mob-menu-icon--sm overflow-hidden p-0">
+                                    <img src="{{ $mc['thumb_url'] }}" alt="" width="32" height="32" class="w-full h-full object-cover" loading="lazy" decoding="async">
+                                </span>
+                            @else
+                                <span class="mob-menu-icon mob-menu-icon--cyan mob-menu-icon--sm"><i class="fas {{ $mc['icon'] }}"></i></span>
+                            @endif
                             <span class="min-w-0 flex-1">
-                                <span class="block font-bold text-[14px] text-white/90 leading-tight">{{ $mc['name'] }}</span>
+                                <span class="flex items-center gap-2">
+                                    <span class="block font-bold text-[14px] text-white/90 leading-tight truncate">{{ $mc['name'] }}</span>
+                                    @if(!empty($mc['count']))
+                                        <span class="shrink-0 text-[9px] font-black px-1.5 py-0.5 rounded bg-acad-yellow/15 text-acad-yellow">{{ $mc['count'] }}</span>
+                                    @endif
+                                </span>
                                 <span class="block text-[11px] text-white/45 line-clamp-1 mt-0.5">{{ $mc['desc'] }}</span>
                             </span>
                         </a>

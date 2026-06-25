@@ -159,6 +159,16 @@ class StudentEnrollmentController extends Controller
 
         $enrollment = StudentCourseEnrollment::create($enrollmentData);
 
+        if ($enrollment->status === 'active') {
+            $course = \App\Models\AdvancedCourse::find($request->advanced_course_id);
+            if ($course && $course->isMonthlyBilling()) {
+                \App\Services\CourseSubscriptionService::activateMonthlyEnrollment($enrollment, $course);
+            } elseif ($course) {
+                \App\Services\CourseSubscriptionService::activateLifetimeEnrollment($enrollment);
+            }
+            $enrollment = $enrollment->fresh();
+        }
+
         // عند التفعيل: إنشاء مدفوعة نسبة المدرب إن وُجدت اتفاقية "نسبة من الكورس"
         if ($enrollment->status === 'active') {
             $freshEnrollment = $enrollment->fresh();

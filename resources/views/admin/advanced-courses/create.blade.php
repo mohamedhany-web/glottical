@@ -103,6 +103,30 @@
                                     <p class="text-xs text-slate-500 dark:text-slate-400">يُعرض على بطاقات الكورس كسعر قبل وبعد. الدفع والكوبونات تُحسب على هذا السعر.</p>
                                     @error('price_after_discount') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                                 </div>
+                                <div class="space-y-2 md:col-span-2">
+                                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">نوع الكورس</label>
+                                    <select name="delivery_type" class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-800 dark:text-slate-200">
+                                        <option value="group" @selected(old('delivery_type', 'group') === 'group')>جماعي</option>
+                                        <option value="one_to_one" @selected(old('delivery_type') === 'one_to_one')>فردي 1:1 مع معلم</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-2 md:col-span-2">
+                                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">نظام الدفع</label>
+                                    <select name="billing_mode" class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-800 dark:text-slate-200">
+                                        <option value="one_time" @selected(old('billing_mode', 'one_time') === 'one_time')>دفعة واحدة</option>
+                                        <option value="monthly" @selected(old('billing_mode') === 'monthly')>اشتراك شهري</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">سعر الاشتراك الشهري (جنيه)</label>
+                                    <input type="number" name="monthly_price" value="{{ old('monthly_price') }}" min="0" step="0.01"
+                                           class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-800 dark:text-slate-200">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">سعر شهري بعد الخصم</label>
+                                    <input type="number" name="monthly_price_after_discount" value="{{ old('monthly_price_after_discount') }}" min="0" step="0.01"
+                                           class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-800 dark:text-slate-200">
+                                </div>
                             </div>
 
                             <div class="space-y-2">

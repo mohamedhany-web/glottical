@@ -20,14 +20,10 @@ class LiveSessionController extends Controller
 
         $enrolledCourseIds = collect();
         if (Schema::hasTable('student_course_enrollments')) {
-            $enrollQuery = DB::table('student_course_enrollments')
-                ->where('user_id', $user->id);
-
-            if (Schema::hasColumn('student_course_enrollments', 'status')) {
-                $enrollQuery->where('status', 'active');
-            }
-
-            $enrolledCourseIds = $enrollQuery->pluck('advanced_course_id');
+            $enrolledCourseIds = $user->courseEnrollments()
+                ->get()
+                ->filter(fn ($e) => \App\Services\CourseSubscriptionService::enrollmentGrantsAccess($e))
+                ->pluck('advanced_course_id');
         } elseif (Schema::hasTable('online_enrollments')) {
             $enrollQuery = DB::table('online_enrollments')
                 ->where('user_id', $user->id);

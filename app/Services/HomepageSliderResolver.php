@@ -55,7 +55,7 @@ class HomepageSliderResolver
                 return '';
             }
 
-            return $course->thumbnail_url ?? storage_public_url($course->thumbnail) ?? '';
+            return storage_public_url_stable($course->thumbnail) ?? '';
         };
 
         if ($featuredList->isNotEmpty()) {

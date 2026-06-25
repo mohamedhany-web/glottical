@@ -18,6 +18,8 @@ class Order extends Model
         'discount_amount',
         'wallet_credit_amount',
         'amount',
+        'billing_mode',
+        'auto_renew',
         'payment_method',
         'wallet_id',
         'payment_proof',
@@ -37,6 +39,7 @@ class Order extends Model
         'original_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'wallet_credit_amount' => 'decimal:2',
+        'auto_renew' => 'boolean',
         'approved_at' => 'datetime',
     ];
 

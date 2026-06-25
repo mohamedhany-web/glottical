@@ -1,174 +1,181 @@
 @php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
+    $a = 'landing.academy';
     $itemTitle = isset($course) ? ($course->title ?? 'الكورس') : (isset($learningPath) ? ($learningPath->name ?? 'الطلب') : 'الطلب');
     $thumbUrl = null;
     if (isset($course) && ($course->thumbnail ?? null)) {
         $thumbUrl = storage_asset(str_replace('\\', '/', $course->thumbnail));
     }
     $platformLogoUrl = $platformLogoUrl ?? \App\Services\AdminPanelBranding::logoPublicUrl();
-    $appName = config('app.name', 'Muallimx');
+    $appName = config('app.name', 'Glottical');
+    $isMonthlyCheckout = isset($course) && $course->isMonthlyBilling();
+    $baseCoursePrice = isset($course) ? (float) $course->effectiveCheckoutPrice() : (float) (isset($learningPath) ? ($learningPath->price ?? 0) : 0);
+    $studentBal = isset($studentWalletBalance) ? (float) $studentWalletBalance : 0;
+    $checkoutHasWalletBalance = isset($course) && isset($studentWalletBalance) && (float) $studentWalletBalance > 0;
+    $fawaterakActive = !empty($fawaterakUseGateway) && isset($course);
+    $fawaterakMis = !empty($fawaterakMisconfigured) && isset($course);
+    $fawaterakIntegration = $fawaterakIntegration ?? 'iframe';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>إتمام الطلب - {{ $itemTitle }} - {{ config('app.name') }}</title>
-    <meta name="theme-color" content="#283593">
+    <title>{{ __('public.checkout_page_label') }} — {{ $itemTitle }} — {{ $appName }}</title>
+    <meta name="theme-color" content="#0d1528">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
     @include('partials.favicon-links')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-    tailwind.config={theme:{extend:{colors:{navy:{50:'#f0f4ff',100:'#dbe4ff',200:'#bac8ff',300:'#91a7ff',400:'#748ffc',500:'#5c7cfa',600:'#4c6ef5',700:'#4263eb',800:'#3b5bdb',900:'#364fc7',950:'#283593'},brand:{50:'#FFF3E0',100:'#FFE0B2',200:'#FFCC80',300:'#FFB74D',400:'#FFA726',500:'#FB5607',600:'#E04D00',700:'#BF360C',800:'#8D2600',900:'#5D1A00'},mx:{navy:'#283593',indigo:'#1F2A7A',orange:'#FB5607',rose:'#FFE5F7',gold:'#FFE569',soft:'#F7F8FF',cream:'#FFF7ED'}},fontFamily:{heading:['Cairo','Tajawal','IBM Plex Sans Arabic','sans-serif'],body:['Cairo','IBM Plex Sans Arabic','Tajawal','sans-serif']}}}}
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    acad: {
+                        blue: '#0B3D91',
+                        blueDark: '#072a66',
+                        cyan: '#00A3C4',
+                        yellow: '#F5B800',
+                        ink: '#1a2d4d',
+                        navy: '#0d1528',
+                        navyMid: '#1a2d4d',
+                        neon: '#00d4ff',
+                    },
+                },
+                fontFamily: {
+                    sans: ['Cairo', 'Tajawal', 'IBM Plex Sans Arabic', 'system-ui', 'sans-serif'],
+                },
+            },
+        },
+    };
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
     <style>
         [x-cloak]{display:none!important}
-        *{font-family:'Cairo','IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif}
-        h1,h2,h3,h4,h5,h6,.font-heading{font-family:'Cairo','Tajawal','IBM Plex Sans Arabic',sans-serif}
-        html{scroll-behavior:smooth;overflow-x:hidden!important}
-        body{overflow-x:hidden!important;background:#fff;min-height:100vh;display:flex;flex-direction:column}
-        body>*{flex-shrink:0}
-        .container-1200{max-width:1200px;margin-inline:auto;padding-inline:24px}
-        @media (max-width:768px){.container-1200{padding-inline:16px}}
-        .reveal{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+        html{scroll-behavior:smooth;overflow-x:hidden}
+        body{overflow-x:hidden;background:linear-gradient(180deg,#0d1528 0%,#121f38 45%,#0d1528 100%);min-height:100vh;display:flex;flex-direction:column;color:#e8eef8;font-size:16px;line-height:1.65}
+        .font-display{font-family:'Cairo','Tajawal','IBM Plex Sans Arabic',system-ui,sans-serif}
+        .container-acad{max-width:1280px;margin-inline:auto;padding-inline:clamp(16px,4vw,28px)}
+        .glass-panel{background:rgba(15,31,58,.72);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+        .pattern-dots{background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.06) 1px,transparent 0);background-size:24px 24px}
+        .reveal{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
         .reveal.revealed{opacity:1;transform:translateY(0)}
-        .stagger-1{transition-delay:.05s}.stagger-2{transition-delay:.1s}.stagger-3{transition-delay:.15s}
-        @media(max-width:768px){.reveal{transition-duration:.5s}.stagger-1,.stagger-2,.stagger-3{transition-delay:0s}}
-        .btn-primary{position:relative;overflow:hidden;transition:all .4s cubic-bezier(.16,1,.3,1)}
-        .btn-primary::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transition:left .6s}
-        .btn-primary:hover::before{left:100%}
-        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 20px 40px -12px rgba(251,86,7,.35)}
-        .btn-outline{transition:all .3s cubic-bezier(.16,1,.3,1)}
-        .btn-outline:hover{transform:translateY(-2px);box-shadow:0 10px 30px -10px rgba(15,23,42,.2)}
-        .card-checkout{transition:all .4s cubic-bezier(.16,1,.3,1)}
-        .card-checkout:hover{box-shadow:0 25px 50px -20px rgba(31,42,122,.18)}
         .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-        #scroll-progress{position:fixed;top:0;left:0;width:0%;height:3px;background:linear-gradient(90deg,#FB5607,#FFE569);z-index:9999;transition:width .1s linear}
-        #navbar,#navbar.nav-transparent,#navbar.nav-solid{background:rgba(31,42,122,.92)!important;backdrop-filter:blur(12px)!important;-webkit-backdrop-filter:blur(12px)!important;border-bottom:1px solid rgba(255,255,255,.08)!important}
-        .navbar-spacer{display:block!important}
-        .input-checkout{width:100%;border-radius:1rem;border:1px solid #e2e8f0;padding:.875rem 1rem;transition:border-color .2s,box-shadow .2s}
-        .input-checkout:focus{outline:none;border-color:#1F2A7A;box-shadow:0 0 0 3px rgba(40,53,147,.12)}
-        .checkout-steps{display:flex;flex-direction:column;gap:1.25rem}
+        #scroll-progress{position:fixed;top:0;left:0;width:0%;height:3px;background:linear-gradient(90deg,#F5B800,#00d4ff);z-index:100000;transition:width .1s linear}
+        .input-checkout{width:100%;border-radius:1rem;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;padding:.875rem 1rem;transition:border-color .2s,box-shadow .2s,background .2s}
+        .input-checkout::placeholder{color:rgba(255,255,255,.38)}
+        .input-checkout:focus{outline:none;border-color:rgba(0,163,196,.55);box-shadow:0 0 0 3px rgba(0,163,196,.18);background:rgba(255,255,255,.08)}
+        .btn-acad-primary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.875rem 1.75rem;border-radius:1rem;font-weight:800;color:#0B3D91;background:#F5B800;transition:transform .2s ease,filter .2s ease,box-shadow .2s ease;box-shadow:0 12px 32px -14px rgba(245,184,0,.45)}
+        .btn-acad-primary:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.05)}
+        .btn-acad-primary:disabled{opacity:.55;cursor:not-allowed;transform:none}
+        .btn-acad-ghost{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.875rem 1.75rem;border-radius:1rem;font-weight:700;color:#fff;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);backdrop-filter:blur(12px);transition:background .2s ease,border-color .2s ease}
+        .btn-acad-ghost:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.28)}
+        .checkout-steps{display:flex;flex-direction:column;gap:1rem}
         @media(min-width:640px){.checkout-steps{flex-direction:row;align-items:center;gap:0}}
         .checkout-step-connector{display:none}
-        @media(min-width:640px){.checkout-step-connector{display:block;flex:1;min-width:1rem;height:2px;background:linear-gradient(90deg,#cbd5e1,#e2e8f0);align-self:center;border-radius:1px}}
+        @media(min-width:640px){.checkout-step-connector{display:block;flex:1;min-width:1rem;height:2px;background:linear-gradient(90deg,rgba(245,184,0,.35),rgba(0,212,255,.25));align-self:center;margin-inline:.75rem}}
+        .alert-box{border-radius:1rem;padding:1rem 1.25rem;display:flex;align-items:flex-start;gap:.75rem;font-size:.875rem;font-weight:600}
+        .alert-error{background:rgba(239,68,68,.12);border:1px solid rgba(248,113,113,.35);color:#fecaca}
+        .alert-success{background:rgba(16,185,129,.12);border:1px solid rgba(52,211,153,.35);color:#a7f3d0}
+        .alert-info{background:rgba(245,184,0,.1);border:1px solid rgba(245,184,0,.28);color:#fde68a}
+        .alert-sky{background:rgba(0,163,196,.12);border:1px solid rgba(0,212,255,.25);color:#a5f3fc}
+        .media-thumb-skeleton{position:absolute;inset:0;background:linear-gradient(110deg,#152a4a 8%,#1e3a5f 18%,#152a4a 33%);background-size:200% 100%;animation:mediaShimmer 1.2s linear infinite}
+        @keyframes mediaShimmer{to{background-position-x:-200%}}
+        .media-thumb-img{opacity:0;transition:opacity .35s ease}
+        .media-thumb-img.is-loaded{opacity:1}
     </style>
 </head>
-<body class="bg-white text-slate-800 antialiased font-body" x-data="{ isSubmitting: false }">
+<body class="font-sans text-white antialiased font-display" x-data="{ isSubmitting: false }">
     <div id="scroll-progress"></div>
     @include('components.unified-navbar')
 
-    <main class="flex-1">
-        {{-- هيرو بنفس أسلوب صفحة الكورس والرئيسية --}}
-        <section class="pt-10 sm:pt-14 lg:pt-16 pb-10 sm:pb-12 overflow-hidden relative" style="background:radial-gradient(circle at 12% 80%,rgba(255,229,247,.65),transparent 28%),radial-gradient(circle at 88% 20%,rgba(40,53,147,.10),transparent 30%),linear-gradient(180deg,#f4f6ff 0%,#fbfbff 55%,#ffffff 100%)">
-            <div class="absolute inset-0 pointer-events-none opacity-40" style="background-image:radial-gradient(circle at 1px 1px,rgba(40,53,147,.08) 1px,transparent 0);background-size:30px 30px"></div>
-            <div class="container-1200 relative z-10">
-                {{-- شريط العلامة: لوجو إعدادات النظام --}}
-                <div class="reveal flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 mb-6 border-b border-slate-200/70">
-                    <div class="flex items-center gap-4 min-w-0">
-                        @if($platformLogoUrl)
-                            <a href="{{ url('/') }}" class="shrink-0 rounded-xl bg-white/90 p-2 ring-1 ring-slate-200/80 shadow-sm hover:ring-mx-navy/20 transition-shadow" title="{{ $appName }}">
-                                <img src="{{ $platformLogoUrl }}" alt="{{ $appName }}" class="h-10 sm:h-11 w-auto max-w-[200px] object-contain object-center" width="200" height="44" loading="eager" decoding="async">
-                            </a>
-                        @else
-                            <a href="{{ url('/') }}" class="shrink-0 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-mx-navy to-mx-indigo text-white font-black text-lg shadow-md ring-1 ring-white/20" title="{{ $appName }}">{{ Str::substr($appName, 0, 1) }}</a>
-                        @endif
-                        <div class="min-w-0 border-slate-200 sm:border-s sm:ps-4">
-                            <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold">{{ __('public.checkout_brand_kicker') }}</p>
-                            <p class="font-heading text-lg sm:text-xl font-black text-mx-indigo truncate">{{ $appName }}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm text-slate-600 shrink-0">
-                        <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white border border-slate-200 text-mx-navy"><i class="fas fa-bag-shopping"></i></span>
-                        <span class="font-semibold text-navy-950">{{ __('public.checkout_page_label') }}</span>
-                    </div>
-                </div>
-
-                <nav class="reveal text-sm text-slate-500 mb-8 flex items-center gap-2 flex-wrap" aria-label="مسار التنقل">
-                    <a href="{{ url('/') }}" class="hover:text-mx-indigo transition-colors">{{ __('public.home') }}</a>
-                    <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }} text-[8px] text-slate-400"></i>
-                    <a href="{{ route('public.courses') }}" class="hover:text-mx-indigo transition-colors">{{ __('public.courses') }}</a>
+    <main class="flex-1 -mt-14 sm:-mt-[60px] pt-14 sm:pt-[60px]">
+        {{-- هيرو — أسلوب الأكاديمية --}}
+        <section class="relative pt-10 sm:pt-14 pb-10 sm:pb-12 overflow-hidden">
+            <div class="absolute inset-0 bg-[#0d1528]"></div>
+            <div class="absolute inset-0 pattern-dots opacity-[0.14] pointer-events-none"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#0d1528] via-[#0d1528]/80 to-transparent pointer-events-none"></div>
+            <div class="container-acad relative z-10">
+                <nav class="reveal text-sm text-white/50 mb-6 flex items-center gap-2 flex-wrap" aria-label="مسار التنقل">
+                    <a href="{{ url('/') }}" class="hover:text-acad-yellow transition-colors">{{ __('public.home') }}</a>
+                    <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }} text-[8px] text-white/30"></i>
+                    <a href="{{ route('public.courses') }}" class="hover:text-acad-yellow transition-colors">{{ __('public.courses') }}</a>
                     @if(isset($course))
-                        <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }} text-[8px] text-slate-400"></i>
-                        <a href="{{ route('public.course.show', $course->id) }}" class="hover:text-mx-indigo transition-colors">{{ Str::limit($course->title ?? '', 36) }}</a>
+                        <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }} text-[8px] text-white/30"></i>
+                        <a href="{{ route('public.course.show', $course->id) }}" class="hover:text-acad-yellow transition-colors">{{ Str::limit($course->title ?? '', 36) }}</a>
                     @endif
-                    <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }} text-[8px] text-slate-400"></i>
-                    <span class="text-mx-indigo font-semibold">{{ __('public.checkout_breadcrumb_current') }}</span>
+                    <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }} text-[8px] text-white/30"></i>
+                    <span class="text-acad-yellow font-semibold">{{ __('public.checkout_breadcrumb_current') }}</span>
                 </nav>
 
-                {{-- خطوات إتمام الشراء --}}
-                <div class="checkout-steps reveal mb-10 lg:mb-12" aria-label="{{ __('public.checkout_steps_label') }}">
+                <div class="checkout-steps reveal mb-8 lg:mb-10" aria-label="{{ __('public.checkout_steps_label') }}">
                     <div class="flex items-center gap-3 shrink-0">
-                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white text-sm font-black shadow-sm ring-2 ring-emerald-200">1</span>
+                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white text-sm font-black shadow-lg ring-2 ring-emerald-400/30">1</span>
                         <div class="min-w-0">
-                            <p class="text-xs font-bold text-emerald-700">{{ __('public.checkout_step_1_title') }}</p>
-                            <p class="text-[11px] text-slate-500 leading-snug">{{ __('public.checkout_step_1_desc') }}</p>
+                            <p class="text-xs font-bold text-emerald-300">{{ __('public.checkout_step_1_title') }}</p>
+                            <p class="text-[11px] text-white/45 leading-snug">{{ __('public.checkout_step_1_desc') }}</p>
                         </div>
                     </div>
-                    <span class="checkout-step-connector mx-2 sm:mx-3" aria-hidden="true"></span>
+                    <span class="checkout-step-connector" aria-hidden="true"></span>
                     <div class="flex items-center gap-3 shrink-0">
-                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white text-sm font-black shadow-md ring-2 ring-orange-200">2</span>
+                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-acad-yellow text-acad-blue text-sm font-black shadow-lg ring-2 ring-acad-yellow/40">2</span>
                         <div class="min-w-0">
-                            <p class="text-xs font-bold text-brand-700">{{ __('public.checkout_step_2_title') }}</p>
-                            <p class="text-[11px] text-slate-500 leading-snug">{{ __('public.checkout_step_2_desc') }}</p>
+                            <p class="text-xs font-bold text-acad-yellow">{{ __('public.checkout_step_2_title') }}</p>
+                            <p class="text-[11px] text-white/45 leading-snug">{{ __('public.checkout_step_2_desc') }}</p>
                         </div>
                     </div>
-                    <span class="checkout-step-connector mx-2 sm:mx-3" aria-hidden="true"></span>
+                    <span class="checkout-step-connector" aria-hidden="true"></span>
                     <div class="flex items-center gap-3 shrink-0">
-                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 text-sm font-black">3</span>
+                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/55 text-sm font-black ring-1 ring-white/15">3</span>
                         <div class="min-w-0">
-                            <p class="text-xs font-bold text-slate-600">{{ __('public.checkout_step_3_title') }}</p>
-                            <p class="text-[11px] text-slate-500 leading-snug">{{ __('public.checkout_step_3_desc') }}</p>
+                            <p class="text-xs font-bold text-white/65">{{ __('public.checkout_step_3_title') }}</p>
+                            <p class="text-[11px] text-white/45 leading-snug">{{ __('public.checkout_step_3_desc') }}</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-center">
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-10 items-center">
                     <div class="lg:col-span-3 reveal">
-                        <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold mb-5 shadow-sm" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
-                            <i class="fas fa-credit-card"></i>
-                            {{ isset($course) ? __('public.secure_checkout_badge') : 'صفحة الدفع' }}
+                        <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-extrabold mb-5 glass-panel text-white border border-white/10">
+                            <i class="fas fa-lock text-acad-cyan text-[11px]"></i>
+                            {{ isset($course) ? __('public.secure_checkout_badge') : __('public.checkout_page_label') }}
                         </span>
-                        <h1 class="font-heading text-3xl sm:text-4xl lg:text-[2.75rem] font-black text-mx-indigo leading-[1.15] mb-4">
-                            إتمام الطلب
+                        <h1 class="text-3xl sm:text-4xl lg:text-[2.65rem] font-black text-white leading-[1.15] mb-4">
+                            {{ __('public.checkout_page_label') }}
                         </h1>
-                        <p class="text-slate-600 text-base sm:text-lg leading-relaxed max-w-2xl mb-6">
-                            خطوة أخيرة لشراء
-                            <span class="font-bold text-mx-indigo">{{ $itemTitle }}</span>
-                            — نفس تجربة المنصة الآمنة والواضحة.
+                        <p class="text-white/65 text-base sm:text-lg leading-relaxed max-w-2xl mb-6">
+                            {{ __('public.checkout_hero_lead') }}
+                            <span class="font-bold text-acad-yellow">{{ $itemTitle }}</span>
                         </p>
                         <div class="flex flex-wrap gap-3">
-                            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-mx-indigo text-sm font-semibold shadow-sm">
-                                <i class="fas fa-shield-halved text-brand-500"></i>
-                                دفع موثوق
+                            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl glass-panel text-white/85 text-sm font-semibold">
+                                <i class="fas fa-shield-halved text-acad-cyan"></i>
+                                {{ __('public.checkout_trust_secure') }}
                             </span>
-                            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-mx-indigo text-sm font-semibold shadow-sm">
-                                <i class="fas fa-bolt text-amber-500"></i>
-                                تفعيل سريع بعد الموافقة
+                            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl glass-panel text-white/85 text-sm font-semibold">
+                                <i class="fas fa-bolt text-acad-yellow"></i>
+                                {{ __('public.checkout_trust_fast') }}
                             </span>
                         </div>
                     </div>
-                    <div class="lg:col-span-2 reveal stagger-2">
+                    <div class="lg:col-span-2 reveal">
                         @if($thumbUrl)
-                            <div class="card-checkout rounded-3xl overflow-hidden border border-slate-200 shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)] ring-1 ring-slate-200/80 aspect-[4/3] bg-slate-100">
-                                <img src="{{ $thumbUrl }}" alt="" class="w-full h-full object-cover">
+                            <div class="glass-panel rounded-2xl overflow-hidden border border-white/12 aspect-[4/3] relative bg-[#152a4a]">
+                                <div class="media-thumb-skeleton" aria-hidden="true"></div>
+                                <img src="{{ $thumbUrl }}" alt="" class="absolute inset-0 w-full h-full object-cover media-thumb-img" width="480" height="360" loading="eager" decoding="async" onload="this.classList.add('is-loaded');this.previousElementSibling?.remove();">
                             </div>
                         @else
-                            <div class="card-checkout rounded-3xl border border-slate-200 shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)] ring-1 ring-slate-200/80 p-8 flex flex-col justify-center min-h-[220px]" style="background:linear-gradient(145deg,#fff 0%,#f4f6ff 50%,#fff5f0 100%)">
-                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-mx-navy flex items-center justify-center text-white text-2xl shadow-lg mb-4">
+                            <div class="glass-panel rounded-2xl border border-white/12 p-8 flex flex-col justify-center min-h-[220px]">
+                                <div class="w-14 h-14 rounded-2xl bg-acad-yellow/15 flex items-center justify-center text-acad-yellow text-2xl mb-4 ring-1 ring-acad-yellow/25">
                                     <i class="fas fa-graduation-cap"></i>
                                 </div>
-                                <p class="font-heading text-xl font-black text-mx-indigo leading-snug">{{ Str::limit($itemTitle, 80) }}</p>
-                                <p class="text-sm text-slate-500 mt-2">{{ isset($course) ? ($course->academicSubject->name ?? '') : '' }}</p>
+                                <p class="text-xl font-black text-white leading-snug">{{ Str::limit($itemTitle, 80) }}</p>
+                                <p class="text-sm text-white/50 mt-2">{{ isset($course) ? ($course->academicSubject->name ?? '') : '' }}</p>
                             </div>
                         @endif
                     </div>
@@ -177,146 +184,141 @@
         </section>
 
         {{-- محتوى الدفع --}}
-        <section class="py-12 md:py-20 bg-mx-soft">
-            <div class="container-1200">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-12">
+        <section class="py-10 sm:py-14 relative">
+            <div class="container-acad">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
                     {{-- ملخص الطلب --}}
-                    <aside class="lg:col-span-4 xl:col-span-4 order-2 lg:order-1">
-                        <div class="reveal card-checkout sticky top-24 rounded-3xl bg-white border border-slate-200 p-6 sm:p-8 shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)] ring-1 ring-slate-200/80">
-                            <div class="flex items-center justify-between gap-3 mb-5 pb-5 border-b border-slate-100">
+                    <aside class="lg:col-span-4 order-2 lg:order-1">
+                        <div class="reveal glass-panel sticky top-24 rounded-2xl p-6 sm:p-7 border border-white/12 shadow-xl">
+                            <div class="flex items-center justify-between gap-3 mb-5 pb-5 border-b border-white/10">
                                 <div class="flex items-center gap-3 min-w-0">
-                                    @if($platformLogoUrl)
-                                        <img src="{{ $platformLogoUrl }}" alt="" class="h-8 sm:h-9 w-auto max-w-[120px] object-contain opacity-95 shrink-0" loading="lazy" decoding="async">
-                                    @else
-                                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mx-soft text-mx-navy font-black text-sm">{{ Str::substr($appName, 0, 1) }}</span>
-                                    @endif
+                                    <span class="w-10 h-10 rounded-xl bg-acad-yellow/15 flex items-center justify-center text-acad-yellow shrink-0"><i class="fas fa-receipt"></i></span>
                                     <div class="min-w-0">
-                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{{ $appName }}</p>
-                                        <p class="text-xs text-slate-500 truncate">{{ __('public.checkout_summary_subtitle') }}</p>
+                                        <p class="text-[10px] font-bold text-white/40 uppercase tracking-wide">{{ $appName }}</p>
+                                        <p class="text-xs text-white/55 truncate">{{ __('public.checkout_summary_subtitle') }}</p>
                                     </div>
                                 </div>
-                                <span class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-500 shrink-0"><i class="fas fa-receipt"></i></span>
                             </div>
-                            <h3 class="font-heading text-lg font-black text-navy-950 mb-6">
-                                {{ __('public.checkout_order_summary_title') }}
-                            </h3>
-                            <div class="flex items-start gap-4 mb-6 pb-6 border-b border-slate-100">
-                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-mx-navy flex items-center justify-center flex-shrink-0 shadow-lg shadow-brand-600/20">
-                                    @if(isset($course))
-                                        <i class="fas fa-graduation-cap text-white text-xl"></i>
-                                    @else
-                                        <i class="fas fa-route text-white text-xl"></i>
-                                    @endif
+                            <h3 class="text-lg font-black text-white mb-5">{{ __('public.checkout_order_summary_title') }}</h3>
+                            <div class="flex items-start gap-4 mb-6 pb-6 border-b border-white/10">
+                                <div class="w-14 h-14 rounded-2xl bg-acad-cyan/15 flex items-center justify-center flex-shrink-0 ring-1 ring-acad-cyan/25">
+                                    <i class="fas {{ isset($course) ? 'fa-graduation-cap' : 'fa-route' }} text-acad-cyan text-xl"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <h4 class="font-bold text-navy-950 text-base line-clamp-2 leading-snug">
+                                    <h4 class="font-bold text-white text-base line-clamp-2 leading-snug">
                                         @if(isset($course)){{ $course->title }}@elseif(isset($learningPath)){{ $learningPath->name }}@else الطلب @endif
                                     </h4>
-                                    <p class="text-sm text-slate-500 mt-1">
-                                        @if(isset($course)){{ $course->academicSubject->name ?? 'غير محدد' }}@else مسار تعليمي شامل @endif
+                                    <p class="text-sm text-white/50 mt-1">
+                                        @if(isset($course)){{ $course->academicSubject->name ?? __('public.course_category_not_set') }}@else مسار تعليمي شامل @endif
                                     </p>
                                 </div>
                             </div>
-                            @php
-                                $baseCoursePrice = isset($course) ? (float) $course->effectivePurchasePrice() : (float) (isset($learningPath) ? ($learningPath->price ?? 0) : 0);
-                                $studentBal = isset($studentWalletBalance) ? (float) $studentWalletBalance : 0;
-                            @endphp
                             <div class="space-y-3 mb-6" id="checkout-pricing-summary"
                                  data-base-price="{{ $baseCoursePrice }}"
                                  data-student-balance="{{ $studentBal }}"
-                                 data-has-course="{{ isset($course) ? '1' : '0' }}">
+                                 data-has-course="{{ isset($course) ? '1' : '0' }}"
+                                 data-is-monthly="{{ $isMonthlyCheckout ? '1' : '0' }}">
+                                @if($isMonthlyCheckout)
+                                    <p class="text-xs font-semibold text-acad-cyan bg-acad-cyan/10 border border-acad-cyan/20 rounded-xl px-3 py-2">
+                                        <i class="fas fa-calendar-check {{ $isRtl ? 'ml-1' : 'mr-1' }}"></i>
+                                        {{ __('public.checkout_monthly_notice') }}
+                                    </p>
+                                    <label class="flex items-start gap-3 p-3 rounded-xl border border-white/10 bg-white/5 cursor-pointer">
+                                        <input type="checkbox" name="auto_renew" value="1" class="mt-1 rounded border-white/30 text-acad-cyan focus:ring-acad-cyan"
+                                               {{ old('auto_renew', '1') ? 'checked' : '' }}>
+                                        <span class="text-sm text-white/80">
+                                            <span class="font-semibold text-white block">{{ __('public.checkout_auto_renew_label') }}</span>
+                                            <span class="text-white/50 text-xs">{{ __('public.checkout_auto_renew_hint') }}</span>
+                                        </span>
+                                    </label>
+                                @endif
                                 <div class="flex justify-between items-center text-sm">
-                                    <span class="text-slate-600">السعر الأساسي</span>
-                                    <span class="font-bold text-brand-600 text-lg" id="sum-original">
+                                    <span class="text-white/60">{{ $isMonthlyCheckout ? __('public.checkout_monthly_price_label') : __('public.checkout_base_price_label') }}</span>
+                                    <span class="font-bold text-acad-yellow text-lg" id="sum-original">
                                         {{ number_format($baseCoursePrice, 2) }}
-                                        <span class="text-slate-500 text-sm font-medium">{{ __('public.currency_egp') }}</span>
+                                        <span class="text-white/45 text-sm font-medium">{{ __('public.currency_egp') }}@if($isMonthlyCheckout)/{{ __('public.per_month') }}@endif</span>
                                     </span>
                                 </div>
-                                <div class="hidden flex justify-between items-center text-sm text-emerald-700" id="sum-coupon-row">
+                                <div class="hidden flex justify-between items-center text-sm text-emerald-300" id="sum-coupon-row">
                                     <span>خصم الكوبون</span>
                                     <span class="font-bold" id="sum-coupon">—</span>
                                 </div>
-                                <div class="hidden flex justify-between items-center text-sm text-sky-700" id="sum-wallet-row">
+                                <div class="hidden flex justify-between items-center text-sm text-acad-cyan" id="sum-wallet-row">
                                     <span>رصيد المحفظة</span>
                                     <span class="font-bold" id="sum-wallet">—</span>
                                 </div>
-                                <div class="flex justify-between items-center pt-4 border-t-2 border-slate-100">
-                                    <span class="font-bold text-navy-950">المستحق للدفع</span>
-                                    <span class="text-2xl font-black text-brand-600" id="sum-final">
+                                <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                                    <span class="font-bold text-white">المستحق للدفع</span>
+                                    <span class="text-2xl font-black text-acad-yellow" id="sum-final">
                                         {{ number_format($baseCoursePrice, 2) }}
-                                        <span class="text-slate-500 text-base font-medium">{{ __('public.currency_egp') }}</span>
+                                        <span class="text-white/45 text-base font-medium">{{ __('public.currency_egp') }}</span>
                                     </span>
                                 </div>
                             </div>
-                            <ul class="space-y-3 text-sm text-slate-600">
-                                <li class="flex items-center gap-3"><span class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0"><i class="fas fa-check text-xs"></i></span> وصول مدى الحياة</li>
-                                <li class="flex items-center gap-3"><span class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0"><i class="fas fa-check text-xs"></i></span> شهادة إتمام</li>
-                                <li class="flex items-center gap-3"><span class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0"><i class="fas fa-check text-xs"></i></span> دعم فني</li>
+                            <ul class="space-y-3 text-sm text-white/65">
+                                @if($isMonthlyCheckout)
+                                    <li class="flex items-center gap-3"><span class="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-300 shrink-0"><i class="fas fa-check text-xs"></i></span> {{ __('public.checkout_benefit_monthly_access') }}</li>
+                                    <li class="flex items-center gap-3"><span class="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-300 shrink-0"><i class="fas fa-sync-alt text-xs"></i></span> {{ __('public.checkout_benefit_renew_anytime') }}</li>
+                                @else
+                                    <li class="flex items-center gap-3"><span class="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-300 shrink-0"><i class="fas fa-check text-xs"></i></span> {{ __('public.checkout_benefit_lifetime') }}</li>
+                                @endif
+                                <li class="flex items-center gap-3"><span class="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-300 shrink-0"><i class="fas fa-check text-xs"></i></span> {{ __('public.checkout_benefit_certificate') }}</li>
+                                <li class="flex items-center gap-3"><span class="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-300 shrink-0"><i class="fas fa-check text-xs"></i></span> {{ __('public.checkout_benefit_support') }}</li>
                             </ul>
                         </div>
                     </aside>
 
                     {{-- طرق الدفع --}}
-                    <div class="lg:col-span-8 xl:col-span-8 order-1 lg:order-2">
-                        <div class="reveal card-checkout rounded-3xl bg-white border border-slate-200 p-6 sm:p-8 lg:p-10 shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)] ring-1 ring-slate-200/80">
-                            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8 pb-6 border-b border-slate-100">
-                                <div class="flex items-start gap-4">
-                                    <span class="w-12 h-12 rounded-2xl bg-mx-navy/10 flex items-center justify-center text-mx-navy text-xl shrink-0"><i class="fas fa-wallet"></i></span>
-                                    <div>
-                                        <h2 class="font-heading text-2xl sm:text-3xl font-black text-navy-950 leading-tight">{{ __('public.checkout_payment_section_title') }}</h2>
-                                        <p class="text-slate-500 text-sm mt-2 max-w-xl leading-relaxed">{{ __('public.checkout_payment_section_desc') }}</p>
-                                    </div>
+                    <div class="lg:col-span-8 order-1 lg:order-2">
+                        <div class="reveal glass-panel rounded-2xl p-6 sm:p-8 lg:p-9 border border-white/12 shadow-xl">
+                            <div class="flex items-start gap-4 mb-8 pb-6 border-b border-white/10">
+                                <span class="w-12 h-12 rounded-2xl bg-acad-yellow/15 flex items-center justify-center text-acad-yellow text-xl shrink-0"><i class="fas fa-wallet"></i></span>
+                                <div>
+                                    <h2 class="text-2xl sm:text-3xl font-black text-white leading-tight">{{ __('public.checkout_payment_section_title') }}</h2>
+                                    <p class="text-white/55 text-sm mt-2 max-w-xl leading-relaxed">{{ __('public.checkout_payment_section_desc') }}</p>
                                 </div>
-                                @if($platformLogoUrl)
-                                    <div class="hidden sm:flex items-center justify-center rounded-2xl bg-mx-soft px-4 py-3 ring-1 ring-slate-200/60 shrink-0">
-                                        <img src="{{ $platformLogoUrl }}" alt="" class="h-7 w-auto max-w-[100px] object-contain opacity-90" loading="lazy">
-                                    </div>
-                                @endif
                             </div>
 
                             @if(session('error'))
-                                <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 flex items-start gap-3 shadow-sm">
-                                    <i class="fas fa-exclamation-circle text-red-600 mt-0.5"></i>
-                                    <p class="text-red-800 text-sm font-semibold flex-1">{{ session('error') }}</p>
+                                <div class="alert-box alert-error mb-6">
+                                    <i class="fas fa-exclamation-circle mt-0.5"></i>
+                                    <p class="flex-1">{{ session('error') }}</p>
                                 </div>
                             @endif
                             @if($errors->any())
-                                <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 shadow-sm">
-                                    <ul class="list-disc list-inside space-y-1 text-red-800 text-sm font-medium">
+                                <div class="alert-box alert-error mb-6">
+                                    <ul class="list-disc list-inside space-y-1 flex-1">
                                         @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
                                     </ul>
                                 </div>
                             @endif
                             @if(session('success'))
-                                <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 flex items-center gap-3 shadow-sm">
-                                    <i class="fas fa-check-circle text-emerald-600"></i>
-                                    <p class="text-emerald-800 text-sm font-semibold">{{ session('success') }}</p>
+                                <div class="alert-box alert-success mb-6">
+                                    <i class="fas fa-check-circle"></i>
+                                    <p class="flex-1">{{ session('success') }}</p>
                                 </div>
                             @endif
                             @if(session('info'))
-                                <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 flex items-center gap-3 shadow-sm">
-                                    <i class="fas fa-info-circle text-amber-600"></i>
-                                    <p class="text-amber-900 text-sm font-semibold">{{ session('info') }}</p>
+                                <div class="alert-box alert-info mb-6">
+                                    <i class="fas fa-info-circle"></i>
+                                    <p class="flex-1">{{ session('info') }}</p>
                                 </div>
                             @endif
 
                             @if(isset($course))
-                                @php
-                                    $checkoutHasWalletBalance = isset($studentWalletBalance) && (float) $studentWalletBalance > 0;
-                                @endphp
-                                <div class="mb-8 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 sm:p-6 shadow-sm space-y-4"
+                                <div class="mb-8 rounded-2xl border border-white/12 bg-white/[0.04] p-5 sm:p-6 space-y-4"
                                      id="checkout-discount-panel"
                                      data-quote-url="{{ route('public.course.checkout.quote', $course->id) }}"
                                      data-has-wallet="{{ $checkoutHasWalletBalance ? '1' : '0' }}">
-                                    <h3 class="font-heading text-lg font-black text-navy-950 flex items-center gap-2">
-                                        <i class="fas fa-tags text-brand-500"></i>
+                                    <h3 class="text-lg font-black text-white flex items-center gap-2">
+                                        <i class="fas fa-tags text-acad-yellow"></i>
                                         @if($checkoutHasWalletBalance)
                                             كوبون الخصم ورصيد المحفظة
                                         @else
                                             كوبون الخصم
                                         @endif
                                     </h3>
-                                    <p class="text-xs text-slate-600 leading-relaxed">
+                                    <p class="text-xs text-white/55 leading-relaxed">
                                         @if($checkoutHasWalletBalance)
                                             أضف كوبوناً صالحاً (من التسويق) و/أو استخدم رصيد محفظتك على المنصة. يُخصم الكوبون أولاً ثم رصيد المحفظة من المبلغ المتبقي.
                                         @else
@@ -324,18 +326,18 @@
                                         @endif
                                     </p>
                                     @if($checkoutHasWalletBalance)
-                                        <p class="text-xs font-semibold text-sky-700">رصيد محفظتك الحالي: {{ number_format($studentWalletBalance, 2) }} {{ __('public.currency_egp') }}</p>
+                                        <p class="text-xs font-semibold text-acad-cyan">رصيد محفظتك الحالي: {{ number_format($studentWalletBalance, 2) }} {{ __('public.currency_egp') }}</p>
                                     @endif
                                     <div class="grid grid-cols-1 {{ $checkoutHasWalletBalance ? 'sm:grid-cols-2' : '' }} gap-4">
                                         <div>
-                                            <label class="block text-sm font-bold text-slate-700 mb-1">كود الكوبون</label>
+                                            <label class="block text-sm font-bold text-white/75 mb-1">كود الكوبون</label>
                                             <input type="text" id="checkout_coupon_code" dir="ltr" autocomplete="off"
                                                    class="input-checkout uppercase font-mono text-sm"
                                                    placeholder="مثال: SAVE10">
                                         </div>
                                         @if($checkoutHasWalletBalance)
                                             <div>
-                                                <label class="block text-sm font-bold text-slate-700 mb-1">مبلغ من المحفظة (ج.م)</label>
+                                                <label class="block text-sm font-bold text-white/75 mb-1">مبلغ من المحفظة (ج.م)</label>
                                                 <input type="number" id="checkout_wallet_credit" step="0.01" min="0"
                                                        value="0"
                                                        max="{{ max(0, $studentWalletBalance ?? 0) }}"
@@ -345,108 +347,88 @@
                                     </div>
                                     <div class="flex flex-wrap items-center gap-3">
                                         <button type="button" id="checkout_apply_pricing"
-                                                class="inline-flex items-center gap-2 rounded-xl bg-mx-navy text-white px-5 py-2.5 text-sm font-bold hover:opacity-95 transition-opacity">
+                                                class="btn-acad-ghost text-sm !py-2.5 !px-5 border-acad-cyan/30 text-acad-cyan hover:bg-acad-cyan/10">
                                             <i class="fas fa-rotate"></i> تحديث السعر
                                         </button>
-                                        <span id="checkout_pricing_msg" class="text-sm font-medium text-slate-600 hidden"></span>
+                                        <span id="checkout_pricing_msg" class="text-sm font-medium text-white/55 hidden"></span>
                                     </div>
                                 </div>
                             @endif
 
-                            @php
-                                $fawaterakActive = !empty($fawaterakUseGateway) && isset($course);
-                                $fawaterakMis = !empty($fawaterakMisconfigured) && isset($course);
-                                $fawaterakIntegration = $fawaterakIntegration ?? 'iframe';
-                            @endphp
-
                             @if($fawaterakMis)
-                                <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 shadow-sm">
-                                    <p class="text-sm font-bold text-rose-900 mb-2 flex items-center gap-2">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                        إعدادات الدفع غير مكتملة
-                                    </p>
-                                    <p class="text-sm text-rose-800 leading-7">
-                                        تم تفعيل بوابة فواتيرك من إعدادات النظام، لكن إعدادات الربط غير مكتملة على الخادم.
-                                        @if($fawaterakIntegration === 'api')
-                                            أضف
-                                            <code class="text-xs bg-white/80 px-1 rounded" dir="ltr">FAWATERAK_API_TOKEN</code>
-                                            (Bearer من لوحة فواتيرك) واختيارياً
-                                            <code class="text-xs bg-white/80 px-1 rounded" dir="ltr">FAWATERAK_API_BASE_URL</code>
-                                            إن اختلف عن العنوان الافتراضي للبيئة.
-                                        @else
-                                            أضف
-                                            <code class="text-xs bg-white/80 px-1 rounded" dir="ltr">FAWATERAK_VENDOR_KEY</code>
-                                            و
-                                            <code class="text-xs bg-white/80 px-1 rounded" dir="ltr">FAWATERAK_PROVIDER_KEY</code>
-                                            لوضع الإطار (IFrame).
-                                        @endif
-                                        ثم شغّل
-                                        <code class="text-xs bg-white/80 px-1 rounded" dir="ltr">php artisan config:clear</code>.
-                                    </p>
+                                <div class="alert-box alert-error mb-6">
+                                    <i class="fas fa-exclamation-triangle mt-0.5"></i>
+                                    <div>
+                                        <p class="font-bold mb-2">إعدادات الدفع غير مكتملة</p>
+                                        <p class="text-sm font-normal leading-7 opacity-90">
+                                            تم تفعيل بوابة فواتيرك من إعدادات النظام، لكن إعدادات الربط غير مكتملة على الخادم.
+                                            @if($fawaterakIntegration === 'api')
+                                                أضف <code class="text-xs bg-black/20 px-1 rounded" dir="ltr">FAWATERAK_API_TOKEN</code>
+                                                واختيارياً <code class="text-xs bg-black/20 px-1 rounded" dir="ltr">FAWATERAK_API_BASE_URL</code>.
+                                            @else
+                                                أضف <code class="text-xs bg-black/20 px-1 rounded" dir="ltr">FAWATERAK_VENDOR_KEY</code>
+                                                و <code class="text-xs bg-black/20 px-1 rounded" dir="ltr">FAWATERAK_PROVIDER_KEY</code>.
+                                            @endif
+                                            ثم شغّل <code class="text-xs bg-black/20 px-1 rounded" dir="ltr">php artisan config:clear</code>.
+                                        </p>
+                                    </div>
                                 </div>
-                                <a href="{{ route('orders.index') }}" class="btn-outline inline-flex items-center justify-center gap-2 bg-white border-2 border-slate-200 text-mx-indigo px-6 py-3.5 rounded-2xl font-bold">
+                                <a href="{{ route('orders.index') }}" class="btn-acad-ghost">
                                     <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }} text-sm"></i>
                                     رجوع
                                 </a>
                             @elseif($fawaterakActive && $fawaterakIntegration === 'api')
-                                <div class="mb-6 rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white px-5 py-4 shadow-sm">
-                                    <p class="text-sm font-bold text-sky-900 mb-1 flex items-center gap-2">
-                                        <i class="fas fa-lock text-sky-600"></i>
-                                        الدفع الإلكتروني عبر فواتيرك (API)
-                                    </p>
-                                    <p class="text-sm text-sky-800/90 leading-relaxed">
-                                        اختر وسيلة الدفع من القائمة ثم تابع؛ قد يُطلب التحويل لصفحة فواتيرك أو عرض رمز (فوري / محفظة) حسب الوسيلة.
-                                    </p>
+                                <div class="alert-box alert-sky mb-6">
+                                    <i class="fas fa-lock mt-0.5"></i>
+                                    <div>
+                                        <p class="font-bold mb-1">الدفع الإلكتروني عبر فواتيرك (API)</p>
+                                        <p class="text-sm font-normal opacity-90 leading-relaxed">اختر وسيلة الدفع من القائمة ثم تابع؛ قد يُطلب التحويل لصفحة فواتيرك أو عرض رمز (فوري / محفظة) حسب الوسيلة.</p>
+                                    </div>
                                 </div>
-                                <div id="fawaterk-api-error" class="hidden mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-red-800 text-sm font-medium"></div>
-                                <div id="fawaterk-api-loading" class="mb-6 flex items-center gap-3 text-slate-600 text-sm">
-                                    <i class="fas fa-spinner fa-spin text-mx-navy"></i>
+                                <div id="fawaterk-api-error" class="hidden alert-box alert-error mb-6"></div>
+                                <div id="fawaterk-api-loading" class="mb-6 flex items-center gap-3 text-white/60 text-sm">
+                                    <i class="fas fa-spinner fa-spin text-acad-cyan"></i>
                                     جاري تحميل وسائل الدفع...
                                 </div>
                                 <div id="fawaterk-api-methods" class="hidden mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
                                 <div id="fawaterk-api-wallet-wrap" class="hidden mb-6">
-                                    <label class="block text-sm font-bold text-slate-700 mb-2">رقم المحفظة (ميزا / محافظ — عند الحاجة)</label>
+                                    <label class="block text-sm font-bold text-white/75 mb-2">رقم المحفظة (ميزا / محافظ — عند الحاجة)</label>
                                     <input type="text" id="fawaterk-api-wallet" dir="ltr" class="input-checkout" placeholder="01xxxxxxxxx" autocomplete="tel">
                                 </div>
-                                <div id="fawaterk-api-result" class="hidden mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-800 space-y-2"></div>
-                                <button type="button" id="fawaterk-api-pay-btn" disabled
-                                        class="btn-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-l from-brand-500 to-brand-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-brand-600/25 disabled:opacity-50 disabled:cursor-not-allowed mb-6">
+                                <div id="fawaterk-api-result" class="hidden mb-6 glass-panel rounded-2xl border border-white/12 p-5 text-sm text-white/85 space-y-2"></div>
+                                <button type="button" id="fawaterk-api-pay-btn" disabled class="btn-acad-primary w-full sm:w-auto mb-6 disabled:opacity-50 disabled:cursor-not-allowed">
                                     <i class="fas fa-arrow-left text-sm"></i>
                                     متابعة الدفع
                                 </button>
-                                <p class="text-xs text-slate-500 text-center mb-6 flex items-center justify-center gap-2">
-                                    <i class="fas fa-shield-halved text-mx-navy"></i>
+                                <p class="text-xs text-white/45 text-center mb-6 flex items-center justify-center gap-2">
+                                    <i class="fas fa-shield-halved text-acad-cyan"></i>
                                     الاتصال بفواتيرك من خادم المنصة — لا حاجة لتحميل سكربت خارجي على هذه الصفحة
                                 </p>
                             @elseif($fawaterakActive)
-                                <div class="mb-6 rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white px-5 py-4 shadow-sm">
-                                    <p class="text-sm font-bold text-sky-900 mb-1 flex items-center gap-2">
-                                        <i class="fas fa-lock text-sky-600"></i>
-                                        الدفع الإلكتروني عبر فواتيرك
-                                    </p>
-                                    <p class="text-sm text-sky-800/90 leading-relaxed">
-                                        اختر وسيلة الدفع داخل الإطار أدناه. بعد نجاح العملية يُفعَّل الكورس على حسابك تلقائياً.
-                                    </p>
+                                <div class="alert-box alert-sky mb-6">
+                                    <i class="fas fa-lock mt-0.5"></i>
+                                    <div>
+                                        <p class="font-bold mb-1">الدفع الإلكتروني عبر فواتيرك</p>
+                                        <p class="text-sm font-normal opacity-90 leading-relaxed">اختر وسيلة الدفع داخل الإطار أدناه. بعد نجاح العملية يُفعَّل الكورس على حسابك تلقائياً.</p>
+                                    </div>
                                 </div>
-                                <div id="fawaterk-checkout-error" class="hidden mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-red-800 text-sm font-medium"></div>
-                                <div id="fawaterkDivId" class="min-h-[520px] w-full rounded-2xl border border-slate-200 bg-white shadow-inner overflow-hidden mb-6 ring-1 ring-slate-200/60"></div>
-                                <p class="text-xs text-slate-500 text-center mb-6 flex items-center justify-center gap-2">
-                                    <i class="fas fa-shield-halved text-mx-navy"></i>
+                                <div id="fawaterk-checkout-error" class="hidden alert-box alert-error mb-6"></div>
+                                <div id="fawaterkDivId" class="min-h-[520px] w-full rounded-2xl border border-white/12 bg-white shadow-inner overflow-hidden mb-6 ring-1 ring-white/10"></div>
+                                <p class="text-xs text-white/45 text-center mb-6 flex items-center justify-center gap-2">
+                                    <i class="fas fa-shield-halved text-acad-cyan"></i>
                                     معالجة الدفع تتم عبر بوابة فواتيرك المعتمدة
                                 </p>
-                                <a href="{{ route('orders.index') }}" class="btn-outline inline-flex items-center justify-center gap-2 bg-white border-2 border-slate-200 text-mx-indigo px-6 py-3.5 rounded-2xl font-bold hover:border-slate-300">
+                                <a href="{{ route('orders.index') }}" class="btn-acad-ghost">
                                     <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }} text-sm"></i>
                                     رجوع
                                 </a>
                             @else
-                                <div class="mb-6 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white px-5 py-4 shadow-sm">
-                                    <p class="text-sm font-bold text-amber-900 mb-1 flex items-center gap-2">
-                                        <i class="fas fa-circle-info"></i>
-                                        الدفع اليدوي
-                                    </p>
-                                    <p class="text-sm text-amber-900/85 leading-relaxed">
-                                        ارفع إيصال التحويل وسيظهر الطلب في صفحة الطلبات حتى تتم مراجعته والموافقة عليه.
-                                    </p>
+                                <div class="alert-box alert-info mb-6">
+                                    <i class="fas fa-circle-info mt-0.5"></i>
+                                    <div>
+                                        <p class="font-bold mb-1">الدفع اليدوي</p>
+                                        <p class="text-sm font-normal opacity-90 leading-relaxed">ارفع إيصال التحويل وسيظهر الطلب في صفحة الطلبات حتى تتم مراجعته والموافقة عليه.</p>
+                                    </div>
                                 </div>
 
                                 <form action="{{ isset($course) ? route('public.course.checkout.complete', $course->id) : (isset($learningPath) ? route('public.learning-path.checkout.complete', Str::slug($learningPath->name)) : '#') }}" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true" x-data="{paymentMethod:'bank_transfer'}" id="manual-checkout-form">
@@ -457,7 +439,7 @@
                                     @endif
                                     <div class="space-y-5 mb-8">
                                         <div>
-                                            <label class="block text-sm font-bold text-slate-700 mb-2">طريقة الدفع</label>
+                                            <label class="block text-sm font-bold text-white/75 mb-2">طريقة الدفع</label>
                                             <select name="payment_method" x-model="paymentMethod" class="input-checkout" required>
                                                 <option value="bank_transfer">تحويل بنكي / محفظة</option>
                                                 <option value="cash">دفع نقدي</option>
@@ -466,7 +448,7 @@
                                         </div>
 
                                         <div x-show="paymentMethod === 'bank_transfer'" x-cloak>
-                                            <label class="block text-sm font-bold text-slate-700 mb-2">اختر حساب التحويل</label>
+                                            <label class="block text-sm font-bold text-white/75 mb-2">اختر حساب التحويل</label>
                                             <select name="wallet_id" class="input-checkout" :required="paymentMethod === 'bank_transfer'">
                                                 <option value="">اختر الحساب</option>
                                                 @foreach(($wallets ?? []) as $wallet)
@@ -478,34 +460,33 @@
                                         </div>
 
                                         <div>
-                                            <label class="block text-sm font-bold text-slate-700 mb-2">إيصال الدفع</label>
+                                            <label class="block text-sm font-bold text-white/75 mb-2">إيصال الدفع</label>
                                             <input type="file" name="payment_proof" accept="image/*" required
-                                                   class="w-full rounded-2xl border border-slate-200 px-4 py-3 file:me-3 file:rounded-xl file:border-0 file:bg-mx-rose file:px-4 file:py-2 file:text-sm file:font-semibold file:text-mx-navy hover:file:bg-pink-100 transition-colors">
-                                            <p class="mt-2 text-xs text-slate-500">الصيغ المسموحة: JPG, PNG — حتى 40 ميجابايت.</p>
+                                                   class="w-full rounded-2xl border border-white/14 bg-white/[0.06] px-4 py-3 text-white/80 file:me-3 file:rounded-xl file:border-0 file:bg-acad-yellow/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-acad-yellow hover:file:bg-acad-yellow/30 transition-colors">
+                                            <p class="mt-2 text-xs text-white/45">الصيغ المسموحة: JPG, PNG — حتى 40 ميجابايت.</p>
                                         </div>
 
                                         <div>
-                                            <label class="block text-sm font-bold text-slate-700 mb-2">ملاحظات (اختياري)</label>
+                                            <label class="block text-sm font-bold text-white/75 mb-2">ملاحظات (اختياري)</label>
                                             <textarea name="notes" rows="3" class="input-checkout resize-y min-h-[100px]" placeholder="أي تفاصيل إضافية عن التحويل"></textarea>
                                         </div>
                                     </div>
 
                                     <div class="flex flex-col sm:flex-row gap-4">
-                                        <button type="submit" :disabled="isSubmitting"
-                                                class="btn-primary flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-l from-brand-500 to-brand-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-brand-600/25 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
+                                        <button type="submit" :disabled="isSubmitting" class="btn-acad-primary flex-1 disabled:opacity-60 disabled:cursor-not-allowed">
                                             <i class="fas fa-file-upload" x-show="!isSubmitting"></i>
                                             <i class="fas fa-spinner fa-spin" x-show="isSubmitting" x-cloak></i>
                                             <span x-text="isSubmitting ? 'جاري إرسال الطلب...' : 'إرسال الطلب ورفع الإيصال'"></span>
                                         </button>
                                         <a href="{{ route('orders.index') }}"
                                            :class="{ 'pointer-events-none opacity-50': isSubmitting }"
-                                           class="btn-outline inline-flex items-center justify-center gap-2 bg-white border-2 border-slate-200 text-mx-indigo px-8 py-4 rounded-2xl font-bold hover:bg-slate-50">
+                                           class="btn-acad-ghost flex-1 sm:flex-initial">
                                             <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}"></i>
                                             إلغاء
                                         </a>
                                     </div>
-                                    <p class="mt-6 text-xs text-slate-500 text-center flex items-center justify-center gap-2">
-                                        <i class="fas fa-shield-halved text-mx-navy"></i>
+                                    <p class="mt-6 text-xs text-white/45 text-center flex items-center justify-center gap-2">
+                                        <i class="fas fa-shield-halved text-acad-cyan"></i>
                                         يظهر الطلب في صفحة الطلبات ويتم التفعيل بعد الموافقة
                                     </p>
                                 </form>
@@ -560,19 +541,23 @@
             if (!m) return;
             m.textContent = text || '';
             m.classList.toggle('hidden', !text);
-            m.classList.toggle('text-red-600', !!isErr);
-            m.classList.toggle('text-emerald-700', !isErr && !!text);
+            m.classList.toggle('text-red-300', !!isErr);
+            m.classList.toggle('text-emerald-300', !isErr && !!text);
         }
         function updateSummary(data) {
             var base = parseFloat(summary.getAttribute('data-base-price')) || 0;
+            var isMonthly = summary.getAttribute('data-is-monthly') === '1';
+            var monthSuffix = isMonthly ? ' / {{ __('public.per_month') }}' : '';
+            var egpSmall = ' <span class="text-white/45 text-sm font-medium">{{ __('public.currency_egp') }}</span>' + (isMonthly ? ' <span class="text-white/40 text-xs font-medium">/{{ __('public.per_month') }}</span>' : '');
+            var egpLarge = ' <span class="text-white/45 text-base font-medium">{{ __('public.currency_egp') }}</span>' + (isMonthly ? ' <span class="text-white/40 text-sm font-medium">/{{ __('public.per_month') }}</span>' : '');
             if (!data || !data.ok) {
-                el('sum-original').innerHTML = fmt(base) + ' <span class="text-slate-500 text-sm font-medium">{{ __('public.currency_egp') }}</span>';
-                el('sum-final').innerHTML = fmt(base) + ' <span class="text-slate-500 text-base font-medium">{{ __('public.currency_egp') }}</span>';
+                el('sum-original').innerHTML = fmt(base) + egpSmall;
+                el('sum-final').innerHTML = fmt(base) + egpLarge;
                 el('sum-coupon-row').classList.add('hidden');
                 el('sum-wallet-row').classList.add('hidden');
                 return;
             }
-            el('sum-original').innerHTML = fmt(data.original_amount) + ' <span class="text-slate-500 text-sm font-medium">{{ __('public.currency_egp') }}</span>';
+            el('sum-original').innerHTML = fmt(data.original_amount) + egpSmall;
             if (data.discount_amount > 0) {
                 el('sum-coupon-row').classList.remove('hidden');
                 el('sum-coupon').textContent = '− ' + fmt(data.discount_amount) + ' {{ __('public.currency_egp') }}';
@@ -585,7 +570,7 @@
             } else {
                 el('sum-wallet-row').classList.add('hidden');
             }
-            el('sum-final').innerHTML = fmt(data.final_amount) + ' <span class="text-slate-500 text-base font-medium">{{ __('public.currency_egp') }}</span>';
+            el('sum-final').innerHTML = fmt(data.final_amount) + egpLarge;
         }
         function quote() {
             setMsg('', false);
@@ -595,6 +580,8 @@
             var w = el('checkout_wallet_credit');
             fd.append('coupon_code', c ? (c.value || '').trim() : '');
             fd.append('wallet_credit', w && w.value !== '' ? w.value : '0');
+            var ar = document.querySelector('input[name="auto_renew"]');
+            if (ar && ar.checked) { fd.append('auto_renew', '1'); }
             return fetch(quoteUrl, {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
@@ -730,6 +717,8 @@
             var wEl = document.getElementById('checkout_wallet_credit');
             fd.append('coupon_code', cEl ? (cEl.value || '').trim() : '');
             fd.append('wallet_credit', wEl && wEl.value !== '' ? wEl.value : '0');
+            var arEl = document.querySelector('input[name="auto_renew"]');
+            if (arEl && arEl.checked) { fd.append('auto_renew', '1'); }
             fetch(prepareUrl, {
                 method: 'POST',
                 headers: {
@@ -841,7 +830,7 @@
                 var name = (document.documentElement.getAttribute('dir') === 'rtl' && m.name_ar) ? m.name_ar : (m.name_en || m.name_ar || ('#' + id));
                 var card = document.createElement('button');
                 card.type = 'button';
-                card.className = 'flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-200 bg-white text-start hover:border-mx-navy/40 transition-colors ring-1 ring-slate-100';
+                card.className = 'flex items-center gap-4 p-4 rounded-2xl border-2 border-white/12 bg-white/[0.04] text-start hover:border-acad-cyan/40 transition-colors';
                 card.setAttribute('data-pid', String(id));
                 if (m.logo && typeof m.logo === 'string') {
                     var img = document.createElement('img');
@@ -852,21 +841,21 @@
                     card.appendChild(img);
                 } else {
                     var ph = document.createElement('span');
-                    ph.className = 'w-10 h-10 rounded-xl bg-mx-soft flex items-center justify-center text-mx-navy shrink-0';
+                    ph.className = 'w-10 h-10 rounded-xl bg-acad-cyan/15 flex items-center justify-center text-acad-cyan shrink-0';
                     ph.innerHTML = '<i class="fas fa-credit-card"></i>';
                     card.appendChild(ph);
                 }
                 var title = document.createElement('span');
-                title.className = 'font-bold text-navy-950 flex-1 min-w-0';
+                title.className = 'font-bold text-white flex-1 min-w-0';
                 title.textContent = name;
                 card.appendChild(title);
                 card.addEventListener('click', function() {
                     methodsEl.querySelectorAll('button').forEach(function(b) {
-                        b.classList.remove('border-mx-navy', 'ring-2', 'ring-mx-navy/25');
-                        b.classList.add('border-slate-200');
+                        b.classList.remove('border-acad-yellow', 'ring-2', 'ring-acad-yellow/30');
+                        b.classList.add('border-white/12');
                     });
-                    card.classList.remove('border-slate-200');
-                    card.classList.add('border-mx-navy', 'ring-2', 'ring-mx-navy/25');
+                    card.classList.remove('border-white/12');
+                    card.classList.add('border-acad-yellow', 'ring-2', 'ring-acad-yellow/30');
                     selectedId = id;
                     if (payBtn) payBtn.disabled = false;
                 });
@@ -890,8 +879,8 @@
             if (pd.amanCode) html += '<p><strong>أمان:</strong> ' + pd.amanCode + '</p>';
             if (pd.masaryCode) html += '<p><strong>مصاري:</strong> ' + pd.masaryCode + '</p>';
             if (!html) html = '<pre class="text-xs whitespace-pre-wrap break-all" dir="ltr">' + JSON.stringify(pd, null, 2) + '</pre>';
-            resultEl.innerHTML = '<p class="font-bold text-mx-indigo mb-2">أكمل الدفع حسب التعليمات:</p>' + html +
-                '<p class="text-xs text-slate-500 mt-3">بعد الدفع قد تُعاد إلى الموقع تلقائياً؛ إن لم يحدث ذلك حدّث صفحة الطلبات.</p>';
+            resultEl.innerHTML = '<p class="font-bold text-acad-yellow mb-2">أكمل الدفع حسب التعليمات:</p>' + html +
+                '<p class="text-xs text-white/45 mt-3">بعد الدفع قد تُعاد إلى الموقع تلقائياً؛ إن لم يحدث ذلك حدّث صفحة الطلبات.</p>';
         }
         function run() {
             var fd = new FormData();
@@ -900,6 +889,8 @@
             var wEl = document.getElementById('checkout_wallet_credit');
             fd.append('coupon_code', cEl ? (cEl.value || '').trim() : '');
             fd.append('wallet_credit', wEl && wEl.value !== '' ? wEl.value : '0');
+            var arEl = document.querySelector('input[name="auto_renew"]');
+            if (arEl && arEl.checked) { fd.append('auto_renew', '1'); }
             fetch(prepareUrl, {
                 method: 'POST',
                 headers: {

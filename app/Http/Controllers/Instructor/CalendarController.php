@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
 use App\Models\ConsultationRequest;
+use App\Models\OneToOneSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,7 +23,12 @@ class CalendarController extends Controller
             now()->subMonths(1),
             now()->addMonths(3),
             'instructor'
-        );
+        )->merge(OneToOneSession::calendarItemsForUser(
+            $user,
+            now()->subMonths(1),
+            now()->addMonths(3),
+            'instructor'
+        ));
 
         $stats = [
             'total' => $events->count(),
@@ -38,7 +44,8 @@ class CalendarController extends Controller
         $start = $request->get('start');
         $end = $request->get('end');
 
-        $events = ConsultationRequest::calendarItemsForUser($user, $start, $end, 'instructor');
+        $events = ConsultationRequest::calendarItemsForUser($user, $start, $end, 'instructor')
+            ->merge(OneToOneSession::calendarItemsForUser($user, $start, $end, 'instructor'));
 
         $calendarEvents = $events->map(function ($event) {
             return [

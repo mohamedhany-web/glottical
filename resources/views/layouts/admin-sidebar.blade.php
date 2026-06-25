@@ -158,6 +158,7 @@
                     || request()->routeIs('admin.users.*')
                     || request()->routeIs('admin.students-control.*')
                     || request()->routeIs('admin.online-enrollments.*')
+                    || request()->routeIs('admin.learning-path-enrollments.*')
                     || request()->routeIs('admin.subscriptions.*')
                     || request()->routeIs('admin.teacher-features.*')
                     || request()->routeIs('admin.support-tickets.*')
@@ -201,6 +202,13 @@
                     <li>
                         <a href="{{ route('admin.online-enrollments.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.online-enrollments.*') ? 'active' : '' }}">
                             <i class="fas fa-user-graduate"></i><span>تسجيلات الطلاب</span>
+                        </a>
+                    </li>
+                    @endif
+                    @if(($isFull || $u->hasPermission('manage.enrollments')) && Route::has('admin.learning-path-enrollments.index'))
+                    <li>
+                        <a href="{{ route('admin.learning-path-enrollments.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.learning-path-enrollments.*') ? 'active' : '' }}">
+                            <i class="fas fa-route"></i><span>تسجيلات المسارات</span>
                         </a>
                     </li>
                     @endif
@@ -657,7 +665,7 @@
             <li class="sidebar-section-label">التعليم</li>
             {{-- إدارة التسجيلات --}}
             @if($isFull || $u->hasPermission('manage.enrollments'))
-            @php $enrollmentsOpen = request()->routeIs('admin.online-enrollments.*'); @endphp
+            @php $enrollmentsOpen = request()->routeIs('admin.online-enrollments.*') || request()->routeIs('admin.learning-path-enrollments.*'); @endphp
             <li x-data="{ open: {{ $enrollmentsOpen ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="sidebar-group-btn">
                     <span class="flex items-center gap-3"><i class="fas fa-user-graduate w-5 text-center text-teal-400"></i><span>{{ __('admin.enrollments') }}</span></span>
@@ -665,14 +673,15 @@
                 </button>
                 <ul x-show="open" x-transition class="mt-1 mr-3 space-y-0.5 border-r border-slate-200 pr-3">
                     <li><a href="{{ route('admin.online-enrollments.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.online-enrollments.*') ? 'active' : '' }}"><i class="fas fa-laptop"></i><span>{{ __('admin.online_enrollments') }}</span></a></li>
+                    <li><a href="{{ route('admin.learning-path-enrollments.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.learning-path-enrollments.*') ? 'active' : '' }}"><i class="fas fa-route"></i><span>تسجيلات المسارات</span></a></li>
                 </ul>
             </li>
             @endif
 
-            {{-- إدارة المحتوى — الكورسات فقط --}}
-            @if($isFull || $u->hasPermission('manage.courses') || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.assignments') || $u->hasPermission('manage.exams') || $u->hasPermission('manage.question-bank') || $u->hasPermission('manage.attendance') || $u->hasPermission('manage.achievements') || $u->hasPermission('manage.badges') || $u->hasPermission('manage.reviews'))
+            {{-- إدارة المحتوى — الكورسات ومسارات التعلم --}}
+            @if($isFull || $u->hasPermission('manage.courses') || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.academic-subjects') || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.assignments') || $u->hasPermission('manage.exams') || $u->hasPermission('manage.question-bank') || $u->hasPermission('manage.attendance') || $u->hasPermission('manage.achievements') || $u->hasPermission('manage.badges') || $u->hasPermission('manage.reviews'))
             @php
-                $contentManagementOpen = request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.course-categories.*') || request()->routeIs('admin.exams.*') || request()->routeIs('admin.question-bank.*') || request()->routeIs('admin.question-categories.*') || request()->routeIs('admin.lectures.*') || request()->routeIs('admin.assignments.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.achievements.*') || request()->routeIs('admin.badges.*') || request()->routeIs('admin.reviews.*');
+                $contentManagementOpen = request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.academic-years.*') || request()->routeIs('admin.academic-subjects.*') || request()->routeIs('admin.learning-paths.*') || request()->routeIs('admin.course-categories.*') || request()->routeIs('admin.exams.*') || request()->routeIs('admin.question-bank.*') || request()->routeIs('admin.question-categories.*') || request()->routeIs('admin.lectures.*') || request()->routeIs('admin.assignments.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.achievements.*') || request()->routeIs('admin.badges.*') || request()->routeIs('admin.reviews.*');
             @endphp
             <li x-data="{ open: {{ $contentManagementOpen ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="sidebar-group-btn">
@@ -680,6 +689,9 @@
                     <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
                 </button>
                 <ul x-show="open" x-transition class="mt-1 mr-3 space-y-0.5 border-r border-slate-200 pr-3">
+                    @if($isFull || $u->hasPermission('manage.academic-years'))
+                    <li><a href="{{ route('admin.academic-years.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.academic-years.*') ? 'active' : '' }}"><i class="fas fa-route"></i><span>مسارات التعلم</span></a></li>
+                    @endif
                     @if($isFull || $u->hasPermission('manage.courses'))
                     @php $advancedCoursesActive = request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.courses.lessons.*'); @endphp
                     <li><a href="{{ route('admin.advanced-courses.index') }}" class="sidebar-sub-link {{ $advancedCoursesActive ? 'active' : '' }}"><i class="fas fa-graduation-cap"></i><span>{{ __('admin.courses_management') }}</span></a></li>

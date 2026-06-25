@@ -30,11 +30,12 @@
         ];
     }
     $pathsList = ($landingPaths ?? collect())->take(10);
-    if ($pathsList->isEmpty()) {
+    $hasManagedPaths = $pathsList->isNotEmpty();
+    if (! $hasManagedPaths) {
         $pathsList = collect([
-            (object) ['name' => __($a.'.path_fallback_1'), 'description' => '', 'courses_count' => 5, 'image_url' => null, 'id' => 0],
-            (object) ['name' => __($a.'.path_fallback_2'), 'description' => '', 'courses_count' => 6, 'image_url' => null, 'id' => 0],
-            (object) ['name' => __($a.'.path_fallback_3'), 'description' => '', 'courses_count' => 4, 'image_url' => null, 'id' => 0],
+            (object) ['name' => __($a.'.path_fallback_1'), 'description' => '', 'courses_count' => 0, 'image_url' => null, 'id' => 0, 'url' => route('public.learning-paths.index')],
+            (object) ['name' => __($a.'.path_fallback_2'), 'description' => '', 'courses_count' => 0, 'image_url' => null, 'id' => 0, 'url' => route('public.learning-paths.index')],
+            (object) ['name' => __($a.'.path_fallback_3'), 'description' => '', 'courses_count' => 0, 'image_url' => null, 'id' => 0, 'url' => route('public.learning-paths.index')],
         ]);
     }
 
@@ -106,6 +107,20 @@
     <meta property="og:image" content="<?php echo e(asset('images/og-image.jpg')); ?>">
     <?php echo $__env->make('partials.favicon-links', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <?php echo $__env->make('partials.seo-jsonld', ['jsonldType' => 'website'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+    <?php
+        $r2PublicBase = \App\Services\PlatformMediaSettings::r2PublicBaseUrl();
+        $heroLcpImage = ($heroSpotlight[0]['bg'] ?? null) ?: null;
+    ?>
+    <?php if(!empty($heroLcpImage)): ?>
+        <link rel="preload" as="image" href="<?php echo e(e($heroLcpImage)); ?>" fetchpriority="high">
+    <?php endif; ?>
+    <?php if(is_string($r2PublicBase) && $r2PublicBase !== ''): ?>
+        <?php $r2Host = parse_url($r2PublicBase, PHP_URL_HOST); ?>
+        <?php if($r2Host): ?>
+            <link rel="preconnect" href="https://<?php echo e($r2Host); ?>" crossorigin>
+        <?php endif; ?>
+    <?php endif; ?>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -184,6 +199,12 @@
         #market-live-results.netflix-row > a.netflix-item{flex:0 0 auto;width:min(9.25rem,38vw);min-width:8.5rem;max-width:10.5rem}
         .search-overlay-enter{animation:soIn .32s ease forwards}
         @keyframes soIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        #academy-search-anchor.search-bar-visible{animation:searchBarIn .28s ease forwards}
+        @keyframes searchBarIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+        .media-thumb-skeleton{position:absolute;inset:0;background:linear-gradient(110deg,#152a4a 8%,#1e3a5f 18%,#152a4a 33%);background-size:200% 100%;animation:mediaShimmer 1.2s linear infinite}
+        @keyframes mediaShimmer{to{background-position-x:-200%}}
+        .media-thumb-img{opacity:0;transition:opacity .35s ease}
+        .media-thumb-img.is-loaded{opacity:1}
         .chip-active{box-shadow:0 0 0 2px #F5B800,inset 0 0 20px rgba(245,184,0,.12)}
         @keyframes kenBurns{0%{transform:scale(1.08) translate(0,0)}100%{transform:scale(1.14) translate(-1%,-1%)}}
         @keyframes kenDrift{0%{transform:scale(1.12) translate(0,0)}100%{transform:scale(1.18) translate(1.2%,0.8%)}}
@@ -210,10 +231,10 @@
                 <?php if(! empty($spot['bg'])): ?>
                     <img src="<?php echo e(e($spot['bg'])); ?>"
                          alt=""
-                         class="hero-ken absolute inset-0 w-full h-full object-cover object-center scale-110"
+                         class="hero-ken hero-slider-img absolute inset-0 w-full h-full object-cover object-center scale-110"
                          decoding="async"
                          fetchpriority="<?php echo e($hi === 0 ? 'high' : 'auto'); ?>"
-                         loading="<?php echo e($hi === 0 ? 'eager' : 'lazy'); ?>">
+                         loading="eager">
                 <?php else: ?>
                     <div class="absolute inset-0 bg-gradient-to-br from-[#0B3D91] via-[#123256] to-[#0d1528]"></div>
                 <?php endif; ?>
@@ -274,7 +295,7 @@
     </section>
 
     
-    <div class="hidden sm:block fixed top-[4.35rem] md:top-[4.6rem] left-1/2 -translate-x-1/2 z-[998] w-[calc(100%-2rem)] max-w-lg pointer-events-none" id="academy-search-anchor">
+    <div class="hidden fixed top-[4.35rem] md:top-[4.6rem] left-1/2 -translate-x-1/2 z-[998] w-[calc(100%-2rem)] max-w-lg pointer-events-none" id="academy-search-anchor" aria-hidden="true">
         <form action="<?php echo e(route('public.courses')); ?>" method="get" id="academy-search-form" class="pointer-events-auto glass-panel rounded-full floating-search-glow px-4 py-2.5 flex items-center gap-3 border border-white/12">
             <i class="fas fa-magnifying-glass text-acad-cyan/80 text-sm"></i>
             <input type="search" name="q" autocomplete="off" placeholder="<?php echo e(__($a.'.search_placeholder')); ?>" class="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/45 text-sm font-semibold" id="academy-search-input" data-open-search>
@@ -289,7 +310,7 @@
             <p class="text-center text-[11px] font-extrabold text-acad-cyan uppercase tracking-[0.2em] mb-5"><?php echo e(__($a.'.strip_kicker_stream')); ?></p>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 text-center">
                 <div class="reveal">
-                    <p class="text-2xl sm:text-4xl font-black text-white tabular-nums counter drop-shadow-[0_0_20px_rgba(245,184,0,.25)]" data-target="<?php echo e((int) $homeStats['learners']); ?>">0</p>
+                    <p class="text-2xl sm:text-4xl font-black text-white tabular-nums counter drop-shadow-[0_0_20px_rgba(245,184,0,.25)]" data-target="<?php echo e((int) $homeStats['learners']); ?>" data-suffix="<?php echo e(!empty($homeStats['learners_show_plus']) ? '+' : ''); ?>">0</p>
                     <p class="text-xs sm:text-sm font-bold text-white/55 mt-2"><?php echo e(__($a.'.stats_students')); ?></p>
                 </div>
                 <div class="reveal">
@@ -345,6 +366,30 @@
         </div>
     </section>
 
+    <?php if(($oneToOneCourses ?? collect())->isNotEmpty()): ?>
+    <section id="stream-one-to-one" class="section-y bg-violet-950/30 border-t border-violet-500/10">
+        <div class="container-acad space-y-8">
+            <div class="reveal flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                <div>
+                    <span class="text-violet-300 font-extrabold text-xs tracking-widest uppercase"><?php echo e(__('public.home_one_to_one_kicker')); ?></span>
+                    <h2 class="mt-2 text-2xl sm:text-3xl font-black text-white"><?php echo e(__('public.home_one_to_one_title')); ?></h2>
+                    <p class="mt-2 text-white/60 max-w-xl text-sm sm:text-base"><?php echo e(__('public.home_one_to_one_sub')); ?></p>
+                </div>
+                <a href="<?php echo e(route('public.courses', ['delivery' => 'one_to_one'])); ?>" class="inline-flex items-center gap-2 font-extrabold text-violet-300 hover:text-white transition text-sm shrink-0">
+                    <?php echo e(__('public.home_one_to_one_cta')); ?>
+
+                    <i class="fas fa-arrow-<?php echo e($isRtl ? 'left' : 'right'); ?> text-xs"></i>
+                </a>
+            </div>
+            <div class="netflix-row reveal" dir="<?php echo e($isRtl ? 'rtl' : 'ltr'); ?>">
+                <?php $__currentLoopData = $oneToOneCourses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $course): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php echo $__env->make('partials.landing-stream-card', ['course' => $course, 'a' => $a, 'isRtl' => $isRtl], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
+
     
     <section id="stream-paths" class="section-y bg-[#060d1a]/90 border-t border-white/5">
         <div class="container-acad">
@@ -357,13 +402,13 @@
                 <?php $__currentLoopData = $pathsList; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $path): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <?php
                         $pImg = $path->image_url ?? null;
-                        $episodes = max(1, (int) ($path->courses_count ?? 3));
-                        $progressPct = min(100, 18 + $episodes * 11);
+                        $episodes = max(0, (int) ($path->courses_count ?? 0));
+                        $pathUrl = $path->url ?? (isset($path->slug) && $path->slug !== '' ? route('public.learning-path.show', $path->slug) : route('public.learning-paths.index'));
                     ?>
                     <article class="reveal shrink-0 w-[min(100%,300px)] sm:w-[320px] snap-start rounded-2xl border border-white/10 glass-panel overflow-hidden shadow-xl hover:border-acad-yellow/40 transition-all duration-300">
-                        <div class="h-40 relative overflow-hidden">
+                        <a href="<?php echo e($pathUrl); ?>" class="block h-40 relative overflow-hidden group">
                             <?php if($pImg): ?>
-                                <img src="<?php echo e($pImg); ?>" alt="" class="absolute inset-0 w-full h-full object-cover">
+                                <img src="<?php echo e($pImg); ?>" alt="<?php echo e($path->name); ?>" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async">
                             <?php else: ?>
                                 <div class="absolute inset-0 bg-gradient-to-br from-acad-blue to-[#0d1528]"></div>
                             <?php endif; ?>
@@ -372,14 +417,20 @@
                             <div class="absolute bottom-3 start-4 end-4">
                                 <h3 class="text-white font-black text-lg leading-tight drop-shadow-lg"><?php echo e($path->name); ?></h3>
                             </div>
-                        </div>
+                        </a>
                         <div class="p-5 text-start">
                             <p class="text-sm text-white/65 line-clamp-2"><?php echo e(\Illuminate\Support\Str::limit(strip_tags((string) ($path->description ?? '')), 110) ?: '—'); ?></p>
-                            <p class="mt-3 text-xs font-bold text-acad-cyan"><i class="fas fa-film me-1 opacity-80"></i><?php echo e($episodes); ?> <?php echo e(__($a.'.path_episodes')); ?></p>
-                            <div class="mt-3 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                                <div class="h-full rounded-full bg-gradient-to-l from-acad-yellow to-acad-cyan shadow-[0_0_12px_rgba(245,184,0,.4)]" style="width:<?php echo e($progressPct); ?>%"></div>
-                            </div>
-                            <a href="<?php echo e(route('public.courses')); ?>" class="mt-5 block text-center py-2.5 rounded-xl bg-acad-yellow text-acad-blue font-extrabold hover:brightness-110 transition"><?php echo e(__($a.'.path_continue')); ?></a>
+                            <p class="mt-3 text-xs font-bold text-acad-cyan">
+                                <i class="fas fa-film me-1 opacity-80"></i>
+                                <?php if($episodes > 0): ?>
+                                    <?php echo e($episodes); ?> <?php echo e(__($a.'.path_episodes')); ?>
+
+                                <?php else: ?>
+                                    <?php echo e(__($a.'.path_episodes')); ?>
+
+                                <?php endif; ?>
+                            </p>
+                            <a href="<?php echo e($pathUrl); ?>" class="mt-5 block text-center py-2.5 rounded-xl bg-acad-yellow text-acad-blue font-extrabold hover:brightness-110 transition"><?php echo e(__($a.'.path_continue')); ?></a>
                         </div>
                     </article>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -458,7 +509,7 @@
             </div>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
                 <div class="reveal text-center">
-                    <p class="text-4xl sm:text-5xl font-black tabular-nums text-acad-yellow counter" data-target="<?php echo e((int) $homeStats['learners']); ?>">0</p>
+                    <p class="text-4xl sm:text-5xl font-black tabular-nums text-acad-yellow counter" data-target="<?php echo e((int) $homeStats['learners']); ?>" data-suffix="<?php echo e(!empty($homeStats['learners_show_plus']) ? '+' : ''); ?>">0</p>
                     <p class="mt-2 font-bold text-white/85"><?php echo e(__($a.'.stats_students')); ?></p>
                 </div>
                 <div class="reveal text-center">
@@ -812,6 +863,7 @@
 
     function marketSearchOverlay(){
         var overlay = document.getElementById('market-search-overlay');
+        var anchor = document.getElementById('academy-search-anchor');
         var ovInput = document.getElementById('market-overlay-input');
         var mainInput = document.getElementById('academy-search-input');
         var hiddenQ = document.getElementById('market-overlay-q-hidden');
@@ -821,6 +873,30 @@
         var ovChipHidden = document.getElementById('ov-active-chip');
         var rec = recentStorage();
         if (!overlay || !ovInput) return;
+
+        function isSearchBarVisible(){
+            return !!(anchor && !anchor.classList.contains('hidden'));
+        }
+
+        function showSearchBar(){
+            if (!anchor) return;
+            anchor.classList.remove('hidden');
+            anchor.classList.add('search-bar-visible');
+            anchor.setAttribute('aria-hidden', 'false');
+            setTimeout(function(){
+                anchor.classList.remove('search-bar-visible');
+                if (mainInput) mainInput.focus();
+            }, 300);
+        }
+
+        function hideSearchBar(){
+            if (!anchor) return;
+            anchor.classList.add('hidden');
+            anchor.classList.remove('search-bar-visible');
+            anchor.setAttribute('aria-hidden', 'true');
+            var suggestBox = document.getElementById('search-suggestions');
+            if (suggestBox) suggestBox.classList.add('hidden');
+        }
 
         function paintRecent(){
             if (!recentEl) return;
@@ -898,25 +974,42 @@
             document.body.classList.remove('overflow-hidden');
         }
 
-        if (mainInput) {
-            mainInput.addEventListener('focus', function(){ openOverlay(); });
-            mainInput.addEventListener('click', function(){ openOverlay(); });
-        }
-        document.querySelectorAll('[data-open-search]').forEach(function(el){
-            el.addEventListener('focus', function(){ openOverlay(); });
-            el.addEventListener('click', function(){ openOverlay(); });
-        });
         bindChips();
         document.querySelectorAll('[data-open-search-btn]').forEach(function(osb) {
-            osb.addEventListener('click', function(e){ e.preventDefault(); openOverlay(); });
+            osb.addEventListener('click', function(e){
+                e.preventDefault();
+                if (osb.closest('#academy-search-form')) {
+                    openOverlay();
+                    return;
+                }
+                if (window.matchMedia('(min-width: 640px)').matches) {
+                    isSearchBarVisible() ? hideSearchBar() : showSearchBar();
+                } else {
+                    openOverlay();
+                }
+            });
         });
-        document.addEventListener('glottical:open-search', function(){ openOverlay(); });
+        document.addEventListener('glottical:open-search', function(){
+            if (window.matchMedia('(min-width: 640px)').matches) {
+                showSearchBar();
+            } else {
+                openOverlay();
+            }
+        });
+        document.addEventListener('click', function(e){
+            if (!isSearchBarVisible()) return;
+            if (anchor.contains(e.target)) return;
+            if (e.target.closest('#navbar [data-open-search-btn]')) return;
+            hideSearchBar();
+        });
 
         overlay.querySelectorAll('[data-close-search]').forEach(function(el){
             el.addEventListener('click', closeOverlay);
         });
         document.addEventListener('keydown', function(e){
-            if (e.key === 'Escape' && !overlay.classList.contains('hidden')) closeOverlay();
+            if (e.key !== 'Escape') return;
+            if (!overlay.classList.contains('hidden')) closeOverlay();
+            else if (isSearchBarVisible()) hideSearchBar();
         });
 
         ovInput.addEventListener('input', syncLive);
@@ -990,12 +1083,13 @@
                 if (!entry.isIntersecting) return;
                 var el = entry.target;
                 var target = parseInt(el.getAttribute('data-target'), 10) || 0;
+                var suffix = el.getAttribute('data-suffix') || '';
                 var dur = 1200, start = null;
                 function step(ts){
                     if (!start) start = ts;
                     var p = Math.min((ts - start) / dur, 1);
                     var ease = 1 - Math.pow(1 - p, 3);
-                    el.textContent = Math.round(target * ease).toLocaleString();
+                    el.textContent = Math.round(target * ease).toLocaleString() + (p >= 1 ? suffix : '');
                     if (p < 1) requestAnimationFrame(step);
                 }
                 requestAnimationFrame(step);

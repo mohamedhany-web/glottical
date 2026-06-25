@@ -5,7 +5,7 @@ namespace App\Helpers;
 class VideoHelper
 {
     /**
-     * تحويل رابط الفيديو إلى رابط قابل للتضمين
+     * تحويل رابط الفيديو إلى رابط قابل للتضمين (Bunny، YouTube، Vimeo).
      */
     public static function getEmbedUrl($url)
     {
@@ -13,16 +13,47 @@ class VideoHelper
             return null;
         }
 
-        // Bunny.net (Bunny Stream) - iframe أو player.mediadelivery.net
+        $url = trim((string) $url);
+
+        // Bunny.net (Bunny Stream)
         if (preg_match('/(?:iframe|player)\.mediadelivery\.net\/(embed|play)\/(\d+)\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
             $mode = $matches[1];
             $libraryId = $matches[2];
             $videoId = $matches[3];
-            // NOTE: Prefer iframe host for embedding, preserve play/embed mode.
             $base = "https://iframe.mediadelivery.net/{$mode}/{$libraryId}/{$videoId}";
             $parsed = parse_url($url);
-            $query = isset($parsed['query']) ? '?' . $parsed['query'] : '';
-            return $base . $query;
+            $query = isset($parsed['query']) ? '?'.$parsed['query'] : '';
+
+            return $base.$query;
+        }
+
+        if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/', $url, $m)) {
+            return 'https://www.youtube.com/embed/'.$m[1].'?rel=0&modestbranding=1&playsinline=1';
+        }
+
+        if (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $url, $m)) {
+            return 'https://player.vimeo.com/video/'.$m[1].'?title=0&byline=0&portrait=0';
+        }
+
+        return null;
+    }
+
+    /**
+     * رابط فيديو مباشر (mp4/webm) للتشغيل عبر <video>.
+     */
+    public static function getDirectVideoUrl($url): ?string
+    {
+        if (empty($url) || self::getEmbedUrl($url)) {
+            return null;
+        }
+
+        $url = trim((string) $url);
+        if (! filter_var($url, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+
+        if (preg_match('/\.(mp4|webm|ogg)(\?.*)?$/i', $url)) {
+            return $url;
         }
 
         return null;
@@ -37,8 +68,17 @@ class VideoHelper
             return 'unknown';
         }
 
-        if (strpos($url, 'iframe.mediadelivery.net') !== false || strpos($url, 'mediadelivery.net') !== false) {
+        if (str_contains($url, 'mediadelivery.net')) {
             return 'bunny';
+        }
+        if (preg_match('/youtube\.com|youtu\.be/', $url)) {
+            return 'youtube';
+        }
+        if (str_contains($url, 'vimeo.com')) {
+            return 'vimeo';
+        }
+        if (self::getDirectVideoUrl($url)) {
+            return 'direct';
         }
 
         return 'other';
@@ -53,16 +93,10 @@ class VideoHelper
             return null;
         }
 
-        // YouTube thumbnail
         if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $url, $matches)) {
             $videoId = $matches[1];
-            return "https://img.youtube.com/vi/{$videoId}/maxresdefault.jpg";
-        }
 
-        // Vimeo thumbnail (يحتاج API call، لكن يمكن استخدام صورة افتراضية)
-        if (preg_match('/vimeo\.com\/(\d+)/', $url, $matches)) {
-            // يمكن تطوير هذا لاحقاً للحصول على الصورة المصغرة من Vimeo API
-            return null;
+            return "https://img.youtube.com/vi/{$videoId}/maxresdefault.jpg";
         }
 
         return null;
@@ -77,7 +111,7 @@ class VideoHelper
             return false;
         }
 
-        return (bool) preg_match('/(?:iframe|player)\.mediadelivery\.net\/(embed|play)\/(\d+)\/([a-zA-Z0-9_-]+)/', $url);
+        return self::getEmbedUrl($url) !== null || self::getDirectVideoUrl($url) !== null;
     }
 
     /**
@@ -87,23 +121,16 @@ class VideoHelper
     {
         $embedUrl = self::getEmbedUrl($url);
         $source = self::getVideoSource($url);
+        $direct = self::getDirectVideoUrl($url);
 
-        if (!$embedUrl) {
-            return '<div class="bg-red-100 text-red-700 p-4 rounded-lg">رابط الفيديو غير صحيح أو غير مدعوم</div>';
+        if ($embedUrl) {
+            return "<iframe src='{$embedUrl}' width='{$width}' height='{$height}' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen' allowfullscreen class='w-full h-full' style='border: none;'></iframe>";
         }
 
-        switch ($source) {
-            case 'youtube':
-            case 'vimeo':
-            case 'google_drive':
-            case 'bunny':
-                return "<iframe src='{$embedUrl}' width='{$width}' height='{$height}' frameborder='0' allow='encrypted-media' class='w-full h-full' style='border: none;'></iframe>";
-            
-            case 'direct':
-                return "<video width='{$width}' height='{$height}' class='w-full h-full' controlsList='nodownload noplaybackrate nofullscreen noremoteplayback' disablePictureInPicture disableRemotePlayback><source src='{$embedUrl}' type='video/mp4'>متصفحك لا يدعم تشغيل الفيديو.</video>";
-            
-            default:
-                return "<div class='bg-yellow-100 text-yellow-700 p-4 rounded-lg h-full flex items-center justify-center'>نوع الفيديو غير مدعوم حالياً</div>";
+        if ($direct) {
+            return "<video width='{$width}' height='{$height}' class='w-full h-full' controls playsinline preload='metadata'><source src='{$direct}' type='video/mp4'>متصفحك لا يدعم تشغيل الفيديو.</video>";
         }
+
+        return '<div class="bg-red-100 text-red-700 p-4 rounded-lg">رابط الفيديو غير صحيح أو غير مدعوم</div>';
     }
 }

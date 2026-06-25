@@ -73,10 +73,18 @@
                 <p class="text-sm text-gray-500 dark:text-slate-400">{{ __('student.my_courses_subtitle') }}</p>
             </div>
             {{-- يظهر لكل طالب يصل لهذه الصفحة (لا يعتمد على صلاحية student.view.courses) --}}
-            <a href="{{ route('public.courses') }}" class="inline-flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-5 py-3 rounded-xl text-sm font-bold transition-colors shadow-md shrink-0 w-full sm:w-auto">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full sm:w-auto">
+            <a href="{{ route('public.courses') }}" class="inline-flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-5 py-3 rounded-xl text-sm font-bold transition-colors shadow-md w-full sm:w-auto">
                 <i class="fas fa-th-large"></i>
                 {{ __('student.browse_courses') }}
             </a>
+            @if(Route::has('student.my-course-subscriptions'))
+            <a href="{{ route('student.my-course-subscriptions') }}" class="inline-flex items-center justify-center gap-2 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 px-5 py-3 rounded-xl text-sm font-bold transition-colors w-full sm:w-auto">
+                <i class="fas fa-calendar-check"></i>
+                {{ __('student.course_subscriptions_nav') }}
+            </a>
+            @endif
+            </div>
         </div>
     </div>
 

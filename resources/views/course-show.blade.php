@@ -4,20 +4,10 @@
     $thumbUrl = $course->thumbnail_url;
     $introVideoUrl = trim((string)($course->video_url ?? ''));
     $introEmbedUrl = \App\Helpers\VideoHelper::getEmbedUrl($introVideoUrl);
-    if (!$introEmbedUrl && $introVideoUrl !== '') {
-        if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/', $introVideoUrl, $m)) {
-            $introEmbedUrl = 'https://www.youtube.com/embed/' . $m[1] . '?rel=0&modestbranding=1';
-        } elseif (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $introVideoUrl, $m)) {
-            $introEmbedUrl = 'https://player.vimeo.com/video/' . $m[1];
-        }
-    }
-    $introDirectVideo = null;
-    if (!$introEmbedUrl && $introVideoUrl !== '' && filter_var($introVideoUrl, FILTER_VALIDATE_URL)) {
-        if (preg_match('/\.(mp4|webm|ogg)(\?.*)?$/i', $introVideoUrl)) {
-            $introDirectVideo = $introVideoUrl;
-        }
-    }
+    $introDirectVideo = \App\Helpers\VideoHelper::getDirectVideoUrl($introVideoUrl);
     $categoryDisplay = $course->courseCategory?->name ?? __('public.course_category_not_set');
+    $isMonthly = $course->isMonthlyBilling();
+    $checkoutPrice = $course->effectiveCheckoutPrice();
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -220,7 +210,7 @@
                                     <a href="{{ route('my-courses.show', $course) }}" class="inline-flex items-center gap-2.5 bg-acad-yellow text-acad-blue px-7 py-3.5 rounded-xl font-black shadow-lg shadow-black/25 hover:brightness-105 transition text-base">
                                         <i class="fas fa-play-circle"></i> {{ __('public.start_learning_now') }}
                                     </a>
-                                @elseif($course->effectivePurchasePrice() > 0 && !($course->is_free ?? false))
+                                @elseif($checkoutPrice > 0 && !($course->is_free ?? false))
                                     <a href="{{ route('public.course.checkout', $course->id) }}" class="inline-flex items-center gap-2.5 bg-acad-yellow text-acad-blue px-7 py-3.5 rounded-xl font-black shadow-lg shadow-black/25 hover:brightness-105 transition text-base">
                                         <i class="fas fa-shopping-cart"></i> {{ __('public.buy_now') }}
                                     </a>
@@ -234,7 +224,7 @@
                                 @endif
                             @endauth
                             @guest
-                                @if($course->effectivePurchasePrice() > 0 && !($course->is_free ?? false))
+                                @if($checkoutPrice > 0 && !($course->is_free ?? false))
                                     <a href="{{ route('register', ['redirect' => route('public.course.checkout', $course->id)]) }}" class="inline-flex items-center gap-2.5 bg-acad-yellow text-acad-blue px-7 py-3.5 rounded-xl font-black shadow-lg shadow-black/25 hover:brightness-105 transition text-base">
                                         <i class="fas fa-shopping-cart"></i> {{ __('public.buy_now') }}
                                     </a>
@@ -254,17 +244,17 @@
                     <div class="lg:col-span-2 reveal stagger-2">
                         @if($introEmbedUrl)
                         <div class="rounded-2xl overflow-hidden border border-white/20 shadow-2xl shadow-black/40 ring-1 ring-white/10 bg-acad-navy">
-                            <div class="aspect-video w-full">
+                            <div class="relative w-full aspect-video max-h-[min(70vh,520px)]">
                                 <iframe src="{{ $introEmbedUrl }}" title="{{ __('public.course_intro_video') }}"
-                                    class="w-full h-full min-h-[220px]"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                                    allowfullscreen loading="lazy"></iframe>
+                                    class="absolute inset-0 w-full h-full"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
+                                    allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
                             </div>
                         </div>
                         @elseif($introDirectVideo)
                         <div class="rounded-2xl overflow-hidden border border-white/20 shadow-2xl shadow-black/40 bg-black ring-1 ring-white/10">
-                            <div class="aspect-video w-full">
-                                <video src="{{ $introDirectVideo }}" controls playsinline preload="metadata" class="w-full h-full object-contain">
+                            <div class="relative w-full aspect-video max-h-[min(70vh,520px)]">
+                                <video src="{{ $introDirectVideo }}" controls playsinline webkit-playsinline preload="metadata" poster="{{ $thumbUrl }}" class="absolute inset-0 w-full h-full object-contain bg-black">
                                     {{ __('public.course_intro_video_unsupported') }}
                                 </video>
                             </div>
@@ -365,12 +355,17 @@
                                 <div class="bg-gradient-to-l from-acad-blue via-acad-blue to-acad-blueDark p-5 text-center relative overflow-hidden">
                                     <div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_80%_0%,rgba(0,212,255,.5),transparent_45%)]"></div>
                                     <div class="relative">
-                                    @if($course->effectivePurchasePrice() > 0 && !($course->is_free ?? false))
-                                        @if($course->hasPromotionalPrice())
+                                    @if($checkoutPrice > 0 && !($course->is_free ?? false))
+                                        @if($isMonthly)
+                                            <div class="text-3xl font-black text-white tabular-nums">{{ number_format($checkoutPrice, 0) }} <span class="text-lg font-medium text-white/80">{{ __('public.currency_egp') }} / {{ __('public.per_month') }}</span></div>
+                                            @if($course->isOneToOne() && $course->instructor)
+                                                <p class="text-xs text-white/70 mt-2">{{ __('public.one_to_one_with') }} {{ $course->instructor->name }}</p>
+                                            @endif
+                                        @elseif($course->hasPromotionalPrice())
                                             <div class="text-sm text-white/80 line-through mb-1 tabular-nums">{{ number_format($course->listPriceAmount(), 0) }} {{ __('public.currency_egp') }}</div>
-                                            <div class="text-3xl font-black text-white tabular-nums">{{ number_format($course->effectivePurchasePrice(), 0) }} <span class="text-lg font-medium text-white/80">{{ __('public.currency_egp') }}</span></div>
+                                            <div class="text-3xl font-black text-white tabular-nums">{{ number_format($checkoutPrice, 0) }} <span class="text-lg font-medium text-white/80">{{ __('public.currency_egp') }}</span></div>
                                         @else
-                                            <div class="text-3xl font-black text-white tabular-nums">{{ number_format($course->effectivePurchasePrice(), 0) }} <span class="text-lg font-medium text-white/80">{{ __('public.currency_egp') }}</span></div>
+                                            <div class="text-3xl font-black text-white tabular-nums">{{ number_format($checkoutPrice, 0) }} <span class="text-lg font-medium text-white/80">{{ __('public.currency_egp') }}</span></div>
                                         @endif
                                     @else
                                         <div class="text-2xl font-black text-white flex items-center justify-center gap-2"><i class="fas fa-gift text-xl"></i>{{ __('public.free_price') }}</div>
@@ -397,7 +392,7 @@
                                             <a href="{{ route('my-courses.show', $course) }}" class="block w-full text-center py-3.5 rounded-xl bg-acad-yellow text-acad-blue font-black shadow-md hover:brightness-105 transition">
                                                 <i class="fas fa-play-circle {{ $isRtl?'ml-2':'mr-2' }}"></i>{{ __('public.start_learning_now') }}
                                             </a>
-                                        @elseif($course->effectivePurchasePrice() > 0 && !($course->is_free ?? false))
+                                        @elseif($checkoutPrice > 0 && !($course->is_free ?? false))
                                             <a href="{{ route('public.course.checkout', $course->id) }}" class="block w-full text-center py-3.5 rounded-xl bg-acad-yellow text-acad-blue font-black shadow-md hover:brightness-105 transition">
                                                 <i class="fas fa-shopping-cart {{ $isRtl?'ml-2':'mr-2' }}"></i>{{ __('public.buy_now') }}
                                             </a>
@@ -411,7 +406,7 @@
                                         @endif
                                     @endauth
                                     @guest
-                                        @if($course->effectivePurchasePrice() > 0 && !($course->is_free ?? false))
+                                        @if($checkoutPrice > 0 && !($course->is_free ?? false))
                                             <a href="{{ route('register', ['redirect' => route('public.course.checkout', $course->id)]) }}" class="block w-full text-center py-3.5 rounded-xl bg-acad-yellow text-acad-blue font-black shadow-md hover:brightness-105 transition">
                                                 <i class="fas fa-shopping-cart {{ $isRtl?'ml-2':'mr-2' }}"></i>{{ __('public.buy_now') }}
                                             </a>

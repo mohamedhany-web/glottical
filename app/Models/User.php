@@ -567,21 +567,24 @@ class User extends Authenticatable
     public function activeCourses()
     {
         return $this->belongsToMany(AdvancedCourse::class, 'student_course_enrollments', 'user_id', 'advanced_course_id')
-            ->withPivot(['status', 'progress', 'enrolled_at', 'activated_at'])
+            ->withPivot(['status', 'progress', 'enrolled_at', 'activated_at', 'expires_at', 'access_type', 'enrollment_type'])
             ->where('student_course_enrollments.status', 'active')
+            ->where(function ($q) {
+                $q->whereNull('student_course_enrollments.expires_at')
+                    ->orWhere('student_course_enrollments.expires_at', '>', now());
+            })
             ->orderByDesc('student_course_enrollments.activated_at')
             ->orderByDesc('student_course_enrollments.created_at');
     }
 
     /**
-     * التحقق من التسجيل في كورس أونلاين
+     * التحقق من التسجيل في كورس أونلاين (يشمل صلاحية الاشتراك الشهري).
      */
     public function isEnrolledIn($courseId): bool
     {
-        return $this->courseEnrollments()
-            ->where('advanced_course_id', $courseId)
-            ->where('status', 'active')
-            ->exists();
+        $enrollment = $this->getCourseEnrollment($courseId);
+
+        return \App\Services\CourseSubscriptionService::enrollmentGrantsAccess($enrollment);
     }
 
     /**

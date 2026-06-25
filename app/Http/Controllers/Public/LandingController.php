@@ -10,6 +10,7 @@ use App\Models\PopupAd;
 use App\Models\SiteTestimonial;
 use App\Models\SiteService;
 use App\Models\User;
+use App\Services\CourseSubscriptionService;
 use App\Services\HomepageSliderResolver;
 use App\Services\InstructorMarketingRankingService;
 use Illuminate\Support\Str;
@@ -50,6 +51,16 @@ class LandingController extends Controller
             ->limit(24)
             ->get();
 
+        $oneToOneCourses = AdvancedCourse::query()
+            ->where('is_active', true)
+            ->where('delivery_type', CourseSubscriptionService::DELIVERY_ONE_TO_ONE)
+            ->with(['instructor:id,name', 'courseCategory:id,name'])
+            ->withCount('lessons')
+            ->orderByDesc('is_featured')
+            ->orderByDesc('created_at')
+            ->limit(12)
+            ->get();
+
         $homeCategories = $this->buildHomeCategories();
 
         $homeInstructors = InstructorMarketingRankingService::rankApprovedProfiles();
@@ -60,8 +71,14 @@ class LandingController extends Controller
             ->limit(24)
             ->get();
 
+        $realLearners = User::query()->where('role', 'student')->where('is_active', true)->count();
+        $learnersMin = (int) config('platform.homepage_stats.learners_min', 5000);
+
         $homeStats = [
-            'learners' => User::query()->where('role', 'student')->where('is_active', true)->count(),
+            'learners' => max($learnersMin, $realLearners),
+            'learners_real' => $realLearners,
+            'learners_show_plus' => (bool) config('platform.homepage_stats.learners_show_plus', true)
+                && max($learnersMin, $realLearners) >= $learnersMin,
             'courses' => AdvancedCourse::query()->where('is_active', true)->count(),
             'certificates' => Certificate::query()
                 ->where(function ($q) {
@@ -81,6 +98,7 @@ class LandingController extends Controller
             'landingPaths',
             'teacherPlans',
             'featuredCourses',
+            'oneToOneCourses',
             'homeCategories',
             'homeInstructors',
             'homeTestimonials',
@@ -156,6 +174,7 @@ class LandingController extends Controller
                 'name' => $year->name,
                 'description' => $year->description,
                 'slug' => $slug,
+                'url' => $slug !== '' ? route('public.learning-path.show', $slug) : route('public.learning-paths.index'),
                 'price' => (float) ($year->price ?? 0),
                 'courses_count' => $courses->count(),
                 'thumbnail' => $year->thumbnail,

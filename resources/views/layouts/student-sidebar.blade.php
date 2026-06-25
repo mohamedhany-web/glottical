@@ -93,6 +93,22 @@
                     <span class="ins-nav-badge bg-[#eef2ff] dark:bg-violet-900/50 text-[#283593] dark:text-violet-300">{{ $coursesCount }}</span>
                 @endif
             </a>
+            <a href="{{ route('student.my-course-subscriptions') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+               class="ins-nav {{ request()->routeIs('student.my-course-subscriptions') ? 'active' : '' }}">
+                <span class="ins-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
+                    <i class="fas fa-calendar-check text-sm"></i>
+                </span>
+                <span class="flex-1 truncate">{{ __('student.course_subscriptions_nav') }}</span>
+            </a>
+            @if(Route::has('student.one-to-one-sessions.index'))
+            <a href="{{ route('student.one-to-one-sessions.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+               class="ins-nav {{ request()->routeIs('student.one-to-one-sessions.*') ? 'active' : '' }}">
+                <span class="ins-icon bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400">
+                    <i class="fas fa-user-graduate text-sm"></i>
+                </span>
+                <span class="flex-1 truncate">{{ __('student.one_to_one_sessions_nav') }}</span>
+            </a>
+            @endif
             @endif
 
             @if(Route::has('student.live-sessions.index'))
@@ -254,6 +270,16 @@
             </a>
             @endif
 
+            @if(Route::has('curriculum-library.index'))
+            <a href="{{ route('curriculum-library.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+               class="ins-nav {{ request()->routeIs('curriculum-library.*') ? 'active' : '' }}">
+                <span class="ins-icon bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
+                    <i class="fas fa-book-open text-sm"></i>
+                </span>
+                <span class="flex-1 truncate">مكتبة المنهج</span>
+            </a>
+            @endif
+
             {{-- ─── القسم المدفوع ─── --}}
             @php
                 $activeSub = $user->activeSubscription();
@@ -280,6 +306,9 @@
             @endif
 
             @foreach($featureConfig as $featureKey => $cfg)
+                @if($featureKey === 'library_access')
+                    @continue
+                @endif
                 @if(!$user->hasSubscriptionFeature($featureKey))
                     @continue
                 @endif

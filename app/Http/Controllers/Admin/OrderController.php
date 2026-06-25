@@ -12,6 +12,7 @@ use App\Models\StudentCourseEnrollment;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Services\CourseSubscriptionService;
 use App\Services\InstructorCoursePercentageService;
 use App\Services\OrderWalletAndCouponFinalizer;
 use Illuminate\Http\Request;
@@ -500,42 +501,23 @@ class OrderController extends Controller
                 if ($order->advanced_course_id) {
                     Log::info('Order approve: starting course enrollment', ['order_id' => $order->id, 'advanced_course_id' => $order->advanced_course_id]);
                     try {
-                        $existingEnrollment = StudentCourseEnrollment::where('user_id', $order->user_id)
-                            ->where('advanced_course_id', $order->advanced_course_id)
-                            ->first();
-
-                        if (! $existingEnrollment) {
-                            StudentCourseEnrollment::create([
-                                'user_id' => $order->user_id,
-                                'advanced_course_id' => $order->advanced_course_id,
-                                'enrolled_at' => now(),
-                                'activated_at' => now(),
-                                'activated_by' => auth()->id(),
-                                'status' => 'active',
-                                'progress' => 0,
-                                'invoice_id' => $invoice->id,
-                                'payment_id' => $payment->id,
-                                'payment_method' => $paymentMethod,
-                                'final_price' => $order->amount,
+                        if (empty($order->billing_mode)) {
+                            $order->loadMissing('course');
+                            $order->update([
+                                'billing_mode' => $order->course && $order->course->isMonthlyBilling()
+                                    ? CourseSubscriptionService::BILLING_MONTHLY
+                                    : CourseSubscriptionService::BILLING_ONE_TIME,
                             ]);
-                        } else {
-                            $existingEnrollment->update([
-                                'status' => 'active',
-                                'activated_at' => now(),
-                                'activated_by' => auth()->id(),
-                                'invoice_id' => $invoice->id,
-                                'payment_id' => $payment->id,
-                                'payment_method' => $paymentMethod,
-                                'final_price' => $order->amount,
-                            ]);
+                            $order = $order->fresh();
                         }
 
-                        $enrollment = StudentCourseEnrollment::where('user_id', $order->user_id)
-                            ->where('advanced_course_id', $order->advanced_course_id)
-                            ->first();
-                        if ($enrollment) {
-                            InstructorCoursePercentageService::processEnrollmentActivation($enrollment);
-                        }
+                        CourseSubscriptionService::syncEnrollmentFromOrder(
+                            $order,
+                            $invoice->id,
+                            $payment->id,
+                            $paymentMethod,
+                            (int) auth()->id()
+                        );
                     } catch (\Throwable $e) {
                         Log::warning('Course enrollment failed during order approval: '.$e->getMessage(), [
                             'order_id' => $order->id,

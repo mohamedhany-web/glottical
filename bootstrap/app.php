@@ -40,6 +40,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // انتهاء الاشتراكات يومياً
         $schedule->command('subscriptions:expire')->dailyAt('00:05');
+        $schedule->command('courses:expire-subscriptions')->dailyAt('00:10');
+        $schedule->command('courses:process-auto-renewals')->dailyAt('08:30');
 
         // تذكير الطلاب قبل 10 دقائق من بدء جلسة البث المباشر
         $schedule->command('live:send-reminders --minutes=10')

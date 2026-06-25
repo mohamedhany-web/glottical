@@ -27,6 +27,16 @@ if (! function_exists('storage_public_url')) {
     }
 }
 
+if (! function_exists('storage_public_url_stable')) {
+    /**
+     * رابط ثابت — للسلايدر والمحتوى الإداري (لا روابط موقّعة متغيّرة).
+     */
+    function storage_public_url_stable(?string $path, ?string $preferredDisk = null): ?string
+    {
+        return \App\Services\PublicStorageUrl::fromPathStable($path, $preferredDisk);
+    }
+}
+
 if (! function_exists('storage_asset')) {
     /**
      * بديل asset('storage/...') — يحترم مجلد التطبيق الفرعي ونفس نطاق الطلب.

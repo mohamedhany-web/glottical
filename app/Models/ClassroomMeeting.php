@@ -13,6 +13,7 @@ class ClassroomMeeting extends Model
     protected $fillable = [
         'user_id',
         'consultation_request_id',
+        'one_to_one_session_id',
         'code',
         'room_name',
         'title',
@@ -58,6 +59,11 @@ class ClassroomMeeting extends Model
     public function consultationRequest(): BelongsTo
     {
         return $this->belongsTo(ConsultationRequest::class, 'consultation_request_id');
+    }
+
+    public function oneToOneSession(): BelongsTo
+    {
+        return $this->belongsTo(OneToOneSession::class, 'one_to_one_session_id');
     }
 
     public function participants()

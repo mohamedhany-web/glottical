@@ -1,6 +1,8 @@
 ﻿@php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
+    $initialCategoryId = isset($categoryId) && (int) $categoryId > 0 ? (string) (int) $categoryId : '';
+    $activeDelivery = $delivery ?? null;
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -113,12 +115,16 @@
       .stream-card{border-radius:14px;overflow:hidden;background:#1a2d4d;border:1px solid rgba(255,255,255,.10);box-shadow:0 18px 40px -26px rgba(0,0,0,.65);transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease}
       .stream-card:hover{transform:scale(1.05);border-color:rgba(245,184,0,.55);box-shadow:0 0 0 2px rgba(245,184,0,.55),0 24px 60px -28px rgba(0,212,255,.35)}
       .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+      .media-thumb-skeleton{position:absolute;inset:0;background:linear-gradient(110deg,#152a4a 8%,#1e3a5f 18%,#152a4a 33%);background-size:200% 100%;animation:mediaShimmer 1.2s linear infinite}
+      @keyframes mediaShimmer{to{background-position-x:-200%}}
+      .media-thumb-img{opacity:0;transition:opacity .35s ease}
+      .media-thumb-img.is-loaded{opacity:1}
     </style>
 </head>
 <body class="font-sans text-white antialiased font-display bg-acad-navy"
       x-data="{
         searchQuery: '',
-        selectedCategoryId: '',
+        selectedCategoryId: @js($initialCategoryId),
         courses: @js($courses ?? []),
         get filteredCourses() {
           const q = this.searchQuery.toLowerCase().trim();
@@ -168,9 +174,27 @@
             <i class="fas fa-chevron-down absolute {{ $isRtl?'left':'right' }}-3 top-1/2 -translate-y-1/2 text-white/50 text-xs"></i>
           </div>
         </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-2 mt-6 reveal s1">
+          <a href="{{ route('public.courses') }}"
+             class="px-4 py-2 rounded-full text-sm font-extrabold border transition {{ !$activeDelivery ? 'bg-acad-yellow text-[#0B3D91] border-acad-yellow' : 'glass-panel border-white/12 text-white/80 hover:text-white' }}">
+            {{ __('public.courses_filter_all') }}
+          </a>
+          <a href="{{ route('public.courses', ['delivery' => 'group']) }}"
+             class="px-4 py-2 rounded-full text-sm font-extrabold border transition {{ $activeDelivery === 'group' ? 'bg-acad-cyan text-[#0B3D91] border-acad-cyan' : 'glass-panel border-white/12 text-white/80 hover:text-white' }}">
+            <i class="fas fa-users text-xs {{ $isRtl ? 'ml-1' : 'mr-1' }}"></i>{{ __('public.courses_filter_group') }}
+          </a>
+          <a href="{{ route('public.courses', ['delivery' => 'one_to_one']) }}"
+             class="px-4 py-2 rounded-full text-sm font-extrabold border transition {{ $activeDelivery === 'one_to_one' ? 'bg-violet-400 text-[#0B3D91] border-violet-400' : 'glass-panel border-white/12 text-white/80 hover:text-white' }}">
+            <i class="fas fa-user-graduate text-xs {{ $isRtl ? 'ml-1' : 'mr-1' }}"></i>{{ __('public.courses_filter_one_to_one') }}
+            @if(($oneToOneCount ?? 0) > 0)
+              <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-[10px] bg-white/15 {{ $isRtl ? 'mr-1' : 'ml-1' }}">{{ $oneToOneCount }}</span>
+            @endif
+          </a>
+        </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-3 sm:gap-4 mt-10 max-w-xl mx-auto reveal s2">
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mt-10 max-w-2xl mx-auto reveal s2">
         <article class="rounded-2xl p-4 sm:p-5 border border-white/10 glass-panel text-center">
           <p class="text-3xl sm:text-4xl font-black text-white" x-text="courses.length">0</p>
           <p class="text-xs sm:text-sm text-white/55 mt-1">{{ __('public.courses_stats_available') }}</p>
@@ -178,6 +202,10 @@
         <article class="rounded-2xl p-4 sm:p-5 border border-white/10 glass-panel text-center">
           <p class="text-3xl sm:text-4xl font-black text-acad-yellow" x-text="courses.filter(c=>c.is_featured).length">0</p>
           <p class="text-xs sm:text-sm text-white/55 mt-1">{{ __('public.courses_stats_featured') }}</p>
+        </article>
+        <article class="rounded-2xl p-4 sm:p-5 border border-white/10 glass-panel text-center hidden sm:block">
+          <p class="text-3xl sm:text-4xl font-black text-violet-300" x-text="courses.filter(c=>c.is_one_to_one).length">0</p>
+          <p class="text-xs sm:text-sm text-white/55 mt-1">{{ __('public.courses_filter_one_to_one') }}</p>
         </article>
       </div>
     </div>
@@ -221,15 +249,19 @@
                        :href="'{{ url('/course') }}/' + course.id">
                       <div class="relative aspect-video bg-slate-900/50">
                         <template x-if="course.thumbnail">
-                          <img :src="course.thumbnail"
-                               :alt="course.title"
-                               width="960"
-                               height="540"
-                               sizes="(max-width: 640px) 85vw, 400px"
-                               decoding="async"
-                               loading="lazy"
-                               class="absolute inset-0 h-full w-full object-cover"
-                               @@error="$el.style.display='none'">
+                          <div class="absolute inset-0">
+                            <div class="media-thumb-skeleton" :data-skeleton-for="course.id"></div>
+                            <img :src="course.thumbnail"
+                                 :alt="course.title"
+                                 width="400"
+                                 height="225"
+                                 sizes="(max-width: 640px) 85vw, 400px"
+                                 decoding="async"
+                                 loading="lazy"
+                                 class="absolute inset-0 h-full w-full object-cover media-thumb-img"
+                                 x-init="$el.addEventListener('load', () => { $el.classList.add('is-loaded'); $el.previousElementSibling?.remove(); })"
+                                 @@error="$el.style.display='none'; $el.previousElementSibling?.remove();">
+                          </div>
                         </template>
                         <div class="absolute inset-0 bg-gradient-to-t from-[#0d1528] via-transparent to-transparent opacity-90"></div>
                         <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition duration-300 bg-black/50">
@@ -239,6 +271,9 @@
                         </div>
                         <template x-if="course.is_featured">
                           <span class="absolute top-3 {{ $isRtl?'right':'left' }}-3 text-[10px] font-black px-2 py-1 rounded-md bg-acad-yellow text-[#0B3D91]">{{ __('public.featured_badge') }}</span>
+                        </template>
+                        <template x-if="course.is_one_to_one">
+                          <span class="absolute top-3 {{ $isRtl?'left':'right' }}-3 text-[10px] font-black px-2 py-1 rounded-md bg-violet-400 text-[#0B3D91]">{{ __('public.course_badge_one_to_one') }}</span>
                         </template>
                       </div>
                       <div class="p-4 text-start">

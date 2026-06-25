@@ -23,11 +23,8 @@ class CourseController extends Controller
             ->latest()
             ->first();
 
-        // التحقق من التسجيل في الكورس
-        $isEnrolled = \App\Models\StudentCourseEnrollment::where('user_id', auth()->id())
-            ->where('advanced_course_id', $advancedCourse->id)
-            ->where('status', 'active')
-            ->exists();
+        // التحقق من التسجيل في الكورس (يشمل انتهاء الاشتراك الشهري)
+        $isEnrolled = auth()->check() && auth()->user()->isEnrolledIn($advancedCourse->id);
 
         // جلب المحافظ الإلكترونية النشطة المتاحة للتحويل
         $availableWallets = \App\Models\Wallet::where('is_active', true)

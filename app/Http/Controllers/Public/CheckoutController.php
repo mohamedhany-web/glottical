@@ -21,6 +21,7 @@ use App\Services\InstructorCoursePercentageService;
 use App\Services\KashierService;
 use App\Services\OrderWalletAndCouponFinalizer;
 use App\Services\PaymentGatewaySettings;
+use App\Services\CourseSubscriptionService;
 use App\Services\TeacherSubscriptionActivationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -48,13 +49,12 @@ class CheckoutController extends Controller
             ->with(['academicSubject', 'academicYear'])
             ->firstOrFail();
 
-        // التحقق من التسجيل السابق
-        $isEnrolled = StudentCourseEnrollment::where('user_id', Auth::id())
+        // التحقق من التسجيل السابق (يشمل انتهاء الاشتراك الشهري)
+        $existingEnrollment = StudentCourseEnrollment::where('user_id', Auth::id())
             ->where('advanced_course_id', $course->id)
-            ->where('status', 'active')
-            ->exists();
+            ->first();
 
-        if ($isEnrolled) {
+        if ($existingEnrollment && CourseSubscriptionService::enrollmentGrantsAccess($existingEnrollment)) {
             return redirect()->route('public.course.show', $course->id)
                 ->with('info', 'أنت مسجل بالفعل في هذا الكورس');
         }
@@ -354,40 +354,13 @@ class CheckoutController extends Controller
             }
 
             if ($order->advanced_course_id) {
-                $existingEnrollment = StudentCourseEnrollment::where('user_id', $order->user_id)
-                    ->where('advanced_course_id', $order->advanced_course_id)
-                    ->first();
-                if (! $existingEnrollment) {
-                    StudentCourseEnrollment::create([
-                        'user_id' => $order->user_id,
-                        'advanced_course_id' => $order->advanced_course_id,
-                        'enrolled_at' => now(),
-                        'activated_at' => now(),
-                        'activated_by' => $order->user_id,
-                        'status' => 'active',
-                        'progress' => 0,
-                        'invoice_id' => $invoice->id,
-                        'payment_id' => $payment->id,
-                        'payment_method' => 'online',
-                        'final_price' => $order->amount,
-                    ]);
-                } else {
-                    $existingEnrollment->update([
-                        'status' => 'active',
-                        'activated_at' => now(),
-                        'activated_by' => $order->user_id,
-                        'invoice_id' => $invoice->id,
-                        'payment_id' => $payment->id,
-                        'payment_method' => 'online',
-                        'final_price' => $order->amount,
-                    ]);
-                }
-                $enrollment = StudentCourseEnrollment::where('user_id', $order->user_id)
-                    ->where('advanced_course_id', $order->advanced_course_id)
-                    ->first();
-                if ($enrollment) {
-                    InstructorCoursePercentageService::processEnrollmentActivation($enrollment);
-                }
+                CourseSubscriptionService::syncEnrollmentFromOrder(
+                    $order,
+                    $invoice->id,
+                    $payment->id,
+                    'online',
+                    (int) $order->user_id
+                );
             }
 
             DB::commit();
@@ -445,11 +418,7 @@ class CheckoutController extends Controller
             return response()->json(['message' => 'الكورس غير متاح أو غير مفعّل.'], 404);
         }
 
-        $isEnrolled = StudentCourseEnrollment::where('user_id', Auth::id())
-            ->where('advanced_course_id', $course->id)
-            ->where('status', 'active')
-            ->exists();
-        if ($isEnrolled) {
+        if (Auth::user()->isEnrolledIn($course->id)) {
             return response()->json(['message' => 'أنت مسجل بالفعل في هذا الكورس.'], 422);
         }
 
@@ -481,11 +450,13 @@ class CheckoutController extends Controller
             'discount_amount' => $pricing['discount_amount'],
             'wallet_credit_amount' => $pricing['wallet_credit_amount'],
             'amount' => $pricing['final_amount'],
+            'billing_mode' => $course->billing_mode ?? CourseSubscriptionService::BILLING_ONE_TIME,
             'payment_method' => 'online',
             'payment_proof' => null,
             'wallet_id' => null,
             'notes' => '',
             'status' => Order::STATUS_PENDING,
+            'auto_renew' => $course->isMonthlyBilling() && $request->boolean('auto_renew'),
         ];
 
         if ($amount < 0.01) {
@@ -904,7 +875,7 @@ class CheckoutController extends Controller
                 ?? $lockedOrder->fawaterak_invoice_id;
             $invoice = $this->approveOrderAfterOnlinePayment(
                 $lockedOrder,
-                'other',
+                'fawaterak',
                 $txRef,
                 $request->query(),
                 'فواتيرك (Fawaterak)'
@@ -1000,7 +971,25 @@ class CheckoutController extends Controller
     }
 
     /**
-     * إتمام الفوترة والتسجيل بعد دفع أونلاين (داخل معاملة قاعدة بيانات مفتوحة).
+     * واجهة عامة لتفعيل الطلب بعد الدفع (فواتيرك webhook أو عودة المتصفح).
+     */
+    public function approveOrderAfterOnlinePaymentPublic(
+        Order $order,
+        string $paymentGateway,
+        ?string $transactionId,
+        array $gatewayResponse,
+        string $gatewayDisplayName
+    ): Invoice {
+        return $this->approveOrderAfterOnlinePayment(
+            $order,
+            $paymentGateway,
+            $transactionId,
+            $gatewayResponse,
+            $gatewayDisplayName
+        );
+    }
+
+    /**
      * يُنشئ فاتورة مدفوعة، وسجل دفع، ومعاملة محاسبية، ويحدّث الطلب إلى مقبول، ويُفعّل التسجيل في الكورس.
      *
      * @param  'kashier'|'other'  $paymentGateway
@@ -1152,40 +1141,13 @@ class CheckoutController extends Controller
         }
 
         if ($order->advanced_course_id) {
-            $existingEnrollment = StudentCourseEnrollment::where('user_id', $order->user_id)
-                ->where('advanced_course_id', $order->advanced_course_id)
-                ->first();
-            if (! $existingEnrollment) {
-                StudentCourseEnrollment::create([
-                    'user_id' => $order->user_id,
-                    'advanced_course_id' => $order->advanced_course_id,
-                    'enrolled_at' => now(),
-                    'activated_at' => now(),
-                    'activated_by' => $order->user_id,
-                    'status' => 'active',
-                    'progress' => 0,
-                    'invoice_id' => $invoice->id,
-                    'payment_id' => $payment->id,
-                    'payment_method' => 'online',
-                    'final_price' => $order->amount,
-                ]);
-            } else {
-                $existingEnrollment->update([
-                    'status' => 'active',
-                    'activated_at' => now(),
-                    'activated_by' => $order->user_id,
-                    'invoice_id' => $invoice->id,
-                    'payment_id' => $payment->id,
-                    'payment_method' => 'online',
-                    'final_price' => $order->amount,
-                ]);
-            }
-            $enrollment = StudentCourseEnrollment::where('user_id', $order->user_id)
-                ->where('advanced_course_id', $order->advanced_course_id)
-                ->first();
-            if ($enrollment) {
-                InstructorCoursePercentageService::processEnrollmentActivation($enrollment);
-            }
+            CourseSubscriptionService::syncEnrollmentFromOrder(
+                $order,
+                $invoice->id,
+                $payment->id,
+                'online',
+                (int) $order->user_id
+            );
         }
 
         OrderWalletAndCouponFinalizer::run($order->fresh());
@@ -1264,13 +1226,7 @@ class CheckoutController extends Controller
             ->where('is_active', true)
             ->firstOrFail();
 
-        // التحقق من التسجيل السابق
-        $isEnrolled = StudentCourseEnrollment::where('user_id', Auth::id())
-            ->where('advanced_course_id', $course->id)
-            ->where('status', 'active')
-            ->exists();
-
-        if ($isEnrolled) {
+        if (Auth::user()->isEnrolledIn($course->id)) {
             return redirect()->route('public.course.show', $course->id)
                 ->with('info', 'أنت مسجل بالفعل في هذا الكورس');
         }
@@ -1354,6 +1310,7 @@ class CheckoutController extends Controller
                 'discount_amount' => $pricing['discount_amount'],
                 'wallet_credit_amount' => $pricing['wallet_credit_amount'],
                 'amount' => $pricing['final_amount'],
+                'billing_mode' => $course->billing_mode ?? CourseSubscriptionService::BILLING_ONE_TIME,
                 'payment_method' => $request->payment_method === 'wallet' ? 'bank_transfer' : $request->payment_method,
                 'payment_proof' => $paymentProofPath,
                 'wallet_id' => $request->payment_method === 'bank_transfer' || $request->payment_method === 'wallet'
@@ -1361,6 +1318,7 @@ class CheckoutController extends Controller
                     : null,
                 'notes' => $notes,
                 'status' => Order::STATUS_PENDING,
+                'auto_renew' => $course->isMonthlyBilling() && $request->boolean('auto_renew'),
             ]);
 
             DB::commit();
@@ -1400,31 +1358,25 @@ class CheckoutController extends Controller
             ->firstOrFail();
 
         // التحقق من أن الكورس مجاني
-        if ($course->effectivePurchasePrice() > 0 && ! ($course->is_free ?? false)) {
+        if ($course->effectiveCheckoutPrice() > 0 && ! ($course->is_free ?? false)) {
             return redirect()->route('public.course.show', $course->id)
                 ->with('error', 'هذا الكورس ليس مجانياً');
         }
 
-        // التحقق من التسجيل السابق
         $existingEnrollment = StudentCourseEnrollment::where('user_id', Auth::id())
             ->where('advanced_course_id', $course->id)
             ->first();
 
-        if ($existingEnrollment && $existingEnrollment->status === 'active') {
+        if ($existingEnrollment && CourseSubscriptionService::enrollmentGrantsAccess($existingEnrollment)) {
             return redirect()->route('public.course.show', $course->id)
                 ->with('info', 'أنت مسجل بالفعل في هذا الكورس');
         }
 
         DB::beginTransaction();
         try {
-            // إذا كان هناك تسجيل غير نشط، تفعيله
-            $enrollment = null;
             if ($existingEnrollment) {
-                $existingEnrollment->update([
-                    'status' => 'active',
-                    'activated_at' => now(),
-                    'activated_by' => Auth::id(),
-                ]);
+                CourseSubscriptionService::activateLifetimeEnrollment($existingEnrollment);
+                $existingEnrollment->update(['activated_by' => Auth::id()]);
                 $enrollment = $existingEnrollment->fresh();
             } else {
                 $enrollment = StudentCourseEnrollment::create([
@@ -1435,11 +1387,11 @@ class CheckoutController extends Controller
                     'activated_by' => Auth::id(),
                     'status' => 'active',
                     'progress' => 0,
+                    'enrollment_type' => 'gift',
+                    'access_type' => 'lifetime',
                 ]);
             }
-            if ($enrollment) {
-                InstructorCoursePercentageService::processEnrollmentActivation($enrollment);
-            }
+            InstructorCoursePercentageService::processEnrollmentActivation($enrollment);
 
             DB::commit();
 

@@ -17,8 +17,8 @@ class CurriculumLibraryController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $hasFullAccess = $user && $user->hasSubscriptionFeature('library_access');
-        $usedFreePreview = $user ? CurriculumLibraryPreviewOpen::hasUsedFreePreview($user->id) : false;
+        $hasFullAccess = (bool) $user;
+        $usedFreePreview = false;
 
         $query = CurriculumLibraryItem::active()
             ->with('category')
@@ -54,7 +54,7 @@ class CurriculumLibraryController extends Controller
     public function show(Request $request, CurriculumLibraryItem $item)
     {
         $user = Auth::user();
-        $hasFullAccess = $user && $user->hasSubscriptionFeature('library_access');
+        $hasFullAccess = (bool) $user;
 
         if (!$item->is_active) {
             abort(404);
@@ -67,12 +67,7 @@ class CurriculumLibraryController extends Controller
         }
 
         if (!$hasFullAccess) {
-            $usedFreePreview = $user ? CurriculumLibraryPreviewOpen::hasUsedFreePreview($user->id) : false;
-            if ($usedFreePreview) {
-                return redirect()->route('student.features.show', ['feature' => 'library_access'])
-                    ->with('error', 'يمكنك معاينة ملف واحد مجاناً فقط. لفتح باقي مناهج X اشترك في الباقة المناسبة.');
-            }
-            CurriculumLibraryPreviewOpen::recordFreePreviewUsed($user->id, $item->id);
+            abort(403, 'يجب تسجيل الدخول للوصول إلى مكتبة المنهج.');
         }
 
         $sectionTree = CurriculumLibrarySection::treeForItem($item);
@@ -425,17 +420,11 @@ class CurriculumLibraryController extends Controller
 
     protected function previewOrSubscriptionGate($user, CurriculumLibraryItem $item): ?\Illuminate\Http\RedirectResponse
     {
-        $hasFullAccess = $user && $user->hasSubscriptionFeature('library_access');
-        if ($hasFullAccess) {
+        if ($user) {
             return null;
         }
-        $used = $user ? CurriculumLibraryPreviewOpen::where('user_id', $user->id)->first() : null;
-        if (!$user || !$used || (int) $used->curriculum_library_item_id !== (int) $item->id) {
-            return redirect()->route('student.features.show', ['feature' => 'library_access'])
-                ->with('error', 'يتطلب هذا المحتوى اشتراك مناهج X أو معاينة ضمن نفس المنهج.');
-        }
 
-        return null;
+        return redirect()->route('login')->with('info', 'سجّل الدخول للوصول إلى مكتبة المنهج.');
     }
 
     protected function absoluteStorageUrl(string $diskName, string $path): string

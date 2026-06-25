@@ -76,9 +76,20 @@
                     <div class="mt-1 ms-2 space-y-0.5 border-s border-white/10 ps-3 pb-1">
                         <?php $__currentLoopData = $megaCategories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $mc): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <a href="<?php echo e($mc['url']); ?>" class="mob-menu-subitem">
-                            <span class="mob-menu-icon mob-menu-icon--cyan mob-menu-icon--sm"><i class="fas <?php echo e($mc['icon']); ?>"></i></span>
+                            <?php if(!empty($mc['thumb_url'])): ?>
+                                <span class="mob-menu-icon mob-menu-icon--cyan mob-menu-icon--sm overflow-hidden p-0">
+                                    <img src="<?php echo e($mc['thumb_url']); ?>" alt="" width="32" height="32" class="w-full h-full object-cover" loading="lazy" decoding="async">
+                                </span>
+                            <?php else: ?>
+                                <span class="mob-menu-icon mob-menu-icon--cyan mob-menu-icon--sm"><i class="fas <?php echo e($mc['icon']); ?>"></i></span>
+                            <?php endif; ?>
                             <span class="min-w-0 flex-1">
-                                <span class="block font-bold text-[14px] text-white/90 leading-tight"><?php echo e($mc['name']); ?></span>
+                                <span class="flex items-center gap-2">
+                                    <span class="block font-bold text-[14px] text-white/90 leading-tight truncate"><?php echo e($mc['name']); ?></span>
+                                    <?php if(!empty($mc['count'])): ?>
+                                        <span class="shrink-0 text-[9px] font-black px-1.5 py-0.5 rounded bg-acad-yellow/15 text-acad-yellow"><?php echo e($mc['count']); ?></span>
+                                    <?php endif; ?>
+                                </span>
                                 <span class="block text-[11px] text-white/45 line-clamp-1 mt-0.5"><?php echo e($mc['desc']); ?></span>
                             </span>
                         </a>

@@ -125,11 +125,11 @@ class HomepageSlider extends Model
         }
 
         if ($this->source_type === self::SOURCE_COURSE && $this->course) {
-            return $this->course->thumbnail_url ?? storage_public_url($this->course->thumbnail) ?? '';
+            return storage_public_url_stable($this->course->thumbnail) ?? '';
         }
 
         if ($this->source_type === self::SOURCE_PATH && $this->academicYear?->thumbnail) {
-            return storage_public_url($this->academicYear->thumbnail) ?? '';
+            return storage_public_url_stable($this->academicYear->thumbnail) ?? '';
         }
 
         return '';

@@ -4,22 +4,10 @@
     $navbarBrandTagline = $navbarBrandTagline ?? \App\Services\PublicFooterSettings::payload()['brand_tagline'];
     $isHome = \Illuminate\Support\Facades\Route::currentRouteName() === 'home';
     $langSwitch = fn (string $lang) => request()->fullUrlWithQuery(array_merge(request()->query(), ['lang' => $lang]));
-    $megaCategories = collect(range(1, 6))->map(function (int $i) {
-        $iconKey = 'public.home_category_fallback_'.$i.'_icon';
-        $iconRaw = __($iconKey);
-        $icon = is_string($iconRaw) && preg_match('/\bfa-[a-z0-9-]+\b/i', $iconRaw, $m)
-            ? strtolower($m[0])
-            : 'fa-folder';
-
-        return [
-            'name' => __('public.home_category_fallback_'.$i.'_name'),
-            'desc' => __('public.home_category_fallback_'.$i.'_desc'),
-            'icon' => $icon,
-            'url' => route('public.services.index'),
-        ];
-    });
+    $megaCategories = \App\Services\NavbarCategoryResolver::megaMenuItems(8);
     $navLinks = [
         ['href' => route('public.courses'), 'icon' => 'fa-graduation-cap', 'label' => __('public.courses')],
+        ['href' => route('public.courses', ['delivery' => 'one_to_one']), 'icon' => 'fa-user-graduate', 'label' => __('public.nav_one_to_one_courses')],
         ['href' => route('public.instructors.index'), 'icon' => 'fa-chalkboard-teacher', 'label' => __('landing.nav.instructors')],
         ['href' => route('public.about'), 'icon' => 'fa-circle-info', 'label' => __('public.about')],
     ];
@@ -67,16 +55,28 @@
                         <div class="mega-panel absolute top-full <?php echo e($isRtl ? 'right-0' : 'left-1/2 -translate-x-1/2'); ?> mt-2 w-[min(720px,calc(100vw-2rem))] rounded-2xl shadow-2xl shadow-black/40 opacity-0 invisible group-hover/mega:opacity-100 group-hover/mega:visible group-focus-within/mega:opacity-100 group-focus-within/mega:visible translate-y-1 group-hover/mega:translate-y-0 group-focus-within/mega:translate-y-0 transition-all duration-200 z-[1000] p-4 text-start border border-white/12 bg-slate-900/92 backdrop-blur-xl">
                             <div class="grid sm:grid-cols-2 gap-2">
                                 <?php $__currentLoopData = $megaCategories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $mc): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <a href="<?php echo e($mc['url']); ?>" class="flex gap-3 rounded-xl p-3 transition hover:bg-white/8 border border-transparent hover:border-white/10">
-                                        <span class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-acad-cyan/15 text-acad-cyan"><i class="fas <?php echo e($mc['icon']); ?>"></i></span>
-                                        <span class="min-w-0">
-                                            <span class="block font-extrabold text-sm text-white"><?php echo e($mc['name']); ?></span>
+                                    <a href="<?php echo e($mc['url']); ?>" class="flex gap-3 rounded-xl p-3 transition hover:bg-white/8 border border-transparent hover:border-white/10 group/mc">
+                                        <?php if(!empty($mc['thumb_url'])): ?>
+                                            <span class="w-12 h-12 rounded-lg overflow-hidden shrink-0 ring-1 ring-white/15 bg-white/5">
+                                                <img src="<?php echo e($mc['thumb_url']); ?>" alt="" width="48" height="48" class="w-full h-full object-cover transition duration-300 group-hover/mc:scale-105" loading="lazy" decoding="async">
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 bg-acad-cyan/15 text-acad-cyan"><i class="fas <?php echo e($mc['icon']); ?>"></i></span>
+                                        <?php endif; ?>
+                                        <span class="min-w-0 flex-1">
+                                            <span class="flex items-center gap-2">
+                                                <span class="block font-extrabold text-sm text-white truncate"><?php echo e($mc['name']); ?></span>
+                                                <?php if(!empty($mc['count'])): ?>
+                                                    <span class="shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded-md bg-acad-yellow/15 text-acad-yellow border border-acad-yellow/25"><?php echo e($mc['count']); ?></span>
+                                                <?php endif; ?>
+                                            </span>
                                             <span class="block text-xs line-clamp-2 mt-0.5 text-white/55"><?php echo e($mc['desc']); ?></span>
                                         </span>
                                     </a>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </div>
                             <a href="<?php echo e(route('public.courses')); ?>" class="mt-3 block text-center text-sm font-extrabold py-2 text-acad-yellow hover:text-acad-cyan"><?php echo e(__('landing.academy.mega_see_all')); ?></a>
+                            <a href="<?php echo e(route('public.courses', ['delivery' => 'one_to_one'])); ?>" class="mt-1 block text-center text-sm font-bold py-2 text-violet-300 hover:text-white"><?php echo e(__('public.nav_one_to_one_courses')); ?></a>
                         </div>
                     </div>
                     <?php $__currentLoopData = $navLinks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $link): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>

@@ -96,6 +96,10 @@ class AdvancedCourse extends Model
         'is_active',
         'is_featured',
         'is_free',
+        'delivery_type',
+        'billing_mode',
+        'monthly_price',
+        'monthly_price_after_discount',
         'starts_at',
         'ends_at',
     ];
@@ -108,6 +112,8 @@ class AdvancedCourse extends Model
         'ends_at' => 'datetime',
         'price' => 'decimal:2',
         'price_after_discount' => 'decimal:2',
+        'monthly_price' => 'decimal:2',
+        'monthly_price_after_discount' => 'decimal:2',
         'rating' => 'decimal:2',
         'skills' => 'array',
     ];
@@ -336,5 +342,91 @@ class AdvancedCourse extends Model
         $s = round((float) $sale, 2);
 
         return $s > 0 && $s < $list;
+    }
+
+    public function isMonthlyBilling(): bool
+    {
+        return ($this->billing_mode ?? 'one_time') === \App\Services\CourseSubscriptionService::BILLING_MONTHLY;
+    }
+
+    public function isOneToOne(): bool
+    {
+        return ($this->delivery_type ?? 'group') === \App\Services\CourseSubscriptionService::DELIVERY_ONE_TO_ONE;
+    }
+
+    public function monthlyListPrice(): float
+    {
+        return round(max(0, (float) ($this->monthly_price ?? 0)), 2);
+    }
+
+    public function effectiveMonthlyPrice(): float
+    {
+        $list = $this->monthlyListPrice();
+        if ($list <= 0) {
+            return 0.0;
+        }
+        $sale = $this->monthly_price_after_discount;
+        if ($sale === null || $sale === '') {
+            return $list;
+        }
+        $s = round((float) $sale, 2);
+        if ($s <= 0 || $s >= $list) {
+            return $list;
+        }
+
+        return $s;
+    }
+
+    /**
+     * السعر المعروض عند الدفع حسب نمط الفوترة.
+     */
+    public function effectiveCheckoutPrice(): float
+    {
+        if ($this->isMonthlyBilling()) {
+            return $this->effectiveMonthlyPrice();
+        }
+
+        return $this->effectivePurchasePrice();
+    }
+
+    /**
+     * بيانات الكورس لصفحة الكتالوج العام (JSON / Alpine).
+     *
+     * @return array<string, mixed>
+     */
+    public function toPublicCatalogArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title ?? 'بدون عنوان',
+            'description' => $this->description ?? '',
+            'level' => $this->level ?? 'beginner',
+            'price' => (float) ($this->price ?? 0),
+            'sale_price' => $this->effectivePurchasePrice(),
+            'monthly_price' => $this->effectiveMonthlyPrice(),
+            'checkout_price' => $this->effectiveCheckoutPrice(),
+            'has_promo_price' => $this->hasPromotionalPrice(),
+            'duration_hours' => (int) ($this->duration_hours ?? 0),
+            'is_featured' => (bool) ($this->is_featured ?? false),
+            'is_free' => (bool) ($this->is_free ?? false),
+            'delivery_type' => $this->delivery_type ?? 'group',
+            'billing_mode' => $this->billing_mode ?? 'one_time',
+            'is_one_to_one' => $this->isOneToOne(),
+            'is_monthly' => $this->isMonthlyBilling(),
+            'lectures_count' => (int) ($this->lectures_count ?? $this->lessons_count ?? 0),
+            'thumbnail' => $this->thumbnail_url,
+            'academic_subject_id' => $this->academic_subject_id ? (int) $this->academic_subject_id : null,
+            'academic_subject' => $this->academicSubject ? [
+                'name' => $this->academicSubject->name ?? 'غير محدد',
+            ] : null,
+            'course_category_id' => $this->course_category_id ? (int) $this->course_category_id : null,
+            'course_category' => $this->courseCategory ? [
+                'name' => $this->courseCategory->name ?? '',
+            ] : null,
+            'instructor' => $this->instructor ? [
+                'id' => $this->instructor->id,
+                'name' => $this->instructor->name,
+            ] : null,
+        ];
     }
 }
