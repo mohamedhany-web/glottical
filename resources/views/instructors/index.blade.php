@@ -114,9 +114,10 @@
                             <div class="reveal card-stream flex flex-col overflow-hidden {{ 's'.min($idx + 1, 4) }}">
                                 <a href="{{ route('public.instructors.show', $p->user) }}" class="block flex-1 min-h-0 group">
                                     <div class="relative aspect-[4/3] overflow-hidden bg-acad-navyMid/80">
-                                        @if($p->photo_path)
-                                            <img src="{{ $p->photo_url }}" alt="{{ $p->user->name }}"
+                                        @if($p->photo_url)
+                                            <img src="{{ $p->photo_url }}" alt=""
                                                  class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                                                 loading="lazy" decoding="async"
                                                  onerror="this.style.display='none';this.nextElementSibling.classList.remove('hidden')">
                                             <div class="hidden absolute inset-0 flex items-center justify-center bg-acad-navyMid">
                                                 <div class="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center">

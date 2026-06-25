@@ -458,13 +458,7 @@
                     @endphp
                     <article class="reveal relative rounded-2xl border border-white/10 glass-panel p-6 hover:border-acad-cyan/35 hover:shadow-[0_0_40px_-10px_rgba(0,212,255,.35)] transition text-center overflow-hidden group">
                         <a href="{{ route('public.instructors.show', $p->user) }}" class="block relative z-10">
-                            <div class="mx-auto w-24 h-24 rounded-full overflow-hidden ring-2 ring-acad-yellow/40 shadow-lg bg-[#1a2d4d]">
-                                @if($p->photo_path)
-                                    <img src="{{ $p->photo_url }}" alt="{{ $name }}" class="w-full h-full object-cover" loading="lazy" decoding="async">
-                                @else
-                                    <div class="w-full h-full flex items-center justify-center text-white/35"><i class="fas fa-user text-3xl"></i></div>
-                                @endif
-                            </div>
+                            <x-instructor-avatar :profile="$p" class="mx-auto ring-2 ring-acad-yellow/40 shadow-lg" size="md" />
                             <h3 class="mt-5 font-black text-lg text-white">{{ $name }}</h3>
                             @if($headline !== '')
                                 <p class="mt-1 text-sm font-bold text-acad-cyan/90 line-clamp-2">{{ $headline }}</p>
@@ -582,31 +576,51 @@
                 <p class="mt-3 text-white/60">{{ __($a.'.pricing_sub') }}</p>
             </div>
             <div class="grid md:grid-cols-3 gap-8 items-stretch">
+                @php
+                    $starterCheckout = route('public.subscription.checkout', 'teacher_starter');
+                    $proCheckout = route('public.subscription.checkout', 'teacher_pro');
+                    $starterCta = auth()->check() ? $starterCheckout : route('login', ['intended' => $starterCheckout]);
+                    $proCta = auth()->check() ? $proCheckout : route('login', ['intended' => $proCheckout]);
+                    $starterLabel = $planStarter['label'] ?? __($a.'.plan_basic');
+                    $proLabel = $planPro['label'] ?? __($a.'.plan_pro');
+                    $starterSubtitle = $planStarter['card_subtitle'] ?? __($a.'.plan_basic_desc');
+                    $proSubtitle = $planPro['card_subtitle'] ?? __($a.'.plan_pro_desc');
+                    $starterFeatures = array_slice(is_array($planStarter['features'] ?? null) ? $planStarter['features'] : [], 0, 3);
+                    $proFeatures = array_slice(is_array($planPro['features'] ?? null) ? $planPro['features'] : [], 0, 4);
+                @endphp
                 <div class="reveal rounded-2xl border border-white/10 glass-panel p-8 flex flex-col">
-                    <h3 class="text-xl font-black text-acad-yellow">{{ __($a.'.plan_basic') }}</h3>
-                    <p class="mt-2 text-white/60 text-sm">{{ __($a.'.plan_basic_desc') }}</p>
+                    <h3 class="text-xl font-black text-acad-yellow">{{ $starterLabel }}</h3>
+                    <p class="mt-2 text-white/60 text-sm">{{ $starterSubtitle }}</p>
                     <p class="mt-4 text-xs font-extrabold text-acad-cyan uppercase tracking-wide">{{ __($a.'.plan_features') }}</p>
                     <ul class="mt-2 space-y-2 text-sm text-white/75 flex-1">
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_basic_f1') }}</li>
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_basic_f2') }}</li>
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_basic_f3') }}</li>
+                        @forelse($starterFeatures as $featureKey)
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __("student.subscription_feature.{$featureKey}") }}</li>
+                        @empty
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_basic_f1') }}</li>
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_basic_f2') }}</li>
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_basic_f3') }}</li>
+                        @endforelse
                     </ul>
                     <p class="mt-6 text-3xl font-black text-white">{{ $starterPrice > 0 ? $fmt((int) $starterPrice).' '.__('landing.currency') : __('landing.free') }}@if($starterPrice > 0)<span class="text-sm font-bold text-white/45"> / {{ __($a.'.plan_period') }}</span>@endif</p>
-                    <a href="{{ route('register') }}" class="mt-6 block text-center py-3 rounded-xl border-2 border-acad-yellow/60 text-acad-yellow font-extrabold hover:bg-acad-yellow hover:text-acad-blue transition">{{ __($a.'.plan_cta') }}</a>
+                    <a href="{{ $starterCta }}" class="mt-6 block text-center py-3 rounded-xl border-2 border-acad-yellow/60 text-acad-yellow font-extrabold hover:bg-acad-yellow hover:text-acad-blue transition">{{ $planStarter['card_cta'] ?? __($a.'.plan_cta') }}</a>
                 </div>
                 <div class="reveal rounded-2xl pricing-pop border-2 border-acad-yellow glass-panel p-8 flex flex-col relative md:-translate-y-2 shadow-[0_0_48px_-12px_rgba(245,184,0,.35)]">
-                    <span class="absolute top-4 end-4 text-[11px] font-black uppercase tracking-wide px-2 py-1 rounded-md bg-acad-yellow text-acad-blue">{{ __($a.'.plan_pro_badge') }}</span>
-                    <h3 class="text-xl font-black text-white">{{ __($a.'.plan_pro') }}</h3>
-                    <p class="mt-2 text-white/60 text-sm">{{ __($a.'.plan_pro_desc') }}</p>
+                    <span class="absolute top-4 end-4 text-[11px] font-black uppercase tracking-wide px-2 py-1 rounded-md bg-acad-yellow text-acad-blue">{{ $planPro['card_badge'] ?? __($a.'.plan_pro_badge') }}</span>
+                    <h3 class="text-xl font-black text-white">{{ $proLabel }}</h3>
+                    <p class="mt-2 text-white/60 text-sm">{{ $proSubtitle }}</p>
                     <p class="mt-4 text-xs font-extrabold text-acad-cyan uppercase tracking-wide">{{ __($a.'.plan_features') }}</p>
                     <ul class="mt-2 space-y-2 text-sm text-white/75 flex-1">
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_pro_f1') }}</li>
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_pro_f2') }}</li>
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_pro_f3') }}</li>
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_pro_f4') }}</li>
+                        @forelse($proFeatures as $featureKey)
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __("student.subscription_feature.{$featureKey}") }}</li>
+                        @empty
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_pro_f1') }}</li>
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_pro_f2') }}</li>
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_pro_f3') }}</li>
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_pro_f4') }}</li>
+                        @endforelse
                     </ul>
                     <p class="mt-6 text-3xl font-black text-acad-yellow">{{ $proPrice > 0 ? $fmt((int) $proPrice).' '.__('landing.currency') : '—' }}@if($proPrice > 0)<span class="text-sm font-bold text-white/45"> / {{ __($a.'.plan_period') }}</span>@endif</p>
-                    <a href="{{ route('public.pricing') }}" class="mt-6 block text-center py-3 rounded-xl bg-acad-yellow text-acad-blue font-extrabold shadow-lg hover:brightness-110 transition">{{ __($a.'.plan_subscribe') }}</a>
+                    <a href="{{ $proCta }}" class="mt-6 block text-center py-3 rounded-xl bg-acad-yellow text-acad-blue font-extrabold shadow-lg hover:brightness-110 transition">{{ $planPro['card_cta'] ?? __($a.'.plan_subscribe') }}</a>
                 </div>
                 <div class="reveal rounded-2xl border border-white/10 glass-panel p-8 flex flex-col">
                     <h3 class="text-xl font-black text-acad-yellow">{{ __($a.'.plan_enterprise') }}</h3>

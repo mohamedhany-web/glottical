@@ -27,10 +27,21 @@ class InstructorController extends Controller
         $courses = \App\Models\AdvancedCourse::where('instructor_id', $instructor->id)
             ->where('is_active', true)
             ->withCount('lessons')
-            ->orderBy('is_featured', 'desc')
+            ->orderByDesc('is_featured')
+            ->orderByDesc('created_at')
             ->get();
+
+        $groupCourses = $courses->filter(fn ($c) => ! $c->isOneToOne())->values();
+        $oneToOneCourses = $courses->filter(fn ($c) => $c->isOneToOne())->values();
+
         $consultationSetting = ConsultationSetting::current();
 
-        return view('instructors.show', compact('profile', 'courses', 'consultationSetting'));
+        return view('instructors.show', compact(
+            'profile',
+            'courses',
+            'groupCourses',
+            'oneToOneCourses',
+            'consultationSetting'
+        ));
     }
 }

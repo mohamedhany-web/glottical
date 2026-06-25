@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\PublicStorageUrl;
+use App\Services\UserProfileImageStorage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -87,19 +89,58 @@ class InstructorProfile extends Model
     }
 
     /**
-     * رابط صورة الملف التعريفي — باستخدام asset('storage/...') لضمان ظهور الصورة في كل الصفحات.
+     * رابط صورة العرض العام — ملف المدرب ثم صورة المستخدم/البورتفوليو (نفس منطق باقي الموقع).
      */
     public function getPhotoUrlAttribute(): ?string
     {
-        if (empty($this->photo_path)) {
-            return null;
-        }
-        $path = str_replace('\\', '/', trim($this->photo_path));
-        $path = ltrim($path, '/');
-        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+        $path = $this->normalizeStoredMediaPath($this->photo_path);
+
+        if ($path !== null && (str_starts_with($path, 'http://') || str_starts_with($path, 'https://'))) {
             return $path;
         }
-        return storage_public_url($path);
+
+        if ($path !== null) {
+            $base = UserProfileImageStorage::publicUrl($path)
+                ?? storage_public_url($path)
+                ?? PublicStorageUrl::fromPathStable($path);
+
+            if ($base) {
+                $ts = $this->updated_at?->timestamp ?? 0;
+
+                return $base.(str_contains($base, '?') ? '&' : '?').'v='.$ts;
+            }
+        }
+
+        $user = $this->relationLoaded('user') ? $this->user : $this->user()->first();
+        if (! $user) {
+            return null;
+        }
+
+        return $user->public_portfolio_marketing_photo_url
+            ?? $user->profile_image_url;
+    }
+
+    public function hasDisplayPhoto(): bool
+    {
+        return filled($this->photo_url);
+    }
+
+    private function normalizeStoredMediaPath(?string $path): ?string
+    {
+        if ($path === null || trim($path) === '') {
+            return null;
+        }
+
+        $path = str_replace('\\', '/', trim($path));
+        $path = ltrim($path, '/');
+
+        foreach (['storage/', 'public/'] as $prefix) {
+            if (str_starts_with($path, $prefix)) {
+                $path = substr($path, strlen($prefix));
+            }
+        }
+
+        return $path !== '' ? $path : null;
     }
 
     public static function statusLabel(string $status): string
@@ -114,16 +155,49 @@ class InstructorProfile extends Model
     }
 
     /**
-     * المهارات كقائمة مرتبة (سطر لكل مهارة أو مفصولة بفاصلة)
+     * تنظيف نصوص الملف (كيانات HTML مزدوجة الترميز، وسوم، مسافات).
+     */
+    public function sanitizedText(?string $value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        return trim(html_entity_decode(strip_tags($value), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    }
+
+    public function getBioCleanAttribute(): string
+    {
+        return $this->sanitizedText($this->bio);
+    }
+
+    public function getHeadlineCleanAttribute(): string
+    {
+        return $this->sanitizedText($this->headline);
+    }
+
+    /**
+     * المهارات كقائمة مرتبة (سطر لكل مهارة أو مفصولة بفاصلة / إيموجي)
      */
     public function getSkillsListAttribute(): array
     {
         if (empty($this->skills)) {
             return [];
         }
-        $raw = preg_split('/[\r\n,،]+/u', $this->skills, -1, PREG_SPLIT_NO_EMPTY);
-        $list = array_map('trim', $raw);
-        return array_values(array_filter($list));
+
+        $text = $this->sanitizedText($this->skills);
+        $raw = preg_split('/[\r\n,،|]+/u', $text, -1, PREG_SPLIT_NO_EMPTY);
+        $list = array_values(array_filter(array_map('trim', $raw)));
+
+        if (count($list) === 1 && mb_strlen($list[0]) > 60) {
+            $emojiSplit = preg_split('/(?=\p{Extended_Pictographic})/u', $list[0], -1, PREG_SPLIT_NO_EMPTY);
+            $emojiSplit = array_values(array_filter(array_map('trim', $emojiSplit)));
+            if (count($emojiSplit) > 1) {
+                return $emojiSplit;
+            }
+        }
+
+        return $list;
     }
 
     /**
@@ -134,8 +208,19 @@ class InstructorProfile extends Model
         if (empty($this->experience)) {
             return [];
         }
-        $lines = preg_split('/\r\n|\r|\n/', $this->experience, -1, PREG_SPLIT_NO_EMPTY);
-        $list = array_map('trim', $lines);
-        return array_values(array_filter($list));
+
+        $text = $this->sanitizedText($this->experience);
+        $lines = preg_split('/\r\n|\r|\n/', $text, -1, PREG_SPLIT_NO_EMPTY);
+        $list = array_values(array_filter(array_map('trim', $lines)));
+
+        if (count($list) === 1 && mb_strlen($list[0]) > 120) {
+            $parts = preg_split('/(?<=[.!?؟])\s+/u', $list[0], -1, PREG_SPLIT_NO_EMPTY);
+            $parts = array_values(array_filter(array_map('trim', $parts)));
+            if (count($parts) > 1) {
+                return $parts;
+            }
+        }
+
+        return $list;
     }
 }

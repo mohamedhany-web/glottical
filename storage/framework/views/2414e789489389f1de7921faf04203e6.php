@@ -461,13 +461,26 @@
                     ?>
                     <article class="reveal relative rounded-2xl border border-white/10 glass-panel p-6 hover:border-acad-cyan/35 hover:shadow-[0_0_40px_-10px_rgba(0,212,255,.35)] transition text-center overflow-hidden group">
                         <a href="<?php echo e(route('public.instructors.show', $p->user)); ?>" class="block relative z-10">
-                            <div class="mx-auto w-24 h-24 rounded-full overflow-hidden ring-2 ring-acad-yellow/40 shadow-lg bg-[#1a2d4d]">
-                                <?php if($p->photo_path): ?>
-                                    <img src="<?php echo e($p->photo_url); ?>" alt="<?php echo e($name); ?>" class="w-full h-full object-cover" loading="lazy" decoding="async">
-                                <?php else: ?>
-                                    <div class="w-full h-full flex items-center justify-center text-white/35"><i class="fas fa-user text-3xl"></i></div>
-                                <?php endif; ?>
-                            </div>
+                            <?php if (isset($component)) { $__componentOriginalf5c368e96b80ecea05cc5aab59adcf79 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalf5c368e96b80ecea05cc5aab59adcf79 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.instructor-avatar','data' => ['profile' => $p,'class' => 'mx-auto ring-2 ring-acad-yellow/40 shadow-lg','size' => 'md']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('instructor-avatar'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['profile' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($p),'class' => 'mx-auto ring-2 ring-acad-yellow/40 shadow-lg','size' => 'md']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalf5c368e96b80ecea05cc5aab59adcf79)): ?>
+<?php $attributes = $__attributesOriginalf5c368e96b80ecea05cc5aab59adcf79; ?>
+<?php unset($__attributesOriginalf5c368e96b80ecea05cc5aab59adcf79); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalf5c368e96b80ecea05cc5aab59adcf79)): ?>
+<?php $component = $__componentOriginalf5c368e96b80ecea05cc5aab59adcf79; ?>
+<?php unset($__componentOriginalf5c368e96b80ecea05cc5aab59adcf79); ?>
+<?php endif; ?>
                             <h3 class="mt-5 font-black text-lg text-white"><?php echo e($name); ?></h3>
                             <?php if($headline !== ''): ?>
                                 <p class="mt-1 text-sm font-bold text-acad-cyan/90 line-clamp-2"><?php echo e($headline); ?></p>
@@ -585,31 +598,51 @@
                 <p class="mt-3 text-white/60"><?php echo e(__($a.'.pricing_sub')); ?></p>
             </div>
             <div class="grid md:grid-cols-3 gap-8 items-stretch">
+                <?php
+                    $starterCheckout = route('public.subscription.checkout', 'teacher_starter');
+                    $proCheckout = route('public.subscription.checkout', 'teacher_pro');
+                    $starterCta = auth()->check() ? $starterCheckout : route('login', ['intended' => $starterCheckout]);
+                    $proCta = auth()->check() ? $proCheckout : route('login', ['intended' => $proCheckout]);
+                    $starterLabel = $planStarter['label'] ?? __($a.'.plan_basic');
+                    $proLabel = $planPro['label'] ?? __($a.'.plan_pro');
+                    $starterSubtitle = $planStarter['card_subtitle'] ?? __($a.'.plan_basic_desc');
+                    $proSubtitle = $planPro['card_subtitle'] ?? __($a.'.plan_pro_desc');
+                    $starterFeatures = array_slice(is_array($planStarter['features'] ?? null) ? $planStarter['features'] : [], 0, 3);
+                    $proFeatures = array_slice(is_array($planPro['features'] ?? null) ? $planPro['features'] : [], 0, 4);
+                ?>
                 <div class="reveal rounded-2xl border border-white/10 glass-panel p-8 flex flex-col">
-                    <h3 class="text-xl font-black text-acad-yellow"><?php echo e(__($a.'.plan_basic')); ?></h3>
-                    <p class="mt-2 text-white/60 text-sm"><?php echo e(__($a.'.plan_basic_desc')); ?></p>
+                    <h3 class="text-xl font-black text-acad-yellow"><?php echo e($starterLabel); ?></h3>
+                    <p class="mt-2 text-white/60 text-sm"><?php echo e($starterSubtitle); ?></p>
                     <p class="mt-4 text-xs font-extrabold text-acad-cyan uppercase tracking-wide"><?php echo e(__($a.'.plan_features')); ?></p>
                     <ul class="mt-2 space-y-2 text-sm text-white/75 flex-1">
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i><?php echo e(__($a.'.plan_basic_f1')); ?></li>
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i><?php echo e(__($a.'.plan_basic_f2')); ?></li>
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i><?php echo e(__($a.'.plan_basic_f3')); ?></li>
+                        <?php $__empty_1 = true; $__currentLoopData = $starterFeatures; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $featureKey): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i><?php echo e(__("student.subscription_feature.{$featureKey}")); ?></li>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i><?php echo e(__($a.'.plan_basic_f1')); ?></li>
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i><?php echo e(__($a.'.plan_basic_f2')); ?></li>
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i><?php echo e(__($a.'.plan_basic_f3')); ?></li>
+                        <?php endif; ?>
                     </ul>
                     <p class="mt-6 text-3xl font-black text-white"><?php echo e($starterPrice > 0 ? $fmt((int) $starterPrice).' '.__('landing.currency') : __('landing.free')); ?><?php if($starterPrice > 0): ?><span class="text-sm font-bold text-white/45"> / <?php echo e(__($a.'.plan_period')); ?></span><?php endif; ?></p>
-                    <a href="<?php echo e(route('register')); ?>" class="mt-6 block text-center py-3 rounded-xl border-2 border-acad-yellow/60 text-acad-yellow font-extrabold hover:bg-acad-yellow hover:text-acad-blue transition"><?php echo e(__($a.'.plan_cta')); ?></a>
+                    <a href="<?php echo e($starterCta); ?>" class="mt-6 block text-center py-3 rounded-xl border-2 border-acad-yellow/60 text-acad-yellow font-extrabold hover:bg-acad-yellow hover:text-acad-blue transition"><?php echo e($planStarter['card_cta'] ?? __($a.'.plan_cta')); ?></a>
                 </div>
                 <div class="reveal rounded-2xl pricing-pop border-2 border-acad-yellow glass-panel p-8 flex flex-col relative md:-translate-y-2 shadow-[0_0_48px_-12px_rgba(245,184,0,.35)]">
-                    <span class="absolute top-4 end-4 text-[11px] font-black uppercase tracking-wide px-2 py-1 rounded-md bg-acad-yellow text-acad-blue"><?php echo e(__($a.'.plan_pro_badge')); ?></span>
-                    <h3 class="text-xl font-black text-white"><?php echo e(__($a.'.plan_pro')); ?></h3>
-                    <p class="mt-2 text-white/60 text-sm"><?php echo e(__($a.'.plan_pro_desc')); ?></p>
+                    <span class="absolute top-4 end-4 text-[11px] font-black uppercase tracking-wide px-2 py-1 rounded-md bg-acad-yellow text-acad-blue"><?php echo e($planPro['card_badge'] ?? __($a.'.plan_pro_badge')); ?></span>
+                    <h3 class="text-xl font-black text-white"><?php echo e($proLabel); ?></h3>
+                    <p class="mt-2 text-white/60 text-sm"><?php echo e($proSubtitle); ?></p>
                     <p class="mt-4 text-xs font-extrabold text-acad-cyan uppercase tracking-wide"><?php echo e(__($a.'.plan_features')); ?></p>
                     <ul class="mt-2 space-y-2 text-sm text-white/75 flex-1">
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i><?php echo e(__($a.'.plan_pro_f1')); ?></li>
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i><?php echo e(__($a.'.plan_pro_f2')); ?></li>
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i><?php echo e(__($a.'.plan_pro_f3')); ?></li>
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i><?php echo e(__($a.'.plan_pro_f4')); ?></li>
+                        <?php $__empty_1 = true; $__currentLoopData = $proFeatures; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $featureKey): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i><?php echo e(__("student.subscription_feature.{$featureKey}")); ?></li>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i><?php echo e(__($a.'.plan_pro_f1')); ?></li>
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i><?php echo e(__($a.'.plan_pro_f2')); ?></li>
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i><?php echo e(__($a.'.plan_pro_f3')); ?></li>
+                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i><?php echo e(__($a.'.plan_pro_f4')); ?></li>
+                        <?php endif; ?>
                     </ul>
                     <p class="mt-6 text-3xl font-black text-acad-yellow"><?php echo e($proPrice > 0 ? $fmt((int) $proPrice).' '.__('landing.currency') : '—'); ?><?php if($proPrice > 0): ?><span class="text-sm font-bold text-white/45"> / <?php echo e(__($a.'.plan_period')); ?></span><?php endif; ?></p>
-                    <a href="<?php echo e(route('public.pricing')); ?>" class="mt-6 block text-center py-3 rounded-xl bg-acad-yellow text-acad-blue font-extrabold shadow-lg hover:brightness-110 transition"><?php echo e(__($a.'.plan_subscribe')); ?></a>
+                    <a href="<?php echo e($proCta); ?>" class="mt-6 block text-center py-3 rounded-xl bg-acad-yellow text-acad-blue font-extrabold shadow-lg hover:brightness-110 transition"><?php echo e($planPro['card_cta'] ?? __($a.'.plan_subscribe')); ?></a>
                 </div>
                 <div class="reveal rounded-2xl border border-white/10 glass-panel p-8 flex flex-col">
                     <h3 class="text-xl font-black text-acad-yellow"><?php echo e(__($a.'.plan_enterprise')); ?></h3>
