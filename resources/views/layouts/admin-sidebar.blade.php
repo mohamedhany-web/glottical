@@ -167,6 +167,7 @@
                     || request()->routeIs('admin.hiring-academies.*')
                     || request()->routeIs('admin.curriculum-library.*')
                     || request()->routeIs('admin.consultations.*')
+                    || request()->routeIs('admin.one-to-one-sessions.*')
                     || request()->routeIs('admin.quality-control.students')
                     || request()->routeIs('admin.reports.users')
                     || request()->routeIs('admin.portfolio-marketing-profiles.*')
@@ -257,6 +258,13 @@
                         </a>
                     </li>
                     @endif
+                    @if($isFull && Route::has('admin.one-to-one-sessions.index'))
+                    <li>
+                        <a href="{{ route('admin.one-to-one-sessions.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.one-to-one-sessions.*') ? 'active' : '' }}">
+                            <i class="fas fa-user-graduate"></i><span>{{ __('student.one_to_one_admin_title') }}</span>
+                        </a>
+                    </li>
+                    @endif
                     @if(($isFull || $u->hasPermission('manage.hiring-academies')) && Route::has('admin.hiring-academies.index'))
                     <li>
                         <a href="{{ route('admin.hiring-academies.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.hiring-academies.*') ? 'active' : '' }}">
@@ -327,7 +335,7 @@
 
             @if($isFull || $u->hasPermission('manage.orders') || $u->hasPermission('manage.coupons') || $u->hasPermission('manage.referrals') || $u->hasPermission('manage.leads') || $u->hasPermission('view.sales-analytics'))
             {{-- قسم المبيعات (ما يقدمه السيلز) --}}
-            @php $salesSectionOpen = request()->routeIs('admin.orders.*') || request()->routeIs('admin.sales.index') || request()->routeIs('admin.sales.leads.*') || request()->routeIs('admin.coupons.*') || request()->routeIs('admin.coupon-commissions.*') || request()->routeIs('admin.referrals.*') || request()->routeIs('admin.referral-programs.*'); @endphp
+            @php $salesSectionOpen = request()->routeIs('admin.orders.*') || request()->routeIs('admin.sales.index') || request()->routeIs('admin.sales.leads.*') || request()->routeIs('admin.crm.*') || request()->routeIs('admin.coupons.*') || request()->routeIs('admin.coupon-commissions.*') || request()->routeIs('admin.referrals.*') || request()->routeIs('admin.referral-programs.*'); @endphp
             <li x-data="{ open: {{ $salesSectionOpen ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="sidebar-group-btn">
                     <span class="flex items-center gap-3"><i class="fas fa-shopping-cart w-5 text-center text-emerald-400"></i><span>قسم المبيعات</span></span>
@@ -335,6 +343,11 @@
                 </button>
                 <ul x-show="open" x-transition class="mt-1 mr-3 space-y-0.5 border-r border-slate-200 pr-3">
                     @if($isFull || $u->hasPermission('manage.leads'))
+                    <li>
+                        <a href="{{ route('admin.crm.dashboard') }}" class="sidebar-sub-link {{ request()->routeIs('admin.crm.*') ? 'active' : '' }}">
+                            <i class="fas fa-funnel-dollar"></i><span>Glottical CRM</span>
+                        </a>
+                    </li>
                     <li>
                         <a href="{{ route('admin.sales.leads.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.sales.leads.*') ? 'active' : '' }}">
                             <i class="fas fa-user-plus"></i><span>العملاء المحتملون (Leads)</span>

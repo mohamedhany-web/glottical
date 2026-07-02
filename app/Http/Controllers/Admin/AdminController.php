@@ -436,7 +436,7 @@ class AdminController extends Controller
                 'count_class' => 'text-emerald-700',
                 'meta_class' => 'text-emerald-600',
                 'cta' => 'قائمة Leads',
-                'route' => route('admin.sales.leads.index', ['status' => 'new']),
+                'route' => route('admin.sales.leads.index', ['status' => \App\Models\SalesLead::STATUS_NEW]),
                 'permissions' => ['manage.leads'],
             ],
             [

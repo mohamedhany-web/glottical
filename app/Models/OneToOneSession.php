@@ -26,6 +26,7 @@ class OneToOneSession extends Model
         'duration_minutes',
         'status',
         'classroom_meeting_id',
+        'booked_by_user_id',
         'notes',
     ];
 
@@ -71,6 +72,11 @@ class OneToOneSession extends Model
     public function classroomMeeting(): BelongsTo
     {
         return $this->belongsTo(ClassroomMeeting::class, 'classroom_meeting_id');
+    }
+
+    public function bookedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'booked_by_user_id');
     }
 
     public function statusLabel(): string

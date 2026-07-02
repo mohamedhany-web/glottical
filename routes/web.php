@@ -661,6 +661,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/my-course-subscriptions', [\App\Http\Controllers\Student\MyCourseSubscriptionController::class, 'index'])->name('student.my-course-subscriptions');
         Route::get('/one-to-one-sessions', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'index'])->name('student.one-to-one-sessions.index');
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'show'])->name('student.one-to-one-sessions.show');
+        Route::post('/one-to-one-sessions/{oneToOneSession}/book', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'book'])->name('student.one-to-one-sessions.book');
         Route::get('/ai-usages', [\App\Http\Controllers\Student\StudentAiUsageController::class, 'index'])->name('student.ai-usages.index');
         Route::post('/ai-usages/saved-games', [\App\Http\Controllers\Student\StudentAiUsageController::class, 'store'])
             ->middleware('throttle:30,1')
@@ -743,6 +744,21 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::post('/leads/{salesLead}/convert', [\App\Http\Controllers\Employee\EmployeeSalesLeadController::class, 'convert'])->name('leads.convert');
             Route::post('/leads/{salesLead}/lost', [\App\Http\Controllers\Employee\EmployeeSalesLeadController::class, 'markLost'])->name('leads.lost');
         });
+
+        Route::prefix('crm')->name('crm.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'dashboard'])->name('dashboard');
+            Route::get('/leads', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'leadsIndex'])->name('leads.index');
+            Route::get('/leads/create', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'leadsCreate'])->name('leads.create');
+            Route::post('/leads', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'leadsStore'])->name('leads.store');
+            Route::get('/leads/{salesLead}', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'leadsShow'])->name('leads.show');
+            Route::put('/leads/{salesLead}', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'leadsUpdate'])->name('leads.update');
+            Route::post('/leads/{salesLead}/transition', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'transition'])->name('leads.transition');
+            Route::post('/leads/{salesLead}/note', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'addNote'])->name('leads.note');
+            Route::post('/leads/{salesLead}/confirm-payment', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'confirmPayment'])->name('leads.confirm-payment');
+            Route::get('/commissions', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'commissions'])->name('commissions');
+            Route::post('/commissions/{commission}/approve', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'approveCommission'])->name('commissions.approve');
+        });
+
         Route::get('/desk/hr', [\App\Http\Controllers\Employee\EmployeeHrDeskController::class, 'index'])->middleware('employee.can:hr_desk')->name('hr-desk.index');
         Route::prefix('hr')->name('hr.')->middleware('employee.can:hr_desk')->group(function () {
             Route::get('/leaves', [\App\Http\Controllers\Employee\EmployeeHrLeaveController::class, 'index'])->name('leaves.index');
@@ -969,6 +985,26 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/statistics', [\App\Http\Controllers\Admin\StatisticsController::class, 'index'])->name('statistics.index');
         Route::get('/statistics/users', [\App\Http\Controllers\Admin\StatisticsController::class, 'users'])->name('statistics.users');
         Route::get('/statistics/courses', [\App\Http\Controllers\Admin\StatisticsController::class, 'courses'])->name('statistics.courses');
+
+        // Glottical CRM
+        Route::prefix('crm')->name('crm.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\CrmDashboardController::class, 'index'])->name('dashboard');
+            Route::get('/leads', [\App\Http\Controllers\Admin\CrmLeadController::class, 'index'])->name('leads.index');
+            Route::get('/leads/{salesLead}', [\App\Http\Controllers\Admin\CrmLeadController::class, 'show'])->name('leads.show');
+            Route::post('/leads/{salesLead}/assign', [\App\Http\Controllers\Admin\CrmLeadController::class, 'assign'])->name('leads.assign');
+            Route::post('/leads/{salesLead}/transition', [\App\Http\Controllers\Admin\CrmLeadController::class, 'transition'])->name('leads.transition');
+            Route::post('/leads/{salesLead}/note', [\App\Http\Controllers\Admin\CrmLeadController::class, 'addNote'])->name('leads.note');
+            Route::get('/commissions', [\App\Http\Controllers\Admin\CrmCommissionController::class, 'index'])->name('commissions.index');
+            Route::post('/commissions/{commission}/approve', [\App\Http\Controllers\Admin\CrmCommissionController::class, 'approve'])->name('commissions.approve');
+            Route::get('/audit', [\App\Http\Controllers\Admin\CrmAuditLogController::class, 'index'])->name('audit.index');
+            Route::get('/groups', [\App\Http\Controllers\Admin\CrmGroupController::class, 'index'])->name('groups.index');
+            Route::get('/groups/create', [\App\Http\Controllers\Admin\CrmGroupController::class, 'create'])->name('groups.create');
+            Route::post('/groups', [\App\Http\Controllers\Admin\CrmGroupController::class, 'store'])->name('groups.store');
+            Route::get('/groups/{group}/edit', [\App\Http\Controllers\Admin\CrmGroupController::class, 'edit'])->name('groups.edit');
+            Route::put('/groups/{group}', [\App\Http\Controllers\Admin\CrmGroupController::class, 'update'])->name('groups.update');
+            Route::post('/groups/{group}/members', [\App\Http\Controllers\Admin\CrmGroupController::class, 'addMember'])->name('groups.members.store');
+            Route::delete('/groups/{group}/members/{member}', [\App\Http\Controllers\Admin\CrmGroupController::class, 'removeMember'])->name('groups.members.destroy');
+        });
 
         // العملاء المحتملون ثم تحليلات المبيعات (مسارات تحت /sales)
         Route::get('/sales/leads', [\App\Http\Controllers\Admin\SalesLeadController::class, 'index'])->name('sales.leads.index');
@@ -1276,6 +1312,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/consultations/requests/{consultation}/notes', [\App\Http\Controllers\Admin\ConsultationController::class, 'updateNotes'])->name('consultations.notes');
         Route::post('/consultations/requests/{consultation}/cancel', [\App\Http\Controllers\Admin\ConsultationController::class, 'cancel'])->name('consultations.cancel');
         Route::post('/consultations/requests/{consultation}/complete', [\App\Http\Controllers\Admin\ConsultationController::class, 'markCompleted'])->name('consultations.complete');
+        Route::get('/one-to-one-sessions', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'index'])->name('one-to-one-sessions.index');
+        Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'show'])->name('one-to-one-sessions.show');
 
         // أكاديميات التوظيف (عملاء المنصة)
         Route::resource('hiring-academies', \App\Http\Controllers\Admin\HiringAcademyController::class);
@@ -1637,6 +1675,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/consultations', [\App\Http\Controllers\Instructor\ConsultationController::class, 'index'])->name('consultations.index');
         Route::get('/consultations/{consultation}', [\App\Http\Controllers\Instructor\ConsultationController::class, 'show'])->name('consultations.show');
         Route::get('/one-to-one-sessions', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'index'])->name('one-to-one-sessions.index');
+        Route::get('/one-to-one-availability', [\App\Http\Controllers\Instructor\OneToOneAvailabilityController::class, 'index'])->name('one-to-one-availability.index');
+        Route::post('/one-to-one-availability', [\App\Http\Controllers\Instructor\OneToOneAvailabilityController::class, 'update'])->name('one-to-one-availability.update');
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'show'])->name('one-to-one-sessions.show');
         Route::post('/one-to-one-sessions/{oneToOneSession}/schedule', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'schedule'])->name('one-to-one-sessions.schedule');
         Route::post('/one-to-one-sessions/{oneToOneSession}/complete', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'complete'])->name('one-to-one-sessions.complete');

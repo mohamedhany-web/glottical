@@ -177,6 +177,15 @@
                 <span class="flex-1 truncate"><?php echo e(__('student.one_to_one_sessions_instructor_nav')); ?></span>
             </a>
             <?php endif; ?>
+            <?php if(Route::has('instructor.one-to-one-availability.index')): ?>
+            <a href="<?php echo e(route('instructor.one-to-one-availability.index')); ?>" @click="if(window.innerWidth<1024) sidebarOpen=false"
+               class="ins-nav <?php echo e(request()->routeIs('instructor.one-to-one-availability.*') ? 'active' : ''); ?>">
+                <span class="ins-icon bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
+                    <i class="fas fa-calendar-week text-sm"></i>
+                </span>
+                <span class="flex-1 truncate"><?php echo e(__('student.one_to_one_availability_title')); ?></span>
+            </a>
+            <?php endif; ?>
             <?php if(Route::has('instructor.calendar')): ?>
             <a href="<?php echo e(route('instructor.calendar')); ?>" @click="if(window.innerWidth<1024) sidebarOpen=false"
                class="ins-nav <?php echo e(request()->routeIs('instructor.calendar') || request()->routeIs('instructor.calendar.events') ? 'active' : ''); ?>">

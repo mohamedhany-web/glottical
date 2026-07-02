@@ -9,6 +9,7 @@ use App\Models\OneToOneSession;
 use App\Models\StudentCourseEnrollment;
 use App\Models\User;
 use App\Services\CourseSubscriptionService;
+use App\Services\OneToOneAvailabilityService;
 use App\Services\OneToOneSessionService;
 use Carbon\Carbon;
 
@@ -45,7 +46,14 @@ OneToOneSessionService::provisionSessionsForEnrollment($enrollment, $course);
 $sessionCount = OneToOneSession::where('student_course_enrollment_id', $enrollment->id)->count();
 
 $session = OneToOneSession::where('student_course_enrollment_id', $enrollment->id)->first();
-OneToOneSessionService::scheduleSession($session, Carbon::now()->addDays(2), 60, $instructor);
+$scheduleAt = Carbon::now()->addDays(2)->setTime(10, 0);
+OneToOneAvailabilityService::syncRules($instructor->id, [[
+    'day_of_week' => $scheduleAt->isoWeekday(),
+    'start_time' => '09:00',
+    'end_time' => '17:00',
+    'slot_duration_minutes' => 60,
+]]);
+OneToOneSessionService::scheduleSession($session, $scheduleAt, 60, $instructor);
 $session->refresh();
 
 $result = [

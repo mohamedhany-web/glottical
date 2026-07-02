@@ -35,7 +35,12 @@
                 <button type="submit" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold"><?php echo e(__('student.one_to_one_mark_complete')); ?></button>
             </form>
         <?php elseif($session->status === \App\Models\OneToOneSession::STATUS_PENDING): ?>
-            <form method="POST" action="<?php echo e(route('instructor.one-to-one-sessions.schedule', $session)); ?>" class="space-y-4">
+            <div class="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4 text-sm text-amber-900 dark:text-amber-100">
+                <?php echo e(__('student.one_to_one_instructor_pending_hint')); ?>
+
+                <a href="<?php echo e(route('instructor.one-to-one-availability.index')); ?>" class="font-bold text-sky-600 hover:underline block mt-2"><?php echo e(__('student.one_to_one_availability_title')); ?></a>
+            </div>
+            <form method="POST" action="<?php echo e(route('instructor.one-to-one-sessions.schedule', $session)); ?>" class="space-y-4 border-t border-slate-100 dark:border-slate-700 pt-4">
                 <?php echo csrf_field(); ?>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">تاريخ ووقت الحصة</label>

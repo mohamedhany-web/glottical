@@ -48,6 +48,10 @@ class EmployeeSalesLeadController extends Controller
     {
         $this->gate();
 
+        if (\App\Services\Crm\CrmAccessService::canAccessCrm(Auth::user())) {
+            return redirect()->route('employee.crm.leads.index', $request->query());
+        }
+
         $query = SalesLead::query()
             ->with(['assignedTo:id,name', 'creator:id,name', 'interestedCourse:id,title']);
 
@@ -174,9 +178,7 @@ class EmployeeSalesLeadController extends Controller
     {
         $this->gate();
 
-        $salesLead->update(['assigned_to' => Auth::id()]);
-
-        return back()->with('success', 'تم تعيين العميل المحتمل إليك.');
+        return back()->with('error', 'تعيين الـ Lead يتم من الإدارة فقط ضمن نظام CRM.');
     }
 
     public function convert(Request $request, SalesLead $salesLead)

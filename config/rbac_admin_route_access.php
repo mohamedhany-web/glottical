@@ -48,6 +48,7 @@ return [
         'invoices' => ['manage.invoices'],
         'installments' => ['manage.installments'],
         'leads' => ['manage.leads'],
+        'crm' => ['manage.leads'],
         'learning-paths' => ['manage.courses'],
         'leaves' => ['manage.leaves'],
         'learning-path-enrollments' => ['manage.enrollments'],

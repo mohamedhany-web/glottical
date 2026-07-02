@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
 use App\Models\OneToOneSession;
-use App\Services\CourseSubscriptionService;
+use App\Services\OneToOneAvailabilityService;
 use App\Services\OneToOneSessionService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -63,12 +63,17 @@ class OneToOneSessionController extends Controller
             'duration_minutes' => ['nullable', 'integer', 'min:30', 'max:180'],
         ]);
 
-        OneToOneSessionService::scheduleSession(
-            $oneToOneSession,
-            Carbon::parse($data['scheduled_at']),
-            (int) ($data['duration_minutes'] ?? 60),
-            $request->user()
-        );
+        try {
+            OneToOneSessionService::scheduleSession(
+                $oneToOneSession,
+                Carbon::parse($data['scheduled_at']),
+                (int) ($data['duration_minutes'] ?? 60),
+                $request->user(),
+                requireAvailability: true
+            );
+        } catch (\InvalidArgumentException $e) {
+            return back()->withErrors(['scheduled_at' => $e->getMessage()])->withInput();
+        }
 
         return back()->with('success', 'تم جدولة الحصة وإشعار الطالب.');
     }

@@ -8,6 +8,7 @@ use App\Models\Notification;
 use App\Models\OneToOneSession;
 use App\Models\StudentCourseEnrollment;
 use App\Models\User;
+use App\Services\OneToOneAvailabilityService;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
@@ -58,7 +59,7 @@ class OneToOneSessionService
             'user_id' => $enrollment->user_id,
             'sender_id' => null,
             'title' => 'تم تفعيل حصصك الفردية',
-            'message' => 'تم إنشاء '.self::SESSIONS_PER_MONTH.' حصص شهرية مع المعلم. سيُحدد المعلم مواعيدها قريباً.',
+            'message' => 'تم إنشاء '.self::SESSIONS_PER_MONTH.' حصص شهرية مع المعلم. اختر موعداً من جدول المعلم المتاح.',
             'type' => 'general',
             'priority' => 'normal',
             'audience' => 'student',
@@ -70,7 +71,7 @@ class OneToOneSessionService
             'user_id' => $course->instructor_id,
             'sender_id' => null,
             'title' => 'طالب جديد في كورس فردي 1:1',
-            'message' => 'طالب مشترك في «'.$course->title.'» — يرجى جدولة الحصص الأسبوعية.',
+            'message' => 'طالب مشترك في «'.$course->title.'» — يمكنه الحجز من جدولك أو جدولة الحصص يدوياً.',
             'type' => 'general',
             'priority' => 'high',
             'audience' => 'instructor',
@@ -83,10 +84,20 @@ class OneToOneSessionService
         OneToOneSession $session,
         Carbon $scheduledAt,
         int $durationMinutes,
-        ?User $scheduledBy = null
+        ?User $scheduledBy = null,
+        bool $requireAvailability = true
     ): void {
         if (! in_array($session->status, [OneToOneSession::STATUS_PENDING, OneToOneSession::STATUS_SCHEDULED], true)) {
             throw new \InvalidArgumentException('لا يمكن جدولة هذه الحصة في حالتها الحالية.');
+        }
+
+        if ($requireAvailability && ! OneToOneAvailabilityService::isSlotAvailable(
+            (int) $session->instructor_id,
+            $scheduledAt,
+            $durationMinutes,
+            $session->status === OneToOneSession::STATUS_SCHEDULED ? $session->id : null
+        )) {
+            throw new \InvalidArgumentException('هذا الموعد غير متاح — ربما حُجز أو خارج جدول المعلم.');
         }
 
         $studentName = $session->student->name ?? 'طالب';
@@ -108,6 +119,7 @@ class OneToOneSessionService
             'scheduled_at' => $scheduledAt,
             'duration_minutes' => $durationMinutes,
             'classroom_meeting_id' => $meeting->id,
+            'booked_by_user_id' => $scheduledBy?->id,
         ]);
 
         $joinUrl = url('classroom/join/'.$meeting->code);

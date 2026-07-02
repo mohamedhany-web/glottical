@@ -32,6 +32,7 @@ class Order extends Model
         'approved_by',
         'sales_owner_id',
         'sales_contacted_at',
+        'sales_lead_id',
     ];
 
     protected $casts = [

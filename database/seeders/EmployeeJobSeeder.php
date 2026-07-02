@@ -71,7 +71,39 @@ class EmployeeJobSeeder extends Seeder
                     'dashboard', 'tasks', 'leaves', 'reports', 'calendar',
                     'profile', 'notifications', 'settings',
                     'sales_desk',
+                    'crm_desk',
                     'public_catalog',
+                ],
+            ],
+            [
+                'name' => 'تسويق CRM',
+                'code' => 'crm_marketing',
+                'description' => 'إضافة ومتابعة Leads التسويقية',
+                'permissions' => [
+                    'dashboard', 'tasks', 'leaves', 'calendar',
+                    'profile', 'notifications', 'settings',
+                    'crm_desk',
+                ],
+            ],
+            [
+                'name' => 'قائد فريق CRM',
+                'code' => 'crm_team_leader',
+                'description' => 'متابعة أداء فريق التسويق والمبيعات',
+                'permissions' => [
+                    'dashboard', 'tasks', 'leaves', 'reports', 'calendar',
+                    'profile', 'notifications', 'settings',
+                    'crm_desk',
+                ],
+            ],
+            [
+                'name' => 'مالية CRM',
+                'code' => 'crm_finance',
+                'description' => 'اعتماد المدفوعات والعمولات',
+                'permissions' => [
+                    'dashboard', 'tasks', 'leaves', 'reports', 'calendar',
+                    'profile', 'notifications', 'settings',
+                    'crm_desk',
+                    'desk_accountant',
                 ],
             ],
             [

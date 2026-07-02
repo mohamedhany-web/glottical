@@ -67,6 +67,13 @@ return [
             'route_patterns' => ['employee.sales.orders.*'],
             'active_class' => 'bg-emerald-700 shadow-lg',
         ],
+        'crm_desk' => [
+            'label' => 'Glottical CRM',
+            'icon' => 'fas fa-funnel-dollar',
+            'route' => 'employee.crm.dashboard',
+            'route_patterns' => ['employee.crm.*'],
+            'active_class' => 'bg-indigo-600 shadow-lg',
+        ],
         'hr_desk' => [
             'permission' => 'manage.users',
             'label' => 'لوحة الموارد البشرية',
