@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'لوحة الإدارة - Muallimx')
+@section('title', 'لوحة الإدارة - Glottical')
 @section('page_title', 'لوحة الإدارة')
 
 @section('content')

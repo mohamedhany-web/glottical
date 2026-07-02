@@ -8,7 +8,7 @@
         $thumbUrl = storage_asset(str_replace('\\', '/', $course->thumbnail));
     }
     $platformLogoUrl = $platformLogoUrl ?? \App\Services\AdminPanelBranding::logoPublicUrl();
-    $appName = config('app.name', 'Glottical');
+    $appName = config('app.name');
     $isMonthlyCheckout = isset($course) && $course->isMonthlyBilling();
     $baseCoursePrice = isset($course) ? (float) $course->effectiveCheckoutPrice() : (float) (isset($learningPath) ? ($learningPath->price ?? 0) : 0);
     $studentBal = isset($studentWalletBalance) ? (float) $studentWalletBalance : 0;

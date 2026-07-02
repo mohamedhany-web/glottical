@@ -32,5 +32,5 @@
             <span class="text-{{ $isDark ? '[#0B3D91]' : 'white' }} font-black {{ $mText }}">G</span>
         </div>
     @endif
-    <span class="{{ $nameClass }} {{ $brandText }}" @if($isSm) style="font-family:Tajawal,sans-serif" @endif>{{ config('app.name', 'Muallimx') }}</span>
+    <span class="{{ $nameClass }} {{ $brandText }}" @if($isSm) style="font-family:Tajawal,sans-serif" @endif>{{ config('app.name') }}</span>
 </a>

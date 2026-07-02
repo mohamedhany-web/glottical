@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('instructor.withdrawal_requests') . ' - ' . config('app.name', 'Muallimx'))
+@section('title', __('instructor.withdrawal_requests') . ' - ' . config('app.name'))
 @section('header', __('instructor.withdrawal_requests'))
 
 @section('content')

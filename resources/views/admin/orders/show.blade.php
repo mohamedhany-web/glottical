@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تفاصيل الطلب #' . $order->id . ' - ' . config('app.name', 'Muallimx'))
+@section('title', 'تفاصيل الطلب #' . $order->id . ' - ' . config('app.name'))
 @section('header', 'تفاصيل الطلب #' . $order->id)
 
 @section('content')

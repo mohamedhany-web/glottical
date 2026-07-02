@@ -1,6 +1,6 @@
 {{-- SEO Meta Tags Component — Glottical --}}
 @php
-    $siteName    = config('app.name', 'Glottical');
+    $siteName    = config('app.name');
     $title       = $title       ?? $siteName . ' — ' . __('landing.hero.headline');
     $description = $description ?? __('landing.meta.description');
     $keywords    = $keywords    ?? 'تعليم ألماني, تعليم إنجليزي, كول سنتر, سوق العمل, ألمانيا, Glottical, ' . $siteName;

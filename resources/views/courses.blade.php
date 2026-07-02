@@ -12,8 +12,8 @@
     <title>{{ __('public.courses_page_title') }} - {{ __('public.site_suffix') }}</title>
     <meta name="title"       content="{{ __('public.courses_page_title') }} - {{ __('public.site_suffix') }}">
     <meta name="description" content="{{ __('public.courses_subtitle') }}">
-    <meta name="keywords"    content="كورسات ألماني, كورسات إنجليزي, كول سنتر, سوق العمل, ألمانيا, {{ config('app.name', 'Glottical') }}">
-    <meta name="author"      content="{{ config('app.name', 'Glottical') }}">
+    <meta name="keywords"    content="كورسات ألماني, كورسات إنجليزي, كول سنتر, سوق العمل, ألمانيا, {{ config('app.name') }}">
+    <meta name="author"      content="{{ config('app.name') }}">
     <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1">
     <meta name="theme-color" content="#0d1528">
     <link rel="canonical"    href="{{ url('/courses') }}">
@@ -23,23 +23,23 @@
     <!-- Open Graph -->
     <meta property="og:type"             content="website">
     <meta property="og:url"              content="{{ url('/courses') }}">
-    <meta property="og:title"            content="{{ __('public.courses_page_title') }} - {{ config('app.name', 'Glottical') }}">
+    <meta property="og:title"            content="{{ __('public.courses_page_title') }} - {{ config('app.name') }}">
     <meta property="og:description"      content="{{ __('public.courses_subtitle') }}">
     <meta property="og:image"            content="{{ asset('images/og-image.jpg') }}">
-    <meta property="og:image:alt"        content="كورسات {{ config('app.name', 'Glottical') }}">
+    <meta property="og:image:alt"        content="كورسات {{ config('app.name') }}">
     <meta property="og:image:width"      content="1200">
     <meta property="og:image:height"     content="630">
     <meta property="og:locale"           content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
     <meta property="og:locale:alternate" content="{{ $locale === 'ar' ? 'en_US' : 'ar_AR' }}">
-    <meta property="og:site_name"        content="{{ config('app.name', 'Glottical') }}">
+    <meta property="og:site_name"        content="{{ config('app.name') }}">
     <!-- Twitter Card -->
     <meta name="twitter:card"        content="summary_large_image">
     <meta name="twitter:site"        content="@Glottical">
     <meta name="twitter:url"         content="{{ url('/courses') }}">
-    <meta name="twitter:title"       content="{{ __('public.courses_page_title') }} - {{ config('app.name', 'Glottical') }}">
+    <meta name="twitter:title"       content="{{ __('public.courses_page_title') }} - {{ config('app.name') }}">
     <meta name="twitter:description" content="{{ __('public.courses_subtitle') }}">
     <meta name="twitter:image"       content="{{ asset('images/og-image.jpg') }}">
-    <meta name="twitter:image:alt"   content="كورسات {{ config('app.name', 'Glottical') }}">
+    <meta name="twitter:image:alt"   content="كورسات {{ config('app.name') }}">
     @include('partials.favicon-links')
     <!-- BreadcrumbList JSON-LD -->
     <script type="application/ld+json">

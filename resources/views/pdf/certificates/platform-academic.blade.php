@@ -1,5 +1,5 @@
 @php
-    $academy = $academyName ?? config('app.name', 'Muallimx');
+    $academy = $academyName ?? config('app.name');
     $primary = $primaryColor ?? '#283593';
     $secondary = $secondaryColor ?? '#FB5607';
     $cream = $creamBg ?? '#FDFBF7';

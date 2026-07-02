@@ -5,8 +5,8 @@
             <i class="fas fa-code text-white text-lg"></i>
         </div>
         <div>
-            <h2 class="text-lg font-black text-gray-900">{{ config('app.name', 'Muallimx') }}</h2>
-            <p class="text-xs text-gray-500">{{ config('app.name', 'Muallimx') }}</p>
+            <h2 class="text-lg font-black text-gray-900">{{ config('app.name') }}</h2>
+            <p class="text-xs text-gray-500">{{ config('app.name') }}</p>
         </div>
     </div>
 

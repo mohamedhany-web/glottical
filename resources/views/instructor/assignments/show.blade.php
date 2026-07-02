@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $assignment->title . ' - ' . config('app.name', 'Muallimx'))
+@section('title', $assignment->title . ' - ' . config('app.name'))
 @section('header', $assignment->title)
 
 @section('content')

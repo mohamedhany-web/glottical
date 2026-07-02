@@ -14,7 +14,7 @@
                 <div class="space-y-4 max-w-3xl">
                     <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-100 text-sky-700 text-sm font-semibold">
                         <i class="fas fa-route"></i>
-                        إدارة مسارات التعلم — {{ config('app.name', 'Muallimx') }}
+                        إدارة مسارات التعلم — {{ config('app.name') }}
                     </span>
                     <h1 class="text-3xl font-black text-gray-900 leading-tight">
                         أنشئ مسارات تعليمية مترابطة تجمع المهارات، الأطر، واللغات المطلوبة لسوق العمل

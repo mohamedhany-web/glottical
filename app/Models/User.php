@@ -375,7 +375,7 @@ class User extends Authenticatable
         return $this->hasMany(PortfolioProject::class, 'user_id');
     }
 
-    /** ألعاب HTML المحفوظة من Muallimx AI */
+    /** ألعاب HTML المحفوظة من Glottical AI */
     public function savedAiGames()
     {
         return $this->hasMany(StudentSavedAiGame::class, 'user_id');

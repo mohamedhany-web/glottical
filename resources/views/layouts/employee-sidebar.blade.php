@@ -16,7 +16,7 @@
                 <i class="fas fa-briefcase text-white text-lg"></i>
             </div>
             <div class="text-right min-w-0">
-                <span class="text-lg font-bold text-white block leading-tight">Muallimx</span>
+                <span class="text-lg font-bold text-white block leading-tight">{{ config('app.name') }}</span>
                 @if($user->employeeJob)
                     <span class="text-[11px] text-slate-400 font-semibold truncate block max-w-[9rem]">{{ $user->employeeJob->name }}</span>
                 @endif

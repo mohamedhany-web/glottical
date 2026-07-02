@@ -24,7 +24,7 @@ class ClassroomJoinController extends Controller
             abort(404, 'كود الغرفة غير صالح.');
         }
 
-        $roomName = 'Muallimx-'.$code;
+        $roomName = 'Glottical-'.$code;
         $meeting = ClassroomMeeting::where('code', $code)->first();
         $jitsiDomain = LiveSetting::getJitsiDomain();
         $joinUrl = url('classroom/join/'.$code);

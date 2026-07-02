@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', ($pageTitle ?? 'إدارة المستخدمين') . ' - ' . config('app.name', 'Muallimx'))
+@section('title', ($pageTitle ?? 'إدارة المستخدمين') . ' - ' . config('app.name'))
 @section('header', $pageTitle ?? 'إدارة المستخدمين')
 
 @push('styles')

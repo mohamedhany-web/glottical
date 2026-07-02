@@ -1,4 +1,4 @@
-{{-- نفس سبورة Muallimx Classroom (Excalidraw) — نافذة منبثقة كبيرة --}}
+{{-- نفس سبورة Glottical Classroom (Excalidraw) — نافذة منبثقة كبيرة --}}
 @php
     $mxWbUiMode = $mxWbUiMode ?? 'full';
 @endphp
@@ -112,7 +112,7 @@
         <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-700 bg-slate-800/95 shrink-0">
             <h2 id="wb-popup-title" class="text-base font-bold text-white m-0 flex items-center gap-2">
                 <i class="fas fa-chalkboard text-amber-400"></i>
-                السبورة التفاعلية — Muallimx
+                السبورة التفاعلية — Glottical
             </h2>
             <div class="flex items-center gap-2">
                 <button type="button" id="btn-wb-popup-fullscreen" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium border border-slate-600" title="ملء الشاشة (اخرج بـ Esc)">
@@ -131,7 +131,7 @@
                 @if($mxWbUiMode === 'student_lite')
                 <strong class="text-slate-200">وضع المشارك</strong> — قلم رسم، ممحاة، ويد لتحريك اللوحة. الرسم محلي على جهازك.
                 @else
-                <strong class="text-slate-200">نفس السبورة المستخدمة في Muallimx Classroom</strong> — أشكال، نص، تصدير PNG/SVG من القائمة. الرسم محلي على جهازك.
+                <strong class="text-slate-200">نفس السبورة المستخدمة في Glottical Classroom</strong> — أشكال، نص، تصدير PNG/SVG من القائمة. الرسم محلي على جهازك.
                 @endif
             </span>
         </div>
@@ -239,7 +239,7 @@
         return excVendorPromise;
     }
 
-    function mountMuallimxExcalidrawOnce() {
+    function mountGlotticalExcalidrawOnce() {
         if (excMounted) return Promise.resolve();
         if (excMountPromise) return excMountPromise;
         if (!excRoot) return Promise.reject(new Error('no excalidraw root'));
@@ -295,7 +295,7 @@
                             var props = {
                                 viewModeEnabled: viewOnly,
                                 excalidrawAPI: function (api) {
-                                    window.__mxMuallimxExcalidrawAPI = api;
+                                    window.__mxGlotticalExcalidrawAPI = api;
                                 }
                             };
                             if (lang.indexOf('ar') === 0) props.langCode = 'ar-SA';
@@ -340,7 +340,7 @@
     var wbCtx = null;
 
     function mergeExcalidrawToMain(done) {
-        var api = window.__mxMuallimxExcalidrawAPI;
+        var api = window.__mxGlotticalExcalidrawAPI;
         if (!api || !wbCanvas || !wbCtx) {
             if (done) done();
             return;
@@ -355,7 +355,7 @@
         wbPopup.classList.add('is-open');
         wbPopup.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
-        mountMuallimxExcalidrawOnce().then(function () {
+        mountGlotticalExcalidrawOnce().then(function () {
             setTimeout(nudgeExcalidrawLayout, 80);
             setTimeout(nudgeExcalidrawLayout, 400);
         }).catch(function () {});
@@ -412,7 +412,7 @@
         }
     }
 
-    window.__mxMuallimxCloseWhiteboardPopup = closeWbPopup;
+    window.__mxGlotticalCloseWhiteboardPopup = closeWbPopup;
 
     if (wbPopup) {
         var wbOpenPopupBtn = document.getElementById('btn-wb-popup-open');

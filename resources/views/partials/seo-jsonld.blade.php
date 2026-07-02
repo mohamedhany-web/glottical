@@ -6,7 +6,7 @@
 $_jldType    = $jsonldType ?? 'website';
 $_siteUrl    = url('/');
 $_logoUrl    = asset('images/og-image.jpg');
-$_siteName   = config('app.name', 'Glottical');
+$_siteName   = config('app.name');
 
 // ── Base: WebSite + EducationalOrganization ──────────────────────────────
 $_baseGraph = [
@@ -32,10 +32,10 @@ $_baseGraph = [
             'url'    => $_siteUrl,
             'logo'   => ['@type' => 'ImageObject', 'url' => $_logoUrl, 'width' => 1200, 'height' => 630],
             'sameAs' => [
-                'https://twitter.com/Muallimx',
-                'https://www.facebook.com/Muallimx',
-                'https://www.linkedin.com/company/muallimx',
-                'https://www.youtube.com/@Muallimx',
+                'https://twitter.com/Glottical',
+                'https://www.facebook.com/Glottical',
+                'https://www.linkedin.com/company/glottical',
+                'https://www.youtube.com/@Glottical',
             ],
             'contactPoint' => ['@type' => 'ContactPoint', 'contactType' => 'customer support', 'availableLanguage' => ['Arabic', 'English']],
         ],

@@ -55,14 +55,14 @@
         </a>
     </div>
 
-    {{-- شريط Muallimx العلوي --}}
+    {{-- شريط Glottical العلوي --}}
     <header class="h-[72px] bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex items-center justify-between px-4 sm:px-6 shadow-lg">
         <div class="flex items-center gap-4">
             <a href="{{ route('student.live-sessions.index') }}" class="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
                 <span class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
                     <i class="fas fa-broadcast-tower text-lg"></i>
                 </span>
-                <span class="font-bold text-white hidden sm:inline">Muallimx</span>
+                <span class="font-bold text-white hidden sm:inline">Glottical</span>
             </a>
             <span class="w-px h-6 bg-slate-600 hidden sm:block"></span>
             <div class="flex items-center gap-2">
@@ -93,7 +93,7 @@
 
     <div class="room-body">
         <div id="mx-video-stack" class="relative flex-1 min-h-0 flex flex-col">
-            <main id="mx-live-broadcast-root" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة البث — Muallimx"></main>
+            <main id="mx-live-broadcast-root" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة البث — Glottical"></main>
             @include('partials.mx-share-annotation-overlay', [
                 'mxAnnRole' => 'student_emit',
                 'mxAnnPostUrl' => route('student.live-sessions.share-annotation', $liveSession),
@@ -135,9 +135,9 @@
                 @endif
             },
             interfaceConfigOverwrite: {
-                APP_NAME: 'Muallimx',
-                NATIVE_APP_NAME: 'Muallimx',
-                PROVIDER_NAME: 'Muallimx',
+                APP_NAME: 'Glottical',
+                NATIVE_APP_NAME: 'Glottical',
+                PROVIDER_NAME: 'Glottical',
                 JITSI_WATERMARK_LINK: '',
                 HIDE_DEEP_LINKING_LOGO: true,
                 TOOLBAR_BUTTONS: [],

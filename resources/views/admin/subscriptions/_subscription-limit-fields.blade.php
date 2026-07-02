@@ -1,7 +1,7 @@
 {{-- حقول حدود المزايا: تُربط بـ Alpine `limits` (نفس أسماء إعدادات باقات المعلمين) --}}
 <div class="mt-4 space-y-4 border-t border-gray-200 pt-4">
     <div>
-        <h3 class="text-sm font-bold text-gray-900">حدود الاستهلاك (Muallimx Classroom والتسويق)</h3>
+        <h3 class="text-sm font-bold text-gray-900">حدود الاستهلاك (Glottical Classroom والتسويق)</h3>
         <p class="text-xs text-gray-500 mt-1">
             تُحفظ مع الاشتراك وتُستخدم بدل قيم الباقة الافتراضية من الإعدادات. عند اختيار باقة من القائمة تُملأ هذه الحقول تلقائياً ويمكنك تعديلها قبل الحفظ.
         </p>

@@ -7,7 +7,7 @@
     $bioClean = $profile->bio_clean;
     $skills = $profile->skills_list;
     $experiences = $profile->experience_list;
-    $instrPageTitle = $name.' — '.$headline.' | '.config('app.name', 'Glottical');
+    $instrPageTitle = $name.' — '.$headline.' | '.config('app.name');
     $instrPageDesc = \Illuminate\Support\Str::limit($bioClean ?: $headline, 160);
     $instrPageImg = ($profile->photo_url ?? null) ?: asset('images/og-image.jpg');
     $instrPageUrl = route('public.instructors.show', $profile->user);
@@ -32,7 +32,7 @@
     <meta property="og:description" content="{{ $instrPageDesc }}">
     <meta property="og:image" content="{{ $instrPageImg }}">
     <meta property="og:locale" content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
-    <meta property="og:site_name" content="{{ config('app.name', 'Glottical') }}">
+    <meta property="og:site_name" content="{{ config('app.name') }}">
     @include('partials.favicon-links')
     @include('partials.seo-jsonld', ['jsonldType' => 'instructor', 'profile' => $profile])
 

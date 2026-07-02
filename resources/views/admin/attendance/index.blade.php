@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'الحضور والغياب - ' . config('app.name', 'Muallimx'))
+@section('title', 'الحضور والغياب - ' . config('app.name'))
 @section('header', 'الحضور والغياب')
 
 @section('content')

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('instructor.personal_branding') . ' - ' . config('app.name', 'Muallimx'))
+@section('title', __('instructor.personal_branding') . ' - ' . config('app.name'))
 @section('header', __('instructor.personal_branding'))
 
 @section('content')

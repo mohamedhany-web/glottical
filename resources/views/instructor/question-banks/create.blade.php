@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('instructor.create_question_bank_new') . ' - ' . config('app.name', 'Muallimx'))
+@section('title', __('instructor.create_question_bank_new') . ' - ' . config('app.name'))
 @section('header', __('instructor.create_question_bank_new'))
 
 @section('content')

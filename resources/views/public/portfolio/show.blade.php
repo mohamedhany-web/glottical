@@ -110,7 +110,7 @@
 
             <div class="reveal s1 flex flex-wrap items-center gap-2 mb-4">
                 <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
-                    <i class="fas fa-chalkboard-teacher"></i> Muallimx
+                    <i class="fas fa-chalkboard-teacher"></i> Glottical
                 </span>
                 @if($typeLabel)
                     <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-bold text-mx-indigo border border-slate-200 shadow-sm">{{ $typeLabel }}</span>
@@ -159,7 +159,7 @@
                                     <i class="fas fa-certificate text-[11px]"></i> {{ __('public.portfolio_page_title') }}
                                 </span>
                             </div>
-                            <p class="text-white/85 text-sm font-bold leading-relaxed">{{ $isEn ? 'Verified educator on Muallimx' : 'معلّم ضمن منصة Muallimx' }}</p>
+                            <p class="text-white/85 text-sm font-bold leading-relaxed">{{ $isEn ? 'Verified educator on Glottical' : 'معلّم ضمن منصة Glottical' }}</p>
                             @if($typeLabel || $project->academicYear)
                                 <div class="mt-5 flex flex-wrap justify-center gap-2 w-full">
                                     @if($typeLabel)
@@ -358,7 +358,7 @@
             @if($related->count() > 0)
                 <div class="mt-16 sm:mt-24 reveal">
                     <div class="text-center mb-10">
-                        <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-black mb-4" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">Muallimx</span>
+                        <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-black mb-4" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">Glottical</span>
                         <h2 class="font-heading text-2xl sm:text-3xl font-black text-mx-indigo">{{ __('public.other_projects_same_path') }}</h2>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">

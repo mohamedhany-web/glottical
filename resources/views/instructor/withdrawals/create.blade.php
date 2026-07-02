@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'طلب سحب جديد - ' . config('app.name', 'Muallimx'))
+@section('title', 'طلب سحب جديد - ' . config('app.name'))
 @section('header', 'طلب سحب جديد')
 
 @section('content')

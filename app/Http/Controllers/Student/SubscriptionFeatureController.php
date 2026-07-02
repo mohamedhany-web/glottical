@@ -102,7 +102,7 @@ class SubscriptionFeatureController extends Controller
     }
 
     /**
-     * التحقق من البيانات وبناء السياق، واستدعاء Muallimx AI عند التفعيل في الإعدادات.
+     * التحقق من البيانات وبناء السياق، واستدعاء Glottical AI عند التفعيل في الإعدادات.
      */
     public function previewFullAiSuite(
         FullAiSuitePreviewRequest $request,
@@ -145,14 +145,14 @@ class SubscriptionFeatureController extends Controller
                         $gameHtmlUrl = $request->getSchemeAndHttpHost().$relativePath;
                         $muallimxAiText = __('student.full_ai_suite.game_html_generated_notice');
                     } else {
-                        Log::warning('Muallimx AI educational game: response had no extractable HTML', [
+                        Log::warning('Glottical AI educational game: response had no extractable HTML', [
                             'user_id' => $request->user()?->id,
                             'raw_preview' => mb_substr($raw, 0, 400),
                         ]);
                         $muallimxAiError = __('student.full_ai_suite.game_html_extraction_failed');
                     }
                 } catch (\Throwable $e) {
-                    Log::warning('Muallimx AI generateFromPrompt failed (educational game)', [
+                    Log::warning('Glottical AI generateFromPrompt failed (educational game)', [
                         'user_id' => $request->user()?->id,
                         'message' => $e->getMessage(),
                     ]);
@@ -173,7 +173,7 @@ class SubscriptionFeatureController extends Controller
             try {
                 $muallimxAiText = $muallimxAi->generateFromPrompt($prompt);
             } catch (\Throwable $e) {
-                Log::warning('Muallimx AI generateFromPrompt failed', [
+                Log::warning('Glottical AI generateFromPrompt failed', [
                     'user_id' => $request->user()?->id,
                     'message' => $e->getMessage(),
                 ]);

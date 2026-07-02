@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إضافة مهمة لمدرب - ' . config('app.name', 'Muallimx'))
+@section('title', 'إضافة مهمة لمدرب - ' . config('app.name'))
 @section('header', 'مهام المدربين')
 
 @section('content')

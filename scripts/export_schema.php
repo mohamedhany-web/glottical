@@ -95,7 +95,7 @@ while ($table = $tablesStmt->fetchColumn()) {
 
 $header = <<<SQL
 -- ============================================
--- Muallimx Platform - Complete Database Schema
+-- Glottical Platform - Complete Database Schema
 -- ============================================
 -- Auto-generated on: %s
 -- ============================================

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>انضم إلى Muallimx Classroom — {{ $code }}</title>
+    <title>انضم إلى Glottical Classroom — {{ $code }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,7 +39,7 @@
                 <div class="w-16 h-16 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-video text-3xl"></i>
                 </div>
-                <h1 class="text-xl font-bold text-white">Muallimx Classroom</h1>
+                <h1 class="text-xl font-bold text-white">Glottical Classroom</h1>
                 <p class="text-slate-400 text-sm mt-1">انضم إلى الاجتماع باستخدام الكود أو الرابط</p>
             </div>
             @if($meeting && $meeting->title)
@@ -69,7 +69,7 @@
                 <span class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0">
                     <i class="fas fa-video text-lg"></i>
                 </span>
-                <span class="font-bold text-white truncate">Muallimx Classroom</span>
+                <span class="font-bold text-white truncate">Glottical Classroom</span>
                 <span class="text-slate-400 text-sm shrink-0">— {{ $code }}</span>
             </div>
             <div class="flex items-center gap-2 shrink-0">
@@ -181,9 +181,9 @@
                     enableNoisyMicDetection: false,
                 },
                 interfaceConfigOverwrite: {
-                    APP_NAME: 'Muallimx Classroom',
-                    NATIVE_APP_NAME: 'Muallimx Classroom',
-                    PROVIDER_NAME: 'Muallimx',
+                    APP_NAME: 'Glottical Classroom',
+                    NATIVE_APP_NAME: 'Glottical Classroom',
+                    PROVIDER_NAME: 'Glottical',
                     JITSI_WATERMARK_LINK: '',
                     HIDE_DEEP_LINKING_LOGO: true,
                     TOOLBAR_BUTTONS: [

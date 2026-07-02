@@ -14,7 +14,7 @@
     
     // التوقيعات
     $academySignatureName = $academySignatureName ?? ($certificate->academy_signature_name ?? 'المدير العام');
-    $academySignatureTitle = $academySignatureTitle ?? ($certificate->academy_signature_title ?? (config('app.name', 'Muallimx').' Academy'));
+    $academySignatureTitle = $academySignatureTitle ?? ($certificate->academy_signature_title ?? (config('app.name').' Academy'));
     $instructorSignatureName = $instructorSignatureName ?? ($certificate->instructor_signature_name ?? ($certificate->instructor->name ?? 'المدرب المعتمد'));
     $instructorSignatureTitle = $instructorSignatureTitle ?? ($certificate->instructor_signature_title ?? 'المدرب المعتمد');
     
@@ -24,7 +24,7 @@
 
 <div id="certificate-template" class="certificate-template template-{{ $template }} relative mx-auto certificate-print" style="width: 297mm; height: 210mm; padding: 25mm 20mm; margin: 0 auto; box-sizing: border-box;">
     <!-- Watermark -->
-    <div class="certificate-watermark">{{ strtoupper(preg_replace('/\s+/', '', config('app.name', 'Muallimx'))) }}</div>
+    <div class="certificate-watermark">{{ strtoupper(preg_replace('/\s+/', '', config('app.name'))) }}</div>
 
     <!-- Decorative Corners -->
     <div class="certificate-corner corner-top-left" style="border-color: currentColor;"></div>
@@ -54,7 +54,7 @@
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-blue-700 text-white shadow-xl mb-3">
                     <span class="text-2xl font-black">M</span>
                 </div>
-                <h3 class="text-lg font-black text-gray-800 mb-0.5" style="color: inherit;">{{ config('app.name', 'Muallimx') }}</h3>
+                <h3 class="text-lg font-black text-gray-800 mb-0.5" style="color: inherit;">{{ config('app.name') }}</h3>
                 <p class="text-xs font-semibold text-gray-600" style="color: inherit;">{{ __('public.site_suffix') }}</p>
             </div>
 

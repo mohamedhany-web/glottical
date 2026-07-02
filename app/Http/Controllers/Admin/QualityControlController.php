@@ -233,7 +233,7 @@ class QualityControlController extends Controller
 
         $spreadsheet = new Spreadsheet();
         $spreadsheet->getProperties()
-            ->setCreator('Muallimx')
+            ->setCreator('Glottical')
             ->setTitle('تقرير رقابة المدرب - ' . $instructor->name)
             ->setSubject('تقرير شامل عن المدرب وأنشطته');
 

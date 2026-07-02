@@ -8,11 +8,11 @@
             </div>
             @else
             <div class="w-9 h-9 rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md shadow-blue-500/25 flex-shrink-0">
-                <span class="text-lg font-black text-white">M</span>
+                <span class="text-lg font-black text-white">G</span>
             </div>
             @endif
             <div class="sidebar-logo-text">
-                <h2 class="text-sm font-heading font-bold text-slate-800 dark:text-slate-100 tracking-tight leading-tight">Muallimx</h2>
+                <h2 class="text-sm font-heading font-bold text-slate-800 dark:text-slate-100 tracking-tight leading-tight">{{ config('app.name') }}</h2>
                 <p class="text-[9px] text-slate-500 dark:text-slate-400 font-medium">{{ __('admin.admin_panel') }}</p>
             </div>
         </div>

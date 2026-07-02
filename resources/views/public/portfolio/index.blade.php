@@ -245,7 +245,7 @@
         <div class="container-1200">
             <div class="reveal rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_44px_-26px_rgba(31,42,122,.28)] px-6 sm:px-10 py-10 sm:py-12 text-center">
                 <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold mb-5" style="background:#FFE5F7;color:#283593"><i class="fas fa-rocket"></i> لديك مشروع مميز؟</span>
-                <h2 class="font-heading text-3xl sm:text-5xl font-black text-mx-indigo mb-4">شاركه الآن داخل معرض Muallimx</h2>
+                <h2 class="font-heading text-3xl sm:text-5xl font-black text-mx-indigo mb-4">شاركه الآن داخل معرض Glottical</h2>
                 <p class="text-slate-600 text-base sm:text-lg max-w-3xl mx-auto leading-8 mb-7">ابدأ التعلم، أنشئ مشروعك، ثم اعرضه بشكل احترافي ليراه الجميع.</p>
                 <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
                     <a href="{{ route('register') }}" class="btn-primary inline-flex items-center justify-center gap-2">إنشاء حساب مجاني <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }} text-xs"></i></a>

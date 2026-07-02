@@ -129,7 +129,7 @@
                 <section class="space-y-4">
                     <h4 class="text-sm font-black text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-600 pb-2">الهوية والنص التعريفي</h4>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">السطر تحت اسم Muallimx (النافبار والفوتر)</label>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">السطر تحت اسم Glottical (النافبار والفوتر)</label>
                         <input type="text" name="footer_brand_tagline" value="{{ old('footer_brand_tagline', $values['footer_brand_tagline']) }}"
                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm text-slate-800 dark:text-slate-100"
                                placeholder="{{ $defaults['footer_brand_tagline'] }}">

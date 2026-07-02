@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'app_name' => 'Muallimx',
+    'app_name' => 'Glottical',
     'save' => 'حفظ',
     'cancel' => 'إلغاء',
     'edit' => 'تعديل',

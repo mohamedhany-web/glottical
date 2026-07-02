@@ -1,5 +1,5 @@
 -- ============================================
--- Muallimx Platform - Complete Database Schema
+-- Glottical Platform - Complete Database Schema
 -- ============================================
 -- Auto-generated on: 2025-11-15 17:31:06
 -- ============================================

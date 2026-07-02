@@ -44,14 +44,14 @@
     </style>
 </head>
 <body class="bg-slate-950">
-    {{-- شريط Muallimx العلوي --}}
+    {{-- شريط Glottical العلوي --}}
     <header class="h-[72px] bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex items-center justify-between px-4 sm:px-6 shadow-lg">
         <div class="flex items-center gap-4">
             <a href="{{ route('instructor.live-sessions.index') }}" class="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
                 <span class="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center">
                     <i class="fas fa-broadcast-tower text-lg"></i>
                 </span>
-                <span class="font-bold text-white hidden sm:inline">Muallimx</span>
+                <span class="font-bold text-white hidden sm:inline">Glottical</span>
             </a>
             <span class="w-px h-6 bg-slate-600 hidden sm:block"></span>
             <div class="flex items-center gap-2">
@@ -102,10 +102,10 @@
                 </div>
             </div>
             @endif
-            {{-- نفس سبورة Muallimx Classroom (Excalidraw) --}}
+            {{-- نفس سبورة Glottical Classroom (Excalidraw) --}}
             <button type="button" id="btn-wb-popup-open"
                     class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-amber-600/25 hover:bg-amber-600/35 text-amber-100 text-sm font-semibold transition-colors border border-amber-500/40"
-                    title="فتح السبورة التفاعلية (Muallimx Classroom)">
+                    title="فتح السبورة التفاعلية (Glottical Classroom)">
                 <i class="fas fa-chalkboard text-amber-300"></i>
                 <span class="hidden sm:inline">السبورة التفاعلية</span>
             </button>
@@ -153,7 +153,7 @@
 
     <div class="room-body">
         <div id="mx-video-stack" class="relative flex-1 min-h-0 flex flex-col">
-            <main id="mx-live-broadcast-root" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة البث — Muallimx"></main>
+            <main id="mx-live-broadcast-root" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة البث — Glottical"></main>
             @include('partials.mx-share-annotation-overlay', [
                 'mxAnnRole' => 'viewer_poll',
                 'mxAnnPollUrl' => route('instructor.live-sessions.share-annotations', $liveSession),
@@ -166,7 +166,7 @@
     <script src="https://{{ $jitsiDomain }}/external_api.js"></script>
     <script>
         /* ══════════════════════════════════════════════
-           غرفة البث (Muallimx)
+           غرفة البث (Glottical)
         ══════════════════════════════════════════════ */
         const domain   = '{{ $jitsiDomain }}';
         const jitsiRoot = document.querySelector('#mx-live-broadcast-root');
@@ -197,9 +197,9 @@
                 @endif
             },
             interfaceConfigOverwrite: {
-                APP_NAME: 'Muallimx',
-                NATIVE_APP_NAME: 'Muallimx',
-                PROVIDER_NAME: 'Muallimx',
+                APP_NAME: 'Glottical',
+                NATIVE_APP_NAME: 'Glottical',
+                PROVIDER_NAME: 'Glottical',
                 JITSI_WATERMARK_LINK: '',
                 HIDE_DEEP_LINKING_LOGO: true,
                 TOOLBAR_BUTTONS: [
@@ -273,7 +273,7 @@
             const url  = URL.createObjectURL(blob);
             const a    = document.createElement('a');
             a.href     = url;
-            a.download = 'muallimx-rec-' + Date.now() + '.webm';
+            a.download = 'glottical-rec-' + Date.now() + '.webm';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

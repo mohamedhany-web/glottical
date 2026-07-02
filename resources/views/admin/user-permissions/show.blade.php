@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'صلاحيات ' . $user->name . ' - ' . config('app.name', 'Muallimx'))
+@section('title', 'صلاحيات ' . $user->name . ' - ' . config('app.name'))
 @section('header', 'صلاحيات ' . $user->name)
 
 @section('content')

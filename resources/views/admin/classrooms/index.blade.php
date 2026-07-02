@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إدارة الفصول - ' . config('app.name', 'Muallimx'))
+@section('title', 'إدارة الفصول - ' . config('app.name'))
 @section('header', 'إدارة الفصول')
 
 @section('content')

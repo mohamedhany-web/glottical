@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('instructor.transfer_account') . ' - ' . config('app.name', 'Muallimx'))
+@section('title', __('instructor.transfer_account') . ' - ' . config('app.name'))
 @section('header', __('instructor.transfer_account'))
 
 @section('content')

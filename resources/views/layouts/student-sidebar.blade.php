@@ -9,7 +9,7 @@
             <i class="fas fa-user-graduate text-lg"></i>
         </div>
         <div class="flex-1 min-w-0 relative z-10">
-            <h2 class="text-base font-bold text-gray-900 dark:text-gray-100 leading-tight">Muallimx</h2>
+            <h2 class="text-base font-bold text-gray-900 dark:text-gray-100 leading-tight">{{ config('app.name') }}</h2>
             <p class="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-0.5">{{ __('student.learning_center') }}</p>
         </div>
     </div>

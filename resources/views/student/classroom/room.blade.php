@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Muallimx Classroom — {{ $meeting->title ?: $meeting->code }}</title>
+    <title>Glottical Classroom — {{ $meeting->title ?: $meeting->code }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -99,7 +99,7 @@
         .classroom-excalidraw-host .excalidraw {
             --color-surface-lowest: #0f172a;
         }
-        /* Muallimx Whiteboard: مكتبة + روابط وخدمات خارجية داخل واجهة اللوحة */
+        /* Glottical Whiteboard: مكتبة + روابط وخدمات خارجية داخل واجهة اللوحة */
         .mx-muallimx-whiteboard .excalidraw .layer-ui__library,
         .mx-muallimx-whiteboard .excalidraw .layer-ui__library-message,
         .mx-muallimx-whiteboard .excalidraw .library-menu,
@@ -193,7 +193,7 @@
         $roomExitUrl = route('student.classroom.index');
     }
 @endphp
-    {{-- شريط Muallimx العلوي — على الهاتف: صف علوي + زر سايدبار؛ من md: شريط أدوات أفقي --}}
+    {{-- شريط Glottical العلوي — على الهاتف: صف علوي + زر سايدبار؛ من md: شريط أدوات أفقي --}}
     <header class="min-h-14 shrink-0 bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex flex-col gap-2 px-3 sm:px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:py-0 md:flex-row md:items-center md:justify-between md:gap-2 shadow-lg">
         <div class="flex items-center justify-between gap-2 w-full min-w-0 md:w-auto md:flex-1 md:justify-start">
             <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
@@ -201,7 +201,7 @@
                 <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
                     <i class="fas fa-video text-sm sm:text-[15px]"></i>
                 </span>
-                <span class="font-bold text-white text-[11px] sm:text-sm truncate max-w-[6.5rem] sm:max-w-[8rem] md:max-w-none">Muallimx</span>
+                <span class="font-bold text-white text-[11px] sm:text-sm truncate max-w-[6.5rem] sm:max-w-[8rem] md:max-w-none">Glottical</span>
             </a>
             <span class="w-px h-5 bg-slate-600 hidden sm:block shrink-0"></span>
             <div class="flex items-center gap-1.5 min-w-0">
@@ -462,9 +462,9 @@
                 <p class="font-bold text-slate-200 mb-2">لا يمكن تحميل غرفة الاجتماع</p>
                 <p class="text-slate-400 text-sm mb-3">المتصفح لم يستطع الاتصال بـ <strong class="text-slate-300">{{ $jitsiDomain }}</strong>.</p>
                 <ul class="text-right text-slate-400 text-sm mb-4 list-none space-y-1">
-                    <li>• النطاق يجب أن يكون <strong class="text-slate-300">النطاق الصحيح لخادم الاجتماعات</strong> (مثلاً <code class="bg-slate-700 px-1 rounded">meet.muallimx.com</code> وليس بالضرورة الموقع الرئيسي).</li>
+                    <li>• النطاق يجب أن يكون <strong class="text-slate-300">النطاق الصحيح لخادم الاجتماعات</strong> (مثلاً <code class="bg-slate-700 px-1 rounded">meet.glottical.com</code> وليس بالضرورة الموقع الرئيسي).</li>
                     <li>• جرّب فتح <a href="https://{{ $jitsiDomain }}/external_api.js" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">هذا الرابط</a> في تاب جديد — إن لم يُحمّل، فخادم الاجتماعات غير متاح من جهازك أو غير مضبوط على هذا النطاق.</li>
-                    <li>• إن كان خادم الاجتماعات على نطاق فرعي (مثل meet.muallimx.com)، حدّث النطاق من: <strong>لوحة الإدارة → سيرفرات البث</strong> ثم «استخدام كنطاق افتراضي» للسيرفر الصحيح.</li>
+                    <li>• إن كان خادم الاجتماعات على نطاق فرعي (مثل meet.glottical.com)، حدّث النطاق من: <strong>لوحة الإدارة → سيرفرات البث</strong> ثم «استخدام كنطاق افتراضي» للسيرفر الصحيح.</li>
                 </ul>
                 <a href="https://{{ $jitsiDomain }}/{{ $meeting->room_name }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold transition-colors">
                     <i class="fas fa-external-link-alt"></i> فتح الغرفة في نافذة جديدة
@@ -499,11 +499,11 @@
             </div>
             <div id="wb-popup-stage" class="relative flex-1 min-h-0 bg-[#121212]">
                 <div id="classroom-excalidraw-root" class="classroom-excalidraw-host mx-muallimx-whiteboard" data-view-only="0" data-lang="ar"></div>
-                <div id="classroom-excalidraw-loading" class="classroom-excalidraw-loading">جاري تحميل Muallimx Whiteboard…</div>
+                <div id="classroom-excalidraw-loading" class="classroom-excalidraw-loading">جاري تحميل Glottical Whiteboard…</div>
             </div>
             <div id="wb-popup-toolbar" class="flex flex-wrap items-center justify-center gap-2 px-4 py-2.5 border-t border-slate-700 bg-slate-800/95 shrink-0">
                 <span class="text-slate-400 text-[11px] leading-relaxed text-center max-w-3xl">
-                    <strong class="text-slate-200">Muallimx Whiteboard</strong> — أدوات رسم كاملة (أشكال، نص، تصدير PNG/SVG من القائمة). الرسم محلي على جهازك فقط.
+                    <strong class="text-slate-200">Glottical Whiteboard</strong> — أدوات رسم كاملة (أشكال، نص، تصدير PNG/SVG من القائمة). الرسم محلي على جهازك فقط.
                 </span>
             </div>
         </div>
@@ -584,7 +584,7 @@
             });
         };
     </script>
-    {{-- Muallimx Whiteboard: تحميل ديناميكي + أكثر من مسار (Laravel ثم ملفات public المباشرة) --}}
+    {{-- Glottical Whiteboard: تحميل ديناميكي + أكثر من مسار (Laravel ثم ملفات public المباشرة) --}}
     <script>
         (function() {
             var jitsiDomain = '{{ $jitsiDomain }}';
@@ -783,7 +783,7 @@
                         .then(function() { return loadScriptSequential(prefix + 'dist/excalidraw.production.min.js'); })
                         .then(function() {
                             if (!window.React || !window.ReactDOM || !getExcalidrawLib()) {
-                                throw new Error('تعذّر تعريف مكوّنات Muallimx Whiteboard بعد التحميل');
+                                throw new Error('تعذّر تعريف مكوّنات Glottical Whiteboard بعد التحميل');
                             }
                         });
                 }
@@ -809,13 +809,13 @@
                 excShowLoading(true);
 
                 function failMount(err) {
-                    console.error('[Muallimx Whiteboard]', err);
+                    console.error('[Glottical Whiteboard]', err);
                     excMountPromise = null;
                     excShowLoading(false);
                     if (excLoading) {
                         var detail = (err && err.message) ? String(err.message) : '';
                         if (detail.length > 240) detail = detail.slice(0, 237) + '…';
-                        excLoading.textContent = 'تعذّر تهيئة Muallimx Whiteboard.' + (detail ? (' ' + detail) : '') + ' — Network: جرّب ‎/mx-vendor/excalidraw/react.production.min.js‎ أو ‎/vendor/excalidraw/…‎ برمز 200.';
+                        excLoading.textContent = 'تعذّر تهيئة Glottical Whiteboard.' + (detail ? (' ' + detail) : '') + ' — Network: جرّب ‎/mx-vendor/excalidraw/react.production.min.js‎ أو ‎/vendor/excalidraw/…‎ برمز 200.';
                         excLoading.style.display = 'flex';
                     }
                 }
@@ -848,7 +848,7 @@
                                     var createRoot = ReactDOM.createRoot;
                                     // مكوّن اللوحة مُصدَّر كـ React.memo — typeof يكون "object" وليس "function"
                                     if (Excalidraw == null || (typeof Excalidraw !== 'function' && typeof Excalidraw !== 'object')) {
-                                        throw new Error('حزمة Muallimx Whiteboard غير صالحة (مكوّن اللوحة).');
+                                        throw new Error('حزمة Glottical Whiteboard غير صالحة (مكوّن اللوحة).');
                                     }
                                     if (typeof createRoot !== 'function') {
                                         throw new Error('ReactDOM.createRoot غير متاح (تحقق من react-dom 18).');
@@ -2326,9 +2326,9 @@
                             enableNoisyMicDetection: false,
                         },
                         interfaceConfigOverwrite: {
-                            APP_NAME: 'Muallimx Classroom',
-                            NATIVE_APP_NAME: 'Muallimx Classroom',
-                            PROVIDER_NAME: 'Muallimx',
+                            APP_NAME: 'Glottical Classroom',
+                            NATIVE_APP_NAME: 'Glottical Classroom',
+                            PROVIDER_NAME: 'Glottical',
                             JITSI_WATERMARK_LINK: '',
                             HIDE_DEEP_LINKING_LOGO: true,
                             TOOLBAR_BUTTONS: [

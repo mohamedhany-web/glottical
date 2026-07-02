@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'المعاملات المالية - التقارير المحاسبية - Muallimx')
+@section('title', 'المعاملات المالية - التقارير المحاسبية - Glottical')
 @section('header', 'المعاملات المالية')
 
 @section('content')

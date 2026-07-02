@@ -17,14 +17,14 @@
     @php
         $courseOgImg  = $thumbUrl ?? asset('images/og-image.jpg');
         $courseDesc   = Str::limit(strip_tags($course->description ?? ''), 160);
-        $courseTitle  = ($course->title ?? __('public.course_detail_title')) . ' | Muallimx';
+        $courseTitle  = ($course->title ?? __('public.course_detail_title')) . ' | Glottical';
         $courseUrl    = url('/course/' . ($course->id ?? ''));
     @endphp
     <title>{{ $courseTitle }}</title>
     <meta name="title"       content="{{ $courseTitle }}">
     <meta name="description" content="{{ $courseDesc }}">
-    <meta name="keywords"    content="{{ $course->title ?? 'كورس' }}, تعلم أونلاين, كورسات عربية, Muallimx, {{ $categoryDisplay }}">
-    <meta name="author"      content="{{ ($course->instructor->name ?? null) ?? 'Muallimx' }}">
+    <meta name="keywords"    content="{{ $course->title ?? 'كورس' }}, تعلم أونلاين, كورسات عربية, Glottical, {{ $categoryDisplay }}">
+    <meta name="author"      content="{{ ($course->instructor->name ?? null) ?? 'Glottical' }}">
     <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1">
     <meta name="theme-color" content="#0d1528">
     <link rel="canonical"    href="{{ $courseUrl }}">
@@ -41,10 +41,10 @@
     <meta property="og:image:width"      content="1200">
     <meta property="og:image:height"     content="630">
     <meta property="og:locale"           content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
-    <meta property="og:site_name"        content="Muallimx">
+    <meta property="og:site_name"        content="Glottical">
     <!-- Twitter Card -->
     <meta name="twitter:card"        content="summary_large_image">
-    <meta name="twitter:site"        content="@Muallimx">
+    <meta name="twitter:site"        content="@Glottical">
     <meta name="twitter:url"         content="{{ $courseUrl }}">
     <meta name="twitter:title"       content="{{ $courseTitle }}">
     <meta name="twitter:description" content="{{ $courseDesc }}">

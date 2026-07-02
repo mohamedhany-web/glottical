@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'إنشاء جلسة بث مباشر - ' . config('app.name', 'Muallimx'))
+@section('title', 'إنشاء جلسة بث مباشر - ' . config('app.name'))
 @section('header', 'إنشاء جلسة بث مباشر')
 
 @push('styles')

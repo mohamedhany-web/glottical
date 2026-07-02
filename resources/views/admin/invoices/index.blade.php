@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إدارة الفواتير - ' . config('app.name', 'Muallimx'))
+@section('title', 'إدارة الفواتير - ' . config('app.name'))
 @section('header', 'إدارة الفواتير')
 
 @section('content')

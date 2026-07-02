@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إضافة مستخدم جديد - ' . config('app.name', 'Muallimx'))
+@section('title', 'إضافة مستخدم جديد - ' . config('app.name'))
 @section('header', 'إضافة مستخدم جديد')
 
 @section('content')
@@ -89,7 +89,7 @@
                                     البريد الإلكتروني <span class="text-rose-500">*</span>
                                 </label>
                                 <div class="relative">
-                                    <input type="email" name="email" id="email" value="{{ old('email', '') }}" required maxlength="255" placeholder="example@Muallimx.com" class="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-slate-400" />
+                                    <input type="email" name="email" id="email" value="{{ old('email', '') }}" required maxlength="255" placeholder="example@Glottical.com" class="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-slate-400" />
                                     <i class="fas fa-envelope absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
                                 </div>
                                 @error('email')<p class="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>@enderror

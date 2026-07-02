@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'طلب سحب #' . ($withdrawal->request_number ?? $withdrawal->id) . ' - ' . config('app.name', 'Muallimx'))
+@section('title', 'طلب سحب #' . ($withdrawal->request_number ?? $withdrawal->id) . ' - ' . config('app.name'))
 @section('header', 'تفاصيل طلب السحب')
 
 @section('content')

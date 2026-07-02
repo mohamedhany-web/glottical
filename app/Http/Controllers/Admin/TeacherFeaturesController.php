@@ -79,7 +79,7 @@ class TeacherFeaturesController extends Controller
                 $plans[$key]['limits']['classroom_default_duration_minutes'] = $plans[$key]['limits']['classroom_max_duration_minutes'];
             }
             if ($key === 'teacher_starter') {
-                // باقة البداية لا تحتوي على Muallimx Classroom نهائياً.
+                // باقة البداية لا تحتوي على Glottical Classroom نهائياً.
                 $plans[$key]['limits']['classroom_meetings_per_month'] = 0;
                 $plans[$key]['limits']['classroom_max_participants'] = 1;
                 $plans[$key]['limits']['classroom_default_duration_minutes'] = 60;
@@ -259,7 +259,7 @@ class TeacherFeaturesController extends Controller
                 'feature_descriptions' => [
                     'library_access' => 'وصول كامل لمكتبة مناهج وأنشطة جاهزة للتطبيق مباشرة.',
                     'ai_tools' => 'أدوات ذكاء اصطناعي تساعدك على تجهيز المحتوى بسرعة.',
-                    'classroom_access' => 'استخدام Muallimx Classroom لعقد لايف ميتينج وإدارة الجلسات.',
+                    'classroom_access' => 'استخدام Glottical Classroom لعقد لايف ميتينج وإدارة الجلسات.',
                     'support' => 'دعم فني لمساعدتك في أي مشكلة تشغيلية داخل المنصة.',
                     'teacher_profile' => 'بروفايل مهني يعرض خبراتك ومجالاتك التعليمية.',
                     'visible_to_academies' => 'ظهور ملفك للأكاديميات الباحثة عن معلمين.',

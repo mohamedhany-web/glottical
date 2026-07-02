@@ -132,7 +132,7 @@ class TwoFactorController extends Controller
         $secret = $google2fa->generateSecretKey(32);
         $request->session()->put('two_factor.setup_secret', $secret);
 
-        $appName = config('app.name', 'Muallimx');
+        $appName = config('app.name');
         $accountLabel = $user->email ?? ('user-'.$user->id.'@'.Str::slug($appName).'.local');
         $qrCodeUrl = $google2fa->getQRCodeUrl($appName, $accountLabel, $secret);
 

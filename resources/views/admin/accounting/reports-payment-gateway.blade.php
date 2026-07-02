@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'بوابة الدفع - التقارير المحاسبية - Muallimx')
+@section('title', 'بوابة الدفع - التقارير المحاسبية - Glottical')
 @section('header', 'مدفوعات بوابة الدفع')
 
 @section('content')

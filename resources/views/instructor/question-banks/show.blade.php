@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'بنك الأسئلة: ' . $questionBank->title . ' - ' . config('app.name', 'Muallimx'))
+@section('title', 'بنك الأسئلة: ' . $questionBank->title . ' - ' . config('app.name'))
 @section('header', 'بنك الأسئلة: ' . $questionBank->title)
 
 @push('styles')

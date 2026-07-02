@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('instructor.submissions_of') . ': ' . $assignment->title . ' - ' . config('app.name', 'Muallimx'))
+@section('title', __('instructor.submissions_of') . ': ' . $assignment->title . ' - ' . config('app.name'))
 @section('header', __('instructor.submissions_title'))
 
 @section('content')

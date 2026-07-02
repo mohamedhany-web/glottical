@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'نظام الاتفاقيات - ' . config('app.name', 'Muallimx'))
+@section('title', 'نظام الاتفاقيات - ' . config('app.name'))
 @section('header', 'نظام الاتفاقيات')
 
 @section('content')

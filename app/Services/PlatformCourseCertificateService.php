@@ -149,7 +149,7 @@ class PlatformCourseCertificateService
         $relativePath = 'certificates/'.$user->id.'/platform-'.Str::uuid().'.pdf';
         Storage::disk('public')->put($relativePath, $mpdf->Output('', 'S'));
 
-        $academy = trim((string) config('certificates.academy_name', '')) ?: (string) config('app.name', 'Muallimx');
+        $academy = trim((string) config('certificates.academy_name', '')) ?: (string) config('app.name');
         $instructor = $course->instructor;
         $instructorName = $instructor?->name ?? 'المدرب المعتمد';
         $instructorTitle = 'مدرب الدورة';
@@ -211,7 +211,7 @@ class PlatformCourseCertificateService
         string $verificationCode,
         string $verificationUrl
     ): array {
-        $academy = trim((string) config('certificates.academy_name', '')) ?: (string) config('app.name', 'Muallimx');
+        $academy = trim((string) config('certificates.academy_name', '')) ?: (string) config('app.name');
         $instructor = $course->instructor;
         $instructorName = $instructor?->name ?? 'المدرب المعتمد';
         $instructorTitle = 'مدرب الدورة';

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('student.ai_usages.page_title') . ' — ' . config('app.name', 'Muallimx'))
+@section('title', __('student.ai_usages.page_title') . ' — ' . config('app.name'))
 @section('header', __('student.ai_usages.page_title'))
 
 @section('content')

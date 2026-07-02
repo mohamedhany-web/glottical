@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'تعديل السؤال - ' . config('app.name', 'Muallimx'))
+@section('title', 'تعديل السؤال - ' . config('app.name'))
 @section('header', 'تعديل السؤال')
 
 @push('styles')

@@ -71,7 +71,7 @@ class ClassroomController extends Controller
     }
 
     /**
-     * Muallimx Whiteboard — صفحة لوحة كاملة منفصلة (خارج غرفة الاجتماع).
+     * Glottical Whiteboard — صفحة لوحة كاملة منفصلة (خارج غرفة الاجتماع).
      */
     public function whiteboardStandalone()
     {
@@ -114,7 +114,7 @@ class ClassroomController extends Controller
         ]);
 
         $code = ClassroomMeeting::generateCode();
-        $roomName = 'Muallimx-'.$code;
+        $roomName = 'Glottical-'.$code;
         $startNow = (string) ($data['start_now'] ?? '1') === '1';
 
         $meeting = ClassroomMeeting::create([
@@ -139,7 +139,7 @@ class ClassroomController extends Controller
     public function start(Request $request)
     {
         $request->merge([
-            'title' => $request->input('title') ?: 'غرفة Muallimx - '.now()->format('H:i'),
+            'title' => $request->input('title') ?: 'غرفة Glottical - '.now()->format('H:i'),
             'max_participants' => (string) (SubscriptionLimitService::limitsForUser(Auth::user())['classroom_max_participants'] ?? 25),
             'planned_duration_minutes' => (string) (SubscriptionLimitService::limitsForUser(Auth::user())['classroom_default_duration_minutes'] ?? 60),
             'start_now' => '1',
@@ -1117,7 +1117,7 @@ class ClassroomController extends Controller
             return;
         }
         if (! $user->hasSubscriptionFeature('classroom_access')) {
-            abort(403, 'ميزة Muallimx Classroom غير مفعلة في اشتراكك. يمكنك ترقية الباقة من صفحة التسعير.');
+            abort(403, 'ميزة Glottical Classroom غير مفعلة في اشتراكك. يمكنك ترقية الباقة من صفحة التسعير.');
         }
     }
 

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تعديل السؤال - ' . config('app.name', 'Muallimx'))
+@section('title', 'تعديل السؤال - ' . config('app.name'))
 
 @section('content')
 <div class="min-h-screen bg-gray-50">

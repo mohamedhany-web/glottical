@@ -27,7 +27,7 @@ Route::post('/webhooks/fawaterak', [\App\Http\Controllers\Webhooks\FawaterakWebh
 
 /*
 |--------------------------------------------------------------------------
-| Muallimx Whiteboard (أصول اللوحة) — تمرير عبر Laravel
+| Glottical Whiteboard (أصول اللوحة) — تمرير عبر Laravel
 | يعمل عندما لا يُخدم public/vendor مباشرة (جذر الموقع ليس public أو قواعد .htaccess)
 |--------------------------------------------------------------------------
 */
@@ -80,7 +80,7 @@ Route::get('/mx-vendor/excalidraw/{path}', function (string $path) {
     ]);
 })->where('path', '.*')->name('mx.vendor.excalidraw')->middleware('web');
 
-// Sitemap Route — Muallimx SEO
+// Sitemap Route — Glottical SEO
 Route::get('/sitemap.xml', function () {
     $xmlEscape = static fn (?string $value): string => htmlspecialchars((string) $value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
     $urls = [];
@@ -274,7 +274,7 @@ Route::get('/services/{siteService}', [\App\Http\Controllers\Public\SiteServiceC
 
 // تم إيقاف مجتمع البيانات والذكاء الاصطناعي (مسابقات، داتاسيت، مجتمع) بالكامل، لذا أزيلت جميع مساراته.
 
-// Muallimx Classroom — دخول الضيوف برابط/كود (بدون تسجيل دخول)
+// Glottical Classroom — دخول الضيوف برابط/كود (بدون تسجيل دخول)
 Route::get('/classroom/join/{code}', [\App\Http\Controllers\ClassroomJoinController::class, 'show'])->name('classroom.join')->where('code', '[A-Za-z0-9]+');
 Route::post('/classroom/join/{code}/enter', [\App\Http\Controllers\ClassroomJoinController::class, 'enter'])->name('classroom.join.enter')->where('code', '[A-Za-z0-9]+');
 Route::post('/classroom/join/{code}/heartbeat', [\App\Http\Controllers\ClassroomJoinController::class, 'heartbeat'])->name('classroom.join.heartbeat')->where('code', '[A-Za-z0-9]+');
@@ -669,7 +669,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::delete('/ai-usages/saved-games/{game}', [\App\Http\Controllers\Student\StudentAiUsageController::class, 'destroy'])
             ->whereNumber('game')
             ->name('student.ai-usages.saved-games.destroy');
-        // Muallimx Classroom — بديل Zoom للمعلم (رابط/كود للضيوف بدون اشتراك)
+        // Glottical Classroom — بديل Zoom للمعلم (رابط/كود للضيوف بدون اشتراك)
         Route::get('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'index'])->name('student.classroom.index');
         Route::get('/classroom/create', [\App\Http\Controllers\Student\ClassroomController::class, 'create'])->name('student.classroom.create');
         Route::post('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'store'])->name('student.classroom.store');
@@ -694,7 +694,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/classroom/{meeting}/ai-report', [\App\Http\Controllers\Student\ClassroomController::class, 'generateAiReport'])->name('student.classroom.ai-report');
     });
 
-    // مزايا اشتراك Muallimx (دعم، مكتبة، صفحات المزايا، …) — للطالب والمدرب حسب التحقق داخل المتحكم
+    // مزايا اشتراك Glottical (دعم، مكتبة، صفحات المزايا، …) — للطالب والمدرب حسب التحقق داخل المتحكم
     Route::middleware(['role:student|instructor|teacher'])->group(function () {
         Route::get('/support', [\App\Http\Controllers\Student\SupportTicketController::class, 'index'])->name('student.support.index');
         Route::post('/support', [\App\Http\Controllers\Student\SupportTicketController::class, 'store'])->name('student.support.store');

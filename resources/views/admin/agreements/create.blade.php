@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إضافة اتفاقية جديدة - ' . config('app.name', 'Muallimx'))
+@section('title', 'إضافة اتفاقية جديدة - ' . config('app.name'))
 @section('header', 'إضافة اتفاقية جديدة')
 
 @section('content')
