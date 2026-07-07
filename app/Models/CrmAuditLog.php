@@ -55,6 +55,10 @@ class CrmAuditLog extends Model
             'commission_approved' => 'اعتماد عمولة',
             'lead_closed_won' => 'إغلاق ناجح',
             'lead_closed_lost' => 'إغلاق خاسر',
+            'team_member_added' => 'إضافة عضو للفريق',
+            'team_member_removed' => 'إزالة عضو من الفريق',
+            'crm_report_submitted' => 'رفع تقرير CRM',
+            'crm_report_reviewed' => 'مراجعة تقرير CRM',
         ];
     }
 

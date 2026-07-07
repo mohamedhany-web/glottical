@@ -54,7 +54,7 @@ class CrmGroupController extends Controller
     {
         abort_unless(auth()->user()->hasPermission('manage.leads') || auth()->user()->role === 'super_admin', 403);
 
-        $group->load('members.user');
+        $group->load(['members.user', 'teamLeader:id,name'])->loadCount('leads');
         $leaders = User::employees()
             ->whereHas('employeeJob', fn ($q) => $q->where('code', config('crm.employee_job_codes.team_leader')))
             ->orderBy('name')

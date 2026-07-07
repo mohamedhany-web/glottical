@@ -5,8 +5,8 @@
 
 @section('content')
 <div class="space-y-4">
-    <div class="flex justify-between">
-        <a href="{{ route('admin.crm.dashboard') }}" class="text-sm text-sky-600 font-semibold">← لوحة CRM</a>
+    @include('partials.crm-admin-nav')
+    <div class="flex justify-end">
         <a href="{{ route('admin.crm.groups.create') }}" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-bold">مجموعة جديدة</a>
     </div>
     <div class="grid gap-4">

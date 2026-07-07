@@ -1,23 +1,22 @@
 @extends('layouts.admin')
 
-@section('title', 'CRM Leads')
-@section('header', 'CRM — Leads')
+@section('title', 'العملاء المحتملون')
+@section('header', 'CRM — العملاء المحتملون')
 
 @section('content')
 <div class="space-y-4">
-    <div class="flex flex-wrap gap-2 justify-between items-center">
-        <a href="{{ route('admin.crm.dashboard') }}" class="text-sm text-sky-600 font-semibold">← لوحة CRM</a>
-        <form method="GET" class="flex flex-wrap gap-2">
-            <input type="search" name="search" value="{{ request('search') }}" placeholder="بحث..." class="rounded-lg border px-3 py-2 text-sm">
-            <select name="status" class="rounded-lg border px-3 py-2 text-sm">
-                <option value="">كل الحالات</option>
-                @foreach($statusLabels as $val => $label)
-                    <option value="{{ $val }}" @selected(request('status') === $val)>{{ $label }}</option>
-                @endforeach
-            </select>
-            <button class="px-4 py-2 rounded-lg bg-slate-800 text-white text-sm font-bold">تصفية</button>
-        </form>
-    </div>
+    @include('partials.crm-admin-nav')
+
+    <form method="GET" class="flex flex-wrap gap-2">
+        <input type="search" name="search" value="{{ request('search') }}" placeholder="بحث بالاسم أو البريد أو الهاتف..." class="rounded-lg border px-3 py-2 text-sm">
+        <select name="status" class="rounded-lg border px-3 py-2 text-sm">
+            <option value="">كل الحالات</option>
+            @foreach($statusLabels as $val => $label)
+                <option value="{{ $val }}" @selected(request('status') === $val)>{{ $label }}</option>
+            @endforeach
+        </select>
+        <button class="px-4 py-2 rounded-lg bg-slate-800 text-white text-sm font-bold">تصفية</button>
+    </form>
 
     <div class="rounded-2xl bg-white border overflow-hidden">
         <table class="min-w-full text-sm">
@@ -26,7 +25,7 @@
                     <th class="px-4 py-3 text-right">#</th>
                     <th class="px-4 py-3 text-right">الاسم</th>
                     <th class="px-4 py-3 text-right">مالك التسويق</th>
-                    <th class="px-4 py-3 text-right">سيلز</th>
+                    <th class="px-4 py-3 text-right">المبيعات</th>
                     <th class="px-4 py-3 text-right">الحالة</th>
                     <th class="px-4 py-3 text-right"></th>
                 </tr>
@@ -42,7 +41,7 @@
                         <td class="px-4 py-3"><a href="{{ route('admin.crm.leads.show', $lead) }}" class="text-sky-600 font-bold">تفاصيل</a></td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="px-4 py-10 text-center text-slate-500">لا توجد Leads</td></tr>
+                    <tr><td colspan="6" class="px-4 py-10 text-center text-slate-500">لا يوجد عملاء محتملون</td></tr>
                 @endforelse
             </tbody>
         </table>

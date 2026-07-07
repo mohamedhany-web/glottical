@@ -74,6 +74,45 @@
                 </div>
             </div>
 
+            <!-- صلاحيات CRM والسايدبار -->
+            <div class="border-b border-gray-200 pb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-2">صلاحيات CRM والوصول</h2>
+                <p class="text-sm text-gray-500 mb-4">حدد ما يمكن لهذه الوظيفة فعله في نظام CRM — كل زر/قسم يُتحكم به منفصلاً.</p>
+                @php
+                    $current = old('permissions', $employeeJob->permissions ?? []);
+                    $crmPerms = config('crm.permissions', []);
+                    $sidebarPerms = collect(config('employee_sidebar.items', []))
+                        ->mapWithKeys(fn ($item, $key) => [$key => $item['label'] ?? $key])
+                        ->except(['dashboard', 'profile', 'notifications', 'settings']);
+                @endphp
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-2">صلاحيات CRM</h3>
+                        <div class="space-y-2 max-h-64 overflow-y-auto border rounded-lg p-3">
+                            @foreach($crmPerms as $key => $label)
+                                <label class="flex items-center gap-2 text-sm">
+                                    <input type="checkbox" name="permissions[]" value="{{ $key }}" {{ in_array($key, $current, true) ? 'checked' : '' }}
+                                           class="w-4 h-4 text-indigo-600 border-gray-300 rounded">
+                                    <span>{{ $label }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-2">أقسام السايدبار</h3>
+                        <div class="space-y-2 max-h-64 overflow-y-auto border rounded-lg p-3">
+                            @foreach($sidebarPerms as $key => $label)
+                                <label class="flex items-center gap-2 text-sm">
+                                    <input type="checkbox" name="permissions[]" value="{{ $key }}" {{ in_array($key, $current, true) ? 'checked' : '' }}
+                                           class="w-4 h-4 text-blue-600 border-gray-300 rounded">
+                                    <span>{{ $label }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- القسم الإداري -->
             <div>
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">الإعدادات</h2>

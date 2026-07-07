@@ -193,7 +193,7 @@ class AppServiceProvider extends ServiceProvider
             }
         );
 
-        View::composer('layouts.admin', function ($view) {
+        View::composer(['layouts.admin', 'layouts.employee'], function ($view) {
             $view->with('adminPanelLogoUrl', AdminPanelBranding::logoPublicUrl());
         });
 

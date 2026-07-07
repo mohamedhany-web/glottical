@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'سجل تدقيق CRM')
-@section('header', 'CRM — سجل التدقيق')
+@section('title', 'سجل المتابعة')
+@section('header', 'CRM — سجل المتابعة')
 
 @section('content')
 <div class="space-y-4">
-    <a href="{{ route('admin.crm.dashboard') }}" class="text-sm text-sky-600 font-semibold">← لوحة CRM</a>
-    <p class="text-sm text-slate-600">السجلات غير قابلة للحذف — كل عملية موثقة.</p>
+    @include('partials.crm-admin-nav')
+    <p class="text-sm text-slate-600">السجلات للقراءة فقط — لا يُحذف أي سجل. كل إجراء موثّق للشفافية.</p>
     <form method="GET" class="flex gap-2">
         <select name="action" class="rounded-lg border px-3 py-2 text-sm">
             <option value="">كل العمليات</option>

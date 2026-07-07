@@ -344,13 +344,33 @@
                 <ul x-show="open" x-transition class="mt-1 mr-3 space-y-0.5 border-r border-slate-200 pr-3">
                     @if($isFull || $u->hasPermission('manage.leads'))
                     <li>
-                        <a href="{{ route('admin.crm.dashboard') }}" class="sidebar-sub-link {{ request()->routeIs('admin.crm.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.crm.dashboard') }}" class="sidebar-sub-link {{ request()->routeIs('admin.crm.dashboard') ? 'active' : '' }}">
                             <i class="fas fa-funnel-dollar"></i><span>Glottical CRM</span>
                         </a>
                     </li>
                     <li>
+                        <a href="{{ route('admin.crm.leads.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.crm.leads.*') ? 'active' : '' }}">
+                            <i class="fas fa-user-plus"></i><span>عملاء CRM</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.crm.commissions.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.crm.commissions.*') ? 'active' : '' }}">
+                            <i class="fas fa-coins"></i><span>عمولات CRM</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.crm.audit.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.crm.audit.*') ? 'active' : '' }}">
+                            <i class="fas fa-history"></i><span>سجل متابعة CRM</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.crm.groups.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.crm.groups.*') ? 'active' : '' }}">
+                            <i class="fas fa-users"></i><span>فرق CRM</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="{{ route('admin.sales.leads.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.sales.leads.*') ? 'active' : '' }}">
-                            <i class="fas fa-user-plus"></i><span>العملاء المحتملون (Leads)</span>
+                            <i class="fas fa-list"></i><span>قائمة Leads القديمة</span>
                         </a>
                     </li>
                     @endif

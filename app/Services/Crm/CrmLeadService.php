@@ -14,8 +14,7 @@ class CrmLeadService
      */
     public static function createLead(array $data, User $creator): SalesLead
     {
-        $role = CrmAccessService::crmRole($creator);
-        if (! in_array($role, ['super_admin', 'marketing'], true)) {
+        if (! CrmAccessService::hasCrmPermission($creator, 'crm_create_leads')) {
             throw new InvalidArgumentException('غير مصرح بإنشاء Lead.');
         }
 
@@ -62,7 +61,7 @@ class CrmLeadService
 
     public static function assignToSales(SalesLead $lead, User $salesUser, User $actor, ?int $groupId = null): SalesLead
     {
-        if (! CrmAccessService::canAssignLead($actor)) {
+        if (! CrmAccessService::canAssignLeadTo($actor, $lead, $salesUser)) {
             throw new InvalidArgumentException('غير مصرح بتعيين الـ Lead.');
         }
         if ($lead->isClosed()) {

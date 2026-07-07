@@ -4,7 +4,9 @@
 @section('header', 'CRM — مجموعة جديدة')
 
 @section('content')
-<form method="POST" action="{{ route('admin.crm.groups.store') }}" class="max-w-lg space-y-4 rounded-2xl bg-white border p-6">
+<div class="space-y-4 max-w-lg">
+    @include('partials.crm-admin-nav')
+<form method="POST" action="{{ route('admin.crm.groups.store') }}" class="space-y-4 rounded-2xl bg-white border p-6">
     @csrf
     <div>
         <label class="block text-sm font-semibold mb-1">اسم المجموعة</label>
@@ -19,4 +21,5 @@
     </div>
     <button class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-bold">حفظ</button>
 </form>
+</div>
 @endsection

@@ -19,6 +19,11 @@
                 <a href="{{ route('admin.employees.edit', $employee) }}" class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors">
                     <i class="fas fa-edit mr-2"></i>تعديل
                 </a>
+                @if($employee->isSalesDepartmentEmployee())
+                <a href="{{ route('admin.crm.sales-permissions.edit', $employee) }}" class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg font-medium transition-colors">
+                    <i class="fas fa-user-shield mr-2"></i>صلاحيات CRM
+                </a>
+                @endif
                 <form action="{{ route('admin.employees.destroy', $employee) }}" method="POST" class="inline"
                       onsubmit="return confirm('هل أنت متأكد من حذف الموظف {{ $employee->name }}؟ لا يمكن التراجع عن هذا الإجراء.');">
                     @csrf

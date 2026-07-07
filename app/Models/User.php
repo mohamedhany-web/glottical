@@ -63,6 +63,8 @@ class User extends Authenticatable
         'bank_account_holder_name',
         'bank_iban',
         'is_employee',
+        'employee_permissions_custom',
+        'employee_permissions',
         'two_factor_secret',
         'two_factor_recovery_codes',
         'two_factor_confirmed_at',
@@ -98,6 +100,8 @@ class User extends Authenticatable
             'termination_date' => 'date',
             'salary' => 'decimal:2',
             'is_employee' => 'boolean',
+            'employee_permissions_custom' => 'boolean',
+            'employee_permissions' => 'array',
             'two_factor_confirmed_at' => 'datetime',
             'two_factor_recovery_codes' => 'array',
             'portfolio_social_links' => 'array',
@@ -919,6 +923,34 @@ class User extends Authenticatable
         return $this->employeeJob?->code;
     }
 
+    public function usesCustomEmployeePermissions(): bool
+    {
+        return (bool) $this->employee_permissions_custom;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function effectiveEmployeePermissions(): array
+    {
+        if ($this->usesCustomEmployeePermissions()) {
+            return is_array($this->employee_permissions) ? array_values($this->employee_permissions) : [];
+        }
+
+        if (! $this->relationLoaded('employeeJob')) {
+            $this->load('employeeJob');
+        }
+
+        $jobPermissions = $this->employeeJob?->permissions;
+
+        return is_array($jobPermissions) ? $jobPermissions : [];
+    }
+
+    public function isSalesDepartmentEmployee(): bool
+    {
+        return \App\Support\EmployeePermissionCatalog::isSalesDepartmentJob($this->employeeJobCode());
+    }
+
     /**
      * تحويل مفتاح عنصر قائمة الموظف (مثل desk_accountant) إلى اسم صلاحية RBAC في جدول permissions
      * (مثل manage.invoices)، بنفس منطق config/employee_sidebar.php.
@@ -940,7 +972,9 @@ class User extends Authenticatable
      * الأولوية:
      * 1. عناصر أساسية (dashboard, profile, notifications, settings) → دائماً مسموح.
      * 2. إذا كان للمستخدم أدوار RBAC مخصصة → نعتمد على hasPermission() فقط.
-     * 3. إذا لم يكن للمستخدم أدوار RBAC → نعود للصلاحيات المحددة في EmployeeJob.
+     * 3. صلاحيات مخصصة للموظف (قسم المبيعات) إن فُعّلت.
+     * 4. إذا كان للمستخدم أدوار RBAC مخصصة → نعتمد على hasPermission() فقط.
+     * 5. صلاحيات الوظيفة من EmployeeJob.
      */
     public function employeeCan(string $permission): bool
     {
@@ -952,6 +986,10 @@ class User extends Authenticatable
         $alwaysAllowed = ['dashboard', 'profile', 'notifications', 'settings'];
         if (in_array($permission, $alwaysAllowed, true)) {
             return true;
+        }
+
+        if ($this->usesCustomEmployeePermissions()) {
+            return in_array($permission, $this->effectiveEmployeePermissions(), true);
         }
 
         // إذا كان للمستخدم أدوار RBAC مخصصة → اعتمد عليها فقط

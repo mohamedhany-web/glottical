@@ -12,6 +12,24 @@ class EmployeeJobSeeder extends Seeder
      */
     public function run(): void
     {
+        $crmMarketing = [
+            'crm_desk', 'crm_create_leads', 'crm_edit_leads', 'crm_add_notes',
+            'crm_submit_reports', 'crm_view_messages', 'crm_send_messages',
+        ];
+        $crmSales = [
+            'crm_desk', 'crm_edit_leads', 'crm_transition_leads', 'crm_add_notes',
+            'crm_submit_reports', 'crm_view_messages', 'crm_send_messages',
+        ];
+        $crmTeamLeader = [
+            'crm_desk', 'crm_assign_leads', 'crm_manage_team', 'crm_view_team_performance',
+            'crm_add_notes', 'crm_submit_reports', 'crm_view_messages', 'crm_send_messages',
+        ];
+        $crmFinance = [
+            'crm_desk', 'crm_view_all_leads', 'crm_view_all_orders', 'crm_approve_payments', 'crm_approve_commissions',
+            'crm_view_sales_financial_reports', 'crm_view_submitted_reports', 'crm_view_team_performance',
+            'crm_view_messages', 'crm_send_messages', 'crm_add_notes',
+        ];
+
         $jobs = [
             [
                 'name' => 'محاسب',
@@ -67,52 +85,45 @@ class EmployeeJobSeeder extends Seeder
                 'name' => 'سيلز',
                 'code' => 'sales',
                 'description' => 'المبيعات ومتابعة الطلبات والعملاء',
-                'permissions' => [
+                'permissions' => array_merge([
                     'dashboard', 'tasks', 'leaves', 'reports', 'calendar',
                     'profile', 'notifications', 'settings',
                     'sales_desk',
-                    'crm_desk',
                     'public_catalog',
-                ],
+                ], $crmSales),
             ],
             [
                 'name' => 'تسويق CRM',
                 'code' => 'crm_marketing',
                 'description' => 'إضافة ومتابعة Leads التسويقية',
-                'permissions' => [
+                'permissions' => array_merge([
                     'dashboard', 'tasks', 'leaves', 'calendar',
                     'profile', 'notifications', 'settings',
-                    'crm_desk',
-                ],
+                ], $crmMarketing),
             ],
             [
                 'name' => 'قائد فريق CRM',
                 'code' => 'crm_team_leader',
                 'description' => 'متابعة أداء فريق التسويق والمبيعات',
-                'permissions' => [
+                'permissions' => array_merge([
                     'dashboard', 'tasks', 'leaves', 'reports', 'calendar',
                     'profile', 'notifications', 'settings',
-                    'crm_desk',
-                ],
+                ], $crmTeamLeader),
             ],
             [
                 'name' => 'مالية CRM',
                 'code' => 'crm_finance',
                 'description' => 'اعتماد المدفوعات والعمولات',
-                'permissions' => [
-                    'dashboard', 'tasks', 'leaves', 'reports', 'calendar',
+                'permissions' => array_merge([
+                    'dashboard', 'tasks', 'leaves', 'calendar',
                     'profile', 'notifications', 'settings',
-                    'crm_desk',
-                    'desk_accountant',
-                ],
+                ], $crmFinance),
             ],
             [
                 'name' => 'مخصص',
                 'code' => 'custom',
                 'description' => 'وظيفة مخصصة يتم ضبط صلاحياتها من هنا',
-                'permissions' => [
-                    // تُترك فارغة افتراضياً؛ يتم تعديلها من لوحة إدارة الوظائف لتحديد الأقسام المسموح بها
-                ],
+                'permissions' => [],
             ],
         ];
 

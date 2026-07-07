@@ -1,30 +1,33 @@
 @extends('layouts.employee')
 
-@section('title', 'عمولات CRM')
-@section('header', 'CRM — العمولات')
+@section('title', 'عمولاتي')
+@section('header', 'CRM — عمولاتي')
 
 @section('content')
 <div class="space-y-4">
-  <a href="{{ route('employee.crm.dashboard') }}" class="text-sm text-sky-600 font-bold">← CRM</a>
+  @include('partials.crm-employee-nav', ['role' => $role])
+
   <div class="rounded-2xl border bg-white overflow-hidden">
     <table class="min-w-full text-sm">
       <thead class="bg-gray-50 text-xs uppercase"><tr>
-        <th class="px-4 py-3 text-right">Lead</th><th class="px-4 py-3 text-right">النوع</th><th class="px-4 py-3 text-right">المبلغ</th><th class="px-4 py-3 text-right">الحالة</th><th></th>
+        <th class="px-4 py-3 text-right">العميل</th><th class="px-4 py-3 text-right">النوع</th><th class="px-4 py-3 text-right">المبلغ</th><th class="px-4 py-3 text-right">الحالة</th><th></th>
       </tr></thead>
       <tbody class="divide-y">
-        @foreach($commissions as $c)
+        @forelse($commissions as $c)
           <tr>
-            <td class="px-4 py-3">#{{ $c->sales_lead_id }}</td>
+            <td class="px-4 py-3">#{{ $c->sales_lead_id }} {{ $c->lead?->name }}</td>
             <td class="px-4 py-3">{{ $c->typeLabel() }}</td>
-            <td class="px-4 py-3 font-bold">{{ number_format($c->commission_amount_egp, 2) }}</td>
-            <td class="px-4 py-3">{{ $c->status }}</td>
+            <td class="px-4 py-3 font-bold">{{ number_format($c->commission_amount_egp, 2) }} ج.م</td>
+            <td class="px-4 py-3">{{ $c->statusLabel() }}</td>
             <td class="px-4 py-3">
               @if($role === 'finance' && $c->status === \App\Models\CrmCommission::STATUS_PENDING)
-                <form method="POST" action="{{ route('employee.crm.commissions.approve', $c) }}">@csrf<button class="text-emerald-600 font-bold text-xs">اعتماد</button></form>
+                <form method="POST" action="{{ route('employee.crm.commissions.approve', $c) }}">@csrf<button class="text-emerald-600 font-bold text-xs">اعتماد للصرف</button></form>
               @endif
             </td>
           </tr>
-        @endforeach
+        @empty
+          <tr><td colspan="5" class="px-4 py-10 text-center text-gray-500">لا توجد عمولات بعد</td></tr>
+        @endforelse
       </tbody>
     </table>
     <div class="p-4">{{ $commissions->links() }}</div>

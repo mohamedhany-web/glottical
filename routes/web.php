@@ -754,9 +754,24 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::put('/leads/{salesLead}', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'leadsUpdate'])->name('leads.update');
             Route::post('/leads/{salesLead}/transition', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'transition'])->name('leads.transition');
             Route::post('/leads/{salesLead}/note', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'addNote'])->name('leads.note');
+            Route::post('/leads/{salesLead}/assign', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'assignLead'])->name('leads.assign');
             Route::post('/leads/{salesLead}/confirm-payment', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'confirmPayment'])->name('leads.confirm-payment');
+            Route::get('/team', [\App\Http\Controllers\Employee\CrmTeamController::class, 'index'])->name('team.index');
+            Route::post('/team/{group}/members', [\App\Http\Controllers\Employee\CrmTeamController::class, 'addMember'])->name('team.members.store');
+            Route::delete('/team/{group}/members/{member}', [\App\Http\Controllers\Employee\CrmTeamController::class, 'removeMember'])->name('team.members.destroy');
+            Route::get('/reports', [\App\Http\Controllers\Employee\CrmReportController::class, 'index'])->name('reports.index');
+            Route::get('/reports/create', [\App\Http\Controllers\Employee\CrmReportController::class, 'create'])->name('reports.create');
+            Route::post('/reports', [\App\Http\Controllers\Employee\CrmReportController::class, 'store'])->name('reports.store');
+            Route::get('/reports/{report}/download', [\App\Http\Controllers\Employee\CrmReportController::class, 'download'])->name('reports.download');
+            Route::get('/messages', [\App\Http\Controllers\Employee\CrmMessageController::class, 'index'])->name('messages.index');
+            Route::post('/messages', [\App\Http\Controllers\Employee\CrmMessageController::class, 'store'])->name('messages.store');
+            Route::get('/messages/leads/{salesLead}', [\App\Http\Controllers\Employee\CrmMessageController::class, 'leadThread'])->name('messages.lead');
+            Route::get('/messages/{message}/attachment', [\App\Http\Controllers\Employee\CrmMessageController::class, 'downloadAttachment'])->name('messages.attachment');
             Route::get('/commissions', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'commissions'])->name('commissions');
             Route::post('/commissions/{commission}/approve', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'approveCommission'])->name('commissions.approve');
+            Route::get('/orders', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'ordersIndex'])->name('orders');
+            Route::get('/sales-financial', [\App\Http\Controllers\Employee\CrmSalesFinancialController::class, 'index'])->name('sales-financial');
+            Route::post('/orders/{order}/approve', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'approveOrder'])->name('orders.approve');
         });
 
         Route::get('/desk/hr', [\App\Http\Controllers\Employee\EmployeeHrDeskController::class, 'index'])->middleware('employee.can:hr_desk')->name('hr-desk.index');
@@ -1004,6 +1019,13 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::put('/groups/{group}', [\App\Http\Controllers\Admin\CrmGroupController::class, 'update'])->name('groups.update');
             Route::post('/groups/{group}/members', [\App\Http\Controllers\Admin\CrmGroupController::class, 'addMember'])->name('groups.members.store');
             Route::delete('/groups/{group}/members/{member}', [\App\Http\Controllers\Admin\CrmGroupController::class, 'removeMember'])->name('groups.members.destroy');
+            Route::get('/reports', [\App\Http\Controllers\Admin\CrmReportController::class, 'index'])->name('reports.index');
+            Route::get('/reports/{report}', [\App\Http\Controllers\Admin\CrmReportController::class, 'show'])->name('reports.show');
+            Route::post('/reports/{report}/review', [\App\Http\Controllers\Admin\CrmReportController::class, 'review'])->name('reports.review');
+            Route::get('/reports/{report}/download', [\App\Http\Controllers\Admin\CrmReportController::class, 'download'])->name('reports.download');
+            Route::get('/sales-permissions', [\App\Http\Controllers\Admin\CrmSalesPermissionController::class, 'index'])->name('sales-permissions.index');
+            Route::get('/sales-permissions/{employee}/edit', [\App\Http\Controllers\Admin\CrmSalesPermissionController::class, 'edit'])->name('sales-permissions.edit');
+            Route::put('/sales-permissions/{employee}', [\App\Http\Controllers\Admin\CrmSalesPermissionController::class, 'update'])->name('sales-permissions.update');
         });
 
         // العملاء المحتملون ثم تحليلات المبيعات (مسارات تحت /sales)

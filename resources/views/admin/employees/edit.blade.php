@@ -7,10 +7,15 @@
 <div class="space-y-6">
     <!-- الهيدر -->
     <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-        <div class="flex justify-between items-center">
+        <div class="flex justify-between items-center flex-wrap gap-3">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900">تعديل موظف</h1>
                 <p class="text-gray-600 mt-1">تحديث معلومات الموظف</p>
+                @if($employee->isSalesDepartmentEmployee())
+                <a href="{{ route('admin.crm.sales-permissions.edit', $employee) }}" class="inline-flex items-center gap-2 mt-2 text-sm font-bold text-violet-700 hover:text-violet-900">
+                    <i class="fas fa-user-shield"></i> صلاحيات المبيعات / CRM
+                </a>
+                @endif
             </div>
             <a href="{{ route('admin.employees.show', $employee) }}" class="text-gray-600 hover:text-gray-900">
                 <i class="fas fa-arrow-right mr-2"></i>العودة للتفاصيل

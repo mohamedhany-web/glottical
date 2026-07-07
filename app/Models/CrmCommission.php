@@ -72,4 +72,18 @@ class CrmCommission extends Model
     {
         return self::typeLabels()[$this->type] ?? $this->type;
     }
+
+    public static function statusLabels(): array
+    {
+        return [
+            self::STATUS_PENDING => 'معلقة',
+            self::STATUS_APPROVED => 'معتمدة',
+            self::STATUS_PAID => 'مُصرفة',
+        ];
+    }
+
+    public function statusLabel(): string
+    {
+        return self::statusLabels()[$this->status] ?? $this->status;
+    }
 }

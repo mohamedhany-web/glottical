@@ -113,9 +113,17 @@ class EmployeeJobController extends Controller
             'min_salary' => 'nullable|numeric|min:0',
             'max_salary' => 'nullable|numeric|min:0|gte:min_salary',
             'is_active' => 'boolean',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'string|max:64',
         ]);
 
         $validated['is_active'] = $request->has('is_active');
+
+        $sidebarKeys = array_keys(config('employee_sidebar.items', []));
+        $crmKeys = array_keys(config('crm.permissions', []));
+        $allowed = array_unique(array_merge($sidebarKeys, $crmKeys));
+        $selected = array_values(array_intersect($request->input('permissions', []), $allowed));
+        $validated['permissions'] = $selected;
 
         $employeeJob->update($validated);
 
