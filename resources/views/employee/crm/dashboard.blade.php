@@ -22,8 +22,19 @@
     <div class="rounded-xl border bg-white p-4"><p class="text-xs text-gray-500">بانتظار الدفع</p><p class="text-2xl font-black text-amber-700">{{ $stats['payment_pending'] }}</p></div>
   </div>
 
-  @if(isset($stats['my_commissions']))
+  @if(isset($stats['subscriptions']))
+    <div class="rounded-xl border border-teal-200 bg-teal-50 p-4 flex flex-wrap items-center justify-between gap-3">
+      <div class="text-sm text-teal-900"><span class="font-bold">اشتركوا من عملائي:</span> {{ number_format($stats['subscriptions']) }} — عمولة: <strong>{{ number_format($stats['my_commissions'] ?? 0, 2) }} ج.م</strong></div>
+      <a href="{{ route('employee.crm.marketing.desk') }}" class="text-sm font-bold text-teal-800 underline">لوحة المسوق بالعمولة ←</a>
+    </div>
+  @elseif(isset($stats['my_commissions']))
     <div class="rounded-xl border bg-white p-4 text-sm"><span class="text-gray-500">إجمالي عمولاتي:</span> <strong>{{ number_format($stats['my_commissions'], 2) }} ج.م</strong></div>
+  @endif
+  @if(($role ?? null) === 'sales')
+    <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 flex flex-wrap justify-between gap-3 items-center text-sm">
+      <span class="text-emerald-900 font-semibold">استلم بيانات المسوقين بالعمولة وتابع تقدمها</span>
+      <a href="{{ route('employee.crm.marketing-inbox.index') }}" class="font-bold text-emerald-800 underline">صندوق المسوقين ←</a>
+    </div>
   @endif
   @if(isset($stats['team_members']))
     <div class="rounded-xl border bg-white p-4 flex flex-wrap justify-between items-center gap-3">

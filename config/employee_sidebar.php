@@ -56,7 +56,7 @@ return [
             'label' => 'لوحة المبيعات',
             'icon' => 'fas fa-chart-line',
             'route' => 'employee.sales.desk',
-            'route_patterns' => ['employee.sales.desk'],
+            'route_patterns' => ['employee.sales.desk', 'employee.sales.leads.*'],
             'active_class' => 'bg-emerald-600 shadow-lg',
         ],
         'sales_orders' => [
@@ -90,6 +90,22 @@ return [
             'route' => 'employee.crm.leads.create',
             'route_patterns' => ['employee.crm.leads.create', 'employee.crm.leads.store'],
             'active_class' => 'bg-teal-600 shadow-lg',
+        ],
+        'crm_marketing_desk' => [
+            'permission' => 'crm_desk',
+            'label' => 'مسوق بالعمولة',
+            'icon' => 'fas fa-handshake',
+            'route' => 'employee.crm.marketing.desk',
+            'route_patterns' => ['employee.crm.marketing.*'],
+            'active_class' => 'bg-teal-700 shadow-lg',
+        ],
+        'crm_marketing_inbox' => [
+            'permission' => 'crm_desk',
+            'label' => 'بيانات المسوقين',
+            'icon' => 'fas fa-inbox',
+            'route' => 'employee.crm.marketing-inbox.index',
+            'route_patterns' => ['employee.crm.marketing-inbox.*'],
+            'active_class' => 'bg-emerald-700 shadow-lg',
         ],
         'crm_commissions' => [
             'permission' => 'crm_desk',
@@ -283,7 +299,7 @@ return [
             ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
         ],
         'sales' => [
-            ['title' => 'Glottical CRM', 'keys' => ['crm_desk', 'crm_leads', 'crm_commissions', 'crm_reports', 'crm_messages']],
+            ['title' => 'Glottical CRM', 'keys' => ['crm_desk', 'crm_leads', 'crm_marketing_inbox', 'crm_commissions', 'crm_reports', 'crm_messages']],
             ['title' => 'القيادة والمبيعات', 'keys' => ['dashboard', 'sales_desk', 'sales_orders']],
             ['title' => 'الكتالوج', 'keys' => ['public_catalog']],
             ['title' => 'المهام والمتابعة', 'keys' => ['tasks', 'leaves']],
@@ -315,13 +331,13 @@ return [
             ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
         ],
         'crm_marketing' => [
-            ['title' => 'Glottical CRM', 'keys' => ['crm_desk', 'crm_leads', 'crm_leads_create', 'crm_commissions', 'crm_reports', 'crm_messages']],
+            ['title' => 'Glottical CRM', 'keys' => ['crm_desk', 'crm_marketing_desk', 'crm_leads', 'crm_leads_create', 'crm_commissions', 'crm_reports', 'crm_messages']],
             ['title' => 'المهام والمتابعة', 'keys' => ['tasks', 'leaves']],
             ['title' => 'التخطيط', 'keys' => ['calendar']],
             ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
         ],
         'crm_team_leader' => [
-            ['title' => 'Glottical CRM', 'keys' => ['crm_desk', 'crm_team', 'crm_leads', 'crm_commissions', 'crm_reports', 'crm_messages']],
+            ['title' => 'Glottical CRM', 'keys' => ['crm_desk', 'crm_team', 'crm_leads', 'crm_marketing_inbox', 'crm_commissions', 'crm_reports', 'crm_messages']],
             ['title' => 'المهام والمتابعة', 'keys' => ['tasks', 'leaves', 'reports']],
             ['title' => 'التخطيط', 'keys' => ['calendar']],
             ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],

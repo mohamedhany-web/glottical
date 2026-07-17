@@ -25,13 +25,13 @@
                 extend: {
                     colors: {
                         acad: {
-                            blue: '#0B3D91',
-                            blueDark: '#072a66',
-                            cyan: '#00A3C4',
-                            yellow: '#F5B800',
-                            navy: '#0d1528',
-                            navyMid: '#1a2d4d',
-                            neon: '#00d4ff',
+                            blue: '{{ config('academy-theme.blue') }}',
+                            blueDark: '{{ config('academy-theme.blue_dark') }}',
+                            cyan: '{{ config('academy-theme.cyan') }}',
+                            yellow: '{{ config('academy-theme.yellow') }}',
+                            navy: '{{ config('academy-theme.navy') }}',
+                            navyMid: '{{ config('academy-theme.navy_mid') }}',
+                            neon: '{{ config('academy-theme.neon') }}',
                         },
                     },
                     fontFamily: {

@@ -44,6 +44,7 @@ return [
     'permissions' => [
         'crm_desk' => 'الوصول للوحة CRM',
         'crm_create_leads' => 'إنشاء عملاء محتملين',
+        'crm_submit_to_sales' => 'إرسال العملاء لصندوق المبيعات',
         'crm_edit_leads' => 'تعديل بيانات العملاء',
         'crm_assign_leads' => 'تعيين العملاء للمبيعات',
         'crm_transition_leads' => 'تحديث حالة العميل',
@@ -66,7 +67,7 @@ return [
     */
     'role_default_permissions' => [
         'marketing' => [
-            'crm_desk', 'crm_create_leads', 'crm_edit_leads', 'crm_add_notes',
+            'crm_desk', 'crm_create_leads', 'crm_submit_to_sales', 'crm_edit_leads', 'crm_add_notes',
             'crm_submit_reports', 'crm_view_messages', 'crm_send_messages',
         ],
         'sales' => [
@@ -75,7 +76,7 @@ return [
         ],
         'team_leader' => [
             'crm_desk', 'crm_assign_leads', 'crm_manage_team', 'crm_view_team_performance',
-            'crm_add_notes', 'crm_submit_reports', 'crm_view_messages', 'crm_send_messages',
+            'crm_transition_leads', 'crm_add_notes', 'crm_submit_reports', 'crm_view_messages', 'crm_send_messages',
         ],
         'finance' => [
             'crm_desk',

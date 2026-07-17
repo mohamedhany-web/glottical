@@ -19,26 +19,62 @@
     @if($lead->notes)<div class="text-sm whitespace-pre-wrap bg-gray-50 rounded-lg p-3">{{ $lead->notes }}</div>@endif
   </div>
 
+  @include('partials.crm-pipeline-strip', ['pipelineLead' => $lead])
+
+  @if(!empty($canSubmitToSales))
+  <form method="POST" action="{{ route('employee.crm.leads.submit-to-sales', $lead) }}" class="rounded-2xl border border-teal-200 bg-teal-50 p-6 space-y-3">
+    @csrf
+    <h3 class="font-bold text-teal-900">إرسال للمبيعات</h3>
+    <p class="text-sm text-teal-800">أرحّل بيانات هذا العميل لصندوق المبيعات. ستبقى مالكاً للعمولة ({{ number_format((float) config('crm.commission_rates.marketing', 5), 1) }}٪) إذا اشترك.</p>
+    <textarea name="note" rows="2" class="w-full rounded-lg border px-3 py-2" placeholder="ملاحظة للمندوب (اختياري)"></textarea>
+    @error('submit')<p class="text-rose-600 text-xs">{{ $message }}</p>@enderror
+    <button class="px-4 py-2 rounded-xl bg-teal-600 text-white font-bold text-sm">إرسال لصندوق المبيعات</button>
+  </form>
+  @elseif($role === 'marketing' && $lead->submitted_to_sales_at && ! $lead->assigned_to)
+    <div class="rounded-xl bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 text-sm">تم الإرسال للمبيعات في {{ $lead->submitted_to_sales_at->format('Y-m-d H:i') }} — بانتظار استلام مندوب.</div>
+  @elseif($role === 'marketing' && $lead->assignedTo)
+    <div class="rounded-xl bg-sky-50 border border-sky-200 text-sky-900 px-4 py-3 text-sm">عند المبيعات: <strong>{{ $lead->assignedTo->name }}</strong> — تابع التقدم من الحالة أدناه.</div>
+  @endif
+
+  @if(!empty($canClaimFromMarketing))
+  <form method="POST" action="{{ route('employee.crm.marketing-inbox.claim', $lead) }}" class="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 space-y-2">
+    @csrf
+    <h3 class="font-bold text-emerald-900">استلام من المسوق</h3>
+    <p class="text-sm text-emerald-800">المسوق: <strong>{{ $lead->marketingOwner?->name ?? '—' }}</strong> — استلم العميل لبدء المتابعة في الـ Pipeline.</p>
+    <button class="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-sm">استلام العميل</button>
+  </form>
+  @endif
+
   @if($role === 'team_leader')
     <div class="rounded-xl bg-sky-50 border border-sky-200 text-sky-900 px-4 py-3 text-sm flex flex-wrap justify-between gap-2 items-center">
-      <span>يمكنك متابعة الفريق وتعيين العملاء وإضافة ملاحظات.</span>
+      <span>يمكنك متابعة الفريق وتعيين العملاء وتحديث حالات البيع وإضافة ملاحظات.</span>
       @if(\App\Services\Crm\CrmAccessService::canViewTeamPerformance(auth()->user()))
         <a href="{{ route('employee.crm.team.index') }}" class="font-bold text-sky-700 underline">عرض أداء الأعضاء</a>
       @endif
     </div>
   @endif
 
-  @if(!empty($canAssign) && $salesUsers->isNotEmpty() && !$lead->isClosed())
-  <form method="POST" action="{{ route('employee.crm.leads.assign', $lead) }}" class="rounded-2xl border border-sky-200 bg-sky-50 p-6 space-y-3">
-    @csrf
-    <h3 class="font-bold text-sky-900">تعيين لموظف مبيعات</h3>
-    <select name="assigned_to" class="w-full rounded-lg border px-3 py-2" required>
-      <option value="">اختر موظف المبيعات</option>
-      @foreach($salesUsers as $u)<option value="{{ $u->id }}">{{ $u->name }}</option>@endforeach
-    </select>
-    @error('assigned_to')<p class="text-rose-600 text-xs">{{ $message }}</p>@enderror
-    <button class="px-4 py-2 rounded-xl bg-sky-600 text-white font-bold text-sm">تعيين العميل</button>
-  </form>
+  @if(!empty($canAssign) && !$lead->isClosed())
+    @if($salesUsers->isNotEmpty())
+    <form method="POST" action="{{ route('employee.crm.leads.assign', $lead) }}" class="rounded-2xl border border-sky-200 bg-sky-50 p-6 space-y-3">
+      @csrf
+      <h3 class="font-bold text-sky-900">تعيين لموظف مبيعات</h3>
+      <select name="assigned_to" class="w-full rounded-lg border px-3 py-2" required>
+        <option value="">اختر موظف المبيعات</option>
+        @foreach($salesUsers as $u)<option value="{{ $u->id }}">{{ $u->name }}</option>@endforeach
+      </select>
+      @error('assigned_to')<p class="text-rose-600 text-xs">{{ $message }}</p>@enderror
+      <button class="px-4 py-2 rounded-xl bg-sky-600 text-white font-bold text-sm">تعيين العميل</button>
+    </form>
+    @else
+    <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950 space-y-2">
+      <p class="font-bold">لا يوجد موظفو مبيعات في فريقك حالياً</p>
+      <p>لإظهار زر التحويل للسيلز، أضف عضواً بدور <strong>مبيعات</strong> من صفحة الفريق، أو اطلب من الإدارة تعيين أعضاء لمجموعتك.</p>
+      @if(\App\Services\Crm\CrmAccessService::canManageTeam(auth()->user()))
+        <a href="{{ route('employee.crm.team.index') }}" class="inline-flex font-bold text-amber-800 underline">إدارة أعضاء الفريق</a>
+      @endif
+    </div>
+    @endif
   @endif
 
   @if(\App\Services\Crm\CrmAccessService::canUseMessages(auth()->user()))
@@ -59,13 +95,16 @@
   </form>
   @endif
 
-  @if($role === 'sales' && !empty($nextStatuses) && !$lead->isClosed())
+  @if(!empty($canTransition) && !empty($nextStatuses) && !$lead->isClosed())
   <form method="POST" action="{{ route('employee.crm.leads.transition', $lead) }}" class="rounded-2xl border bg-white p-6 space-y-3">
     @csrf
     <h3 class="font-bold">تحديث الحالة</h3>
-    <p class="text-xs text-gray-500">حدّث الحالة بالترتيب بعد كل خطوة — لا يمكن تخطي المراحل.</p>
+    <p class="text-xs text-gray-500">يمكنك الانتقال إلى أي مرحلة لاحقة في مسار البيع (أو إغلاق كخاسر). تأكيد الدفع والتسجيل تتم من المالية/الإدارة.</p>
     <select name="status" class="w-full rounded-lg border px-3 py-2" required>
-      @foreach($nextStatuses as $st)<option value="{{ $st }}">{{ \App\Models\SalesLead::statusLabels()[$st] }}</option>@endforeach
+      <option value="">اختر الحالة</option>
+      @foreach($nextStatuses as $st)
+        <option value="{{ $st }}">{{ \App\Models\SalesLead::statusLabels()[$st] ?? $st }}</option>
+      @endforeach
     </select>
     <textarea name="note" rows="2" class="w-full rounded-lg border px-3 py-2" placeholder="ملاحظة عن هذه الخطوة"></textarea>
     <button class="px-4 py-2 rounded-xl bg-violet-600 text-white font-bold text-sm">تحديث الحالة</button>

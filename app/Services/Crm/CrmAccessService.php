@@ -38,7 +38,7 @@ class CrmAccessService
 
 
 
-        return match ($code) {
+        $role = match ($code) {
 
             config('crm.employee_job_codes.team_leader') => 'team_leader',
 
@@ -52,6 +52,24 @@ class CrmAccessService
 
         };
 
+        // معيَّن كقائد مجموعة CRM فعّالة ⇒ دور قائد فريق حتى لو الوظيفة ليست crm_team_leader
+        if ($role !== 'finance' && self::leadsActiveCrmGroupsAsLeader($user)) {
+            return 'team_leader';
+        }
+
+        return $role;
+
+    }
+
+    /**
+     * هل المستخدم قائد لمجموعة CRM نشطة؟
+     */
+    public static function leadsActiveCrmGroupsAsLeader(User $user): bool
+    {
+        return CrmGroup::query()
+            ->where('team_leader_id', $user->id)
+            ->where('is_active', true)
+            ->exists();
     }
 
 
@@ -104,6 +122,12 @@ class CrmAccessService
 
         if ($user->usesCustomEmployeePermissions()) {
 
+            // قائد مجموعة مفعّلة يحتفظ بصلاحيات قيادة الفريق حتى لو سقطت من الصلاحيات المخصّصة بالخطأ
+            if (in_array($permission, ['crm_desk', 'crm_assign_leads', 'crm_manage_team', 'crm_view_team_performance', 'crm_add_notes'], true)
+                && self::leadsActiveCrmGroupsAsLeader($user)) {
+                return true;
+            }
+
             return false;
 
         }
@@ -146,7 +170,17 @@ class CrmAccessService
 
             'marketing' => $query->where('marketing_owner_id', $user->id),
 
-            'sales' => $query->where('assigned_to', $user->id),
+            'sales' => $query->where(function ($q) use ($user) {
+                $q->where('assigned_to', $user->id)
+                    ->orWhere(function ($inbox) {
+                        $inbox->whereNotNull('submitted_to_sales_at')
+                            ->whereNull('assigned_to')
+                            ->whereNotIn('status', [
+                                SalesLead::STATUS_CLOSED_WON,
+                                SalesLead::STATUS_CLOSED_LOST,
+                            ]);
+                    });
+            }),
 
             'team_leader' => self::teamLeaderLeadsQuery($user, $query),
 
@@ -350,15 +384,23 @@ class CrmAccessService
 
     {
 
-        if (self::crmRole($user) !== 'team_leader') {
+        if (self::crmRole($user) === 'super_admin') {
 
-            return self::crmRole($user) === 'super_admin';
+            return true;
 
         }
 
 
 
         $groupIds = self::teamGroupsFor($user)->pluck('id');
+
+
+
+        if ($groupIds->isEmpty()) {
+
+            return false;
+
+        }
 
 
 
@@ -412,9 +454,18 @@ class CrmAccessService
 
 
 
-        if ($role === 'team_leader') {
+        // دور قائد فريق أو معيَّن كقائد مجموعة (team_leader_id)
+        if ($role === 'team_leader' || self::leadsActiveCrmGroupsAsLeader($user)) {
 
-            return $lead ? self::canTeamLeaderManageLead($user, $lead) : self::teamGroupsFor($user)->exists();
+            if (! $lead) {
+
+                return self::teamGroupsFor($user)->exists();
+
+            }
+
+
+
+            return self::canTeamLeaderManageLead($user, $lead);
 
         }
 
@@ -422,6 +473,72 @@ class CrmAccessService
 
         return false;
 
+    }
+
+
+
+    public static function canSubmitLeadToSales(User $user, SalesLead $lead): bool
+    {
+        if (! self::hasCrmPermission($user, 'crm_submit_to_sales') && ! self::hasCrmPermission($user, 'crm_create_leads')) {
+            return false;
+        }
+
+        if (self::crmRole($user) !== 'marketing' && self::crmRole($user) !== 'super_admin') {
+            return false;
+        }
+
+        if (self::crmRole($user) === 'marketing' && (int) $lead->marketing_owner_id !== (int) $user->id) {
+            return false;
+        }
+
+        return ! $lead->isClosed() && ! $lead->assigned_to && ! $lead->submitted_to_sales_at;
+    }
+
+    public static function canClaimMarketingLead(User $user, SalesLead $lead): bool
+    {
+        if (self::crmRole($user) !== 'sales' && self::crmRole($user) !== 'super_admin') {
+            return false;
+        }
+
+        if (! self::hasCrmPermission($user, 'crm_desk') && self::crmRole($user) !== 'super_admin') {
+            return false;
+        }
+
+        if ($lead->isClosed()) {
+            return false;
+        }
+
+        if (! $lead->submitted_to_sales_at && self::crmRole($user) !== 'super_admin') {
+            return false;
+        }
+
+        if ($lead->assigned_to && (int) $lead->assigned_to !== (int) $user->id) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * صندوق بيانات المسوقين بالعمولة لمندوبي المبيعات.
+     */
+    public static function marketingInboxQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return SalesLead::query()
+            ->whereNotNull('submitted_to_sales_at')
+            ->whereNull('assigned_to')
+            ->open();
+    }
+
+    /**
+     * ليدز جلبها المسوقون وأُسندت للمندوب الحالي (للمتابعة).
+     */
+    public static function marketerSourcedAssignedQuery(User $salesUser): \Illuminate\Database\Eloquent\Builder
+    {
+        return SalesLead::query()
+            ->where('assigned_to', $salesUser->id)
+            ->whereNotNull('marketing_owner_id')
+            ->whereColumn('marketing_owner_id', '!=', 'assigned_to');
     }
 
 
@@ -634,6 +751,10 @@ class CrmAccessService
 
 
 
+        $salesStatuses = SalesLead::salesMovableStatuses();
+
+
+
         if ($role === 'sales') {
 
             if ($lead->assigned_to !== $user->id) {
@@ -642,21 +763,21 @@ class CrmAccessService
 
             }
 
-            $salesStatuses = [
 
-                SalesLead::STATUS_CONTACTED,
 
-                SalesLead::STATUS_INTERESTED,
+            return in_array($toStatus, $salesStatuses, true);
 
-                SalesLead::STATUS_PLACEMENT_TEST,
+        }
 
-                SalesLead::STATUS_OFFER_SENT,
 
-                SalesLead::STATUS_PAYMENT_PENDING,
 
-                SalesLead::STATUS_CLOSED_LOST,
+        if ($role === 'team_leader') {
 
-            ];
+            if (! self::canTeamLeaderManageLead($user, $lead)) {
+
+                return false;
+
+            }
 
 
 
@@ -668,6 +789,32 @@ class CrmAccessService
 
         return false;
 
+    }
+
+
+
+    /**
+     * حالات يمكن للمستخدم اختيارها فعلياً لتحديث هذا العميل.
+     *
+     * @return list<string>
+     */
+    public static function selectableStatusesFor(User $user, SalesLead $lead): array
+    {
+        if ($lead->isClosed() && ! self::canForceLeadStatus($user)) {
+            return [];
+        }
+
+        $candidates = array_keys(SalesLead::statusLabels());
+
+        return array_values(array_filter(
+            $candidates,
+            fn (string $status) => self::canTransitionStatus($user, $lead, $status)
+        ));
+    }
+
+    public static function canForceLeadStatus(User $user): bool
+    {
+        return $user->role === 'super_admin' || $user->hasPermission('manage.leads');
     }
 
 

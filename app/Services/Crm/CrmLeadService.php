@@ -75,6 +75,8 @@ class CrmLeadService
             'assigned_at' => now(),
             'status' => SalesLead::STATUS_ASSIGNED,
             'crm_group_id' => $groupId ?? $lead->crm_group_id,
+            'submitted_to_sales_at' => $lead->submitted_to_sales_at ?? now(),
+            'submitted_to_sales_by' => $lead->submitted_to_sales_by ?? $actor->id,
         ]);
 
         CrmAuditService::log('lead_assigned', $lead, $actor, $old, [
@@ -86,13 +88,115 @@ class CrmLeadService
         return $lead->fresh();
     }
 
+    /**
+     * المسوق يرسل الـ Lead لصندوق المبيعات للاستلام والمتابعة.
+     */
+    public static function submitToSales(SalesLead $lead, User $actor, ?string $note = null): SalesLead
+    {
+        if (! CrmAccessService::canSubmitLeadToSales($actor, $lead)) {
+            throw new InvalidArgumentException('غير مصرح بإرسال هذا العميل للمبيعات.');
+        }
+        if ($lead->isClosed()) {
+            throw new InvalidArgumentException('لا يمكن إرسال عميل مغلق.');
+        }
+        if ($lead->assigned_to) {
+            throw new InvalidArgumentException('هذا العميل مسند بالفعل لمندوب مبيعات.');
+        }
+        if ($lead->submitted_to_sales_at) {
+            throw new InvalidArgumentException('تم إرسال هذا العميل للمبيعات مسبقاً.');
+        }
+
+        $old = $lead->only(['submitted_to_sales_at', 'submitted_to_sales_by', 'notes']);
+        $updates = [
+            'submitted_to_sales_at' => now(),
+            'submitted_to_sales_by' => $actor->id,
+        ];
+        if ($note) {
+            $prefix = '['.now()->toDateTimeString().'] إرسال للمبيعات: ';
+            $updates['notes'] = trim(($lead->notes ?? '')."\n\n".$prefix.$note);
+        }
+
+        $lead->update($updates);
+
+        CrmAuditService::log('lead_submitted_to_sales', $lead, $actor, $old, [
+            'submitted_to_sales_at' => $lead->submitted_to_sales_at?->toDateTimeString(),
+            'note' => $note,
+        ]);
+
+        return $lead->fresh();
+    }
+
+    /**
+     * مندوب المبيعات يستلم Lead من صندوق المسوقين.
+     */
+    public static function claimFromMarketingInbox(SalesLead $lead, User $salesUser): SalesLead
+    {
+        if (! CrmAccessService::canClaimMarketingLead($salesUser, $lead)) {
+            throw new InvalidArgumentException('غير مصرح باستلام هذا العميل.');
+        }
+        if ($lead->isClosed()) {
+            throw new InvalidArgumentException('الـ Lead مغلق.');
+        }
+        if ($lead->assigned_to && (int) $lead->assigned_to !== (int) $salesUser->id) {
+            throw new InvalidArgumentException('هذا العميل مسند بالفعل إلى مندوب آخر.');
+        }
+
+        $old = $lead->only(['assigned_to', 'status', 'assigned_at']);
+
+        $lead->update([
+            'assigned_to' => $salesUser->id,
+            'assigned_at' => now(),
+            'status' => $lead->status === SalesLead::STATUS_NEW
+                ? SalesLead::STATUS_ASSIGNED
+                : $lead->status,
+            'submitted_to_sales_at' => $lead->submitted_to_sales_at ?? now(),
+        ]);
+
+        CrmAuditService::log('lead_claimed_from_marketing', $lead, $salesUser, $old, [
+            'assigned_to' => $salesUser->id,
+            'status' => $lead->status,
+        ]);
+
+        return $lead->fresh();
+    }
+
     public static function transitionStatus(SalesLead $lead, string $toStatus, User $actor, ?string $note = null): SalesLead
     {
         if (! CrmAccessService::canTransitionStatus($actor, $lead, $toStatus)) {
             throw new InvalidArgumentException('انتقال الحالة غير مسموح.');
         }
 
-        return DB::transaction(function () use ($lead, $toStatus, $actor, $note) {
+        return self::applyStatusChange($lead, $toStatus, $actor, $note, false);
+    }
+
+    /**
+     * فرض حالة من إدارة Glottical CRM (تخطي القيود بما فيها إعادة فتح مغلق).
+     */
+    public static function forceStatus(SalesLead $lead, string $toStatus, User $actor, ?string $note = null): SalesLead
+    {
+        if (! CrmAccessService::canForceLeadStatus($actor)) {
+            throw new InvalidArgumentException('فرض الحالة متاح للإدارة فقط.');
+        }
+
+        if (! array_key_exists($toStatus, SalesLead::statusLabels())) {
+            throw new InvalidArgumentException('حالة غير صالحة.');
+        }
+
+        if ($toStatus === $lead->status) {
+            throw new InvalidArgumentException('العميل بالفعل في هذه الحالة.');
+        }
+
+        return self::applyStatusChange($lead, $toStatus, $actor, $note, true);
+    }
+
+    private static function applyStatusChange(
+        SalesLead $lead,
+        string $toStatus,
+        User $actor,
+        ?string $note,
+        bool $forced
+    ): SalesLead {
+        return DB::transaction(function () use ($lead, $toStatus, $actor, $note, $forced) {
             $oldStatus = $lead->status;
             $updates = ['status' => $toStatus];
 
@@ -102,23 +206,35 @@ class CrmLeadService
             if ($toStatus === SalesLead::STATUS_CLOSED_WON) {
                 $updates['converted_at'] = now();
             }
+            if (in_array($toStatus, [SalesLead::STATUS_NEW, SalesLead::STATUS_ASSIGNED, SalesLead::STATUS_CONTACTED], true)
+                && $oldStatus === SalesLead::STATUS_CLOSED_LOST) {
+                $updates['lost_reason'] = null;
+                $updates['converted_at'] = null;
+            }
 
             if ($note && $toStatus !== SalesLead::STATUS_CLOSED_LOST) {
                 $prefix = '['.now()->toDateTimeString().'] ';
+                if ($forced) {
+                    $prefix .= '[إدارة — فرض حالة] ';
+                }
                 $updates['notes'] = trim(($lead->notes ?? '')."\n\n".$prefix.$note);
+            } elseif ($forced && $note && $toStatus === SalesLead::STATUS_CLOSED_LOST) {
+                // lost_reason already handled
             }
 
             $lead->update($updates);
 
-            $action = match ($toStatus) {
-                SalesLead::STATUS_CLOSED_WON => 'lead_closed_won',
-                SalesLead::STATUS_CLOSED_LOST => 'lead_closed_lost',
+            $action = match (true) {
+                $forced => 'lead_status_forced',
+                $toStatus === SalesLead::STATUS_CLOSED_WON => 'lead_closed_won',
+                $toStatus === SalesLead::STATUS_CLOSED_LOST => 'lead_closed_lost',
                 default => 'lead_status_changed',
             };
 
             CrmAuditService::log($action, $lead, $actor, ['status' => $oldStatus], [
                 'status' => $toStatus,
                 'note' => $note,
+                'forced' => $forced,
             ]);
 
             return $lead->fresh();

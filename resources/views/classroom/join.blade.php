@@ -34,6 +34,22 @@
                     <p class="text-slate-500 text-sm mb-4 text-center">{{ $meeting->title }}</p>
                 @endif
                 <p class="text-slate-500 text-xs text-center">كود الغرفة: <span class="font-mono text-slate-400">{{ $code }}</span></p>
+            @elseif(!empty($meetingNotStarted))
+                <div class="text-center mb-2">
+                    <div class="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-300 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-hourglass-half text-3xl"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-white">المحاضرة لم تبدأ بعد</h1>
+                    <p class="text-slate-400 text-sm mt-3 leading-relaxed">انتظر حتى يبدأ المدرب الاجتماع، ثم حدّث الصفحة وانضم. لن تبقى في غرفة فارغة لساعات.</p>
+                </div>
+                @if($meeting && $meeting->title)
+                    <p class="text-slate-500 text-sm mb-4 text-center">{{ $meeting->title }}</p>
+                @endif
+                <p class="text-slate-500 text-xs text-center mb-4">كود الغرفة: <span class="font-mono text-slate-400">{{ $code }}</span></p>
+                <button type="button" onclick="window.location.reload()" class="w-full px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold transition-colors">
+                    <i class="fas fa-sync-alt ml-2"></i>
+                    تحديث الصفحة
+                </button>
             @else
             <div class="text-center mb-6">
                 <div class="w-16 h-16 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto mb-4">
@@ -97,7 +113,7 @@
         </div>
     </div>
 
-    @if(empty($meetingEnded))
+    @if(empty($meetingEnded) && empty($meetingNotStarted))
     @include('partials.jitsi-iframe-media-allow')
     <script src="https://{{ $jitsiDomain }}/external_api.js"></script>
     <script>

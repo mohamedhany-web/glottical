@@ -1,4 +1,4 @@
-﻿@php
+@php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
     $initialCategoryId = isset($categoryId) && (int) $categoryId > 0 ? (string) (int) $categoryId : '';
@@ -12,7 +12,7 @@
     <title>{{ __('public.courses_page_title') }} - {{ __('public.site_suffix') }}</title>
     <meta name="title"       content="{{ __('public.courses_page_title') }} - {{ __('public.site_suffix') }}">
     <meta name="description" content="{{ __('public.courses_subtitle') }}">
-    <meta name="keywords"    content="كورسات ألماني, كورسات إنجليزي, كول سنتر, سوق العمل, ألمانيا, {{ config('app.name') }}">
+    <meta name="keywords"    content="?????? ??????, ?????? ???????, ??? ????, ??? ?????, ???????, {{ config('app.name') }}">
     <meta name="author"      content="{{ config('app.name') }}">
     <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1">
     <meta name="theme-color" content="#0d1528">
@@ -26,7 +26,7 @@
     <meta property="og:title"            content="{{ __('public.courses_page_title') }} - {{ config('app.name') }}">
     <meta property="og:description"      content="{{ __('public.courses_subtitle') }}">
     <meta property="og:image"            content="{{ asset('images/og-image.jpg') }}">
-    <meta property="og:image:alt"        content="كورسات {{ config('app.name') }}">
+    <meta property="og:image:alt"        content="?????? {{ config('app.name') }}">
     <meta property="og:image:width"      content="1200">
     <meta property="og:image:height"     content="630">
     <meta property="og:locale"           content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
@@ -39,11 +39,11 @@
     <meta name="twitter:title"       content="{{ __('public.courses_page_title') }} - {{ config('app.name') }}">
     <meta name="twitter:description" content="{{ __('public.courses_subtitle') }}">
     <meta name="twitter:image"       content="{{ asset('images/og-image.jpg') }}">
-    <meta name="twitter:image:alt"   content="كورسات {{ config('app.name') }}">
+    <meta name="twitter:image:alt"   content="?????? {{ config('app.name') }}">
     @include('partials.favicon-links')
     <!-- BreadcrumbList JSON-LD -->
     <script type="application/ld+json">
-    {"@@context":"https://schema.org","@@type":"BreadcrumbList","itemListElement":[{"@@type":"ListItem","position":1,"name":"الرئيسية","item":"{{ url('/') }}"},{"@@type":"ListItem","position":2,"name":"الكورسات","item":"{{ url('/courses') }}"}]}
+    {"@@context":"https://schema.org","@@type":"BreadcrumbList","itemListElement":[{"@@type":"ListItem","position":1,"name":"????????","item":"{{ url('/') }}"},{"@@type":"ListItem","position":2,"name":"????????","item":"{{ url('/courses') }}"}]}
     </script>
     @include('partials.seo-jsonld', ['jsonldType' => 'website'])
 
@@ -59,17 +59,17 @@
                 extend: {
                     colors: {
                         acad: {
-                            blue: '#0B3D91',
-                            blueDark: '#072a66',
-                            blueSoft: '#E8EEF8',
-                            cyan: '#00A3C4',
-                            yellow: '#F5B800',
-                            yellowSoft: '#FFF8E1',
+                            blue: '{{ config('academy-theme.blue') }}',
+                            blueDark: '{{ config('academy-theme.blue_dark') }}',
+                            blueSoft: '{{ config('academy-theme.blue_soft') }}',
+                            cyan: '{{ config('academy-theme.cyan') }}',
+                            yellow: '{{ config('academy-theme.yellow') }}',
+                            yellowSoft: '{{ config('academy-theme.yellow_soft') }}',
                             gray: '#F4F6FA',
-                            ink: '#1a2d4d',
-                            navy: '#0d1528',
-                            navyMid: '#1a2d4d',
-                            neon: '#00d4ff',
+                            ink: '{{ config('academy-theme.ink') }}',
+                            navy: '{{ config('academy-theme.navy') }}',
+                            navyMid: '{{ config('academy-theme.navy_mid') }}',
+                            neon: '{{ config('academy-theme.neon') }}',
                         },
                     },
                     fontFamily: {
@@ -185,7 +185,7 @@
             <i class="fas fa-users text-xs {{ $isRtl ? 'ml-1' : 'mr-1' }}"></i>{{ __('public.courses_filter_group') }}
           </a>
           <a href="{{ route('public.courses', ['delivery' => 'one_to_one']) }}"
-             class="px-4 py-2 rounded-full text-sm font-extrabold border transition {{ $activeDelivery === 'one_to_one' ? 'bg-violet-400 text-[#0B3D91] border-violet-400' : 'glass-panel border-white/12 text-white/80 hover:text-white' }}">
+             class="px-4 py-2 rounded-full text-sm font-extrabold border transition {{ $activeDelivery === 'one_to_one' ? 'bg-acad-blue text-white border-acad-blue' : 'glass-panel border-white/12 text-white/80 hover:text-white' }}">
             <i class="fas fa-user-graduate text-xs {{ $isRtl ? 'ml-1' : 'mr-1' }}"></i>{{ __('public.courses_filter_one_to_one') }}
             @if(($oneToOneCount ?? 0) > 0)
               <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-[10px] bg-white/15 {{ $isRtl ? 'mr-1' : 'ml-1' }}">{{ $oneToOneCount }}</span>
@@ -273,7 +273,7 @@
                           <span class="absolute top-3 {{ $isRtl?'right':'left' }}-3 text-[10px] font-black px-2 py-1 rounded-md bg-acad-yellow text-[#0B3D91]">{{ __('public.featured_badge') }}</span>
                         </template>
                         <template x-if="course.is_one_to_one">
-                          <span class="absolute top-3 {{ $isRtl?'left':'right' }}-3 text-[10px] font-black px-2 py-1 rounded-md bg-violet-400 text-[#0B3D91]">{{ __('public.course_badge_one_to_one') }}</span>
+                          <span class="absolute top-3 {{ $isRtl?'left':'right' }}-3 text-[10px] font-black px-2 py-1 rounded-md bg-acad-blue text-white">{{ __('public.course_badge_one_to_one') }}</span>
                         </template>
                       </div>
                       <div class="p-4 text-start">

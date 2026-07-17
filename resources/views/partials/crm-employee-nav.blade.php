@@ -10,6 +10,14 @@
 
     <a href="{{ route('employee.crm.dashboard') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('employee.crm.dashboard') ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700' }}">لوحة CRM</a>
 
+    @if(\App\Services\Crm\CrmAccessService::hasCrmPermission($user, 'crm_create_leads') || $crmRole === 'marketing')
+        <a href="{{ route('employee.crm.marketing.desk') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('employee.crm.marketing.*') ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-700' }}">مسوق بالعمولة</a>
+    @endif
+
+    @if(in_array($crmRole, ['sales', 'team_leader', 'super_admin'], true))
+        <a href="{{ route('employee.crm.marketing-inbox.index') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('employee.crm.marketing-inbox.*') ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700' }}">بيانات المسوقين</a>
+    @endif
+
     @if(\App\Services\Crm\CrmAccessService::canViewTeamPerformance($user) || \App\Services\Crm\CrmAccessService::canManageTeam($user))
 
         <a href="{{ route('employee.crm.team.index') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('employee.crm.team.*') ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-700' }}">فريقي</a>

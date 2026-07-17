@@ -27,15 +27,22 @@
                     <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>مرفوض</option>
                 </select>
             </div>
-            <div class="flex flex-wrap items-end gap-3">
-                <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" name="mine" value="1" {{ request('mine') ? 'checked' : '' }} class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
-                    طلباتي فقط
-                </label>
-                <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" name="unassigned" value="1" {{ request('unassigned') ? 'checked' : '' }} class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
-                    بلا مندوب
-                </label>
+            <div class="flex flex-col gap-2 justify-end">
+                <div class="flex flex-wrap items-center gap-3">
+                    <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                        <input type="checkbox" name="mine" value="1" {{ request('mine') && ! request('unassigned') ? 'checked' : '' }}
+                               class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                               onchange="if(this.checked){this.form.unassigned.checked=false}">
+                        طلباتي فقط
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                        <input type="checkbox" name="unassigned" value="1" {{ request('unassigned') && ! request('mine') ? 'checked' : '' }}
+                               class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                               onchange="if(this.checked){this.form.mine.checked=false}">
+                        بلا مندوب
+                    </label>
+                </div>
+                <p class="text-[11px] text-gray-500">لا يمكن الجمع بين «طلباتي» و«بلا مندوب» في نفس الوقت.</p>
             </div>
             <div class="lg:col-span-4 flex flex-wrap gap-2">
                 <button type="submit" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold">تطبيق</button>

@@ -55,8 +55,9 @@ class CrmLeadController extends Controller
             ->get(['id', 'name']);
 
         $groups = CrmGroup::where('is_active', true)->orderBy('name')->get();
+        $nextStatuses = CrmAccessService::selectableStatusesFor($request->user(), $salesLead);
 
-        return view('admin.crm.leads.show', compact('salesLead', 'salesUsers', 'groups'));
+        return view('admin.crm.leads.show', compact('salesLead', 'salesUsers', 'groups', 'nextStatuses'));
     }
 
     public function assign(Request $request, SalesLead $salesLead): RedirectResponse
@@ -79,10 +80,15 @@ class CrmLeadController extends Controller
         $data = $request->validate([
             'status' => ['required', Rule::in(array_keys(SalesLead::statusLabels()))],
             'note' => ['nullable', 'string', 'max:5000'],
+            'force' => ['nullable', 'boolean'],
         ]);
 
         try {
-            CrmLeadService::transitionStatus($salesLead, $data['status'], $request->user(), $data['note'] ?? null);
+            if ($request->boolean('force')) {
+                CrmLeadService::forceStatus($salesLead, $data['status'], $request->user(), $data['note'] ?? null);
+            } else {
+                CrmLeadService::transitionStatus($salesLead, $data['status'], $request->user(), $data['note'] ?? null);
+            }
         } catch (\InvalidArgumentException $e) {
             return back()->withErrors(['status' => $e->getMessage()]);
         }

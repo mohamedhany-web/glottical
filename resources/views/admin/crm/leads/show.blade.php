@@ -26,6 +26,8 @@
         @if($salesLead->notes)<div class="rounded-lg bg-slate-50 p-3 text-sm whitespace-pre-wrap">{{ $salesLead->notes }}</div>@endif
     </div>
 
+    @include('partials.crm-pipeline-strip', ['pipelineLead' => $salesLead])
+
     @if(!$salesLead->isClosed())
     <div class="rounded-2xl bg-white border p-6 space-y-4">
         <h3 class="font-bold">تعيين لموظف مبيعات</h3>
@@ -43,21 +45,38 @@
             <button class="px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-bold">تعيين</button>
         </form>
     </div>
+    @endif
 
     <div class="rounded-2xl bg-white border p-6 space-y-4">
-        <h3 class="font-bold">تغيير الحالة (إدارة)</h3>
+        <h3 class="font-bold">تغيير الحالة (رقابة الإدارة)</h3>
+        <p class="text-sm text-slate-500">اختر أي مرحلة لاحقة مسموحة، أو فعّل «فرض أي حالة» لإعادة فتح عميل مغلق أو الرجوع لمرحلة سابقة.</p>
         <form method="POST" action="{{ route('admin.crm.leads.transition', $salesLead) }}" class="space-y-3">
             @csrf
             <select name="status" class="w-full rounded-lg border px-3 py-2 text-sm" required>
-                @foreach(\App\Models\SalesLead::allowedTransitions()[$salesLead->status] ?? [] as $st)
-                    <option value="{{ $st }}">{{ \App\Models\SalesLead::statusLabels()[$st] }}</option>
-                @endforeach
+                <option value="">اختر الحالة</option>
+                <optgroup label="انتقالات مسموحة من الحالة الحالية">
+                    @forelse($nextStatuses ?? [] as $st)
+                        <option value="{{ $st }}">{{ \App\Models\SalesLead::statusLabels()[$st] ?? $st }}</option>
+                    @empty
+                        <option value="" disabled>لا انتقالات عادية (مغلق أو نهاية المسار)</option>
+                    @endforelse
+                </optgroup>
+                <optgroup label="كل الحالات (استخدم مع فرض الحالة عند الحاجة)">
+                    @foreach(\App\Models\SalesLead::statusLabels() as $st => $label)
+                        @if($st !== $salesLead->status)
+                            <option value="{{ $st }}">{{ $label }}</option>
+                        @endif
+                    @endforeach
+                </optgroup>
             </select>
-            <textarea name="note" rows="2" class="w-full rounded-lg border px-3 py-2 text-sm" placeholder="ملاحظة (اختياري)"></textarea>
+            <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                <input type="checkbox" name="force" value="1" class="rounded border-slate-300 text-violet-600 focus:ring-violet-500">
+                فرض أي حالة (صلاحية الإدارة — يُسجَّل في المتابعة)
+            </label>
+            <textarea name="note" rows="2" class="w-full rounded-lg border px-3 py-2 text-sm" placeholder="ملاحظة / سبب التغيير (موصى به)"></textarea>
             <button class="px-4 py-2 rounded-xl bg-violet-600 text-white text-sm font-bold">تحديث الحالة</button>
         </form>
     </div>
-    @endif
 
     @if($salesLead->commissions->isNotEmpty())
     <div class="rounded-2xl bg-white border p-6">

@@ -51,7 +51,7 @@
 
             @if($isHome)
             <button type="button"
-                    class="mob-menu-search w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-white/12 bg-white/[0.06] text-white/80 hover:bg-white/10 hover:border-[#00A3C4]/35 transition-colors text-start"
+                    class="mob-menu-search w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-white/12 bg-white/[0.06] text-white/80 hover:bg-white/10 hover:border-acad-cyan/35 transition-colors text-start"
                     data-mob-close-then-search>
                 <span class="mob-menu-icon mob-menu-icon--cyan"><i class="fas fa-search"></i></span>
                 <span class="flex-1 text-sm font-bold text-white/75">{{ __('landing.academy.nav_search') }}…</span>

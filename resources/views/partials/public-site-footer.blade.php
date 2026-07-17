@@ -13,18 +13,18 @@
 @endphp
 {{-- فوتر موحّد — نفس الصفحة الرئيسية؛ بيانات من إعدادات النظام --}}
 <footer class="relative overflow-hidden text-white {{ $footerExtraClass ?? '' }} {{ $isStreamFooter ? 'border-t border-white/10 shadow-[0_-20px_60px_-30px_rgba(0,0,0,.55)]' : '' }}"
-    style="font-family:Tajawal,Cairo,sans-serif;{{ $isStreamFooter ? '' : 'background:#0B3D91;' }}">
+    style="font-family:Cairo,system-ui,sans-serif;{{ $isStreamFooter ? '' : 'background:'.config('academy-theme.blue').';' }}">
     @if($isStreamFooter)
         <div class="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
-            <div class="absolute inset-0 bg-[#0a121f]"></div>
+            <div class="absolute inset-0 bg-[var(--acad-navy-deep,#070E18)]"></div>
             <div class="absolute -bottom-40 {{ $isRtl ? '-left-32' : '-right-32' }} w-[min(1100px,150vw)] h-[520px] rounded-[45%] opacity-[0.52] bg-cover bg-center scale-110"
                  style="background-image:url('https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=2200&q=82');"></div>
             <div class="absolute -top-20 {{ $isRtl ? 'left-0' : 'right-0' }} w-[min(780px,95vw)] h-[440px] opacity-[0.44] bg-cover bg-center"
                  style="background-image:url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=2000&q=82');"></div>
-            <div class="absolute inset-0 bg-gradient-to-b from-[#0d1528]/80 via-[#0B3D91]/78 to-[#0a121f]"></div>
+            <div class="absolute inset-0 bg-gradient-to-b from-[var(--acad-navy)]/85 via-[var(--acad-blue-dark)]/75 to-[var(--acad-navy-deep,#070E18)]"></div>
             <div class="absolute inset-0 opacity-[0.09]" style="background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.15) 1px,transparent 0);background-size:22px 22px;"></div>
-            <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#00d4ff]/40 to-transparent"></div>
-            <div class="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#F5B800]/45 to-transparent"></div>
+            <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[var(--acad-yellow)]/40 to-transparent"></div>
+            <div class="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[var(--acad-yellow)]/45 to-transparent"></div>
         </div>
     @endif
     @if($variant === 'minimal')

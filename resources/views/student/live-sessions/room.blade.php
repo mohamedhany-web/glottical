@@ -140,8 +140,23 @@
                 PROVIDER_NAME: 'Glottical',
                 JITSI_WATERMARK_LINK: '',
                 HIDE_DEEP_LINKING_LOGO: true,
-                TOOLBAR_BUTTONS: [],
-                TOOLBAR_ALWAYS_VISIBLE: false,
+                TOOLBAR_BUTTONS: [
+                    'microphone',
+                    'camera',
+                    @if($liveSession->allow_screen_share)
+                    'desktop',
+                    @endif
+                    @if($liveSession->allow_chat)
+                    'chat',
+                    @endif
+                    'raisehand',
+                    'participants-pane',
+                    'tileview',
+                    'fullscreen',
+                    'settings',
+                    'hangup',
+                ],
+                TOOLBAR_ALWAYS_VISIBLE: true,
                 SHOW_JITSI_WATERMARK: false,
                 SHOW_WATERMARK_FOR_GUESTS: false,
                 SHOW_BRAND_WATERMARK: false,

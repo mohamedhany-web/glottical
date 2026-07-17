@@ -99,6 +99,28 @@
             </li>
             @endif
 
+            @if($isFull || $u->hasPermission('manage.free-trial-bookings'))
+            @php
+                try {
+                    $sidebarFreeTrialUpcoming = \App\Models\FreeTrialBooking::query()
+                        ->where('status', \App\Models\FreeTrialBooking::STATUS_CONFIRMED)
+                        ->where('starts_at', '>=', now())
+                        ->count();
+                } catch (\Exception $e) {
+                    $sidebarFreeTrialUpcoming = 0;
+                }
+            @endphp
+            <li>
+                <a href="{{ route('admin.free-trial-bookings.index') }}" class="sidebar-link {{ request()->routeIs('admin.free-trial-bookings.*') ? 'active' : '' }}">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>الحصة المجانية</span>
+                    @if($sidebarFreeTrialUpcoming > 0)
+                        <span class="sidebar-badge bg-amber-500 text-white">{{ $sidebarFreeTrialUpcoming > 99 ? '99+' : $sidebarFreeTrialUpcoming }}</span>
+                    @endif
+                </a>
+            </li>
+            @endif
+
             @if($isFull || $u->hasPermission('manage.site-services'))
             <li>
                 <a href="{{ route('admin.site-services.index') }}" class="sidebar-link {{ request()->routeIs('admin.site-services.*') ? 'active' : '' }}">
@@ -346,6 +368,11 @@
                     <li>
                         <a href="{{ route('admin.crm.dashboard') }}" class="sidebar-sub-link {{ request()->routeIs('admin.crm.dashboard') ? 'active' : '' }}">
                             <i class="fas fa-funnel-dollar"></i><span>Glottical CRM</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.crm.pipeline') }}" class="sidebar-sub-link {{ request()->routeIs('admin.crm.pipeline') ? 'active' : '' }}">
+                            <i class="fas fa-project-diagram"></i><span>Pipeline</span>
                         </a>
                     </li>
                     <li>

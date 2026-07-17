@@ -36,14 +36,14 @@
             extend: {
                 colors: {
                     acad: {
-                        blue: '#0B3D91',
-                        blueDark: '#072a66',
-                        cyan: '#00A3C4',
-                        yellow: '#F5B800',
-                        ink: '#1a2d4d',
-                        navy: '#0d1528',
-                        navyMid: '#1a2d4d',
-                        neon: '#00d4ff',
+                        blue: '{{ config('academy-theme.blue') }}',
+                        blueDark: '{{ config('academy-theme.blue_dark') }}',
+                        cyan: '{{ config('academy-theme.cyan') }}',
+                        yellow: '{{ config('academy-theme.yellow') }}',
+                        ink: '{{ config('academy-theme.ink') }}',
+                        navy: '{{ config('academy-theme.navy') }}',
+                        navyMid: '{{ config('academy-theme.navy_mid') }}',
+                        neon: '{{ config('academy-theme.neon') }}',
                     },
                 },
                 fontFamily: {
@@ -66,11 +66,11 @@
         .reveal{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
         .reveal.revealed{opacity:1;transform:translateY(0)}
         .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-        #scroll-progress{position:fixed;top:0;left:0;width:0%;height:3px;background:linear-gradient(90deg,#F5B800,#00d4ff);z-index:100000;transition:width .1s linear}
+        #scroll-progress{position:fixed;top:0;left:0;width:0%;height:3px;background:linear-gradient(90deg,{{ config('academy-theme.yellow') }},{{ config('academy-theme.blue') }});z-index:100000;transition:width .1s linear}
         .input-checkout{width:100%;border-radius:1rem;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;padding:.875rem 1rem;transition:border-color .2s,box-shadow .2s,background .2s}
         .input-checkout::placeholder{color:rgba(255,255,255,.38)}
         .input-checkout:focus{outline:none;border-color:rgba(0,163,196,.55);box-shadow:0 0 0 3px rgba(0,163,196,.18);background:rgba(255,255,255,.08)}
-        .btn-acad-primary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.875rem 1.75rem;border-radius:1rem;font-weight:800;color:#0B3D91;background:#F5B800;transition:transform .2s ease,filter .2s ease,box-shadow .2s ease;box-shadow:0 12px 32px -14px rgba(245,184,0,.45)}
+        .btn-acad-primary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.875rem 1.75rem;border-radius:1rem;font-weight:800;color:#1A3F73;background:#E6B009;transition:transform .2s ease,filter .2s ease,box-shadow .2s ease;box-shadow:0 12px 32px -14px rgba(230,176,9,.45)}
         .btn-acad-primary:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.05)}
         .btn-acad-primary:disabled{opacity:.55;cursor:not-allowed;transform:none}
         .btn-acad-ghost{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.875rem 1.75rem;border-radius:1rem;font-weight:700;color:#fff;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);backdrop-filter:blur(12px);transition:background .2s ease,border-color .2s ease}
@@ -78,7 +78,7 @@
         .checkout-steps{display:flex;flex-direction:column;gap:1rem}
         @media(min-width:640px){.checkout-steps{flex-direction:row;align-items:center;gap:0}}
         .checkout-step-connector{display:none}
-        @media(min-width:640px){.checkout-step-connector{display:block;flex:1;min-width:1rem;height:2px;background:linear-gradient(90deg,rgba(245,184,0,.35),rgba(0,212,255,.25));align-self:center;margin-inline:.75rem}}
+        @media(min-width:640px){.checkout-step-connector{display:block;flex:1;min-width:1rem;height:2px;background:linear-gradient(90deg,rgba(230,176,9,.35),rgba(143,163,192,.25));align-self:center;margin-inline:.75rem}}
         .alert-box{border-radius:1rem;padding:1rem 1.25rem;display:flex;align-items:flex-start;gap:.75rem;font-size:.875rem;font-weight:600}
         .alert-error{background:rgba(239,68,68,.12);border:1px solid rgba(248,113,113,.35);color:#fecaca}
         .alert-success{background:rgba(16,185,129,.12);border:1px solid rgba(52,211,153,.35);color:#a7f3d0}

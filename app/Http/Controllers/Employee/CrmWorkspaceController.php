@@ -97,6 +97,14 @@ class CrmWorkspaceController extends Controller
             $query->where('status', $request->string('status'));
         }
 
+        if ($request->boolean('mine')) {
+            $query->where('assigned_to', $request->user()->id);
+        }
+
+        if ($request->boolean('open')) {
+            $query->open();
+        }
+
         $leads = $query->latest()->paginate(20)->withQueryString();
 
         return view('employee.crm.leads.index', [
@@ -128,15 +136,23 @@ class CrmWorkspaceController extends Controller
             'source' => ['required', Rule::in(array_keys(SalesLead::sourceLabels()))],
             'notes' => 'nullable|string|max:10000',
             'interested_advanced_course_id' => 'nullable|exists:advanced_courses,id',
+            'submit_to_sales' => ['nullable', 'boolean'],
         ]);
 
         try {
             $lead = CrmLeadService::createLead($validated, $request->user());
+            if ($request->boolean('submit_to_sales')) {
+                CrmLeadService::submitToSales($lead, $request->user(), 'إرسال تلقائي عند الإنشاء');
+            }
         } catch (\InvalidArgumentException $e) {
             return back()->withErrors(['name' => $e->getMessage()])->withInput();
         }
 
-        return redirect()->route('employee.crm.leads.show', $lead)->with('success', 'تم إنشاء الـ Lead بنجاح.');
+        $msg = $request->boolean('submit_to_sales')
+            ? 'تم إنشاء العميل وإرساله لصندوق المبيعات.'
+            : 'تم إنشاء الـ Lead بنجاح.';
+
+        return redirect()->route('employee.crm.leads.show', $lead)->with('success', $msg);
     }
 
     public function leadsShow(Request $request, SalesLead $salesLead): View
@@ -157,7 +173,12 @@ class CrmWorkspaceController extends Controller
                 ? CrmAccessService::assignableSalesUsers($request->user())
                 : collect(),
             'canSeePayment' => CrmAccessService::canSeePaymentData($request->user()),
-            'nextStatuses' => SalesLead::allowedTransitions()[$salesLead->status] ?? [],
+            'nextStatuses' => CrmAccessService::selectableStatusesFor($request->user(), $salesLead),
+            'canTransition' => CrmAccessService::hasCrmPermission($request->user(), 'crm_transition_leads')
+                && ! empty(CrmAccessService::selectableStatusesFor($request->user(), $salesLead)),
+            'canSubmitToSales' => CrmAccessService::canSubmitLeadToSales($request->user(), $salesLead),
+            'canClaimFromMarketing' => CrmAccessService::canClaimMarketingLead($request->user(), $salesLead)
+                && ! $salesLead->assigned_to,
         ]);
     }
 

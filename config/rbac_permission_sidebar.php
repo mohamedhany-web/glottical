@@ -216,6 +216,11 @@ return [
             'icon' => 'fas fa-envelope-open-text',
             'route_patterns' => ['admin.contact-messages.*'],
         ],
+        'manage.free-trial-bookings' => [
+            'route' => 'admin.free-trial-bookings.index',
+            'icon' => 'fas fa-calendar-check',
+            'route_patterns' => ['admin.free-trial-bookings.*'],
+        ],
         'manage.site-services' => [
             'route' => 'admin.site-services.index',
             'icon' => 'fas fa-concierge-bell',

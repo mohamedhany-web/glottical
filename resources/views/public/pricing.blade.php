@@ -27,11 +27,11 @@
                 extend: {
                     colors: {
                         acad: {
-                            blue: '#0B3D91',
-                            cyan: '#00A3C4',
-                            yellow: '#F5B800',
-                            navy: '#0d1528',
-                            navyMid: '#1a2d4d',
+                            blue: '{{ config('academy-theme.blue') }}',
+                            cyan: '{{ config('academy-theme.cyan') }}',
+                            yellow: '{{ config('academy-theme.yellow') }}',
+                            navy: '{{ config('academy-theme.navy') }}',
+                            navyMid: '{{ config('academy-theme.navy_mid') }}',
                         },
                     },
                     fontFamily: {

@@ -16,10 +16,10 @@
             @if($open)
                 <a href="{{ route('employee.sales.leads.edit', $salesLead) }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-900 text-white text-sm font-bold">تعديل</a>
             @endif
-            @if($open && (int) $salesLead->assigned_to !== (int) auth()->id())
+            @if($open && ! $salesLead->assigned_to)
                 <form method="POST" action="{{ route('employee.sales.leads.assign-me', $salesLead) }}" class="inline">
                     @csrf
-                    <button type="submit" class="px-3 py-2 rounded-lg bg-teal-100 hover:bg-teal-200 text-teal-900 text-sm font-bold">تعيين لي</button>
+                    <button type="submit" class="px-3 py-2 rounded-lg bg-teal-100 hover:bg-teal-200 text-teal-900 text-sm font-bold">استلام العميل</button>
                 </form>
             @endif
         </div>

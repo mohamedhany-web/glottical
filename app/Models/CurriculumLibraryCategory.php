@@ -46,10 +46,16 @@ class CurriculumLibraryCategory extends Model
     }
 
     /**
-     * تصنيفات يحق للطالب رؤيتها في القوائم والفلترة (عامة أو مُدرَجة لهم).
+     * تصنيفات يحق للمستخدم رؤيتها في القوائم والفلترة (عامة أو مُدرَجة لهم).
+     * المدرب والمعلم والإدارة يرون كل التصنيفات النشطة بما فيها الخاصة.
      */
     public function scopeAccessibleByStudent($query, ?User $user)
     {
+        if ($user && ($user->isAdmin() || $user->isInstructor() || $user->isTeacher()
+            || in_array(strtolower((string) $user->role), ['instructor', 'teacher', 'super_admin', 'admin'], true))) {
+            return $query;
+        }
+
         return $query->where(function ($q) use ($user) {
             $q->where('curriculum_library_categories.is_restricted', false);
             if ($user) {

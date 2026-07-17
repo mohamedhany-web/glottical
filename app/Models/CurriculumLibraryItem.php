@@ -80,9 +80,14 @@ class CurriculumLibraryItem extends Model
         return $this->belongsTo(CurriculumLibraryCategory::class, 'category_id');
     }
 
-    /** هل يحق للطالب الوصول لهذا العنصر بحسب تصنيف «قسم خاص»؟ */
+    /** هل يحق للمستخدم الوصول لهذا العنصر بحسب تصنيف «قسم خاص»؟ */
     public function isAccessibleByStudent(?User $user): bool
     {
+        if ($user && ($user->isAdmin() || $user->isInstructor() || $user->isTeacher()
+            || in_array(strtolower((string) $user->role), ['instructor', 'teacher', 'super_admin', 'admin'], true))) {
+            return true;
+        }
+
         if (!$this->category_id) {
             return true;
         }

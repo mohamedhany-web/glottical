@@ -48,14 +48,14 @@
         padding: 0.75rem 1.5rem;
         border-radius: 1rem;
         font-weight: 800;
-        color: #0b3d91;
-        background: #f5b800;
+        color: {{ config('academy-theme.blue') }};
+        background: {{ config('academy-theme.yellow') }};
         transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
     }
     .btn-stream-primary:hover {
         transform: translateY(-1px) scale(1.02);
         filter: brightness(1.05);
-        box-shadow: 0 18px 40px -18px rgba(245, 184, 0, 0.55);
+        box-shadow: 0 18px 40px -18px rgba({{ config('academy-theme.yellow_rgb') }}, 0.55);
     }
     .btn-stream-secondary {
         display: inline-flex;

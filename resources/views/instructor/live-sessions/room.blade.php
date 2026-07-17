@@ -446,6 +446,19 @@
         api.addEventListener('videoConferenceLeft', function() {
             stopLocalRecording();
             stopAndUploadAutoAudio();
+            try {
+                var payload = new FormData();
+                payload.append('_token', '{{ csrf_token() }}');
+                navigator.sendBeacon('{{ route("instructor.live-sessions.leave-presence", $liveSession) }}', payload);
+            } catch (e) {}
+        });
+
+        window.addEventListener('pagehide', function() {
+            try {
+                var payload = new FormData();
+                payload.append('_token', '{{ csrf_token() }}');
+                navigator.sendBeacon('{{ route("instructor.live-sessions.leave-presence", $liveSession) }}', payload);
+            } catch (e) {}
         });
 
         /* ══════════════════════════════════════════════

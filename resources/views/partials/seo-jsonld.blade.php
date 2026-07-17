@@ -5,8 +5,9 @@
  */
 $_jldType    = $jsonldType ?? 'website';
 $_siteUrl    = url('/');
-$_logoUrl    = asset('images/og-image.jpg');
+$_logoUrl    = \App\Services\SeoAssets::ogImageUrl();
 $_siteName   = config('app.name');
+$_metaDesc   = __('landing.meta.description');
 
 // ── Base: WebSite + EducationalOrganization ──────────────────────────────
 $_baseGraph = [
@@ -17,27 +18,43 @@ $_baseGraph = [
             '@id'           => $_siteUrl . '/#website',
             'url'           => $_siteUrl,
             'name'          => $_siteName,
-            'description'   => __('landing.meta.description'),
+            'description'   => $_metaDesc,
             'inLanguage'    => ['ar', 'en'],
+            'publisher'     => ['@id' => $_siteUrl . '/#organization'],
             'potentialAction' => [
                 '@type'        => 'SearchAction',
-                'target'       => ['@type' => 'EntryPoint', 'urlTemplate' => url('/courses') . '?search={search_term_string}'],
+                'target'       => ['@type' => 'EntryPoint', 'urlTemplate' => url('/courses') . '?q={search_term_string}'],
                 'query-input'  => 'required name=search_term_string',
             ],
         ],
         [
-            '@type'  => 'EducationalOrganization',
+            '@type'  => ['EducationalOrganization', 'Organization'],
             '@id'    => $_siteUrl . '/#organization',
             'name'   => $_siteName,
             'url'    => $_siteUrl,
+            'description' => $_metaDesc,
             'logo'   => ['@type' => 'ImageObject', 'url' => $_logoUrl, 'width' => 1200, 'height' => 630],
-            'sameAs' => [
-                'https://twitter.com/Glottical',
-                'https://www.facebook.com/Glottical',
-                'https://www.linkedin.com/company/glottical',
-                'https://www.youtube.com/@Glottical',
-            ],
+            'image'  => $_logoUrl,
+            'sameAs' => array_values(array_filter([
+                config('services.social.twitter'),
+                config('services.social.facebook'),
+                config('services.social.linkedin'),
+                config('services.social.youtube'),
+            ])),
             'contactPoint' => ['@type' => 'ContactPoint', 'contactType' => 'customer support', 'availableLanguage' => ['Arabic', 'English']],
+            'areaServed' => ['EG', 'SA', 'AE', 'EU'],
+            'knowsAbout' => ['Language immersion', 'Live conversation practice', 'Private language tutoring', 'Online language courses'],
+        ],
+        [
+            '@type' => 'WebPage',
+            '@id' => $_siteUrl . '/#webpage',
+            'url' => $_siteUrl,
+            'name' => __('landing.meta.title'),
+            'description' => $_metaDesc,
+            'isPartOf' => ['@id' => $_siteUrl . '/#website'],
+            'about' => ['@id' => $_siteUrl . '/#organization'],
+            'inLanguage' => app()->getLocale(),
+            'primaryImageOfPage' => ['@type' => 'ImageObject', 'url' => $_logoUrl],
         ],
     ],
 ];

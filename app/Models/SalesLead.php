@@ -78,11 +78,14 @@ class SalesLead extends Model
         'enrollment_id',
         'converted_at',
         'lost_reason',
+        'submitted_to_sales_at',
+        'submitted_to_sales_by',
     ];
 
     protected $casts = [
         'converted_at' => 'datetime',
         'assigned_at' => 'datetime',
+        'submitted_to_sales_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -199,6 +202,46 @@ class SalesLead extends Model
         ];
     }
 
+    /**
+     * ترتيب مراحل الـ Pipeline (من دون الحالة الخاسرة).
+     *
+     * @return list<string>
+     */
+    public static function pipelineStages(): array
+    {
+        return [
+            self::STATUS_NEW,
+            self::STATUS_ASSIGNED,
+            self::STATUS_CONTACTED,
+            self::STATUS_INTERESTED,
+            self::STATUS_PLACEMENT_TEST,
+            self::STATUS_OFFER_SENT,
+            self::STATUS_PAYMENT_PENDING,
+            self::STATUS_PAYMENT_CONFIRMED,
+            self::STATUS_ENROLLED,
+            self::STATUS_COURSE_ACTIVE,
+            self::STATUS_RENEWAL,
+            self::STATUS_CLOSED_WON,
+        ];
+    }
+
+    /**
+     * حالات يحق لموظف المبيعات / قائد الفريق تحريك العميل إليها.
+     *
+     * @return list<string>
+     */
+    public static function salesMovableStatuses(): array
+    {
+        return [
+            self::STATUS_CONTACTED,
+            self::STATUS_INTERESTED,
+            self::STATUS_PLACEMENT_TEST,
+            self::STATUS_OFFER_SENT,
+            self::STATUS_PAYMENT_PENDING,
+            self::STATUS_CLOSED_LOST,
+        ];
+    }
+
     /** @return array<string, string> */
     public static function sourceLabels(): array
     {
@@ -213,28 +256,58 @@ class SalesLead extends Model
         ];
     }
 
-    /** @return array<string, list<string>> */
+    /**
+     * انتقالات مسموحة: أي مرحلة لاحقة في الـ Pipeline + خاسر من المراحل المفتوحة.
+     *
+     * @return array<string, list<string>>
+     */
     public static function allowedTransitions(): array
     {
-        return [
-            self::STATUS_NEW => [self::STATUS_ASSIGNED, self::STATUS_CLOSED_LOST],
-            self::STATUS_ASSIGNED => [self::STATUS_CONTACTED, self::STATUS_CLOSED_LOST],
-            self::STATUS_CONTACTED => [self::STATUS_INTERESTED, self::STATUS_CLOSED_LOST],
-            self::STATUS_INTERESTED => [self::STATUS_PLACEMENT_TEST, self::STATUS_CLOSED_LOST],
-            self::STATUS_PLACEMENT_TEST => [self::STATUS_OFFER_SENT, self::STATUS_CLOSED_LOST],
-            self::STATUS_OFFER_SENT => [self::STATUS_PAYMENT_PENDING, self::STATUS_CLOSED_LOST],
-            self::STATUS_PAYMENT_PENDING => [self::STATUS_PAYMENT_CONFIRMED, self::STATUS_CLOSED_LOST],
-            self::STATUS_PAYMENT_CONFIRMED => [self::STATUS_ENROLLED],
-            self::STATUS_ENROLLED => [self::STATUS_COURSE_ACTIVE],
-            self::STATUS_COURSE_ACTIVE => [self::STATUS_RENEWAL, self::STATUS_CLOSED_WON],
-            self::STATUS_RENEWAL => [self::STATUS_PAYMENT_PENDING, self::STATUS_CLOSED_WON, self::STATUS_CLOSED_LOST],
-        ];
+        $stages = self::pipelineStages();
+        $map = [];
+
+        foreach ($stages as $i => $from) {
+            if ($from === self::STATUS_CLOSED_WON) {
+                $map[$from] = [];
+
+                continue;
+            }
+
+            if ($from === self::STATUS_RENEWAL) {
+                $map[$from] = [
+                    self::STATUS_PAYMENT_PENDING,
+                    self::STATUS_CLOSED_WON,
+                    self::STATUS_CLOSED_LOST,
+                ];
+
+                continue;
+            }
+
+            $forwards = array_slice($stages, $i + 1);
+            $forwards[] = self::STATUS_CLOSED_LOST;
+            $map[$from] = array_values(array_unique($forwards));
+        }
+
+        $map[self::STATUS_CLOSED_LOST] = [];
+
+        return $map;
     }
 
     public function canTransitionTo(string $status): bool
     {
+        if ($status === $this->status) {
+            return false;
+        }
+
         $allowed = self::allowedTransitions()[$this->status] ?? [];
 
         return in_array($status, $allowed, true);
+    }
+
+    public function pipelineIndex(): int
+    {
+        $idx = array_search($this->status, self::pipelineStages(), true);
+
+        return $idx === false ? -1 : (int) $idx;
     }
 }

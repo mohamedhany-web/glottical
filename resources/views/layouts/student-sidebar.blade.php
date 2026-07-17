@@ -276,7 +276,7 @@
                 <span class="ins-icon bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
                     <i class="fas fa-book-open text-sm"></i>
                 </span>
-                <span class="flex-1 truncate">مكتبة المنهج</span>
+                <span class="flex-1 truncate">مكتبة المناهج</span>
             </a>
             @endif
 

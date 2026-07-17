@@ -10,7 +10,7 @@ class LiveSetting extends Model
     protected $fillable = ['key', 'value', 'type', 'group', 'label'];
 
     /**
-     * تطبيع نطاق Jitsi: إزالة البروتوكول والشرطة الأخيرة لاستخدام النطاق فقط (مثل muallimx.com).
+     * تطبيع نطاق Jitsi: إزالة البروتوكول والشرطة الأخيرة لاستخدام النطاق فقط (مثل meet.glottical.com).
      * ضروري لأن السكربت يُحمّل من https://النطاق/external_api.js
      */
     public static function normalizeJitsiDomain(string $domain): string

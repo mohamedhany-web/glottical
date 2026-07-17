@@ -23,7 +23,7 @@
                 </div>
                 <div class="min-w-0">
                     <h1 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">إضافة عميل محتمل</h1>
-                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">سجّل العميل فور أول تواصل — يصبح في حالة «عميل جديد» حتى تعيّنه الإدارة لمندوب مبيعات.</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">يُسجَّل باسمك كـ «مسوق بالعمولة» — ثم أرسله لصندوق المبيعات وتابع من اشترك وفي أي كورس.</p>
                 </div>
             </div>
             <a href="{{ route('employee.crm.leads.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors shrink-0">
@@ -117,8 +117,14 @@
                 </div>
 
                 <div class="pt-6 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div class="bg-sky-50 dark:bg-sky-900/30 border border-sky-200 dark:border-sky-800 rounded-xl p-4 text-sm text-sky-800 dark:text-sky-200 max-w-lg">
-                        <span class="font-semibold">نصيحة:</span> بعد الحفظ تابع العميل من قائمة «العملاء المحتملون» حتى تُعيّنه الإدارة لمندوب مبيعات.
+                    <div class="space-y-3 max-w-lg">
+                        <label class="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200 font-semibold">
+                            <input type="checkbox" name="submit_to_sales" value="1" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500" {{ old('submit_to_sales') ? 'checked' : '' }}>
+                            إرسال فوراً لصندوق المبيعات بعد الحفظ
+                        </label>
+                        <div class="bg-sky-50 dark:bg-sky-900/30 border border-sky-200 dark:border-sky-800 rounded-xl p-4 text-sm text-sky-800 dark:text-sky-200">
+                            <span class="font-semibold">نصيحة:</span> تابع كل تقدمك وعمولاتك من <a href="{{ route('employee.crm.marketing.desk') }}" class="font-bold underline">لوحة المسوق بالعمولة</a>.
+                        </div>
                     </div>
                     <div class="flex flex-wrap gap-3 shrink-0">
                         <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold transition-colors">

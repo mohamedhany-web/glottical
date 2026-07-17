@@ -211,6 +211,29 @@ class LiveSessionController extends Controller
     }
 
     /**
+     * تسجيل مغادرة المدرب من الغرفة دون إنهاء الجلسة فوراً —
+     * أمر live:auto-end-sessions ينهي الجلسة بعد idle_end_minutes إن لم يعد.
+     */
+    public function leavePresence(LiveSession $liveSession)
+    {
+        if ($liveSession->instructor_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if (! $liveSession->isLive()) {
+            return response()->json(['ok' => true, 'status' => $liveSession->status]);
+        }
+
+        SessionAttendance::where('session_id', $liveSession->id)
+            ->where('user_id', auth()->id())
+            ->where('role_in_session', 'instructor')
+            ->whereNull('left_at')
+            ->each(fn ($attendance) => $attendance->markLeft());
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
      * يطلق إنشاء تقرير ذكاء اصطناعي للجلسة الحالية عبر n8n.
      * يُستدعى من واجهة المعلم داخل غرفة البث أو صفحة الجلسة.
      */

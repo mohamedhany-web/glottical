@@ -1,5 +1,5 @@
-# robots.txt — MuallimX
-# https://muallimx.com
+# robots.txt — Glottical
+# https://glottical.com
 
 User-agent: *
 Allow: /
@@ -56,4 +56,5 @@ User-agent: anthropic-ai
 Disallow: /
 
 # ─── Sitemap (يُغيَّر عند النشر الفعلي) ─────────────────
-Sitemap: https://muallimx.com/sitemap.xml
+# ─── Sitemap ───────────────────────────────────────────────
+Sitemap: https://glottical.com/sitemap.xml

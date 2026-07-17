@@ -26,6 +26,7 @@ return [
         'classroom-recordings' => ['manage.live-sessions'],
         'consultations' => ['manage.consultations'],
         'contact-messages' => ['manage.contact-messages'],
+        'free-trial-bookings' => ['manage.free-trial-bookings'],
         'coupons' => ['manage.coupons'],
         'course-categories' => ['manage.courses'],
         'courses' => ['manage.courses', 'manage.lectures'],

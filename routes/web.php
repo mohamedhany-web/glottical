@@ -232,6 +232,10 @@ Route::get('/sitemap.xml', function () {
 
 // الصفحة الرئيسية (Home) - الترجمة عبر SetLocale في مجموعة web
 Route::get('/', [\App\Http\Controllers\Public\LandingController::class, 'index'])->name('home');
+Route::get('/free-trial/slots', [\App\Http\Controllers\Public\FreeTrialBookingController::class, 'slots'])->name('public.free-trial.slots');
+Route::post('/free-trial/book', [\App\Http\Controllers\Public\FreeTrialBookingController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('public.free-trial.book');
 
 // الصفحات العامة
 Route::get('/about', [\App\Http\Controllers\Public\PageController::class, 'about'])->name('public.about');
@@ -747,6 +751,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         Route::prefix('crm')->name('crm.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'dashboard'])->name('dashboard');
+            Route::get('/marketing-desk', [\App\Http\Controllers\Employee\CrmMarketingController::class, 'desk'])->name('marketing.desk');
+            Route::get('/marketing-inbox', [\App\Http\Controllers\Employee\CrmSalesInboxController::class, 'index'])->name('marketing-inbox.index');
+            Route::post('/marketing-inbox/{salesLead}/claim', [\App\Http\Controllers\Employee\CrmSalesInboxController::class, 'claim'])->name('marketing-inbox.claim');
             Route::get('/leads', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'leadsIndex'])->name('leads.index');
             Route::get('/leads/create', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'leadsCreate'])->name('leads.create');
             Route::post('/leads', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'leadsStore'])->name('leads.store');
@@ -755,6 +762,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::post('/leads/{salesLead}/transition', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'transition'])->name('leads.transition');
             Route::post('/leads/{salesLead}/note', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'addNote'])->name('leads.note');
             Route::post('/leads/{salesLead}/assign', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'assignLead'])->name('leads.assign');
+            Route::post('/leads/{salesLead}/submit-to-sales', [\App\Http\Controllers\Employee\CrmMarketingController::class, 'submitToSales'])->name('leads.submit-to-sales');
             Route::post('/leads/{salesLead}/confirm-payment', [\App\Http\Controllers\Employee\CrmWorkspaceController::class, 'confirmPayment'])->name('leads.confirm-payment');
             Route::get('/team', [\App\Http\Controllers\Employee\CrmTeamController::class, 'index'])->name('team.index');
             Route::post('/team/{group}/members', [\App\Http\Controllers\Employee\CrmTeamController::class, 'addMember'])->name('team.members.store');
@@ -1004,6 +1012,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         // Glottical CRM
         Route::prefix('crm')->name('crm.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\CrmDashboardController::class, 'index'])->name('dashboard');
+            Route::get('/pipeline', [\App\Http\Controllers\Admin\CrmPipelineController::class, 'index'])->name('pipeline');
             Route::get('/leads', [\App\Http\Controllers\Admin\CrmLeadController::class, 'index'])->name('leads.index');
             Route::get('/leads/{salesLead}', [\App\Http\Controllers\Admin\CrmLeadController::class, 'show'])->name('leads.show');
             Route::post('/leads/{salesLead}/assign', [\App\Http\Controllers\Admin\CrmLeadController::class, 'assign'])->name('leads.assign');
@@ -1100,6 +1109,15 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::resource('contact-messages', \App\Http\Controllers\Admin\ContactMessageController::class);
         Route::post('/contact-messages/{contactMessage}/mark-as-read', [\App\Http\Controllers\Admin\ContactMessageController::class, 'markAsRead'])->name('contact-messages.mark-as-read');
         Route::post('/contact-messages/{contactMessage}/mark-as-unread', [\App\Http\Controllers\Admin\ContactMessageController::class, 'markAsUnread'])->name('contact-messages.mark-as-unread');
+
+        Route::get('free-trial-bookings/availability', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'availability'])->name('free-trial-bookings.availability');
+        Route::post('free-trial-bookings/availability', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'storeAvailability'])->name('free-trial-bookings.availability.store');
+        Route::put('free-trial-bookings/availability/{window}', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'updateAvailability'])->name('free-trial-bookings.availability.update');
+        Route::delete('free-trial-bookings/availability/{window}', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'destroyAvailability'])->name('free-trial-bookings.availability.destroy');
+        Route::patch('free-trial-bookings/{freeTrialBooking}/status', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'updateStatus'])->name('free-trial-bookings.update-status');
+        Route::get('free-trial-bookings', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'index'])->name('free-trial-bookings.index');
+        Route::get('free-trial-bookings/{freeTrialBooking}', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'show'])->name('free-trial-bookings.show');
+        Route::delete('free-trial-bookings/{freeTrialBooking}', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'destroy'])->name('free-trial-bookings.destroy');
 
         Route::resource('faq', \App\Http\Controllers\Admin\FAQController::class);
 
@@ -1833,6 +1851,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::post('/{liveSession}/audio/presign', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'presignAudioUpload'])->name('audio.presign');
             Route::post('/{liveSession}/audio/complete', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'completeAudioUpload'])->name('audio.complete');
             Route::post('/{liveSession}/ai-report', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'generateAiReport'])->name('ai-report');
+            Route::post('/{liveSession}/leave-presence', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'leavePresence'])->name('leave-presence');
             Route::post('/{liveSession}/end', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'end'])->name('end');
         });
 

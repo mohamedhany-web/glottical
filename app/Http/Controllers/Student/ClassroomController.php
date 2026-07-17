@@ -252,7 +252,8 @@ class ClassroomController extends Controller
             $maxDurationMinutes = max(480, $effectiveDurationMinutes);
         } else {
             $maxDurationMinutes = (int) $limits['classroom_max_duration_minutes'];
-            $effectiveDurationMinutes = (int) ($meeting->planned_duration_minutes ?: $maxDurationMinutes);
+            $defaultDurationMinutes = (int) ($limits['classroom_default_duration_minutes'] ?? 60);
+            $effectiveDurationMinutes = (int) ($meeting->planned_duration_minutes ?: $defaultDurationMinutes);
             if ($effectiveDurationMinutes > $maxDurationMinutes) {
                 $effectiveDurationMinutes = $maxDurationMinutes;
             }

@@ -12,14 +12,22 @@
                     <i class="fas fa-book-open text-lg"></i>
                 </span>
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-black text-slate-800">مكتبة المناهج التفاعلية (مناهج X)</h1>
+                    <h1 class="text-xl sm:text-2xl font-black text-slate-800">مكتبة المناهج والملفات التعليمية</h1>
                     <p class="text-sm text-slate-600 mt-0.5">
-                        مناهج جاهزة للاستخدام في التحضير والتدريس مع الطلاب.
-                        @if(empty($hasFullAccess) || !$hasFullAccess)
-                            <br><span class="text-xs text-amber-600 font-semibold">يمكنك فتح ملف واحد مجاناً (أي عنصر) للتجربة؛ بعدها تحتاج الاشتراك لفتح باقي المناهج.</span>
-                        @else
-                            <br><span class="text-xs text-emerald-600 font-semibold">لديك وصول كامل لجميع مناهج X ضمن اشتراكك.</span>
-                        @endif
+                        مناهج وملفات جاهزة للتحضير والتدريس — تدعم
+                        <span class="font-bold text-indigo-700">PowerPoint</span>
+                        و
+                        <span class="font-bold text-indigo-700">HTML</span>
+                        وPDF والمزيد.
+                        @auth
+                            @if(auth()->user()->isInstructor() || auth()->user()->isTeacher() || in_array(strtolower((string) auth()->user()->role), ['instructor', 'teacher'], true))
+                                <br><span class="text-xs text-emerald-600 font-semibold">متاحة لك كمدرب لاستخدامها في التحضير مع طلابك.</span>
+                            @elseif(empty($hasFullAccess) || !$hasFullAccess)
+                                <br><span class="text-xs text-amber-600 font-semibold">يمكنك فتح ملف واحد مجاناً للتجربة؛ بعدها تحتاج الاشتراك لفتح باقي المناهج.</span>
+                            @else
+                                <br><span class="text-xs text-emerald-600 font-semibold">لديك وصول كامل لمكتبة المناهج.</span>
+                            @endif
+                        @endauth
                     </p>
                 </div>
             </div>

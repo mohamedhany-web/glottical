@@ -11,8 +11,9 @@ use App\Models\SiteTestimonial;
 use App\Models\SiteService;
 use App\Models\User;
 use App\Services\CourseSubscriptionService;
-use App\Services\HomepageSliderResolver;
 use App\Services\InstructorMarketingRankingService;
+use App\Services\SeoAssets;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -35,76 +36,80 @@ class LandingController extends Controller
             }
         }
 
-        // نفس مسارات صفحة المسارات التعليمية بكل بياناتها (سعر المسار المستقل، عدد الكورسات، الصورة، إلخ)
-        $landingPaths = $this->getPublicLearningPaths(12);
+        $locale = app()->getLocale();
+        $payload = Cache::remember('landing.home.v5.'.$locale, 180, function () {
+            $landingPaths = $this->getPublicLearningPaths(8);
 
-        // باقات المعلمين من إعدادات مزايا اشتراك المعلمين (نفس بيانات /admin/teacher-features وصفحة الأسعار)
-        $featuresController = new \App\Http\Controllers\Admin\TeacherFeaturesController();
-        $teacherPlans = $featuresController->getSettings();
+            $featuresController = new \App\Http\Controllers\Admin\TeacherFeaturesController();
+            $teacherPlans = $featuresController->getSettings();
 
-        $featuredCourses = AdvancedCourse::query()
-            ->where('is_active', true)
-            ->with(['instructor:id,name', 'courseCategory:id,name'])
-            ->withCount('lessons')
-            ->orderByDesc('is_featured')
-            ->orderByDesc('created_at')
-            ->limit(24)
-            ->get();
+            $featuredCourses = AdvancedCourse::query()
+                ->where('is_active', true)
+                ->with(['instructor:id,name', 'courseCategory:id,name'])
+                ->withCount('lessons')
+                ->orderByDesc('is_featured')
+                ->orderByDesc('created_at')
+                ->limit(12)
+                ->get();
 
-        $oneToOneCourses = AdvancedCourse::query()
-            ->where('is_active', true)
-            ->where('delivery_type', CourseSubscriptionService::DELIVERY_ONE_TO_ONE)
-            ->with(['instructor:id,name', 'courseCategory:id,name'])
-            ->withCount('lessons')
-            ->orderByDesc('is_featured')
-            ->orderByDesc('created_at')
-            ->limit(12)
-            ->get();
+            $oneToOneCourses = AdvancedCourse::query()
+                ->where('is_active', true)
+                ->where('delivery_type', CourseSubscriptionService::DELIVERY_ONE_TO_ONE)
+                ->with(['instructor:id,name', 'courseCategory:id,name'])
+                ->withCount('lessons')
+                ->orderByDesc('is_featured')
+                ->orderByDesc('created_at')
+                ->limit(8)
+                ->get();
 
-        $homeCategories = $this->buildHomeCategories();
+            $homeCategories = $this->buildHomeCategories();
+            $homeInstructors = InstructorMarketingRankingService::rankApprovedProfiles()->take(8)->values();
 
-        $homeInstructors = InstructorMarketingRankingService::rankApprovedProfiles();
+            $homeTestimonials = SiteTestimonial::query()
+                ->active()
+                ->ordered()
+                ->limit(12)
+                ->get();
 
-        $homeTestimonials = SiteTestimonial::query()
-            ->active()
-            ->ordered()
-            ->limit(24)
-            ->get();
+            $realLearners = User::query()->where('role', 'student')->where('is_active', true)->count();
+            $learnersMin = (int) config('platform.homepage_stats.learners_min', 5000);
 
-        $realLearners = User::query()->where('role', 'student')->where('is_active', true)->count();
-        $learnersMin = (int) config('platform.homepage_stats.learners_min', 5000);
+            $homeStats = [
+                'learners' => max($learnersMin, $realLearners),
+                'learners_real' => $realLearners,
+                'learners_show_plus' => (bool) config('platform.homepage_stats.learners_show_plus', true)
+                    && max($learnersMin, $realLearners) >= $learnersMin,
+                'courses' => AdvancedCourse::query()->where('is_active', true)->count(),
+                'certificates' => Certificate::query()
+                    ->where(function ($q) {
+                        $q->where('status', 'issued')->orWhere('is_verified', true);
+                    })
+                    ->count(),
+                'services' => SiteService::active()->count(),
+            ];
 
-        $homeStats = [
-            'learners' => max($learnersMin, $realLearners),
-            'learners_real' => $realLearners,
-            'learners_show_plus' => (bool) config('platform.homepage_stats.learners_show_plus', true)
-                && max($learnersMin, $realLearners) >= $learnersMin,
-            'courses' => AdvancedCourse::query()->where('is_active', true)->count(),
-            'certificates' => Certificate::query()
-                ->where(function ($q) {
-                    $q->where('status', 'issued')->orWhere('is_verified', true);
-                })
-                ->count(),
-            'services' => SiteService::active()->count(),
-        ];
+            // سليدر خلفيات فقط (هوية ثابتة + زرّان فوقه)
+            $heroSlides = [
+                SeoAssets::optimizedRemoteImage('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=72', 1600, 72),
+                SeoAssets::optimizedRemoteImage('https://images.unsplash.com/photo-1546410531-bb4caa6b424d?auto=format&fit=crop&w=1600&q=72', 1600, 72),
+                SeoAssets::optimizedRemoteImage('https://images.unsplash.com/photo-1571260899304-425eee4c7efc?auto=format&fit=crop&w=1600&q=72', 1600, 72),
+                SeoAssets::optimizedRemoteImage('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1600&q=72', 1600, 72),
+            ];
 
-        $heroSpotlight = app(HomepageSliderResolver::class)->resolve(
-            collect($featuredCourses),
-            collect($landingPaths)
-        );
+            return compact(
+                'landingPaths',
+                'teacherPlans',
+                'featuredCourses',
+                'oneToOneCourses',
+                'homeCategories',
+                'homeInstructors',
+                'homeTestimonials',
+                'homeStats',
+                'heroSlides'
+            );
+        });
 
-        return view('welcome', compact(
-            'popupAd',
-            'landingPaths',
-            'teacherPlans',
-            'featuredCourses',
-            'oneToOneCourses',
-            'homeCategories',
-            'homeInstructors',
-            'homeTestimonials',
-            'homeStats',
-            'heroSpotlight'
-        ));
+        return view('welcome', array_merge($payload, compact('popupAd')));
     }
 
     /**

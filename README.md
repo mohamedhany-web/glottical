@@ -1,2 +1,2 @@
-"# muallimx" 
-"# glottical" 
+# Glottical
+

@@ -13,7 +13,7 @@ class EmployeeJobSeeder extends Seeder
     public function run(): void
     {
         $crmMarketing = [
-            'crm_desk', 'crm_create_leads', 'crm_edit_leads', 'crm_add_notes',
+            'crm_desk', 'crm_create_leads', 'crm_submit_to_sales', 'crm_edit_leads', 'crm_add_notes',
             'crm_submit_reports', 'crm_view_messages', 'crm_send_messages',
         ];
         $crmSales = [
@@ -22,7 +22,7 @@ class EmployeeJobSeeder extends Seeder
         ];
         $crmTeamLeader = [
             'crm_desk', 'crm_assign_leads', 'crm_manage_team', 'crm_view_team_performance',
-            'crm_add_notes', 'crm_submit_reports', 'crm_view_messages', 'crm_send_messages',
+            'crm_transition_leads', 'crm_add_notes', 'crm_submit_reports', 'crm_view_messages', 'crm_send_messages',
         ];
         $crmFinance = [
             'crm_desk', 'crm_view_all_leads', 'crm_view_all_orders', 'crm_approve_payments', 'crm_approve_commissions',

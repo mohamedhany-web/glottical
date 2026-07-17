@@ -83,6 +83,16 @@
             </a>
             @endif
 
+            @if(Route::has('curriculum-library.index'))
+            <a href="{{ route('curriculum-library.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+               class="ins-nav {{ request()->routeIs('curriculum-library.*') ? 'active' : '' }}">
+                <span class="ins-icon bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
+                    <i class="fas fa-folder-open text-sm"></i>
+                </span>
+                <span class="flex-1 truncate">مكتبة المناهج</span>
+            </a>
+            @endif
+
             {{-- ─── أدوات التدريس ─── --}}
             <div class="ins-nav-group mt-3">
                 <span class="inline-flex items-center gap-1.5">

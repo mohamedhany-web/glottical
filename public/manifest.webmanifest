@@ -1,13 +1,13 @@
 {
   "id": "/",
-  "name": "Muallimx",
-  "short_name": "Muallimx",
+  "name": "Glottical",
+  "short_name": "Glottical",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#283593",
-  "description": "منصة تطوير المعلم العربي",
+  "background_color": "#0B1424",
+  "theme_color": "#0B1424",
+  "description": "تعلم اللغات كما يتعلمها أهلها — ممارسة يومية ومحادثات حية مع مدربين محترفين.",
   "lang": "ar",
   "dir": "rtl",
   "icons": [

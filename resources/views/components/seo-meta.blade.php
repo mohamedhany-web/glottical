@@ -4,7 +4,7 @@
     $title       = $title       ?? $siteName . ' — ' . __('landing.hero.headline');
     $description = $description ?? __('landing.meta.description');
     $keywords    = $keywords    ?? 'تعليم ألماني, تعليم إنجليزي, كول سنتر, سوق العمل, ألمانيا, Glottical, ' . $siteName;
-    $image       = $image       ?? asset('images/og-image.jpg');
+    $image       = $image       ?? \App\Services\SeoAssets::ogImageUrl();
     $imageAlt    = $imageAlt    ?? $title;
     $url         = $url         ?? url()->current();
     $type        = $type        ?? 'website';

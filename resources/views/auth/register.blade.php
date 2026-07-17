@@ -21,14 +21,14 @@
             extend: {
                 colors: {
                     acad: {
-                        blue: '#0B3D91',
-                        blueDark: '#072a66',
-                        blueSoft: '#E8EEF8',
-                        cyan: '#00A3C4',
-                        yellow: '#F5B800',
-                        ink: '#1a2d4d',
-                        navy: '#0d1528',
-                        navyMid: '#1a2d4d',
+                        blue: '{{ config('academy-theme.blue') }}',
+                        blueDark: '{{ config('academy-theme.blue_dark') }}',
+                        blueSoft: '{{ config('academy-theme.blue_soft') }}',
+                        cyan: '{{ config('academy-theme.cyan') }}',
+                        yellow: '{{ config('academy-theme.yellow') }}',
+                        ink: '{{ config('academy-theme.ink') }}',
+                        navy: '{{ config('academy-theme.navy') }}',
+                        navyMid: '{{ config('academy-theme.navy_mid') }}',
                     },
                     mx: { indigo: '#1F2A7A', navy: '#283593', orange: '#FB5607' },
                 },

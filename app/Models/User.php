@@ -989,7 +989,22 @@ class User extends Authenticatable
         }
 
         if ($this->usesCustomEmployeePermissions()) {
-            return in_array($permission, $this->effectiveEmployeePermissions(), true);
+            $perms = $this->effectiveEmployeePermissions();
+            if (in_array($permission, $perms, true)) {
+                return true;
+            }
+            // سايدبار المبيعات يستخدم manage.orders بينما الوظيفة/التخصيص تستخدم sales_desk
+            if ($permission === 'manage.orders' && (in_array('sales_desk', $perms, true) || in_array('sales_orders', $perms, true))) {
+                return true;
+            }
+            if ($permission === 'sales_orders' && in_array('sales_desk', $perms, true)) {
+                return true;
+            }
+            if ($permission === 'sales_desk' && in_array('sales_orders', $perms, true)) {
+                return true;
+            }
+
+            return false;
         }
 
         // إذا كان للمستخدم أدوار RBAC مخصصة → اعتمد عليها فقط
@@ -1002,6 +1017,9 @@ class User extends Authenticatable
                     || $this->hasPermission('view.reports')
                     || $this->hasPermission('view.financial-reports')
                     || $this->hasPermission('view.academic-reports');
+            }
+            if ($permission === 'sales_desk' || $permission === 'sales_orders') {
+                return $this->hasPermission('manage.orders') || $this->hasPermission('sales_desk');
             }
 
             $rbacName = self::rbacPermissionForEmployeeMenuKey($permission);
@@ -1024,7 +1042,25 @@ class User extends Authenticatable
             return false;
         }
 
-        return in_array($permission, $jobPermissions, true);
+        if (in_array($permission, $jobPermissions, true)) {
+            return true;
+        }
+
+        // توافق سايدبار المبيعات: manage.orders ≡ sales_desk في وظيفة السيلز
+        if ($permission === 'manage.orders'
+            && (in_array('sales_desk', $jobPermissions, true) || in_array('sales_orders', $jobPermissions, true))) {
+            return true;
+        }
+
+        // sales_orders و sales_desk متلازمان وظيفياً في مساحة المبيعات
+        if ($permission === 'sales_orders' && in_array('sales_desk', $jobPermissions, true)) {
+            return true;
+        }
+        if ($permission === 'sales_desk' && in_array('sales_orders', $jobPermissions, true)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

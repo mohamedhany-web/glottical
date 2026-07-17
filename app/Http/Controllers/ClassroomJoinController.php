@@ -30,8 +30,9 @@ class ClassroomJoinController extends Controller
         $joinUrl = url('classroom/join/'.$code);
         $maxParticipants = (int) ($meeting?->max_participants ?? 25);
         $meetingEnded = (bool) ($meeting && $meeting->ended_at);
+        $meetingNotStarted = (bool) ($meeting && ! $meeting->started_at && ! $meeting->ended_at);
 
-        return view('classroom.join', compact('code', 'roomName', 'meeting', 'jitsiDomain', 'joinUrl', 'maxParticipants', 'meetingEnded'));
+        return view('classroom.join', compact('code', 'roomName', 'meeting', 'jitsiDomain', 'joinUrl', 'maxParticipants', 'meetingEnded', 'meetingNotStarted'));
     }
 
     public function enter(Request $request, string $code)
@@ -46,11 +47,19 @@ class ClassroomJoinController extends Controller
             ], 422);
         }
 
+        if (! $meeting->started_at) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'المحاضرة لم تبدأ بعد. انتظر حتى يبدأ المدرب الاجتماع ثم انضم مرة أخرى.',
+            ], 422);
+        }
+
         $owner = $meeting->user;
         if ($owner && $meeting->started_at) {
             $limits = SubscriptionLimitService::limitsForUser($owner);
             $packageMax = (int) $limits['classroom_max_duration_minutes'];
-            $effectiveDuration = (int) ($meeting->planned_duration_minutes ?: $packageMax);
+            $packageDefault = (int) ($limits['classroom_default_duration_minutes'] ?? 60);
+            $effectiveDuration = (int) ($meeting->planned_duration_minutes ?: $packageDefault);
             if ($effectiveDuration > $packageMax) {
                 $effectiveDuration = $packageMax;
             }

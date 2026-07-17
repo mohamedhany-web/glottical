@@ -42,6 +42,7 @@ class Order extends Model
         'wallet_credit_amount' => 'decimal:2',
         'auto_renew' => 'boolean',
         'approved_at' => 'datetime',
+        'sales_contacted_at' => 'datetime',
     ];
 
     const STATUS_PENDING = 'pending';

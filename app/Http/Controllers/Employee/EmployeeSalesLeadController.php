@@ -178,7 +178,23 @@ class EmployeeSalesLeadController extends Controller
     {
         $this->gate();
 
-        return back()->with('error', 'تعيين الـ Lead يتم من الإدارة فقط ضمن نظام CRM.');
+        if (\App\Services\Crm\CrmAccessService::canAccessCrm(Auth::user())) {
+            return redirect()
+                ->route('employee.crm.leads.show', $salesLead)
+                ->with('error', 'تعيين العملاء المحتملين في CRM يتم من قائد الفريق أو التسويق حسب صلاحياتك.');
+        }
+
+        if ($salesLead->isConverted() || $salesLead->isLost()) {
+            return back()->with('error', 'هذا السجل مغلق ولا يمكن تعيينه.');
+        }
+
+        if ($salesLead->assigned_to && (int) $salesLead->assigned_to !== (int) Auth::id()) {
+            return back()->with('error', 'هذا العميل مسند بالفعل إلى مندوب آخر.');
+        }
+
+        $salesLead->update(['assigned_to' => Auth::id()]);
+
+        return back()->with('success', 'تم تعيين العميل المحتمل لك.');
     }
 
     public function convert(Request $request, SalesLead $salesLead)

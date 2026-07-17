@@ -10,9 +10,9 @@ use Illuminate\Support\Str;
 class HomepageSliderResolver
 {
     private const STOCK_BACKGROUNDS = [
-        'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=2400&q=82',
-        'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=2400&q=82',
-        'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=2400&q=82',
+        'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1400&q=72',
+        'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1400&q=72',
+        'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1400&q=72',
     ];
 
     /**
@@ -113,7 +113,10 @@ class HomepageSliderResolver
             $slide['accent_bg'] = self::STOCK_BACKGROUNDS[$i % count(self::STOCK_BACKGROUNDS)];
             if (empty($slide['bg'])) {
                 $slide['bg'] = $slide['accent_bg'];
+            } else {
+                $slide['bg'] = SeoAssets::optimizedRemoteImage($slide['bg'], 1600, 72) ?? $slide['bg'];
             }
+            $slide['accent_bg'] = SeoAssets::optimizedRemoteImage($slide['accent_bg'], 1200, 65) ?? $slide['accent_bg'];
         }
         unset($slide);
 

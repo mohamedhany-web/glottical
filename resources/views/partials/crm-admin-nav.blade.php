@@ -1,5 +1,6 @@
 <nav class="flex flex-wrap gap-2 rounded-2xl border bg-white p-3 text-sm">
     <a href="{{ route('admin.crm.dashboard') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('admin.crm.dashboard') ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700' }}">لوحة CRM</a>
+    <a href="{{ route('admin.crm.pipeline') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('admin.crm.pipeline') ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-700' }}">Pipeline</a>
     <a href="{{ route('admin.crm.leads.index') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('admin.crm.leads.*') ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700' }}">العملاء المحتملون</a>
     <a href="{{ route('admin.crm.commissions.index') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('admin.crm.commissions.*') ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-700' }}">العمولات</a>
     <a href="{{ route('admin.crm.audit.index') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('admin.crm.audit.*') ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700' }}">سجل المتابعة</a>

@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\SalesLead;
 use App\Models\SalesOrderNote;
-use App\Models\User;
+use App\Services\Crm\CrmAccessService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,7 +21,13 @@ class EmployeeSalesWorkspaceController extends Controller
     public function desk()
     {
         $this->gate();
-        $userId = Auth::id();
+        $user = Auth::user();
+        $userId = $user->id;
+        $useCrm = CrmAccessService::canAccessCrm($user);
+
+        $leadQuery = $useCrm
+            ? CrmAccessService::leadsQueryFor($user)->open()
+            : SalesLead::query()->open();
 
         $stats = [
             'pending' => Order::where('status', Order::STATUS_PENDING)->count(),
@@ -36,8 +42,10 @@ class EmployeeSalesWorkspaceController extends Controller
                 ->where('sales_owner_id', $userId)
                 ->where('approved_at', '>=', now()->startOfMonth())
                 ->count(),
-            'leads_open' => SalesLead::query()->open()->count(),
-            'leads_mine_open' => SalesLead::query()->open()->where('assigned_to', $userId)->count(),
+            'leads_open' => (clone $leadQuery)->count(),
+            'leads_mine_open' => $useCrm
+                ? (clone $leadQuery)->where('assigned_to', $userId)->count()
+                : SalesLead::query()->open()->where('assigned_to', $userId)->count(),
         ];
 
         $recentOrders = Order::query()
@@ -53,7 +61,13 @@ class EmployeeSalesWorkspaceController extends Controller
             ->take(8)
             ->get();
 
-        return view('employee.sales.desk', compact('stats', 'recentOrders', 'myOrders'));
+        return view('employee.sales.desk', [
+            'stats' => $stats,
+            'recentOrders' => $recentOrders,
+            'myOrders' => $myOrders,
+            'useCrm' => $useCrm,
+            'leadsIndexRoute' => $useCrm ? 'employee.crm.leads.index' : 'employee.sales.leads.index',
+        ]);
     }
 
     public function ordersIndex(Request $request)
@@ -63,12 +77,14 @@ class EmployeeSalesWorkspaceController extends Controller
         $query = Order::query()
             ->with(['user:id,name,email,phone', 'course:id,title', 'salesOwner:id,name']);
 
-        if ($request->boolean('mine')) {
+        // طلباتي وبلا مندوب متنافيان — لا يمكن تطبيقهما معاً
+        if ($request->boolean('mine') && ! $request->boolean('unassigned')) {
             $query->where('sales_owner_id', Auth::id());
-        }
-
-        if ($request->boolean('unassigned')) {
+        } elseif ($request->boolean('unassigned') && ! $request->boolean('mine')) {
             $query->whereNull('sales_owner_id');
+        } elseif ($request->boolean('mine') && $request->boolean('unassigned')) {
+            // لو اختُيرا معاً: أظهر طلباتي فقط (الأكثر فائدة)
+            $query->where('sales_owner_id', Auth::id());
         }
 
         if ($request->filled('status')) {
@@ -88,7 +104,10 @@ class EmployeeSalesWorkspaceController extends Controller
                             ->orWhere('phone', 'like', "%{$search}%");
                     })->orWhereHas('course', function ($cq) use ($search) {
                         $cq->where('title', 'like', "%{$search}%");
-                    })->orWhere('id', $search);
+                    });
+                    if (ctype_digit($search)) {
+                        $q->orWhere('id', (int) $search);
+                    }
                 });
             }
         }
@@ -104,11 +123,8 @@ class EmployeeSalesWorkspaceController extends Controller
 
         $order->load([
             'user',
-            'course.academicYear',
-            'learningPath',
+            'course',
             'salesOwner',
-            'approver',
-            'wallet',
             'salesNotes.user',
         ]);
 

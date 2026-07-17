@@ -107,7 +107,7 @@
                     <p class="text-xs text-amber-800 mt-2">مسند لمندوب آخر؛ يمكنك فقط عرض التفاصيل وإضافة ملاحظات للفريق.</p>
                 @endif
                 @if($order->sales_contacted_at)
-                    <p class="text-xs text-gray-500 mt-3">آخر نشاط مسجل: {{ $order->sales_contacted_at->format('Y-m-d H:i') }}</p>
+                    <p class="text-xs text-gray-500 mt-3">آخر نشاط مسجل: {{ optional($order->sales_contacted_at)->format('Y-m-d H:i') ?? $order->sales_contacted_at }}</p>
                 @endif
             </div>
 

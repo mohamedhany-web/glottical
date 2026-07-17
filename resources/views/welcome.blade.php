@@ -5,7 +5,7 @@
     $fmt = fn (int $n) => number_format($n, 0, '.', ',');
     $a = 'landing.academy';
 
-    $featuredList = ($featuredCourses ?? collect())->take(24);
+    $featuredList = ($featuredCourses ?? collect())->take(12);
     $courseCatalogForJs = [];
     foreach ($featuredList as $course) {
         $thumbUrl = $course->thumbnail_url ?? '';
@@ -64,6 +64,15 @@
     ];
 
     $heroSpotlight = $heroSpotlight ?? [];
+    $heroSlides = $heroSlides ?? [];
+    if ($heroSlides === [] && $heroSpotlight !== []) {
+        $heroSlides = collect($heroSpotlight)->pluck('bg')->filter()->values()->all();
+    }
+    if ($heroSlides === []) {
+        $heroSlides = [
+            'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=72',
+        ];
+    }
 
     $rowTrendingNow = $featuredList->sort(function ($a, $b) {
         $fa = (int) ($a->is_featured ?? false);
@@ -73,11 +82,9 @@
         }
 
         return strtotime((string) ($b->created_at ?? '')) <=> strtotime((string) ($a->created_at ?? ''));
-    })->values();
-    $rowPopularWeek = $featuredList->sortByDesc(fn ($c) => (int) ($c->students_count ?? 0))->values();
-    $rowRecommended = $featuredList->sortByDesc(fn ($c) => (int) ($c->lessons_count ?? 0))->values();
-    $rowNew = $featuredList->sortByDesc('created_at')->values();
-    $rowTopRated = $featuredList->sortByDesc(fn ($c) => (float) ($c->rating ?? 0))->values();
+    })->values()->take(10);
+    $rowRecommended = $featuredList->sortByDesc(fn ($c) => (int) ($c->lessons_count ?? 0))->values()->take(10);
+    $rowNew = $featuredList->sortByDesc('created_at')->values()->take(10);
 
     // Streaming search chips for an academy (no AI chip)
     $searchChipsForJs = [
@@ -93,24 +100,27 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>{{ __('landing.meta.title') }}</title>
-    <meta name="title" content="{{ __('landing.meta.title') }}">
-    <meta name="description" content="{{ __('landing.meta.description') }}">
-    <meta name="theme-color" content="#0d1528">
-    <link rel="canonical" href="{{ url('/') }}">
-    <link rel="alternate" hreflang="ar" href="{{ url('/') }}?lang=ar">
-    <link rel="alternate" hreflang="en" href="{{ url('/') }}?lang=en">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ url('/') }}">
-    <meta property="og:title" content="{{ __('landing.meta.og_title') }}">
-    <meta property="og:description" content="{{ __('landing.meta.og_description') }}">
-    <meta property="og:image" content="{{ asset('images/og-image.jpg') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="{{ config('academy-theme.navy') }}">
+    @include('components.seo-meta', [
+        'title' => __('landing.meta.title'),
+        'description' => __('landing.meta.description'),
+        'keywords' => __('landing.meta.keywords'),
+        'image' => \App\Services\SeoAssets::ogImageUrl(),
+        'imageAlt' => __('landing.meta.og_title'),
+        'url' => url('/'),
+        'type' => 'website',
+    ])
+    <link rel="alternate" hreflang="ar" href="{{ url('/?lang=ar') }}">
+    <link rel="alternate" hreflang="en" href="{{ url('/?lang=en') }}">
+    <link rel="alternate" hreflang="x-default" href="{{ url('/') }}">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
     @include('partials.favicon-links')
     @include('partials.seo-jsonld', ['jsonldType' => 'website'])
 
     @php
         $r2PublicBase = \App\Services\PlatformMediaSettings::r2PublicBaseUrl();
-        $heroLcpImage = ($heroSpotlight[0]['bg'] ?? null) ?: null;
+        $heroLcpImage = \App\Services\SeoAssets::optimizedRemoteImage($heroSlides[0] ?? null, 1400, 70);
     @endphp
     @if(!empty($heroLcpImage))
         <link rel="preload" as="image" href="{{ e($heroLcpImage) }}" fetchpriority="high">
@@ -118,78 +128,91 @@
     @if(is_string($r2PublicBase) && $r2PublicBase !== '')
         @php $r2Host = parse_url($r2PublicBase, PHP_URL_HOST); @endphp
         @if($r2Host)
+            <link rel="dns-prefetch" href="https://{{ $r2Host }}">
             <link rel="preconnect" href="https://{{ $r2Host }}" crossorigin>
         @endif
     @endif
 
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    {{-- خط واحد بأوزان أساسية فقط لتسريع الرسم الأول --}}
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap"></noscript>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        acad: {
-                            blue: '#0B3D91',
-                            blueDark: '#072a66',
-                            blueSoft: '#E8EEF8',
-                            cyan: '#00A3C4',
-                            yellow: '#F5B800',
-                            yellowSoft: '#FFF8E1',
-                            gray: '#F4F6FA',
-                            ink: '#1a2d4d',
-                            navy: '#0d1528',
-                            navyMid: '#1a2d4d',
-                            neon: '#00d4ff',
-                        },
+                        @include('partials.academy-tailwind-colors')
                     },
                     fontFamily: {
-                        sans: ['Cairo', 'Tajawal', 'IBM Plex Sans Arabic', 'system-ui', 'sans-serif'],
+                        sans: ['Cairo', 'system-ui', 'sans-serif'],
                     },
                 },
             },
         };
     </script>
+    @include('partials.academy-theme-vars')
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
 
     <style>
         [x-cloak]{display:none!important}
         html{scroll-behavior:smooth;overflow-x:hidden}
-        body{overflow-x:hidden;background:linear-gradient(180deg,#0d1528 0%,#121f38 45%,#0d1528 100%);min-height:100vh;display:flex;flex-direction:column;color:#e8eef8;font-size:16px;line-height:1.65}
-        .font-display{font-family:'Cairo','Tajawal','IBM Plex Sans Arabic',system-ui,sans-serif}
+        body{overflow-x:hidden;background:linear-gradient(180deg,#1A2A45 0%,#121C30 38%,#0F1A2C 100%);min-height:100vh;display:flex;flex-direction:column;color:#e8eef8;font-size:16px;line-height:1.65}
+        .font-display{font-family:'Cairo',system-ui,sans-serif}
         .container-acad{max-width:1280px;margin-inline:auto;padding-inline:clamp(16px,4vw,28px)}
         .section-y{padding-block:clamp(3.5rem,7vw,5rem)}
         .reveal{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
         .reveal.revealed{opacity:1;transform:translateY(0)}
-        .stream-hero .hero-slide{opacity:0;pointer-events:none;transition:opacity 1s ease,transform 1s ease;transform:scale(1.02)}
-        .stream-hero .hero-slide.is-active{opacity:1;pointer-events:auto;transform:scale(1)}
+        .stream-hero .hero-slide{opacity:0;pointer-events:none;transition:opacity 1.1s ease,transform 1.1s ease;transform:scale(1.03)}
+        .stream-hero .hero-slide.is-active{opacity:1;transform:scale(1)}
+        .hero-cta-primary{
+            display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:.15rem;
+            min-width:min(100%,17.5rem);padding:.9rem 1.6rem;border-radius:1rem;
+            background:linear-gradient(180deg,#FFD24A 0%,var(--acad-yellow) 55%,#D9A70A 100%);
+            color:var(--acad-blue-dark);font-weight:800;box-shadow:0 16px 36px -18px rgba(var(--acad-yellow-rgb),.65),0 0 0 1px rgba(255,255,255,.18) inset;
+            transition:transform .2s ease,filter .2s ease,box-shadow .2s ease;
+        }
+        .hero-cta-primary:hover{transform:translateY(-2px);filter:brightness(1.05);box-shadow:0 20px 44px -16px rgba(var(--acad-yellow-rgb),.75),0 0 0 1px rgba(255,255,255,.22) inset}
+        .hero-cta-secondary{
+            display:inline-flex;align-items:center;justify-content:center;gap:.55rem;
+            min-width:min(100%,15rem);padding:1rem 1.5rem;border-radius:1rem;
+            background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);color:#fff;font-weight:800;
+            backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+            box-shadow:0 12px 28px -18px rgba(0,0,0,.45);
+            transition:background .2s ease,border-color .2s ease,transform .2s ease;
+        }
+        .hero-cta-secondary:hover{background:rgba(255,255,255,.18);border-color:rgba(240,188,12,.45);transform:translateY(-2px)}
+        .hero-side-card{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+        .hero-side-card:hover{border-color:rgba(var(--acad-yellow-rgb),.55);background:rgba(255,255,255,.14)}
         .hero-dots button{width:10px;height:10px;border-radius:999px;background:rgba(255,255,255,.28);transition:transform .2s,background .2s,width .2s}
-        .hero-dots button.is-active{background:#F5B800;transform:scale(1.15);width:28px;border-radius:999px}
-        .glass-panel{background:rgba(15,31,58,.72);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-        .floating-search-glow{box-shadow:0 0 0 1px rgba(255,255,255,.08),0 8px 40px -8px rgba(0,212,255,.15),0 20px 50px -20px rgba(0,0,0,.5)}
+        .hero-dots button.is-active{background:var(--acad-yellow);transform:scale(1.15);width:28px;border-radius:999px}
+        .glass-panel{background:rgba(var(--acad-navy-mid-rgb),.72);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+        .floating-search-glow{box-shadow:0 0 0 1px rgba(255,255,255,.08),0 8px 40px -8px rgba(var(--acad-yellow-rgb),.12),0 20px 50px -20px rgba(0,0,0,.55)}
         .suggest-item{animation:suggestIn .35s ease backwards}
         @keyframes suggestIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-        .path-scroll{scrollbar-width:thin;scrollbar-color:rgba(0,212,255,.5) rgba(5,11,24,.75)}
+        .path-scroll{scrollbar-width:thin;scrollbar-color:rgba(var(--acad-yellow-rgb),.45) rgba(7,14,24,.75)}
         .path-scroll::-webkit-scrollbar{height:6px}
-        .path-scroll::-webkit-scrollbar-track{background:rgba(5,11,24,.78);border-radius:999px}
-        .path-scroll::-webkit-scrollbar-thumb{background:rgba(0,212,255,.35);border-radius:999px;border:1px solid rgba(5,11,24,.5)}
-        .path-scroll::-webkit-scrollbar-thumb:hover{background:rgba(0,212,255,.5)}
+        .path-scroll::-webkit-scrollbar-track{background:rgba(7,14,24,.78);border-radius:999px}
+        .path-scroll::-webkit-scrollbar-thumb{background:rgba(var(--acad-yellow-rgb),.4);border-radius:999px;border:1px solid rgba(7,14,24,.5)}
+        .path-scroll::-webkit-scrollbar-thumb:hover{background:rgba(var(--acad-yellow-rgb),.55)}
         .path-scroll::-webkit-scrollbar-button{width:0;height:0;display:none}
         .path-scroll::-webkit-scrollbar-corner{background:transparent}
-        .pricing-pop{box-shadow:0 24px 60px -20px rgba(0,212,255,.25)}
+        .pricing-pop{box-shadow:0 24px 60px -20px rgba(var(--acad-yellow-rgb),.22)}
         .grid-12{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:clamp(1rem,2vw,1.5rem)}
-        .stream-cta-band{background:linear-gradient(135deg,#0B3D91 0%,#123256 50%,#0d1528 100%);position:relative;overflow:hidden}
-        .stream-cta-band::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 80%,rgba(245,184,0,.15),transparent 55%),radial-gradient(ellipse 60% 40% at 85% 20%,rgba(0,212,255,.12),transparent 50%);pointer-events:none}
+        .stream-cta-band{background:linear-gradient(135deg,var(--acad-blue-dark) 0%,var(--acad-blue) 42%,var(--acad-navy) 100%);position:relative;overflow:hidden}
+        .stream-cta-band::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 80%,rgba(var(--acad-yellow-rgb),.14),transparent 55%),radial-gradient(ellipse 60% 40% at 85% 20%,rgba(var(--acad-cyan-rgb),.1),transparent 50%);pointer-events:none}
         .pattern-dots{background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.06) 1px,transparent 0);background-size:24px 24px}
-        .netflix-row{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:stretch;gap:1rem;overflow-x:auto;overflow-y:visible;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:rgba(0,212,255,.5) rgba(5,11,24,.82);scroll-behavior:smooth;-webkit-overflow-scrolling:touch;padding:8px 4px 16px;margin-inline:-4px;width:100%;max-width:100%}
+        .netflix-row{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:stretch;gap:1rem;overflow-x:auto;overflow-y:visible;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:rgba(var(--acad-yellow-rgb),.4) rgba(7,14,24,.82);scroll-behavior:smooth;-webkit-overflow-scrolling:touch;padding:8px 4px 16px;margin-inline:-4px;width:100%;max-width:100%}
         .netflix-row::-webkit-scrollbar{height:8px}
-        .netflix-row::-webkit-scrollbar-track{background:rgba(5,11,24,.9);border-radius:999px;margin-inline:2px}
-        .netflix-row::-webkit-scrollbar-thumb{background:linear-gradient(90deg,rgba(245,184,0,.55),rgba(0,212,255,.45));border-radius:999px;border:2px solid rgba(5,11,24,.85)}
-        .netflix-row::-webkit-scrollbar-thumb:hover{background:linear-gradient(90deg,rgba(245,184,0,.7),rgba(0,212,255,.55))}
+        .netflix-row::-webkit-scrollbar-track{background:rgba(7,14,24,.9);border-radius:999px;margin-inline:2px}
+        .netflix-row::-webkit-scrollbar-thumb{background:linear-gradient(90deg,rgba(var(--acad-yellow-rgb),.55),rgba(var(--acad-cyan-rgb),.35));border-radius:999px;border:2px solid rgba(7,14,24,.85)}
+        .netflix-row::-webkit-scrollbar-thumb:hover{background:linear-gradient(90deg,rgba(var(--acad-yellow-rgb),.7),rgba(var(--acad-cyan-rgb),.45))}
         .netflix-row::-webkit-scrollbar-button{width:0;height:0;display:none}
         .netflix-row::-webkit-scrollbar-corner{background:transparent}
         .stream-card-wrap.netflix-item{scroll-snap-align:start;flex:0 0 auto;width:min(17.5rem,82vw);min-width:min(17.5rem,82vw);max-width:20rem}
@@ -201,85 +224,112 @@
         @keyframes soIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
         #academy-search-anchor.search-bar-visible{animation:searchBarIn .28s ease forwards}
         @keyframes searchBarIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
-        .media-thumb-skeleton{position:absolute;inset:0;background:linear-gradient(110deg,#152a4a 8%,#1e3a5f 18%,#152a4a 33%);background-size:200% 100%;animation:mediaShimmer 1.2s linear infinite}
+        .media-thumb-skeleton{position:absolute;inset:0;background:linear-gradient(110deg,#152740 8%,#1A3F73 18%,#152740 33%);background-size:200% 100%;animation:mediaShimmer 1.2s linear infinite}
         @keyframes mediaShimmer{to{background-position-x:-200%}}
         .media-thumb-img{opacity:0;transition:opacity .35s ease}
         .media-thumb-img.is-loaded{opacity:1}
-        .chip-active{box-shadow:0 0 0 2px #F5B800,inset 0 0 20px rgba(245,184,0,.12)}
+        .chip-active{box-shadow:0 0 0 2px var(--acad-yellow),inset 0 0 20px rgba(var(--acad-yellow-rgb),.12)}
         @keyframes kenBurns{0%{transform:scale(1.08) translate(0,0)}100%{transform:scale(1.14) translate(-1%,-1%)}}
         @keyframes kenDrift{0%{transform:scale(1.12) translate(0,0)}100%{transform:scale(1.18) translate(1.2%,0.8%)}}
         .stream-hero .hero-slide.is-active .hero-ken{animation:kenBurns 16s ease-in-out infinite alternate}
         .stream-hero .hero-slide.is-active .hero-ken-accent{animation:kenDrift 18s ease-in-out infinite alternate}
-        /* Make hero imagery feel crisp/cinematic (not washed out) */
         .stream-hero .hero-ken,
         .stream-hero .hero-ken-accent{
-            filter: saturate(1.18) contrast(1.08) brightness(0.98);
-            -webkit-filter: saturate(1.18) contrast(1.08) brightness(0.98);
+            filter: saturate(1.05) contrast(1.06) brightness(0.96);
+            -webkit-filter: saturate(1.05) contrast(1.06) brightness(0.96);
+        }
+        @media (max-width: 767px), (prefers-reduced-motion: reduce) {
+            .stream-hero .hero-slide.is-active .hero-ken,
+            .stream-hero .hero-slide.is-active .hero-ken-accent { animation: none !important; }
+            .stream-hero .hero-ken,
+            .stream-hero .hero-ken-accent { filter: none; -webkit-filter: none; transform: none !important; }
+            .glass-panel { backdrop-filter: none; -webkit-backdrop-filter: none; }
+            .reveal { opacity: 1; transform: none; transition: none; }
+        }
+        @media (max-width: 767px) {
+            .stream-hero .hero-ken-accent { display: none; }
         }
     </style>
 </head>
 <body class="font-sans text-white antialiased font-display bg-acad-navy">
-<div id="scroll-progress" class="fixed top-0 left-0 h-[3px] w-0 z-[100000] bg-gradient-to-l from-acad-yellow to-acad-cyan"></div>
+<div id="scroll-progress" class="fixed top-0 left-0 h-[3px] w-0 z-[100000] bg-gradient-to-l from-acad-yellow to-acad-blue"></div>
 
 @include('components.unified-navbar')
 
 <main class="flex-1">
-    {{-- HERO: Netflix-style featured learning --}}
+    {{-- HERO: هوية المنصة + سليدر خلفيات + زرّان فقط + كورسات جانبية --}}
     <section class="stream-hero relative min-h-[100svh] flex flex-col justify-end overflow-hidden text-white -mt-14 sm:-mt-[60px] pt-14 sm:pt-[60px]">
-        @foreach($heroSpotlight as $hi => $spot)
-            <div class="hero-slide {{ $hi === 0 ? 'is-active' : '' }} absolute inset-0 flex flex-col justify-end pb-28 sm:pb-36 md:pb-44" data-hero-slide="{{ $hi }}">
-                @if(! empty($spot['bg']))
-                    <img src="{{ e($spot['bg']) }}"
+        @foreach($heroSlides as $hi => $slideBg)
+            <div class="hero-slide {{ $hi === 0 ? 'is-active' : '' }} absolute inset-0" data-hero-slide="{{ $hi }}" aria-hidden="{{ $hi === 0 ? 'false' : 'true' }}">
+                @if(! empty($slideBg))
+                    <img src="{{ e(\App\Services\SeoAssets::optimizedRemoteImage($slideBg, $hi === 0 ? 1400 : 1100, $hi === 0 ? 70 : 65)) }}"
                          alt=""
-                         class="hero-ken hero-slider-img absolute inset-0 w-full h-full object-cover object-center scale-110"
+                         width="1400"
+                         height="900"
+                         class="hero-ken hero-slider-img absolute inset-0 w-full h-full object-cover object-center"
                          decoding="async"
-                         fetchpriority="{{ $hi === 0 ? 'high' : 'auto' }}"
-                         loading="eager">
+                         fetchpriority="{{ $hi === 0 ? 'high' : 'low' }}"
+                         loading="{{ $hi === 0 ? 'eager' : 'lazy' }}">
                 @else
-                    <div class="absolute inset-0 bg-gradient-to-br from-[#0B3D91] via-[#123256] to-[#0d1528]"></div>
+                    <div class="absolute inset-0 bg-gradient-to-br from-[var(--acad-blue)] via-[var(--acad-navy-hero-mid)] to-[var(--acad-navy)]"></div>
                 @endif
-                @php
-                    $accent = $spot['accent_bg'] ?? '';
-                    $showAccent = $accent !== '' && $accent !== ($spot['bg'] ?? '');
-                @endphp
-                @if($showAccent)
-                    <img src="{{ e($accent) }}"
-                         alt=""
-                         class="hero-ken-accent absolute inset-0 w-full h-full object-cover object-center scale-110 opacity-[0.34] mix-blend-soft-light"
-                         decoding="async"
-                         loading="lazy">
-                @endif
-                <div class="absolute inset-0 bg-gradient-to-br from-[#0B3D91]/18 via-transparent to-[#00d4ff]/10 pointer-events-none"></div>
-                <div class="absolute inset-0 bg-gradient-to-t from-[#0d1528] via-[#0d1528]/70 to-[#0d1528]/12"></div>
-                <div class="absolute inset-0 bg-gradient-to-{{ $isRtl ? 'l' : 'r' }} from-[#0d1528] via-[#0d1528]/55 to-transparent w-full md:w-[75%]"></div>
-                <div class="absolute inset-0 pattern-dots opacity-[0.14] pointer-events-none"></div>
-                <div class="container-acad relative z-10 w-full">
-                    <div class="max-w-3xl {{ $isRtl ? 'ms-auto text-right' : 'me-auto text-left' }}">
-                        <p class="text-acad-yellow font-black text-[11px] sm:text-xs tracking-[0.25em] uppercase mb-3 opacity-95">{{ __($a.'.stream_meta_kicker') }}</p>
-                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-panel text-xs font-bold text-white w-fit mb-4 border border-white/10">{{ $spot['kicker'] }}</span>
-                        <h1 class="text-3xl sm:text-5xl lg:text-[3.35rem] font-black leading-[1.12] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,.45)] text-white">{{ $spot['title'] }}</h1>
-                        <p class="mt-4 text-base sm:text-lg text-white/82 max-w-2xl leading-relaxed font-medium">{{ $spot['sub'] }}</p>
-                        <div class="mt-8 flex flex-wrap gap-3">
-                            <a href="{{ $spot['primary_url'] }}" class="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-acad-yellow text-acad-blue font-extrabold text-sm sm:text-base shadow-xl shadow-black/35 hover:brightness-110 transition ring-2 ring-acad-yellow/30">{{ $spot['primary_label'] }}<i class="fas fa-play text-xs"></i></a>
-                            <a href="{{ $spot['secondary_url'] }}" class="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl glass-panel text-white font-bold hover:bg-white/10 transition border border-white/15">{{ $spot['secondary_label'] }}</a>
-                        </div>
-                    </div>
-                </div>
             </div>
         @endforeach
+
+        <div class="absolute inset-0 z-[1] bg-gradient-to-br from-[#1E4D8C]/35 via-transparent to-[#F0BC0C]/12 pointer-events-none"></div>
+        <div class="absolute inset-0 z-[1] bg-gradient-to-t from-[#121C30] via-[#121C30]/55 to-[#121C30]/10"></div>
+        <div class="absolute inset-0 z-[1] bg-gradient-to-{{ $isRtl ? 'l' : 'r' }} from-[#121C30]/92 via-[#121C30]/45 to-transparent w-full md:w-[78%]"></div>
+        <div class="absolute inset-0 z-[1] pattern-dots opacity-[0.12] pointer-events-none"></div>
+
+        <div class="container-acad relative z-10 w-full pb-28 sm:pb-32 md:pb-40">
+            <div class="max-w-3xl {{ $isRtl ? 'ms-auto text-right' : 'me-auto text-left' }}">
+                <p class="text-acad-yellow font-black text-[11px] sm:text-xs tracking-[0.28em] uppercase mb-3">Glottical</p>
+                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-xs font-bold text-white w-fit mb-4 shadow-lg shadow-black/20">
+                    <i class="fas fa-star text-acad-yellow text-[10px]"></i>
+                    {{ __($a.'.identity_badge') }}
+                </span>
+                <h1 class="text-3xl sm:text-5xl lg:text-[3.4rem] font-black leading-[1.12] tracking-tight text-white drop-shadow-[0_6px_28px_rgba(0,0,0,.4)]">
+                    {{ __($a.'.identity_title') }}
+                </h1>
+                <p class="mt-4 text-base sm:text-lg text-white/88 max-w-2xl leading-relaxed font-medium">
+                    {{ __($a.'.identity_sub') }}
+                </p>
+
+                <div class="mt-8 flex flex-wrap items-stretch gap-3 sm:gap-4">
+                    <button type="button" data-open-free-trial class="hero-cta-primary">
+                        <span class="inline-flex items-center gap-2 text-sm sm:text-base">
+                            <i class="fas fa-clipboard-check text-sm"></i>
+                            {{ __($a.'.free_trial_cta') }}
+                        </span>
+                        <span class="text-[11px] sm:text-xs font-bold opacity-80">{{ __($a.'.free_trial_cta_hint') }}</span>
+                    </button>
+                    <a href="{{ route('register') }}" class="hero-cta-secondary text-sm sm:text-base">
+                        <i class="fas fa-user-plus text-xs"></i>
+                        {{ __($a.'.identity_secondary_cta') }}
+                    </a>
+                </div>
+
+                <ul class="mt-7 flex flex-wrap gap-x-5 gap-y-2.5 text-xs sm:text-sm font-semibold text-white/85">
+                    <li class="inline-flex items-center gap-2"><i class="fas fa-check-circle text-acad-yellow"></i> {{ __($a.'.free_perk_1') }}</li>
+                    <li class="inline-flex items-center gap-2"><i class="fas fa-check-circle text-acad-yellow"></i> {{ __($a.'.free_perk_2') }}</li>
+                    <li class="inline-flex items-center gap-2"><i class="fas fa-check-circle text-acad-yellow"></i> {{ __($a.'.free_perk_3') }}</li>
+                    <li class="inline-flex items-center gap-2"><i class="fas fa-check-circle text-acad-yellow"></i> {{ __($a.'.free_perk_4') }}</li>
+                </ul>
+            </div>
+        </div>
+
         <div class="absolute bottom-6 sm:bottom-8 inset-x-0 z-20 flex justify-center pointer-events-none">
             <div class="hero-dots flex gap-2 pointer-events-auto" role="tablist" aria-label="Hero"></div>
         </div>
+
         @if($featuredList->isNotEmpty())
             <div class="hidden lg:flex flex-col gap-3 absolute bottom-28 {{ $isRtl ? 'left-6' : 'right-6' }} z-20 w-[min(100%,280px)] pointer-events-auto">
                 @foreach($featuredList->take(3) as $fc)
-                    @php
-                        $fcu = $fc->thumbnail_url;
-                    @endphp
-                    <a href="{{ route('public.course.show', $fc->id) }}" class="flex items-center gap-3 rounded-xl glass-panel p-3 text-white hover:ring-1 hover:ring-acad-yellow/60 transition shadow-2xl border border-white/10">
+                    @php $fcu = $fc->thumbnail_url; @endphp
+                    <a href="{{ route('public.course.show', $fc->id) }}" class="hero-side-card flex items-center gap-3 rounded-xl p-3 text-white transition shadow-2xl">
                         <div class="w-14 h-14 rounded-lg overflow-hidden bg-white/10 shrink-0 ring-1 ring-white/15">
                             @if($fcu)
-                                <img src="{{ $fcu }}" alt="" class="w-full h-full object-cover">
+                                <img src="{{ $fcu }}" alt="" class="w-full h-full object-cover" loading="lazy" width="56" height="56">
                             @else
                                 <span class="flex w-full h-full items-center justify-center text-white/40"><i class="fas fa-play"></i></span>
                             @endif
@@ -456,7 +506,7 @@
                         $courseCt = (int) ($p->courses_count ?? 0);
                         $avgRating = number_format(4.6 + (crc32((string) $name) % 35) / 100, 1);
                     @endphp
-                    <article class="reveal relative rounded-2xl border border-white/10 glass-panel p-6 hover:border-acad-cyan/35 hover:shadow-[0_0_40px_-10px_rgba(0,212,255,.35)] transition text-center overflow-hidden group">
+                    <article class="reveal relative rounded-2xl border border-white/10 glass-panel p-6 hover:border-acad-yellow/35 hover:shadow-[0_0_40px_-10px_rgba(230,176,9,.28)] transition text-center overflow-hidden group">
                         <a href="{{ route('public.instructors.show', $p->user) }}" class="block relative z-10">
                             <x-instructor-avatar :profile="$p" class="mx-auto ring-2 ring-acad-yellow/40 shadow-lg" size="md" />
                             <h3 class="mt-5 font-black text-lg text-white">{{ $name }}</h3>
@@ -490,7 +540,7 @@
 
     {{-- STATS --}}
     <section class="section-y relative overflow-hidden text-white border-t border-white/5">
-        <div class="absolute inset-0 bg-gradient-to-br from-[#121f38] via-[#0B3D91] to-[#0d1528]"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-acad-navy-mid via-acad-blue-dark to-acad-navy"></div>
         <div class="absolute inset-0 pattern-dots opacity-30"></div>
         <div class="absolute inset-0 bg-gradient-to-t from-acad-yellow/5 to-transparent pointer-events-none"></div>
         <div class="container-acad relative z-10">
@@ -697,6 +747,68 @@
     </div>
 </div>
 
+{{-- Free trial booking calendar modal --}}
+<div id="free-trial-modal" class="fixed inset-0 z-[100070] hidden items-center justify-center p-4" aria-hidden="true">
+    <div class="absolute inset-0 bg-acad-navy/80 backdrop-blur-md" data-close-free-trial></div>
+    <div class="relative z-10 w-full max-w-xl rounded-2xl bg-acad-navy shadow-2xl border border-acad-yellow/25 overflow-hidden max-h-[92vh] overflow-y-auto text-white">
+        <div class="h-1.5 w-full bg-gradient-to-l from-acad-yellow via-acad-blue to-acad-yellow"></div>
+        <button type="button" class="absolute top-3 {{ $isRtl ? 'left-3' : 'right-3' }} w-10 h-10 rounded-full bg-white/10 border border-white/15 text-white hover:bg-white/20 z-10" data-close-free-trial aria-label="{{ __($a.'.free_trial_close') }}"><i class="fas fa-times"></i></button>
+        <div class="p-6 pt-12 space-y-5">
+            <div>
+                <p class="text-acad-yellow text-xs font-black uppercase tracking-widest mb-1">Glottical</p>
+                <h3 class="text-xl font-black">{{ __($a.'.free_trial_modal_title') }}</h3>
+                <p class="text-sm text-white/65 mt-1">{{ __($a.'.free_trial_modal_sub') }}</p>
+            </div>
+
+            <div id="ft-loading" class="text-sm text-acad-yellow font-semibold">{{ __($a.'.free_trial_loading') }}</div>
+            <div id="ft-error" class="hidden rounded-xl bg-rose-500/15 border border-rose-400/30 text-rose-100 px-3 py-2 text-sm"></div>
+
+            <div id="ft-calendar" class="hidden space-y-4">
+                <div>
+                    <p class="text-xs font-bold text-white/50 mb-2">{{ __($a.'.free_trial_pick_date') }}</p>
+                    <div id="ft-dates" class="flex flex-wrap gap-2"></div>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-white/50 mb-2">{{ __($a.'.free_trial_pick_time') }}</p>
+                    <div id="ft-times" class="flex flex-wrap gap-2"></div>
+                    <p id="ft-no-times" class="hidden text-sm text-white/50">{{ __($a.'.free_trial_no_slots') }}</p>
+                </div>
+                <form id="ft-form" class="space-y-3 pt-2 border-t border-white/10">
+                    <input type="hidden" name="starts_at" id="ft-starts-at" required>
+                    <div>
+                        <label class="block text-xs font-bold text-white/60 mb-1">{{ __($a.'.free_trial_name') }}</label>
+                        <input type="text" name="name" id="ft-name" required class="w-full rounded-xl bg-white/5 border border-white/15 px-3 py-2.5 text-sm focus:ring-2 focus:ring-acad-yellow/40 focus:border-acad-yellow outline-none" value="{{ auth()->user()->name ?? '' }}">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-white/60 mb-1">{{ __($a.'.free_trial_email') }}</label>
+                            <input type="email" name="email" id="ft-email" class="w-full rounded-xl bg-white/5 border border-white/15 px-3 py-2.5 text-sm focus:ring-2 focus:ring-acad-yellow/40 outline-none" value="{{ auth()->user()->email ?? '' }}">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-white/60 mb-1">{{ __($a.'.free_trial_phone') }}</label>
+                            <input type="text" name="phone" id="ft-phone" class="w-full rounded-xl bg-white/5 border border-white/15 px-3 py-2.5 text-sm focus:ring-2 focus:ring-acad-yellow/40 outline-none" value="{{ auth()->user()->phone ?? '' }}">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-white/60 mb-1">{{ __($a.'.free_trial_goal') }}</label>
+                        <input type="text" name="goal" id="ft-goal" class="w-full rounded-xl bg-white/5 border border-white/15 px-3 py-2.5 text-sm focus:ring-2 focus:ring-acad-yellow/40 outline-none" placeholder="سفر / عمل / دراسة…">
+                    </div>
+                    <button type="submit" id="ft-submit" disabled class="w-full py-3 rounded-xl bg-acad-yellow text-acad-blue font-black disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition">
+                        {{ __($a.'.free_trial_submit') }}
+                    </button>
+                </form>
+            </div>
+
+            <div id="ft-success" class="hidden text-center space-y-3 py-6">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-acad-yellow text-acad-blue flex items-center justify-center text-2xl"><i class="fas fa-check"></i></div>
+                <h4 class="font-black text-lg">{{ __($a.'.free_trial_success') }}</h4>
+                <p id="ft-success-msg" class="text-sm text-white/70"></p>
+                <button type="button" data-close-free-trial class="px-5 py-2.5 rounded-xl border border-white/20 font-bold text-sm">{{ __($a.'.free_trial_close') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Quick view modal --}}
 <div id="quick-view-modal" class="fixed inset-0 z-[100060] hidden items-center justify-center p-4" aria-hidden="true">
     <div class="absolute inset-0 bg-black/70 backdrop-blur-md" data-close-qv></div>
@@ -770,7 +882,11 @@
         var dots = dotsWrap.querySelectorAll('button');
         function go(n){
             i = n;
-            slides.forEach(function(s, j){ s.classList.toggle('is-active', j === i); });
+            slides.forEach(function(s, j){
+                var on = j === i;
+                s.classList.toggle('is-active', on);
+                s.setAttribute('aria-hidden', on ? 'false' : 'true');
+            });
             dots.forEach(function(d, j){ d.classList.toggle('is-active', j === i); });
         }
         function next(){ go((i + 1) % slides.length); }
@@ -1135,6 +1251,143 @@
         p();
     }
 
+    function freeTrialBooking(){
+        var modal = document.getElementById('free-trial-modal');
+        if (!modal) return;
+        var slotsByDate = {};
+        var selectedDate = null;
+        var selectedStart = null;
+        var csrf = document.querySelector('meta[name="csrf-token"]');
+        var token = csrf ? csrf.getAttribute('content') : '';
+
+        function openModal(){
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            loadSlots();
+        }
+        function closeModal(){
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+        document.querySelectorAll('[data-open-free-trial]').forEach(function(btn){
+            btn.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
+        });
+        document.querySelectorAll('[data-close-free-trial]').forEach(function(btn){
+            btn.addEventListener('click', closeModal);
+        });
+
+        function loadSlots(){
+            document.getElementById('ft-loading').classList.remove('hidden');
+            document.getElementById('ft-calendar').classList.add('hidden');
+            document.getElementById('ft-success').classList.add('hidden');
+            document.getElementById('ft-error').classList.add('hidden');
+            fetch(@json(route('public.free-trial.slots')) + '?days=14', { headers: { 'Accept': 'application/json' } })
+                .then(function(r){ return r.json(); })
+                .then(function(data){
+                    slotsByDate = data.slots_by_date || {};
+                    var datesWrap = document.getElementById('ft-dates');
+                    datesWrap.innerHTML = '';
+                    (data.dates || []).forEach(function(d, i){
+                        var b = document.createElement('button');
+                        b.type = 'button';
+                        b.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-white/15 bg-white/5 hover:border-acad-yellow/60 transition';
+                        b.textContent = d;
+                        b.dataset.date = d;
+                        b.addEventListener('click', function(){ selectDate(d); });
+                        datesWrap.appendChild(b);
+                        if (i === 0) selectDate(d);
+                    });
+                    document.getElementById('ft-loading').classList.add('hidden');
+                    document.getElementById('ft-calendar').classList.remove('hidden');
+                    if (!(data.dates || []).length) {
+                        document.getElementById('ft-error').textContent = @json(__($a.'.free_trial_no_slots'));
+                        document.getElementById('ft-error').classList.remove('hidden');
+                    }
+                })
+                .catch(function(){
+                    document.getElementById('ft-loading').classList.add('hidden');
+                    document.getElementById('ft-error').textContent = 'تعذّر تحميل المواعيد';
+                    document.getElementById('ft-error').classList.remove('hidden');
+                });
+        }
+
+        function selectDate(d){
+            selectedDate = d;
+            selectedStart = null;
+            document.getElementById('ft-starts-at').value = '';
+            document.getElementById('ft-submit').disabled = true;
+            document.querySelectorAll('#ft-dates button').forEach(function(b){
+                var on = b.dataset.date === d;
+                b.classList.toggle('bg-acad-yellow', on);
+                b.classList.toggle('text-acad-blue', on);
+                b.classList.toggle('border-acad-yellow', on);
+            });
+            var times = slotsByDate[d] || [];
+            var wrap = document.getElementById('ft-times');
+            wrap.innerHTML = '';
+            document.getElementById('ft-no-times').classList.toggle('hidden', times.length > 0);
+            times.forEach(function(slot){
+                var b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'px-3 py-2 rounded-xl text-sm font-bold border border-white/15 bg-white/5 hover:border-acad-yellow/70 transition';
+                b.textContent = slot.time;
+                b.addEventListener('click', function(){
+                    selectedStart = slot.starts_at;
+                    document.getElementById('ft-starts-at').value = slot.starts_at;
+                    document.getElementById('ft-submit').disabled = false;
+                    wrap.querySelectorAll('button').forEach(function(x){
+                        x.classList.remove('bg-acad-yellow', 'text-acad-navy', 'border-acad-yellow');
+                    });
+                    b.classList.add('bg-acad-yellow', 'text-acad-navy', 'border-acad-yellow');
+                });
+                wrap.appendChild(b);
+            });
+        }
+
+        var form = document.getElementById('ft-form');
+        form.addEventListener('submit', function(e){
+            e.preventDefault();
+            var err = document.getElementById('ft-error');
+            err.classList.add('hidden');
+            var payload = {
+                name: document.getElementById('ft-name').value,
+                email: document.getElementById('ft-email').value || null,
+                phone: document.getElementById('ft-phone').value || null,
+                goal: document.getElementById('ft-goal').value || null,
+                starts_at: document.getElementById('ft-starts-at').value
+            };
+            document.getElementById('ft-submit').disabled = true;
+            fetch(@json(route('public.free-trial.book')), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': token
+                },
+                body: JSON.stringify(payload)
+            }).then(function(r){ return r.json().then(function(j){ return { ok: r.ok, status: r.status, body: j }; }); })
+            .then(function(res){
+                if (!res.ok) {
+                    err.textContent = (res.body && res.body.message) ? res.body.message : ((res.body && res.body.errors) ? Object.values(res.body.errors)[0][0] : 'فشل الحجز');
+                    err.classList.remove('hidden');
+                    document.getElementById('ft-submit').disabled = false;
+                    return;
+                }
+                document.getElementById('ft-calendar').classList.add('hidden');
+                document.getElementById('ft-success').classList.remove('hidden');
+                document.getElementById('ft-success-msg').textContent = (res.body.message || '') + (res.body.booking && res.body.booking.label ? (' — ' + res.body.booking.label) : '');
+            }).catch(function(){
+                err.textContent = 'فشل الاتصال — حاول مجدداً';
+                err.classList.remove('hidden');
+                document.getElementById('ft-submit').disabled = false;
+            });
+        });
+    }
+
     function boot(){
         reveal();
         heroParallax();
@@ -1145,6 +1398,7 @@
         counters();
         testimonialCarousel();
         scrollProgress();
+        freeTrialBooking();
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

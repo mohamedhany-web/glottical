@@ -14,7 +14,7 @@
 @endphp
 <nav id="navbar"
      class="fixed top-0 inset-x-0 z-[999] transition-all duration-500 {{ $isHome ? 'nav-home' : '' }}"
-     style="font-family: 'Cairo', 'Tajawal', 'IBM Plex Sans Arabic', system-ui, sans-serif;">
+     style="font-family: 'Cairo', system-ui, sans-serif;">
 
     <div class="max-w-7xl mx-auto px-3 sm:px-5 lg:px-8 relative">
         <div class="flex items-center justify-between gap-2 sm:gap-3 h-14 sm:h-[60px] w-full min-w-0">
@@ -229,7 +229,7 @@
 #navbar .nav-mycourses:hover { background: rgba(255,255,255,.14); }
 #navbar .nav-dash { color: #ffffff; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.10); }
 #navbar .nav-dash:hover { background: rgba(255,255,255,.14); }
-#navbar .nav-cta { background: #F5B800; color: #0B3D91; box-shadow: 0 8px 22px -14px rgba(245,184,0,.45); }
+#navbar .nav-cta { background: #E6B009; color: #1A3F73; box-shadow: 0 8px 22px -14px rgba(230,176,9,.45); }
 #navbar .nav-cta:hover { transform: translateY(-1px) scale(1.02); box-shadow: 0 14px 32px -14px rgba(245,184,0,.55); }
 #navbar .nav-lang-switch { border-color: rgba(255, 255, 255, 0.18); }
 #navbar .nav-lang-item { color: rgba(255, 255, 255, 0.78); }
@@ -295,23 +295,23 @@
     width: 20px;
     height: 2px;
     border-radius: 1px;
-    background: #F5B800;
+    background: #E6B009;
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .nav-link:hover::after {
     transform: translateX(-50%) scaleX(1);
 }
 
-/* ─── Mobile drawer (موحّد مع #0d1528) ─── */
+/* ─── Mobile drawer (موحّد مع navy brand) ─── */
 .mob-menu-overlay {
-    background: rgba(8, 14, 28, 0.72);
+    background: rgba(8, 14, 24, 0.72);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     transition: opacity 0.28s ease;
     will-change: opacity;
 }
 .mob-menu-panel {
-    font-family: 'Cairo', 'Tajawal', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+    font-family: 'Cairo', system-ui, sans-serif;
     box-shadow: {{ $isRtl ? '-24px' : '24px' }} 0 48px rgba(0, 0, 0, 0.55);
     transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
     overscroll-behavior: contain;
@@ -365,10 +365,10 @@
     flex-shrink: 0;
     font-size: 0.95rem;
 }
-.mob-menu-icon--gold { background: rgba(245, 184, 0, 0.12); border: 1px solid rgba(245, 184, 0, 0.22); color: #F5B800; }
-.mob-menu-icon--cyan { background: rgba(0, 163, 196, 0.14); border: 1px solid rgba(0, 212, 255, 0.22); color: #00d4ff; }
-.mob-menu-icon--blue { background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(96, 165, 250, 0.2); color: #93c5fd; }
-.mob-menu-icon--violet { background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(167, 139, 250, 0.2); color: #c4b5fd; }
+.mob-menu-icon--gold { background: rgba(230, 176, 9, 0.12); border: 1px solid rgba(230, 176, 9, 0.22); color: #E6B009; }
+.mob-menu-icon--cyan { background: rgba(143, 163, 192, 0.14); border: 1px solid rgba(143, 163, 192, 0.22); color: #8FA3C0; }
+.mob-menu-icon--blue { background: rgba(26, 63, 115, 0.22); border: 1px solid rgba(143, 163, 192, 0.2); color: #8FA3C0; }
+.mob-menu-icon--violet { background: rgba(26, 63, 115, 0.18); border: 1px solid rgba(143, 163, 192, 0.18); color: #A8B8D0; }
 .mob-menu-icon--slate { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.65); }
 .mob-menu-cta {
     display: flex;
@@ -386,9 +386,9 @@
 }
 .mob-menu-cta:active { transform: scale(0.98); }
 .mob-menu-cta--primary {
-    background: linear-gradient(135deg, #F5B800 0%, #f0a500 100%);
-    color: #0B3D91;
-    box-shadow: 0 10px 28px -12px rgba(245, 184, 0, 0.55);
+    background: linear-gradient(135deg, #E6B009 0%, #D4A008 100%);
+    color: #1A3F73;
+    box-shadow: 0 10px 28px -12px rgba(230, 176, 9, 0.55);
 }
 .mob-menu-close { -webkit-tap-highlight-color: transparent; }
 .mob-menu-details .mob-menu-summary { list-style: none; }

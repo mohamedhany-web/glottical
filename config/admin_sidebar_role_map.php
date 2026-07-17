@@ -21,6 +21,7 @@ return [
                 ['label' => 'الملف الشخصي', 'permissions' => ['view.dashboard', 'admin.access']],
                 ['label' => 'وارد الإشعارات', 'permissions' => ['manage.notifications'], 'note' => 'للموظف RBAC: يظهر إن وُجدت الصلاحية'],
                 ['label' => 'رسائل التواصل', 'permissions' => ['manage.contact-messages']],
+                ['label' => 'الحصة المجانية', 'permissions' => ['manage.free-trial-bookings']],
                 ['label' => 'خدمات الموقع', 'permissions' => ['manage.site-services']],
                 ['label' => 'آراء الموقع (الرئيسية)', 'permissions' => ['manage.site-testimonials', 'manage.site-services']],
                 ['label' => 'سلايدر الصفحة الرئيسية', 'permissions' => ['manage.homepage-sliders', 'manage.site-services']],

@@ -41,7 +41,7 @@
             <div class="relative z-20 p-3 pt-3 border-t border-white/10 bg-[#121f38]">
                 <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
                     <span class="text-[10px] font-black px-2 py-0.5 rounded-md bg-white/15 text-white backdrop-blur-sm border border-white/10">{{ $durLabel }}</span>
-                    <span class="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#00A3C4]/25 text-[#7ee8ff] border border-[#00A3C4]/30">{{ $lvlLabel }}</span>
+                    <span class="text-[10px] font-black px-2 py-0.5 rounded-md bg-acad-cyan/20 text-acad-cyan border border-acad-cyan/30">{{ $lvlLabel }}</span>
                 </div>
                 <h3 class="font-black text-white text-sm sm:text-base leading-snug line-clamp-2">{{ \Illuminate\Support\Str::limit($course->title, 72) }}</h3>
                 @if($instName !== '')

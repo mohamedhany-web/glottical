@@ -63,19 +63,7 @@
             theme: {
                 extend: {
                     colors: {
-                        acad: {
-                            blue: '#0B3D91',
-                            blueDark: '#072a66',
-                            blueSoft: '#E8EEF8',
-                            cyan: '#00A3C4',
-                            yellow: '#F5B800',
-                            yellowSoft: '#FFF8E1',
-                            gray: '#F4F6FA',
-                            ink: '#1a2d4d',
-                            navy: '{{ config('academy-theme.navy') }}',
-                            navyMid: '{{ config('academy-theme.navy_mid') }}',
-                            neon: '#00d4ff',
-                        },
+                        @include('partials.academy-tailwind-colors')
                     },
                     fontFamily: {
                         sans: ['Cairo', 'Tajawal', 'IBM Plex Sans Arabic', 'system-ui', 'sans-serif'],
@@ -104,7 +92,7 @@
       x-data="{ mobileMenu: false, searchQuery: '' }"
       :class="{ 'overflow-hidden': mobileMenu }">
 
-    <div id="scroll-progress" class="fixed top-0 left-0 h-[3px] w-0 z-[100000] bg-gradient-to-l from-acad-yellow to-acad-cyan"></div>
+    <div id="scroll-progress" class="fixed top-0 left-0 h-[3px] w-0 z-[100000] bg-gradient-to-l from-acad-yellow to-acad-blue"></div>
 
     @include('components.unified-navbar')
 

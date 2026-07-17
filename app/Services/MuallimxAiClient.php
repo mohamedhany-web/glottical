@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * عميل توليد النصوص لـ Muallimx AI (REST generateContent).
+ * عميل توليد النصوص لـ Glottical AI (REST generateContent).
  */
 class MuallimxAiClient
 {
@@ -93,7 +93,7 @@ class MuallimxAiClient
         if (! $response->successful()) {
             $body = $response->json();
             $msg = is_array($body) ? (string) data_get($body, 'error.message', $response->body()) : $response->body();
-            Log::warning('Muallimx AI HTTP error', [
+            Log::warning('Glottical AI HTTP error', [
                 'status' => $response->status(),
                 'message' => mb_substr($msg, 0, 500),
             ]);
@@ -117,7 +117,7 @@ class MuallimxAiClient
 
         $text = $this->extractTextFromResponse($json);
         if ($text === '') {
-            Log::warning('Muallimx AI empty or unparsed candidates', [
+            Log::warning('Glottical AI empty or unparsed candidates', [
                 'finishReason' => $finish,
                 'keys' => array_keys($json),
                 'candidate_preview' => mb_substr(json_encode(data_get($json, 'candidates.0'), JSON_UNESCAPED_UNICODE), 0, 800),
