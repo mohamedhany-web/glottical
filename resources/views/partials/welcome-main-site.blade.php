@@ -28,16 +28,16 @@
 <main class="page-enter">
     {{-- 1. Hero --}}
     <section class="relative min-h-[92vh] overflow-hidden bg-ink text-white">
-      <img src="{{ e(\App\Services\SeoAssets::optimizedRemoteImage($heroImg, 1600, 70)) }}" alt="" class="absolute inset-0 h-full w-full object-cover object-center opacity-55 img-zoom" width="1600" height="900" fetchpriority="high" decoding="async">
-      <div class="absolute inset-0 bg-gradient-to-{{ $isRtl ? 'l' : 'r' }} from-ink via-ink/75 to-ink/35"></div>
+      <img src="{{ e(\App\Services\SeoAssets::optimizedRemoteImage($heroImg, 1600, 70)) }}" alt="" class="absolute inset-0 h-full w-full object-cover object-center opacity-45" width="1600" height="900" fetchpriority="high" decoding="async">
+      <div class="hero-scrim" aria-hidden="true"></div>
       <div class="container-wide relative flex min-h-[92vh] flex-col justify-end pb-14 pt-32 sm:pb-16 md:justify-center md:pb-24 md:pt-36">
         <div class="max-w-2xl space-y-5 sm:space-y-6">
           <p class="fade-up text-3xl font-bold tracking-tight sm:text-4xl md:text-6xl">Glottical</p>
           <h1 class="fade-up fade-up-delay-1 text-balance text-2xl font-semibold leading-tight sm:text-3xl md:text-5xl md:leading-[1.15]">{{ __($a.'.identity_title') }}</h1>
-          <p class="fade-up fade-up-delay-2 max-w-xl text-sm leading-7 text-white/80 sm:text-base sm:leading-8 md:text-lg">{{ __($a.'.identity_sub') }}</p>
+          <p class="fade-up fade-up-delay-2 max-w-xl text-sm leading-7 text-white/85 sm:text-base sm:leading-8 md:text-lg">{{ __($a.'.identity_sub') }}</p>
           <div class="hero-cta-row fade-up fade-up-delay-3 flex flex-col gap-3 pt-1 sm:flex-row sm:flex-wrap sm:pt-2">
-            <button type="button" data-open-free-trial class="btn-press inline-flex h-12 sm:h-14 items-center rounded-xl bg-accent px-6 sm:px-7 text-sm sm:text-base font-medium text-white shadow-[0_10px_24px_rgba(15,92,87,0.25)] transition hover:bg-[#0d4f4a]">{{ __($a.'.free_trial_cta') }}</button>
-            <a href="{{ route('register') }}" class="btn-press inline-flex h-12 sm:h-14 items-center rounded-xl border border-white/25 bg-white/5 px-6 sm:px-7 text-sm sm:text-base font-medium text-white transition hover:bg-white/10">{{ __($a.'.identity_secondary_cta') }}</a>
+            <button type="button" data-open-free-trial class="btn-press inline-flex h-12 items-center justify-center rounded-xl bg-accent px-6 text-sm font-medium text-white shadow-[0_10px_24px_rgba(15,92,87,0.25)] transition hover:bg-[#0d4f4a] sm:h-14 sm:px-7 sm:text-base">{{ __($a.'.free_trial_cta') }}</button>
+            <a href="{{ route('register') }}" class="btn-press inline-flex h-12 items-center justify-center rounded-xl border border-white/25 bg-white/10 px-6 text-sm font-medium text-white transition hover:bg-white/15 sm:h-14 sm:px-7 sm:text-base">{{ __($a.'.identity_secondary_cta') }}</a>
           </div>
         </div>
       </div>

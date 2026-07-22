@@ -136,15 +136,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="{{ versioned_asset('js/atheer-tailwind-config.js') }}"></script>
-    <link rel="stylesheet" href="{{ versioned_asset('css/atheer.css') }}">
+    @include('partials.atheer-head')
     <meta name="theme-color" content="#0f5c57">
     <style>
         [x-cloak]{display:none!important}
         /* Free-trial modal — self-contained so it never falls back to old dark UI */
         #free-trial-modal{
             font-family:"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif;
+        }
+        #free-trial-modal.hidden{
+            display:none !important;
         }
         #free-trial-modal .ft-backdrop{
             background:rgba(11,18,32,.48);

@@ -14,8 +14,10 @@ description: >-
 Source of truth: `site/` (storefront + `site/admin/`).
 
 Live assets:
-- Public: `public/css/atheer.css`, `public/js/atheer-tailwind-config.js`, `partials/atheer-home-*`
+- Public: `public/css/atheer.css`, `partials/atheer-head.blade.php` (Tailwind + **inlined** tokens), `partials/atheer-home-*`
 - Admin: `public/css/admin-atheer.css`, `layouts/admin.blade.php`, `layouts/admin-sidebar.blade.php`
+
+**Never depend only on `atheer-tailwind-config.js` for production** — always `@include('partials.atheer-head')` so tokens ship even if the external JS 404s. Token utility fallbacks also live in `atheer.css` (`.bg-ink`, `.container-wide` padding, `.hero-scrim`).
 
 This is an **academy**. Match the **visual system** of `site/`; never reintroduce e-commerce cart UX as the product model.
 
