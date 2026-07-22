@@ -36,6 +36,8 @@ class SeoAssets
             return $url;
         }
 
+        $url = html_entity_decode($url, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
         if (! str_contains($url, 'images.unsplash.com')) {
             return $url;
         }

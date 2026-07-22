@@ -42,8 +42,8 @@
             </a>
             <button type="button" id="mobile-menu-close"
                     class="mob-menu-close shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 border border-white/10 transition-colors"
-                    aria-label="Close">
-                <i class="fas fa-times text-lg"></i>
+                    aria-label="{{ app()->getLocale() === 'ar' ? 'إغلاق' : 'Close' }}">
+                <span class="text-2xl leading-none" aria-hidden="true">&times;</span>
             </button>
         </div>
 

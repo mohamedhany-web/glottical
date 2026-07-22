@@ -1,4 +1,7 @@
-{{-- تحميل Tailwind + توكنات Atheer (الكونفيج مضمّن حتى لا ينكسر التصميم لو فشل ملف الـ JS الخارجي) --}}
+{{-- تحميل Tailwind + توكنات Atheer — الـ CSS يُضمَّن من resources حتى لا ينهار الموقع لو /css/* رجّع 404 على السيرفر --}}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
@@ -34,4 +37,25 @@
     },
   };
 </script>
+@php
+    $atheerCssCandidates = [
+        resource_path('css/atheer.css'),
+        public_path('css/atheer.css'),
+    ];
+    $atheerCssInline = '';
+    foreach ($atheerCssCandidates as $atheerCssPath) {
+        if (is_file($atheerCssPath)) {
+            $atheerCssInline = (string) file_get_contents($atheerCssPath);
+            break;
+        }
+    }
+    if ($atheerCssInline !== '') {
+        $atheerCssInline = preg_replace('/@import\s+url\([^)]+\)\s*;?/i', '', $atheerCssInline) ?? $atheerCssInline;
+    }
+@endphp
+@if($atheerCssInline !== '')
+<style id="atheer-css">{!! $atheerCssInline !!}</style>
+@endif
+{{-- رابط احتياطي للكاش — عبر Laravel route لأن /css/* قد يرجّع 404 على بعض الاستضافات --}}
+<link rel="stylesheet" href="{{ route('assets.atheer.css') }}?v={{ @filemtime(resource_path('css/atheer.css')) ?: time() }}">
 <link rel="stylesheet" href="{{ versioned_asset('css/atheer.css') }}">

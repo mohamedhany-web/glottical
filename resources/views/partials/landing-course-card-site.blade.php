@@ -1,5 +1,16 @@
 @php
     $thumbUrl = $course->thumbnail_url;
+    if (! $thumbUrl) {
+        $fallbackPool = [
+            'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80',
+            'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=900&q=80',
+            'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=900&q=80',
+            'https://images.unsplash.com/photo-1546410531-bb4caa6b139d?auto=format&fit=crop&w=900&q=80',
+            'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=900&q=80',
+            'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80',
+        ];
+        $thumbUrl = $fallbackPool[abs(crc32((string) ($course->id ?? 0))) % count($fallbackPool)];
+    }
     $instName = $course->instructor->name ?? '';
     $rating = $course->rating !== null ? number_format((float) $course->rating, 1) : '4.8';
     $reviews = max(12, abs(crc32((string) $course->id)) % 320);
@@ -14,11 +25,7 @@
 <article class="group card-lift flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft">
   <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
     <a href="{{ $url }}" class="absolute inset-0">
-      @if($thumbUrl)
-        <img src="{{ $thumbUrl }}" alt="{{ $course->title }}" class="img-zoom h-full w-full object-cover" loading="lazy" decoding="async" width="400" height="500">
-      @else
-        <span class="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent to-ink text-white/40 text-4xl">✦</span>
-      @endif
+      <img src="{{ $thumbUrl }}" alt="{{ $course->title }}" class="img-zoom h-full w-full object-cover" loading="lazy" decoding="async" width="400" height="500">
     </a>
     <div class="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
       <div class="flex flex-wrap gap-1.5">

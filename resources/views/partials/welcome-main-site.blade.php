@@ -28,7 +28,7 @@
 <main class="page-enter">
     {{-- 1. Hero --}}
     <section class="relative min-h-[92vh] overflow-hidden bg-ink text-white">
-      <img src="{{ e(\App\Services\SeoAssets::optimizedRemoteImage($heroImg, 1600, 70)) }}" alt="" class="absolute inset-0 h-full w-full object-cover object-center opacity-45" width="1600" height="900" fetchpriority="high" decoding="async">
+      <img src="{{ \App\Services\SeoAssets::optimizedRemoteImage($heroImg, 1600, 70) }}" alt="" class="absolute inset-0 h-full w-full object-cover object-center opacity-45" width="1600" height="900" fetchpriority="high" decoding="async">
       <div class="hero-scrim" aria-hidden="true"></div>
       <div class="container-wide relative flex min-h-[92vh] flex-col justify-end pb-14 pt-32 sm:pb-16 md:justify-center md:pb-24 md:pt-36">
         <div class="max-w-2xl space-y-5 sm:space-y-6">

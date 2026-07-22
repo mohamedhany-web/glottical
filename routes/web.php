@@ -232,6 +232,48 @@ Route::get('/sitemap.xml', function () {
 
 // الصفحة الرئيسية (Home) - الترجمة عبر SetLocale في مجموعة web
 Route::get('/', [\App\Http\Controllers\Public\LandingController::class, 'index'])->name('home');
+
+// خدمة أصول أثير عبر Laravel عندما تفشل الملفات الثابتة من /public على الاستضافة
+$serveAtheerAsset = static function (array $candidates, string $contentType) {
+    foreach ($candidates as $path) {
+        if (is_file($path)) {
+            return response((string) file_get_contents($path), 200, [
+                'Content-Type' => $contentType,
+                'Cache-Control' => 'public, max-age=86400',
+            ]);
+        }
+    }
+
+    abort(404);
+};
+
+Route::get('/assets/atheer.css', function () use ($serveAtheerAsset) {
+    return $serveAtheerAsset(
+        [resource_path('css/atheer.css'), public_path('css/atheer.css')],
+        'text/css; charset=UTF-8'
+    );
+})->name('assets.atheer.css');
+
+Route::get('/css/atheer.css', function () use ($serveAtheerAsset) {
+    return $serveAtheerAsset(
+        [resource_path('css/atheer.css'), public_path('css/atheer.css')],
+        'text/css; charset=UTF-8'
+    );
+})->name('assets.atheer.css.public');
+
+Route::get('/css/admin-atheer.css', function () use ($serveAtheerAsset) {
+    return $serveAtheerAsset(
+        [resource_path('css/admin-atheer.css'), public_path('css/admin-atheer.css')],
+        'text/css; charset=UTF-8'
+    );
+})->name('assets.admin-atheer.css');
+
+Route::get('/js/atheer-tailwind-config.js', function () use ($serveAtheerAsset) {
+    return $serveAtheerAsset(
+        [resource_path('js/atheer-tailwind-config.js'), public_path('js/atheer-tailwind-config.js')],
+        'application/javascript; charset=UTF-8'
+    );
+})->name('assets.atheer.tailwind');
 Route::get('/free-trial/slots', [\App\Http\Controllers\Public\FreeTrialBookingController::class, 'slots'])->name('public.free-trial.slots');
 Route::post('/free-trial/book', [\App\Http\Controllers\Public\FreeTrialBookingController::class, 'store'])
     ->middleware('throttle:10,1')

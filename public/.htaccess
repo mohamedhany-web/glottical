@@ -13,6 +13,9 @@
     # إجبار /media/* و /storage/* على Laravel (تجنب 404 من symlink أو مجلد storage على الاستضافة)
     RewriteRule ^(media|storage)/ index.php [L]
 
+    # CSS/JS أثير: على بعض الاستضافات ملفات public/css و public/js لا تُقدَّم كملفات ثابتة
+    RewriteRule ^(css/atheer\.css|css/admin-atheer\.css|js/atheer-tailwind-config\.js)$ index.php [L]
+
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
