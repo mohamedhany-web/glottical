@@ -1,293 +1,256 @@
 @extends('layouts.admin')
 
 @section('title', 'الملف الشخصي - لوحة الإدارة')
+@section('page_title', 'الملف الشخصي')
 @section('header', 'الملف الشخصي')
 
 @section('content')
 @php
     $roleLabels = [
-        'admin' => ['label' => 'إداري', 'color' => 'from-indigo-500 to-violet-600', 'chip' => 'bg-indigo-50 text-indigo-700 border border-indigo-200'],
-        'super_admin' => ['label' => 'مدير عام', 'color' => 'from-blue-600 to-indigo-700', 'chip' => 'bg-blue-50 text-blue-700 border border-blue-200'],
+        'admin' => 'إداري',
+        'super_admin' => 'مدير عام',
     ];
-    $roleMeta = $roleLabels[$user->role] ?? ['label' => 'إداري', 'color' => 'from-slate-500 to-slate-600', 'chip' => 'bg-slate-100 text-slate-700 border border-slate-200'];
-
+    $roleLabel = $roleLabels[$user->role] ?? 'إداري';
     $memberSince = $user->created_at ? $user->created_at->copy()->locale('ar')->translatedFormat('d F Y') : '—';
     $lastLogin = $user->last_login_at ? $user->last_login_at->copy()->locale('ar')->diffForHumans() : '—';
+    $inputClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-2 block text-sm font-medium text-ink';
 @endphp
 
-<div class="space-y-6 sm:space-y-8">
-    {{-- تنبيه رموز الاسترداد --}}
+<div class="space-y-5">
     @if(session('recovery_codes'))
-        <div class="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-6 shadow-sm">
-            <h3 class="font-heading font-bold text-amber-900 mb-2 flex items-center gap-2">
-                <span class="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center"><i class="fas fa-key text-amber-600"></i></span>
+        <div class="rounded-2xl border border-amber-200/80 bg-[#fbf7ef] p-5 shadow-soft">
+            <h3 class="mb-1 flex items-center gap-2 text-sm font-semibold text-ink">
+                <span class="inline-flex size-9 items-center justify-center rounded-xl bg-metal/15 text-metal"><i class="fas fa-key text-sm"></i></span>
                 رموز الاسترداد — احفظها في مكان آمن
             </h3>
-            <p class="text-sm text-amber-800/90 mb-4">استخدم أحد هذه الرموز للدخول إذا لم يكن معك جهاز المصادقة. كل رمز يُستخدم مرة واحدة فقط.</p>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-sm">
+            <p class="mb-4 text-sm leading-7 text-muted">استخدم أحد هذه الرموز للدخول إذا لم يكن معك جهاز المصادقة. كل رمز يُستخدم مرة واحدة فقط.</p>
+            <div class="grid grid-cols-2 gap-2 font-mono text-sm sm:grid-cols-4">
                 @foreach(session('recovery_codes') as $code)
-                    <span class="bg-white px-3 py-2 rounded-xl border border-amber-200 text-amber-900">{{ $code }}</span>
+                    <span class="rounded-xl border border-line bg-surface px-3 py-2 text-ink">{{ $code }}</span>
                 @endforeach
             </div>
             @php session()->forget('recovery_codes'); @endphp
         </div>
     @endif
 
-    {{-- رسالة نجاح --}}
     @if(session('success'))
-        <div class="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-5 py-4 flex items-center gap-3 shadow-sm">
-            <span class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white flex-shrink-0"><i class="fas fa-check"></i></span>
-            <p class="font-semibold text-emerald-800">{{ session('success') }}</p>
+        <div class="flex items-center gap-3 rounded-2xl border border-success/20 bg-[#eef8f2] px-4 py-3 text-sm font-medium text-success shadow-soft" role="status">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-success text-white"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
         </div>
     @endif
 
-    {{-- هيدر الملف الشخصي (بطاقة علوية) --}}
-    <div class="rounded-3xl border border-slate-200/80 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
-        <div class="bg-gradient-to-br from-navy-800 via-navy-900 to-navy-950 px-6 py-8 sm:px-8 sm:py-10">
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div class="flex flex-col sm:flex-row sm:items-center gap-5">
-                    <div class="profile-avatar flex items-center justify-center h-24 w-24 sm:h-28 sm:w-28 rounded-2xl bg-gradient-to-br {{ $roleMeta['color'] }} text-white overflow-hidden shadow-xl ring-4 ring-white/20 flex-shrink-0 mx-auto sm:mx-0">
+    {{-- Profile summary --}}
+    <section class="overflow-hidden rounded-2xl border border-line bg-ink text-white shadow-soft">
+        <div class="relative px-5 py-6 sm:px-6 sm:py-8">
+            <div class="pointer-events-none absolute inset-0 opacity-50" style="background: radial-gradient(ellipse at 15% 0%, rgba(15,92,87,0.45), transparent 50%), radial-gradient(ellipse at 95% 100%, rgba(176,141,87,0.2), transparent 40%);"></div>
+            <div class="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex flex-col items-center gap-4 sm:flex-row sm:items-center">
+                    <div class="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-accent text-3xl font-semibold text-white ring-2 ring-white/15 sm:size-28 sm:text-4xl">
                         @if($user->profile_image)
-                            <img src="{{ $user->profile_image_url }}" alt="صورة الملف الشخصي" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
-                            <span class="text-4xl sm:text-5xl font-heading font-black leading-none hidden">{{ mb_substr($user->name, 0, 1) }}</span>
+                            <img src="{{ $user->profile_image_url }}" alt="" class="size-full object-cover" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
+                            <span class="hidden">{{ mb_substr($user->name, 0, 1) }}</span>
                         @else
-                            <span class="text-4xl sm:text-5xl font-heading font-black leading-none">{{ mb_substr($user->name, 0, 1) }}</span>
+                            <span>{{ mb_substr($user->name, 0, 1) }}</span>
                         @endif
                     </div>
-                    <div class="text-center sm:text-right flex-1">
-                        <span class="inline-flex items-center gap-2 rounded-xl {{ $roleMeta['chip'] }} px-3 py-1.5 text-xs font-bold mb-2">
-                            <i class="fas fa-user-shield text-indigo-500"></i>
-                            {{ $roleMeta['label'] }}
+                    <div class="min-w-0 text-center sm:text-start">
+                        <span class="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-2.5 py-1 text-xs font-medium text-metal">
+                            <i class="fas fa-user-shield text-[10px]"></i>
+                            {{ $roleLabel }}
                         </span>
-                        <h1 class="font-heading text-2xl sm:text-3xl font-black text-white mb-1">{{ $user->name }}</h1>
-                        <p class="text-slate-300 text-sm mb-4">إدارة بياناتك وإعدادات حسابك الشخصي</p>
-                        <div class="flex flex-wrap justify-center sm:justify-end gap-2">
+                        <h2 class="mt-2 text-2xl font-semibold tracking-tight">{{ $user->name }}</h2>
+                        <p class="mt-1 text-sm text-white/65">إدارة بياناتك وإعدادات حسابك الشخصي</p>
+                        <div class="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
                             @if($user->phone)
-                                <span class="inline-flex items-center gap-2 rounded-xl bg-white/10 text-white px-4 py-2 text-sm font-medium border border-white/10">
-                                    <i class="fas fa-phone text-cyan-400"></i>
-                                    {{ $user->phone }}
+                                <span class="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white/85">
+                                    <i class="fas fa-phone text-metal text-xs"></i>{{ $user->phone }}
                                 </span>
                             @endif
                             @if($user->email)
-                                <span class="inline-flex items-center gap-2 rounded-xl bg-white/10 text-white px-4 py-2 text-sm font-medium border border-white/10">
-                                    <i class="fas fa-envelope text-cyan-400"></i>
-                                    {{ $user->email }}
+                                <span class="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white/85">
+                                    <i class="fas fa-envelope text-metal text-xs"></i>{{ $user->email }}
                                 </span>
                             @endif
                         </div>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:max-w-md">
-                    <div class="rounded-2xl bg-white/10 backdrop-blur border border-white/10 p-4 text-center">
-                        <div class="w-10 h-10 rounded-xl bg-cyan-500/30 flex items-center justify-center text-cyan-300 mx-auto mb-2">
-                            <i class="fas fa-calendar-week text-sm"></i>
-                        </div>
-                        <div class="text-xs font-medium text-slate-400 mb-0.5">تاريخ الانضمام</div>
-                        <div class="text-sm font-bold text-white">{{ $memberSince }}</div>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:max-w-lg">
+                    <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center">
+                        <p class="text-[11px] text-white/50">تاريخ الانضمام</p>
+                        <p class="mt-1 text-sm font-semibold">{{ $memberSince }}</p>
                     </div>
-                    <div class="rounded-2xl bg-white/10 backdrop-blur border border-white/10 p-4 text-center">
-                        <div class="w-10 h-10 rounded-xl bg-indigo-500/30 flex items-center justify-center text-indigo-300 mx-auto mb-2">
-                            <i class="fas fa-user-shield text-sm"></i>
-                        </div>
-                        <div class="text-xs font-medium text-slate-400 mb-0.5">نوع الحساب</div>
-                        <div class="text-sm font-bold text-white">{{ $roleMeta['label'] }}</div>
+                    <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center">
+                        <p class="text-[11px] text-white/50">نوع الحساب</p>
+                        <p class="mt-1 text-sm font-semibold">{{ $roleLabel }}</p>
                     </div>
-                    <div class="rounded-2xl bg-white/10 backdrop-blur border border-white/10 p-4 text-center">
-                        <div class="w-10 h-10 rounded-xl bg-amber-500/30 flex items-center justify-center text-amber-300 mx-auto mb-2">
-                            <i class="fas fa-clock-rotate-left text-sm"></i>
-                        </div>
-                        <div class="text-xs font-medium text-slate-400 mb-0.5">آخر تسجيل دخول</div>
-                        <div class="text-sm font-bold text-white">{{ $lastLogin }}</div>
+                    <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center">
+                        <p class="text-[11px] text-white/50">آخر تسجيل دخول</p>
+                        <p class="mt-1 text-sm font-semibold">{{ $lastLogin }}</p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-        {{-- الشريط الجانبي: معلومات الحساب + 2FA --}}
-        <div class="space-y-6">
-            <div class="section-card rounded-3xl p-6 border border-slate-200/80 bg-white shadow-sm hover:shadow-md hover:border-slate-200 transition-all duration-300">
-                <h2 class="font-heading text-lg font-bold text-slate-800 mb-5 flex items-center gap-3">
-                    <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-                        <i class="fas fa-info-circle text-sm"></i>
-                    </span>
-                    معلومات الحساب
-                </h2>
-                <div class="space-y-3 text-sm">
-                    <div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                        <span class="font-medium text-slate-600">رقم العضوية</span>
-                        <span class="font-bold text-slate-800">#{{ str_pad($user->id, 5, '0', STR_PAD_LEFT) }}</span>
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div class="space-y-5">
+            <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                <div class="mb-4 flex items-center gap-3">
+                    <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-info-circle text-sm"></i></span>
+                    <h3 class="text-base font-semibold text-ink">معلومات الحساب</h3>
+                </div>
+                <div class="space-y-2 text-sm">
+                    <div class="flex items-center justify-between gap-3 rounded-xl border border-line bg-canvas px-3 py-2.5">
+                        <span class="text-muted">رقم العضوية</span>
+                        <span class="font-semibold tabular-nums text-ink">#{{ str_pad($user->id, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
-                    <div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                        <span class="font-medium text-slate-600">نوع الحساب</span>
-                        <span class="rounded-lg px-2.5 py-1 text-xs font-bold {{ $roleMeta['chip'] }}">{{ $roleMeta['label'] }}</span>
+                    <div class="flex items-center justify-between gap-3 rounded-xl border border-line bg-canvas px-3 py-2.5">
+                        <span class="text-muted">نوع الحساب</span>
+                        <span class="rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-semibold text-accent">{{ $roleLabel }}</span>
                     </div>
-                    <div class="flex items-center justify-between gap-3 p-3 rounded-xl border {{ $user->is_active ? 'bg-emerald-50/80 border-emerald-200' : 'bg-rose-50/80 border-rose-200' }}">
-                        <span class="font-medium text-slate-600">الحالة</span>
-                        <span class="inline-flex items-center gap-2 text-xs font-bold {{ $user->is_active ? 'text-emerald-700' : 'text-rose-700' }}">
-                            <span class="relative flex h-2 w-2">
-                                @if($user->is_active)
-                                    <span class="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping"></span>
-                                @endif
-                                <span class="relative inline-flex h-2 w-2 rounded-full {{ $user->is_active ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
-                            </span>
+                    <div class="flex items-center justify-between gap-3 rounded-xl border border-line bg-canvas px-3 py-2.5">
+                        <span class="text-muted">الحالة</span>
+                        <span class="inline-flex items-center gap-2 text-xs font-semibold {{ $user->is_active ? 'text-success' : 'text-danger' }}">
+                            <span class="size-2 rounded-full {{ $user->is_active ? 'bg-success' : 'bg-danger' }}"></span>
                             {{ $user->is_active ? 'نشط' : 'غير نشط' }}
                         </span>
                     </div>
                 </div>
-            </div>
+            </article>
 
-            <div class="section-card rounded-3xl p-6 border border-slate-200/80 bg-white shadow-sm hover:shadow-md hover:border-slate-200 transition-all duration-300">
-                <h2 class="font-heading text-lg font-bold text-slate-800 mb-5 flex items-center gap-3">
-                    <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-                        <i class="fas fa-shield-alt text-sm"></i>
-                    </span>
-                    المصادقة الثنائية
-                </h2>
+            <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                <div class="mb-4 flex items-center gap-3">
+                    <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-shield-alt text-sm"></i></span>
+                    <h3 class="text-base font-semibold text-ink">المصادقة الثنائية</h3>
+                </div>
                 @if($user->hasTwoFactorEnabled())
-                    <p class="text-sm text-slate-600 mb-4">مفعّلة — يتم طلب رمز التحقق عند كل تسجيل دخول.</p>
+                    <p class="mb-4 text-sm leading-7 text-muted">مفعّلة — يتم طلب رمز التحقق عند كل تسجيل دخول.</p>
                     <form action="{{ route('two-factor.disable') }}" method="POST" class="space-y-3" onsubmit="return confirm('هل تريد تعطيل المصادقة الثنائية؟ ستحتاج إدخال كلمة المرور.');">
                         @csrf
-                        <input type="password" name="password" required placeholder="كلمة المرور للتأكيد"
-                               class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-colors">
+                        <input type="password" name="password" required placeholder="كلمة المرور للتأكيد" class="{{ $inputClass }}">
                         @error('password')
-                            <p class="text-rose-600 text-xs font-medium">{{ $message }}</p>
+                            <p class="text-xs font-medium text-danger">{{ $message }}</p>
                         @enderror
-                        <button type="submit" class="w-full py-2.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 font-bold text-sm hover:bg-rose-100 transition-colors">
+                        <button type="submit" class="inline-flex h-10 w-full items-center justify-center rounded-xl border border-danger/30 bg-[#fdf2f1] text-sm font-medium text-danger transition hover:bg-[#fbe8e6]">
                             تعطيل المصادقة الثنائية
                         </button>
                     </form>
                 @else
-                    <p class="text-sm text-slate-600 mb-4">تفعيل المصادقة الثنائية يزيد أمان دخولك للمنصة.</p>
-                    <a href="{{ route('two-factor.setup') }}" class="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:from-emerald-500 hover:to-emerald-400 transition-all">
+                    <p class="mb-4 text-sm leading-7 text-muted">تفعيل المصادقة الثنائية يزيد أمان دخولك للمنصة.</p>
+                    <a href="{{ route('two-factor.setup') }}" class="btn-press inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent text-sm font-medium text-white transition hover:bg-[#0d4f4a]">
                         <i class="fas fa-mobile-alt"></i>
                         تفعيل المصادقة الثنائية
                     </a>
                 @endif
-            </div>
+            </article>
         </div>
 
-        {{-- نموذج التحديث --}}
         <div class="lg:col-span-2">
-            <div class="section-card rounded-3xl p-6 sm:p-8 border border-slate-200/80 bg-white shadow-sm hover:shadow-md hover:border-slate-200 transition-all duration-300">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft sm:p-6">
+                <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h3 class="font-heading text-xl font-bold text-slate-800 mb-1">تحديث البيانات الأساسية</h3>
-                        <p class="text-sm text-slate-500">قم بمراجعة معلوماتك وتحديثها في أي وقت</p>
+                        <h3 class="text-lg font-semibold text-ink">تحديث البيانات الأساسية</h3>
+                        <p class="mt-1 text-sm text-muted">راجع معلوماتك وحدّثها في أي وقت</p>
                     </div>
-                    <span class="inline-flex items-center gap-2 text-xs font-bold rounded-xl bg-cyan-50 text-cyan-700 border border-cyan-200 px-4 py-2 w-fit">
-                        <i class="fas fa-shield-check"></i>
+                    <span class="inline-flex w-fit items-center gap-2 rounded-xl border border-line bg-canvas px-3 py-1.5 text-xs font-medium text-muted">
+                        <i class="fas fa-lock text-accent"></i>
                         بياناتك مشفرة وآمنة
                     </span>
                 </div>
 
-                <form method="POST" action="{{ route('admin.profile.update') }}" class="space-y-6" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('admin.profile.update') }}" class="space-y-5" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
 
-                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                         <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-2">الاسم الكامل</label>
-                            <div class="relative">
-                                <i class="fas fa-user absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
-                                <input type="text" name="name" value="{{ old('name', $user->name) }}" required
-                                       class="w-full rounded-xl border border-slate-200 bg-slate-50/50 pr-11 pl-4 py-3 text-slate-800 font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-colors">
-                            </div>
+                            <label class="{{ $labelClass }}" for="name">الاسم الكامل</label>
+                            <input id="name" type="text" name="name" value="{{ old('name', $user->name) }}" required class="{{ $inputClass }}">
                             @error('name')
-                                <p class="text-rose-600 text-xs mt-2 font-medium">{{ $message }}</p>
+                                <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
                             @enderror
                         </div>
-
                         <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-2">رقم الهاتف</label>
-                            <div class="relative">
-                                <i class="fas fa-phone absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
-                                <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" required
-                                       class="w-full rounded-xl border border-slate-200 bg-slate-50/50 pr-11 pl-4 py-3 text-slate-800 font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-colors">
-                            </div>
+                            <label class="{{ $labelClass }}" for="phone">رقم الهاتف</label>
+                            <input id="phone" type="text" name="phone" value="{{ old('phone', $user->phone) }}" required class="{{ $inputClass }}">
                             @error('phone')
-                                <p class="text-rose-600 text-xs mt-2 font-medium">{{ $message }}</p>
+                                <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
                             @enderror
                         </div>
-
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-bold text-slate-700 mb-2">البريد الإلكتروني (اختياري)</label>
-                            <div class="relative">
-                                <i class="fas fa-at absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
-                                <input type="email" name="email" value="{{ old('email', $user->email) }}"
-                                       class="w-full rounded-xl border border-slate-200 bg-slate-50/50 pr-11 pl-4 py-3 text-slate-800 font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-colors">
-                            </div>
+                            <label class="{{ $labelClass }}" for="email">البريد الإلكتروني <span class="font-normal text-muted">(اختياري)</span></label>
+                            <input id="email" type="email" name="email" value="{{ old('email', $user->email) }}" class="{{ $inputClass }}">
                             @error('email')
-                                <p class="text-rose-600 text-xs mt-2 font-medium">{{ $message }}</p>
+                                <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
                             @enderror
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-3">صورة الملف الشخصي</label>
-                        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-                            <div class="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center flex-shrink-0">
+                        <label class="{{ $labelClass }}">صورة الملف الشخصي</label>
+                        <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+                            <div class="flex size-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-line bg-canvas">
                                 @if($user->profile_image)
-                                    <img src="{{ $user->profile_image_url }}" alt="صورة الملف الشخصي" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
-                                    <i class="fas fa-camera text-slate-400 text-3xl hidden"></i>
+                                    <img src="{{ $user->profile_image_url }}" alt="" class="size-full object-cover" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
+                                    <i class="fas fa-camera hidden text-2xl text-muted"></i>
                                 @else
-                                    <i class="fas fa-camera text-slate-400 text-3xl"></i>
+                                    <i class="fas fa-camera text-2xl text-muted"></i>
                                 @endif
                             </div>
                             <div class="flex-1">
-                                <label class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-3 text-sm font-bold text-slate-600 hover:bg-slate-100 hover:border-slate-300 transition-all">
-                                    <i class="fas fa-upload text-blue-500"></i>
-                                    <span>اختر صورة جديدة (PNG أو JPG — حد أقصى 40 ميجابايت)</span>
+                                <label class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-line bg-canvas px-5 py-3 text-sm font-medium text-ink-soft transition hover:border-accent/40 hover:bg-accent-soft hover:text-accent">
+                                    <i class="fas fa-upload"></i>
+                                    <span>اختر صورة جديدة (PNG أو JPG)</span>
                                     <input type="file" name="profile_image" accept="image/*" class="hidden">
                                 </label>
                                 @error('profile_image')
-                                    <p class="text-rose-600 text-xs mt-2 font-medium">{{ $message }}</p>
+                                    <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
                                 @enderror
                             </div>
                         </div>
                     </div>
 
-                    <div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-6 space-y-4">
-                        <h4 class="font-heading font-bold text-slate-800">تغيير كلمة المرور</h4>
-                        <p class="text-xs text-slate-500">اترك الحقول فارغة إذا لم ترغب في التغيير</p>
+                    <div class="space-y-4 rounded-2xl border border-dashed border-line bg-canvas p-5">
+                        <div>
+                            <h4 class="text-sm font-semibold text-ink">تغيير كلمة المرور</h4>
+                            <p class="mt-1 text-xs text-muted">اترك الحقول فارغة إذا لم ترغب في التغيير</p>
+                        </div>
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-600 mb-2">كلمة المرور الحالية</label>
-                                <input type="password" name="current_password"
-                                       class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors">
+                                <label class="mb-1.5 block text-xs font-medium text-muted" for="current_password">كلمة المرور الحالية</label>
+                                <input id="current_password" type="password" name="current_password" class="{{ $inputClass }}">
                                 @error('current_password')
-                                    <p class="text-rose-600 text-xs mt-2 font-medium">{{ $message }}</p>
+                                    <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
                                 @enderror
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-600 mb-2">كلمة المرور الجديدة</label>
-                                <input type="password" name="password"
-                                       class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors">
+                                <label class="mb-1.5 block text-xs font-medium text-muted" for="password">كلمة المرور الجديدة</label>
+                                <input id="password" type="password" name="password" class="{{ $inputClass }}">
                                 @error('password')
-                                    <p class="text-rose-600 text-xs mt-2 font-medium">{{ $message }}</p>
+                                    <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
                                 @enderror
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-600 mb-2">تأكيد كلمة المرور</label>
-                                <input type="password" name="password_confirmation"
-                                       class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors">
+                                <label class="mb-1.5 block text-xs font-medium text-muted" for="password_confirmation">تأكيد كلمة المرور</label>
+                                <input id="password_confirmation" type="password" name="password_confirmation" class="{{ $inputClass }}">
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-6 border-t border-slate-200">
-                        <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all order-2 sm:order-1">
+                    <div class="flex flex-col gap-3 border-t border-line pt-5 sm:flex-row sm:items-center sm:justify-between">
+                        <a href="{{ route('admin.dashboard') }}" class="order-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-line bg-surface px-5 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent sm:order-1">
                             <i class="fas fa-arrow-right"></i>
                             رجوع للوحة التحكم
                         </a>
-                        <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:from-blue-500 hover:to-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all order-1 sm:order-2">
+                        <button type="submit" class="btn-press order-1 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-white transition hover:bg-[#0d4f4a] sm:order-2">
                             <i class="fas fa-save"></i>
                             حفظ التعديلات
                         </button>
                     </div>
                 </form>
-            </div>
+            </article>
         </div>
     </div>
 </div>

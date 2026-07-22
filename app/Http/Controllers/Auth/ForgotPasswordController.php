@@ -15,9 +15,7 @@ class ForgotPasswordController extends Controller
      */
     public function showLinkRequestForm()
     {
-        $authBackgroundUrl = \Illuminate\Support\Facades\Storage::disk('public')->exists(\App\Providers\AppServiceProvider::AUTH_BACKGROUND_STORAGE_PATH)
-            ? storage_asset(\App\Providers\AppServiceProvider::AUTH_BACKGROUND_STORAGE_PATH)
-            : asset('images/brainstorm-meeting.jpg');
+        $authBackgroundUrl = \App\Providers\AppServiceProvider::authBackgroundUrl();
         return view('auth.forgot-password', compact('authBackgroundUrl'));
     }
 

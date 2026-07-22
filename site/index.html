@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>أثير | تسوق عربي فاخر بثقة</title>
+  <meta name="description" content="أثير منصة تجارة إلكترونية عربية فاخرة للاكتشاف الذكي، والدفع الآمن، والتوصيل الواضح." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/atheer.css" />
+</head>
+<body class="font-sans antialiased">
+  <div data-site-header></div>
+
+  <main>
+    <!-- 1. Hero -->
+    <section class="relative min-h-[92vh] overflow-hidden bg-ink text-white">
+      <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=2400&q=80" alt="مساحة تسوق فاخرة بإضاءة هادئة ومنتجات مختارة" class="absolute inset-0 h-full w-full object-cover object-center opacity-55" />
+      <div class="absolute inset-0 bg-gradient-to-l from-ink via-ink/75 to-ink/35"></div>
+      <div class="container-wide relative flex min-h-[92vh] flex-col justify-end pb-16 pt-28 md:justify-center md:pb-24 md:pt-32">
+        <div class="max-w-2xl space-y-6">
+          <p class="fade-up text-4xl font-bold tracking-tight md:text-6xl">أثير</p>
+          <h1 class="fade-up fade-up-delay-1 text-balance text-3xl font-semibold leading-tight md:text-5xl md:leading-[1.15]">تسوّق بثقة… واكتشف بأناقة</h1>
+          <p class="fade-up fade-up-delay-2 max-w-xl text-base leading-8 text-white/80 md:text-lg">منصة عربية فاخرة صُممت لتختصر طريقك من البحث إلى الباب — باكتشاف أذكى، وثقة أوضح، وتجربة تليق بما تشتريه.</p>
+          <div class="fade-up fade-up-delay-3 flex flex-wrap gap-3 pt-2">
+            <a href="collections.html" class="inline-flex h-14 items-center rounded-xl bg-accent px-7 text-base font-medium text-white shadow-[0_10px_24px_rgba(15,92,87,0.25)] transition hover:bg-[#0d4f4a]">ابدأ الاكتشاف</a>
+            <a href="assistant.html" class="inline-flex h-14 items-center rounded-xl border border-white/25 bg-white/5 px-7 text-base font-medium text-white transition hover:bg-white/10">اسأل مساعد أثير</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. AI Assistant banner -->
+    <section class="container-wide py-8 md:py-12">
+      <div class="relative overflow-hidden rounded-3xl bg-ink px-6 py-10 text-white md:px-12 md:py-14">
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(15,92,87,0.45),transparent_45%),radial-gradient(circle_at_90%_80%,rgba(176,141,87,0.28),transparent_40%)]"></div>
+        <div class="relative grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+          <div class="space-y-4">
+            <p class="inline-flex items-center gap-2 text-sm text-metal">
+              <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              مساعد أثير الذكي
+            </p>
+            <h2 class="text-balance text-2xl font-semibold md:text-4xl">قل ما تحتاجه… وسنرتّب لك مساراً واضحاً للشراء</h2>
+            <p class="max-w-xl text-sm leading-8 text-white/70 md:text-base">اكتشاف ذكي يقلّل التصفح العشوائي: اقترح هدية، قارن خيارات، أو ابنِ مجموعة متناسقة خلال دقائق — بدون واجهة مزدحمة.</p>
+          </div>
+          <div class="flex flex-col gap-3 sm:flex-row lg:justify-end">
+            <a href="assistant.html" class="inline-flex h-14 items-center justify-center rounded-xl bg-accent px-7 font-medium transition hover:bg-[#0d4f4a]">ابدأ محادثة قصيرة</a>
+            <a href="compare.html" class="inline-flex h-14 items-center justify-center rounded-xl border border-white/20 bg-white/5 px-7 font-medium transition hover:bg-white/10">قارن المنتجات</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Categories -->
+    <section class="container-wide py-20 md:py-24">
+      <div class="mb-8 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-2xl space-y-3">
+          <p class="text-sm font-medium text-accent">اكتشف بسرعة</p>
+          <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">تصنيفات تأخذك مباشرة لما تبحث عنه</h2>
+          <p class="text-base leading-8 text-muted">مسارات بصرية واضحة تقلل التردد وتقرّبك من المنتج المناسب بعدد نقرات أقل.</p>
+        </div>
+        <a href="categories.html" class="inline-flex h-10 shrink-0 items-center rounded-xl border border-line px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">كل التصنيفات</a>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <a href="categories.html" class="group relative min-h-72 overflow-hidden rounded-2xl">
+          <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80" alt="الأناقة اليومية" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+          <div class="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/25 to-transparent"></div>
+          <div class="absolute inset-x-0 bottom-0 space-y-1 p-5 text-white">
+            <h3 class="text-xl font-semibold">الأناقة اليومية</h3>
+            <p class="text-sm text-white/75">248 منتجاً</p>
+          </div>
+        </a>
+        <a href="categories.html" class="group relative min-h-72 overflow-hidden rounded-2xl">
+          <img src="https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=1200&q=80" alt="تقنية المنزل" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+          <div class="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/25 to-transparent"></div>
+          <div class="absolute inset-x-0 bottom-0 space-y-1 p-5 text-white">
+            <h3 class="text-xl font-semibold">تقنية المنزل</h3>
+            <p class="text-sm text-white/75">186 منتجاً</p>
+          </div>
+        </a>
+        <a href="categories.html" class="group relative min-h-72 overflow-hidden rounded-2xl">
+          <img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1200&q=80" alt="العناية الفاخرة" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+          <div class="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/25 to-transparent"></div>
+          <div class="absolute inset-x-0 bottom-0 space-y-1 p-5 text-white">
+            <h3 class="text-xl font-semibold">العناية الفاخرة</h3>
+            <p class="text-sm text-white/75">132 منتجاً</p>
+          </div>
+        </a>
+        <a href="categories.html" class="group relative min-h-72 overflow-hidden rounded-2xl">
+          <img src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1200&q=80" alt="مساحة المعيشة" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+          <div class="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/25 to-transparent"></div>
+          <div class="absolute inset-x-0 bottom-0 space-y-1 p-5 text-white">
+            <h3 class="text-xl font-semibold">مساحة المعيشة</h3>
+            <p class="text-sm text-white/75">97 منتجاً</p>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- 4. Featured Collections -->
+    <section class="bg-surface py-20 md:py-24">
+      <div class="container-wide">
+        <div class="mb-8 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
+          <div class="max-w-2xl space-y-3">
+            <p class="text-sm font-medium text-accent">مجموعات منسّقة</p>
+            <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">اختيارات موسمية بمعايير أثير</h2>
+            <p class="text-base leading-8 text-muted">مجموعات ديناميكية تُبنى حول أسلوب حياة، لا مجرد خصم — لتسهيل الاكتشاف وزيادة وضوح القرار.</p>
+          </div>
+          <a href="collections.html" class="inline-flex h-10 shrink-0 items-center rounded-xl border border-line px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">عرض الكل</a>
+        </div>
+        <div class="grid gap-5 lg:grid-cols-3">
+          <article class="group relative min-h-96 overflow-hidden rounded-2xl">
+            <img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=1400&q=80" alt="اختيارات الصيف الهادئة" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+            <div class="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-transparent"></div>
+            <div class="absolute inset-x-0 bottom-0 space-y-3 p-6 text-white">
+              <h3 class="text-2xl font-semibold">اختيارات الصيف الهادئة</h3>
+              <p class="text-sm leading-7 text-white/75">قطع خفيفة بلمسة فاخرة لأيام أطول</p>
+              <a href="collections.html" class="inline-flex h-10 items-center rounded-xl bg-white px-5 text-sm font-medium text-ink transition hover:bg-canvas">تسوق المجموعة</a>
+            </div>
+          </article>
+          <article class="group relative min-h-96 overflow-hidden rounded-2xl">
+            <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1400&q=80" alt="أدوات العمل الذكية" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+            <div class="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-transparent"></div>
+            <div class="absolute inset-x-0 bottom-0 space-y-3 p-6 text-white">
+              <h3 class="text-2xl font-semibold">أدوات العمل الذكية</h3>
+              <p class="text-sm leading-7 text-white/75">تجهيز مكتبك بأناقة وكفاءة</p>
+              <a href="collections.html" class="inline-flex h-10 items-center rounded-xl bg-white px-5 text-sm font-medium text-ink transition hover:bg-canvas">تسوق المجموعة</a>
+            </div>
+          </article>
+          <article class="group relative min-h-96 overflow-hidden rounded-2xl">
+            <img src="https://images.unsplash.com/photo-1513885535751-8b9238bd345a?auto=format&fit=crop&w=1400&q=80" alt="هدايا تُحكى" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+            <div class="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-transparent"></div>
+            <div class="absolute inset-x-0 bottom-0 space-y-3 p-6 text-white">
+              <h3 class="text-2xl font-semibold">هدايا تُحكى</h3>
+              <p class="text-sm leading-7 text-white/75">منتجات مختارة بعناية للمناسبات الخاصة</p>
+              <a href="collections.html" class="inline-flex h-10 items-center rounded-xl bg-white px-5 text-sm font-medium text-ink transition hover:bg-canvas">تسوق المجموعة</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Best sellers -->
+    <section class="container-wide py-20 md:py-24">
+      <div class="mb-8 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-2xl space-y-3">
+          <p class="text-sm font-medium text-accent">الأكثر مبيعاً</p>
+          <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">منتجات أثبتت جدارتها عند المتسوقين</h2>
+          <p class="text-base leading-8 text-muted">بطاقات حديثة مع تقييم وسعر وخصم وإضافة سريعة — لتقليل الخطوات حتى السلة.</p>
+        </div>
+        <a href="offers.html" class="inline-flex h-10 shrink-0 items-center rounded-xl border border-line px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">عرض الكل</a>
+      </div>
+      <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
+        <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+          <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
+            <a href="product.html" class="absolute inset-0"><img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=900&q=80" alt="بليزر كتان بهيكل ناعم" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></a>
+            <div class="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
+              <div class="flex flex-wrap gap-1.5">
+                <span class="inline-flex items-center rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">الأكثر مبيعاً</span>
+                <span class="inline-flex items-center rounded-lg bg-[#f4eadc] px-2.5 py-1 text-xs font-medium text-[#7a5c2e]">خصم 21%</span>
+              </div>
+              <button type="button" class="inline-flex size-10 items-center justify-center rounded-full bg-surface/90 shadow-soft backdrop-blur" aria-label="أضف بليزر كتان إلى المفضلة"><svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+            </div>
+            <div class="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100">
+              <div class="flex gap-2">
+                <button type="button" data-add-to-cart data-id="p1" data-name="بليزر كتان بهيكل ناعم" data-brand="أوريون" data-price="890" data-image="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=900&q=80" data-label="أضف" class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-accent text-sm font-medium text-white">أضف</button>
+                <a href="product.html" class="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-line bg-surface text-sm font-medium">معاينة</a>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-1 flex-col gap-2 p-4">
+            <p class="text-xs text-muted">أوريون</p>
+            <a href="product.html" class="line-clamp-2 text-sm font-medium leading-6 text-ink transition hover:text-accent">بليزر كتان بهيكل ناعم</a>
+            <p class="flex items-center gap-1.5 text-sm text-muted"><svg class="size-3.5 fill-metal text-metal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="font-medium text-ink">4.8</span><span>(126)</span></p>
+            <p class="text-base font-semibold text-ink">٨٩٠ ر.س <span class="text-sm font-normal text-muted line-through">١٬١٢٠ ر.س</span></p>
+          </div>
+        </article>
+        <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+          <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
+            <a href="product.html" class="absolute inset-0"><img src="https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?auto=format&fit=crop&w=900&q=80" alt="طقم إسبريسو سيراميك يدوي" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></a>
+            <div class="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
+              <span class="inline-flex items-center rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">جديد</span>
+              <button type="button" class="inline-flex size-10 items-center justify-center rounded-full bg-surface/90 shadow-soft backdrop-blur" aria-label="أضف إسبريسو إلى المفضلة"><svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+            </div>
+            <div class="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100">
+              <div class="flex gap-2">
+                <button type="button" data-add-to-cart data-id="p2" data-name="طقم إسبريسو سيراميك يدوي" data-brand="مرسى" data-price="340" data-image="https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?auto=format&fit=crop&w=900&q=80" data-label="أضف" class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-accent text-sm font-medium text-white">أضف</button>
+                <a href="product.html" class="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-line bg-surface text-sm font-medium">معاينة</a>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-1 flex-col gap-2 p-4">
+            <p class="text-xs text-muted">مرسى</p>
+            <a href="product.html" class="line-clamp-2 text-sm font-medium leading-6 text-ink transition hover:text-accent">طقم إسبريسو سيراميك يدوي</a>
+            <p class="flex items-center gap-1.5 text-sm text-muted"><svg class="size-3.5 fill-metal text-metal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="font-medium text-ink">4.9</span><span>(84)</span></p>
+            <p class="text-base font-semibold text-ink">٣٤٠ ر.س</p>
+          </div>
+        </article>
+        <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+          <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
+            <a href="product.html" class="absolute inset-0"><img src="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=900&q=80" alt="سماعات لاسلكية عازلة للضجيج" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></a>
+            <div class="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
+              <span class="inline-flex items-center rounded-lg bg-[#f4eadc] px-2.5 py-1 text-xs font-medium text-[#7a5c2e]">خصم 19%</span>
+              <button type="button" class="inline-flex size-10 items-center justify-center rounded-full bg-surface/90 shadow-soft backdrop-blur" aria-label="أضف سماعات إلى المفضلة"><svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+            </div>
+            <div class="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100">
+              <div class="flex gap-2">
+                <button type="button" data-add-to-cart data-id="p3" data-name="سماعات لاسلكية عازلة للضجيج" data-brand="نُورتك" data-price="649" data-image="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=900&q=80" data-label="أضف" class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-accent text-sm font-medium text-white">أضف</button>
+                <a href="product.html" class="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-line bg-surface text-sm font-medium">معاينة</a>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-1 flex-col gap-2 p-4">
+            <p class="text-xs text-muted">نُورتك</p>
+            <a href="product.html" class="line-clamp-2 text-sm font-medium leading-6 text-ink transition hover:text-accent">سماعات لاسلكية عازلة للضجيج</a>
+            <p class="flex items-center gap-1.5 text-sm text-muted"><svg class="size-3.5 fill-metal text-metal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="font-medium text-ink">4.7</span><span>(312)</span></p>
+            <p class="text-base font-semibold text-ink">٦٤٩ ر.س <span class="text-sm font-normal text-muted line-through">٧٩٩ ر.س</span></p>
+          </div>
+        </article>
+        <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+          <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
+            <a href="product.html" class="absolute inset-0"><img src="https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=80" alt="مصباح مكتب بتشطيب مطفي" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></a>
+            <div class="absolute inset-x-3 top-3 flex justify-end">
+              <button type="button" class="inline-flex size-10 items-center justify-center rounded-full bg-surface/90 shadow-soft backdrop-blur" aria-label="أضف مصباح إلى المفضلة"><svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+            </div>
+            <div class="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100">
+              <div class="flex gap-2">
+                <button type="button" data-add-to-cart data-id="p4" data-name="مصباح مكتب بتشطيب مطفي" data-brand="حدّة" data-price="420" data-image="https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=80" data-label="أضف" class="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-accent text-sm font-medium text-white">أضف</button>
+                <a href="product.html" class="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-line bg-surface text-sm font-medium">معاينة</a>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-1 flex-col gap-2 p-4">
+            <p class="text-xs text-muted">حدّة</p>
+            <a href="product.html" class="line-clamp-2 text-sm font-medium leading-6 text-ink transition hover:text-accent">مصباح مكتب بتشطيب مطفي</a>
+            <p class="flex items-center gap-1.5 text-sm text-muted"><svg class="size-3.5 fill-metal text-metal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="font-medium text-ink">4.6</span><span>(58)</span></p>
+            <p class="text-base font-semibold text-ink">٤٢٠ ر.س</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 6. New arrivals -->
+    <section class="container-wide py-20 md:py-24">
+      <div class="mb-8 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-2xl space-y-3">
+          <p class="text-sm font-medium text-accent">وصل حديثاً</p>
+          <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">إضافات جديدة تستحق نظرة أولى</h2>
+          <p class="text-base leading-8 text-muted">اكتشاف مستمر لمنتجات حديثة مع الحفاظ على نفس معايير الجودة والوضوح.</p>
+        </div>
+        <a href="new-arrivals.html" class="inline-flex h-10 shrink-0 items-center rounded-xl border border-line px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">عرض الكل</a>
+      </div>
+      <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
+        <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+          <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
+            <a href="product.html" class="absolute inset-0"><img src="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=900&q=80" alt="سماعات لاسلكية عازلة للضجيج" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></a>
+            <div class="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100">
+              <div class="flex gap-2">
+                <button type="button" data-add-to-cart data-id="p3" data-name="سماعات لاسلكية عازلة للضجيج" data-brand="نُورتك" data-price="649" data-image="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=900&q=80" data-label="أضف" class="inline-flex h-10 flex-1 items-center justify-center rounded-xl bg-accent text-sm font-medium text-white">أضف</button>
+                <a href="product.html" class="inline-flex h-10 flex-1 items-center justify-center rounded-xl border border-line bg-surface text-sm font-medium">معاينة</a>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-1 flex-col gap-2 p-4">
+            <p class="text-xs text-muted">نُورتك</p>
+            <a href="product.html" class="line-clamp-2 text-sm font-medium leading-6 text-ink transition hover:text-accent">سماعات لاسلكية عازلة للضجيج</a>
+            <p class="flex items-center gap-1.5 text-sm text-muted"><svg class="size-3.5 fill-metal text-metal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="font-medium text-ink">4.7</span><span>(312)</span></p>
+            <p class="text-base font-semibold text-ink">٦٤٩ ر.س <span class="text-sm font-normal text-muted line-through">٧٩٩ ر.س</span></p>
+          </div>
+        </article>
+        <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+          <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
+            <a href="product.html" class="absolute inset-0"><img src="https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=80" alt="مصباح مكتب بتشطيب مطفي" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></a>
+            <div class="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100">
+              <div class="flex gap-2">
+                <button type="button" data-add-to-cart data-id="p4" data-name="مصباح مكتب بتشطيب مطفي" data-brand="حدّة" data-price="420" data-image="https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=80" data-label="أضف" class="inline-flex h-10 flex-1 items-center justify-center rounded-xl bg-accent text-sm font-medium text-white">أضف</button>
+                <a href="product.html" class="inline-flex h-10 flex-1 items-center justify-center rounded-xl border border-line bg-surface text-sm font-medium">معاينة</a>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-1 flex-col gap-2 p-4">
+            <p class="text-xs text-muted">حدّة</p>
+            <a href="product.html" class="line-clamp-2 text-sm font-medium leading-6 text-ink transition hover:text-accent">مصباح مكتب بتشطيب مطفي</a>
+            <p class="flex items-center gap-1.5 text-sm text-muted"><svg class="size-3.5 fill-metal text-metal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="font-medium text-ink">4.6</span><span>(58)</span></p>
+            <p class="text-base font-semibold text-ink">٤٢٠ ر.س</p>
+          </div>
+        </article>
+        <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+          <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
+            <a href="product.html" class="absolute inset-0"><img src="https://images.unsplash.com/photo-1620916566940-4f43b1ceb923?auto=format&fit=crop&w=900&q=80" alt="سيروم عناية بالحرير النباتي" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></a>
+            <div class="absolute inset-x-3 top-3"><span class="inline-flex items-center rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">محدود</span></div>
+            <div class="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100">
+              <div class="flex gap-2">
+                <button type="button" data-add-to-cart data-id="p5" data-name="سيروم عناية بالحرير النباتي" data-brand="لُمعة" data-price="275" data-image="https://images.unsplash.com/photo-1620916566940-4f43b1ceb923?auto=format&fit=crop&w=900&q=80" data-label="أضف" class="inline-flex h-10 flex-1 items-center justify-center rounded-xl bg-accent text-sm font-medium text-white">أضف</button>
+                <a href="product.html" class="inline-flex h-10 flex-1 items-center justify-center rounded-xl border border-line bg-surface text-sm font-medium">معاينة</a>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-1 flex-col gap-2 p-4">
+            <p class="text-xs text-muted">لُمعة</p>
+            <a href="product.html" class="line-clamp-2 text-sm font-medium leading-6 text-ink transition hover:text-accent">سيروم عناية بالحرير النباتي</a>
+            <p class="flex items-center gap-1.5 text-sm text-muted"><svg class="size-3.5 fill-metal text-metal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="font-medium text-ink">4.9</span><span>(201)</span></p>
+            <p class="text-base font-semibold text-ink">٢٧٥ ر.س <span class="text-sm font-normal text-muted line-through">٣٢٠ ر.س</span></p>
+          </div>
+        </article>
+        <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+          <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
+            <a href="product.html" class="absolute inset-0"><img src="https://images.unsplash.com/photo-1594026112284-02bb6f3352bb?auto=format&fit=crop&w=900&q=80" alt="رف معياري من خشب البلوط" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></a>
+            <div class="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100">
+              <div class="flex gap-2">
+                <button type="button" data-add-to-cart data-id="p6" data-name="رف معياري من خشب البلوط" data-brand="مساكن" data-price="1280" data-image="https://images.unsplash.com/photo-1594026112284-02bb6f3352bb?auto=format&fit=crop&w=900&q=80" data-label="أضف" class="inline-flex h-10 flex-1 items-center justify-center rounded-xl bg-accent text-sm font-medium text-white">أضف</button>
+                <a href="product.html" class="inline-flex h-10 flex-1 items-center justify-center rounded-xl border border-line bg-surface text-sm font-medium">معاينة</a>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-1 flex-col gap-2 p-4">
+            <p class="text-xs text-muted">مساكن</p>
+            <a href="product.html" class="line-clamp-2 text-sm font-medium leading-6 text-ink transition hover:text-accent">رف معياري من خشب البلوط</a>
+            <p class="flex items-center gap-1.5 text-sm text-muted"><svg class="size-3.5 fill-metal text-metal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="font-medium text-ink">4.8</span><span>(43)</span></p>
+            <p class="text-base font-semibold text-ink">١٬٢٨٠ ر.س</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 7. Flash deals -->
+    <section class="container-wide py-20 md:py-24">
+      <div class="mb-8 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-2xl space-y-3">
+          <p class="text-sm font-medium text-accent">لفترة محدودة</p>
+          <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">عروض برق بحدود واضحة للمخزون والوقت</h2>
+          <p class="text-base leading-8 text-muted">عداد ومخزون ظاهران يقلّلان التردد ويزيدان وضوح القرار — دون ضوضاء بصرية.</p>
+        </div>
+        <a href="offers.html" class="inline-flex h-10 shrink-0 items-center rounded-xl border border-line px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">كل العروض</a>
+      </div>
+      <div class="grid gap-5 lg:grid-cols-2">
+        <article id="flash-deal-1" data-ends-at="" class="grid overflow-hidden rounded-2xl bg-surface shadow-soft md:grid-cols-[1.1fr_1fr]">
+          <a href="product.html" class="relative min-h-64 md:min-h-full">
+            <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=80" alt="حقيبة عطلة نهاية الأسبوع" class="absolute inset-0 h-full w-full object-cover" />
+          </a>
+          <div class="flex flex-col justify-center gap-4 p-6 md:p-8">
+            <span class="inline-flex w-fit items-center rounded-lg bg-[#fef3f2] px-2.5 py-1 text-xs font-medium text-danger">عرض برق</span>
+            <h3 class="text-xl font-semibold text-ink md:text-2xl"><a href="product.html" class="hover:text-accent">حقيبة عطلة نهاية الأسبوع</a></h3>
+            <p class="text-base font-semibold text-ink">٧٦٠ ر.س <span class="text-sm font-normal text-muted line-through">٩٢٠ ر.س</span></p>
+            <div class="flex gap-2" aria-label="الوقت المتبقي للعرض">
+              <div class="min-w-16 rounded-xl bg-canvas px-3 py-2 text-center"><p id="flash-deal-1-hours" class="text-lg font-semibold tabular-nums text-ink">00</p><p class="text-[11px] text-muted">ساعة</p></div>
+              <div class="min-w-16 rounded-xl bg-canvas px-3 py-2 text-center"><p id="flash-deal-1-mins" class="text-lg font-semibold tabular-nums text-ink">00</p><p class="text-[11px] text-muted">دقيقة</p></div>
+              <div class="min-w-16 rounded-xl bg-canvas px-3 py-2 text-center"><p id="flash-deal-1-secs" class="text-lg font-semibold tabular-nums text-ink">00</p><p class="text-[11px] text-muted">ثانية</p></div>
+            </div>
+            <p class="text-sm text-muted">تبقّى <span class="font-semibold text-ink">8</span> قطعة فقط</p>
+            <a href="product.html" class="inline-flex h-12 w-fit items-center rounded-xl bg-accent px-6 font-medium text-white transition hover:bg-[#0d4f4a]">اغتنم العرض</a>
+          </div>
+        </article>
+        <article id="flash-deal-2" data-ends-at="" class="grid overflow-hidden rounded-2xl bg-surface shadow-soft md:grid-cols-[1.1fr_1fr]">
+          <a href="product.html" class="relative min-h-64 md:min-h-full">
+            <img src="https://images.unsplash.com/photo-1578645510447-e20b74926a1a?auto=format&fit=crop&w=900&q=80" alt="غلاية صبّ ذكية بتحكم حراري" class="absolute inset-0 h-full w-full object-cover" />
+          </a>
+          <div class="flex flex-col justify-center gap-4 p-6 md:p-8">
+            <span class="inline-flex w-fit items-center rounded-lg bg-[#fef3f2] px-2.5 py-1 text-xs font-medium text-danger">عرض برق</span>
+            <h3 class="text-xl font-semibold text-ink md:text-2xl"><a href="product.html" class="hover:text-accent">غلاية صبّ ذكية بتحكم حراري</a></h3>
+            <p class="text-base font-semibold text-ink">٥١٠ ر.س <span class="text-sm font-normal text-muted line-through">٦٤٠ ر.س</span></p>
+            <div class="flex gap-2" aria-label="الوقت المتبقي للعرض">
+              <div class="min-w-16 rounded-xl bg-canvas px-3 py-2 text-center"><p id="flash-deal-2-hours" class="text-lg font-semibold tabular-nums text-ink">00</p><p class="text-[11px] text-muted">ساعة</p></div>
+              <div class="min-w-16 rounded-xl bg-canvas px-3 py-2 text-center"><p id="flash-deal-2-mins" class="text-lg font-semibold tabular-nums text-ink">00</p><p class="text-[11px] text-muted">دقيقة</p></div>
+              <div class="min-w-16 rounded-xl bg-canvas px-3 py-2 text-center"><p id="flash-deal-2-secs" class="text-lg font-semibold tabular-nums text-ink">00</p><p class="text-[11px] text-muted">ثانية</p></div>
+            </div>
+            <p class="text-sm text-muted">تبقّى <span class="font-semibold text-ink">14</span> قطعة فقط</p>
+            <a href="product.html" class="inline-flex h-12 w-fit items-center rounded-xl bg-accent px-6 font-medium text-white transition hover:bg-[#0d4f4a]">اغتنم العرض</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 8. Popular brands -->
+    <section class="bg-surface py-20 md:py-24">
+      <div class="container-wide">
+        <div class="mb-8 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
+          <div class="max-w-2xl space-y-3">
+            <p class="text-sm font-medium text-accent">علامات موثوقة</p>
+            <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">تسوّق عبر علامات مختارة بعناية</h2>
+            <p class="text-base leading-8 text-muted">دخول سريع لصفحات العلامات دون تشتيت — ثقة أعلى واكتشاف أدق.</p>
+          </div>
+          <a href="brands.html" class="inline-flex h-10 shrink-0 items-center rounded-xl border border-line px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">عرض الكل</a>
+        </div>
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+          <a href="brands.html" class="flex h-24 items-center justify-center rounded-2xl border border-line bg-canvas text-sm font-semibold text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">أوريون</a>
+          <a href="brands.html" class="flex h-24 items-center justify-center rounded-2xl border border-line bg-canvas text-sm font-semibold text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">مرسى</a>
+          <a href="brands.html" class="flex h-24 items-center justify-center rounded-2xl border border-line bg-canvas text-sm font-semibold text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">نُورتك</a>
+          <a href="brands.html" class="flex h-24 items-center justify-center rounded-2xl border border-line bg-canvas text-sm font-semibold text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">حدّة</a>
+          <a href="brands.html" class="flex h-24 items-center justify-center rounded-2xl border border-line bg-canvas text-sm font-semibold text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">لُمعة</a>
+          <a href="brands.html" class="flex h-24 items-center justify-center rounded-2xl border border-line bg-canvas text-sm font-semibold text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">مساكن</a>
+          <a href="brands.html" class="flex h-24 items-center justify-center rounded-2xl border border-line bg-canvas text-sm font-semibold text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">مسار</a>
+          <a href="brands.html" class="flex h-24 items-center justify-center rounded-2xl border border-line bg-canvas text-sm font-semibold text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">صفوة</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. Recommended -->
+    <section class="container-wide py-20 md:py-24">
+      <div class="mb-8 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-2xl space-y-3">
+          <p class="text-sm font-medium text-accent">موصى لك</p>
+          <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">اقتراحات مخصّصة حسب أسلوب تصفحك</h2>
+          <p class="text-base leading-8 text-muted">طبقة توصية جاهزة للذكاء الاصطناعي — تبدأ من سياق بسيط وتتطور مع الاستخدام.</p>
+        </div>
+        <a href="offers.html" class="inline-flex h-10 shrink-0 items-center rounded-xl border border-line px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">عرض الكل</a>
+      </div>
+      <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
+        <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+          <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
+            <a href="product.html" class="absolute inset-0"><img src="https://images.unsplash.com/photo-1578645510447-e20b74926a1a?auto=format&fit=crop&w=900&q=80" alt="غلاية صبّ ذكية بتحكم حراري" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></a>
+            <div class="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100">
+              <div class="flex gap-2">
+                <button type="button" data-add-to-cart data-id="p8" data-name="غلاية صبّ ذكية بتحكم حراري" data-brand="نُورتك" data-price="510" data-image="https://images.unsplash.com/photo-1578645510447-e20b74926a1a?auto=format&fit=crop&w=900&q=80" data-label="أضف" class="inline-flex h-10 flex-1 items-center justify-center rounded-xl bg-accent text-sm font-medium text-white">أضف</button>
+                <a href="product.html" class="inline-flex h-10 flex-1 items-center justify-center rounded-xl border border-line bg-surface text-sm font-medium">معاينة</a>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-1 flex-col gap-2 p-4">
+            <p class="text-xs text-muted">نُورتك</p>
+            <a href="product.html" class="line-clamp-2 text-sm font-medium leading-6 text-ink transition hover:text-accent">غلاية صبّ ذكية بتحكم حراري</a>
+            <p class="flex items-center gap-1.5 text-sm text-muted"><svg class="size-3.5 fill-metal text-metal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="font-medium text-ink">4.5</span><span>(156)</span></p>
+            <p class="text-base font-semibold text-ink">٥١٠ ر.س <span class="text-sm font-normal text-muted line-through">٦٤٠ ر.س</span></p>
+          </div>
+        </article>
+        <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+          <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
+            <a href="product.html" class="absolute inset-0"><img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=80" alt="حقيبة عطلة نهاية الأسبوع" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></a>
+            <div class="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100">
+              <div class="flex gap-2">
+                <button type="button" data-add-to-cart data-id="p7" data-name="حقيبة عطلة نهاية الأسبوع" data-brand="مسار" data-price="760" data-image="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=80" data-label="أضف" class="inline-flex h-10 flex-1 items-center justify-center rounded-xl bg-accent text-sm font-medium text-white">أضف</button>
+                <a href="product.html" class="inline-flex h-10 flex-1 items-center justify-center rounded-xl border border-line bg-surface text-sm font-medium">معاينة</a>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-1 flex-col gap-2 p-4">
+            <p class="text-xs text-muted">مسار</p>
+            <a href="product.html" class="line-clamp-2 text-sm font-medium leading-6 text-ink transition hover:text-accent">حقيبة عطلة نهاية الأسبوع</a>
+            <p class="flex items-center gap-1.5 text-sm text-muted"><svg class="size-3.5 fill-metal text-metal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="font-medium text-ink">4.7</span><span>(97)</span></p>
+            <p class="text-base font-semibold text-ink">٧٦٠ ر.س <span class="text-sm font-normal text-muted line-through">٩٢٠ ر.س</span></p>
+          </div>
+        </article>
+        <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+          <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
+            <a href="product.html" class="absolute inset-0"><img src="https://images.unsplash.com/photo-1594026112284-02bb6f3352bb?auto=format&fit=crop&w=900&q=80" alt="رف معياري من خشب البلوط" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></a>
+            <div class="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100">
+              <div class="flex gap-2">
+                <button type="button" data-add-to-cart data-id="p6" data-name="رف معياري من خشب البلوط" data-brand="مساكن" data-price="1280" data-image="https://images.unsplash.com/photo-1594026112284-02bb6f3352bb?auto=format&fit=crop&w=900&q=80" data-label="أضف" class="inline-flex h-10 flex-1 items-center justify-center rounded-xl bg-accent text-sm font-medium text-white">أضف</button>
+                <a href="product.html" class="inline-flex h-10 flex-1 items-center justify-center rounded-xl border border-line bg-surface text-sm font-medium">معاينة</a>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-1 flex-col gap-2 p-4">
+            <p class="text-xs text-muted">مساكن</p>
+            <a href="product.html" class="line-clamp-2 text-sm font-medium leading-6 text-ink transition hover:text-accent">رف معياري من خشب البلوط</a>
+            <p class="flex items-center gap-1.5 text-sm text-muted"><svg class="size-3.5 fill-metal text-metal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="font-medium text-ink">4.8</span><span>(43)</span></p>
+            <p class="text-base font-semibold text-ink">١٬٢٨٠ ر.س</p>
+          </div>
+        </article>
+        <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+          <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
+            <a href="product.html" class="absolute inset-0"><img src="https://images.unsplash.com/photo-1620916566940-4f43b1ceb923?auto=format&fit=crop&w=900&q=80" alt="سيروم عناية بالحرير النباتي" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></a>
+            <div class="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100">
+              <div class="flex gap-2">
+                <button type="button" data-add-to-cart data-id="p5" data-name="سيروم عناية بالحرير النباتي" data-brand="لُمعة" data-price="275" data-image="https://images.unsplash.com/photo-1620916566940-4f43b1ceb923?auto=format&fit=crop&w=900&q=80" data-label="أضف" class="inline-flex h-10 flex-1 items-center justify-center rounded-xl bg-accent text-sm font-medium text-white">أضف</button>
+                <a href="product.html" class="inline-flex h-10 flex-1 items-center justify-center rounded-xl border border-line bg-surface text-sm font-medium">معاينة</a>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-1 flex-col gap-2 p-4">
+            <p class="text-xs text-muted">لُمعة</p>
+            <a href="product.html" class="line-clamp-2 text-sm font-medium leading-6 text-ink transition hover:text-accent">سيروم عناية بالحرير النباتي</a>
+            <p class="flex items-center gap-1.5 text-sm text-muted"><svg class="size-3.5 fill-metal text-metal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="font-medium text-ink">4.9</span><span>(201)</span></p>
+            <p class="text-base font-semibold text-ink">٢٧٥ ر.س <span class="text-sm font-normal text-muted line-through">٣٢٠ ر.س</span></p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 10. Inspiration gallery -->
+    <section class="container-wide py-20 md:py-24">
+      <div class="mb-8 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-2xl space-y-3">
+          <p class="text-sm font-medium text-accent">معرض إلهام</p>
+          <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">قصص منتجات تساعدك تتخيّل النتيجة</h2>
+          <p class="text-base leading-8 text-muted">سرد بصري تفاعلي يربط المنتج بأسلوب الحياة — لاكتشاف أعمق وتحويل أعلى دون إعلانات مزعجة.</p>
+        </div>
+        <a href="collections.html" class="inline-flex h-10 shrink-0 items-center rounded-xl border border-line px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">المزيد من الإلهام</a>
+      </div>
+      <div class="grid gap-4 md:grid-cols-3">
+        <a href="collections.html" class="group relative min-h-80 overflow-hidden rounded-2xl">
+          <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80" alt="ركن صباحي هادئ" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+          <div class="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/30 to-transparent"></div>
+          <div class="absolute inset-x-0 bottom-0 space-y-2 p-5 text-white">
+            <h3 class="text-xl font-semibold">ركن صباحي هادئ</h3>
+            <p class="text-sm leading-7 text-white/75">إضاءة، خزف، وطقوس قهوة تبدأ يومك بثبات.</p>
+          </div>
+        </a>
+        <a href="collections.html" class="group relative min-h-80 overflow-hidden rounded-2xl">
+          <img src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1200&q=80" alt="أناقة العمل عن بُعد" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+          <div class="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/30 to-transparent"></div>
+          <div class="absolute inset-x-0 bottom-0 space-y-2 p-5 text-white">
+            <h3 class="text-xl font-semibold">أناقة العمل عن بُعد</h3>
+            <p class="text-sm leading-7 text-white/75">قطع مرتبة ترفع حضورك في الاجتماعات دون مبالغة.</p>
+          </div>
+        </a>
+        <a href="collections.html" class="group relative min-h-80 overflow-hidden rounded-2xl">
+          <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&q=80" alt="مساحة استقبال دافئة" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+          <div class="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/30 to-transparent"></div>
+          <div class="absolute inset-x-0 bottom-0 space-y-2 p-5 text-white">
+            <h3 class="text-xl font-semibold">مساحة استقبال دافئة</h3>
+            <p class="text-sm leading-7 text-white/75">تفاصيل منزلية تُشعر ضيوفك بالترحيب من أول نظرة.</p>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- 11. Customer reviews -->
+    <section class="bg-surface py-20 md:py-24">
+      <div class="container-wide">
+        <div class="mb-8 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
+          <div class="max-w-2xl space-y-3">
+            <p class="text-sm font-medium text-accent">ثقة المجتمع</p>
+            <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">آراء حقيقية من مشترين في الوطن العربي</h2>
+            <p class="text-base leading-8 text-muted">مراجعات مختارة تبني الثقة قبل الشراء — بشفافية وبدون مبالغة.</p>
+          </div>
+        </div>
+        <div class="grid gap-5 md:grid-cols-3">
+          <blockquote class="flex h-full flex-col gap-4 rounded-2xl border border-line bg-canvas p-6">
+            <p class="flex items-center gap-1 text-sm"><svg class="size-3.5 fill-metal text-metal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="font-medium text-ink">5.0</span></p>
+            <p class="flex-1 text-sm leading-8 text-ink-soft">"التسوق صار أسرع وأوضح. التفاصيل الدقيقة في التوصيل والدفع خلّتني أثق من أول طلب."</p>
+            <footer class="space-y-1 text-sm"><p class="font-semibold text-ink">ليلى أحمد</p><p class="text-muted">الرياض · بليزر كتان بهيكل ناعم</p></footer>
+          </blockquote>
+          <blockquote class="flex h-full flex-col gap-4 rounded-2xl border border-line bg-canvas p-6">
+            <p class="flex items-center gap-1 text-sm"><svg class="size-3.5 fill-metal text-metal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="font-medium text-ink">5.0</span></p>
+            <p class="flex-1 text-sm leading-8 text-ink-soft">"تجربة عربية أصيلة فعلاً — مو ترجمة. البحث والاقتراحات وفّروا علي وقت كثير."</p>
+            <footer class="space-y-1 text-sm"><p class="font-semibold text-ink">عمر حسن</p><p class="text-muted">دبي · سماعات لاسلكية عازلة للضجيج</p></footer>
+          </blockquote>
+          <blockquote class="flex h-full flex-col gap-4 rounded-2xl border border-line bg-canvas p-6">
+            <p class="flex items-center gap-1 text-sm"><svg class="size-3.5 fill-metal text-metal" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><span class="font-medium text-ink">5.0</span></p>
+            <p class="flex-1 text-sm leading-8 text-ink-soft">"المنتجات مختارة بعناية والواجهة راقية بدون ضوضاء. الإحساس بالمتعة موجود في كل خطوة."</p>
+            <footer class="space-y-1 text-sm"><p class="font-semibold text-ink">نورة السالم</p><p class="text-muted">الكويت · سيروم عناية بالحرير النباتي</p></footer>
+          </blockquote>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. Shopping benefits -->
+    <section class="container-wide py-20 md:py-24">
+      <div class="mb-8 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-2xl space-y-3">
+          <p class="text-sm font-medium text-accent">لماذا أثير؟</p>
+          <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">ضمانات واضحة تزيد ثقتك قبل الدفع</h2>
+          <p class="text-base leading-8 text-muted">كل وعد ظاهر ومفهوم — توصيل، إرجاع، دفع، ودعم — لتقليل القلق وزيادة إتمام الشراء.</p>
+        </div>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-2xl border border-line bg-surface p-6 shadow-soft">
+          <div class="mb-4 inline-flex size-11 items-center justify-center rounded-xl bg-accent-soft text-accent"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg></div>
+          <h3 class="mb-2 text-base font-semibold text-ink">توصيل سريع وواضح</h3>
+          <p class="text-sm leading-7 text-muted">مواعيد دقيقة وتتبع لحظي من المستودع حتى بابك.</p>
+        </div>
+        <div class="rounded-2xl border border-line bg-surface p-6 shadow-soft">
+          <div class="mb-4 inline-flex size-11 items-center justify-center rounded-xl bg-accent-soft text-accent"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></div>
+          <h3 class="mb-2 text-base font-semibold text-ink">إرجاع بلا تعقيد</h3>
+          <p class="text-sm leading-7 text-muted">سياسة شفافة وخطوات قصيرة لأي منتج مؤهل.</p>
+        </div>
+        <div class="rounded-2xl border border-line bg-surface p-6 shadow-soft">
+          <div class="mb-4 inline-flex size-11 items-center justify-center rounded-xl bg-accent-soft text-accent"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg></div>
+          <h3 class="mb-2 text-base font-semibold text-ink">دفع آمن متعدد</h3>
+          <p class="text-sm leading-7 text-muted">بطاقات، محافظ رقمية، وتقسيط عبر مزودين موثوقين.</p>
+        </div>
+        <div class="rounded-2xl border border-line bg-surface p-6 shadow-soft">
+          <div class="mb-4 inline-flex size-11 items-center justify-center rounded-xl bg-accent-soft text-accent"><svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5Zm0 0a9 9 0 1 1 18 0m0 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3Z"/></svg></div>
+          <h3 class="mb-2 text-base font-semibold text-ink">دعم بشري سريع</h3>
+          <p class="text-sm leading-7 text-muted">فريق عربي يفهم طلبك ويحله بسياق الطلب كاملاً.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13. App promo -->
+    <section class="container-wide py-12 md:py-16">
+      <div class="grid overflow-hidden rounded-3xl bg-accent text-white md:grid-cols-[1.3fr_1fr]">
+        <div class="space-y-4 px-8 py-10 md:px-12 md:py-14">
+          <p class="text-sm text-white/75">تطبيق أثير قريباً</p>
+          <h2 class="text-2xl font-semibold md:text-3xl">تسوق أسرع على الجوال — بنفس أناقة التجربة</h2>
+          <p class="max-w-lg text-sm leading-8 text-white/80">إشعارات ذكية، تتبّع لحظي، ومساعد أثير في جيبك. سجّل اهتمامك الآن وكن من أوائل المستخدمين.</p>
+          <a href="account.html" class="inline-flex h-12 items-center rounded-xl bg-white px-6 font-medium text-ink transition hover:bg-canvas">أعلمني عند الإطلاق</a>
+        </div>
+        <div class="relative hidden items-center justify-center bg-[#0c4d49] md:flex">
+          <div class="h-64 w-36 rounded-[2rem] border border-white/20 bg-white/10 p-3 shadow-lift">
+            <div class="flex h-full flex-col justify-between rounded-[1.4rem] bg-ink/40 p-4">
+              <p class="text-lg font-bold">أثير</p>
+              <p class="text-xs leading-6 text-white/70">تجربة عربية أصيلة على الشاشة الصغيرة.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14. Newsletter -->
+    <section class="container-wide py-20 md:py-24">
+      <div class="rounded-3xl border border-line bg-surface px-6 py-10 shadow-soft md:px-12 md:py-14">
+        <div class="mb-6 max-w-2xl space-y-3 md:mb-8">
+          <p class="text-sm font-medium text-accent">نشرة أثير</p>
+          <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">اختيارات أسبوعية… بلا ضوضاء</h2>
+          <p class="text-base leading-8 text-muted">وصول مبكر للعروض المنسّقة، ومجموعات موسمية، ونصائح اكتشاف توفّر وقتك.</p>
+        </div>
+        <form id="newsletter-form" class="flex max-w-xl flex-col gap-3 sm:flex-row sm:items-end">
+          <div class="flex-1 space-y-2">
+            <label for="newsletter-email" class="text-sm font-medium text-ink">بريدك الإلكتروني</label>
+            <input id="newsletter-email" type="email" name="email" required autocomplete="email" placeholder="name@example.com" class="h-12 w-full rounded-xl border border-line bg-surface px-4 text-sm sm:min-w-72" />
+          </div>
+          <button type="submit" class="inline-flex h-12 items-center justify-center rounded-xl bg-accent px-7 font-medium text-white transition hover:bg-[#0d4f4a]">اشترك</button>
+        </form>
+        <p id="newsletter-success" class="mt-4 hidden text-sm text-success" role="status">تم تسجيل اهتمامك بنجاح. شكراً لانضمامك إلى أثير.</p>
+      </div>
+    </section>
+
+    <!-- 15. FAQ -->
+    <section class="container-wide py-20 md:py-24">
+      <div class="mb-8 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-2xl space-y-3">
+          <p class="text-sm font-medium text-accent">أسئلة شائعة</p>
+          <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">إجابات سريعة قبل أن تحتاج للدعم</h2>
+          <p class="text-base leading-8 text-muted">وضوح في الحساب، الشحن، والتتبع، والإرجاع — لتقليل الاحتكاك وزيادة الثقة.</p>
+        </div>
+        <a href="help.html" class="inline-flex h-10 shrink-0 items-center rounded-xl border border-line px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">مركز المساعدة</a>
+      </div>
+      <div id="faq-accordion" class="mx-auto max-w-3xl divide-y divide-line rounded-2xl border border-line bg-surface">
+        <div class="faq-item">
+          <button type="button" class="faq-trigger flex w-full items-center justify-between gap-4 px-5 py-5 text-right" aria-expanded="true">
+            <span class="text-sm font-semibold text-ink md:text-base">هل يمكن الشراء دون إنشاء حساب؟</span>
+            <svg class="faq-icon size-5 shrink-0 rotate-180 text-muted transition" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="faq-panel px-5 pb-5 text-sm leading-8 text-muted">نعم. نوفر إتمام شراء كزائر، مع خيار حفظ الطلب في حسابك لاحقاً بخطوة واحدة.</div>
+        </div>
+        <div class="faq-item">
+          <button type="button" class="faq-trigger flex w-full items-center justify-between gap-4 px-5 py-5 text-right" aria-expanded="false">
+            <span class="text-sm font-semibold text-ink md:text-base">كم تستغرق مدة التوصيل؟</span>
+            <svg class="faq-icon size-5 shrink-0 text-muted transition" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="faq-panel hidden px-5 pb-5 text-sm leading-8 text-muted">داخل المدن الرئيسية عادة من يوم إلى ثلاثة أيام عمل حسب المستودع ومنطقة الشحن.</div>
+        </div>
+        <div class="faq-item">
+          <button type="button" class="faq-trigger flex w-full items-center justify-between gap-4 px-5 py-5 text-right" aria-expanded="false">
+            <span class="text-sm font-semibold text-ink md:text-base">كيف أتابع طلبي؟</span>
+            <svg class="faq-icon size-5 shrink-0 text-muted transition" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="faq-panel hidden px-5 pb-5 text-sm leading-8 text-muted">من حسابك أو عبر رابط التتبع في رسالة التأكيد، مع تحديثات عند كل مرحلة شحن.</div>
+        </div>
+        <div class="faq-item">
+          <button type="button" class="faq-trigger flex w-full items-center justify-between gap-4 px-5 py-5 text-right" aria-expanded="false">
+            <span class="text-sm font-semibold text-ink md:text-base">ما سياسة الإرجاع؟</span>
+            <svg class="faq-icon size-5 shrink-0 text-muted transition" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="faq-panel hidden px-5 pb-5 text-sm leading-8 text-muted">معظم المنتجات قابلة للإرجاع خلال 14 يوماً بشرط الحالة والسياسة الخاصة بكل فئة.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div data-site-footer></div>
+  <script>
+    (function () {
+      // Flash deal countdown timers
+      var deals = [
+        { id: "flash-deal-1", hoursOffset: 14 },
+        { id: "flash-deal-2", hoursOffset: 9 },
+      ];
+
+      deals.forEach(function (deal) {
+        var card = document.getElementById(deal.id);
+        if (!card) return;
+        var endsAt = Date.now() + deal.hoursOffset * 60 * 60 * 1000;
+        card.setAttribute("data-ends-at", new Date(endsAt).toISOString());
+
+        var hoursEl = document.getElementById(deal.id + "-hours");
+        var minsEl = document.getElementById(deal.id + "-mins");
+        var secsEl = document.getElementById(deal.id + "-secs");
+
+        function tick() {
+          var diff = Math.max(0, endsAt - Date.now());
+          var hours = Math.floor(diff / (1000 * 60 * 60));
+          var mins = Math.floor((diff / (1000 * 60)) % 60);
+          var secs = Math.floor((diff / 1000) % 60);
+          if (hoursEl) hoursEl.textContent = String(hours).padStart(2, "0");
+          if (minsEl) minsEl.textContent = String(mins).padStart(2, "0");
+          if (secsEl) secsEl.textContent = String(secs).padStart(2, "0");
+        }
+
+        tick();
+        setInterval(tick, 1000);
+      });
+
+      // FAQ accordion
+      document.querySelectorAll(".faq-trigger").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var item = btn.closest(".faq-item");
+          var panel = item ? item.querySelector(".faq-panel") : null;
+          var icon = btn.querySelector(".faq-icon");
+          var isOpen = btn.getAttribute("aria-expanded") === "true";
+
+          document.querySelectorAll(".faq-trigger").forEach(function (other) {
+            if (other === btn) return;
+            other.setAttribute("aria-expanded", "false");
+            var otherPanel = other.closest(".faq-item").querySelector(".faq-panel");
+            var otherIcon = other.querySelector(".faq-icon");
+            if (otherPanel) otherPanel.classList.add("hidden");
+            if (otherIcon) otherIcon.classList.remove("rotate-180");
+          });
+
+          btn.setAttribute("aria-expanded", isOpen ? "false" : "true");
+          if (panel) panel.classList.toggle("hidden", isOpen);
+          if (icon) icon.classList.toggle("rotate-180", !isOpen);
+        });
+      });
+
+      // Newsletter
+      var form = document.getElementById("newsletter-form");
+      var success = document.getElementById("newsletter-success");
+      if (form && success) {
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          var email = document.getElementById("newsletter-email");
+          if (!email || !email.value.trim()) return;
+          success.classList.remove("hidden");
+          form.querySelector("button[type='submit']").disabled = true;
+        });
+      }
+    })();
+  </script>
+  <script src="assets/js/storefront.js"></script>
+</body>
+</html>

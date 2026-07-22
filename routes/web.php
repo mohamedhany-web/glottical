@@ -296,6 +296,12 @@ Route::post('/contact', [\App\Http\Controllers\Public\ContactController::class, 
 Route::get('/media', [\App\Http\Controllers\Public\MediaController::class, 'index'])->name('public.media.index');
 Route::get('/media/{media}', [\App\Http\Controllers\Public\MediaController::class, 'show'])->name('public.media.show');
 
+// صفحة التصنيفات العامة (من course_categories في الموقع)
+Route::get('/categories', [\App\Http\Controllers\Public\CategoriesController::class, 'index'])->name('public.categories');
+
+// نظام المجموعات: جماعي مقابل فردي (1:1)
+Route::get('/groups', [\App\Http\Controllers\Public\GroupsController::class, 'index'])->name('public.groups');
+
 // صفحة الكورسات العامة (?subject=id & ?delivery=one_to_one|group)
 Route::get('/courses', [\App\Http\Controllers\Public\CoursesController::class, 'index'])->name('public.courses');
 

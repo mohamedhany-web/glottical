@@ -56,3 +56,17 @@ if (! function_exists('storage_base_url')) {
         return rtrim(\App\Support\ApplicationUrl::resolveRootUrl(), '/').'/'.\App\Services\PublicStorageUrl::PROXY_PATH;
     }
 }
+
+if (! function_exists('versioned_asset')) {
+    /**
+     * رابط أصل ثابت مع بصمة تعديل الملف — يكسر كاش المتصفح تلقائياً عند كل تحديث.
+     */
+    function versioned_asset(string $path): string
+    {
+        $url = asset($path);
+        $full = public_path(ltrim(str_replace('\\', '/', $path), '/'));
+        $version = is_file($full) ? (string) filemtime($full) : (string) time();
+
+        return $url.(str_contains($url, '?') ? '&' : '?').'v='.$version;
+    }
+}

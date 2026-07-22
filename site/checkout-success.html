@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تم تأكيد الطلب | أثير</title>
+  <meta name="description" content="تم تأكيد طلبك من أثير بنجاح — تتبّع شحنتك واستلمها في الموعد المتوقع." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/atheer.css" />
+</head>
+<body class="font-sans antialiased">
+  <div data-site-header></div>
+
+  <main class="page-enter pb-20">
+    <div class="container-wide py-10 md:py-16">
+      <!-- Success hero -->
+      <div class="mx-auto max-w-3xl text-center">
+        <div class="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-accent-soft text-accent shadow-soft" aria-hidden="true">
+          <svg class="size-10" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10-3-3"/></svg>
+        </div>
+        <h1 class="text-3xl font-semibold tracking-tight text-ink md:text-4xl">تم تأكيد طلبك بنجاح</h1>
+        <p class="mx-auto mt-4 max-w-xl text-base leading-8 text-muted">شكراً لتسوقك من أثير. طلبك قيد المعالجة وسنُبقيك على اطلاع بكل خطوة.</p>
+      </div>
+
+      <!-- Order details card -->
+      <div class="mx-auto mt-10 max-w-2xl rounded-3xl border border-line bg-surface p-6 shadow-soft md:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-6">
+          <div>
+            <p class="text-sm text-muted">رقم الطلب</p>
+            <p class="text-2xl font-semibold tracking-wide text-ink" dir="ltr">ATH-10482</p>
+          </div>
+          <div class="text-left sm:text-right">
+            <p class="text-sm text-muted">التوصيل المتوقع</p>
+            <p class="text-lg font-semibold text-accent">الأحد 19 يوليو 2026</p>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="py-8" aria-label="مراحل الطلب">
+          <ol class="relative grid gap-0 sm:grid-cols-4">
+            <li class="relative flex flex-col items-center gap-3 pb-8 sm:pb-0">
+              <span class="relative z-10 flex size-10 items-center justify-center rounded-full bg-accent text-sm font-semibold text-white shadow-soft">✓</span>
+              <div class="text-center">
+                <p class="text-sm font-semibold text-ink">تأكيد</p>
+                <p class="text-xs text-muted">تم الآن</p>
+              </div>
+              <span class="absolute top-5 hidden h-0.5 w-full bg-accent sm:block sm:-translate-x-1/2" style="right:50%;width:100%" aria-hidden="true"></span>
+            </li>
+            <li class="relative flex flex-col items-center gap-3 pb-8 sm:pb-0">
+              <span class="relative z-10 flex size-10 items-center justify-center rounded-full border-2 border-accent bg-accent-soft text-sm font-semibold text-accent">2</span>
+              <div class="text-center">
+                <p class="text-sm font-semibold text-ink">تجهيز</p>
+                <p class="text-xs text-muted">خلال 24 ساعة</p>
+              </div>
+              <span class="absolute top-5 hidden h-0.5 w-full bg-line sm:block" style="right:50%;width:100%" aria-hidden="true"></span>
+            </li>
+            <li class="relative flex flex-col items-center gap-3 pb-8 sm:pb-0">
+              <span class="relative z-10 flex size-10 items-center justify-center rounded-full border-2 border-line bg-canvas text-sm font-semibold text-muted">3</span>
+              <div class="text-center">
+                <p class="text-sm font-semibold text-ink">شحن</p>
+                <p class="text-xs text-muted">17–18 يوليو</p>
+              </div>
+              <span class="absolute top-5 hidden h-0.5 w-full bg-line sm:block" style="right:50%;width:100%" aria-hidden="true"></span>
+            </li>
+            <li class="relative flex flex-col items-center gap-3">
+              <span class="relative z-10 flex size-10 items-center justify-center rounded-full border-2 border-line bg-canvas text-sm font-semibold text-muted">4</span>
+              <div class="text-center">
+                <p class="text-sm font-semibold text-ink">تسليم</p>
+                <p class="text-xs text-muted">19 يوليو</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+
+        <div class="rounded-2xl bg-accent-soft px-5 py-4 text-sm leading-7 text-accent">
+          <p class="flex items-start gap-2">
+            <svg class="mt-0.5 size-4 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <span>أرسلنا رسالة تأكيد إلى <strong>laila@example.com</strong> تتضمن رقم الطلب ورابط التتبع. تحقق من صندوق الوارد أو البريد المزعج.</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- What's next -->
+      <div class="mx-auto mt-10 max-w-2xl space-y-4">
+        <h2 class="text-center text-lg font-semibold text-ink">ماذا بعد؟</h2>
+        <div class="grid gap-4 sm:grid-cols-3">
+          <a href="account.html#orders" class="group rounded-2xl border border-line bg-surface p-5 text-center shadow-soft transition hover:-translate-y-1 hover:border-accent/30 hover:shadow-lift">
+            <div class="mx-auto mb-3 flex size-11 items-center justify-center rounded-xl bg-accent-soft text-accent transition group-hover:bg-accent group-hover:text-white">
+              <svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+            </div>
+            <p class="text-sm font-semibold text-ink">تتبّع الطلب</p>
+            <p class="mt-1 text-xs text-muted">راقب حالة الشحنة</p>
+          </a>
+          <a href="index.html" class="group rounded-2xl border border-line bg-surface p-5 text-center shadow-soft transition hover:-translate-y-1 hover:border-accent/30 hover:shadow-lift">
+            <div class="mx-auto mb-3 flex size-11 items-center justify-center rounded-xl bg-accent-soft text-accent transition group-hover:bg-accent group-hover:text-white">
+              <svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m2 7 10 5 10-5"/><path d="M12 22V12"/></svg>
+            </div>
+            <p class="text-sm font-semibold text-ink">متابعة التسوق</p>
+            <p class="mt-1 text-xs text-muted">اكتشف منتجات جديدة</p>
+          </a>
+          <a href="account.html" class="group rounded-2xl border border-line bg-surface p-5 text-center shadow-soft transition hover:-translate-y-1 hover:border-accent/30 hover:shadow-lift">
+            <div class="mx-auto mb-3 flex size-11 items-center justify-center rounded-xl bg-accent-soft text-accent transition group-hover:bg-accent group-hover:text-white">
+              <svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <p class="text-sm font-semibold text-ink">حسابي</p>
+            <p class="mt-1 text-xs text-muted">الطلبات والمفضلة</p>
+          </a>
+        </div>
+      </div>
+
+      <div class="mx-auto mt-10 flex max-w-2xl flex-wrap justify-center gap-3">
+        <a href="account.html#orders" class="btn-press inline-flex h-12 items-center rounded-xl bg-accent px-6 font-medium text-white shadow-[0_10px_24px_rgba(15,92,87,0.25)] transition hover:bg-[#0d4f4a]">متابعة الطلب</a>
+        <a href="index.html" class="btn-press inline-flex h-12 items-center rounded-xl border border-line bg-surface px-6 font-medium transition hover:border-accent/30 hover:bg-accent-soft">العودة للتسوق</a>
+      </div>
+    </div>
+  </main>
+
+  <div data-site-footer></div>
+  <script src="assets/js/storefront.js"></script>
+</body>
+</html>

@@ -1,0 +1,388 @@
+/* Admin shell — مطابقة حرفية لـ site/admin-shell.js + ريسبونسيف ثابت */
+
+body.admin-body {
+  background: #eef1f5 !important;
+  color: #0b1220;
+  font-family: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif !important;
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* شِل بارتفاع الشاشة: سايدبار ثابت + محتوى يتمرّر منفصلاً */
+.admin-shell {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.admin-main-column {
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  height: 100%;
+  overflow: hidden;
+}
+
+.admin-main-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* —— سايدبار ثابت 280px — تمرير الروابط داخل الـ nav فقط —— */
+.admin-sidebar {
+  background: #0b1220 !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: none !important;
+  transition: none !important;
+  overflow: hidden !important;
+}
+.admin-sidebar-desktop {
+  width: 280px !important;
+  min-width: 280px !important;
+  max-width: 280px !important;
+  flex-shrink: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+}
+.admin-sidebar > .flex.flex-col,
+.admin-sidebar > div.flex.flex-col {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.admin-sidebar .sidebar-nav {
+  flex: 1 1 auto;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+.admin-sidebar .sidebar-nav::-webkit-scrollbar {
+  width: 4px;
+}
+.admin-sidebar .sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+}
+.admin-sidebar .sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#admin-drawer .admin-sidebar {
+  width: min(88vw, 300px) !important;
+  min-width: 0 !important;
+  max-width: min(88vw, 300px) !important;
+  height: 100% !important;
+  transition: none !important;
+}
+#admin-drawer .drawer-panel {
+  animation: none !important;
+}
+
+.admin-sidebar .sidebar-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  margin-bottom: 0.25rem !important;
+  padding: 0.625rem 0.75rem !important;
+  border-radius: 0.75rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  background: transparent !important;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.admin-sidebar .sidebar-link::before {
+  display: none !important;
+}
+.admin-sidebar .sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+}
+.admin-sidebar .sidebar-link.active {
+  background: #fff !important;
+  color: #0b1220 !important;
+  font-weight: 600 !important;
+}
+
+.admin-sidebar .sidebar-link i {
+  width: 2rem !important;
+  height: 2rem !important;
+  min-width: 2rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 0.5rem !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  font-size: 0.8125rem !important;
+  color: inherit !important;
+  flex-shrink: 0 !important;
+}
+.admin-sidebar .sidebar-link.active i {
+  background: #0f5c57 !important;
+  color: #fff !important;
+}
+
+.admin-sidebar .sidebar-section-label {
+  display: block !important;
+  margin: 1rem 0 0.35rem !important;
+  padding: 0 0.75rem !important;
+  font-size: 0.625rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.28) !important;
+  text-transform: none !important;
+}
+.admin-sidebar .sidebar-section-label:first-child,
+.admin-sidebar ul > .sidebar-section-label:first-of-type {
+  margin-top: 0.25rem !important;
+}
+
+.admin-sidebar .sidebar-group-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.5rem;
+  width: 100%;
+  margin-bottom: 0.25rem;
+  padding: 0.5rem 0.75rem !important;
+  border-radius: 0.75rem !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  background: transparent !important;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+.admin-sidebar .sidebar-group-btn > span:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.admin-sidebar .sidebar-group-btn > span:first-child > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-sidebar .sidebar-group-btn i:not(.chevron) {
+  width: 2rem !important;
+  height: 2rem !important;
+  min-width: 2rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 0.5rem !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  font-size: 0.75rem !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+.admin-sidebar .sidebar-group-btn i.chevron {
+  font-size: 0.5rem !important;
+  color: rgba(255, 255, 255, 0.3) !important;
+  background: none !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  flex-shrink: 0;
+}
+.admin-sidebar .sidebar-group-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+}
+.admin-sidebar .sidebar-group-btn:hover i:not(.chevron) {
+  color: #fff !important;
+}
+
+.admin-sidebar .sidebar-sub-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  padding: 0.4rem 0.75rem !important;
+  border-radius: 0.5rem !important;
+  font-size: 0.8125rem !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+.admin-sidebar .sidebar-sub-link:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+}
+.admin-sidebar .sidebar-sub-link.active {
+  background: rgba(15, 92, 87, 0.35) !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+}
+.admin-sidebar .sidebar-sub-link i {
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  background: none !important;
+  font-size: 0.6875rem !important;
+}
+
+.admin-sidebar .sidebar-badge {
+  margin-inline-start: auto;
+  border-radius: 0.375rem !important;
+  padding: 0.125rem 0.375rem !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  flex-shrink: 0;
+}
+.admin-sidebar .sidebar-link.active .sidebar-badge {
+  background: #e6f2f1 !important;
+  color: #0f5c57 !important;
+}
+
+.admin-sidebar .border-slate-200,
+.admin-sidebar .border-slate-600,
+.admin-sidebar [class*="border-slate"],
+.admin-sidebar ul.border-r {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.admin-sidebar .text-slate-800,
+.admin-sidebar .text-slate-100,
+.admin-sidebar .text-emerald-400 {
+  color: inherit !important;
+}
+.admin-sidebar .text-slate-500,
+.admin-sidebar .text-slate-400 {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* —— نافبار ثابت الارتفاع —— */
+.admin-topbar {
+  height: 72px;
+  min-height: 72px;
+  max-height: 72px;
+  border-bottom: 1px solid rgba(215, 221, 230, 0.8);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  flex-shrink: 0;
+}
+.admin-topbar > div {
+  height: 72px;
+  min-width: 0;
+}
+.admin-topbar-title {
+  min-width: 0;
+  flex: 1 1 auto;
+  max-width: 100%;
+}
+@media (min-width: 768px) {
+  .admin-topbar-title {
+    flex: 0 1 auto;
+    max-width: min(240px, 28vw);
+  }
+}
+@media (min-width: 1280px) {
+  .admin-topbar-title {
+    max-width: 320px;
+  }
+}
+
+.admin-topbar-search {
+  height: 2.75rem;
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid #d7dde6;
+  background: #f7f8fa;
+  padding-inline: 1rem;
+  font-size: 0.875rem;
+  color: #0b1220;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.admin-topbar-search:focus {
+  outline: none;
+  border-color: #0f5c57;
+  box-shadow: 0 0 0 4px rgba(15, 92, 87, 0.15);
+  background: #fff;
+}
+
+.admin-topbar-actions {
+  flex-shrink: 0;
+}
+
+/* قوائم منسدلة لا تخرج عن الشاشة على الموبايل */
+.admin-dropdown-panel {
+  width: min(20rem, calc(100vw - 1.5rem));
+  max-width: calc(100vw - 1.5rem);
+}
+
+/* —— محتوى —— */
+.admin-content-pad {
+  padding: 1rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+@media (min-width: 768px) {
+  .admin-content-pad {
+    padding: 1.5rem;
+  }
+}
+
+/* جداول: تمرير أفقي بدون كسر التخطيط */
+.admin-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+/* بطاقات KPI: ارتفاع متساوٍ تقريباً */
+.admin-kpi-grid > article {
+  min-height: 0;
+}
+
+/* أزرار الهيرو على الموبايل */
+@media (max-width: 639px) {
+  .admin-hero-actions > a,
+  .admin-hero-actions > button {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: calc(50% - 0.25rem);
+  }
+}
+
+/* شريط الحالة السفلي */
+.admin-status-strip {
+  display: grid;
+  gap: 0.75rem;
+}
+@media (min-width: 640px) {
+  .admin-status-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .admin-status-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* درور الموبايل */
+@media (max-width: 1023px) {
+  .admin-sidebar-desktop {
+    display: none !important;
+  }
+}
+@media (min-width: 1024px) {
+  .admin-sidebar-desktop {
+    display: flex !important;
+  }
+  #admin-drawer {
+    display: none !important;
+  }
+}

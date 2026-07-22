@@ -1,35 +1,38 @@
 <?php
 
 /**
- * هوية Glottical — توازن: كحلي غني + ذهبي قوي + أسطح أوضح (ليست دامسة بالكامل).
+ * هوية Glottical — تصميم فاتح مستوحى من site/ مع براند أكاديمي.
+ * أزرق #0B3D91 · أصفر #F5B800 · سماوي هادئ · خلفية قماشية فاتحة.
  */
 return [
-    // خلفيات أفتح قليلاً لتوازن أفضل
-    'navy' => '#121C30',
-    'navy_mid' => '#1B2F4D',
-    'navy_gradient' => '#1A2A45',
-    'navy_deep' => '#0C1422',
-    'navy_drawer_start' => '#1A2F4C',
-    'navy_drawer_end' => '#121C30',
-    'navy_hero_mid' => '#234B7A',
-    'navy_rgb' => '18, 28, 48',
-    'navy_mid_rgb' => '27, 47, 77',
+    'navy' => '#0B1220',
+    'navy_mid' => '#1C2738',
+    'navy_gradient' => '#152238',
+    'navy_deep' => '#070E18',
+    'navy_drawer_start' => '#152238',
+    'navy_drawer_end' => '#0B1220',
+    'navy_hero_mid' => '#0B3D91',
+    'navy_rgb' => '11, 18, 32',
+    'navy_mid_rgb' => '28, 39, 56',
 
-    // أزرق براند أوضح
-    'blue' => '#1E4D8C',
-    'blue_dark' => '#143665',
-    'blue_soft' => '#EAF0F8',
+    'blue' => '#0B3D91',
+    'blue_dark' => '#072A66',
+    'blue_soft' => '#E8EEF8',
 
-    // ثانوي هادئ
-    'cyan' => '#9BB0CB',
-    'cyan_rgb' => '155, 176, 203',
-    'neon' => '#9BB0CB',
+    'cyan' => '#00A3C4',
+    'cyan_rgb' => '0, 163, 196',
+    'neon' => '#00A3C4',
 
-    // ذهبي CTA قوي
-    'yellow' => '#F0BC0C',
+    'yellow' => '#F5B800',
     'yellow_soft' => '#FFF6D6',
-    'yellow_rgb' => '240, 188, 12',
+    'yellow_rgb' => '245, 184, 0',
 
-    'ink' => '#1A2B44',
-    'gray' => '#F3F5F9',
+    'ink' => '#0B1220',
+    'gray' => '#F3F5F7',
+
+    // أسطح تصميم site
+    'canvas' => '#F3F5F7',
+    'surface' => '#FFFFFF',
+    'muted' => '#5B6577',
+    'line' => '#D7DDE6',
 ];

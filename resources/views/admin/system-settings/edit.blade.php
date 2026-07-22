@@ -1,46 +1,46 @@
 @extends('layouts.admin')
 
 @section('title', 'إعدادات النظام')
+@section('page_title', 'إعدادات النظام')
 @section('header', 'إعدادات النظام')
 
 @section('content')
-<div class="w-full max-w-6xl mx-auto space-y-6 pb-10">
-    {{-- مقدمة الصفحة: توسعة مستقبلية لأقسام جديدة --}}
-    <section class="rounded-2xl border border-slate-200 dark:border-slate-600 bg-gradient-to-br from-slate-50 via-white to-sky-50/50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-900 p-6 sm:p-8 shadow-sm">
-        <div class="flex flex-col lg:flex-row lg:items-start gap-6">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/25 shrink-0">
-                <i class="fas fa-sliders-h text-2xl"></i>
-            </div>
-            <div class="flex-1 min-w-0 space-y-3">
-                <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 leading-tight">مركز إعدادات المنصة</h2>
-                <p class="text-sm sm:text-[15px] text-slate-600 dark:text-slate-300 leading-7 max-w-3xl">
-                    من هنا تضبط ما يظهر للزوار في الفوتر (تواصل وسوشيال)، وشعار لوحة التحكم، و<strong class="text-slate-800 dark:text-slate-200">المصادقة الثنائية لحسابات الأدمن</strong> فقط.
-                    يمكن لاحقاً إضافة أقسام أخرى في هذه الصفحة دون تغيير عنوان واحد.
-                </p>
-                <ul class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 space-y-1.5 list-disc list-inside max-w-3xl">
-                    <li><strong class="text-slate-700 dark:text-slate-300">الشعار:</strong> يُفضّل صورة مربعة أو شبه مربعة بخلفية شفافة أو فاتحة، بحد أقصى 2 ميغابايت.</li>
-                    <li><strong class="text-slate-700 dark:text-slate-300">الفوتر:</strong> اترك أي حقل فارغاً واحفظ لاستعادة القيمة الافتراضية لهذا الحقل.</li>
-                </ul>
-            </div>
+@php
+    $input = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $label = 'mb-1.5 block text-xs font-medium text-muted';
+    $sectionHead = 'flex flex-wrap items-center gap-3 border-b border-line bg-canvas/60 px-5 py-4';
+    $sectionBody = 'space-y-5 p-5 sm:p-6';
+    $panel = 'overflow-hidden rounded-2xl border border-line bg-surface shadow-soft';
+@endphp
+
+<div class="space-y-5 pb-8">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0 max-w-3xl">
+            <p class="text-xs font-medium text-muted">إعدادات المنصة</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink">مركز إعدادات النظام</h2>
+            <p class="mt-2 text-sm leading-7 text-muted">
+                ضبط الفوتر والسوشيال، شعار اللوحة، بوابة الدفع، و<strong class="font-medium text-ink">المصادقة الثنائية لحسابات الأدمن</strong>.
+                اترك أي حقل فوتر فارغاً واحفظ لاستعادة الافتراضي لهذا الحقل.
+            </p>
         </div>
     </section>
 
     @if(session('success'))
-        <div class="flex items-center gap-3 px-5 py-3 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-sm font-semibold">
+        <div class="flex items-center gap-3 rounded-2xl border border-success/20 bg-[#eef8f2] px-4 py-3 text-sm font-medium text-success shadow-soft" role="status">
             <i class="fas fa-check-circle"></i>
             {{ session('success') }}
         </div>
     @endif
     @if(session('info'))
-        <div class="flex items-center gap-3 px-5 py-3 rounded-2xl bg-sky-50 dark:bg-sky-900/20 border border-sky-100 dark:border-sky-800 text-sky-800 dark:text-sky-200 text-sm font-semibold">
+        <div class="flex items-center gap-3 rounded-2xl border border-accent/20 bg-accent-soft px-4 py-3 text-sm font-medium text-accent shadow-soft" role="status">
             <i class="fas fa-info-circle"></i>
             {{ session('info') }}
         </div>
     @endif
     @if($errors->any())
-        <div class="p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-2xl text-rose-800 dark:text-rose-200 text-sm">
-            <p class="font-bold mb-2">يرجى تصحيح ما يلي:</p>
-            <ul class="list-disc list-inside space-y-1">
+        <div class="rounded-2xl border border-danger/20 bg-[#fdf2f1] p-4 text-sm text-danger shadow-soft">
+            <p class="mb-2 font-semibold">يرجى تصحيح ما يلي:</p>
+            <ul class="list-inside list-disc space-y-1">
                 @foreach($errors->all() as $err)
                     <li>{{ $err }}</li>
                 @endforeach
@@ -48,131 +48,131 @@
         </div>
     @endif
 
-    <form method="post" action="{{ route('admin.system-settings.update') }}" enctype="multipart/form-data" class="space-y-6">
+    <form method="post" action="{{ route('admin.system-settings.update') }}" enctype="multipart/form-data" class="space-y-5">
         @csrf
         @method('PUT')
 
-        {{-- 1) شعار لوحة التحكم --}}
-        <div class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-lg overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-700/30 flex flex-wrap items-center gap-3">
-                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 text-sm font-black">1</span>
-                <div>
-                    <h3 class="text-base font-black text-slate-900 dark:text-slate-100">شعار لوحة التحكم وأيقونة الموقع</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">يظهر بدل الحرف «M» في الشريط الجانبي، وفي شعار النافبار العام (الصفحة الرئيسية والصفحات العامة)، وبجانب عنوان الصفحة في الشريط العلوي للوحة التحكم، وكأيقونة تبويب المتصفح (favicon).</p>
-                    <p class="text-[11px] text-sky-700 dark:text-sky-300 mt-2 leading-relaxed rounded-lg bg-sky-50 dark:bg-sky-900/20 border border-sky-100 dark:border-sky-800 px-3 py-2">
-                        <strong>محلياً:</strong> نفّذ <code class="text-[10px] bg-white dark:bg-slate-800 px-1 rounded">php artisan storage:link</code> وتأكد أن <code class="text-[10px]">APP_URL</code> يطابق عنوان المتصفح (مثلاً <code class="text-[10px]">http://127.0.0.1:8000</code>).<br>
-                        <strong>Cloudflare R2:</strong> في <code class="text-[10px]">.env</code> اضبط <code class="text-[10px]">ADMIN_BRANDING_DISK=r2</code> مع <code class="text-[10px]">AWS_*</code> و<code class="text-[10px]">AWS_URL</code> (رابط الـ bucket العام)، ثم <code class="text-[10px]">php artisan config:clear</code>.
-                    </p>
+        {{-- 1) Logo --}}
+        <article class="{{ $panel }}">
+            <div class="{{ $sectionHead }}">
+                <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-sm font-semibold text-accent">1</span>
+                <div class="min-w-0">
+                    <h3 class="text-base font-semibold text-ink">شعار لوحة التحكم وأيقونة الموقع</h3>
+                    <p class="mt-0.5 text-xs leading-6 text-muted">يظهر في الشريط الجانبي، النافبار العام، الشريط العلوي للأدمن، وكـ favicon.</p>
                 </div>
             </div>
-            <div class="p-6 space-y-5">
-                <div class="flex flex-col sm:flex-row sm:items-center gap-6">
+            <div class="{{ $sectionBody }}">
+                <div class="rounded-xl border border-line bg-canvas px-4 py-3 text-xs leading-6 text-muted">
+                    <strong class="text-ink">محلياً:</strong> نفّذ <code class="rounded bg-surface px-1 text-[10px]" dir="ltr">php artisan storage:link</code>
+                    وتأكد أن <code class="rounded bg-surface px-1 text-[10px]" dir="ltr">APP_URL</code> يطابق المتصفح.
+                    <br>
+                    <strong class="text-ink">Cloudflare R2:</strong>
+                    <code class="rounded bg-surface px-1 text-[10px]" dir="ltr">ADMIN_BRANDING_DISK=r2</code>
+                    مع مفاتيح AWS ثم <code class="rounded bg-surface px-1 text-[10px]" dir="ltr">php artisan config:clear</code>.
+                </div>
+                <div class="flex flex-col gap-5 sm:flex-row sm:items-center">
                     <div class="shrink-0">
                         @if($adminPanelLogoUrl)
-                            <div class="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-600 p-2 bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
-                                <img src="{{ $adminPanelLogoUrl }}" alt="" class="max-w-full max-h-full object-contain">
+                            <div class="flex size-24 items-center justify-center rounded-2xl border border-dashed border-line bg-canvas p-2">
+                                <img src="{{ $adminPanelLogoUrl }}" alt="" class="max-h-full max-w-full object-contain">
                             </div>
                         @else
-                            <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-3xl font-black shadow-md">M</div>
+                            <div class="flex size-24 items-center justify-center rounded-2xl bg-accent text-3xl font-semibold text-white">G</div>
                         @endif
                     </div>
-                    <div class="flex-1 space-y-3 min-w-0">
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-200">رفع شعار جديد</label>
+                    <div class="min-w-0 flex-1 space-y-3">
+                        <label class="{{ $label }}">رفع شعار جديد</label>
                         <input type="file" name="admin_panel_logo" accept="image/jpeg,image/png,image/webp,image/gif"
-                               class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 dark:file:bg-slate-700 dark:file:text-slate-200">
-                        <p class="text-xs text-slate-500">صيغ مسموحة: JPG, PNG, WebP, GIF — حتى 2 ميغابايت.</p>
+                               class="block w-full text-sm text-muted file:me-4 file:rounded-xl file:border-0 file:bg-accent-soft file:px-4 file:py-2 file:text-sm file:font-medium file:text-accent hover:file:bg-[#d9ebe9]">
+                        <p class="text-xs text-muted">JPG, PNG, WebP, GIF — حتى 2 ميغابايت. يُفضّل مربع بخلفية شفافة أو فاتحة.</p>
                         @if($adminPanelLogoUrl)
-                        <label class="inline-flex items-center gap-2 cursor-pointer text-sm text-rose-700 dark:text-rose-300">
-                            <input type="checkbox" name="remove_admin_panel_logo" value="1" class="rounded border-slate-300 text-rose-600 focus:ring-rose-500" @checked(old('remove_admin_panel_logo'))>
-                            <span>حذف الشعار الحالي والعودة للحرف الافتراضي</span>
-                        </label>
+                            <label class="inline-flex cursor-pointer items-center gap-2 text-sm text-danger">
+                                <input type="checkbox" name="remove_admin_panel_logo" value="1" class="rounded border-line text-danger focus:ring-accent" @checked(old('remove_admin_panel_logo'))>
+                                <span>حذف الشعار الحالي والعودة للحرف الافتراضي</span>
+                            </label>
                         @endif
                     </div>
                 </div>
             </div>
-        </div>
+        </article>
 
-        {{-- 1ب) رابط R2 العام للصور --}}
-        <div class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-lg overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-700/30 flex flex-wrap items-center gap-3">
-                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-sm font-black">★</span>
-                <div>
-                    <h3 class="text-base font-black text-slate-900 dark:text-slate-100">رابط عرض الصور (Cloudflare R2)</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">يُستخدم للشعار، سلايدر الصفحة الرئيسية، صور الكورسات، وكل ملفات المنصة. بدونه قد لا تظهر الصور على الاستضافة.</p>
+        {{-- R2 --}}
+        <article class="{{ $panel }}">
+            <div class="{{ $sectionHead }}">
+                <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-metal"><i class="fas fa-cloud text-sm"></i></span>
+                <div class="min-w-0">
+                    <h3 class="text-base font-semibold text-ink">رابط عرض الصور (Cloudflare R2)</h3>
+                    <p class="mt-0.5 text-xs leading-6 text-muted">للشعار، السلايدر، صور الكورسات، وكل ملفات المنصة.</p>
                 </div>
             </div>
-            <div class="p-6 space-y-3">
-                <label class="block text-sm font-bold text-slate-700 dark:text-slate-200">R2 Public URL</label>
-                <input type="url" name="r2_public_url" value="{{ old('r2_public_url', $r2PublicUrl) }}"
-                       class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm text-slate-800 dark:text-slate-100 font-mono"
-                       placeholder="https://pub-xxxxxxxx.r2.dev">
-                <p class="text-xs text-slate-500 leading-relaxed">
-                    من لوحة Cloudflare: R2 → Bucket → <strong>Public access</strong> → انسخ رابط <code class="text-[10px] bg-slate-100 dark:bg-slate-700 px-1 rounded">r2.dev</code>.
-                    لا تستخدم <code class="text-[10px]">cloudflarestorage.com</code>. يمكن أيضاً ضبط <code class="text-[10px]">R2_PUBLIC_URL</code> في <code class="text-[10px]">.env</code> على السيرفر.
-                </p>
-                @error('r2_public_url')
-                    <p class="text-xs text-rose-600 font-semibold">{{ $message }}</p>
-                @enderror
-            </div>
-        </div>
-
-        {{-- 2) الفوتر العام --}}
-        <div class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-lg overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-700/30 flex flex-wrap items-center gap-3">
-                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-sm font-black">2</span>
+            <div class="{{ $sectionBody }}">
                 <div>
-                    <h3 class="text-base font-black text-slate-900 dark:text-slate-100">فوتر الموقع العام</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">يُعرض في الصفحة الرئيسية، صفحات الخدمات، الأسعار، ومعرض الأعمال.</p>
+                    <label class="{{ $label }}" for="r2_public_url">R2 Public URL</label>
+                    <input type="url" id="r2_public_url" name="r2_public_url" value="{{ old('r2_public_url', $r2PublicUrl) }}"
+                           class="{{ $input }} font-mono" dir="ltr" placeholder="https://pub-xxxxxxxx.r2.dev">
+                    <p class="mt-2 text-xs leading-6 text-muted">
+                        من Cloudflare: R2 → Bucket → Public access → انسخ رابط <code class="rounded bg-canvas px-1 text-[10px]" dir="ltr">r2.dev</code>.
+                        لا تستخدم <code class="rounded bg-canvas px-1 text-[10px]" dir="ltr">cloudflarestorage.com</code>.
+                    </p>
+                    @error('r2_public_url')
+                        <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
-            <div class="p-6 space-y-8">
+        </article>
+
+        {{-- Footer --}}
+        <article class="{{ $panel }}">
+            <div class="{{ $sectionHead }}">
+                <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-sm font-semibold text-accent">2</span>
+                <div class="min-w-0">
+                    <h3 class="text-base font-semibold text-ink">فوتر الموقع العام</h3>
+                    <p class="mt-0.5 text-xs leading-6 text-muted">يُعرض في الصفحة الرئيسية والصفحات العامة.</p>
+                </div>
+            </div>
+            <div class="{{ $sectionBody }} space-y-8">
                 <section class="space-y-4">
-                    <h4 class="text-sm font-black text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-600 pb-2">الهوية والنص التعريفي</h4>
+                    <h4 class="border-b border-line pb-2 text-sm font-semibold text-ink">الهوية والنص التعريفي</h4>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">السطر تحت اسم Glottical (النافبار والفوتر)</label>
+                        <label class="{{ $label }}">السطر تحت اسم Glottical</label>
                         <input type="text" name="footer_brand_tagline" value="{{ old('footer_brand_tagline', $values['footer_brand_tagline']) }}"
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm text-slate-800 dark:text-slate-100"
-                               placeholder="{{ $defaults['footer_brand_tagline'] }}">
+                               class="{{ $input }}" placeholder="{{ $defaults['footer_brand_tagline'] }}">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">فقرة تعريفية قصيرة</label>
-                        <textarea name="footer_blurb" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm text-slate-800 dark:text-slate-100"
+                        <label class="{{ $label }}">فقرة تعريفية قصيرة</label>
+                        <textarea name="footer_blurb" rows="3" class="min-h-[96px] w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
                                   placeholder="{{ $defaults['footer_blurb'] }}">{{ old('footer_blurb', $values['footer_blurb']) }}</textarea>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">السطر بجانب حقوق النشر أسفل الفوتر</label>
+                        <label class="{{ $label }}">السطر بجانب حقوق النشر</label>
                         <input type="text" name="footer_bottom_tagline" value="{{ old('footer_bottom_tagline', $values['footer_bottom_tagline']) }}"
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm text-slate-800 dark:text-slate-100"
-                               placeholder="{{ $defaults['footer_bottom_tagline'] }}">
+                               class="{{ $input }}" placeholder="{{ $defaults['footer_bottom_tagline'] }}">
                     </div>
                 </section>
 
                 <section class="space-y-4">
-                    <h4 class="text-sm font-black text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-600 pb-2">التواصل</h4>
+                    <h4 class="border-b border-line pb-2 text-sm font-semibold text-ink">التواصل</h4>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">البريد الإلكتروني</label>
+                        <label class="{{ $label }}">البريد الإلكتروني</label>
                         <input type="email" name="footer_email" value="{{ old('footer_email', $values['footer_email']) }}"
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm" dir="ltr"
-                               placeholder="{{ $defaults['footer_email'] }}">
+                               class="{{ $input }}" dir="ltr" placeholder="{{ $defaults['footer_email'] }}">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">رقم الهاتف (عرض + رابط اتصال عند الإمكان)</label>
+                        <label class="{{ $label }}">رقم الهاتف</label>
                         <input type="text" name="footer_phone" value="{{ old('footer_phone', $values['footer_phone']) }}"
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm" dir="ltr"
-                               placeholder="{{ $defaults['footer_phone'] }}">
+                               class="{{ $input }}" dir="ltr" placeholder="{{ $defaults['footer_phone'] }}">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">رابط واتساب (كاملاً، مثل https://wa.me/20…)</label>
+                        <label class="{{ $label }}">رابط واتساب</label>
                         <input type="url" name="footer_whatsapp_url" value="{{ old('footer_whatsapp_url', $values['footer_whatsapp_url']) }}"
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm" dir="ltr"
-                               placeholder="{{ $defaults['footer_whatsapp_url'] }}">
+                               class="{{ $input }}" dir="ltr" placeholder="{{ $defaults['footer_whatsapp_url'] }}">
                     </div>
                 </section>
 
                 <section class="space-y-4">
-                    <h4 class="text-sm font-black text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-600 pb-2">وسائل التواصل الاجتماعي</h4>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">تظهر أيقونة المنصة في الفوتر فقط عند ملء الرابط. استخدم رابط الصفحة العامة لحسابك.</p>
-                    <div class="grid sm:grid-cols-2 gap-4">
+                    <h4 class="border-b border-line pb-2 text-sm font-semibold text-ink">وسائل التواصل الاجتماعي</h4>
+                    <p class="text-xs text-muted">تظهر الأيقونة في الفوتر فقط عند ملء الرابط.</p>
+                    <div class="grid gap-4 sm:grid-cols-2">
                         @foreach([
                             'social_facebook_url' => 'Facebook',
                             'social_x_url' => 'X (Twitter)',
@@ -182,152 +182,155 @@
                             'social_tiktok_url' => 'TikTok',
                             'social_telegram_url' => 'Telegram',
                             'social_snapchat_url' => 'Snapchat',
-                        ] as $field => $label)
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">{{ $label }}</label>
-                            <input type="url" name="{{ $field }}" value="{{ old($field, $values[$field]) }}"
-                                   class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm" dir="ltr" placeholder="https://">
-                        </div>
+                        ] as $field => $socialLabel)
+                            <div>
+                                <label class="{{ $label }}">{{ $socialLabel }}</label>
+                                <input type="url" name="{{ $field }}" value="{{ old($field, $values[$field]) }}"
+                                       class="{{ $input }}" dir="ltr" placeholder="https://">
+                            </div>
                         @endforeach
                     </div>
                 </section>
             </div>
-        </div>
+        </article>
 
-        {{-- بوابة الدفع فواتيرك --}}
-        <div class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-lg overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-700/30 flex flex-wrap items-center gap-3">
-                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-sm font-black">
-                    <i class="fas fa-credit-card"></i>
-                </span>
-                <div class="flex-1 min-w-0">
-                    <h3 class="text-base font-black text-slate-900 dark:text-slate-100">بوابة الدفع — فواتيرك (IFrame)</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">عند التفعيل، صفحة شراء الكورس تعرض نموذج الدفع الإلكتروني فقط ولا يُقبل رفع إيصال تحويل يدوي.</p>
+        {{-- Payment --}}
+        <article class="{{ $panel }}">
+            <div class="{{ $sectionHead }}">
+                <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-credit-card text-sm"></i></span>
+                <div class="min-w-0 flex-1">
+                    <h3 class="text-base font-semibold text-ink">بوابة الدفع — فواتيرك (IFrame)</h3>
+                    <p class="mt-0.5 text-xs leading-6 text-muted">عند التفعيل تُعرض بوابة الدفع فقط دون رفع إيصال يدوي.</p>
                 </div>
                 @if($fawaterakGatewayEnabled)
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-700">مفعّل</span>
+                    <span class="inline-flex items-center gap-1.5 rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-semibold text-accent">مفعّل</span>
                 @else
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">معطّل</span>
+                    <span class="inline-flex items-center gap-1.5 rounded-lg border border-line bg-canvas px-2.5 py-1 text-xs font-medium text-muted">معطّل</span>
                 @endif
             </div>
-            <div class="p-6 space-y-4">
+            <div class="{{ $sectionBody }}">
                 <input type="hidden" name="fawaterak_gateway_enabled" value="0">
-                <label class="flex items-start gap-4 cursor-pointer group">
-                    <input type="checkbox" name="fawaterak_gateway_enabled" value="1" class="mt-1 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                <label class="flex cursor-pointer items-start gap-3">
+                    <input type="checkbox" name="fawaterak_gateway_enabled" value="1" class="mt-1 rounded border-line text-accent focus:ring-accent"
                            @checked((string) old('fawaterak_gateway_enabled', $fawaterakGatewayEnabled ? '1' : '0') === '1')>
-                    <span class="text-sm text-slate-700 dark:text-slate-200 leading-7">
-                        <span class="font-black text-slate-900 dark:text-slate-100 block mb-1">تفعيل الدفع عبر فواتيرك</span>
-                        يظهر إطار الدفع الرسمي على صفحة إتمام طلب الكورس، ويُعطّل نموذج التحويل اليدوي ورفع الإيصال.
+                    <span class="text-sm leading-7 text-muted">
+                        <span class="mb-0.5 block font-semibold text-ink">تفعيل الدفع عبر فواتيرك</span>
+                        يظهر إطار الدفع الرسمي على صفحة إتمام طلب الكورس، ويُعطّل التحويل اليدوي ورفع الإيصال.
                     </span>
                 </label>
-                <div class="rounded-xl border px-4 py-3 text-xs sm:text-sm leading-7 {{ $fawaterakEnvConfigured ? 'bg-emerald-50/80 dark:bg-emerald-900/15 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100' : 'bg-amber-50/80 dark:bg-amber-900/15 border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-100' }}">
+
+                <div class="rounded-xl border px-4 py-3 text-xs leading-7 sm:text-sm {{ $fawaterakEnvConfigured ? 'border-success/20 bg-[#eef8f2] text-success' : 'border-metal/30 bg-[#fbf7ef] text-ink' }}">
                     @if($fawaterakEnvConfigured)
-                        <i class="fas fa-check-circle ml-1"></i>
-                        مفاتيح API مضبوطة في ملف البيئة (<code class="text-[11px] bg-white/80 dark:bg-slate-800 px-1 rounded" dir="ltr">FAWATERAK_VENDOR_KEY</code> و<code class="text-[11px] bg-white/80 dark:bg-slate-800 px-1 rounded" dir="ltr">FAWATERAK_PROVIDER_KEY</code>).
+                        <i class="fas fa-check-circle ms-1"></i>
+                        مفاتيح API مضبوطة في البيئة (<code class="rounded bg-surface px-1 text-[11px]" dir="ltr">FAWATERAK_VENDOR_KEY</code> /
+                        <code class="rounded bg-surface px-1 text-[11px]" dir="ltr">FAWATERAK_PROVIDER_KEY</code>).
                     @else
-                        <i class="fas fa-exclamation-triangle ml-1"></i>
-                        أضف في <code class="text-[11px] bg-white/80 dark:bg-slate-800 px-1 rounded" dir="ltr">.env</code> القيم <code class="text-[11px] px-1 rounded" dir="ltr">FAWATERAK_VENDOR_KEY</code> و<code class="text-[11px] px-1 rounded" dir="ltr">FAWATERAK_PROVIDER_KEY</code> ثم نفّذ <code class="text-[11px] px-1 rounded" dir="ltr">php artisan config:clear</code>. بدونها لن يظهر الدفع حتى مع تفعيل الخيار أعلاه.
+                        <i class="fas fa-exclamation-triangle ms-1 text-metal"></i>
+                        أضف المفاتيح في <code class="rounded bg-surface px-1 text-[11px]" dir="ltr">.env</code> ثم
+                        <code class="rounded bg-surface px-1 text-[11px]" dir="ltr">php artisan config:clear</code>.
                     @endif
                 </div>
-                <p class="text-xs text-slate-500 dark:text-slate-400 leading-6">
-                    في لوحة فواتيرك: <strong class="text-slate-700 dark:text-slate-300">Integrations → Fawaterak</strong> — سجّل نطاقات الـ IFrame بصيغة <strong class="text-slate-700 dark:text-slate-300">HTTPS</strong> بدون شرطة مائلة في النهاية، وطابق قيمة <code class="text-[10px] bg-slate-100 dark:bg-slate-700 px-1 rounded" dir="ltr">FAWATERAK_IFRAME_DOMAIN</code> أو <code class="text-[10px] bg-slate-100 dark:bg-slate-700 px-1 rounded" dir="ltr">APP_URL</code> مع ما تتوقعه فواتيرك في حساب الـ HMAC.
+
+                <p class="text-xs leading-6 text-muted">
+                    في لوحة فواتيرك: <strong class="text-ink">Integrations → Fawaterak</strong> — سجّل نطاقات الـ IFrame بصيغة HTTPS بدون شرطة مائلة في النهاية.
                 </p>
-                <div class="pt-2 border-t border-slate-100 dark:border-slate-600">
-                    <label for="payment_gateway_fee_percent" class="block text-sm font-black text-slate-900 dark:text-slate-100 mb-2">عمولة بوابة الدفع (تقديرية %)</label>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-2 leading-6">نسبة مئوية من <strong>مبلغ العميل</strong> تُسجَّل كعمولة في المحاسبة (مدفوعات أونلاين: فواتيرك، كاشير، واشتراك الباقة عبر فواتيرك). اترك الحقل فارغاً أو 0 إن لم ترد تسجيل عمولة.</p>
+
+                <div class="border-t border-line pt-4">
+                    <label for="payment_gateway_fee_percent" class="mb-1.5 block text-sm font-semibold text-ink">عمولة بوابة الدفع (تقديرية %)</label>
+                    <p class="mb-2 text-xs leading-6 text-muted">نسبة من مبلغ العميل تُسجَّل كعمولة في المحاسبة. اتركها فارغة أو 0 لإيقافها.</p>
                     <input type="text" name="payment_gateway_fee_percent" id="payment_gateway_fee_percent" inputmode="decimal"
                            value="{{ old('payment_gateway_fee_percent', $paymentGatewayFeePercent) }}"
-                           class="w-full max-w-xs px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm font-mono" dir="ltr" placeholder="مثال: 2.5">
+                           class="{{ $input }} max-w-xs font-mono" dir="ltr" placeholder="مثال: 2.5">
                     @error('payment_gateway_fee_percent')
-                        <p class="text-sm text-rose-600 mt-1">{{ $message }}</p>
+                        <p class="mt-1.5 text-sm text-danger">{{ $message }}</p>
                     @enderror
                 </div>
             </div>
-        </div>
+        </article>
 
-        {{-- أزرار الحفظ داخل نموذج الإعدادات فقط — لا يُسمح بتداخل &lt;form&gt; داخل &lt;form&gt; (كان يكسر زر تفعيل 2FA) --}}
-        <div class="flex flex-wrap items-center gap-3 sticky bottom-4 z-10">
-            <button type="submit" class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 text-white text-sm font-black shadow-lg shadow-sky-500/25 hover:from-sky-700 hover:to-blue-700 transition-colors">
+        <div class="sticky bottom-4 z-10 flex flex-wrap items-center gap-3">
+            <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-white shadow-soft transition hover:bg-[#0d4f4a]">
                 <i class="fas fa-save"></i>
                 حفظ كل الإعدادات
             </button>
-            <a href="{{ route('home') }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+            <a href="{{ route('home') }}" target="_blank" rel="noopener" class="inline-flex h-11 items-center gap-2 rounded-xl border border-line bg-surface px-5 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">
                 <i class="fas fa-external-link-alt"></i>
                 معاينة الموقع العام
             </a>
         </div>
     </form>
 
-    {{-- 3) الأمان — خارج النموذج الرئيسي حتى يعمل POST لتفعيل/تعطيل 2FA --}}
-    <div class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-lg overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-700/30 flex flex-wrap items-center gap-3">
-            <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 text-sm font-black">3</span>
-            <div class="flex-1 min-w-0">
-                <h3 class="text-base font-black text-slate-900 dark:text-slate-100">المصادقة الثنائية للمنصة</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">عند التفعيل، يُطلب من حسابات <strong>المدير العام والأدمن</strong> فقط إدخال رمز يُرسل إلى البريد بعد كلمة المرور عند تسجيل الدخول. لا يؤثر على المدربين ولا الطلاب ولا الموظفين.</p>
+    {{-- 3) 2FA — خارج النموذج الرئيسي --}}
+    <article class="{{ $panel }}">
+        <div class="{{ $sectionHead }}">
+            <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-sm font-semibold text-accent">3</span>
+            <div class="min-w-0 flex-1">
+                <h3 class="text-base font-semibold text-ink">المصادقة الثنائية للمنصة</h3>
+                <p class="mt-0.5 text-xs leading-6 text-muted">إلزام رمز البريد بعد كلمة المرور لحسابات المدير العام والأدمن فقط.</p>
             </div>
             @if($adminTwoFactorRequired)
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-700">
+                <span class="inline-flex items-center gap-1.5 rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-semibold text-accent">
                     <i class="fas fa-shield-alt"></i> مفعّل
                 </span>
             @else
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
-                    غير مفعّل
-                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-lg border border-line bg-canvas px-2.5 py-1 text-xs font-medium text-muted">غير مفعّل</span>
             @endif
         </div>
-        <div class="p-6 space-y-5">
+        <div class="{{ $sectionBody }}">
             @if($errors->has('two_factor'))
-                <div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-sm font-medium">
+                <div class="rounded-xl border border-danger/20 bg-[#fdf2f1] px-4 py-3 text-sm font-medium text-danger">
                     {{ $errors->first('two_factor') }}
                 </div>
             @endif
-            <div class="rounded-xl bg-amber-50/80 dark:bg-amber-900/15 border border-amber-100 dark:border-amber-800/50 px-4 py-3 text-sm text-amber-900 dark:text-amber-100 leading-7">
-                <i class="fas fa-exclamation-triangle ml-1"></i>
-                تأكد أن إعدادات البريد في السيرفر تعمل قبل التفعيل. يمكنك أيضاً ضبط القيمة الافتراضية من ملف البيئة <code class="text-[11px] bg-white/80 dark:bg-slate-800 px-1 rounded" dir="ltr">ADMIN_2FA_REQUIRED</code> عند أول تشغيل قبل حفظ أي شيء من هنا.
+
+            <div class="rounded-xl border border-metal/25 bg-[#fbf7ef] px-4 py-3 text-sm leading-7 text-ink">
+                <i class="fas fa-exclamation-triangle ms-1 text-metal"></i>
+                تأكد أن إعدادات البريد تعمل قبل التفعيل. يمكن ضبط
+                <code class="rounded bg-surface px-1 text-[11px]" dir="ltr">ADMIN_2FA_REQUIRED</code>
+                في البيئة عند أول تشغيل.
             </div>
-            <div class="rounded-xl bg-sky-50/80 dark:bg-sky-900/15 border border-sky-100 dark:border-sky-800/50 px-4 py-3 text-sm text-sky-900 dark:text-sky-100 leading-7">
-                <i class="fas fa-info-circle ml-1"></i>
-                لا يُفعّل الإلزام على الخادم إلا بعد الضغط على الزر أدناه، ثم إدخال الرمز في صفحة التأكيد. إن ظهر «مفعّل» هنا فقط بعد ذلك، سيُطلب رمز البريد عند الدخول.
+
+            <div class="rounded-xl border border-accent/20 bg-accent-soft px-4 py-3 text-sm leading-7 text-accent">
+                <i class="fas fa-info-circle ms-1"></i>
+                لا يُفعّل الإلزام إلا بعد إرسال الرمز ثم تأكيده في الصفحة التالية.
             </div>
+
             @if(!$admin2faAppliesToCurrentUserRole)
-            <div class="rounded-xl bg-violet-50/90 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 px-4 py-3 text-sm text-violet-900 dark:text-violet-100 leading-7">
-                <i class="fas fa-user-shield ml-1"></i>
-                دور حسابك الحالي (<strong class="font-black">{{ auth()->user()->role }}</strong>) ليس من ضمن «المدير العام والأدمن» في النظام؛ حتى مع تفعيل الإلزام لن يُطلب منك رمز بريد عند تسجيل الدخول. الإلزام ينطبق فقط على المستخدمين ذوي الدور <code class="text-[11px] bg-white/80 dark:bg-slate-800 px-1 rounded" dir="ltr">super_admin</code> أو <code class="text-[11px] bg-white/80 dark:bg-slate-800 px-1 rounded" dir="ltr">admin</code>.
-            </div>
+                <div class="rounded-xl border border-line bg-canvas px-4 py-3 text-sm leading-7 text-muted">
+                    <i class="fas fa-user-shield ms-1 text-accent"></i>
+                    دور حسابك الحالي (<strong class="text-ink">{{ auth()->user()->role }}</strong>) ليس ضمن الأدوار الملزَمة.
+                    الإلزام ينطبق على <code class="rounded bg-surface px-1 text-[11px]" dir="ltr">super_admin</code> و
+                    <code class="rounded bg-surface px-1 text-[11px]" dir="ltr">admin</code> فقط.
+                </div>
             @endif
+
             @if(!$adminTwoFactorRequired)
-                <p class="text-sm text-slate-600 dark:text-slate-300 leading-7">
-                    اضغط الزر أدناه لإرسال رمز تحقق إلى بريدك، ثم ستُفتح صفحة لإدخال الرمز وتأكيد التفعيل.
-                </p>
+                <p class="text-sm leading-7 text-muted">اضغط الزر لإرسال رمز تحقق إلى بريدك، ثم أكّد التفعيل في الصفحة التالية.</p>
                 <form method="post" action="{{ route('admin.system-settings.two-factor.enable-request') }}" class="inline">
                     @csrf
-                    <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-black shadow-lg shadow-violet-500/25 hover:from-violet-700 hover:to-indigo-700 transition-colors">
+                    <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white transition hover:bg-[#0d4f4a]">
                         <i class="fas fa-paper-plane"></i>
-                        تفعيل إلزام المصادقة الثنائية (إرسال الرمز بالبريد)
+                        تفعيل إلزام المصادقة الثنائية
                     </button>
                 </form>
             @else
-                <p class="text-sm text-slate-600 dark:text-slate-300 leading-7">
-                    الإلزام مفعّل حالياً. لتعطيله على مستوى المنصة، أدخل كلمة مرور حسابك للتأكيد.
-                </p>
+                <p class="text-sm leading-7 text-muted">الإلزام مفعّل. لتعطيله أدخل كلمة مرور حسابك.</p>
                 <form method="post" action="{{ route('admin.system-settings.two-factor.disable') }}" class="max-w-md space-y-4">
                     @csrf
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">كلمة المرور</label>
-                        <input type="password" name="password" required autocomplete="current-password"
-                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm">
+                        <label class="{{ $label }}">كلمة المرور</label>
+                        <input type="password" name="password" required autocomplete="current-password" class="{{ $input }}">
                         @error('password')
-                            <p class="text-xs text-rose-600 dark:text-rose-400 mt-1">{{ $message }}</p>
+                            <p class="mt-1.5 text-xs text-danger">{{ $message }}</p>
                         @enderror
                     </div>
-                    <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-sm font-black hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors">
+                    <button type="submit" class="inline-flex h-11 items-center gap-2 rounded-xl border border-danger/30 bg-[#fdf2f1] px-5 text-sm font-medium text-danger transition hover:bg-[#fbe8e6]">
                         <i class="fas fa-power-off"></i>
                         تعطيل إلزام المصادقة الثنائية
                     </button>
                 </form>
             @endif
         </div>
-    </div>
+    </article>
 </div>
 @endsection

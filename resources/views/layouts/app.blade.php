@@ -43,7 +43,7 @@
     <script>
         window.Laravel = { user: { name: '{{ auth()->check() ? auth()->user()->name : "زائر" }}' } };
     </script>
-    <script src="{{ asset('js/platform-protection.js') }}"></script>
+    <script src="{{ versioned_asset('js/platform-protection.js') }}"></script>
     @endif
 
     {{-- نفس منطق الإدارة: الافتراضي فاتح؛ الوضع الداكن فقط عند theme=dark في localStorage --}}

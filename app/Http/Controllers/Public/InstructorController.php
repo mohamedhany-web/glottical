@@ -15,7 +15,20 @@ class InstructorController extends Controller
         $profiles = InstructorMarketingRankingService::rankApprovedProfiles();
         $consultationSetting = ConsultationSetting::current();
 
-        return view('instructors.index', compact('profiles', 'consultationSetting'));
+        $instructorIds = $profiles->pluck('user_id')->filter()->unique()->values();
+        $featuredCourses = $instructorIds->isEmpty()
+            ? collect()
+            : \App\Models\AdvancedCourse::query()
+                ->where('is_active', true)
+                ->whereIn('instructor_id', $instructorIds)
+                ->with(['instructor:id,name', 'courseCategory:id,name'])
+                ->withCount('lessons')
+                ->orderByDesc('is_featured')
+                ->orderByDesc('created_at')
+                ->limit(8)
+                ->get();
+
+        return view('instructors.index', compact('profiles', 'consultationSetting', 'featuredCourses'));
     }
 
     public function show(User $instructor)

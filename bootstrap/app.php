@@ -70,6 +70,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // تحديد لغة الموقع من ?lang= أو الجلسة (لجميع الصفحات)
         $middleware->appendToGroup('web', \App\Http\Middleware\SetLocale::class);
+
+        // منع كاش المتصفح لصفحات HTML حتى تظهر التحديثات فوراً
+        $middleware->appendToGroup('web', \App\Http\Middleware\PreventBrowserHtmlCache::class);
         
         // Input Sanitization - تنظيف المدخلات
         $middleware->appendToGroup('web', \App\Http\Middleware\InputSanitizationMiddleware::class);

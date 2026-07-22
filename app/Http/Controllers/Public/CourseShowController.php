@@ -29,7 +29,7 @@ class CourseShowController extends Controller
                 $query->orWhere('academic_subject_id', $course->academic_subject_id)
                     ->orWhere('is_featured', true);
             })
-            ->with(['academicSubject'])
+            ->with(['academicSubject', 'instructor'])
             ->withCount('lessons')
             ->limit(3)
             ->get();

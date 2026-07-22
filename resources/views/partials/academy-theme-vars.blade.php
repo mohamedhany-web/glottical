@@ -17,5 +17,9 @@
         --acad-yellow: {{ $acadTheme['yellow'] }};
         --acad-yellow-rgb: {{ $acadTheme['yellow_rgb'] }};
         --acad-ink: {{ $acadTheme['ink'] }};
+        --acad-canvas: {{ $acadTheme['canvas'] ?? '#F3F5F7' }};
+        --acad-surface: {{ $acadTheme['surface'] ?? '#FFFFFF' }};
+        --acad-muted: {{ $acadTheme['muted'] ?? '#5B6577' }};
+        --acad-line: {{ $acadTheme['line'] ?? '#D7DDE6' }};
     }
 </style>

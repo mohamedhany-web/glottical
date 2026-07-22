@@ -13,4 +13,8 @@ acad: {
     navy: '{{ $t['navy'] }}',
     navyMid: '{{ $t['navy_mid'] }}',
     neon: '{{ $t['neon'] }}',
+    canvas: '{{ $t['canvas'] ?? '#F3F5F7' }}',
+    surface: '{{ $t['surface'] ?? '#FFFFFF' }}',
+    muted: '{{ $t['muted'] ?? '#5B6577' }}',
+    line: '{{ $t['line'] ?? '#D7DDE6' }}',
 },

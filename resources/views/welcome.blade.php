@@ -101,7 +101,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="{{ config('academy-theme.navy') }}">
     @include('components.seo-meta', [
         'title' => __('landing.meta.title'),
         'description' => __('landing.meta.description'),
@@ -134,578 +133,232 @@
     @endif
 
     <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
-    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
-    {{-- خط واحد بأوزان أساسية فقط لتسريع الرسم الأول --}}
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap"></noscript>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        @include('partials.academy-tailwind-colors')
-                    },
-                    fontFamily: {
-                        sans: ['Cairo', 'system-ui', 'sans-serif'],
-                    },
-                },
-            },
-        };
-    </script>
-    @include('partials.academy-theme-vars')
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
-
+    <script src="{{ versioned_asset('js/atheer-tailwind-config.js') }}"></script>
+    <link rel="stylesheet" href="{{ versioned_asset('css/atheer.css') }}">
+    <meta name="theme-color" content="#0f5c57">
     <style>
         [x-cloak]{display:none!important}
-        html{scroll-behavior:smooth;overflow-x:hidden}
-        body{overflow-x:hidden;background:linear-gradient(180deg,#1A2A45 0%,#121C30 38%,#0F1A2C 100%);min-height:100vh;display:flex;flex-direction:column;color:#e8eef8;font-size:16px;line-height:1.65}
-        .font-display{font-family:'Cairo',system-ui,sans-serif}
-        .container-acad{max-width:1280px;margin-inline:auto;padding-inline:clamp(16px,4vw,28px)}
-        .section-y{padding-block:clamp(3.5rem,7vw,5rem)}
-        .reveal{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
-        .reveal.revealed{opacity:1;transform:translateY(0)}
-        .stream-hero .hero-slide{opacity:0;pointer-events:none;transition:opacity 1.1s ease,transform 1.1s ease;transform:scale(1.03)}
-        .stream-hero .hero-slide.is-active{opacity:1;transform:scale(1)}
-        .hero-cta-primary{
-            display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:.15rem;
-            min-width:min(100%,17.5rem);padding:.9rem 1.6rem;border-radius:1rem;
-            background:linear-gradient(180deg,#FFD24A 0%,var(--acad-yellow) 55%,#D9A70A 100%);
-            color:var(--acad-blue-dark);font-weight:800;box-shadow:0 16px 36px -18px rgba(var(--acad-yellow-rgb),.65),0 0 0 1px rgba(255,255,255,.18) inset;
-            transition:transform .2s ease,filter .2s ease,box-shadow .2s ease;
+        /* Free-trial modal — self-contained so it never falls back to old dark UI */
+        #free-trial-modal{
+            font-family:"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif;
         }
-        .hero-cta-primary:hover{transform:translateY(-2px);filter:brightness(1.05);box-shadow:0 20px 44px -16px rgba(var(--acad-yellow-rgb),.75),0 0 0 1px rgba(255,255,255,.22) inset}
-        .hero-cta-secondary{
-            display:inline-flex;align-items:center;justify-content:center;gap:.55rem;
-            min-width:min(100%,15rem);padding:1rem 1.5rem;border-radius:1rem;
-            background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);color:#fff;font-weight:800;
-            backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-            box-shadow:0 12px 28px -18px rgba(0,0,0,.45);
-            transition:background .2s ease,border-color .2s ease,transform .2s ease;
+        #free-trial-modal .ft-backdrop{
+            background:rgba(11,18,32,.48);
+            backdrop-filter:blur(3px);
+            -webkit-backdrop-filter:blur(3px);
+            opacity:0;
+            transition:opacity 220ms ease;
         }
-        .hero-cta-secondary:hover{background:rgba(255,255,255,.18);border-color:rgba(240,188,12,.45);transform:translateY(-2px)}
-        .hero-side-card{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-        .hero-side-card:hover{border-color:rgba(var(--acad-yellow-rgb),.55);background:rgba(255,255,255,.14)}
-        .hero-dots button{width:10px;height:10px;border-radius:999px;background:rgba(255,255,255,.28);transition:transform .2s,background .2s,width .2s}
-        .hero-dots button.is-active{background:var(--acad-yellow);transform:scale(1.15);width:28px;border-radius:999px}
-        .glass-panel{background:rgba(var(--acad-navy-mid-rgb),.72);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-        .floating-search-glow{box-shadow:0 0 0 1px rgba(255,255,255,.08),0 8px 40px -8px rgba(var(--acad-yellow-rgb),.12),0 20px 50px -20px rgba(0,0,0,.55)}
-        .suggest-item{animation:suggestIn .35s ease backwards}
-        @keyframes suggestIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-        .path-scroll{scrollbar-width:thin;scrollbar-color:rgba(var(--acad-yellow-rgb),.45) rgba(7,14,24,.75)}
-        .path-scroll::-webkit-scrollbar{height:6px}
-        .path-scroll::-webkit-scrollbar-track{background:rgba(7,14,24,.78);border-radius:999px}
-        .path-scroll::-webkit-scrollbar-thumb{background:rgba(var(--acad-yellow-rgb),.4);border-radius:999px;border:1px solid rgba(7,14,24,.5)}
-        .path-scroll::-webkit-scrollbar-thumb:hover{background:rgba(var(--acad-yellow-rgb),.55)}
-        .path-scroll::-webkit-scrollbar-button{width:0;height:0;display:none}
-        .path-scroll::-webkit-scrollbar-corner{background:transparent}
-        .pricing-pop{box-shadow:0 24px 60px -20px rgba(var(--acad-yellow-rgb),.22)}
-        .grid-12{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:clamp(1rem,2vw,1.5rem)}
-        .stream-cta-band{background:linear-gradient(135deg,var(--acad-blue-dark) 0%,var(--acad-blue) 42%,var(--acad-navy) 100%);position:relative;overflow:hidden}
-        .stream-cta-band::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 80%,rgba(var(--acad-yellow-rgb),.14),transparent 55%),radial-gradient(ellipse 60% 40% at 85% 20%,rgba(var(--acad-cyan-rgb),.1),transparent 50%);pointer-events:none}
-        .pattern-dots{background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.06) 1px,transparent 0);background-size:24px 24px}
-        .netflix-row{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:stretch;gap:1rem;overflow-x:auto;overflow-y:visible;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:rgba(var(--acad-yellow-rgb),.4) rgba(7,14,24,.82);scroll-behavior:smooth;-webkit-overflow-scrolling:touch;padding:8px 4px 16px;margin-inline:-4px;width:100%;max-width:100%}
-        .netflix-row::-webkit-scrollbar{height:8px}
-        .netflix-row::-webkit-scrollbar-track{background:rgba(7,14,24,.9);border-radius:999px;margin-inline:2px}
-        .netflix-row::-webkit-scrollbar-thumb{background:linear-gradient(90deg,rgba(var(--acad-yellow-rgb),.55),rgba(var(--acad-cyan-rgb),.35));border-radius:999px;border:2px solid rgba(7,14,24,.85)}
-        .netflix-row::-webkit-scrollbar-thumb:hover{background:linear-gradient(90deg,rgba(var(--acad-yellow-rgb),.7),rgba(var(--acad-cyan-rgb),.45))}
-        .netflix-row::-webkit-scrollbar-button{width:0;height:0;display:none}
-        .netflix-row::-webkit-scrollbar-corner{background:transparent}
-        .stream-card-wrap.netflix-item{scroll-snap-align:start;flex:0 0 auto;width:min(17.5rem,82vw);min-width:min(17.5rem,82vw);max-width:20rem}
-        @media(min-width:640px){.stream-card-wrap.netflix-item{width:18.5rem;min-width:18.5rem;max-width:19.5rem}}
-        @media(min-width:1024px){.stream-card-wrap.netflix-item{width:20rem;min-width:20rem;max-width:20rem}}
-        .stream-card-wrap .stream-card{width:100%}
-        #market-live-results.netflix-row > a.netflix-item{flex:0 0 auto;width:min(9.25rem,38vw);min-width:8.5rem;max-width:10.5rem}
-        .search-overlay-enter{animation:soIn .32s ease forwards}
-        @keyframes soIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-        #academy-search-anchor.search-bar-visible{animation:searchBarIn .28s ease forwards}
-        @keyframes searchBarIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
-        .media-thumb-skeleton{position:absolute;inset:0;background:linear-gradient(110deg,#152740 8%,#1A3F73 18%,#152740 33%);background-size:200% 100%;animation:mediaShimmer 1.2s linear infinite}
-        @keyframes mediaShimmer{to{background-position-x:-200%}}
-        .media-thumb-img{opacity:0;transition:opacity .35s ease}
-        .media-thumb-img.is-loaded{opacity:1}
-        .chip-active{box-shadow:0 0 0 2px var(--acad-yellow),inset 0 0 20px rgba(var(--acad-yellow-rgb),.12)}
-        @keyframes kenBurns{0%{transform:scale(1.08) translate(0,0)}100%{transform:scale(1.14) translate(-1%,-1%)}}
-        @keyframes kenDrift{0%{transform:scale(1.12) translate(0,0)}100%{transform:scale(1.18) translate(1.2%,0.8%)}}
-        .stream-hero .hero-slide.is-active .hero-ken{animation:kenBurns 16s ease-in-out infinite alternate}
-        .stream-hero .hero-slide.is-active .hero-ken-accent{animation:kenDrift 18s ease-in-out infinite alternate}
-        .stream-hero .hero-ken,
-        .stream-hero .hero-ken-accent{
-            filter: saturate(1.05) contrast(1.06) brightness(0.96);
-            -webkit-filter: saturate(1.05) contrast(1.06) brightness(0.96);
+        #free-trial-modal.flex .ft-backdrop,
+        #free-trial-modal.ft-open .ft-backdrop{opacity:1}
+        #free-trial-modal .ft-dialog{
+            background:#ffffff !important;
+            color:#0b1220 !important;
+            border:1px solid #d7dde6 !important;
+            box-shadow:0 18px 50px rgba(11,18,32,.12);
+            opacity:0;
+            transform:translateY(14px) scale(.985);
+            transition:opacity 280ms cubic-bezier(.22,1,.36,1), transform 280ms cubic-bezier(.22,1,.36,1);
         }
-        @media (max-width: 767px), (prefers-reduced-motion: reduce) {
-            .stream-hero .hero-slide.is-active .hero-ken,
-            .stream-hero .hero-slide.is-active .hero-ken-accent { animation: none !important; }
-            .stream-hero .hero-ken,
-            .stream-hero .hero-ken-accent { filter: none; -webkit-filter: none; transform: none !important; }
-            .glass-panel { backdrop-filter: none; -webkit-backdrop-filter: none; }
-            .reveal { opacity: 1; transform: none; transition: none; }
+        #free-trial-modal.flex .ft-dialog,
+        #free-trial-modal.ft-open .ft-dialog{
+            opacity:1;
+            transform:translateY(0) scale(1);
         }
-        @media (max-width: 767px) {
-            .stream-hero .hero-ken-accent { display: none; }
+        #free-trial-modal .ft-head{
+            border-bottom:1px solid #d7dde6;
+            background:#fff;
+        }
+        #free-trial-modal .ft-kicker{color:#b08d57;font-size:.875rem;font-weight:500}
+        #free-trial-modal .ft-title{color:#0b1220;font-size:1.25rem;font-weight:600;letter-spacing:-.01em;line-height:1.35}
+        #free-trial-modal .ft-sub{color:#5b6577;font-size:.875rem;line-height:1.75}
+        #free-trial-modal .ft-label{color:#0b1220;font-size:.875rem;font-weight:600}
+        #free-trial-modal .ft-muted{color:#5b6577;font-size:.75rem}
+        #free-trial-modal .ft-close{
+            width:2.5rem;height:2.5rem;border-radius:.75rem;border:1px solid #d7dde6;
+            background:#f3f5f7;color:#1c2738;display:inline-flex;align-items:center;justify-content:center;
+        }
+        #free-trial-modal .ft-close:hover{border-color:rgba(15,92,87,.35);background:#e6f2f1;color:#0f5c57}
+        #free-trial-modal .ft-chip{
+            border:1px solid #d7dde6;
+            background:#f3f5f7;
+            color:#1c2738;
+            border-radius:.75rem;
+            font-size:.8125rem;
+            font-weight:600;
+            padding:.55rem .85rem;
+            transition:background-color 160ms ease,border-color 160ms ease,color 160ms ease;
+            flex:0 0 auto;
+            scroll-snap-align:start;
+        }
+        #free-trial-modal .ft-chip:hover{
+            border-color:rgba(15,92,87,.35);
+            background:#e6f2f1;
+            color:#0f5c57;
+        }
+        #free-trial-modal .ft-chip.is-active{
+            background:#0f5c57 !important;
+            border-color:#0f5c57 !important;
+            color:#fff !important;
+        }
+        #free-trial-modal .ft-chip .ft-chip-day{
+            display:block;
+            font-size:.6875rem;
+            font-weight:500;
+            opacity:.72;
+            line-height:1.2;
+        }
+        #free-trial-modal .ft-chip .ft-chip-date{
+            display:block;
+            font-size:.875rem;
+            font-weight:700;
+            line-height:1.25;
+            margin-top:.1rem;
+        }
+        #free-trial-modal .ft-scroll-wrap{
+            position:relative;
+        }
+        #free-trial-modal .ft-scroll-wrap::before,
+        #free-trial-modal .ft-scroll-wrap::after{
+            content:"";
+            position:absolute;
+            top:0;bottom:0;
+            width:1.75rem;
+            pointer-events:none;
+            z-index:2;
+            opacity:0;
+            transition:opacity 180ms ease;
+        }
+        #free-trial-modal .ft-scroll-wrap::before{
+            inset-inline-start:0;
+            background:linear-gradient(to left, transparent, #fff 70%);
+        }
+        #free-trial-modal .ft-scroll-wrap::after{
+            inset-inline-end:0;
+            background:linear-gradient(to right, transparent, #fff 70%);
+        }
+        [dir="ltr"] #free-trial-modal .ft-scroll-wrap::before{
+            background:linear-gradient(to right, #fff 30%, transparent);
+        }
+        [dir="ltr"] #free-trial-modal .ft-scroll-wrap::after{
+            background:linear-gradient(to left, #fff 30%, transparent);
+        }
+        #free-trial-modal .ft-scroll-wrap.has-start::before,
+        #free-trial-modal .ft-scroll-wrap.has-end::after{opacity:1}
+        #free-trial-modal .ft-hscroll{
+            display:flex;
+            gap:.5rem;
+            overflow-x:auto;
+            overflow-y:hidden;
+            padding-bottom:.55rem;
+            scroll-snap-type:x proximity;
+            scroll-behavior:smooth;
+            -webkit-overflow-scrolling:touch;
+            overscroll-behavior-x:contain;
+            scrollbar-width:thin;
+            scrollbar-color:#b08d57 transparent;
+        }
+        #free-trial-modal .ft-hscroll::-webkit-scrollbar{height:5px}
+        #free-trial-modal .ft-hscroll::-webkit-scrollbar-track{background:transparent}
+        #free-trial-modal .ft-hscroll::-webkit-scrollbar-thumb{
+            background:#c9b28a;
+            border-radius:999px;
+        }
+        #free-trial-modal .ft-hscroll::-webkit-scrollbar-thumb:hover{background:#b08d57}
+        #free-trial-modal .ft-scroll-btn{
+            position:absolute;
+            top:50%;
+            transform:translateY(-60%);
+            z-index:3;
+            width:2rem;height:2rem;
+            border-radius:.75rem;
+            border:1px solid #d7dde6;
+            background:#fff;
+            color:#0f5c57;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            box-shadow:0 6px 16px rgba(11,18,32,.08);
+            transition:opacity 160ms ease,background-color 160ms ease,border-color 160ms ease;
+        }
+        #free-trial-modal .ft-scroll-btn:hover{
+            background:#e6f2f1;
+            border-color:rgba(15,92,87,.35);
+        }
+        #free-trial-modal .ft-scroll-btn[disabled]{
+            opacity:0;
+            pointer-events:none;
+        }
+        #free-trial-modal .ft-scroll-btn.is-prev{inset-inline-start:.15rem}
+        #free-trial-modal .ft-scroll-btn.is-next{inset-inline-end:.15rem}
+        @media (max-width:639px){
+            #free-trial-modal .ft-scroll-btn{display:none}
+        }
+        #free-trial-modal .ft-field{
+            width:100%;
+            height:2.75rem;
+            border-radius:.75rem;
+            border:1px solid #d7dde6;
+            background:#fff;
+            padding:0 1rem;
+            font-size:.875rem;
+            color:#0b1220;
+        }
+        #free-trial-modal .ft-field:focus{
+            outline:none;
+            border-color:#0f5c57;
+            box-shadow:0 0 0 3px rgba(15,92,87,.15);
+        }
+        #free-trial-modal .ft-field::placeholder{color:#5b6577;opacity:.7}
+        #free-trial-modal .ft-submit{
+            width:100%;height:3rem;border-radius:.75rem;border:0;
+            background:#0f5c57;color:#fff;font-size:.875rem;font-weight:600;
+        }
+        #free-trial-modal .ft-submit:hover{background:#0d4f4a}
+        #free-trial-modal .ft-submit:disabled{opacity:.4;cursor:not-allowed}
+        #free-trial-modal .ft-loading{
+            align-items:center;gap:.75rem;
+            border:1px solid #d7dde6;background:#f3f5f7;border-radius:1rem;
+            padding:1.1rem 1rem;color:#5b6577;font-size:.875rem;
+        }
+        /* مهم: لا تفرض display:flex هنا — يتغلب على .hidden ويبقى التحميل ظاهراً للأبد */
+        #free-trial-modal .ft-loading:not(.hidden){
+            display:flex;
+        }
+        #free-trial-modal .ft-error{
+            border:1px solid #f5c2c0;background:#fef3f2;color:#b42318;
+            border-radius:1rem;padding:.75rem 1rem;font-size:.875rem;line-height:1.75;
+        }
+        #free-trial-modal .ft-error:not(.hidden){
+            display:block;
+        }
+        #free-trial-modal .ft-success-icon{
+            width:3.5rem;height:3.5rem;margin:0 auto 1rem;
+            display:inline-flex;align-items:center;justify-content:center;
+            border-radius:1rem;background:#e6f2f1;color:#0f5c57;
+        }
+        @media (prefers-reduced-motion: reduce){
+            #free-trial-modal .ft-backdrop,
+            #free-trial-modal .ft-dialog{transition:none}
         }
     </style>
 </head>
-<body class="font-sans text-white antialiased font-display bg-acad-navy">
-<div id="scroll-progress" class="fixed top-0 left-0 h-[3px] w-0 z-[100000] bg-gradient-to-l from-acad-yellow to-acad-blue"></div>
+<body class="font-sans antialiased">
+@include('partials.atheer-home-header')
 
-@include('components.unified-navbar')
-
-<main class="flex-1">
-    {{-- HERO: هوية المنصة + سليدر خلفيات + زرّان فقط + كورسات جانبية --}}
-    <section class="stream-hero relative min-h-[100svh] flex flex-col justify-end overflow-hidden text-white -mt-14 sm:-mt-[60px] pt-14 sm:pt-[60px]">
-        @foreach($heroSlides as $hi => $slideBg)
-            <div class="hero-slide {{ $hi === 0 ? 'is-active' : '' }} absolute inset-0" data-hero-slide="{{ $hi }}" aria-hidden="{{ $hi === 0 ? 'false' : 'true' }}">
-                @if(! empty($slideBg))
-                    <img src="{{ e(\App\Services\SeoAssets::optimizedRemoteImage($slideBg, $hi === 0 ? 1400 : 1100, $hi === 0 ? 70 : 65)) }}"
-                         alt=""
-                         width="1400"
-                         height="900"
-                         class="hero-ken hero-slider-img absolute inset-0 w-full h-full object-cover object-center"
-                         decoding="async"
-                         fetchpriority="{{ $hi === 0 ? 'high' : 'low' }}"
-                         loading="{{ $hi === 0 ? 'eager' : 'lazy' }}">
-                @else
-                    <div class="absolute inset-0 bg-gradient-to-br from-[var(--acad-blue)] via-[var(--acad-navy-hero-mid)] to-[var(--acad-navy)]"></div>
-                @endif
-            </div>
-        @endforeach
-
-        <div class="absolute inset-0 z-[1] bg-gradient-to-br from-[#1E4D8C]/35 via-transparent to-[#F0BC0C]/12 pointer-events-none"></div>
-        <div class="absolute inset-0 z-[1] bg-gradient-to-t from-[#121C30] via-[#121C30]/55 to-[#121C30]/10"></div>
-        <div class="absolute inset-0 z-[1] bg-gradient-to-{{ $isRtl ? 'l' : 'r' }} from-[#121C30]/92 via-[#121C30]/45 to-transparent w-full md:w-[78%]"></div>
-        <div class="absolute inset-0 z-[1] pattern-dots opacity-[0.12] pointer-events-none"></div>
-
-        <div class="container-acad relative z-10 w-full pb-28 sm:pb-32 md:pb-40">
-            <div class="max-w-3xl {{ $isRtl ? 'ms-auto text-right' : 'me-auto text-left' }}">
-                <p class="text-acad-yellow font-black text-[11px] sm:text-xs tracking-[0.28em] uppercase mb-3">Glottical</p>
-                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-xs font-bold text-white w-fit mb-4 shadow-lg shadow-black/20">
-                    <i class="fas fa-star text-acad-yellow text-[10px]"></i>
-                    {{ __($a.'.identity_badge') }}
-                </span>
-                <h1 class="text-3xl sm:text-5xl lg:text-[3.4rem] font-black leading-[1.12] tracking-tight text-white drop-shadow-[0_6px_28px_rgba(0,0,0,.4)]">
-                    {{ __($a.'.identity_title') }}
-                </h1>
-                <p class="mt-4 text-base sm:text-lg text-white/88 max-w-2xl leading-relaxed font-medium">
-                    {{ __($a.'.identity_sub') }}
-                </p>
-
-                <div class="mt-8 flex flex-wrap items-stretch gap-3 sm:gap-4">
-                    <button type="button" data-open-free-trial class="hero-cta-primary">
-                        <span class="inline-flex items-center gap-2 text-sm sm:text-base">
-                            <i class="fas fa-clipboard-check text-sm"></i>
-                            {{ __($a.'.free_trial_cta') }}
-                        </span>
-                        <span class="text-[11px] sm:text-xs font-bold opacity-80">{{ __($a.'.free_trial_cta_hint') }}</span>
-                    </button>
-                    <a href="{{ route('register') }}" class="hero-cta-secondary text-sm sm:text-base">
-                        <i class="fas fa-user-plus text-xs"></i>
-                        {{ __($a.'.identity_secondary_cta') }}
-                    </a>
-                </div>
-
-                <ul class="mt-7 flex flex-wrap gap-x-5 gap-y-2.5 text-xs sm:text-sm font-semibold text-white/85">
-                    <li class="inline-flex items-center gap-2"><i class="fas fa-check-circle text-acad-yellow"></i> {{ __($a.'.free_perk_1') }}</li>
-                    <li class="inline-flex items-center gap-2"><i class="fas fa-check-circle text-acad-yellow"></i> {{ __($a.'.free_perk_2') }}</li>
-                    <li class="inline-flex items-center gap-2"><i class="fas fa-check-circle text-acad-yellow"></i> {{ __($a.'.free_perk_3') }}</li>
-                    <li class="inline-flex items-center gap-2"><i class="fas fa-check-circle text-acad-yellow"></i> {{ __($a.'.free_perk_4') }}</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="absolute bottom-6 sm:bottom-8 inset-x-0 z-20 flex justify-center pointer-events-none">
-            <div class="hero-dots flex gap-2 pointer-events-auto" role="tablist" aria-label="Hero"></div>
-        </div>
-
-        @if($featuredList->isNotEmpty())
-            <div class="hidden lg:flex flex-col gap-3 absolute bottom-28 {{ $isRtl ? 'left-6' : 'right-6' }} z-20 w-[min(100%,280px)] pointer-events-auto">
-                @foreach($featuredList->take(3) as $fc)
-                    @php $fcu = $fc->thumbnail_url; @endphp
-                    <a href="{{ route('public.course.show', $fc->id) }}" class="hero-side-card flex items-center gap-3 rounded-xl p-3 text-white transition shadow-2xl">
-                        <div class="w-14 h-14 rounded-lg overflow-hidden bg-white/10 shrink-0 ring-1 ring-white/15">
-                            @if($fcu)
-                                <img src="{{ $fcu }}" alt="" class="w-full h-full object-cover" loading="lazy" width="56" height="56">
-                            @else
-                                <span class="flex w-full h-full items-center justify-center text-white/40"><i class="fas fa-play"></i></span>
-                            @endif
-                        </div>
-                        <div class="min-w-0 text-start">
-                            <p class="text-[10px] font-bold text-acad-yellow uppercase tracking-wide">{{ __($a.'.hero_preview_live') }}</p>
-                            <p class="text-sm font-bold leading-snug line-clamp-2">{{ \Illuminate\Support\Str::limit($fc->title, 52) }}</p>
-                        </div>
-                    </a>
-                @endforeach
-            </div>
-        @endif
-    </section>
-
-    {{-- Floating glass search — يظهر فقط بعد الضغط على أيقونة البحث في النافبار --}}
-    <div class="hidden fixed top-[4.35rem] md:top-[4.6rem] left-1/2 -translate-x-1/2 z-[998] w-[calc(100%-2rem)] max-w-lg pointer-events-none" id="academy-search-anchor" aria-hidden="true">
-        <form action="{{ route('public.courses') }}" method="get" id="academy-search-form" class="pointer-events-auto glass-panel rounded-full floating-search-glow px-4 py-2.5 flex items-center gap-3 border border-white/12">
-            <i class="fas fa-magnifying-glass text-acad-cyan/80 text-sm"></i>
-            <input type="search" name="q" autocomplete="off" placeholder="{{ __($a.'.search_placeholder') }}" class="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/45 text-sm font-semibold" id="academy-search-input" data-open-search>
-            <button type="button" class="text-acad-yellow font-extrabold text-xs shrink-0 lg:hidden" data-open-search-btn>{{ __($a.'.search_open') }}</button>
-        </form>
-        <div id="search-suggestions" class="hidden mt-2 glass-panel rounded-2xl border border-white/10 p-2 text-white max-h-56 overflow-y-auto shadow-xl"></div>
-    </div>
-
-    {{-- SOCIAL PROOF --}}
-    <section class="relative z-10 py-8 sm:py-10 border-y border-white/5 bg-[#080f1f]/95 backdrop-blur-md">
-        <div class="container-acad">
-            <p class="text-center text-[11px] font-extrabold text-acad-cyan uppercase tracking-[0.2em] mb-5">{{ __($a.'.strip_kicker_stream') }}</p>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 text-center">
-                <div class="reveal">
-                    <p class="text-2xl sm:text-4xl font-black text-white tabular-nums counter drop-shadow-[0_0_20px_rgba(245,184,0,.25)]" data-target="{{ (int) $homeStats['learners'] }}" data-suffix="{{ !empty($homeStats['learners_show_plus']) ? '+' : '' }}">0</p>
-                    <p class="text-xs sm:text-sm font-bold text-white/55 mt-2">{{ __($a.'.stats_students') }}</p>
-                </div>
-                <div class="reveal">
-                    <p class="text-2xl sm:text-4xl font-black text-white tabular-nums counter drop-shadow-[0_0_20px_rgba(0,212,255,.2)]" data-target="{{ (int) $homeStats['courses'] }}">0</p>
-                    <p class="text-xs sm:text-sm font-bold text-white/55 mt-2">{{ __($a.'.stats_courses') }}</p>
-                </div>
-                <div class="reveal">
-                    <p class="text-2xl sm:text-4xl font-black text-acad-yellow tabular-nums counter" data-target="{{ $satisfactionStat }}">0</p>
-                    <p class="text-xs sm:text-sm font-bold text-white/55 mt-2">{{ __($a.'.stats_completion') }}</p>
-                </div>
-                <div class="reveal">
-                    <p class="text-2xl sm:text-4xl font-black text-white tabular-nums counter" data-target="{{ $countriesStat }}">0</p>
-                    <p class="text-xs sm:text-sm font-bold text-white/55 mt-2">{{ __($a.'.stats_countries') }}</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    {{-- DISCOVERY ROWS (horizontal only) --}}
-    <section id="stream-discover" class="section-y relative">
-        <div class="container-acad space-y-10 md:space-y-14">
-            <div class="reveal flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                <div>
-                    <span class="text-acad-cyan font-extrabold text-xs tracking-widest uppercase">{{ __($a.'.stream_meta_kicker') }}</span>
-                    <h2 class="mt-2 text-2xl sm:text-3xl font-black text-white">{{ __($a.'.courses_title') }}</h2>
-                    <p class="mt-2 text-white/60 max-w-xl text-sm sm:text-base">{{ __($a.'.courses_sub') }}</p>
-                </div>
-                <a href="{{ route('public.courses') }}" class="inline-flex items-center gap-2 font-extrabold text-acad-yellow hover:text-white transition text-sm shrink-0">{{ __('landing.view_all_courses') }}<i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }} text-xs"></i></a>
-            </div>
-
-            @foreach([
-                ['title' => __($a.'.row_trending_now'), 'rows' => $rowTrendingNow],
-                ['title' => __($a.'.row_recommended'), 'rows' => $rowRecommended],
-                ['title' => __($a.'.row_new_releases'), 'rows' => $rowNew],
-            ] as $band)
-                @if($band['rows']->isEmpty()) @continue @endif
-                <div class="reveal">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="h-1 w-8 rounded-full bg-gradient-to-l from-acad-yellow to-acad-cyan shrink-0"></span>
-                        <h3 class="text-lg sm:text-xl font-black text-white tracking-tight">{{ $band['title'] }}</h3>
-                    </div>
-                    <div class="netflix-row" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
-                        @foreach($band['rows'] as $course)
-                            @include('partials.landing-stream-card', ['course' => $course, 'a' => $a, 'isRtl' => $isRtl])
-                        @endforeach
-                    </div>
-                </div>
-            @endforeach
-
-            @if($featuredList->isEmpty())
-                <p class="text-center text-white/50 py-12">{{ __('public.no_courses_landing') }}</p>
-            @endif
-        </div>
-    </section>
-
-    @if(($oneToOneCourses ?? collect())->isNotEmpty())
-    <section id="stream-one-to-one" class="section-y bg-violet-950/30 border-t border-violet-500/10">
-        <div class="container-acad space-y-8">
-            <div class="reveal flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                <div>
-                    <span class="text-violet-300 font-extrabold text-xs tracking-widest uppercase">{{ __('public.home_one_to_one_kicker') }}</span>
-                    <h2 class="mt-2 text-2xl sm:text-3xl font-black text-white">{{ __('public.home_one_to_one_title') }}</h2>
-                    <p class="mt-2 text-white/60 max-w-xl text-sm sm:text-base">{{ __('public.home_one_to_one_sub') }}</p>
-                </div>
-                <a href="{{ route('public.courses', ['delivery' => 'one_to_one']) }}" class="inline-flex items-center gap-2 font-extrabold text-violet-300 hover:text-white transition text-sm shrink-0">
-                    {{ __('public.home_one_to_one_cta') }}
-                    <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }} text-xs"></i>
-                </a>
-            </div>
-            <div class="netflix-row reveal" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
-                @foreach($oneToOneCourses as $course)
-                    @include('partials.landing-stream-card', ['course' => $course, 'a' => $a, 'isRtl' => $isRtl])
-                @endforeach
-            </div>
-        </div>
-    </section>
-    @endif
-
-    {{-- PATHS (series) --}}
-    <section id="stream-paths" class="section-y bg-[#060d1a]/90 border-t border-white/5">
-        <div class="container-acad">
-            <div class="reveal max-w-3xl">
-                <span class="text-acad-cyan font-extrabold text-xs tracking-widest uppercase">{{ __($a.'.paths_kicker') }}</span>
-                <h2 class="mt-2 text-3xl sm:text-4xl font-black text-white">{{ __($a.'.stream_paths_series') }}</h2>
-                <p class="mt-3 text-white/60 leading-relaxed">{{ __($a.'.stream_paths_sub') }}</p>
-            </div>
-            <div class="path-scroll flex gap-5 mt-10 overflow-x-auto pb-4 snap-x snap-mandatory">
-                @foreach($pathsList as $path)
-                    @php
-                        $pImg = $path->image_url ?? null;
-                        $episodes = max(0, (int) ($path->courses_count ?? 0));
-                        $pathUrl = $path->url ?? (isset($path->slug) && $path->slug !== '' ? route('public.learning-path.show', $path->slug) : route('public.learning-paths.index'));
-                    @endphp
-                    <article class="reveal shrink-0 w-[min(100%,300px)] sm:w-[320px] snap-start rounded-2xl border border-white/10 glass-panel overflow-hidden shadow-xl hover:border-acad-yellow/40 transition-all duration-300">
-                        <a href="{{ $pathUrl }}" class="block h-40 relative overflow-hidden group">
-                            @if($pImg)
-                                <img src="{{ $pImg }}" alt="{{ $path->name }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async">
-                            @else
-                                <div class="absolute inset-0 bg-gradient-to-br from-acad-blue to-[#0d1528]"></div>
-                            @endif
-                            <div class="absolute inset-0 bg-gradient-to-t from-[#0d1528] via-[#0d1528]/50 to-transparent"></div>
-                            <span class="absolute top-3 {{ $isRtl ? 'right-3' : 'left-3' }} text-[10px] font-black uppercase tracking-wide px-2 py-1 rounded-md bg-acad-yellow/95 text-acad-blue">{{ __($a.'.stream_badge_series') }}</span>
-                            <div class="absolute bottom-3 start-4 end-4">
-                                <h3 class="text-white font-black text-lg leading-tight drop-shadow-lg">{{ $path->name }}</h3>
-                            </div>
-                        </a>
-                        <div class="p-5 text-start">
-                            <p class="text-sm text-white/65 line-clamp-2">{{ \Illuminate\Support\Str::limit(strip_tags((string) ($path->description ?? '')), 110) ?: '—' }}</p>
-                            <p class="mt-3 text-xs font-bold text-acad-cyan">
-                                <i class="fas fa-film me-1 opacity-80"></i>
-                                @if($episodes > 0)
-                                    {{ $episodes }} {{ __($a.'.path_episodes') }}
-                                @else
-                                    {{ __($a.'.path_episodes') }}
-                                @endif
-                            </p>
-                            <a href="{{ $pathUrl }}" class="mt-5 block text-center py-2.5 rounded-xl bg-acad-yellow text-acad-blue font-extrabold hover:brightness-110 transition">{{ __($a.'.path_continue') }}</a>
-                        </div>
-                    </article>
-                @endforeach
-            </div>
-        </div>
-    </section>
-
-    {{-- INSTRUCTORS (creators) --}}
-    <section class="section-y bg-[#0d1528] border-t border-white/5">
-        <div class="container-acad">
-            <div class="reveal text-center max-w-2xl mx-auto mb-12">
-                <span class="text-acad-cyan font-extrabold text-xs tracking-widest uppercase">{{ __($a.'.instructors_kicker') }}</span>
-                <h2 class="mt-2 text-3xl sm:text-4xl font-black text-white">{{ __($a.'.instructors_title') }}</h2>
-                <p class="mt-3 text-white/60">{{ __($a.'.instructors_sub') }}</p>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-                @forelse(($homeInstructors ?? collect())->take(8) as $p)
-                    @php
-                        $name = $p->user->name ?? '';
-                        $headline = $p->headline ?? '';
-                        $skillTags = array_slice(array_filter(is_array($p->skills ?? null) ? $p->skills : []), 0, 3);
-                        if (empty($skillTags)) {
-                            $skillTags = [__('landing.nav.courses'), __('landing.nav.instructors'), __('public.services')];
-                        }
-                        $followers = max(120, abs(crc32((string) $name)) % 14000);
-                        $courseCt = (int) ($p->courses_count ?? 0);
-                        $avgRating = number_format(4.6 + (crc32((string) $name) % 35) / 100, 1);
-                    @endphp
-                    <article class="reveal relative rounded-2xl border border-white/10 glass-panel p-6 hover:border-acad-yellow/35 hover:shadow-[0_0_40px_-10px_rgba(230,176,9,.28)] transition text-center overflow-hidden group">
-                        <a href="{{ route('public.instructors.show', $p->user) }}" class="block relative z-10">
-                            <x-instructor-avatar :profile="$p" class="mx-auto ring-2 ring-acad-yellow/40 shadow-lg" size="md" />
-                            <h3 class="mt-5 font-black text-lg text-white">{{ $name }}</h3>
-                            @if($headline !== '')
-                                <p class="mt-1 text-sm font-bold text-acad-cyan/90 line-clamp-2">{{ $headline }}</p>
-                            @endif
-                            <div class="mt-3 flex flex-wrap justify-center gap-1.5">
-                                @foreach($skillTags as $tag)
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-acad-cyan border border-white/10">{{ $tag }}</span>
-                                @endforeach
-                            </div>
-                            <p class="mt-3 text-xs font-bold text-white/50"><i class="fas fa-user-friends text-acad-yellow me-1"></i>{{ number_format($followers) }}+ {{ __($a.'.instructor_followers') }}</p>
-                            <div class="mt-2 text-amber-400 text-sm font-bold"><i class="fas fa-star"></i> {{ $avgRating }}</div>
-                            <span class="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-acad-yellow text-acad-blue font-extrabold text-sm group-hover:brightness-110 transition">{{ __($a.'.instructor_view_content') }}</span>
-                        </a>
-                        <div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#0d1528]/92 text-white p-4 opacity-0 group-hover:opacity-100 transition duration-300 backdrop-blur-sm">
-                            <div class="text-center">
-                                <p class="text-3xl font-black">{{ $courseCt }}</p>
-                                <p class="text-xs font-bold text-white/80">{{ __($a.'.instructor_overlay_courses') }}</p>
-                                <p class="text-2xl font-black mt-3">{{ $avgRating }}</p>
-                                <p class="text-xs font-bold text-white/80">{{ __($a.'.instructor_overlay_rating') }}</p>
-                            </div>
-                        </div>
-                    </article>
-                @empty
-                    <p class="col-span-full text-center text-white/45">{{ __('public.no_instructors') }}</p>
-                @endforelse
-            </div>
-        </div>
-    </section>
-
-    {{-- STATS --}}
-    <section class="section-y relative overflow-hidden text-white border-t border-white/5">
-        <div class="absolute inset-0 bg-gradient-to-br from-acad-navy-mid via-acad-blue-dark to-acad-navy"></div>
-        <div class="absolute inset-0 pattern-dots opacity-30"></div>
-        <div class="absolute inset-0 bg-gradient-to-t from-acad-yellow/5 to-transparent pointer-events-none"></div>
-        <div class="container-acad relative z-10">
-            <div class="reveal text-center max-w-2xl mx-auto mb-14">
-                <span class="text-acad-yellow font-extrabold text-sm">{{ __($a.'.stats_kicker') }}</span>
-                <h2 class="mt-2 text-3xl sm:text-4xl font-black">{{ __($a.'.stats_title') }}</h2>
-            </div>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-                <div class="reveal text-center">
-                    <p class="text-4xl sm:text-5xl font-black tabular-nums text-acad-yellow counter" data-target="{{ (int) $homeStats['learners'] }}" data-suffix="{{ !empty($homeStats['learners_show_plus']) ? '+' : '' }}">0</p>
-                    <p class="mt-2 font-bold text-white/85">{{ __($a.'.stats_students') }}</p>
-                </div>
-                <div class="reveal text-center">
-                    <p class="text-4xl sm:text-5xl font-black tabular-nums text-acad-yellow counter" data-target="{{ (int) $homeStats['courses'] }}">0</p>
-                    <p class="mt-2 font-bold text-white/85">{{ __($a.'.stats_courses') }}</p>
-                </div>
-                <div class="reveal text-center">
-                    <p class="text-4xl sm:text-5xl font-black tabular-nums text-acad-yellow counter" data-target="{{ $countriesStat }}">0</p>
-                    <p class="mt-2 font-bold text-white/85">{{ __($a.'.stats_countries') }}</p>
-                </div>
-                <div class="reveal text-center">
-                    <p class="text-4xl sm:text-5xl font-black tabular-nums text-acad-yellow counter" data-target="{{ $satisfactionStat }}">0</p>
-                    <p class="mt-2 font-bold text-white/85">{{ __($a.'.stats_completion') }}</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    {{-- TESTIMONIALS --}}
-    @if($testimonialRows->isNotEmpty())
-        <section class="section-y bg-[#080f1f] border-t border-white/5">
-            <div class="container-acad">
-                <div class="reveal text-center max-w-2xl mx-auto mb-12">
-                    <span class="text-acad-cyan font-extrabold text-xs tracking-widest uppercase">{{ __($a.'.testimonials_kicker') }}</span>
-                    <h2 class="mt-2 text-3xl font-black text-white">{{ __($a.'.testimonials_title') }}</h2>
-                    <p class="mt-2 text-white/55">{{ __($a.'.testimonials_sub') }}</p>
-                </div>
-                <div class="relative max-w-3xl mx-auto reveal">
-                    <div class="overflow-hidden rounded-2xl border border-white/10 glass-panel" dir="ltr">
-                        <div class="flex transition-transform duration-500 ease-out" id="testimonial-track" style="transform:translateX(0)">
-                            @foreach($testimonialRows as $t)
-                                @php $img = method_exists($t, 'publicImageUrl') ? $t->publicImageUrl() : null; @endphp
-                                <div class="min-w-full px-2 py-2">
-                                    <div class="rounded-xl p-8">
-                                        <div class="flex items-start gap-4 flex-wrap">
-                                            <div class="w-14 h-14 rounded-full overflow-hidden bg-white/10 flex-shrink-0 ring-2 ring-acad-yellow/30">
-                                                @if($img)
-                                                    <img src="{{ $img }}" alt="" class="w-full h-full object-cover">
-                                                @else
-                                                    <div class="w-full h-full flex items-center justify-center font-black text-acad-yellow">{{ mb_substr((string) ($t->author_name ?? 'G'), 0, 1) }}</div>
-                                                @endif
-                                            </div>
-                                            <div class="flex-1 min-w-0 text-start">
-                                                <div class="flex flex-wrap items-center gap-2">
-                                                    <p class="font-black text-white">{{ $t->author_name ?? '—' }}</p>
-                                                    <span class="text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"><i class="fas fa-check-circle me-1"></i>{{ __($a.'.testimonial_verified') }}</span>
-                                                </div>
-                                                <p class="text-sm text-acad-cyan font-bold">{{ $t->role_label ?? '' }}</p>
-                                                <p class="text-amber-400 text-sm mt-1" aria-hidden="true">{!! str_repeat('<i class="fas fa-star"></i> ', 5) !!}</p>
-                                            </div>
-                                        </div>
-                                        <p class="mt-6 text-white/70 leading-relaxed">{{ \Illuminate\Support\Str::limit(strip_tags((string) ($t->body ?? '')), 280) }}</p>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                    <div class="flex justify-center gap-3 mt-6">
-                        <button type="button" class="test-prev w-11 h-11 rounded-full border border-white/20 bg-white/5 text-white hover:bg-acad-yellow hover:text-acad-blue hover:border-acad-yellow transition" aria-label="{{ __($a.'.carousel_prev') }}"><i class="fas fa-chevron-{{ $isRtl ? 'right' : 'left' }}"></i></button>
-                        <button type="button" class="test-next w-11 h-11 rounded-full border border-white/20 bg-white/5 text-white hover:bg-acad-yellow hover:text-acad-blue hover:border-acad-yellow transition" aria-label="{{ __($a.'.carousel_next') }}"><i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }}"></i></button>
-                    </div>
-                </div>
-            </div>
-        </section>
-    @endif
-
-    {{-- PRICING --}}
-    <section class="section-y bg-[#0d1528] border-t border-white/5">
-        <div class="container-acad">
-            <div class="reveal text-center max-w-2xl mx-auto mb-14">
-                <span class="text-acad-cyan font-extrabold text-xs tracking-widest uppercase">{{ __($a.'.pricing_kicker') }}</span>
-                <h2 class="mt-2 text-3xl sm:text-4xl font-black text-white">{{ __($a.'.pricing_title') }}</h2>
-                <p class="mt-3 text-white/60">{{ __($a.'.pricing_sub') }}</p>
-            </div>
-            <div class="grid md:grid-cols-3 gap-8 items-stretch">
-                @php
-                    $starterCheckout = route('public.subscription.checkout', 'teacher_starter');
-                    $proCheckout = route('public.subscription.checkout', 'teacher_pro');
-                    $starterCta = auth()->check() ? $starterCheckout : route('login', ['intended' => $starterCheckout]);
-                    $proCta = auth()->check() ? $proCheckout : route('login', ['intended' => $proCheckout]);
-                    $starterLabel = $planStarter['label'] ?? __($a.'.plan_basic');
-                    $proLabel = $planPro['label'] ?? __($a.'.plan_pro');
-                    $starterSubtitle = $planStarter['card_subtitle'] ?? __($a.'.plan_basic_desc');
-                    $proSubtitle = $planPro['card_subtitle'] ?? __($a.'.plan_pro_desc');
-                    $starterFeatures = array_slice(is_array($planStarter['features'] ?? null) ? $planStarter['features'] : [], 0, 3);
-                    $proFeatures = array_slice(is_array($planPro['features'] ?? null) ? $planPro['features'] : [], 0, 4);
-                @endphp
-                <div class="reveal rounded-2xl border border-white/10 glass-panel p-8 flex flex-col">
-                    <h3 class="text-xl font-black text-acad-yellow">{{ $starterLabel }}</h3>
-                    <p class="mt-2 text-white/60 text-sm">{{ $starterSubtitle }}</p>
-                    <p class="mt-4 text-xs font-extrabold text-acad-cyan uppercase tracking-wide">{{ __($a.'.plan_features') }}</p>
-                    <ul class="mt-2 space-y-2 text-sm text-white/75 flex-1">
-                        @forelse($starterFeatures as $featureKey)
-                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __("student.subscription_feature.{$featureKey}") }}</li>
-                        @empty
-                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_basic_f1') }}</li>
-                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_basic_f2') }}</li>
-                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_basic_f3') }}</li>
-                        @endforelse
-                    </ul>
-                    <p class="mt-6 text-3xl font-black text-white">{{ $starterPrice > 0 ? $fmt((int) $starterPrice).' '.__('landing.currency') : __('landing.free') }}@if($starterPrice > 0)<span class="text-sm font-bold text-white/45"> / {{ __($a.'.plan_period') }}</span>@endif</p>
-                    <a href="{{ $starterCta }}" class="mt-6 block text-center py-3 rounded-xl border-2 border-acad-yellow/60 text-acad-yellow font-extrabold hover:bg-acad-yellow hover:text-acad-blue transition">{{ $planStarter['card_cta'] ?? __($a.'.plan_cta') }}</a>
-                </div>
-                <div class="reveal rounded-2xl pricing-pop border-2 border-acad-yellow glass-panel p-8 flex flex-col relative md:-translate-y-2 shadow-[0_0_48px_-12px_rgba(245,184,0,.35)]">
-                    <span class="absolute top-4 end-4 text-[11px] font-black uppercase tracking-wide px-2 py-1 rounded-md bg-acad-yellow text-acad-blue">{{ $planPro['card_badge'] ?? __($a.'.plan_pro_badge') }}</span>
-                    <h3 class="text-xl font-black text-white">{{ $proLabel }}</h3>
-                    <p class="mt-2 text-white/60 text-sm">{{ $proSubtitle }}</p>
-                    <p class="mt-4 text-xs font-extrabold text-acad-cyan uppercase tracking-wide">{{ __($a.'.plan_features') }}</p>
-                    <ul class="mt-2 space-y-2 text-sm text-white/75 flex-1">
-                        @forelse($proFeatures as $featureKey)
-                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __("student.subscription_feature.{$featureKey}") }}</li>
-                        @empty
-                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_pro_f1') }}</li>
-                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_pro_f2') }}</li>
-                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_pro_f3') }}</li>
-                            <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_pro_f4') }}</li>
-                        @endforelse
-                    </ul>
-                    <p class="mt-6 text-3xl font-black text-acad-yellow">{{ $proPrice > 0 ? $fmt((int) $proPrice).' '.__('landing.currency') : '—' }}@if($proPrice > 0)<span class="text-sm font-bold text-white/45"> / {{ __($a.'.plan_period') }}</span>@endif</p>
-                    <a href="{{ $proCta }}" class="mt-6 block text-center py-3 rounded-xl bg-acad-yellow text-acad-blue font-extrabold shadow-lg hover:brightness-110 transition">{{ $planPro['card_cta'] ?? __($a.'.plan_subscribe') }}</a>
-                </div>
-                <div class="reveal rounded-2xl border border-white/10 glass-panel p-8 flex flex-col">
-                    <h3 class="text-xl font-black text-acad-yellow">{{ __($a.'.plan_enterprise') }}</h3>
-                    <p class="mt-2 text-white/60 text-sm">{{ __($a.'.plan_enterprise_desc') }}</p>
-                    <p class="mt-4 text-xs font-extrabold text-acad-cyan uppercase tracking-wide">{{ __($a.'.plan_features') }}</p>
-                    <ul class="mt-2 space-y-2 text-sm text-white/75 flex-1">
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_ent_f1') }}</li>
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_ent_f2') }}</li>
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_ent_f3') }}</li>
-                        <li class="flex gap-2"><i class="fas fa-check text-emerald-400 mt-0.5"></i>{{ __($a.'.plan_ent_f4') }}</li>
-                    </ul>
-                    <p class="mt-6 text-3xl font-black text-white">{{ __($a.'.plan_custom') }}</p>
-                    <a href="{{ route('public.contact') }}" class="mt-6 block text-center py-3 rounded-xl border-2 border-white/25 text-white font-extrabold hover:bg-white/10 transition">{{ __($a.'.plan_contact') }}</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    {{-- CTA --}}
-    <section class="section-y stream-cta-band text-white border-t border-white/5">
-        <div class="container-acad relative z-10 text-center py-8">
-            <h2 class="text-3xl sm:text-4xl font-black max-w-3xl mx-auto leading-tight reveal">{{ __($a.'.cta_title') }}</h2>
-            <p class="mt-4 text-lg text-white/85 max-w-xl mx-auto reveal">{{ __($a.'.cta_sub') }}</p>
-            <a href="{{ route('register') }}" class="mt-8 inline-flex items-center gap-2 px-10 py-4 rounded-xl bg-acad-yellow text-acad-blue font-extrabold text-lg shadow-xl hover:brightness-105 transition reveal ring-2 ring-acad-yellow/40">{{ __($a.'.cta_button') }}<i class="fas fa-play text-sm"></i></a>
-        </div>
-    </section>
-</main>
+@include('partials.welcome-main-site')
 
 {{-- Netflix-style full-screen search --}}
 <div id="market-search-overlay" class="fixed inset-0 z-[100050] hidden" aria-hidden="true">
     <div class="absolute inset-0 bg-[#0d1528]/80 backdrop-blur-xl transition-opacity" data-close-search tabindex="-1"></div>
     <div class="relative z-10 min-h-0 flex flex-col items-stretch pt-16 sm:pt-20 px-3 sm:px-6 pb-8 pointer-events-none">
-        <div class="max-w-5xl w-full mx-auto glass-panel rounded-2xl border border-white/15 shadow-2xl pointer-events-auto search-overlay-enter max-h-[min(90vh,840px)] flex flex-col overflow-hidden">
+        <div class="max-w-5xl w-full mx-auto glass-panel-dark rounded-2xl border border-white/15 shadow-2xl pointer-events-auto search-overlay-enter max-h-[min(90vh,840px)] flex flex-col overflow-hidden">
             <div class="flex items-center justify-between gap-3 p-4 border-b border-white/10">
-                <p class="text-sm font-black text-acad-yellow">{{ __($a.'.search_live') }}</p>
+                <p class="text-sm font-black text-metal">{{ __($a.'.search_live') }}</p>
                 <button type="button" class="w-10 h-10 rounded-xl border border-white/15 text-white hover:bg-white/10 transition font-bold" data-close-search aria-label="{{ __($a.'.search_close') }}"><i class="fas fa-times"></i></button>
             </div>
             <div class="p-4 border-b border-white/10 shrink-0">
@@ -741,69 +394,97 @@
             </div>
             <form action="{{ route('public.courses') }}" method="get" class="p-4 border-t border-white/10 bg-black/20 shrink-0 flex flex-wrap gap-2 justify-end">
                 <input type="hidden" name="q" id="market-overlay-q-hidden" value="">
-                <button type="submit" class="px-6 py-2.5 rounded-xl bg-acad-yellow text-acad-blue font-extrabold hover:brightness-110 transition">{{ __($a.'.search_btn') }}</button>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-accent text-white font-extrabold hover:brightness-110 transition">{{ __($a.'.search_btn') }}</button>
             </form>
         </div>
     </div>
 </div>
 
-{{-- Free trial booking calendar modal --}}
-<div id="free-trial-modal" class="fixed inset-0 z-[100070] hidden items-center justify-center p-4" aria-hidden="true">
-    <div class="absolute inset-0 bg-acad-navy/80 backdrop-blur-md" data-close-free-trial></div>
-    <div class="relative z-10 w-full max-w-xl rounded-2xl bg-acad-navy shadow-2xl border border-acad-yellow/25 overflow-hidden max-h-[92vh] overflow-y-auto text-white">
-        <div class="h-1.5 w-full bg-gradient-to-l from-acad-yellow via-acad-blue to-acad-yellow"></div>
-        <button type="button" class="absolute top-3 {{ $isRtl ? 'left-3' : 'right-3' }} w-10 h-10 rounded-full bg-white/10 border border-white/15 text-white hover:bg-white/20 z-10" data-close-free-trial aria-label="{{ __($a.'.free_trial_close') }}"><i class="fas fa-times"></i></button>
-        <div class="p-6 pt-12 space-y-5">
-            <div>
-                <p class="text-acad-yellow text-xs font-black uppercase tracking-widest mb-1">Glottical</p>
-                <h3 class="text-xl font-black">{{ __($a.'.free_trial_modal_title') }}</h3>
-                <p class="text-sm text-white/65 mt-1">{{ __($a.'.free_trial_modal_sub') }}</p>
+{{-- Free trial booking modal — light storefront brand (self-styled) --}}
+<div id="free-trial-modal" class="fixed inset-0 z-[100070] hidden items-end sm:items-center justify-center p-0 sm:p-4" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="ft-title">
+    <div class="ft-backdrop absolute inset-0" data-close-free-trial></div>
+    <div class="ft-dialog relative z-10 flex w-full sm:max-w-lg flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl max-h-[min(94vh,100dvh)]">
+        <div class="ft-head flex items-start justify-between gap-3 px-5 py-4 sm:px-6 sm:py-5">
+            <div class="min-w-0 space-y-1.5">
+                <p class="ft-kicker inline-flex items-center gap-1.5">
+                    <svg class="size-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                    Glottical · 30 {{ $isRtl ? 'دقيقة' : 'min' }}
+                </p>
+                <h3 id="ft-title" class="ft-title sm:text-2xl">{{ __($a.'.free_trial_modal_title') }}</h3>
+                <p class="ft-sub">{{ __($a.'.free_trial_modal_sub') }}</p>
+            </div>
+            <button type="button" class="ft-close shrink-0" data-close-free-trial aria-label="{{ __($a.'.free_trial_close') }}">
+                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6" style="background:#fff">
+            <div id="ft-loading" class="ft-loading">
+                <span class="inline-flex size-8 items-center justify-center rounded-xl" style="background:#e6f2f1;color:#0f5c57">
+                    <svg class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                </span>
+                {{ __($a.'.free_trial_loading') }}
             </div>
 
-            <div id="ft-loading" class="text-sm text-acad-yellow font-semibold">{{ __($a.'.free_trial_loading') }}</div>
-            <div id="ft-error" class="hidden rounded-xl bg-rose-500/15 border border-rose-400/30 text-rose-100 px-3 py-2 text-sm"></div>
+            <div id="ft-error" class="ft-error mb-4 hidden" role="alert"></div>
 
-            <div id="ft-calendar" class="hidden space-y-4">
+            <div id="ft-calendar" class="hidden space-y-6">
                 <div>
-                    <p class="text-xs font-bold text-white/50 mb-2">{{ __($a.'.free_trial_pick_date') }}</p>
-                    <div id="ft-dates" class="flex flex-wrap gap-2"></div>
+                    <div class="mb-3 flex items-end justify-between gap-3">
+                        <p class="ft-label">{{ __($a.'.free_trial_pick_date') }}</p>
+                        <p class="ft-muted">{{ $isRtl ? 'خلال أسبوعين' : 'Next 2 weeks' }}</p>
+                    </div>
+                    <div class="ft-scroll-wrap" data-ft-scroll-wrap>
+                        <button type="button" class="ft-scroll-btn is-prev" data-ft-scroll="-1" aria-label="{{ $isRtl ? 'الأيام السابقة' : 'Previous days' }}" disabled>
+                            <svg class="size-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="{{ $isRtl ? 'm9 18 6-6-6-6' : 'm15 18-6-6 6-6' }}"/></svg>
+                        </button>
+                        <div id="ft-dates" class="ft-hscroll" role="listbox" aria-label="{{ __($a.'.free_trial_pick_date') }}"></div>
+                        <button type="button" class="ft-scroll-btn is-next" data-ft-scroll="1" aria-label="{{ $isRtl ? 'الأيام التالية' : 'Next days' }}" disabled>
+                            <svg class="size-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="{{ $isRtl ? 'm15 18-6-6 6-6' : 'm9 18 6-6-6-6' }}"/></svg>
+                        </button>
+                    </div>
                 </div>
+
                 <div>
-                    <p class="text-xs font-bold text-white/50 mb-2">{{ __($a.'.free_trial_pick_time') }}</p>
+                    <p class="ft-label mb-3">{{ __($a.'.free_trial_pick_time') }}</p>
                     <div id="ft-times" class="flex flex-wrap gap-2"></div>
-                    <p id="ft-no-times" class="hidden text-sm text-white/50">{{ __($a.'.free_trial_no_slots') }}</p>
+                    <p id="ft-no-times" class="ft-sub mt-2 hidden">{{ __($a.'.free_trial_no_slots') }}</p>
                 </div>
-                <form id="ft-form" class="space-y-3 pt-2 border-t border-white/10">
+
+                <form id="ft-form" class="space-y-4 pt-5" style="border-top:1px solid #d7dde6">
                     <input type="hidden" name="starts_at" id="ft-starts-at" required>
-                    <div>
-                        <label class="block text-xs font-bold text-white/60 mb-1">{{ __($a.'.free_trial_name') }}</label>
-                        <input type="text" name="name" id="ft-name" required class="w-full rounded-xl bg-white/5 border border-white/15 px-3 py-2.5 text-sm focus:ring-2 focus:ring-acad-yellow/40 focus:border-acad-yellow outline-none" value="{{ auth()->user()->name ?? '' }}">
+                    <div class="space-y-2">
+                        <label for="ft-name" class="ft-label block">{{ __($a.'.free_trial_name') }}</label>
+                        <input type="text" name="name" id="ft-name" required autocomplete="name" class="ft-field" value="{{ auth()->user()->name ?? '' }}">
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-white/60 mb-1">{{ __($a.'.free_trial_email') }}</label>
-                            <input type="email" name="email" id="ft-email" class="w-full rounded-xl bg-white/5 border border-white/15 px-3 py-2.5 text-sm focus:ring-2 focus:ring-acad-yellow/40 outline-none" value="{{ auth()->user()->email ?? '' }}">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div class="space-y-2">
+                            <label for="ft-email" class="ft-label block">{{ __($a.'.free_trial_email') }}</label>
+                            <input type="email" name="email" id="ft-email" autocomplete="email" class="ft-field" value="{{ auth()->user()->email ?? '' }}">
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-white/60 mb-1">{{ __($a.'.free_trial_phone') }}</label>
-                            <input type="text" name="phone" id="ft-phone" class="w-full rounded-xl bg-white/5 border border-white/15 px-3 py-2.5 text-sm focus:ring-2 focus:ring-acad-yellow/40 outline-none" value="{{ auth()->user()->phone ?? '' }}">
+                        <div class="space-y-2">
+                            <label for="ft-phone" class="ft-label block">{{ __($a.'.free_trial_phone') }}</label>
+                            <input type="tel" name="phone" id="ft-phone" autocomplete="tel" class="ft-field" value="{{ auth()->user()->phone ?? '' }}">
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-white/60 mb-1">{{ __($a.'.free_trial_goal') }}</label>
-                        <input type="text" name="goal" id="ft-goal" class="w-full rounded-xl bg-white/5 border border-white/15 px-3 py-2.5 text-sm focus:ring-2 focus:ring-acad-yellow/40 outline-none" placeholder="سفر / عمل / دراسة…">
+                    <div class="space-y-2">
+                        <label for="ft-goal" class="ft-label block">{{ __($a.'.free_trial_goal') }}</label>
+                        <input type="text" name="goal" id="ft-goal" class="ft-field" placeholder="{{ $isRtl ? 'سفر، عمل، دراسة…' : 'Travel, work, study…' }}">
                     </div>
-                    <button type="submit" id="ft-submit" disabled class="w-full py-3 rounded-xl bg-acad-yellow text-acad-blue font-black disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition">
+                    <button type="submit" id="ft-submit" disabled class="ft-submit">
                         {{ __($a.'.free_trial_submit') }}
                     </button>
+                    <p class="text-center ft-muted" style="line-height:1.6">{{ $isRtl ? 'بدون التزام · سنؤكد الموعد برسالة قصيرة' : 'No commitment · We’ll confirm by a short message' }}</p>
                 </form>
             </div>
 
-            <div id="ft-success" class="hidden text-center space-y-3 py-6">
-                <div class="w-16 h-16 mx-auto rounded-2xl bg-acad-yellow text-acad-blue flex items-center justify-center text-2xl"><i class="fas fa-check"></i></div>
-                <h4 class="font-black text-lg">{{ __($a.'.free_trial_success') }}</h4>
-                <p id="ft-success-msg" class="text-sm text-white/70"></p>
-                <button type="button" data-close-free-trial class="px-5 py-2.5 rounded-xl border border-white/20 font-bold text-sm">{{ __($a.'.free_trial_close') }}</button>
+            <div id="ft-success" class="hidden py-6 text-center">
+                <div class="ft-success-icon">
+                    <svg class="size-7" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                </div>
+                <h4 class="ft-title">{{ __($a.'.free_trial_success') }}</h4>
+                <p id="ft-success-msg" class="ft-sub mx-auto mt-2 max-w-sm"></p>
+                <button type="button" data-close-free-trial class="ft-close mt-6" style="width:auto;padding:0 1.5rem;height:2.75rem">{{ __($a.'.free_trial_close') }}</button>
             </div>
         </div>
     </div>
@@ -818,7 +499,7 @@
     </div>
 </div>
 
-@include('components.unified-footer', ['footerVariant' => 'stream'])
+@include('partials.atheer-home-footer')
 
 @if(isset($popupAd) && $popupAd)
     @include('partials.popup-ad', ['ad' => $popupAd])
@@ -982,7 +663,7 @@
                 (rt ? '<p class="text-[10px] text-amber-300/95 mt-0.5 font-bold">★ ' + esc(rt) + '</p>' : '') +
                 '</div>' +
                 '<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/45">' +
-                '<span class="px-3 py-1.5 rounded-lg bg-acad-yellow text-acad-blue text-[10px] sm:text-[11px] font-extrabold shadow-lg">' + esc(streamPlayLabel) + '</span>' +
+                '<span class="px-3 py-1.5 rounded-lg bg-accent text-white text-[10px] sm:text-[11px] font-extrabold shadow-lg">' + esc(streamPlayLabel) + '</span>' +
                 '</div></div>';
             container.appendChild(el);
         });
@@ -1055,9 +736,9 @@
             var cur = ovChipHidden ? ovChipHidden.value : '';
             document.querySelectorAll('#market-search-overlay .search-chip').forEach(function(b){
                 var on = !!(cur && b.getAttribute('data-chip') === cur);
-                b.classList.toggle('bg-acad-yellow', on);
-                b.classList.toggle('text-acad-blue', on);
-                b.classList.toggle('border-acad-yellow', on);
+                b.classList.toggle('bg-accent', on);
+                b.classList.toggle('text-white', on);
+                b.classList.toggle('border-accent', on);
                 b.classList.toggle('bg-white/5', !on);
                 b.classList.toggle('text-white/90', !on);
                 b.classList.toggle('border-white/15', !on);
@@ -1181,7 +862,7 @@
                 '<p class="text-sm text-white/55 mt-1">' + esc(c.instructor) + '</p>' +
                 '<p class="text-amber-300 text-sm mt-2">' + esc(stars) + ' ' + (c.rating || '—') + '</p>' +
                 '<p class="text-lg font-black text-acad-cyan mt-3">' + esc(price) + '</p>' +
-                '<a href="' + esc(c.url) + '" class="mt-4 block text-center py-3 rounded-xl bg-acad-yellow text-acad-blue font-extrabold hover:brightness-110 transition">' + esc(enrollLabel) + '</a>';
+                '<a href="' + esc(c.url) + '" class="mt-4 block text-center py-3 rounded-xl bg-accent text-white font-extrabold hover:brightness-110 transition">' + esc(enrollLabel) + '</a>';
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             modal.setAttribute('aria-hidden', 'false');
@@ -1265,13 +946,17 @@
             modal.classList.add('flex');
             modal.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
+            requestAnimationFrame(function(){ modal.classList.add('ft-open'); });
             loadSlots();
         }
         function closeModal(){
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            modal.setAttribute('aria-hidden', 'true');
-            document.body.style.overflow = '';
+            modal.classList.remove('ft-open');
+            setTimeout(function(){
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+            }, 200);
         }
         document.querySelectorAll('[data-open-free-trial]').forEach(function(btn){
             btn.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
@@ -1279,40 +964,147 @@
         document.querySelectorAll('[data-close-free-trial]').forEach(function(btn){
             btn.addEventListener('click', closeModal);
         });
+        document.addEventListener('keydown', function(e){
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+        });
+        try {
+            if (new URLSearchParams(window.location.search).get('open_trial') === '1') {
+                openModal();
+                if (window.history && window.history.replaceState) {
+                    var clean = window.location.pathname + (window.location.hash || '');
+                    window.history.replaceState({}, '', clean);
+                }
+            }
+        } catch (e) {}
 
         function loadSlots(){
-            document.getElementById('ft-loading').classList.remove('hidden');
-            document.getElementById('ft-calendar').classList.add('hidden');
-            document.getElementById('ft-success').classList.add('hidden');
-            document.getElementById('ft-error').classList.add('hidden');
-            fetch(@json(route('public.free-trial.slots')) + '?days=14', { headers: { 'Accept': 'application/json' } })
-                .then(function(r){ return r.json(); })
+            var loadingEl = document.getElementById('ft-loading');
+            var calendarEl = document.getElementById('ft-calendar');
+            var errorEl = document.getElementById('ft-error');
+            var successEl = document.getElementById('ft-success');
+            if (loadingEl) loadingEl.classList.remove('hidden');
+            if (calendarEl) calendarEl.classList.add('hidden');
+            if (successEl) successEl.classList.add('hidden');
+            if (errorEl) {
+                errorEl.classList.add('hidden');
+                errorEl.textContent = '';
+            }
+            var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+            var timeoutId = setTimeout(function(){ if (ctrl) ctrl.abort(); }, 15000);
+            fetch(@json(route('public.free-trial.slots')) + '?days=14', {
+                headers: { 'Accept': 'application/json' },
+                signal: ctrl ? ctrl.signal : undefined,
+                credentials: 'same-origin'
+            })
+                .then(function(r){
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
                 .then(function(data){
                     slotsByDate = data.slots_by_date || {};
                     var datesWrap = document.getElementById('ft-dates');
+                    if (!datesWrap) return;
                     datesWrap.innerHTML = '';
-                    (data.dates || []).forEach(function(d, i){
+                    var dates = data.dates || [];
+                    dates.forEach(function(d, i){
                         var b = document.createElement('button');
                         b.type = 'button';
-                        b.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-white/15 bg-white/5 hover:border-acad-yellow/60 transition';
-                        b.textContent = d;
+                        b.className = 'ft-chip';
                         b.dataset.date = d;
+                        b.setAttribute('role', 'option');
+                        var parts = formatDateChip(d);
+                        b.innerHTML = '<span class="ft-chip-day">' + parts.day + '</span><span class="ft-chip-date">' + parts.date + '</span>';
                         b.addEventListener('click', function(){ selectDate(d); });
                         datesWrap.appendChild(b);
                         if (i === 0) selectDate(d);
                     });
-                    document.getElementById('ft-loading').classList.add('hidden');
-                    document.getElementById('ft-calendar').classList.remove('hidden');
-                    if (!(data.dates || []).length) {
-                        document.getElementById('ft-error').textContent = @json(__($a.'.free_trial_no_slots'));
-                        document.getElementById('ft-error').classList.remove('hidden');
+                    if (calendarEl) calendarEl.classList.remove('hidden');
+                    setupDateScroller(datesWrap);
+                    if (!dates.length && errorEl) {
+                        errorEl.textContent = @json(__($a.'.free_trial_no_slots'));
+                        errorEl.classList.remove('hidden');
                     }
                 })
                 .catch(function(){
-                    document.getElementById('ft-loading').classList.add('hidden');
-                    document.getElementById('ft-error').textContent = 'تعذّر تحميل المواعيد';
-                    document.getElementById('ft-error').classList.remove('hidden');
+                    if (errorEl) {
+                        errorEl.textContent = @json($isRtl ? 'تعذّر تحميل المواعيد. حاول مرة أخرى.' : 'Could not load slots. Please try again.');
+                        errorEl.classList.remove('hidden');
+                    }
+                })
+                .finally(function(){
+                    clearTimeout(timeoutId);
+                    if (loadingEl) loadingEl.classList.add('hidden');
                 });
+        }
+
+        function formatDateChip(isoDate){
+            try {
+                var dt = new Date(isoDate + 'T12:00:00');
+                var day = dt.toLocaleDateString(@json($locale), { weekday: 'short' });
+                var date = dt.toLocaleDateString(@json($locale), { day: 'numeric', month: 'short' });
+                return { day: day, date: date };
+            } catch (e) {
+                return { day: '', date: isoDate };
+            }
+        }
+
+        function setupDateScroller(scroller){
+            var wrap = scroller.closest('[data-ft-scroll-wrap]');
+            if (!wrap || wrap.dataset.ftScrollReady === '1') {
+                updateScrollEdges(wrap, scroller);
+                return;
+            }
+            wrap.dataset.ftScrollReady = '1';
+            var prev = wrap.querySelector('[data-ft-scroll="-1"]');
+            var next = wrap.querySelector('[data-ft-scroll="1"]');
+            function sync(){ updateScrollEdges(wrap, scroller); }
+            scroller.addEventListener('scroll', sync, { passive: true });
+            window.addEventListener('resize', sync);
+            if (prev) prev.addEventListener('click', function(){ scroller.scrollBy({ left: (@json($isRtl) ? 1 : -1) * Math.max(180, scroller.clientWidth * 0.7), behavior: 'smooth' }); });
+            if (next) next.addEventListener('click', function(){ scroller.scrollBy({ left: (@json($isRtl) ? -1 : 1) * Math.max(180, scroller.clientWidth * 0.7), behavior: 'smooth' }); });
+            // سحب بالماوس على سطح المكتب
+            var dragging = false, startX = 0, startLeft = 0;
+            scroller.addEventListener('pointerdown', function(e){
+                if (e.pointerType !== 'mouse' || e.button !== 0) return;
+                dragging = true;
+                startX = e.clientX;
+                startLeft = scroller.scrollLeft;
+                scroller.setPointerCapture(e.pointerId);
+            });
+            scroller.addEventListener('pointermove', function(e){
+                if (!dragging) return;
+                scroller.scrollLeft = startLeft - (e.clientX - startX);
+            });
+            scroller.addEventListener('pointerup', function(){ dragging = false; });
+            scroller.addEventListener('pointercancel', function(){ dragging = false; });
+            requestAnimationFrame(sync);
+        }
+
+        function updateScrollEdges(wrap, scroller){
+            if (!wrap || !scroller) return;
+            var canScroll = scroller.scrollWidth - scroller.clientWidth > 4;
+            var atStart = true;
+            var atEnd = true;
+            var first = scroller.firstElementChild;
+            var last = scroller.lastElementChild;
+            if (first && last && canScroll) {
+                var box = scroller.getBoundingClientRect();
+                var firstRect = first.getBoundingClientRect();
+                var lastRect = last.getBoundingClientRect();
+                var rtl = @json($isRtl);
+                atStart = rtl
+                    ? firstRect.right >= box.right - 10
+                    : firstRect.left <= box.left + 10;
+                atEnd = rtl
+                    ? lastRect.left <= box.left + 10
+                    : lastRect.right >= box.right - 10;
+            }
+            wrap.classList.toggle('has-start', canScroll && !atStart);
+            wrap.classList.toggle('has-end', canScroll && !atEnd);
+            var prev = wrap.querySelector('[data-ft-scroll="-1"]');
+            var next = wrap.querySelector('[data-ft-scroll="1"]');
+            if (prev) prev.disabled = !canScroll || atStart;
+            if (next) next.disabled = !canScroll || atEnd;
         }
 
         function selectDate(d){
@@ -1320,31 +1112,36 @@
             selectedStart = null;
             document.getElementById('ft-starts-at').value = '';
             document.getElementById('ft-submit').disabled = true;
+            var activeBtn = null;
             document.querySelectorAll('#ft-dates button').forEach(function(b){
                 var on = b.dataset.date === d;
-                b.classList.toggle('bg-acad-yellow', on);
-                b.classList.toggle('text-acad-blue', on);
-                b.classList.toggle('border-acad-yellow', on);
+                b.classList.toggle('is-active', on);
+                b.setAttribute('aria-selected', on ? 'true' : 'false');
+                if (on) activeBtn = b;
             });
+            if (activeBtn && typeof activeBtn.scrollIntoView === 'function') {
+                activeBtn.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
+            }
+            var scroller = document.getElementById('ft-dates');
+            var wrap = scroller ? scroller.closest('[data-ft-scroll-wrap]') : null;
+            if (wrap) updateScrollEdges(wrap, scroller);
             var times = slotsByDate[d] || [];
-            var wrap = document.getElementById('ft-times');
-            wrap.innerHTML = '';
+            var wrapTimes = document.getElementById('ft-times');
+            wrapTimes.innerHTML = '';
             document.getElementById('ft-no-times').classList.toggle('hidden', times.length > 0);
             times.forEach(function(slot){
                 var b = document.createElement('button');
                 b.type = 'button';
-                b.className = 'px-3 py-2 rounded-xl text-sm font-bold border border-white/15 bg-white/5 hover:border-acad-yellow/70 transition';
+                b.className = 'ft-chip';
                 b.textContent = slot.time;
                 b.addEventListener('click', function(){
                     selectedStart = slot.starts_at;
                     document.getElementById('ft-starts-at').value = slot.starts_at;
                     document.getElementById('ft-submit').disabled = false;
-                    wrap.querySelectorAll('button').forEach(function(x){
-                        x.classList.remove('bg-acad-yellow', 'text-acad-navy', 'border-acad-yellow');
-                    });
-                    b.classList.add('bg-acad-yellow', 'text-acad-navy', 'border-acad-yellow');
+                    wrapTimes.querySelectorAll('button').forEach(function(x){ x.classList.remove('is-active'); });
+                    b.classList.add('is-active');
                 });
-                wrap.appendChild(b);
+                wrapTimes.appendChild(b);
             });
         }
 
@@ -1403,6 +1200,71 @@
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
     else boot();
+})();
+</script>
+
+<script>
+(function () {
+  var deals = [
+    { id: "flash-deal-1", hoursOffset: 14 },
+    { id: "flash-deal-2", hoursOffset: 9 },
+  ];
+  deals.forEach(function (deal) {
+    var card = document.getElementById(deal.id);
+    if (!card) return;
+    var endsAt = Date.now() + deal.hoursOffset * 60 * 60 * 1000;
+    card.setAttribute("data-ends-at", new Date(endsAt).toISOString());
+    var hoursEl = document.getElementById(deal.id + "-hours");
+    var minsEl = document.getElementById(deal.id + "-mins");
+    var secsEl = document.getElementById(deal.id + "-secs");
+    function tick() {
+      var diff = Math.max(0, endsAt - Date.now());
+      var hours = Math.floor(diff / (1000 * 60 * 60));
+      var mins = Math.floor((diff / (1000 * 60)) % 60);
+      var secs = Math.floor((diff / 1000) % 60);
+      if (hoursEl) hoursEl.textContent = String(hours).padStart(2, "0");
+      if (minsEl) minsEl.textContent = String(mins).padStart(2, "0");
+      if (secsEl) secsEl.textContent = String(secs).padStart(2, "0");
+    }
+    tick();
+    setInterval(tick, 1000);
+  });
+
+  document.querySelectorAll(".faq-trigger").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var item = btn.closest(".faq-item");
+      var panel = item ? item.querySelector(".faq-panel") : null;
+      var icon = btn.querySelector(".faq-icon");
+      var isOpen = btn.getAttribute("aria-expanded") === "true";
+      document.querySelectorAll(".faq-trigger").forEach(function (other) {
+        if (other === btn) return;
+        other.setAttribute("aria-expanded", "false");
+        var otherPanel = other.closest(".faq-item").querySelector(".faq-panel");
+        var otherIcon = other.querySelector(".faq-icon");
+        if (otherPanel) otherPanel.classList.add("hidden");
+        if (otherIcon) otherIcon.classList.remove("rotate-180");
+      });
+      btn.setAttribute("aria-expanded", isOpen ? "false" : "true");
+      if (panel) panel.classList.toggle("hidden", isOpen);
+      if (icon) icon.classList.toggle("rotate-180", !isOpen);
+    });
+  });
+
+  var form = document.getElementById("newsletter-form");
+  var success = document.getElementById("newsletter-success");
+  if (form && success) {
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      var email = document.getElementById("newsletter-email");
+      if (!email || !email.value.trim()) return;
+      success.classList.remove("hidden");
+      var btn = form.querySelector("button[type='submit']");
+      if (btn) btn.disabled = true;
+      setTimeout(function () {
+        window.location.href = form.getAttribute("action") || "/register";
+      }, 700);
+    });
+  }
 })();
 </script>
 </body>

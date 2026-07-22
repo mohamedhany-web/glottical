@@ -81,45 +81,14 @@ class LearningPathController extends Controller
             ];
         });
         
-        // جلب الكورسات المميزة للعرض
         $featuredCourses = AdvancedCourse::where('is_active', true)
             ->where('is_featured', true)
-            ->with(['academicSubject', 'academicYear'])
+            ->with(['academicSubject', 'academicYear', 'instructor:id,name', 'courseCategory:id,name'])
             ->withCount('lessons')
-            ->limit(6)
+            ->limit(8)
             ->get();
-        
-        // تحضير بيانات المسارات للبحث (Alpine.js)
-        $pathsForSearch = $learningPaths->map(function($path) {
-            return [
-                'id' => $path->id,
-                'name' => $path->name ?? '',
-                'description' => $path->description ?? '',
-                'slug' => $path->slug ?? '',
-                'price' => (float)($path->price ?? 0),
-                'original_price' => $path->original_price ? (float)$path->original_price : null,
-                'courses_count' => (int)($path->courses_count ?? 0),
-                'is_featured' => (bool)($path->is_featured ?? false),
-                'is_popular' => (bool)($path->is_popular ?? false),
-                'thumbnail' => $path->thumbnail ?? null,
-                'features' => $path->features ?? [],
-                'icon' => $path->icon ?? null,
-                'color' => $path->color ?? null,
-                'code' => $path->code ?? ''
-            ];
-        })->values()->all();
-        
-        // Debug: Log المسارات للتأكد من وجودها
-        \Log::info('Academic Years Count: ' . $academicYears->count());
-        \Log::info('Learning Paths Count: ' . $learningPaths->count());
-        \Log::info('Paths For Search Count: ' . count($pathsForSearch));
-        if ($learningPaths->count() > 0) {
-            \Log::info('First Path: ' . json_encode($pathsForSearch[0] ?? []));
-        }
-        
-        // إضافة debugging في الـ view أيضاً
-        return view('public.learning-paths', compact('learningPaths', 'featuredCourses', 'pathsForSearch'))
-            ->with('debug_count', $learningPaths->count());
+
+        return view('public.learning-paths', compact('learningPaths', 'featuredCourses'));
     }
 
     /**

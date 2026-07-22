@@ -117,7 +117,7 @@ RedirectMatch 404 ^/(app|bootstrap|config|database|resources|routes|tests|vendor
     
     # Documents
     ExpiresByType application/pdf "access plus 1 month"
-    ExpiresByType text/html "access plus 1 hour"
+    ExpiresByType text/html "access plus 0 seconds"
     
     # Fonts - محسّن
     ExpiresByType font/ttf "access plus 1 year"
@@ -127,8 +127,19 @@ RedirectMatch 404 ^/(app|bootstrap|config|database|resources|routes|tests|vendor
     ExpiresByType application/font-woff "access plus 1 year"
     
     # Cache-Control Headers
-    <FilesMatch "\.(ico|jpg|jpeg|png|gif|webp|svg|css|js|woff|woff2|ttf|otf)$">
+    # الصور/الخطوط: كاش طويل
+    <FilesMatch "\.(ico|jpg|jpeg|png|gif|webp|svg|woff|woff2|ttf|otf)$">
         Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    # CSS/JS: كاش طويل مع الاعتماد على ?v=filemtime من versioned_asset()
+    <FilesMatch "\.(css|js)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    # HTML ثابت: لا كاش
+    <FilesMatch "\.(html|htm)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
     </FilesMatch>
 </IfModule>
 

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>العروض | أثير</title>
+  <meta name="description" content="عروض أثير الحصرية — خصومات واضحة وعروض برق بحدود زمنية ومخزون شفاف." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/atheer.css" />
+</head>
+<body class="font-sans antialiased">
+  <div data-site-header></div>
+
+  <main class="page-enter">
+    <section class="container-wide py-10 md:py-14">
+      <nav class="mb-6" aria-label="مسار التنقل">
+        <ol class="flex flex-wrap items-center gap-2 text-sm text-muted">
+          <li><a href="index.html" class="transition hover:text-ink">الرئيسية</a></li>
+          <li aria-hidden="true" class="text-line">/</li>
+          <li class="font-medium text-ink" aria-current="page">العروض</li>
+        </ol>
+      </nav>
+      <div class="max-w-2xl space-y-3">
+        <p class="text-sm font-medium text-accent">لفترة محدودة</p>
+        <h1 class="text-balance text-3xl font-semibold tracking-tight text-ink md:text-4xl">العروض</h1>
+        <p class="text-base leading-8 text-muted">خصومات واضحة وعروض برق بحدود زمنية ومخزون شفاف — دون ضوضاء بصرية.</p>
+      </div>
+    </section>
+
+    <section class="container-wide pb-12 md:pb-16">
+      <div class="relative overflow-hidden rounded-3xl bg-ink px-6 py-12 text-white shadow-soft md:px-14 md:py-16">
+        <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=2400&q=80" alt="" class="absolute inset-0 h-full w-full object-cover opacity-30" aria-hidden="true" />
+        <div class="absolute inset-0 bg-gradient-to-l from-ink via-ink/80 to-ink/50"></div>
+        <div class="relative max-w-xl space-y-4">
+          <span class="inline-flex items-center rounded-lg bg-[#fef3f2] px-3 py-1.5 text-sm font-medium text-danger">تخفيضات تصل إلى 30%</span>
+          <h2 class="text-balance text-2xl font-semibold md:text-4xl">أسبوع العروض الفاخرة</h2>
+          <p class="text-base leading-8 text-white/75">خصومات مختارة على منتجات أثير الأكثر طلباً — مع شحن مجاني للطلبات فوق ٥٠٠ ر.س حتى نهاية الأسبوع.</p>
+          <a href="product.html" class="inline-flex h-12 items-center rounded-xl bg-accent px-7 font-medium text-white transition hover:bg-[#0d4f4a]">تسوّق العروض</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="container-wide pb-16 md:pb-20">
+      <div class="mb-8 max-w-2xl space-y-3 md:mb-10">
+        <p class="text-sm font-medium text-accent">عروض برق</p>
+        <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">لفترة محدودة — مخزون ووقت واضحان</h2>
+        <p class="text-base leading-8 text-muted">عداد ومخزون ظاهران يقلّلان التردد ويزيدان وضوح القرار.</p>
+      </div>
+      <div class="grid gap-5 lg:grid-cols-2">
+        <article id="flash-deal-1" data-ends-at="" class="grid overflow-hidden rounded-2xl bg-surface shadow-soft md:grid-cols-[1.1fr_1fr]">
+          <a href="product.html" class="relative min-h-64 md:min-h-full">
+            <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=80" alt="حقيبة عطلة نهاية الأسبوع" class="absolute inset-0 h-full w-full object-cover" />
+          </a>
+          <div class="flex flex-col justify-center gap-4 p-6 md:p-8">
+            <span class="inline-flex w-fit items-center rounded-lg bg-[#fef3f2] px-2.5 py-1 text-xs font-medium text-danger">عرض برق · خصم 17%</span>
+            <h3 class="text-xl font-semibold text-ink md:text-2xl"><a href="product.html" class="hover:text-accent">حقيبة عطلة نهاية الأسبوع</a></h3>
+            <p class="text-base font-semibold text-ink">٧٦٠ ر.س <span class="text-sm font-normal text-muted line-through">٩٢٠ ر.س</span></p>
+            <div class="flex gap-2" aria-label="الوقت المتبقي للعرض">
+              <div class="min-w-16 rounded-xl bg-canvas px-3 py-2 text-center"><p id="flash-deal-1-hours" class="text-lg font-semibold tabular-nums text-ink">00</p><p class="text-[11px] text-muted">ساعة</p></div>
+              <div class="min-w-16 rounded-xl bg-canvas px-3 py-2 text-center"><p id="flash-deal-1-mins" class="text-lg font-semibold tabular-nums text-ink">00</p><p class="text-[11px] text-muted">دقيقة</p></div>
+              <div class="min-w-16 rounded-xl bg-canvas px-3 py-2 text-center"><p id="flash-deal-1-secs" class="text-lg font-semibold tabular-nums text-ink">00</p><p class="text-[11px] text-muted">ثانية</p></div>
+            </div>
+            <p class="text-sm text-muted">تبقّى <span class="font-semibold text-ink">8</span> قطعة فقط</p>
+            <button type="button" data-add-to-cart data-id="p7" data-name="حقيبة عطلة نهاية الأسبوع" data-brand="مسار" data-price="760" data-image="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=80" data-label="أضف للسلة" class="inline-flex h-12 w-fit items-center rounded-xl bg-accent px-6 font-medium text-white transition hover:bg-[#0d4f4a]">أضف للسلة</button>
+          </div>
+        </article>
+        <article id="flash-deal-2" data-ends-at="" class="grid overflow-hidden rounded-2xl bg-surface shadow-soft md:grid-cols-[1.1fr_1fr]">
+          <a href="product.html" class="relative min-h-64 md:min-h-full">
+            <img src="https://images.unsplash.com/photo-1578645510447-e20b74926a1a?auto=format&fit=crop&w=900&q=80" alt="غلاية صبّ ذكية بتحكم حراري" class="absolute inset-0 h-full w-full object-cover" />
+          </a>
+          <div class="flex flex-col justify-center gap-4 p-6 md:p-8">
+            <span class="inline-flex w-fit items-center rounded-lg bg-[#fef3f2] px-2.5 py-1 text-xs font-medium text-danger">عرض برق · خصم 20%</span>
+            <h3 class="text-xl font-semibold text-ink md:text-2xl"><a href="product.html" class="hover:text-accent">غلاية صبّ ذكية بتحكم حراري</a></h3>
+            <p class="text-base font-semibold text-ink">٥١٠ ر.س <span class="text-sm font-normal text-muted line-through">٦٤٠ ر.س</span></p>
+            <div class="flex gap-2" aria-label="الوقت المتبقي للعرض">
+              <div class="min-w-16 rounded-xl bg-canvas px-3 py-2 text-center"><p id="flash-deal-2-hours" class="text-lg font-semibold tabular-nums text-ink">00</p><p class="text-[11px] text-muted">ساعة</p></div>
+              <div class="min-w-16 rounded-xl bg-canvas px-3 py-2 text-center"><p id="flash-deal-2-mins" class="text-lg font-semibold tabular-nums text-ink">00</p><p class="text-[11px] text-muted">دقيقة</p></div>
+              <div class="min-w-16 rounded-xl bg-canvas px-3 py-2 text-center"><p id="flash-deal-2-secs" class="text-lg font-semibold tabular-nums text-ink">00</p><p class="text-[11px] text-muted">ثانية</p></div>
+            </div>
+            <p class="text-sm text-muted">تبقّى <span class="font-semibold text-ink">14</span> قطعة فقط</p>
+            <button type="button" data-add-to-cart data-id="p8" data-name="غلاية صبّ ذكية بتحكم حراري" data-brand="نُورتك" data-price="510" data-image="https://images.unsplash.com/photo-1578645510447-e20b74926a1a?auto=format&fit=crop&w=900&q=80" data-label="أضف للسلة" class="inline-flex h-12 w-fit items-center rounded-xl bg-accent px-6 font-medium text-white transition hover:bg-[#0d4f4a]">أضف للسلة</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="bg-surface py-20 md:py-24">
+      <div class="container-wide">
+        <div class="mb-8 max-w-2xl space-y-3 md:mb-10">
+          <p class="text-sm font-medium text-accent">خصومات إضافية</p>
+          <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">منتجات بأسعار مخفّضة</h2>
+          <p class="text-base leading-8 text-muted">عروض مختارة بخصومات واضحة — جاهزة للإضافة إلى سلتك.</p>
+        </div>
+        <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
+          <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+            <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
+              <a href="product.html" class="absolute inset-0"><img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=900&q=80" alt="بليزر كتان بهيكل ناعم" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></a>
+              <div class="absolute inset-x-3 top-3"><span class="inline-flex items-center rounded-lg bg-[#f4eadc] px-2.5 py-1 text-xs font-medium text-[#7a5c2e]">خصم 21%</span></div>
+              <div class="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100">
+                <button type="button" data-add-to-cart data-id="p1" data-name="بليزر كتان بهيكل ناعم" data-brand="أوريون" data-price="890" data-image="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=900&q=80" data-label="أضف" class="inline-flex h-10 w-full items-center justify-center rounded-xl bg-accent text-sm font-medium text-white">أضف</button>
+              </div>
+            </div>
+            <div class="flex flex-1 flex-col gap-2 p-4">
+              <p class="text-xs text-muted">أوريون</p>
+              <a href="product.html" class="line-clamp-2 text-sm font-medium leading-6 text-ink transition hover:text-accent">بليزر كتان بهيكل ناعم</a>
+              <p class="text-base font-semibold text-ink">٨٩٠ ر.س <span class="text-sm font-normal text-muted line-through">١٬١٢٠ ر.س</span></p>
+            </div>
+          </article>
+          <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+            <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
+              <a href="product.html" class="absolute inset-0"><img src="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=900&q=80" alt="سماعات لاسلكية عازلة للضجيج" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></a>
+              <div class="absolute inset-x-3 top-3"><span class="inline-flex items-center rounded-lg bg-[#f4eadc] px-2.5 py-1 text-xs font-medium text-[#7a5c2e]">خصم 19%</span></div>
+              <div class="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100">
+                <button type="button" data-add-to-cart data-id="p3" data-name="سماعات لاسلكية عازلة للضجيج" data-brand="نُورتك" data-price="649" data-image="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=900&q=80" data-label="أضف" class="inline-flex h-10 w-full items-center justify-center rounded-xl bg-accent text-sm font-medium text-white">أضف</button>
+              </div>
+            </div>
+            <div class="flex flex-1 flex-col gap-2 p-4">
+              <p class="text-xs text-muted">نُورتك</p>
+              <a href="product.html" class="line-clamp-2 text-sm font-medium leading-6 text-ink transition hover:text-accent">سماعات لاسلكية عازلة للضجيج</a>
+              <p class="text-base font-semibold text-ink">٦٤٩ ر.س <span class="text-sm font-normal text-muted line-through">٧٩٩ ر.س</span></p>
+            </div>
+          </article>
+          <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+            <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
+              <a href="product.html" class="absolute inset-0"><img src="https://images.unsplash.com/photo-1620916566940-4f43b1ceb923?auto=format&fit=crop&w=900&q=80" alt="سيروم عناية بالحرير النباتي" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></a>
+              <div class="absolute inset-x-3 top-3"><span class="inline-flex items-center rounded-lg bg-[#f4eadc] px-2.5 py-1 text-xs font-medium text-[#7a5c2e]">خصم 14%</span></div>
+              <div class="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100">
+                <button type="button" data-add-to-cart data-id="p5" data-name="سيروم عناية بالحرير النباتي" data-brand="لُمعة" data-price="275" data-image="https://images.unsplash.com/photo-1620916566940-4f43b1ceb923?auto=format&fit=crop&w=900&q=80" data-label="أضف" class="inline-flex h-10 w-full items-center justify-center rounded-xl bg-accent text-sm font-medium text-white">أضف</button>
+              </div>
+            </div>
+            <div class="flex flex-1 flex-col gap-2 p-4">
+              <p class="text-xs text-muted">لُمعة</p>
+              <a href="product.html" class="line-clamp-2 text-sm font-medium leading-6 text-ink transition hover:text-accent">سيروم عناية بالحرير النباتي</a>
+              <p class="text-base font-semibold text-ink">٢٧٥ ر.س <span class="text-sm font-normal text-muted line-through">٣٢٠ ر.س</span></p>
+            </div>
+          </article>
+          <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+            <div class="relative aspect-[4/5] overflow-hidden bg-canvas-muted">
+              <a href="product.html" class="absolute inset-0"><img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=80" alt="حقيبة عطلة نهاية الأسبوع" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" /></a>
+              <div class="absolute inset-x-3 top-3"><span class="inline-flex items-center rounded-lg bg-[#f4eadc] px-2.5 py-1 text-xs font-medium text-[#7a5c2e]">خصم 17%</span></div>
+              <div class="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100">
+                <button type="button" data-add-to-cart data-id="p7" data-name="حقيبة عطلة نهاية الأسبوع" data-brand="مسار" data-price="760" data-image="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=80" data-label="أضف" class="inline-flex h-10 w-full items-center justify-center rounded-xl bg-accent text-sm font-medium text-white">أضف</button>
+              </div>
+            </div>
+            <div class="flex flex-1 flex-col gap-2 p-4">
+              <p class="text-xs text-muted">مسار</p>
+              <a href="product.html" class="line-clamp-2 text-sm font-medium leading-6 text-ink transition hover:text-accent">حقيبة عطلة نهاية الأسبوع</a>
+              <p class="text-base font-semibold text-ink">٧٦٠ ر.س <span class="text-sm font-normal text-muted line-through">٩٢٠ ر.س</span></p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div data-site-footer></div>
+  <script src="assets/js/storefront.js"></script>
+  <script>
+    (function () {
+      var deals = [
+        { id: "flash-deal-1", hoursOffset: 14 },
+        { id: "flash-deal-2", hoursOffset: 9 },
+      ];
+      deals.forEach(function (deal) {
+        var card = document.getElementById(deal.id);
+        if (!card) return;
+        var endsAt = Date.now() + deal.hoursOffset * 60 * 60 * 1000;
+        card.setAttribute("data-ends-at", new Date(endsAt).toISOString());
+        var hoursEl = document.getElementById(deal.id + "-hours");
+        var minsEl = document.getElementById(deal.id + "-mins");
+        var secsEl = document.getElementById(deal.id + "-secs");
+        function tick() {
+          var diff = Math.max(0, endsAt - Date.now());
+          var hours = Math.floor(diff / (1000 * 60 * 60));
+          var mins = Math.floor((diff / (1000 * 60)) % 60);
+          var secs = Math.floor((diff / 1000) % 60);
+          if (hoursEl) hoursEl.textContent = String(hours).padStart(2, "0");
+          if (minsEl) minsEl.textContent = String(mins).padStart(2, "0");
+          if (secsEl) secsEl.textContent = String(secs).padStart(2, "0");
+        }
+        tick();
+        setInterval(tick, 1000);
+      });
+    })();
+  </script>
+</body>
+</html>

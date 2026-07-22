@@ -198,6 +198,7 @@ return [
     'pricing_footer_contact' => 'تواصل معنا',
     'contact_page_title' => 'تواصل معنا',
     'contact_channels_empty_hint' => 'يمكن ضبط البريد والهاتف من لوحة الإدارة → إعدادات النظام (حقول الفوتر).',
+    'contact_success' => 'تم إرسال رسالتك بنجاح. سنتواصل معك قريباً!',
     'media_page_title' => 'معرض الصور والفيديوهات',
     'testimonials_page_title' => 'آراء العملاء',
     'home_testimonials_heading' => 'آراء وتجارب المتعلمين',

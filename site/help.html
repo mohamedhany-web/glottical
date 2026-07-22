@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مركز المساعدة | أثير</title>
+  <meta name="description" content="مركز مساعدة أثير — إجابات سريعة عن الطلبات، الشحن، الإرجاع، والحساب." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/atheer.css" />
+</head>
+<body class="font-sans antialiased">
+  <div data-site-header></div>
+
+  <main class="page-enter">
+    <section class="container-wide py-10 md:py-14">
+      <nav class="mb-6" aria-label="مسار التنقل">
+        <ol class="flex flex-wrap items-center gap-2 text-sm text-muted">
+          <li><a href="index.html" class="transition hover:text-ink">الرئيسية</a></li>
+          <li aria-hidden="true" class="text-line">/</li>
+          <li class="font-medium text-ink" aria-current="page">مركز المساعدة</li>
+        </ol>
+      </nav>
+      <div class="max-w-2xl space-y-3">
+        <p class="text-sm font-medium text-accent">كيف نساعدك؟</p>
+        <h1 class="text-balance text-3xl font-semibold tracking-tight text-ink md:text-4xl">مركز المساعدة</h1>
+        <p class="text-base leading-8 text-muted">وضوح في الحساب، الشحن، والتتبع، والإرجاع — لتقليل الاحتكاك وزيادة الثقة.</p>
+      </div>
+    </section>
+
+    <section class="container-wide pb-8">
+      <div class="relative mx-auto max-w-2xl">
+        <label for="help-search" class="sr-only">ابحث في مركز المساعدة</label>
+        <input id="help-search" type="search" placeholder="ابحث عن موضوع… مثال: شحن، إرجاع، تتبع" class="h-14 w-full rounded-2xl border border-line bg-surface pl-14 pr-5 text-sm shadow-soft" />
+        <svg class="pointer-events-none absolute right-5 top-1/2 size-5 -translate-y-1/2 text-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      </div>
+    </section>
+
+    <section class="container-wide pb-20 md:pb-24">
+      <div class="mx-auto max-w-3xl space-y-8">
+        <div>
+          <h2 class="mb-4 text-lg font-semibold text-ink">الطلبات والحساب</h2>
+          <div class="divide-y divide-line rounded-2xl border border-line bg-surface">
+            <div class="faq-item">
+              <button type="button" class="faq-trigger flex w-full items-center justify-between gap-4 px-5 py-5 text-right" aria-expanded="true">
+                <span class="text-sm font-semibold text-ink md:text-base">هل يمكن الشراء دون إنشاء حساب؟</span>
+                <svg class="faq-icon size-5 shrink-0 rotate-180 text-muted transition" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="faq-panel px-5 pb-5 text-sm leading-8 text-muted">نعم. نوفر إتمام شراء كزائر، مع خيار حفظ الطلب في حسابك لاحقاً بخطوة واحدة عبر البريد الإلكتروني.</div>
+            </div>
+            <div class="faq-item">
+              <button type="button" class="faq-trigger flex w-full items-center justify-between gap-4 px-5 py-5 text-right" aria-expanded="false">
+                <span class="text-sm font-semibold text-ink md:text-base">كيف أتابع طلبي؟</span>
+                <svg class="faq-icon size-5 shrink-0 text-muted transition" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="faq-panel hidden px-5 pb-5 text-sm leading-8 text-muted">من <a href="account.html" class="font-medium text-accent hover:underline">حسابك</a> أو عبر رابط التتبع في رسالة التأكيد، مع تحديثات عند كل مرحلة شحن.</div>
+            </div>
+            <div class="faq-item">
+              <button type="button" class="faq-trigger flex w-full items-center justify-between gap-4 px-5 py-5 text-right" aria-expanded="false">
+                <span class="text-sm font-semibold text-ink md:text-base">هل يمكن تعديل الطلب بعد الإرسال؟</span>
+                <svg class="faq-icon size-5 shrink-0 text-muted transition" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="faq-panel hidden px-5 pb-5 text-sm leading-8 text-muted">خلال ساعتين من تأكيد الطلب يمكنك طلب تعديل العنوان أو إلغاء المنتجات عبر الدعم. بعد بدء التجهيز، يُطبَّق سياسة الإرجاع.</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 class="mb-4 text-lg font-semibold text-ink">الشحن والتوصيل</h2>
+          <div class="divide-y divide-line rounded-2xl border border-line bg-surface">
+            <div class="faq-item">
+              <button type="button" class="faq-trigger flex w-full items-center justify-between gap-4 px-5 py-5 text-right" aria-expanded="false">
+                <span class="text-sm font-semibold text-ink md:text-base">كم تستغرق مدة التوصيل؟</span>
+                <svg class="faq-icon size-5 shrink-0 text-muted transition" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="faq-panel hidden px-5 pb-5 text-sm leading-8 text-muted">داخل المدن الرئيسية عادة من يوم إلى ثلاثة أيام عمل حسب المستودع ومنطقة الشحن. المناطق البعيدة قد تستغرق حتى خمسة أيام.</div>
+            </div>
+            <div class="faq-item">
+              <button type="button" class="faq-trigger flex w-full items-center justify-between gap-4 px-5 py-5 text-right" aria-expanded="false">
+                <span class="text-sm font-semibold text-ink md:text-base">ما تكلفة الشحن؟</span>
+                <svg class="faq-icon size-5 shrink-0 text-muted transition" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="faq-panel hidden px-5 pb-5 text-sm leading-8 text-muted">الشحن القياسي ٢٥ ر.س. الطلبات فوق ٥٠٠ ر.س تستفيد من شحن مجاني داخل المملكة.</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 class="mb-4 text-lg font-semibold text-ink">الإرجاع والاستبدال</h2>
+          <div class="divide-y divide-line rounded-2xl border border-line bg-surface">
+            <div class="faq-item">
+              <button type="button" class="faq-trigger flex w-full items-center justify-between gap-4 px-5 py-5 text-right" aria-expanded="false">
+                <span class="text-sm font-semibold text-ink md:text-base">ما سياسة الإرجاع؟</span>
+                <svg class="faq-icon size-5 shrink-0 text-muted transition" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="faq-panel hidden px-5 pb-5 text-sm leading-8 text-muted">معظم المنتجات قابلة للإرجاع خلال 14 يوماً بشرط الحالة الأصلية والتغليف. بعض فئات العناية والإلكترونيات لها شروط خاصة.</div>
+            </div>
+            <div class="faq-item">
+              <button type="button" class="faq-trigger flex w-full items-center justify-between gap-4 px-5 py-5 text-right" aria-expanded="false">
+                <span class="text-sm font-semibold text-ink md:text-base">متى يُسترد المبلغ؟</span>
+                <svg class="faq-icon size-5 shrink-0 text-muted transition" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="faq-panel hidden px-5 pb-5 text-sm leading-8 text-muted">بعد استلام وفحص المرتجع، يُعاد المبلغ خلال ٥–١٠ أيام عمل إلى وسيلة الدفع الأصلية.</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 class="mb-4 text-lg font-semibold text-ink">الدفع والأمان</h2>
+          <div class="divide-y divide-line rounded-2xl border border-line bg-surface">
+            <div class="faq-item">
+              <button type="button" class="faq-trigger flex w-full items-center justify-between gap-4 px-5 py-5 text-right" aria-expanded="false">
+                <span class="text-sm font-semibold text-ink md:text-base">ما طرق الدفع المتاحة؟</span>
+                <svg class="faq-icon size-5 shrink-0 text-muted transition" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="faq-panel hidden px-5 pb-5 text-sm leading-8 text-muted">بطاقات مدى وفيزا وماستركارد، Apple Pay، والدفع عند الاستلام في المناطق المدعومة.</div>
+            </div>
+            <div class="faq-item">
+              <button type="button" class="faq-trigger flex w-full items-center justify-between gap-4 px-5 py-5 text-right" aria-expanded="false">
+                <span class="text-sm font-semibold text-ink md:text-base">هل بياناتي آمنة؟</span>
+                <svg class="faq-icon size-5 shrink-0 text-muted transition" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="faq-panel hidden px-5 pb-5 text-sm leading-8 text-muted">نعم. جميع المعاملات مشفّرة عبر بوابات دفع معتمدة، ولا نخزّن بيانات البطاقة الكاملة على خوادمنا.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mx-auto mt-12 max-w-2xl rounded-2xl border border-line bg-surface px-6 py-8 text-center shadow-soft">
+        <p class="mb-2 text-lg font-semibold text-ink">لم تجد إجابتك؟</p>
+        <p class="mb-4 text-sm leading-7 text-muted">فريق دعم أثير متاح من الأحد إلى الخميس، ٩ صباحاً — ٦ مساءً.</p>
+        <a href="mailto:support@atheer.sa" class="inline-flex h-11 items-center rounded-xl bg-accent px-6 text-sm font-medium text-white transition hover:bg-[#0d4f4a]">تواصل معنا</a>
+      </div>
+    </section>
+  </main>
+
+  <div data-site-footer></div>
+  <script src="assets/js/storefront.js"></script>
+  <script>
+    document.querySelectorAll(".faq-trigger").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var item = btn.closest(".faq-item");
+        var panel = item ? item.querySelector(".faq-panel") : null;
+        var icon = btn.querySelector(".faq-icon");
+        var isOpen = btn.getAttribute("aria-expanded") === "true";
+        btn.setAttribute("aria-expanded", isOpen ? "false" : "true");
+        if (panel) panel.classList.toggle("hidden", isOpen);
+        if (icon) icon.classList.toggle("rotate-180", !isOpen);
+      });
+    });
+  </script>
+</body>
+</html>

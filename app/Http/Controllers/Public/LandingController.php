@@ -37,7 +37,7 @@ class LandingController extends Controller
         }
 
         $locale = app()->getLocale();
-        $payload = Cache::remember('landing.home.v5.'.$locale, 180, function () {
+        $buildHomePayload = function () {
             $landingPaths = $this->getPublicLearningPaths(8);
 
             $featuresController = new \App\Http\Controllers\Admin\TeacherFeaturesController();
@@ -107,7 +107,12 @@ class LandingController extends Controller
                 'homeStats',
                 'heroSlides'
             );
-        });
+        };
+
+        // في وضع التطوير: بدون كاش حتى تظهر تحديثات التصميم فوراً
+        $payload = config('app.debug')
+            ? $buildHomePayload()
+            : Cache::remember('landing.home.v8.'.$locale, 180, $buildHomePayload);
 
         return view('welcome', array_merge($payload, compact('popupAd')));
     }

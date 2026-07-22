@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\AdvancedCourse;
 use App\Models\CourseCategory;
-use App\Models\Package;
 use App\Services\CourseSubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -18,6 +17,8 @@ class CoursesController extends Controller
         if (! in_array($delivery, ['group', 'one_to_one'], true)) {
             $delivery = null;
         }
+
+        $searchQuery = trim((string) $request->query('q', ''));
 
         $coursesQuery = AdvancedCourse::query()->where('is_active', true);
 
@@ -40,27 +41,28 @@ class CoursesController extends Controller
             $coursesQuery->where('course_category_id', $categoryId);
         }
 
-        $coursesCollection = $coursesQuery
+        if ($searchQuery !== '') {
+            $coursesQuery->where(function ($q) use ($searchQuery) {
+                $q->where('title', 'like', '%'.$searchQuery.'%')
+                    ->orWhere('description', 'like', '%'.$searchQuery.'%');
+            });
+        }
+
+        $sort = (string) $request->query('sort', '');
+        if ($sort === 'newest') {
+            $coursesQuery->orderByDesc('created_at');
+        } elseif ($sort === 'featured') {
+            $coursesQuery->orderByDesc('is_featured')->orderByDesc('created_at');
+        } else {
+            $coursesQuery->orderByDesc('is_featured')->orderByDesc('created_at');
+        }
+
+        $courseModels = $coursesQuery
             ->with(['academicSubject', 'academicYear', 'instructor:id,name', 'courseCategory'])
-            ->withCount('lectures')
-            ->orderByDesc('is_featured')
-            ->orderByDesc('created_at')
+            ->withCount(['lectures', 'lessons'])
             ->get();
 
         $courseFilterCategories = CourseCategory::active()->ordered()->get(['id', 'name']);
-
-        $courses = $coursesCollection
-            ->map(fn (AdvancedCourse $course) => $course->toPublicCatalogArray())
-            ->values()
-            ->toArray();
-
-        $packages = Package::active()
-            ->with(['courses' => fn ($q) => $q->where('is_active', true)])
-            ->withCount('courses')
-            ->orderByDesc('is_featured')
-            ->orderByDesc('is_popular')
-            ->orderBy('order')
-            ->get();
 
         $oneToOneCount = AdvancedCourse::query()
             ->where('is_active', true)
@@ -68,12 +70,13 @@ class CoursesController extends Controller
             ->count();
 
         return view('courses', compact(
-            'courses',
-            'packages',
+            'courseModels',
             'courseFilterCategories',
             'categoryId',
             'delivery',
-            'oneToOneCount'
+            'oneToOneCount',
+            'searchQuery',
+            'sort'
         ));
     }
 }

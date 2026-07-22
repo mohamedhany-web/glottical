@@ -38,6 +38,6 @@ class ContactController extends Controller
         }
 
         return redirect()->route('public.contact')
-            ->with('success', 'تم إرسال رسالتك بنجاح. سنتواصل معك قريباً!');
+            ->with('success', __('public.contact_success'));
     }
 }

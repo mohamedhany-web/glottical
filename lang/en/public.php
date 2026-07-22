@@ -198,6 +198,7 @@ return [
     'pricing_footer_contact' => 'Contact us',
     'contact_page_title' => 'Contact Us',
     'contact_channels_empty_hint' => 'Add the public email and phone in Admin → System settings (footer fields).',
+    'contact_success' => 'Your message was sent successfully. We will get back to you soon!',
     'media_page_title' => 'Media Gallery',
     'testimonials_page_title' => 'Testimonials',
     'home_testimonials_heading' => 'Learner voices and experiences',

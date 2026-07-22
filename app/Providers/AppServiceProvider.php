@@ -21,8 +21,39 @@ class AppServiceProvider extends ServiceProvider
     /** مسار صورة خلفية صفحات تسجيل الدخول/إنشاء الحساب في التخزين (نفس أسلوب مسارات التعلم) */
     public const AUTH_BACKGROUND_STORAGE_PATH = 'auth-pages/brainstorm-meeting.jpg';
 
+    /** نسخة خفيفة للخلفية داخل public (تحميل سريع من نفس النطاق) */
+    public const AUTH_BACKGROUND_PUBLIC_RELATIVE = 'images/auth-hero.jpg';
+
     /** مسار لوجو المنصة في التخزين (يُعرض من /storage/ مثل الكورسات والصور) */
     public const SITE_LOGO_STORAGE_PATH = 'site/logo.png';
+
+    /**
+     * رابط خلفية صفحات المصادقة: يفضّل ملفاً محلياً خفيفاً ثم بروكسي ثابت.
+     */
+    public static function authBackgroundUrl(): string
+    {
+        foreach ([self::AUTH_BACKGROUND_PUBLIC_RELATIVE, 'images/brainstorm-meeting.jpg'] as $relative) {
+            $full = public_path($relative);
+            if (is_file($full) && is_readable($full)) {
+                $url = asset($relative);
+
+                return $url.(str_contains($url, '?') ? '&' : '?').'v='.filemtime($full);
+            }
+        }
+
+        $storagePath = self::AUTH_BACKGROUND_STORAGE_PATH;
+        if (Storage::disk('public')->exists($storagePath) || Storage::disk('public')->exists('auth-pages/auth-hero.jpg')) {
+            $path = Storage::disk('public')->exists('auth-pages/auth-hero.jpg')
+                ? 'auth-pages/auth-hero.jpg'
+                : $storagePath;
+            $stable = storage_public_url_stable($path);
+            if (is_string($stable) && $stable !== '') {
+                return $stable;
+            }
+        }
+
+        return asset(self::AUTH_BACKGROUND_PUBLIC_RELATIVE);
+    }
 
     /**
      * Register any application services.
@@ -70,8 +101,8 @@ class AppServiceProvider extends ServiceProvider
         // ضمان وجود صورة الخلفية في التخزين (نفس مسار صور المسارات) لتعمل على السيرفر عبر /storage/
         $authStoragePath = self::AUTH_BACKGROUND_STORAGE_PATH;
         $disk = Storage::disk('public');
-        if (! $disk->exists($authStoragePath)) {
-            $sources = ['images/brainstorm-meeting.jpg', 'images/brainstorm-meeting.png'];
+        if (! $disk->exists($authStoragePath) && ! $disk->exists('auth-pages/auth-hero.jpg')) {
+            $sources = [self::AUTH_BACKGROUND_PUBLIC_RELATIVE, 'images/brainstorm-meeting.jpg', 'images/brainstorm-meeting.png'];
             foreach ($sources as $source) {
                 $publicPath = public_path($source);
                 if (File::isFile($publicPath)) {
@@ -85,15 +116,22 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
-        // صورة خلفية صفحات تسجيل الدخول وإنشاء الحساب: دائماً من التخزين (نفس عرض صور المسارات)
-        View::composer(['auth.login', 'auth.register', 'auth.forgot-password', 'auth.two-factor.challenge'], function ($view) {
-            $path = self::AUTH_BACKGROUND_STORAGE_PATH;
-            if (Storage::disk('public')->exists($path)) {
-                $view->with('authBackgroundUrl', storage_public_url($path));
-            } else {
-                $view->with('authBackgroundUrl', asset('images/brainstorm-meeting.jpg'));
+        // صورة خلفية صفحات تسجيل الدخول وإنشاء الحساب: محلي خفيف أولاً (نفس نطاق الطلب)
+        View::composer(['auth.login', 'auth.register', 'auth.forgot-password', 'auth.two-factor.challenge', 'layouts.auth-atheer'], function ($view) {
+            $view->with('authBackgroundUrl', self::authBackgroundUrl());
+            $logo = AdminPanelBranding::logoPublicUrl();
+            // تجنّب روابط R2 الموقّعة الثقيلة على صفحات المصادقة إن وُجد بروكسي ثابت
+            if (is_string($logo) && str_contains($logo, 'cloudflarestorage.com')) {
+                $path = \App\Models\Setting::getValue(AdminPanelBranding::SETTING_KEY)
+                    ?: self::SITE_LOGO_STORAGE_PATH;
+                if (is_string($path) && $path !== '') {
+                    $stable = storage_public_url_stable($path);
+                    if (is_string($stable) && $stable !== '') {
+                        $logo = $stable;
+                    }
+                }
             }
-            $view->with('adminPanelLogoUrl', AdminPanelBranding::logoPublicUrl());
+            $view->with('adminPanelLogoUrl', $logo);
         });
 
         // لوجو المنصة: نسخ إلى التخزين إن لم يكن موجوداً (نفس أسلوب صورة تسجيل الدخول)

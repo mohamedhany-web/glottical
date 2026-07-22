@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>إتمام الشراء | أثير</title>
+  <meta name="description" content="أكمل طلبك من أثير — عنوان، توصيل، دفع، وتأكيد في خطوات واضحة وآمنة." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/atheer.css" />
+</head>
+<body class="font-sans antialiased">
+  <div data-site-header></div>
+
+  <main class="page-enter pb-20">
+    <nav class="container-wide pt-6" aria-label="مسار التنقل">
+      <ol class="flex flex-wrap items-center gap-2 text-sm text-muted">
+        <li><a href="index.html" class="transition hover:text-ink">الرئيسية</a></li>
+        <li aria-hidden="true" class="text-line">/</li>
+        <li><a href="cart.html" class="transition hover:text-ink">السلة</a></li>
+        <li aria-hidden="true" class="text-line">/</li>
+        <li class="font-medium text-ink" aria-current="page">إتمام الشراء</li>
+      </ol>
+    </nav>
+
+    <div class="container-wide py-8 md:py-12">
+      <div class="mb-8 space-y-4 md:mb-10">
+        <h1 class="text-3xl font-semibold tracking-tight text-ink md:text-4xl">إتمام الشراء</h1>
+        <p class="max-w-2xl text-base leading-8 text-muted">خطوات واضحة: العنوان، التوصيل، الدفع، ثم التأكيد — كلها في تجربة واحدة متصلة.</p>
+      </div>
+
+      <!-- Step progress -->
+      <nav class="mb-10 overflow-x-auto scrollbar-none" aria-label="خطوات إتمام الشراء">
+        <ol class="flex min-w-max items-center gap-2 md:gap-3">
+          <li class="step-pill flex items-center gap-2 rounded-full border border-accent bg-accent px-4 py-2.5 text-sm font-medium text-white shadow-soft" data-step="1">
+            <span class="flex size-6 items-center justify-center rounded-full bg-white/20 text-xs">1</span>
+            عنوان
+          </li>
+          <li class="hidden text-muted md:inline" aria-hidden="true">←</li>
+          <li class="step-pill flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-2.5 text-sm font-medium text-muted shadow-soft" data-step="2">
+            <span class="flex size-6 items-center justify-center rounded-full bg-canvas text-xs">2</span>
+            توصيل
+          </li>
+          <li class="hidden text-muted md:inline" aria-hidden="true">←</li>
+          <li class="step-pill flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-2.5 text-sm font-medium text-muted shadow-soft" data-step="3">
+            <span class="flex size-6 items-center justify-center rounded-full bg-canvas text-xs">3</span>
+            دفع
+          </li>
+          <li class="hidden text-muted md:inline" aria-hidden="true">←</li>
+          <li class="step-pill flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-2.5 text-sm font-medium text-muted shadow-soft" data-step="4">
+            <span class="flex size-6 items-center justify-center rounded-full bg-canvas text-xs">4</span>
+            تأكيد
+          </li>
+        </ol>
+      </nav>
+
+      <form id="checkout-form" class="grid gap-8 lg:grid-cols-[1.35fr_0.85fr] lg:gap-10">
+        <div class="space-y-6">
+          <!-- Address -->
+          <section id="section-address" class="checkout-section rounded-3xl border border-line bg-surface p-6 shadow-soft md:p-8">
+            <div class="mb-6 flex items-center gap-3">
+              <div class="flex size-10 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                <svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              </div>
+              <div>
+                <h2 class="text-lg font-semibold text-ink">عنوان الشحن</h2>
+                <p class="text-sm text-muted">أين نُسلّم طلبك؟</p>
+              </div>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <label class="block text-sm">
+                <span class="mb-2 flex items-center gap-2 font-medium text-ink">
+                  <svg class="size-4 text-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  الاسم الكامل
+                </span>
+                <input required name="fullname" class="h-12 w-full rounded-xl border border-line bg-canvas px-4 text-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" value="ليلى أحمد" />
+              </label>
+              <label class="block text-sm">
+                <span class="mb-2 flex items-center gap-2 font-medium text-ink">
+                  <svg class="size-4 text-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  رقم الجوال
+                </span>
+                <input required name="phone" type="tel" dir="ltr" class="h-12 w-full rounded-xl border border-line bg-canvas px-4 text-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" value="+966500000000" />
+              </label>
+              <label class="block text-sm">
+                <span class="mb-2 flex items-center gap-2 font-medium text-ink">
+                  <svg class="size-4 text-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
+                  المدينة
+                </span>
+                <input required name="city" class="h-12 w-full rounded-xl border border-line bg-canvas px-4 text-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" value="الرياض" />
+              </label>
+              <label class="block text-sm">
+                <span class="mb-2 flex items-center gap-2 font-medium text-ink">
+                  <svg class="size-4 text-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/></svg>
+                  الحي
+                </span>
+                <input required name="district" class="h-12 w-full rounded-xl border border-line bg-canvas px-4 text-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" value="العليا" />
+              </label>
+              <label class="block text-sm sm:col-span-2">
+                <span class="mb-2 flex items-center gap-2 font-medium text-ink">
+                  <svg class="size-4 text-muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  تفاصيل العنوان
+                </span>
+                <input required name="address" class="h-12 w-full rounded-xl border border-line bg-canvas px-4 text-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" value="شارع التحلية، مبنى 12، الطابق 3" />
+              </label>
+            </div>
+          </section>
+
+          <!-- Delivery -->
+          <section id="section-delivery" class="checkout-section rounded-3xl border border-line bg-surface p-6 shadow-soft md:p-8">
+            <div class="mb-6 flex items-center gap-3">
+              <div class="flex size-10 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                <svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+              </div>
+              <div>
+                <h2 class="text-lg font-semibold text-ink">طريقة التوصيل</h2>
+                <p class="text-sm text-muted">اختر السرعة المناسبة لك</p>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <label class="delivery-option flex cursor-pointer items-start gap-4 rounded-2xl border border-accent bg-accent-soft px-5 py-4 transition hover:border-accent">
+                <input type="radio" name="delivery" value="25" checked class="mt-1" />
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-start justify-between gap-3">
+                    <p class="font-medium text-ink">توصيل قياسي</p>
+                    <span class="shrink-0 text-sm font-semibold text-ink">٢٥ ر.س</span>
+                  </div>
+                  <p class="mt-1 text-sm leading-6 text-muted">1–3 أيام عمل · تتبع مباشر · تغليف آمن</p>
+                  <p class="mt-1 text-xs text-accent">الوصول المتوقع: الأحد 19 يوليو</p>
+                </div>
+              </label>
+              <label class="delivery-option flex cursor-pointer items-start gap-4 rounded-2xl border border-line bg-surface px-5 py-4 transition hover:border-accent/30 hover:bg-canvas">
+                <input type="radio" name="delivery" value="45" class="mt-1" />
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-start justify-between gap-3">
+                    <p class="font-medium text-ink">توصيل سريع</p>
+                    <span class="shrink-0 text-sm font-semibold text-ink">٤٥ ر.س</span>
+                  </div>
+                  <p class="mt-1 text-sm leading-6 text-muted">خلال 24 ساعة · أولوية في التجهيز</p>
+                  <p class="mt-1 text-xs text-accent">الوصول المتوقع: غداً 17 يوليو</p>
+                </div>
+              </label>
+              <label class="delivery-option flex cursor-pointer items-start gap-4 rounded-2xl border border-line bg-surface px-5 py-4 transition hover:border-accent/30 hover:bg-canvas">
+                <input type="radio" name="delivery" value="0" class="mt-1" />
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-start justify-between gap-3">
+                    <p class="font-medium text-ink">استلام من نقطة</p>
+                    <span class="shrink-0 text-sm font-semibold text-success">مجاني</span>
+                  </div>
+                  <p class="mt-1 text-sm leading-6 text-muted">اختر أقرب نقطة استلام · جاهز خلال يومين</p>
+                  <p class="mt-1 text-xs text-accent">الاستلام المتوقع: السبت 18 يوليو</p>
+                </div>
+              </label>
+            </div>
+          </section>
+
+          <!-- Payment -->
+          <section id="section-payment" class="checkout-section rounded-3xl border border-line bg-surface p-6 shadow-soft md:p-8">
+            <div class="mb-6 flex items-center gap-3">
+              <div class="flex size-10 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                <svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg>
+              </div>
+              <div>
+                <h2 class="text-lg font-semibold text-ink">طريقة الدفع</h2>
+                <p class="text-sm text-muted">مدفوعات مشفّرة وآمنة</p>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <label class="pay-option flex cursor-pointer items-center gap-4 rounded-2xl border border-accent bg-accent-soft px-5 py-4 transition">
+                <input type="radio" name="pay" value="card" checked />
+                <div class="flex flex-1 items-center justify-between gap-3">
+                  <span class="font-medium text-ink">بطاقة مدى / ائتمان</span>
+                  <span class="flex gap-1 text-xs text-muted" aria-hidden="true">💳</span>
+                </div>
+              </label>
+              <label class="pay-option flex cursor-pointer items-center gap-4 rounded-2xl border border-line bg-surface px-5 py-4 transition hover:border-accent/30 hover:bg-canvas">
+                <input type="radio" name="pay" value="apple" />
+                <div class="flex flex-1 items-center justify-between gap-3">
+                  <span class="font-medium text-ink">Apple Pay</span>
+                  <span class="rounded-lg bg-ink px-2 py-0.5 text-xs font-medium text-white"> Pay</span>
+                </div>
+              </label>
+              <label class="pay-option flex cursor-pointer items-center gap-4 rounded-2xl border border-line bg-surface px-5 py-4 transition hover:border-accent/30 hover:bg-canvas">
+                <input type="radio" name="pay" value="cod" />
+                <div class="flex flex-1 items-center justify-between gap-3">
+                  <span class="font-medium text-ink">الدفع عند الاستلام</span>
+                  <span class="text-xs text-muted">نقداً أو بطاقة</span>
+                </div>
+              </label>
+            </div>
+
+            <div id="card-fields" class="mt-6 space-y-4 rounded-2xl border border-line bg-canvas p-5">
+              <label class="block text-sm">
+                <span class="mb-2 block font-medium text-ink">رقم البطاقة</span>
+                <input type="text" inputmode="numeric" placeholder="1234 5678 9012 3456" dir="ltr" class="h-12 w-full rounded-xl border border-line bg-surface px-4 text-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" />
+              </label>
+              <div class="grid gap-4 sm:grid-cols-2">
+                <label class="block text-sm">
+                  <span class="mb-2 block font-medium text-ink">تاريخ الانتهاء</span>
+                  <input type="text" placeholder="MM/YY" dir="ltr" class="h-12 w-full rounded-xl border border-line bg-surface px-4 text-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" />
+                </label>
+                <label class="block text-sm">
+                  <span class="mb-2 block font-medium text-ink">رمز الأمان CVV</span>
+                  <input type="text" inputmode="numeric" placeholder="123" dir="ltr" class="h-12 w-full rounded-xl border border-line bg-surface px-4 text-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" />
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <!-- Notes -->
+          <section class="rounded-3xl border border-line bg-surface p-6 shadow-soft md:p-8">
+            <label for="order-notes" class="mb-3 flex items-center gap-2 text-lg font-semibold text-ink">
+              <svg class="size-5 text-accent" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
+              ملاحظات الطلب
+              <span class="text-sm font-normal text-muted">(اختياري)</span>
+            </label>
+            <textarea id="order-notes" rows="3" placeholder="مثال: يرجى الاتصال قبل التوصيل، أو ترك الطرد عند الباب…" class="w-full resize-none rounded-xl border border-line bg-canvas px-4 py-3 text-sm leading-7 transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"></textarea>
+          </section>
+        </div>
+
+        <!-- Summary -->
+        <aside class="h-fit lg:sticky lg:top-24">
+          <div class="rounded-3xl border border-line bg-surface p-6 shadow-soft">
+            <h2 class="mb-5 text-lg font-semibold text-ink">ملخص الطلب</h2>
+            <div id="summary-items" class="mb-5 max-h-48 space-y-3 overflow-y-auto"></div>
+
+            <div class="mb-5 space-y-2 border-t border-line pt-5">
+              <label for="checkout-coupon" class="text-sm font-medium text-ink">رمز الخصم</label>
+              <div class="flex gap-2">
+                <input id="checkout-coupon" type="text" placeholder="ATHIR10" class="h-11 min-w-0 flex-1 rounded-xl border border-line bg-canvas px-4 text-sm transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" />
+                <button type="button" id="checkout-apply-coupon" class="btn-press shrink-0 rounded-xl border border-line px-4 text-sm font-medium transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">تطبيق</button>
+              </div>
+              <p id="coupon-msg" class="hidden text-xs text-success"></p>
+            </div>
+
+            <div id="summary" class="space-y-3 text-sm"></div>
+
+            <button type="submit" class="btn-press mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-accent font-medium text-white shadow-[0_10px_24px_rgba(15,92,87,0.25)] transition hover:bg-[#0d4f4a]">
+              <svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              تأكيد والدفع
+            </button>
+            <a href="checkout-failure.html" class="mt-3 flex h-11 w-full items-center justify-center rounded-xl border border-line text-sm text-muted transition hover:border-accent/30 hover:bg-accent-soft hover:text-ink">محاكاة فشل الدفع</a>
+
+            <div class="mt-6 flex flex-wrap justify-center gap-4 border-t border-line pt-5 text-xs text-muted">
+              <span class="inline-flex items-center gap-1.5">
+                <svg class="size-4 text-accent" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                SSL مشفّر
+              </span>
+              <span class="inline-flex items-center gap-1.5">
+                <svg class="size-4 text-accent" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                ضمان أثير
+              </span>
+              <span class="inline-flex items-center gap-1.5">
+                <svg class="size-4 text-accent" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/></svg>
+                إرجاع 14 يوم
+              </span>
+            </div>
+          </div>
+        </aside>
+      </form>
+    </div>
+  </main>
+
+  <div data-site-footer></div>
+  <script src="assets/js/storefront.js"></script>
+  <script>
+    let appliedCoupon = null;
+
+    function money(n) {
+      return new Intl.NumberFormat("ar-SA", { style: "currency", currency: "SAR", maximumFractionDigits: 0 }).format(n);
+    }
+
+    function couponDiscount(subtotal) {
+      if (appliedCoupon === "ATHIR10") return Math.round(subtotal * 0.1);
+      return 0;
+    }
+
+    function updateStepPills() {
+      const sections = ["section-address", "section-delivery", "section-payment"];
+      const scrollY = window.scrollY + 120;
+      let active = 1;
+      sections.forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (el && el.offsetTop <= scrollY) active = i + 1;
+      });
+      document.querySelectorAll(".step-pill").forEach((pill) => {
+        const step = Number(pill.dataset.step);
+        const isActive = step <= active;
+        const isCurrent = step === active;
+        pill.className = "step-pill flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium shadow-soft " +
+          (isCurrent ? "border border-accent bg-accent text-white" : isActive ? "border border-accent/30 bg-accent-soft text-accent" : "border border-line bg-surface text-muted");
+        const num = pill.querySelector("span");
+        if (num) num.className = "flex size-6 items-center justify-center rounded-full text-xs " + (isCurrent ? "bg-white/20" : isActive ? "bg-accent/10" : "bg-canvas");
+      });
+      const confirmPill = document.querySelector('.step-pill[data-step="4"]');
+      if (confirmPill && active === 3 && window.innerHeight + window.scrollY >= document.body.offsetHeight - 80) {
+        confirmPill.className = "step-pill flex items-center gap-2 rounded-full border border-accent bg-accent px-4 py-2.5 text-sm font-medium text-white shadow-soft";
+      }
+    }
+
+    function updatePayUI() {
+      const cardFields = document.getElementById("card-fields");
+      const isCard = document.querySelector('input[name="pay"]:checked')?.value === "card";
+      if (cardFields) cardFields.classList.toggle("hidden", !isCard);
+      document.querySelectorAll(".pay-option").forEach((label) => {
+        const input = label.querySelector('input[name="pay"]');
+        const selected = input?.checked;
+        label.className = "pay-option flex cursor-pointer items-center gap-4 rounded-2xl px-5 py-4 transition " +
+          (selected ? "border border-accent bg-accent-soft" : "border border-line bg-surface hover:border-accent/30 hover:bg-canvas");
+      });
+    }
+
+    function updateDeliveryUI() {
+      document.querySelectorAll(".delivery-option").forEach((label) => {
+        const input = label.querySelector('input[name="delivery"]');
+        const selected = input?.checked;
+        label.className = "delivery-option flex cursor-pointer items-start gap-4 rounded-2xl px-5 py-4 transition " +
+          (selected ? "border border-accent bg-accent-soft" : "border border-line bg-surface hover:border-accent/30 hover:bg-canvas");
+      });
+    }
+
+    function renderSummary() {
+      const items = AtheerCart.read();
+      const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+      const discount = couponDiscount(subtotal);
+      const delivery = Number(document.querySelector('input[name="delivery"]:checked')?.value || 25);
+      const total = subtotal - discount + delivery;
+
+      document.getElementById("summary-items").innerHTML = items.length
+        ? items.map((i) => `
+            <div class="flex items-center gap-3">
+              <img src="${i.image}" alt="" class="size-12 shrink-0 rounded-xl object-cover" />
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-medium text-ink">${i.name}</p>
+                <p class="text-xs text-muted">× ${i.quantity}</p>
+              </div>
+              <span class="shrink-0 text-sm font-medium">${money(i.price * i.quantity)}</span>
+            </div>`).join("")
+        : '<p class="text-sm text-muted">السلة فارغة — <a href="index.html" class="text-accent underline">تسوق الآن</a></p>';
+
+      document.getElementById("summary").innerHTML = `
+        <div class="flex justify-between"><span class="text-muted">المجموع الفرعي</span><span class="font-medium">${money(subtotal)}</span></div>
+        ${discount ? `<div class="flex justify-between text-success"><span>خصم</span><span>−${money(discount)}</span></div>` : ""}
+        <div class="flex justify-between"><span class="text-muted">الشحن</span><span class="font-medium">${delivery ? money(delivery) : "مجاني"}</span></div>
+        <div class="flex justify-between border-t border-line pt-3 text-base font-semibold text-ink">
+          <span>الإجمالي</span><span>${money(total)}</span>
+        </div>
+        <p class="text-xs text-muted">شامل الضريبة</p>`;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(() => {
+        renderSummary();
+        updatePayUI();
+        updateDeliveryUI();
+        updateStepPills();
+
+        document.querySelectorAll('input[name="delivery"]').forEach((el) => {
+          el.addEventListener("change", () => { updateDeliveryUI(); renderSummary(); });
+        });
+        document.querySelectorAll('input[name="pay"]').forEach((el) => {
+          el.addEventListener("change", updatePayUI);
+        });
+
+        document.getElementById("checkout-apply-coupon")?.addEventListener("click", () => {
+          const code = document.getElementById("checkout-coupon").value.trim().toUpperCase();
+          appliedCoupon = code === "ATHIR10" ? code : null;
+          const msg = document.getElementById("coupon-msg");
+          if (appliedCoupon) {
+            msg.textContent = "تم تطبيق خصم 10%";
+            msg.classList.remove("hidden");
+          } else {
+            msg.classList.add("hidden");
+          }
+          renderSummary();
+        });
+
+        window.addEventListener("scroll", updateStepPills, { passive: true });
+
+        document.getElementById("checkout-form").addEventListener("submit", (e) => {
+          e.preventDefault();
+          if (!AtheerCart.read().length) {
+            alert("السلة فارغة");
+            return;
+          }
+          AtheerCart.clear();
+          location.href = "checkout-success.html";
+        });
+      }, 0);
+    });
+  </script>
+</body>
+</html>

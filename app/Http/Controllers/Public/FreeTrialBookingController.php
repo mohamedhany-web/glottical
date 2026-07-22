@@ -18,7 +18,15 @@ class FreeTrialBookingController extends Controller
 
         $slots = FreeTrialBookingService::availableSlots($from, $to);
 
-        $byDate = $slots->groupBy('date')->map(fn ($group) => $group->values())->all();
+        $byDate = $slots->groupBy('date')->map(function ($group) {
+            return $group->values()->map(fn (array $slot) => [
+                'starts_at' => $slot['starts_at'],
+                'date' => $slot['date'],
+                'time' => $slot['time'],
+                'label' => $slot['label'],
+                'duration' => $slot['duration'],
+            ])->all();
+        })->all();
 
         return response()->json([
             'duration_minutes' => FreeTrialBookingService::DURATION_MINUTES,

@@ -1,313 +1,158 @@
-@extends('layouts.public')
-
 @php
-    $brand = config('app.name');
-    $aboutRtl = app()->getLocale() === 'ar';
+    $locale = app()->getLocale();
+    $isRtl = $locale === 'ar';
+    $brand = config('app.name', 'Glottical');
+    $heroImg = 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=2400&q=80';
+    $missionImg = 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80';
 @endphp
+<!DOCTYPE html>
+<html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+  <title>{{ __('public.about_page_title') }} — {{ $brand }}</title>
+  <meta name="description" content="{{ __('public.about_intro') }}">
+  <link rel="canonical" href="{{ route('public.about') }}">
+  @include('partials.favicon-links')
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="{{ versioned_asset('js/atheer-tailwind-config.js') }}"></script>
+  <link rel="stylesheet" href="{{ versioned_asset('css/atheer.css') }}">
+  <meta name="theme-color" content="#0f5c57">
+</head>
+<body class="font-sans antialiased">
+@include('partials.atheer-home-header')
 
-@section('title', __('public.about_page_title') . ' - ' . __('public.site_suffix'))
-@section('meta_description', __('public.about_page_title') . ' — ' . $brand . '، منصة لتعليم الألمانية والإنجليزية وربط اللغة بفرص العمل في الكول سنتر، السياحة، وألمانيا.')
-@section('meta_keywords', 'من نحن, ' . $brand . ', تعليم ألماني, تعليم إنجليزي, كول سنتر, سوق العمل, ألمانيا')
-@section('canonical_url', url('/about'))
-
-@push('styles')
-<style>
-    .about-reveal {
-        opacity: 0;
-        transform: translateY(36px);
-        transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1), transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    .about-reveal.revealed { opacity: 1; transform: translateY(0); }
-    .about-reveal-from-right {
-        opacity: 0;
-        transform: translate(40px, 20px);
-        transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    .about-reveal-from-right.revealed { opacity: 1; transform: translate(0, 0); }
-    .about-reveal-from-left {
-        opacity: 0;
-        transform: translate(-40px, 20px);
-        transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    .about-reveal-from-left.revealed { opacity: 1; transform: translate(0, 0); }
-    .about-reveal-scale {
-        opacity: 0;
-        transform: translateY(24px) scale(0.97);
-        transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    .about-reveal-scale.revealed { opacity: 1; transform: translateY(0) scale(1); }
-    .about-reveal-heading {
-        opacity: 0;
-        transform: translateY(20px);
-        transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-    }
-    .about-reveal-heading .about-heading-underline {
-        transform: scaleX(0);
-        transform-origin: right;
-        transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-        transition-delay: 0.15s;
-    }
-    .about-reveal-heading.revealed { opacity: 1; transform: translateY(0); }
-    .about-reveal-heading.revealed .about-heading-underline { transform: scaleX(1); transform-origin: left; }
-    .about-reveal-stagger > * {
-        opacity: 0;
-        transform: translateY(28px);
-        transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    .about-reveal-stagger.revealed > *:nth-child(1) { transition-delay: 0s; }
-    .about-reveal-stagger.revealed > *:nth-child(2) { transition-delay: 0.08s; }
-    .about-reveal-stagger.revealed > *:nth-child(3) { transition-delay: 0.16s; }
-    .about-reveal-stagger.revealed > *:nth-child(4) { transition-delay: 0.24s; }
-    .about-reveal-stagger.revealed > * { opacity: 1; transform: translateY(0); }
-    .about-fade-up {
-        animation: aboutFadeUp 0.55s ease-out forwards;
-        opacity: 0;
-    }
-    @keyframes aboutFadeUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-</style>
-@endpush
-
-@section('content')
-<section class="-mt-14 sm:-mt-[60px] pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-16 overflow-hidden relative">
-    <div class="absolute inset-0 bg-acad-navy"></div>
-    <div class="absolute inset-0 opacity-[0.22] bg-cover bg-center" style="background-image:url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=2400&q=82')"></div>
-    <div class="absolute inset-0 bg-gradient-to-t from-acad-navy via-acad-navy/88 to-acad-navy/35"></div>
-    <div class="absolute inset-0 pattern-dots opacity-[0.12] pointer-events-none"></div>
-    <div class="container-acad relative z-10 text-center">
-        <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-extrabold mb-5 glass-panel border border-white/10 text-white about-fade-up">
-            <i class="fas fa-heart text-acad-yellow"></i> {{ __('public.about_page_title') }}
-        </span>
-        <h1 class="text-[1.75rem] sm:text-[2.35rem] lg:text-[3rem] leading-[1.2] font-black mb-5 text-white font-display about-fade-up">
-            {{ __('public.about_hero') }}
-            <span class="block mt-2 sm:mt-3 text-lg sm:text-xl md:text-2xl font-bold text-acad-yellow">{{ $brand }}</span>
-        </h1>
-        <p class="text-white/75 text-base sm:text-lg leading-8 max-w-3xl mx-auto font-medium">
-            {{ __('public.about_hero_sub') }}
-        </p>
+<main class="page-enter">
+  {{-- Full-bleed hero — brand first --}}
+  <section class="relative overflow-hidden bg-ink py-20 text-white md:py-28">
+    <img src="{{ $heroImg }}" alt="" class="absolute inset-0 h-full w-full object-cover opacity-40" aria-hidden="true" loading="eager" width="2400" height="1200">
+    <div class="absolute inset-0 {{ $isRtl ? 'bg-gradient-to-l' : 'bg-gradient-to-r' }} from-ink via-ink/80 to-ink/50"></div>
+    <div class="container-wide relative max-w-3xl space-y-5">
+      <p class="text-sm font-medium text-metal">{{ $isRtl ? 'قصة '.$brand : 'The '.$brand.' story' }}</p>
+      <p class="text-4xl font-bold tracking-tight md:text-5xl">{{ $brand }}</p>
+      <h1 class="text-balance text-2xl font-semibold text-white/95 md:text-4xl">{{ __('public.about_hero_sub') }}</h1>
+      <p class="text-base leading-8 text-white/80 md:text-lg">{{ __('public.about_intro') }}</p>
     </div>
-</section>
+  </section>
 
-<section class="py-14 md:py-20 relative">
-    <div class="absolute inset-0 bg-gradient-to-b from-acad-navy via-acad-navyMid/30 to-acad-navy pointer-events-none"></div>
-    <div class="container-acad relative z-10">
-        <h2 class="about-reveal-heading text-3xl md:text-4xl lg:text-5xl font-black text-white mb-10 md:mb-12 font-display">
-            {{ __('public.about_heading') }}
-            <span class="about-heading-underline block h-1 w-28 mt-2 rounded-full bg-gradient-to-r from-acad-yellow to-acad-cyan"></span>
-        </h2>
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
-            <div class="lg:col-span-7 about-reveal-from-right space-y-6">
-                <p class="text-lg md:text-xl text-white/85 leading-[1.85]">
-                    {!! __('public.about_para1', ['brand' => '<strong class="font-black text-acad-yellow">' . e($brand) . '</strong>']) !!}
-                </p>
-                <p class="text-lg md:text-xl text-white/80 leading-[1.85]">
-                    {{ __('public.about_para2') }}
-                </p>
-            </div>
-            <div class="lg:col-span-5 about-reveal-from-left flex justify-center lg:justify-start">
-                <div class="w-full max-w-sm aspect-square rounded-[24px] flex items-center justify-center glass-panel border border-white/15 shadow-2xl bg-acad-navyMid/50">
-                    <i class="fas fa-graduation-cap text-7xl md:text-8xl text-acad-cyan/50"></i>
-                </div>
-            </div>
+  {{-- Mission / story --}}
+  <section class="container-wide py-20 md:py-24">
+    <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
+      <div class="space-y-4">
+        <p class="text-sm font-medium text-accent">{{ __('public.about_heading') }}</p>
+        <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">{{ __('public.about_hero_sub') }}</h2>
+        <p class="text-base leading-8 text-muted">{!! __('public.about_para1', ['brand' => '<strong class="font-semibold text-ink">'.e($brand).'</strong>']) !!}</p>
+        <p class="text-base leading-8 text-muted">{{ __('public.about_para2') }}</p>
+      </div>
+      <div class="overflow-hidden rounded-3xl shadow-soft">
+        <img src="{{ $missionImg }}" alt="{{ $brand }}" class="aspect-[4/3] w-full object-cover" loading="lazy" width="1200" height="900">
+      </div>
+    </div>
+  </section>
+
+  {{-- Vision & mission — one purpose, clean columns --}}
+  <section class="bg-surface py-20 md:py-24">
+    <div class="container-wide">
+      <div class="grid gap-12 md:grid-cols-2 md:gap-16">
+        <div class="space-y-4">
+          <p class="text-sm font-medium text-accent">{{ __('public.our_vision') }}</p>
+          <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink">{{ $isRtl ? 'لغة تفتح باب الفرصة' : 'Language that opens opportunity' }}</h2>
+          <p class="text-base leading-8 text-muted">{{ __('public.vision_text') }}</p>
         </div>
-    </div>
-</section>
-
-{{-- الرؤية والمهمة --}}
-<section class="py-14 md:py-20 relative">
-    <div class="absolute inset-0 bg-acad-navy/80 pointer-events-none"></div>
-    <div class="container-acad relative z-10">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-            <div class="about-reveal-scale rounded-[24px] glass-panel p-8 md:p-10 border border-white/12 overflow-hidden relative group">
-                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-acad-blue to-acad-cyan"></div>
-                <div class="flex gap-6 items-start">
-                    <span class="flex-shrink-0 w-16 h-16 rounded-2xl text-acad-blue flex items-center justify-center shadow-lg bg-acad-yellow transition-transform duration-300 group-hover:scale-105">
-                        <i class="fas fa-eye text-2xl"></i>
-                    </span>
-                    <div class="flex-1 min-w-0">
-                        <h3 class="text-2xl md:text-3xl font-black text-white mb-4 font-display">{{ __('public.our_vision') }}</h3>
-                        <p class="text-lg text-white/80 leading-relaxed">{{ __('public.vision_text') }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="about-reveal-scale rounded-[24px] glass-panel p-8 md:p-10 border border-white/12 overflow-hidden relative group">
-                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-acad-yellow to-acad-cyan"></div>
-                <div class="flex gap-6 items-start">
-                    <span class="flex-shrink-0 w-16 h-16 rounded-2xl text-acad-navy flex items-center justify-center shadow-lg bg-acad-cyan transition-transform duration-300 group-hover:scale-105">
-                        <i class="fas fa-bullseye text-2xl"></i>
-                    </span>
-                    <div class="flex-1 min-w-0">
-                        <h3 class="text-2xl md:text-3xl font-black text-white mb-4 font-display">{{ __('public.our_mission') }}</h3>
-                        <p class="text-lg text-white/80 leading-relaxed mb-5">{{ __('public.mission_intro') }}</p>
-                        <ul class="space-y-3 text-white/85">
-                            <li class="flex items-center gap-3 text-base"><span class="w-2 h-2 rounded-full shrink-0 bg-acad-yellow"></span> {{ __('public.mission_1') }}</li>
-                            <li class="flex items-center gap-3 text-base"><span class="w-2 h-2 rounded-full shrink-0 bg-acad-yellow"></span> {{ __('public.mission_2') }}</li>
-                            <li class="flex items-center gap-3 text-base"><span class="w-2 h-2 rounded-full shrink-0 bg-acad-yellow"></span> {{ __('public.mission_3') }}</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+        <div class="space-y-4">
+          <p class="text-sm font-medium text-accent">{{ __('public.our_mission') }}</p>
+          <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink">{{ $isRtl ? 'تعليم عملي حتى التوظيف' : 'Practical learning to hiring' }}</h2>
+          <p class="text-base leading-8 text-muted">{{ __('public.mission_intro') }}</p>
+          <ul class="space-y-3 text-sm leading-7 text-muted">
+            <li class="flex gap-3"><span class="mt-2 size-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true"></span><span>{{ __('public.mission_1') }}</span></li>
+            <li class="flex gap-3"><span class="mt-2 size-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true"></span><span>{{ __('public.mission_2') }}</span></li>
+            <li class="flex gap-3"><span class="mt-2 size-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true"></span><span>{{ __('public.mission_3') }}</span></li>
+          </ul>
         </div>
+      </div>
     </div>
-</section>
+  </section>
 
-{{-- لماذا نحن --}}
-<section class="py-14 md:py-20 relative">
-    <div class="absolute inset-0 bg-gradient-to-b from-acad-navy via-acad-navyMid/25 to-acad-navy pointer-events-none"></div>
-    <div class="container-acad relative z-10">
-        <h2 class="about-reveal text-3xl md:text-4xl lg:text-5xl font-black text-white mb-12 md:mb-14 text-center font-display">
-            {{ __('public.why_platform') }}
-        </h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 about-reveal-stagger">
-            <div class="rounded-[20px] p-6 md:p-8 border border-white/10 glass-panel h-full flex flex-col hover:border-acad-yellow/40 transition-all duration-300">
-                <div class="w-14 h-14 rounded-xl bg-acad-blue/80 text-acad-yellow flex items-center justify-center mb-5 shadow-md border border-white/10"><i class="fas fa-chalkboard-teacher text-xl"></i></div>
-                <h4 class="text-xl font-black text-white mb-2">{{ __('public.why_1_title') }}</h4>
-                <p class="text-white/70 leading-relaxed flex-1">{{ __('public.why_1_desc') }}</p>
-            </div>
-            <div class="rounded-[20px] p-6 md:p-8 border border-white/10 glass-panel h-full flex flex-col hover:border-acad-cyan/40 transition-all duration-300">
-                <div class="w-14 h-14 rounded-xl bg-acad-cyan/25 text-acad-cyan flex items-center justify-center mb-5 shadow-md border border-acad-cyan/30"><i class="fas fa-user-tie text-xl"></i></div>
-                <h4 class="text-xl font-black text-white mb-2">{{ __('public.why_2_title') }}</h4>
-                <p class="text-white/70 leading-relaxed flex-1">{{ __('public.why_2_desc') }}</p>
-            </div>
-            <div class="rounded-[20px] p-6 md:p-8 border border-white/10 glass-panel h-full flex flex-col hover:border-acad-yellow/40 transition-all duration-300">
-                <div class="w-14 h-14 rounded-xl bg-acad-blue/80 text-acad-yellow flex items-center justify-center mb-5 shadow-md border border-white/10"><i class="fas fa-headset text-xl"></i></div>
-                <h4 class="text-xl font-black text-white mb-2">{{ __('public.why_3_title') }}</h4>
-                <p class="text-white/70 leading-relaxed flex-1">{{ __('public.why_3_desc') }}</p>
-            </div>
-            <div class="rounded-[20px] p-6 md:p-8 border border-white/10 glass-panel h-full flex flex-col hover:border-acad-cyan/40 transition-all duration-300">
-                <div class="w-14 h-14 rounded-xl bg-acad-cyan/25 text-acad-cyan flex items-center justify-center mb-5 shadow-md border border-acad-cyan/30"><i class="fas fa-certificate text-xl"></i></div>
-                <h4 class="text-xl font-black text-white mb-2">{{ __('public.why_4_title') }}</h4>
-                <p class="text-white/70 leading-relaxed flex-1">{{ __('public.why_4_desc') }}</p>
-            </div>
+  {{-- Values — site/about pattern --}}
+  <section class="container-wide py-20 md:py-24">
+    <div class="mb-10 max-w-2xl space-y-3 md:mb-14">
+      <p class="text-sm font-medium text-accent">{{ __('public.our_values') }}</p>
+      <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">{{ __('public.why_platform') }}</h2>
+      <p class="text-base leading-8 text-muted">{{ $isRtl ? 'ثلاث ركائز تحكم كل قرار نتخذه — من تصميم الكورس إلى متابعة الطالب.' : 'Three pillars guide every decision — from course design to student follow-up.' }}</p>
+    </div>
+    <div class="grid gap-6 md:grid-cols-3">
+      <article class="rounded-2xl border border-line bg-surface p-8 shadow-soft">
+        <div class="mb-4 flex size-12 items-center justify-center rounded-xl bg-accent-soft text-accent">
+          <svg class="size-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
-    </div>
-</section>
-
-{{-- القيم --}}
-<section class="py-14 md:py-20 relative">
-    <div class="absolute inset-0 bg-acad-navyMid/40 pointer-events-none"></div>
-    <div class="container-acad relative z-10">
-        <h2 class="about-reveal text-3xl md:text-4xl lg:text-5xl font-black text-white mb-12 md:mb-14 text-center font-display">
-            {{ __('public.our_values') }}
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10 about-reveal-stagger">
-            <div class="rounded-[24px] glass-panel p-8 md:p-10 border border-white/10 text-center hover:border-acad-yellow/35 transition-all duration-300">
-                <span class="inline-flex w-16 h-16 rounded-2xl font-black text-2xl items-center justify-center mb-6 bg-acad-yellow text-acad-blue">1</span>
-                <h4 class="text-xl md:text-2xl font-black text-white mb-3">{{ __('public.value_1_title') }}</h4>
-                <p class="text-white/70 leading-relaxed text-base md:text-lg">{{ __('public.value_1_desc') }}</p>
-            </div>
-            <div class="rounded-[24px] glass-panel p-8 md:p-10 border border-white/10 text-center hover:border-acad-cyan/35 transition-all duration-300">
-                <span class="inline-flex w-16 h-16 rounded-2xl font-black text-2xl items-center justify-center mb-6 bg-acad-cyan text-acad-navy">2</span>
-                <h4 class="text-xl md:text-2xl font-black text-white mb-3">{{ __('public.value_2_title') }}</h4>
-                <p class="text-white/70 leading-relaxed text-base md:text-lg">{{ __('public.value_2_desc') }}</p>
-            </div>
-            <div class="rounded-[24px] glass-panel p-8 md:p-10 border border-white/10 text-center hover:border-acad-yellow/35 transition-all duration-300">
-                <span class="inline-flex w-16 h-16 rounded-2xl font-black text-2xl items-center justify-center mb-6 bg-acad-yellow text-acad-blue">3</span>
-                <h4 class="text-xl md:text-2xl font-black text-white mb-3">{{ __('public.value_3_title') }}</h4>
-                <p class="text-white/70 leading-relaxed text-base md:text-lg">{{ __('public.value_3_desc') }}</p>
-            </div>
+        <h3 class="mb-2 text-xl font-semibold text-ink">{{ __('public.value_1_title') }}</h3>
+        <p class="text-sm leading-7 text-muted">{{ __('public.value_1_desc') }}</p>
+      </article>
+      <article class="rounded-2xl border border-line bg-surface p-8 shadow-soft">
+        <div class="mb-4 flex size-12 items-center justify-center rounded-xl bg-accent-soft text-accent">
+          <svg class="size-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
         </div>
-    </div>
-</section>
-
-{{-- أرقام --}}
-<section class="py-14 md:py-20 relative overflow-hidden text-white">
-    <div class="absolute inset-0 bg-gradient-to-br from-acad-blue via-acad-navy to-acad-navyMid"></div>
-    <div class="absolute inset-0 opacity-[0.08] pattern-dots pointer-events-none"></div>
-    <div class="container-acad relative z-10">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 text-center about-reveal-stagger">
-            <div>
-                <div class="text-4xl md:text-5xl lg:text-6xl font-black text-acad-yellow drop-shadow-lg counter" data-target="{{ $stats['courses'] ?? 50 }}">{{ $stats['courses'] ?? 50 }}+</div>
-                <div class="text-white/85 font-semibold mt-2 text-sm md:text-lg">{{ __('public.stat_courses') }}</div>
-            </div>
-            <div>
-                <div class="text-4xl md:text-5xl lg:text-6xl font-black text-acad-yellow drop-shadow-lg counter" data-target="{{ $stats['students'] ?? 1000 }}">{{ $stats['students'] ?? 1000 }}+</div>
-                <div class="text-white/85 font-semibold mt-2 text-sm md:text-lg">{{ __('public.stat_students') }}</div>
-            </div>
-            <div>
-                <div class="text-4xl md:text-5xl lg:text-6xl font-black text-acad-yellow drop-shadow-lg counter" data-target="{{ $stats['instructors'] ?? 20 }}">{{ $stats['instructors'] ?? 20 }}+</div>
-                <div class="text-white/85 font-semibold mt-2 text-sm md:text-lg">{{ __('public.stat_instructors') }}</div>
-            </div>
-            <div>
-                <div class="text-4xl md:text-5xl lg:text-6xl font-black text-acad-cyan drop-shadow-lg">100%</div>
-                <div class="text-white/85 font-semibold mt-2 text-sm md:text-lg">{{ __('public.stat_quality') }}</div>
-            </div>
+        <h3 class="mb-2 text-xl font-semibold text-ink">{{ __('public.value_2_title') }}</h3>
+        <p class="text-sm leading-7 text-muted">{{ __('public.value_2_desc') }}</p>
+      </article>
+      <article class="rounded-2xl border border-line bg-surface p-8 shadow-soft">
+        <div class="mb-4 flex size-12 items-center justify-center rounded-xl bg-accent-soft text-accent">
+          <svg class="size-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 7.65l.77.78L12 21.23l7.65-7.65.77-.78a5.4 5.4 0 0 0 0-7.65z"/></svg>
         </div>
+        <h3 class="mb-2 text-xl font-semibold text-ink">{{ __('public.value_3_title') }}</h3>
+        <p class="text-sm leading-7 text-muted">{{ __('public.value_3_desc') }}</p>
+      </article>
     </div>
-</section>
+  </section>
 
-{{-- CTA --}}
-<section class="py-16 md:py-24 relative">
-    <div class="container-acad relative z-10 about-reveal-scale">
-        <div class="rounded-[28px] border border-white/10 glass-panel px-6 sm:px-10 py-10 sm:py-12 text-center overflow-hidden relative">
-            <div class="absolute inset-0 pointer-events-none opacity-20 bg-cover bg-center" style="background-image:url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=2000&q=82')"></div>
-            <div class="absolute inset-0 bg-gradient-to-r from-acad-navy/90 via-acad-navy/75 to-acad-blue/40 pointer-events-none"></div>
-            <span class="relative z-10 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-extrabold mb-5 glass-panel border border-white/10">
-                <i class="fas fa-rocket text-acad-yellow"></i> {{ $brand }}
-            </span>
-            <h2 class="relative z-10 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white mb-4 leading-tight max-w-4xl mx-auto font-display">
-                {{ __('public.cta_about_title') }}
-            </h2>
-            <p class="relative z-10 text-white/75 text-base md:text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
-                {{ __('public.cta_about_desc') }}
-            </p>
-            <div class="relative z-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
-                <a href="{{ route('register') }}" class="btn-stream-primary px-8 py-3.5">
-                    <i class="fas fa-user-plus"></i>
-                    {{ __('public.register_free_now') }}
-                </a>
-                <a href="{{ route('public.courses') }}" class="btn-stream-secondary px-8 py-3.5">
-                    {{ __('public.browse_all_courses_btn') }}
-                    <i class="fas fa-arrow-{{ $aboutRtl ? 'left' : 'right' }} ms-1"></i>
-                </a>
-            </div>
+  {{-- Quiet stats band (not first viewport) --}}
+  <section class="bg-ink py-14 text-white md:py-16">
+    <div class="container-wide">
+      <div class="grid grid-cols-2 gap-8 text-center md:grid-cols-4 md:gap-6">
+        <div class="space-y-1">
+          <p class="text-3xl font-semibold tracking-tight text-metal md:text-4xl">{{ number_format((int) ($stats['courses'] ?? 0)) }}+</p>
+          <p class="text-sm text-white/65">{{ __('public.stat_courses') }}</p>
         </div>
+        <div class="space-y-1">
+          <p class="text-3xl font-semibold tracking-tight text-metal md:text-4xl">{{ number_format((int) ($stats['students'] ?? 0)) }}+</p>
+          <p class="text-sm text-white/65">{{ __('public.stat_students') }}</p>
+        </div>
+        <div class="space-y-1">
+          <p class="text-3xl font-semibold tracking-tight text-metal md:text-4xl">{{ number_format((int) ($stats['instructors'] ?? 0)) }}+</p>
+          <p class="text-sm text-white/65">{{ __('public.stat_instructors') }}</p>
+        </div>
+        <div class="space-y-1">
+          <p class="text-3xl font-semibold tracking-tight text-metal md:text-4xl">100%</p>
+          <p class="text-sm text-white/65">{{ __('public.stat_quality') }}</p>
+        </div>
+      </div>
     </div>
-</section>
-@endsection
+  </section>
 
-@push('scripts')
+  {{-- CTA --}}
+  <section class="container-wide py-20 md:py-24">
+    <div class="rounded-3xl border border-line bg-surface px-6 py-10 text-center shadow-soft md:px-14 md:py-14">
+      <p class="mb-3 text-sm font-medium text-accent">{{ $brand }}</p>
+      <h2 class="mb-4 text-balance text-2xl font-semibold text-ink md:text-3xl">{{ __('public.cta_about_title') }}</h2>
+      <p class="mx-auto mb-6 max-w-lg text-base leading-8 text-muted">{{ __('public.cta_about_desc') }}</p>
+      <div class="flex flex-wrap justify-center gap-3">
+        <a href="{{ route('register') }}" class="btn-press inline-flex h-12 items-center rounded-xl bg-accent px-7 font-medium text-white transition hover:bg-[#0d4f4a]">{{ __('public.register_free_now') ?? ($isRtl ? 'سجّل مجاناً الآن' : 'Register free now') }}</a>
+        <a href="{{ route('public.courses') }}" class="inline-flex h-12 items-center rounded-xl border border-line px-7 font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">{{ __('public.browse_all_courses_btn') }}</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+@include('partials.atheer-home-footer')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    function animateCounter(el) {
-        var target = parseInt(el.getAttribute('data-target'), 10);
-        if (isNaN(target)) return;
-        var duration = 2200;
-        var start = performance.now();
-        var loc = document.documentElement.lang === 'ar' ? 'ar-EG' : 'en-US';
-        function tick(now) {
-            var p = Math.min((now - start) / duration, 1);
-            var eased = 1 - Math.pow(1 - p, 3);
-            var val = Math.floor(eased * target);
-            el.textContent = val.toLocaleString(loc) + (target >= 85 && target < 4000 ? '+' : '');
-            if (p < 1) requestAnimationFrame(tick);
-            else el.textContent = target.toLocaleString(loc) + (target >= 85 && target < 4000 ? '+' : '');
-        }
-        requestAnimationFrame(tick);
-    }
-
-    var counters = document.querySelectorAll('.counter[data-target]');
-    var co = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-            if (!entry.isIntersecting) return;
-            animateCounter(entry.target);
-            co.unobserve(entry.target);
-        });
-    }, { threshold: 0.25 });
-    counters.forEach(function (c) { co.observe(c); });
-
-    var sel = '.about-reveal, .about-reveal-from-right, .about-reveal-from-left, .about-reveal-scale, .about-reveal-heading, .about-reveal-stagger';
-    var ro = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('revealed');
-                ro.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-    document.querySelectorAll(sel).forEach(function (el) { ro.observe(el); });
-});
+  document.querySelectorAll('[data-open-free-trial]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      window.location.href = {{ \Illuminate\Support\Js::from(url('/?open_trial=1')) }};
+    });
+  });
 </script>
-@endpush
+</body>
+</html>

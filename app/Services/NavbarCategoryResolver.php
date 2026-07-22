@@ -35,7 +35,31 @@ class NavbarCategoryResolver
         $cacheKey = 'navbar_mega_categories_v2_'.app()->getLocale().'_'.$limit;
 
         return Cache::remember($cacheKey, 300, function () use ($limit) {
-            $fromCategories = self::fromCourseCategories($limit);
+            $fromCategories = self::fromCourseCategories($limit, requireCourses: true);
+            if ($fromCategories->isNotEmpty()) {
+                return $fromCategories;
+            }
+
+            $fromSubjects = self::fromAcademicSubjects($limit);
+            if ($fromSubjects->isNotEmpty()) {
+                return $fromSubjects;
+            }
+
+            return self::fallbackItems($limit);
+        });
+    }
+
+    /**
+     * شبكة صفحة التصنيفات العامة — كل التصنيفات النشطة من الموقع.
+     *
+     * @return Collection<int, array{name: string, desc: string, icon: string, url: string, count: int, thumb_url: ?string}>
+     */
+    public static function catalogPageItems(int $limit = 48): Collection
+    {
+        $cacheKey = 'categories_page_catalog_v1_'.app()->getLocale().'_'.$limit;
+
+        return Cache::remember($cacheKey, 300, function () use ($limit) {
+            $fromCategories = self::fromCourseCategories($limit, requireCourses: false);
             if ($fromCategories->isNotEmpty()) {
                 return $fromCategories;
             }
@@ -50,7 +74,7 @@ class NavbarCategoryResolver
     }
 
     /** @return Collection<int, array{name: string, desc: string, icon: string, url: string, count: int, thumb_url: ?string}> */
-    private static function fromCourseCategories(int $limit): Collection
+    private static function fromCourseCategories(int $limit, bool $requireCourses = true): Collection
     {
         return CourseCategory::query()
             ->active()
@@ -68,7 +92,9 @@ class NavbarCategoryResolver
                     ->select(['id', 'course_category_id', 'thumbnail']),
             ])
             ->get()
-            ->filter(fn (CourseCategory $cat) => (int) $cat->active_courses_count > 0)
+            ->when($requireCourses, fn (Collection $rows) => $rows->filter(
+                fn (CourseCategory $cat) => (int) $cat->active_courses_count > 0
+            ))
             ->take($limit)
             ->values()
             ->map(function (CourseCategory $cat, int $index) {
