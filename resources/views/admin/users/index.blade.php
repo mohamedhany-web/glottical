@@ -256,21 +256,25 @@
     @if($pageMode === 'students')
     <section class="students-card">
         <div class="students-card-header">
-            <h3 class="text-base font-bold text-slate-900">التحكم والرقابة المدفوعة</h3>
+            <h3 class="text-base font-bold text-slate-900">اختصارات الخدمات الحالية</h3>
         </div>
         <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-3">
-            <a href="{{ route('admin.students-control.paid-features') }}" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors">
-                <i class="fas fa-layer-group"></i>
-                إدارة المزايا المدفوعة
-            </a>
-            <a href="{{ route('admin.students-control.consumption') }}" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors">
-                <i class="fas fa-chart-pie"></i>
-                استهلاك المستخدمين
-            </a>
-            <a href="{{ route('admin.subscriptions.index') }}" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                <i class="fas fa-calendar-check"></i>
-                الاشتراكات
-            </a>
+            @if(Route::has('admin.tutoring-groups.index'))
+                <a href="{{ route('admin.tutoring-groups.index', 'individual') }}" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-accent text-white font-semibold hover:opacity-90 transition-colors">
+                    <i class="fas fa-user"></i>
+                    مجموعات فردية
+                </a>
+                <a href="{{ route('admin.tutoring-groups.index', 'collective') }}" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    <i class="fas fa-users"></i>
+                    مجموعات جماعية
+                </a>
+            @endif
+            @if(Route::has('admin.advanced-courses.index'))
+                <a href="{{ route('admin.advanced-courses.index') }}" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    <i class="fas fa-graduation-cap"></i>
+                    الكورسات
+                </a>
+            @endif
         </div>
     </section>
     @endif

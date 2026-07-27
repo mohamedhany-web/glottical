@@ -28,7 +28,7 @@ class CrmLeadService
             'notes' => $data['notes'] ?? null,
             'interested_advanced_course_id' => $data['interested_advanced_course_id'] ?? null,
             'created_by' => $creator->id,
-            'marketing_owner_id' => $creator->id,
+            'marketing_owner_id' => $data['marketing_owner_id'] ?? $creator->id,
             'crm_group_id' => $data['crm_group_id'] ?? null,
         ]);
 
@@ -42,21 +42,36 @@ class CrmLeadService
     /**
      * @param  array<string, mixed>  $data
      */
-    public static function updateLead(SalesLead $lead, array $data, User $actor): SalesLead
+    public static function updateLead(SalesLead $lead, array $data, User $actor, bool $adminOverride = false): SalesLead
     {
-        if (! CrmAccessService::canEditLead($actor, $lead)) {
+        if (! $adminOverride && ! CrmAccessService::canEditLead($actor, $lead)) {
             throw new InvalidArgumentException('لا يمكن تعديل هذا الـ Lead بعد التحويل أو التعيين.');
         }
 
-        $old = $lead->only(['name', 'email', 'phone', 'company', 'source', 'notes', 'interested_advanced_course_id']);
+        if ($adminOverride && ! ($actor->role === 'super_admin' || $actor->hasPermission('manage.leads'))) {
+            throw new InvalidArgumentException('غير مصرح بتعديل الإدارة لهذا الـ Lead.');
+        }
+
+        $old = $lead->only(['name', 'email', 'phone', 'company', 'source', 'notes', 'interested_advanced_course_id', 'crm_group_id', 'assigned_to']);
         $lead->fill(collect($data)->only([
-            'name', 'email', 'phone', 'company', 'source', 'notes', 'interested_advanced_course_id',
+            'name', 'email', 'phone', 'company', 'source', 'notes', 'interested_advanced_course_id', 'crm_group_id',
         ])->all());
         $lead->save();
 
         CrmAuditService::log('lead_updated', $lead, $actor, $old, $lead->only(array_keys($old)));
 
         return $lead->fresh();
+    }
+
+    public static function deleteLead(SalesLead $lead, User $actor): void
+    {
+        if (! ($actor->role === 'super_admin' || $actor->hasPermission('manage.leads'))) {
+            throw new InvalidArgumentException('غير مصرح بحذف الـ Lead.');
+        }
+
+        $snapshot = $lead->only(['id', 'name', 'email', 'phone', 'status', 'marketing_owner_id', 'assigned_to']);
+        CrmAuditService::log('lead_deleted', $lead, $actor, $snapshot, null);
+        $lead->delete();
     }
 
     public static function assignToSales(SalesLead $lead, User $salesUser, User $actor, ?int $groupId = null): SalesLead

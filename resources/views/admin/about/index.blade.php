@@ -1,22 +1,42 @@
 @extends('layouts.admin')
 
-@section('title', __('admin.about_page'))
-@section('header', __('admin.about_page'))
+@section('title', __('admin.about_page') . ' - Glottical')
+@section('page_title', __('admin.about_page'))
 
 @section('content')
-<div class="max-w-3xl mx-auto py-12">
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 md:p-12">
-        <p class="text-gray-600 mb-6">إدارة محتوى صفحة «من نحن» المعروضة للزوار. يمكنك معاينة الصفحة أو تعديل النصوص لاحقاً عند تفعيل التحرير.</p>
-        <div class="flex flex-wrap gap-4">
-            <a href="{{ route('public.about') }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors">
-                <i class="fas fa-external-link-alt"></i>
-                <span>معاينة صفحة من نحن</span>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">محتوى الموقع · صفحة من نحن</p>
+            <h2 class="mt-1 text-2xl font-semibold text-ink">{{ __('admin.about_page') }}</h2>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.dashboard') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                لوحة التحكم
             </a>
-            <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-100 text-gray-800 font-bold hover:bg-gray-200 transition-colors">
-                <i class="fas fa-arrow-right"></i>
-                <span>لوحة التحكم</span>
+            <a href="{{ route('public.about') }}" target="_blank" rel="noopener" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-external-link-alt text-xs"></i>
+                معاينة الصفحة
             </a>
         </div>
-    </div>
+    </section>
+
+    <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft sm:p-6">
+        <div class="mb-4 flex items-center gap-3">
+            <span class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-info-circle text-sm"></i></span>
+            <div>
+                <h3 class="text-base font-semibold text-ink">صفحة من نحن</h3>
+                <p class="mt-0.5 text-xs text-muted">المحتوى المعروض للزوار على الموقع العام</p>
+            </div>
+        </div>
+        <p class="mb-5 text-sm leading-6 text-muted">يمكنك معاينة صفحة «من نحن» كما يراها الزائر. سيتم تفعيل التحرير المباشر لاحقاً عند إضافة حقول المحتوى.</p>
+        <div class="flex flex-wrap gap-3">
+            <a href="{{ route('public.about') }}" target="_blank" rel="noopener" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-white">
+                <i class="fas fa-external-link-alt text-xs"></i>
+                فتح المعاينة
+            </a>
+        </div>
+    </article>
 </div>
 @endsection

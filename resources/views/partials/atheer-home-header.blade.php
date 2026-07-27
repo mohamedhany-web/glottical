@@ -19,7 +19,7 @@
     <a href="{{ url('/') }}" class="shrink-0 text-xl font-bold tracking-tight text-ink md:text-2xl xl:text-3xl">Glottical</a>
 
     <nav class="{{ $isRtl ? 'mr-1' : 'ml-1' }} hidden min-w-0 items-center gap-0 lg:flex" aria-label="{{ $isRtl ? 'التنقل الرئيسي' : 'Main' }}">
-      <a class="nav-link rounded-lg px-2 py-2 text-sm text-ink-soft hover:bg-canvas hover:text-ink xl:px-3" href="{{ route('public.learning-paths.index') }}">{{ __('landing.nav.learning_paths') }}</a>
+      <a class="nav-link rounded-lg px-2 py-2 text-sm text-ink-soft hover:bg-canvas hover:text-ink xl:px-3" href="{{ route('public.courses') }}">{{ __('landing.nav.courses') }}</a>
       <a class="nav-link rounded-lg px-2 py-2 text-sm text-ink-soft hover:bg-canvas hover:text-ink xl:px-3" href="{{ route('public.courses') }}">{{ __('landing.nav.courses') }}</a>
       <a class="nav-link rounded-lg px-2 py-2 text-sm text-ink-soft hover:bg-canvas hover:text-ink xl:px-3" href="{{ route('public.groups') }}">{{ __('landing.nav.groups') }}</a>
       <a class="nav-link hidden rounded-lg px-2 py-2 text-sm text-ink-soft hover:bg-canvas hover:text-ink xl:inline-flex xl:px-3" href="{{ route('public.categories') }}">{{ __('landing.nav.categories') }}</a>
@@ -64,7 +64,7 @@
       </form>
     </div>
     <div class="flex flex-col gap-0.5 text-sm font-medium">
-      <a class="rounded-xl px-3 py-3 transition hover:bg-canvas" href="{{ route('public.learning-paths.index') }}">{{ __('landing.nav.learning_paths') }}</a>
+      <a class="rounded-xl px-3 py-3 transition hover:bg-canvas" href="{{ route('public.courses') }}">{{ __('landing.nav.courses') }}</a>
       <a class="rounded-xl px-3 py-3 transition hover:bg-canvas" href="{{ route('public.courses') }}">{{ __('landing.nav.courses') }}</a>
       <a class="rounded-xl px-3 py-3 transition hover:bg-canvas" href="{{ route('public.groups') }}">{{ __('landing.nav.groups') }}</a>
       <a class="rounded-xl px-3 py-3 transition hover:bg-canvas" href="{{ route('public.categories') }}">{{ __('landing.nav.categories') }}</a>

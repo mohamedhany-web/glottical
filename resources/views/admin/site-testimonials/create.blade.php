@@ -1,93 +1,133 @@
 @extends('layouts.admin')
-@section('title', 'إضافة رأي')
-@section('header', 'إضافة رأي للصفحة الرئيسية')
+
+@section('title', 'إضافة رأي - Glottical')
+@section('page_title', 'إضافة رأي')
+
 @section('content')
-<div class="w-full" x-data="{ type: '{{ old('content_type', 'text') }}' }">
-    <div class="rounded-3xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-5 py-6 sm:px-8 border-b border-slate-200">
-            <h1 class="text-xl font-bold text-slate-900">رأي جديد</h1>
-            <p class="text-slate-500 mt-1 text-sm">«نص» لاقتباس مكتوب، أو «صورة» لشهادة/لقطة. التخزين على Cloudflare R2 عند ضبط SITE_SERVICES_DISK أو SITE_TESTIMONIALS_DISK.</p>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $areaClass = 'w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+@endphp
+
+<div class="space-y-5" x-data="{ type: '{{ old('content_type', 'text') }}' }">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">محتوى الموقع · آراء الرئيسية</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">رأي جديد</h2>
+            <p class="mt-1 text-sm text-muted">«نص» لاقتباس مكتوب، أو «صورة» لشهادة / لقطة</p>
         </div>
-        <form action="{{ route('admin.site-testimonials.store') }}" method="POST" enctype="multipart/form-data" class="p-5 sm:p-8 space-y-6">
-            @csrf
-            <div>
-                <span class="block text-sm font-semibold text-slate-700 mb-2">نوع العرض <span class="text-rose-500">*</span></span>
-                <div class="flex flex-wrap gap-4">
-                    <label class="inline-flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="content_type" value="text" x-model="type" class="text-sky-600 focus:ring-sky-500">
-                        <span>نص (اقتباس + اسم)</span>
-                    </label>
-                    <label class="inline-flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="content_type" value="image" x-model="type" class="text-sky-600 focus:ring-sky-500">
-                        <span>صورة (شهادة / لقطة)</span>
-                    </label>
-                </div>
-                @error('content_type')<p class="mt-1 text-sm text-rose-600">{{ $message }}</p>@enderror
+        <a href="{{ route('admin.site-testimonials.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+            <i class="fas fa-arrow-right text-xs"></i>
+            رجوع للقائمة
+        </a>
+    </section>
+
+    @if($errors->any())
+        <div class="rounded-2xl border border-danger/20 bg-danger/5 p-4 text-sm text-danger shadow-soft">
+            <p class="mb-2 font-semibold">يرجى تصحيح ما يلي:</p>
+            <ul class="list-inside list-disc space-y-1">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form action="{{ route('admin.site-testimonials.store') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+        @csrf
+
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">نوع العرض والمحتوى</h3>
+                <p class="mt-0.5 text-xs text-muted">اختر نصاً أو صورة ثم أدخل المحتوى الظاهر للزوار</p>
             </div>
-
-            <template x-if="type === 'text'">
+            <div class="grid gap-5 p-4 sm:p-5">
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">نص الرأي <span class="text-rose-500">*</span></label>
-                    <textarea name="body" rows="6" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/30">{{ old('body') }}</textarea>
-                    @error('body')<p class="mt-1 text-sm text-rose-600">{{ $message }}</p>@enderror
-                </div>
-            </template>
-
-            <template x-if="type === 'image'">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">صورة الشهادة <span class="text-rose-500">*</span></label>
-                        <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif"
-                               class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-violet-50 file:text-violet-700">
-                        <p class="mt-1 text-xs text-slate-500">jpg, png, webp, gif — حتى 10 ميجابايت تقريباً.</p>
-                        @error('image')<p class="mt-1 text-sm text-rose-600">{{ $message }}</p>@enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">وصف قصير تحت الصورة (اختياري)</label>
-                        <textarea name="body" rows="2" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl">{{ old('body') }}</textarea>
+                    <span class="{{ $labelClass }}">نوع العرض <span class="text-danger">*</span></span>
+                    <div class="flex flex-wrap gap-2">
+                        <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-line bg-canvas px-4 py-2.5 text-sm text-ink transition" :class="type === 'text' ? 'border-accent bg-accent-soft text-accent' : ''">
+                            <input type="radio" name="content_type" value="text" x-model="type" class="text-accent focus:ring-accent/20">
+                            <span>نص (اقتباس + اسم)</span>
+                        </label>
+                        <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-line bg-canvas px-4 py-2.5 text-sm text-ink transition" :class="type === 'image' ? 'border-accent bg-accent-soft text-accent' : ''">
+                            <input type="radio" name="content_type" value="image" x-model="type" class="text-accent focus:ring-accent/20">
+                            <span>صورة (شهادة / لقطة)</span>
+                        </label>
                     </div>
                 </div>
-            </template>
 
-            <div class="grid sm:grid-cols-2 gap-4">
+                <template x-if="type === 'text'">
+                    <div>
+                        <label class="{{ $labelClass }}" for="body_text">نص الرأي <span class="text-danger">*</span></label>
+                        <textarea id="body_text" name="body" rows="6" class="{{ $areaClass }}">{{ old('body') }}</textarea>
+                    </div>
+                </template>
+
+                <template x-if="type === 'image'">
+                    <div class="space-y-5">
+                        <div>
+                            <label class="{{ $labelClass }}" for="image">صورة الشهادة <span class="text-danger">*</span></label>
+                            <input id="image" type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif"
+                                   class="block w-full text-sm text-muted file:ml-4 file:rounded-xl file:border-0 file:bg-accent-soft file:px-4 file:py-2 file:text-sm file:font-medium file:text-accent hover:file:bg-accent hover:file:text-white">
+                            <p class="mt-1.5 text-xs text-muted">jpg, png, webp, gif — حتى 10 ميغابايت تقريباً.</p>
+                        </div>
+                        <div>
+                            <label class="{{ $labelClass }}" for="body_image">وصف قصير تحت الصورة <span class="font-normal text-muted">(اختياري)</span></label>
+                            <textarea id="body_image" name="body" rows="2" class="{{ $areaClass }}">{{ old('body') }}</textarea>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </article>
+
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">صاحب الرأي</h3>
+                <p class="mt-0.5 text-xs text-muted">الاسم والمسمى الظاهران بجانب الرأي</p>
+            </div>
+            <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">اسم صاحب الرأي</label>
-                    <input type="text" name="author_name" value="{{ old('author_name') }}" maxlength="190" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl">
-                    @error('author_name')<p class="mt-1 text-sm text-rose-600">{{ $message }}</p>@enderror
+                    <label class="{{ $labelClass }}" for="author_name">اسم صاحب الرأي</label>
+                    <input id="author_name" type="text" name="author_name" value="{{ old('author_name') }}" maxlength="190" class="{{ $fieldClass }}">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">المسمى (اختياري)</label>
-                    <input type="text" name="role_label" value="{{ old('role_label') }}" maxlength="190" placeholder="مثال: معلّم لغة عربية" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl">
-                    @error('role_label')<p class="mt-1 text-sm text-rose-600">{{ $message }}</p>@enderror
+                    <label class="{{ $labelClass }}" for="role_label">المسمى <span class="font-normal text-muted">(اختياري)</span></label>
+                    <input id="role_label" type="text" name="role_label" value="{{ old('role_label') }}" maxlength="190" placeholder="مثال: معلّم لغة عربية" class="{{ $fieldClass }}">
                 </div>
             </div>
+        </article>
 
-            <div class="grid sm:grid-cols-2 gap-4">
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">العرض والنشر</h3>
+                <p class="mt-0.5 text-xs text-muted">الترتيب والتفعيل والتمييز في الرئيسية</p>
+            </div>
+            <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">ترتيب العرض</label>
-                    <input type="number" name="sort_order" value="{{ old('sort_order', 0) }}" min="0" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl">
+                    <label class="{{ $labelClass }}" for="sort_order">ترتيب العرض</label>
+                    <input id="sort_order" type="number" name="sort_order" value="{{ old('sort_order', 0) }}" min="0" class="{{ $fieldClass }}">
                 </div>
-                <div class="flex flex-col gap-3 justify-end pb-1">
+                <div class="flex flex-col justify-end gap-2">
                     <input type="hidden" name="is_active" value="0">
                     <input type="hidden" name="is_featured" value="0">
-                    <label class="inline-flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="is_active" value="1" @checked(old('is_active', '1') !== '0') class="rounded border-slate-300 text-sky-600">
-                        <span class="text-sm font-semibold text-slate-700">نشط</span>
+                    <label class="inline-flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-line bg-canvas px-4 text-sm font-medium text-ink">
+                        <input type="checkbox" name="is_active" value="1" @checked(old('is_active', '1') !== '0') class="size-4 rounded border-line text-accent focus:ring-accent/20">
+                        <span>نشط ويظهر في الموقع</span>
                     </label>
-                    <label class="inline-flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="is_featured" value="1" @checked(old('is_featured')) class="rounded border-slate-300 text-amber-600">
-                        <span class="text-sm font-semibold text-slate-700">بطاقة مميزة (خلفية كحلية في الرئيسية)</span>
+                    <label class="inline-flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-line bg-canvas px-4 text-sm font-medium text-ink">
+                        <input type="checkbox" name="is_featured" value="1" @checked(old('is_featured')) class="size-4 rounded border-line text-metal focus:ring-metal/20">
+                        <span>بطاقة مميزة</span>
                     </label>
                 </div>
             </div>
-
-            <div class="flex flex-wrap gap-3 pt-2">
-                <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold">
-                    <i class="fas fa-save"></i> حفظ
+            <div class="flex flex-wrap gap-3 border-t border-line px-4 py-4 sm:px-5">
+                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-white">
+                    <i class="fas fa-save text-xs"></i> حفظ الرأي
                 </button>
-                <a href="{{ route('admin.site-testimonials.index') }}" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold">إلغاء</a>
+                <a href="{{ route('admin.site-testimonials.index') }}" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line px-6 text-sm font-medium text-ink hover:bg-canvas">إلغاء</a>
             </div>
-        </form>
-    </div>
+        </article>
+    </form>
 </div>
 @endsection

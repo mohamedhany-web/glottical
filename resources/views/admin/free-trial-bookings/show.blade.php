@@ -1,77 +1,165 @@
 @extends('layouts.admin')
 
-@section('title', 'تفاصيل حجز الحصة المجانية - ' . config('app.name'))
+@section('title', 'تفاصيل حجز الحصة المجانية - Glottical')
+@section('page_title', 'تفاصيل الحجز')
 
 @section('content')
-<div class="p-6 bg-gray-50 min-h-screen max-w-4xl mx-auto">
-    <div class="mb-6 flex items-center justify-between gap-3">
-        <a href="{{ route('admin.free-trial-bookings.index') }}" class="text-[#0B3D91] font-bold hover:underline">
-            <i class="fas fa-arrow-right ml-1"></i> رجوع للقائمة
-        </a>
-    </div>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $statusLabel = match ($booking->status) {
+        'confirmed' => 'مؤكد',
+        'completed' => 'مكتمل',
+        'cancelled' => 'ملغي',
+        default => $booking->status,
+    };
+    $statusTone = match ($booking->status) {
+        'confirmed' => 'bg-accent-soft text-accent',
+        'completed' => 'bg-canvas-muted text-muted',
+        'cancelled' => 'bg-danger/10 text-danger',
+        default => 'bg-canvas-muted text-muted',
+    };
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">حجوزات الحصة المجانية · تقييم المستوى</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ $booking->name }}</h2>
+            <p class="mt-1 text-sm text-muted">حجز #{{ $booking->id }} · {{ $booking->created_at?->diffForHumans() }}</p>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.free-trial-bookings.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                رجوع للقائمة
+            </a>
+            <a href="{{ route('admin.free-trial-bookings.availability') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-clock text-xs"></i>
+                أوقات الأسبوع
+            </a>
+        </div>
+    </section>
 
     @if(session('success'))
-        <div class="mb-6 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 font-semibold">{{ session('success') }}</div>
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
+        </div>
     @endif
 
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-        <div class="h-1.5 bg-gradient-to-l from-[#F5B800] via-[#00A3C4] to-[#0B3D91]"></div>
-        <div class="p-6 space-y-6">
-            <div>
-                <p class="text-xs font-black uppercase tracking-widest text-amber-600 mb-1">حصة تجريبية — {{ $booking->duration_minutes }} دقيقة</p>
-                <h1 class="text-2xl font-black text-gray-900">{{ $booking->name }}</h1>
-                <p class="text-sm text-gray-500 mt-1">حجز #{{ $booking->id }} · {{ $booking->created_at?->diffForHumans() }}</p>
+    <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                <i class="fas fa-calendar-day text-sm"></i>
             </div>
-
-            <div class="grid sm:grid-cols-2 gap-4 text-sm">
-                <div class="rounded-xl bg-gray-50 p-4 border border-gray-100">
-                    <p class="text-xs font-bold text-gray-500 mb-1">الموعد</p>
-                    <p class="font-bold text-gray-900 text-lg">{{ $booking->starts_at?->format('Y-m-d H:i') }}</p>
-                    <p class="text-gray-500 mt-1">حتى {{ $booking->ends_at?->format('H:i') }}</p>
-                </div>
-                <div class="rounded-xl bg-gray-50 p-4 border border-gray-100">
-                    <p class="text-xs font-bold text-gray-500 mb-1">التواصل</p>
-                    <p class="font-semibold text-gray-900">{{ $booking->email ?: '—' }}</p>
-                    <p class="text-gray-700 mt-1">{{ $booking->phone ?: '—' }}</p>
-                </div>
-                <div class="rounded-xl bg-gray-50 p-4 border border-gray-100 sm:col-span-2">
-                    <p class="text-xs font-bold text-gray-500 mb-1">هدف التعلم</p>
-                    <p class="text-gray-800">{{ $booking->goal ?: '—' }}</p>
-                </div>
-                @if($booking->user)
-                <div class="rounded-xl bg-gray-50 p-4 border border-gray-100 sm:col-span-2">
-                    <p class="text-xs font-bold text-gray-500 mb-1">حساب مسجّل</p>
-                    <p class="font-semibold text-gray-900">{{ $booking->user->name }} ({{ $booking->user->email }})</p>
-                </div>
-                @endif
+            <p class="mt-3 text-xs text-muted">الموعد</p>
+            <p class="mt-1 text-base font-semibold tabular-nums tracking-tight text-ink">{{ $booking->starts_at?->format('Y-m-d') }}</p>
+            <p class="mt-0.5 text-sm text-muted">{{ $booking->starts_at?->format('H:i') }} — {{ $booking->ends_at?->format('H:i') }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-metal/15 text-metal">
+                <i class="fas fa-hourglass-half text-sm"></i>
             </div>
+            <p class="mt-3 text-xs text-muted">المدة</p>
+            <p class="mt-1 text-base font-semibold tracking-tight text-ink">{{ (int) $booking->duration_minutes }} دقيقة</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $statusTone }}">
+                <i class="fas fa-flag text-sm"></i>
+            </div>
+            <p class="mt-3 text-xs text-muted">الحالة</p>
+            <p class="mt-1">
+                <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold {{ $statusTone }}">{{ $statusLabel }}</span>
+            </p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                <i class="fas fa-envelope text-sm"></i>
+            </div>
+            <p class="mt-3 text-xs text-muted">التواصل</p>
+            <p class="mt-1 truncate text-sm font-semibold text-ink" title="{{ $booking->email }}">{{ $booking->email ?: '—' }}</p>
+            <p class="mt-0.5 text-sm text-muted" dir="ltr">{{ $booking->phone ?: '—' }}</p>
+        </article>
+    </section>
 
-            <form method="post" action="{{ route('admin.free-trial-bookings.update-status', $booking) }}" class="space-y-4 border-t border-gray-100 pt-5">
-                @csrf
-                @method('PATCH')
-                <div class="grid sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">الحالة</label>
-                        <select name="status" class="w-full rounded-xl border-gray-300">
-                            <option value="confirmed" @selected($booking->status==='confirmed')>مؤكد</option>
-                            <option value="completed" @selected($booking->status==='completed')>مكتمل</option>
-                            <option value="cancelled" @selected($booking->status==='cancelled')>ملغي</option>
-                        </select>
+    <div class="grid gap-5 lg:grid-cols-5">
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft lg:col-span-3">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">بيانات الحجز</h3>
+                <p class="mt-0.5 text-xs text-muted">تفاصيل الطالب وهدف التعلّم المرتبط بهذا الموعد</p>
+            </div>
+            <div class="space-y-4 p-4 sm:p-5">
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="rounded-xl border border-line bg-canvas/60 p-4">
+                        <p class="text-xs font-medium text-muted">الاسم</p>
+                        <p class="mt-1 text-sm font-semibold text-ink">{{ $booking->name }}</p>
+                    </div>
+                    <div class="rounded-xl border border-line bg-canvas/60 p-4">
+                        <p class="text-xs font-medium text-muted">البريد</p>
+                        <p class="mt-1 text-sm font-semibold text-ink break-all">{{ $booking->email ?: '—' }}</p>
+                    </div>
+                    <div class="rounded-xl border border-line bg-canvas/60 p-4">
+                        <p class="text-xs font-medium text-muted">الهاتف</p>
+                        <p class="mt-1 text-sm font-semibold text-ink" dir="ltr">{{ $booking->phone ?: '—' }}</p>
+                    </div>
+                    <div class="rounded-xl border border-line bg-canvas/60 p-4">
+                        <p class="text-xs font-medium text-muted">تاريخ الإنشاء</p>
+                        <p class="mt-1 text-sm font-semibold text-ink">{{ $booking->created_at?->format('Y-m-d H:i') ?: '—' }}</p>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 mb-1">ملاحظات داخلية</label>
-                    <textarea name="notes" rows="3" class="w-full rounded-xl border-gray-300" placeholder="ملاحظات للمتابعة…">{{ old('notes', $booking->notes) }}</textarea>
+
+                <div class="rounded-xl border border-line bg-canvas/60 p-4">
+                    <p class="text-xs font-medium text-muted">هدف التعلم</p>
+                    <p class="mt-1 text-sm leading-7 text-ink">{{ $booking->goal ?: '—' }}</p>
                 </div>
-                        <div class="flex flex-wrap gap-3 items-center">
-                            <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#F5B800] text-[#0B3D91] font-black hover:brightness-105">حفظ التحديث</button>
-                        </div>
-            </form>
-            <form method="post" action="{{ route('admin.free-trial-bookings.destroy', $booking) }}" class="mt-3" onsubmit="return confirm('حذف الحجز نهائياً؟');">
-                @csrf @method('DELETE')
-                <button type="submit" class="px-5 py-2.5 rounded-xl border border-rose-300 text-rose-700 font-bold hover:bg-rose-50">حذف</button>
-            </form>
-        </div>
+
+                @if($booking->user)
+                    <div class="rounded-xl border border-line bg-canvas/60 p-4">
+                        <p class="text-xs font-medium text-muted">حساب مسجّل على المنصة</p>
+                        <p class="mt-1 text-sm font-semibold text-ink">{{ $booking->user->name }}</p>
+                        <p class="mt-0.5 text-sm text-muted">{{ $booking->user->email }}</p>
+                    </div>
+                @endif
+            </div>
+        </article>
+
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft lg:col-span-2">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">تحديث الحالة</h3>
+                <p class="mt-0.5 text-xs text-muted">غيّر الحالة وأضف ملاحظات داخلية للمتابعة</p>
+            </div>
+            <div class="p-4 sm:p-5">
+                <form method="post" action="{{ route('admin.free-trial-bookings.update-status', $booking) }}" class="space-y-4">
+                    @csrf
+                    @method('PATCH')
+                    <div>
+                        <label class="{{ $labelClass }}" for="status">الحالة</label>
+                        <select id="status" name="status" class="{{ $fieldClass }}">
+                            <option value="confirmed" @selected($booking->status === 'confirmed')>مؤكد</option>
+                            <option value="completed" @selected($booking->status === 'completed')>مكتمل</option>
+                            <option value="cancelled" @selected($booking->status === 'cancelled')>ملغي</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="{{ $labelClass }}" for="notes">ملاحظات داخلية</label>
+                        <textarea id="notes" name="notes" rows="5" class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" placeholder="ملاحظات للمتابعة…">{{ old('notes', $booking->notes) }}</textarea>
+                    </div>
+                    <button type="submit" class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                        <i class="fas fa-save text-xs"></i>
+                        حفظ التحديث
+                    </button>
+                </form>
+
+                <form method="post" action="{{ route('admin.free-trial-bookings.destroy', $booking) }}" class="mt-4 border-t border-line pt-4" onsubmit="return confirm('حذف الحجز نهائياً؟');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-danger/30 bg-surface px-4 text-sm font-medium text-danger transition hover:bg-danger/5">
+                        <i class="fas fa-trash text-xs"></i>
+                        حذف الحجز
+                    </button>
+                </form>
+            </div>
+        </article>
     </div>
 </div>
 @endsection

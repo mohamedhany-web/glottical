@@ -16,9 +16,33 @@ use Illuminate\View\View;
 
 class CrmLeadController extends Controller
 {
-    public function index(Request $request): View
+    private function authorizeLeads(Request $request): void
     {
         abort_unless($request->user()->hasPermission('manage.leads') || $request->user()->role === 'super_admin', 403);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validatedLeadPayload(Request $request): array
+    {
+        return $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:64'],
+            'company' => ['nullable', 'string', 'max:255'],
+            'source' => ['required', Rule::in(array_keys(SalesLead::sourceLabels()))],
+            'notes' => ['nullable', 'string', 'max:10000'],
+            'interested_advanced_course_id' => ['nullable', 'exists:advanced_courses,id'],
+            'crm_group_id' => ['nullable', 'exists:crm_groups,id'],
+            'assigned_to' => ['nullable', 'exists:users,id'],
+            'marketing_owner_id' => ['nullable', 'exists:users,id'],
+        ]);
+    }
+
+    public function index(Request $request): View
+    {
+        $this->authorizeLeads($request);
 
         $query = SalesLead::query()
             ->with(['marketingOwner:id,name', 'assignedTo:id,name', 'interestedCourse:id,title', 'crmGroup:id,name']);
@@ -33,15 +57,53 @@ class CrmLeadController extends Controller
 
         $leads = $query->latest()->paginate(25)->withQueryString();
 
+        $stats = [
+            'total' => SalesLead::count(),
+            'open' => SalesLead::open()->count(),
+            'filtered' => $leads->total(),
+            'closed_won' => SalesLead::where('status', SalesLead::STATUS_CLOSED_WON)->count(),
+        ];
+
         return view('admin.crm.leads.index', [
             'leads' => $leads,
             'statusLabels' => SalesLead::statusLabels(),
+            'stats' => $stats,
         ]);
+    }
+
+    public function create(Request $request): View
+    {
+        $this->authorizeLeads($request);
+
+        return view('admin.crm.leads.create', $this->formLookups());
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $this->authorizeLeads($request);
+
+        $data = $this->validatedLeadPayload($request);
+
+        try {
+            $lead = CrmLeadService::createLead($data, $request->user());
+
+            if (! empty($data['assigned_to'])) {
+                $salesUser = User::findOrFail($data['assigned_to']);
+                CrmLeadService::assignToSales($lead, $salesUser, $request->user(), $data['crm_group_id'] ?? null);
+                $lead->refresh();
+            }
+        } catch (\InvalidArgumentException $e) {
+            return back()->withErrors(['name' => $e->getMessage()])->withInput();
+        }
+
+        return redirect()
+            ->route('admin.crm.leads.show', $lead)
+            ->with('success', 'تم إنشاء العميل المحتمل بنجاح.');
     }
 
     public function show(Request $request, SalesLead $salesLead): View
     {
-        abort_unless($request->user()->hasPermission('manage.leads') || $request->user()->role === 'super_admin', 403);
+        $this->authorizeLeads($request);
 
         $salesLead->load([
             'marketingOwner', 'assignedTo', 'creator', 'linkedUser',
@@ -58,6 +120,59 @@ class CrmLeadController extends Controller
         $nextStatuses = CrmAccessService::selectableStatusesFor($request->user(), $salesLead);
 
         return view('admin.crm.leads.show', compact('salesLead', 'salesUsers', 'groups', 'nextStatuses'));
+    }
+
+    public function edit(Request $request, SalesLead $salesLead): View
+    {
+        $this->authorizeLeads($request);
+
+        return view('admin.crm.leads.edit', array_merge($this->formLookups(), [
+            'salesLead' => $salesLead,
+        ]));
+    }
+
+    public function update(Request $request, SalesLead $salesLead): RedirectResponse
+    {
+        $this->authorizeLeads($request);
+
+        $data = $this->validatedLeadPayload($request);
+
+        try {
+            CrmLeadService::updateLead($salesLead, $data, $request->user(), true);
+
+            if (array_key_exists('assigned_to', $data) && $data['assigned_to']) {
+                $currentAssigned = (int) ($salesLead->fresh()->assigned_to ?? 0);
+                if ($currentAssigned !== (int) $data['assigned_to'] && ! $salesLead->fresh()->isClosed()) {
+                    $salesUser = User::findOrFail($data['assigned_to']);
+                    CrmLeadService::assignToSales($salesLead->fresh(), $salesUser, $request->user(), $data['crm_group_id'] ?? null);
+                } elseif (! empty($data['crm_group_id'])) {
+                    $salesLead->fresh()->update(['crm_group_id' => $data['crm_group_id']]);
+                }
+            } elseif (! empty($data['crm_group_id'])) {
+                $salesLead->fresh()->update(['crm_group_id' => $data['crm_group_id']]);
+            }
+        } catch (\InvalidArgumentException $e) {
+            return back()->withErrors(['name' => $e->getMessage()])->withInput();
+        }
+
+        return redirect()
+            ->route('admin.crm.leads.show', $salesLead)
+            ->with('success', 'تم تحديث بيانات العميل المحتمل.');
+    }
+
+    public function destroy(Request $request, SalesLead $salesLead): RedirectResponse
+    {
+        $this->authorizeLeads($request);
+
+        try {
+            CrmLeadService::deleteLead($salesLead, $request->user());
+        } catch (\InvalidArgumentException $e) {
+            return back()->withErrors(['delete' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('admin.crm.leads.index')
+            ->with('success', 'تم حذف العميل المحتمل.');
     }
 
     public function assign(Request $request, SalesLead $salesLead): RedirectResponse
@@ -103,5 +218,28 @@ class CrmLeadController extends Controller
         CrmLeadService::addNote($salesLead, $data['note'], $request->user());
 
         return back()->with('success', 'تمت إضافة الملاحظة.');
+    }
+
+    /**
+     * @return array{courses: \Illuminate\Support\Collection, groups: \Illuminate\Support\Collection, salesUsers: \Illuminate\Support\Collection, marketingUsers: \Illuminate\Support\Collection}
+     */
+    private function formLookups(): array
+    {
+        $salesCode = config('crm.employee_job_codes.sales', 'sales');
+        $marketingCode = config('crm.employee_job_codes.marketing', 'marketing');
+
+        return [
+            'courses' => AdvancedCourse::query()->orderBy('title')->get(['id', 'title']),
+            'groups' => CrmGroup::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'salesUsers' => User::employees()
+                ->whereHas('employeeJob', fn ($q) => $q->whereIn('code', ['sales', $salesCode]))
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'marketingUsers' => User::employees()
+                ->whereHas('employeeJob', fn ($q) => $q->whereIn('code', ['marketing', $marketingCode]))
+                ->orderBy('name')
+                ->get(['id', 'name']),
+            'sourceLabels' => SalesLead::sourceLabels(),
+        ];
     }
 }

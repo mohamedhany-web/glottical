@@ -5,7 +5,6 @@
 
 @section('content')
 <div class="space-y-4">
-    @include('partials.crm-admin-nav')
     <div class="grid grid-cols-3 gap-3">
         <div class="rounded-xl bg-white border p-4"><p class="text-xs text-slate-500">معلقة</p><p class="text-2xl font-bold">{{ $stats['pending'] }}</p></div>
         <div class="rounded-xl bg-white border p-4"><p class="text-xs text-slate-500">معتمدة</p><p class="text-2xl font-bold text-emerald-700">{{ $stats['approved'] }}</p></div>

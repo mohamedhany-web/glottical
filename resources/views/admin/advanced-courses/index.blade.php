@@ -35,7 +35,7 @@
             <h2 class="text-base font-semibold text-slate-800 dark:text-slate-100">البحث والتصفية</h2>
         </div>
         <div class="p-6">
-            <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div>
                     <label for="search" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">البحث</label>
                     <input type="text" name="search" id="search" value="{{ request('search') }}"
@@ -49,6 +49,14 @@
                         @foreach($courseCategoryOptions as $cc)
                             <option value="{{ $cc->id }}" {{ (string) request('course_category_id') === (string) $cc->id ? 'selected' : '' }}>{{ $cc->name }}</option>
                         @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="delivery_type" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">نوع التعلّم</label>
+                    <select name="delivery_type" id="delivery_type" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
+                        <option value="">الكل</option>
+                        <option value="group" {{ request('delivery_type') == 'group' ? 'selected' : '' }}>جماعي</option>
+                        <option value="one_to_one" {{ request('delivery_type') == 'one_to_one' ? 'selected' : '' }}>فردي 1:1</option>
                     </select>
                 </div>
                 <div>
@@ -76,9 +84,15 @@
                 <div class="section-card flex flex-col overflow-hidden">
                     <div class="section-card-header flex items-start justify-between gap-3">
                         <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 truncate flex-1 min-w-0">{{ $course->title }}</h3>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 {{ $course->is_active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-600 dark:text-slate-300' }}">
-                            {{ $course->is_active ? 'نشط' : 'معطل' }}
-                        </span>
+                        <div class="flex flex-col items-end gap-1 flex-shrink-0">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $course->is_active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-600 dark:text-slate-300' }}">
+                                {{ $course->is_active ? 'نشط' : 'معطل' }}
+                            </span>
+                            @php $isSolo = ($course->delivery_type ?? 'group') === 'one_to_one'; @endphp
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold {{ $isSolo ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200' : 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200' }}">
+                                {{ $isSolo ? 'فردي 1:1' : 'جماعي' }}
+                            </span>
+                        </div>
                     </div>
 
                     <div class="p-6 flex-1">

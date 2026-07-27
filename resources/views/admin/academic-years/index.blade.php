@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'مسارات التعلم')
-@section('header', 'مسارات التعلم')
+@section('title', 'السنوات الأكاديمية')
+@section('header', 'السنوات الأكاديمية')
 
 @section('content')
 <div class="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6" style="background: #f8fafc; min-height: 100vh;">
@@ -13,29 +13,29 @@
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div class="space-y-4 max-w-3xl">
                     <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-100 text-sky-700 text-sm font-semibold">
-                        <i class="fas fa-route"></i>
-                        إدارة مسارات التعلم — {{ config('app.name') }}
+                        <i class="fas fa-calendar-alt"></i>
+                        إدارة السنوات الأكاديمية — {{ config('app.name') }}
                     </span>
                     <h1 class="text-3xl font-black text-gray-900 leading-tight">
-                        أنشئ مسارات تعليمية مترابطة تجمع المهارات، الأطر، واللغات المطلوبة لسوق العمل
+                        نظّم المحتوى التعليمي حسب السنوات الأكاديمية والمراحل الدراسية
                     </h1>
                     <p class="text-gray-600 text-lg">
-                        كل مسار يمثل رحلة تعلم كاملة تضم مجموعات مهارية وكورسات تطبيقية. من هنا يمكنك التخطيط للمحتوى، مراقبة جاهزية المسارات، وتنسيق الفرق المسؤولة عن إنتاج الدروس.
+                        كل سنة أكاديمية تمثل طبقة تنظيمية داخلية تضم مجموعات مهارية وكورسات مرتبطة. من هنا يمكنك إدارة التصنيف، مراقبة المحتوى المرتبط، وتنسيق الفرق المسؤولة عن إنتاج الدروس.
                     </p>
                 </div>
                 <a href="{{ route('admin.academic-years.create') }}" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-sky-600 text-white hover:from-sky-700 hover:via-blue-700 hover:to-sky-700 transition-all duration-300 text-sm font-bold shadow-lg shadow-sky-600/30 hover:shadow-xl hover:shadow-sky-600/40 hover:-translate-y-0.5 w-full sm:w-auto">
                     <i class="fas fa-plus"></i>
-                    إنشاء مسار تعلم جديد
+                    إنشاء سنة أكاديمية جديدة
                 </a>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4 mt-8">
                 <div class="dashboard-card rounded-2xl p-5 card-hover-effect relative overflow-hidden group border-2 border-sky-200/50 hover:border-sky-300/70 shadow-lg hover:shadow-xl transition-all duration-300" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 249, 255, 0.95) 100%);">
-                    <p class="text-xs sm:text-sm font-bold text-sky-800/80 mb-2">إجمالي المسارات</p>
+                    <p class="text-xs sm:text-sm font-bold text-sky-800/80 mb-2">إجمالي السنوات</p>
                     <p class="text-3xl sm:text-4xl font-black bg-gradient-to-r from-sky-700 via-blue-600 to-sky-600 bg-clip-text text-transparent drop-shadow-sm">{{ $summary['total_tracks'] }}</p>
                 </div>
                 <div class="dashboard-card rounded-2xl p-5 card-hover-effect relative overflow-hidden group border-2 border-emerald-200/50 hover:border-emerald-300/70 shadow-lg hover:shadow-xl transition-all duration-300" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 253, 245, 0.95) 100%);">
-                    <p class="text-xs sm:text-sm font-bold text-emerald-800/80 mb-2">مسارات نشطة</p>
+                    <p class="text-xs sm:text-sm font-bold text-emerald-800/80 mb-2">سنوات نشطة</p>
                     <p class="text-3xl sm:text-4xl font-black bg-gradient-to-r from-emerald-700 via-green-600 to-teal-600 bg-clip-text text-transparent drop-shadow-sm">{{ $summary['active_tracks'] }}</p>
                 </div>
                 <div class="dashboard-card rounded-2xl p-5 card-hover-effect relative overflow-hidden group border-2 border-indigo-200/50 hover:border-indigo-300/70 shadow-lg hover:shadow-xl transition-all duration-300" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(238, 242, 255, 0.95) 100%);">
@@ -81,7 +81,7 @@
                                 </div>
                             </div>
                             <p class="text-sm text-gray-600 max-w-xl">
-                                {{ $track->description ? Str::limit($track->description, 160) : 'مسار تعلم متكامل يضم مجموعات مهارية متعددة مع كورسات تطبيقية متدرجة المستوى.' }}
+                                {{ $track->description ? Str::limit($track->description, 160) : 'سنة أكاديمية تنظّم مجموعات مهارية وكورسات مرتبطة ضمن هيكل المحتوى الداخلي.' }}
                             </p>
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
@@ -151,7 +151,7 @@
 
                         @if($previewCourses->isNotEmpty())
                             <div class="space-y-2">
-                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">كورسات حديثة في المسار</p>
+                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">كورسات حديثة في السنة</p>
                                 <div class="space-y-2">
                                     @foreach($previewCourses as $course)
                                         <div class="flex items-center justify-between gap-3 text-sm text-gray-600">
@@ -178,7 +178,7 @@
                             <div class="flex flex-wrap items-center gap-2">
                                 <a href="{{ route('admin.academic-years.edit', $track) }}" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-700 text-xs font-semibold">
                                     <i class="fas fa-pen"></i>
-                                    تعديل المسار
+                                    تعديل السنة
                                 </a>
                                 <a href="{{ route('admin.academic-subjects.index', ['track' => $track->id]) }}" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-sky-100 text-sky-700 hover:bg-sky-200 text-xs font-semibold">
                                     <i class="fas fa-layer-group"></i>
@@ -188,15 +188,15 @@
                                     @csrf
                                     <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs font-semibold">
                                         <i class="fas fa-power-off"></i>
-                                        {{ $track->is_active ? 'إيقاف مؤقت' : 'تفعيل المسار' }}
+                                        {{ $track->is_active ? 'إيقاف مؤقت' : 'تفعيل السنة' }}
                                     </button>
                                 </form>
-                                <form method="POST" action="{{ route('admin.academic-years.destroy', $track) }}" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا المسار التعليمي؟ سيتم حذف جميع البيانات المرتبطة به. هذا الإجراء لا يمكن التراجع عنه!');">
+                                <form method="POST" action="{{ route('admin.academic-years.destroy', $track) }}" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذه السنة الأكاديمية؟ سيتم حذف جميع البيانات المرتبطة بها. هذا الإجراء لا يمكن التراجع عنه!');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 text-xs font-semibold">
                                         <i class="fas fa-trash"></i>
-                                        حذف المسار
+                                        حذف السنة
                                     </button>
                                 </form>
                             </div>
@@ -209,16 +209,16 @@
         <div class="dashboard-card rounded-2xl card-hover-effect border-2 border-gray-200/50 shadow-xl p-12 text-center space-y-4" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%);">
             <div class="flex items-center justify-center">
                 <span class="w-16 h-16 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center text-2xl">
-                    <i class="fas fa-route"></i>
+                    <i class="fas fa-calendar-alt"></i>
                 </span>
             </div>
-            <h3 class="text-2xl font-bold text-gray-900">لا توجد مسارات تعلم بعد</h3>
+            <h3 class="text-2xl font-bold text-gray-900">لا توجد سنوات أكاديمية بعد</h3>
             <p class="text-gray-500 max-w-xl mx-auto">
-                قم بإنشاء أول مسار تعلم لتجميع الكورسات داخل رحلة تعليمية واضحة. ابدأ بتحديد الهدف التقني، مجموعات المهارات، والمهارات المطلوبة.
+                أنشئ أول سنة أكاديمية لتنظيم الكورسات والمجموعات المهارية ضمن هيكل أكاديمي واضح. ابدأ بتحديد الاسم، الرمز، والمجموعات المرتبطة.
             </p>
             <a href="{{ route('admin.academic-years.create') }}" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-sky-600 text-white hover:from-sky-700 hover:via-blue-700 hover:to-sky-700 transition-all duration-300 font-bold shadow-lg shadow-sky-600/30 hover:shadow-xl hover:shadow-sky-600/40 hover:-translate-y-0.5">
                 <i class="fas fa-plus"></i>
-                إنشاء مسار جديد
+                إنشاء سنة أكاديمية
             </a>
         </div>
     @endif

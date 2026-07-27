@@ -13,16 +13,9 @@ use Illuminate\Validation\Rule;
 
 class SupportTicketController extends Controller
 {
-    private function ensureSubscriptionSupportAccess($user): void
-    {
-        $ok = $user->hasSubscriptionFeature('support') || $user->hasSubscriptionFeature('direct_support');
-        abort_unless($ok, 403, 'خدمة الدعم الفني غير متاحة في باقتك الحالية.');
-    }
-
     public function index()
     {
         $user = auth()->user();
-        $this->ensureSubscriptionSupportAccess($user);
 
         $tickets = SupportTicket::query()
             ->where('user_id', $user->id)
@@ -38,7 +31,6 @@ class SupportTicketController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        $this->ensureSubscriptionSupportAccess($user);
 
         $data = $request->validate([
             'support_inquiry_category_id' => [
@@ -82,7 +74,6 @@ class SupportTicketController extends Controller
     {
         $user = auth()->user();
         abort_unless((int) $ticket->user_id === (int) $user->id, 403);
-        $this->ensureSubscriptionSupportAccess($user);
 
         $ticket->load(['replies.user', 'inquiryCategory']);
 
@@ -93,7 +84,6 @@ class SupportTicketController extends Controller
     {
         $user = auth()->user();
         abort_unless((int) $ticket->user_id === (int) $user->id, 403);
-        $this->ensureSubscriptionSupportAccess($user);
         abort_if(in_array($ticket->status, ['resolved', 'closed'], true), 422, 'هذه التذكرة مغلقة ولا يمكن الرد عليها.');
 
         $data = $request->validate([
@@ -115,4 +105,3 @@ class SupportTicketController extends Controller
         return back()->with('success', 'تم إرسال ردك لفريق الدعم.');
     }
 }
-

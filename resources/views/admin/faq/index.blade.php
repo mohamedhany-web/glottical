@@ -1,130 +1,196 @@
 @extends('layouts.admin')
 
-@section('title', 'إدارة الأسئلة الشائعة - ' . config('app.name'))
+@section('title', 'الأسئلة الشائعة - Glottical')
+@section('page_title', 'الأسئلة الشائعة')
 
 @section('content')
-<div class="min-h-screen bg-gray-50">
-    <div class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900">إدارة الأسئلة الشائعة</h1>
-                    <p class="mt-2 text-gray-600">إدارة الأسئلة الشائعة والردود</p>
+@php
+    $kpis = [
+        ['label' => 'إجمالي الأسئلة', 'value' => $stats['total'], 'icon' => 'fa-question-circle', 'tone' => 'accent', 'note' => 'كل الأسئلة المسجّلة'],
+        ['label' => 'نشطة', 'value' => $stats['active'], 'icon' => 'fa-eye', 'tone' => 'accent', 'note' => 'تظهر للزوار'],
+        ['label' => 'غير نشطة', 'value' => $stats['inactive'], 'icon' => 'fa-eye-slash', 'tone' => 'muted', 'note' => 'مخفية عن الموقع'],
+        ['label' => 'الفئات', 'value' => $stats['categories'], 'icon' => 'fa-folder', 'tone' => 'metal', 'note' => 'تصنيفات مستخدمة'],
+    ];
+    $toneClass = [
+        'accent' => 'bg-accent-soft text-accent',
+        'metal' => 'bg-metal/15 text-metal',
+        'muted' => 'bg-canvas-muted text-muted',
+    ];
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">محتوى الموقع · الأسئلة والردود المعروضة للزوار</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">الأسئلة الشائعة</h2>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            @if(Route::has('public.faq'))
+                <a href="{{ route('public.faq') }}" target="_blank" rel="noopener" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                    <i class="fas fa-external-link-alt text-xs"></i>
+                    معاينة الموقع
+                </a>
+            @endif
+            <a href="{{ route('admin.faq.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-plus text-xs"></i>
+                سؤال جديد
+            </a>
+        </div>
+    </section>
+
+    @if(session('success'))
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
+        </div>
+    @endif
+
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach($kpis as $kpi)
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $toneClass[$kpi['tone']] }}">
+                    <i class="fas {{ $kpi['icon'] }} text-sm"></i>
                 </div>
-                <div>
-                    <a href="{{ route('admin.faq.create') }}" 
-                       class="inline-flex items-center px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors">
-                        <i class="fas fa-plus mr-2"></i>
-                        إضافة سؤال جديد
+                <p class="mt-3 text-xs text-muted">{{ $kpi['label'] }}</p>
+                <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ number_format($kpi['value']) }}</p>
+                <p class="mt-1 text-[11px] text-muted">{{ $kpi['note'] }}</p>
+            </article>
+        @endforeach
+    </section>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-4 py-4 sm:px-5">
+            <h3 class="text-base font-semibold text-ink">البحث والفلترة</h3>
+            <p class="mt-0.5 text-xs text-muted">ابحث في السؤال أو الإجابة، أو صفِّ حسب الفئة</p>
+        </div>
+        <form method="GET" action="{{ route('admin.faq.index') }}" class="grid grid-cols-1 gap-4 p-4 sm:p-5 md:grid-cols-3 md:items-end">
+            <div>
+                <label class="{{ $labelClass }}" for="search">البحث</label>
+                <input id="search" type="search" name="search" value="{{ request('search') }}"
+                       placeholder="السؤال أو الإجابة..." class="{{ $fieldClass }}">
+            </div>
+            <div>
+                <label class="{{ $labelClass }}" for="category">الفئة</label>
+                <select id="category" name="category" class="{{ $fieldClass }}">
+                    <option value="">جميع الفئات</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category }}" @selected(request('category') == $category)>{{ $category }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white">
+                    <i class="fas fa-filter text-xs"></i>
+                    تصفية
+                </button>
+                @if(request()->anyFilled(['search', 'category']))
+                    <a href="{{ route('admin.faq.index') }}" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line px-5 text-sm font-medium text-ink hover:bg-canvas">
+                        <i class="fas fa-times text-xs"></i>
+                        مسح
                     </a>
-                </div>
+                @endif
             </div>
-        </div>
-    </div>
+        </form>
+    </article>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="bg-white shadow rounded-lg mb-6">
-            <form method="GET" action="{{ route('admin.faq.index') }}" class="p-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">البحث</label>
-                        <input type="text" name="search" value="{{ request('search') }}" 
-                               placeholder="السؤال أو الإجابة"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">الفئة</label>
-                        <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900">
-                            <option value="">جميع الفئات</option>
-                            @foreach($categories as $category)
-                            <option value="{{ $category }}" {{ request('category') == $category ? 'selected' : '' }}>{{ $category }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="flex items-end">
-                        <button type="submit" class="w-full px-4 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-700">
-                            <i class="fas fa-search mr-2"></i>
-                            بحث
-                        </button>
-                    </div>
-                </div>
-            </form>
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+            <div class="min-w-0">
+                <h3 class="text-base font-semibold text-ink">قائمة الأسئلة</h3>
+                <p class="mt-0.5 text-xs text-muted">{{ number_format($faqs->total()) }} سؤال</p>
+            </div>
+            <a href="{{ route('admin.faq.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-plus text-xs"></i>
+                إضافة
+            </a>
         </div>
 
-        <div class="bg-white shadow rounded-lg overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">
-                    الأسئلة ({{ $faqs->total() }})
-                </h3>
-            </div>
-            
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+        @if($faqs->count() > 0)
+            <div class="admin-table-wrap">
+                <table class="w-full min-w-[860px] text-right text-sm">
+                    <thead class="bg-canvas text-[11px] uppercase tracking-wide text-muted">
                         <tr>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السؤال</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الفئة</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الترتيب</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                            <th class="px-5 py-3 font-medium">السؤال</th>
+                            <th class="px-3 py-3 font-medium">الفئة</th>
+                            <th class="px-3 py-3 font-medium">الترتيب</th>
+                            <th class="px-3 py-3 font-medium">الحالة</th>
+                            <th class="px-5 py-3 font-medium">إجراءات</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse($faqs as $faq)
-                        <tr>
-                            <td class="px-6 py-4">
-                                <div class="text-sm font-medium text-gray-900">{{ $faq->question }}</div>
-                                <div class="text-sm text-gray-500 mt-1">{{ Str::limit($faq->answer, 80) }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $faq->category ?? 'غير محدد' }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $faq->order ?? 0 }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $faq->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                    {{ $faq->is_active ? 'نشط' : 'غير نشط' }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <div class="flex items-center space-x-2 space-x-reverse">
-                                    <a href="{{ route('admin.faq.show', $faq) }}" class="text-blue-600 hover:text-blue-900">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ route('admin.faq.edit', $faq) }}" class="text-sky-600 hover:text-sky-900">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form action="{{ route('admin.faq.destroy', $faq) }}" method="POST" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا السؤال؟');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-900">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-                                لا توجد أسئلة
-                            </td>
-                        </tr>
-                        @endforelse
+                    <tbody class="divide-y divide-line">
+                        @foreach($faqs as $faq)
+                            <tr class="transition hover:bg-canvas">
+                                <td class="px-5 py-3">
+                                    <div class="flex items-start gap-3">
+                                        <span class="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                                            <i class="fas fa-question text-xs"></i>
+                                        </span>
+                                        <div class="min-w-0">
+                                            <p class="font-semibold text-ink">{{ $faq->question }}</p>
+                                            <p class="mt-0.5 line-clamp-1 text-xs text-muted">{{ \Illuminate\Support\Str::limit($faq->answer, 90) }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-3">
+                                    <span class="rounded-lg bg-canvas-muted px-2.5 py-1 text-xs font-medium text-muted">{{ $faq->category ?: 'غير محدد' }}</span>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-3 tabular-nums text-muted">{{ $faq->order ?? 0 }}</td>
+                                <td class="whitespace-nowrap px-3 py-3">
+                                    @if($faq->is_active)
+                                        <span class="rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">نشط</span>
+                                    @else
+                                        <span class="rounded-lg bg-canvas-muted px-2.5 py-1 text-xs font-medium text-muted">غير نشط</span>
+                                    @endif
+                                </td>
+                                <td class="whitespace-nowrap px-5 py-3">
+                                    <div class="flex items-center gap-1.5">
+                                        <a href="{{ route('admin.faq.show', $faq) }}"
+                                           class="btn-press inline-flex size-8 items-center justify-center rounded-lg bg-canvas-muted text-muted transition hover:bg-ink hover:text-white"
+                                           title="عرض">
+                                            <i class="fas fa-eye text-xs"></i>
+                                        </a>
+                                        <a href="{{ route('admin.faq.edit', $faq) }}"
+                                           class="btn-press inline-flex size-8 items-center justify-center rounded-lg bg-accent-soft text-accent transition hover:bg-accent hover:text-white"
+                                           title="تعديل">
+                                            <i class="fas fa-pen text-xs"></i>
+                                        </a>
+                                        <form action="{{ route('admin.faq.destroy', $faq) }}" method="POST" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا السؤال؟');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="btn-press inline-flex size-8 items-center justify-center rounded-lg bg-danger/10 text-danger transition hover:bg-danger hover:text-white"
+                                                    title="حذف">
+                                                <i class="fas fa-trash text-xs"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
             </div>
 
             @if($faqs->hasPages())
-            <div class="px-6 py-4 border-t border-gray-200">
-                {{ $faqs->links() }}
-            </div>
+                <div class="border-t border-line px-4 py-4 sm:px-5">{{ $faqs->withQueryString()->links() }}</div>
             @endif
-        </div>
-    </div>
+        @else
+            <div class="px-4 py-16 text-center sm:px-5">
+                <div class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <p class="text-sm font-medium text-ink">لا توجد أسئلة</p>
+                <p class="mt-1 text-xs text-muted">
+                    @if(request()->anyFilled(['search', 'category']))
+                        لا توجد نتائج مطابقة للفلتر الحالي.
+                    @else
+                        <a href="{{ route('admin.faq.create') }}" class="text-accent hover:underline">أضف أول سؤال</a>.
+                    @endif
+                </p>
+            </div>
+        @endif
+    </article>
 </div>
 @endsection
-
-
-

@@ -15,14 +15,7 @@ class SalesLeadController extends Controller
 
         if ($request->filled('status')) {
             $s = (string) $request->input('status');
-            $allowed = [
-                SalesLead::STATUS_NEW,
-                SalesLead::STATUS_CONTACTED,
-                SalesLead::STATUS_QUALIFIED,
-                SalesLead::STATUS_CONVERTED,
-                SalesLead::STATUS_LOST,
-            ];
-            if (in_array($s, $allowed, true)) {
+            if (array_key_exists($s, SalesLead::statusLabels())) {
                 $query->where('status', $s);
             }
         }

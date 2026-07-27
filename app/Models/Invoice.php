@@ -96,11 +96,6 @@ class Invoice extends Model
         return $this->hasOne(Order::class);
     }
 
-    public function subscription()
-    {
-        return $this->hasOne(Subscription::class);
-    }
-
     public function expense()
     {
         return $this->hasOne(Expense::class);

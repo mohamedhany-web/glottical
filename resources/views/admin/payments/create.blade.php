@@ -1,23 +1,43 @@
 @extends('layouts.admin')
 
 @section('title', 'إضافة دفعة جديدة')
-@section('header', 'إضافة دفعة جديدة')
+@section('page_title', 'إضافة دفعة جديدة')
 
 @section('content')
-<div class="space-y-6">
-    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">إضافة دفعة جديدة</h1>
-        
-        <form action="{{ route('admin.payments.store') }}" method="POST" class="space-y-6">
-            @csrf
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $areaClass = 'w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">المحاسبة · المدفوعات</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إضافة دفعة جديدة</h2>
+            <p class="mt-1 text-sm text-muted">تسجيل دفعة جديدة وربطها بالعميل والفاتورة</p>
+        </div>
+        <a href="{{ route('admin.payments.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+            <i class="fas fa-arrow-right text-xs"></i>
+            رجوع للقائمة
+        </a>
+    </section>
+
+    <form action="{{ route('admin.payments.store') }}" method="POST" class="space-y-5">
+        @csrf
+
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">بيانات الدفعة</h3>
+                <p class="mt-0.5 text-xs text-muted">اختر العميل والفاتورة وأدخل تفاصيل المبلغ وطريقة الدفع</p>
+            </div>
+            <div class="grid grid-cols-1 gap-5 p-4 sm:p-5 md:grid-cols-2">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">العميل *</label>
+                    <label class="{{ $labelClass }}" for="payment-client-search">العميل *</label>
                     <label for="payment-client-search" class="sr-only">بحث عن عميل بالاسم أو البريد</label>
                     <input type="search" id="payment-client-search" autocomplete="off" placeholder="بحث بالاسم أو البريد أو الجوال…"
-                           class="w-full mb-2 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                    <select id="payment-user-id" name="user_id" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                           class="{{ $fieldClass }} mb-2">
+                    <select id="payment-user-id" name="user_id" required class="{{ $fieldClass }}">
                         <option value="">اختر العميل</option>
                         @foreach($users as $user)
                         @php
@@ -32,8 +52,8 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">الفاتورة *</label>
-                    <select name="invoice_id" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                    <label class="{{ $labelClass }}">الفاتورة *</label>
+                    <select name="invoice_id" required class="{{ $fieldClass }}">
                         @if($invoices->isEmpty())
                             <option value="" disabled selected>لا توجد فواتير مستحقة حاليًا</option>
                         @else
@@ -46,19 +66,18 @@
                         @endif
                     </select>
                     @if($invoices->isEmpty())
-                        <p class="mt-2 text-xs text-amber-600">لا توجد فواتير بحاجة إلى دفع في الوقت الحالي.</p>
+                        <p class="mt-2 text-xs text-metal">لا توجد فواتير بحاجة إلى دفع في الوقت الحالي.</p>
                     @endif
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">المبلغ *</label>
-                    <input type="number" name="amount" step="0.01" min="0" required value="{{ old('amount') }}" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                    <label class="{{ $labelClass }}">المبلغ *</label>
+                    <input type="number" name="amount" step="0.01" min="0" required value="{{ old('amount') }}" class="{{ $fieldClass }}">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">طريقة الدفع *</label>
-                    <select name="payment_method" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                    <label class="{{ $labelClass }}">طريقة الدفع *</label>
+                    <select name="payment_method" required class="{{ $fieldClass }}">
                         <option value="cash">نقدي</option>
                         <option value="card">بطاقة</option>
                         <option value="bank_transfer">تحويل بنكي</option>
@@ -67,24 +86,26 @@
                         <option value="other">أخرى</option>
                     </select>
                 </div>
-            </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
-                <textarea name="notes" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">{{ old('notes') }}</textarea>
+                <div class="md:col-span-2">
+                    <label class="{{ $labelClass }}">ملاحظات</label>
+                    <textarea name="notes" rows="3" class="{{ $areaClass }}">{{ old('notes') }}</textarea>
+                </div>
             </div>
+        </article>
 
-            <div class="flex gap-4">
-                <button type="submit" class="bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-lg shadow-sky-500/30">
-                    إضافة الدفعة
-                </button>
-                <a href="{{ route('admin.payments.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-medium transition-colors">
-                    إلغاء
-                </a>
-            </div>
-        </form>
-    </div>
+        <div class="flex flex-wrap gap-2">
+            <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white">
+                <i class="fas fa-plus text-xs"></i>
+                إضافة الدفعة
+            </button>
+            <a href="{{ route('admin.payments.index') }}" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line px-5 text-sm font-medium text-ink hover:bg-canvas">
+                إلغاء
+            </a>
+        </div>
+    </form>
 </div>
+
 @push('scripts')
 <script>
 (function () {
@@ -114,4 +135,3 @@
 </script>
 @endpush
 @endsection
-

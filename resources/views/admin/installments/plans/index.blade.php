@@ -1,257 +1,242 @@
 @extends('layouts.admin')
 
 @section('title', 'خطط التقسيط - ' . config('app.name'))
-@section('header', 'خطط التقسيط والاشتراكات')
+@section('page_title', 'خطط التقسيط والاشتراكات')
 
 @section('content')
 @php
-    $statusColors = [
-        true => 'bg-emerald-100 text-emerald-700',
-        false => 'bg-rose-100 text-rose-700',
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $statusBadges = [
+        true => ['label' => 'نشطة', 'classes' => 'bg-accent-soft text-accent'],
+        false => ['label' => 'معطلة', 'classes' => 'bg-canvas-muted text-muted'],
+    ];
+    $kpis = [
+        ['label' => 'إجمالي القيم الممولة', 'value' => number_format($stats['total_amount'] ?? 0, 2) . ' ج.م', 'icon' => 'fa-coins', 'tone' => 'accent', 'note' => 'إجمالي المبالغ التي تغطيها الخطط الحالية'],
+        ['label' => 'إجمالي الدفعات المقدمة', 'value' => number_format($stats['total_deposit'] ?? 0, 2) . ' ج.م', 'icon' => 'fa-piggy-bank', 'tone' => 'metal', 'note' => 'قيمة الدفعات المقدمة المطلوبة عند الاشتراك'],
+        ['label' => 'متوسط عدد الأقساط', 'value' => number_format($stats['average_installments'] ?? 0, 1), 'icon' => 'fa-chart-area', 'tone' => 'accent', 'note' => 'متوسط الأقساط لكل خطة تمويلية'],
+        ['label' => 'خطط جديدة هذا الشهر', 'value' => number_format($monthlyNew ?? 0), 'icon' => 'fa-calendar-plus', 'tone' => 'muted', 'note' => 'بقيمة ' . number_format($monthlyAmount ?? 0, 2) . ' ج.م منذ بداية الشهر'],
+    ];
+    $toneClass = [
+        'accent' => 'bg-accent-soft text-accent',
+        'metal' => 'bg-metal/15 text-metal',
+        'muted' => 'bg-canvas-muted text-muted',
     ];
 @endphp
-<div class="container mx-auto px-4 py-8 space-y-8">
-    <div class="bg-gradient-to-br from-sky-500 via-sky-600 to-purple-600 rounded-3xl shadow-xl text-white p-8 relative overflow-hidden">
-        <div class="absolute inset-y-0 right-0 w-1/3 pointer-events-none opacity-20">
-            <div class="w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-        </div>
-        <div class="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div>
-                <div class="flex items-center gap-3 flex-wrap">
-                    <h1 class="text-3xl font-black tracking-tight">لوحة خطط التقسيط</h1>
-                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/20">
-                        <i class="fas fa-layer-group text-xs"></i>
-                        إجمالي {{ number_format($stats['total'] ?? 0) }} خطة
-                    </span>
-                </div>
-                <p class="mt-3 text-white/70 max-w-2xl">
-                    تعرّف على أداء خطط الدفع بالتقسيط، قيمها الإجمالية، وعدد الاتفاقيات المرتبطة بها مع متابعة الخطط التي تستخدم التجديد الآلي عند تسجيل الطلاب.
-                </p>
-                <div class="mt-6 flex flex-wrap items-center gap-3 text-xs font-semibold">
-                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15">
-                        <span class="w-2 h-2 rounded-full bg-emerald-300"></span>
-                        نشطة: {{ number_format($stats['active'] ?? 0) }}
-                    </span>
-                    <span class="inline-flex items-center_gap-2 px-3 py-1 rounded-full bg-white/15">
-                        <span class="w-2 h-2 rounded-full bg-rose-300"></span>
-                        غير نشطة: {{ number_format($stats['inactive'] ?? 0) }}
-                    </span>
-                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15">
-                        <i class="fas fa-robot text-xs"></i>
-                        توليد تلقائي: {{ number_format($stats['auto_generate'] ?? 0) }}
-                    </span>
-                </div>
-            </div>
-            <div class="flex flex-wrap gap-3 justify-end">
-                <a href="{{ route('admin.installments.plans.create') }}" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white text-sky-700 font-semibold shadow-lg hover:shadow-xl transition-all">
-                    <i class="fas fa-plus"></i>
-                    إضافة خطة جديدة
-                </a>
-            </div>
-        </div>
-    </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div class="rounded-2xl bg-white shadow-lg border border-sky-100 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-semibold text-sky-500">إجمالي القيم الممولة</p>
-                    <p class="mt-2 text-3xl font-black text-gray-900">{{ number_format($stats['total_amount'] ?? 0, 2) }} ج.م</p>
-                </div>
-                <span class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-sky-100 text-sky-600">
-                    <i class="fas fa-coins text-lg"></i>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">المالية · التقسيط</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">لوحة خطط التقسيط</h2>
+            <p class="mt-1 text-sm text-muted">تعرّف على أداء خطط الدفع بالتقسيط، قيمها الإجمالية، وعدد الاتفاقيات المرتبطة بها</p>
+            <div class="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium">
+                <span class="inline-flex items-center gap-1.5 rounded-lg bg-accent-soft px-2.5 py-1 text-accent">
+                    <span class="size-1.5 rounded-full bg-accent"></span>
+                    نشطة: {{ number_format($stats['active'] ?? 0) }}
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-lg bg-canvas-muted px-2.5 py-1 text-muted">
+                    <span class="size-1.5 rounded-full bg-muted"></span>
+                    غير نشطة: {{ number_format($stats['inactive'] ?? 0) }}
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-lg bg-metal/15 px-2.5 py-1 text-metal">
+                    <i class="fas fa-robot text-[10px]"></i>
+                    توليد تلقائي: {{ number_format($stats['auto_generate'] ?? 0) }}
                 </span>
             </div>
-            <p class="text-xs text-gray-500 mt-3">إجمالي المبالغ التي تغطيها الخطط الحالية.</p>
         </div>
-        <div class="rounded-2xl bg-white shadow-lg border border-emerald-100 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-semibold text-emerald-500">إجمالي الدفعات المقدمة</p>
-                    <p class="mt-2 text-3xl font-black text-gray-900">{{ number_format($stats['total_deposit'] ?? 0, 2) }} ج.م</p>
-                </div>
-                <span class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600">
-                    <i class="fas fa-piggy-bank text-lg"></i>
-                </span>
-            </div>
-            <p class="text-xs text-gray-500 mt-3">قيمة الدفعات المقدمة المطلوبة عند الاشتراك.</p>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.installments.agreements.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-file-signature text-xs"></i>
+                الاتفاقيات
+            </a>
+            <a href="{{ route('admin.installments.plans.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-plus text-xs"></i>
+                إضافة خطة جديدة
+            </a>
         </div>
-        <div class="rounded-2xl bg-white shadow-lg border border-purple-100 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-semibold text-purple-500">متوسط عدد الأقساط</p>
-                    <p class="mt-2 text-3xl font-black text-gray-900">{{ number_format($stats['average_installments'] ?? 0, 1) }}</p>
-                </div>
-                <span class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-100 text-purple-600">
-                    <i class="fas fa-chart-area text-lg"></i>
-                </span>
-            </div>
-            <p class="text-xs text-gray-500 mt-3">متوسط الأقساط لكل خطة تمويلية.</p>
-        </div>
-        <div class="rounded-2xl bg-white shadow-lg border border-amber-100 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-semibold text-amber-500">خطط جديدة هذا الشهر</p>
-                    <p class="mt-2 text-3xl font-black text-gray-900">{{ number_format($monthlyNew ?? 0) }}</p>
-                </div>
-                <span class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-amber-100 text-amber-600">
-                    <i class="fas fa-calendar-plus text-lg"></i>
-                </span>
-            </div>
-            <p class="text-xs text-gray-500 mt-3">بقيمة {{ number_format($monthlyAmount ?? 0, 2) }} ج.م منذ بداية الشهر.</p>
-        </div>
-    </div>
+    </section>
 
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div class="xl:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-black text-gray-900">توزيع حسب دورية السداد</h2>
-                    <span class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-sky-100 text-sky-700">
-                        <i class="fas fa-clock text-xs"></i>
+    @if(session('success'))
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
+        </div>
+    @endif
+
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach($kpis as $kpi)
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $toneClass[$kpi['tone']] }}">
+                    <i class="fas {{ $kpi['icon'] }} text-sm"></i>
+                </div>
+                <p class="mt-3 text-xs text-muted">{{ $kpi['label'] }}</p>
+                <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ $kpi['value'] }}</p>
+                <p class="mt-1 text-[11px] text-muted">{{ $kpi['note'] }}</p>
+            </article>
+        @endforeach
+    </section>
+
+    <div class="grid grid-cols-1 gap-5 xl:grid-cols-3">
+        <div class="xl:col-span-2 grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+                    <div>
+                        <h3 class="text-base font-semibold text-ink">توزيع حسب دورية السداد</h3>
+                        <p class="mt-0.5 text-xs text-muted">حسب وحدة التكرار</p>
+                    </div>
+                    <span class="inline-flex rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">
+                        <i class="fas fa-clock me-1 text-[10px]"></i>
                         {{ $frequencyBreakdown->sum('plans_count') }} خطة
                     </span>
                 </div>
-                <div class="space-y-4">
+                <div class="space-y-4 p-4 sm:p-5">
                     @forelse($frequencyBreakdown as $item)
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
-                                <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-sky-100 text-sky-600">
-                                    <i class="fas fa-sync-alt"></i>
+                                <span class="inline-flex size-10 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                                    <i class="fas fa-sync-alt text-sm"></i>
                                 </span>
                                 <div>
-                                    <p class="text-sm font-semibold text-gray-900">{{ $unitLabels[$item->frequency_unit] ?? $item->frequency_unit }}</p>
-                                    <p class="text-xs text-gray-500">{{ number_format($item->plans_count) }} خطة</p>
+                                    <p class="text-sm font-semibold text-ink">{{ $unitLabels[$item->frequency_unit] ?? $item->frequency_unit }}</p>
+                                    <p class="text-xs text-muted">{{ number_format($item->plans_count) }} خطة</p>
                                 </div>
                             </div>
-                            <p class="text-sm font-semibold text-sky-600">{{ number_format($item->total_amount, 2) }} ج.م</p>
+                            <p class="text-sm font-semibold tabular-nums text-ink">{{ number_format($item->total_amount, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></p>
                         </div>
                     @empty
-                        <p class="text-sm text-gray-500">لا توجد بيانات للتوزيع حالياً.</p>
+                        <p class="text-sm text-muted">لا توجد بيانات للتوزيع حالياً.</p>
                     @endforelse
                 </div>
-            </div>
+            </article>
 
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-                <h2 class="text-lg font-black text-gray-900 mb-4">أعلى الخطط قيمة</h2>
-                <div class="space-y-4">
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">أعلى الخطط قيمة</h3>
+                    <p class="mt-0.5 text-xs text-muted">الخطط ذات أعلى مبالغ تمويل</p>
+                </div>
+                <div class="space-y-3 p-4 sm:p-5">
                     @forelse($highValuePlans as $plan)
-                        <div class="p-4 rounded-2xl border border-gray-100 bg-gray-50/70">
+                        <div class="rounded-xl border border-line bg-canvas/40 p-4">
                             <div class="flex items-center justify-between">
-                                <p class="text-sm font-semibold text-gray-900">{{ $plan->name }}</p>
-                                <span class="text-xs text-gray-500">{{ optional($plan->created_at)->diffForHumans() }}</span>
+                                <p class="text-sm font-semibold text-ink">{{ $plan->name }}</p>
+                                <span class="text-xs text-muted">{{ optional($plan->created_at)->diffForHumans() }}</span>
                             </div>
-                            <p class="text-xs text-sky-600 mt-1">{{ $plan->course->title ?? 'خطة عامة' }}</p>
+                            <p class="mt-1 text-xs text-accent">{{ $plan->course->title ?? 'خطة عامة' }}</p>
                             <div class="mt-3 flex items-center justify-between">
-                                <span class="text-sm font-semibold text-gray-900">{{ number_format($plan->total_amount ?? 0, 2) }} ج.م</span>
-                                <a href="{{ route('admin.installments.plans.show', $plan) }}" class="text-xs font-semibold text-sky-600 hover:text-sky-800">
+                                <span class="text-sm font-semibold tabular-nums text-ink">{{ number_format($plan->total_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></span>
+                                <a href="{{ route('admin.installments.plans.show', $plan) }}" class="text-xs font-medium text-accent hover:underline">
                                     تفاصيل <i class="fas fa-arrow-left text-[10px]"></i>
                                 </a>
                             </div>
                         </div>
                     @empty
-                        <div class="text-sm text-gray-500">لا توجد خطط مميزة بعد.</div>
+                        <p class="text-sm text-muted">لا توجد خطط مميزة بعد.</p>
                     @endforelse
                 </div>
-            </div>
+            </article>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-            <h2 class="text-lg font-black text-gray-900 mb-4">أحدث الخطط</h2>
-            <div class="space-y-4">
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">أحدث الخطط</h3>
+                <p class="mt-0.5 text-xs text-muted">آخر الخطط المضافة</p>
+            </div>
+            <div class="space-y-3 p-4 sm:p-5">
                 @forelse($recentPlans as $recent)
-                    <div class="p-4 rounded-2xl border border-gray-100 bg-gray-50/70">
+                    <div class="rounded-xl border border-line bg-canvas/40 p-4">
                         <div class="flex items-center justify-between">
-                            <p class="text-sm font-semibold text-gray-900">{{ $recent->name }}</p>
-                            <span class="text-xs text-gray-500">{{ optional($recent->created_at)->diffForHumans() }}</span>
+                            <p class="text-sm font-semibold text-ink">{{ $recent->name }}</p>
+                            <span class="text-xs text-muted">{{ optional($recent->created_at)->diffForHumans() }}</span>
                         </div>
-                        <p class="text-xs text-sky-600 mt-1">{{ $recent->course->title ?? 'خطة عامة' }}</p>
-                        <p class="text-xs text-gray-500 mt-1">{{ number_format($recent->installments_count) }} دفعة · كل {{ $recent->frequency_interval }} {{ $unitLabels[$recent->frequency_unit] ?? $recent->frequency_unit }}</p>
+                        <p class="mt-1 text-xs text-accent">{{ $recent->course->title ?? 'خطة عامة' }}</p>
+                        <p class="mt-1 text-xs text-muted">{{ number_format($recent->installments_count) }} دفعة · كل {{ $recent->frequency_interval }} {{ $unitLabels[$recent->frequency_unit] ?? $recent->frequency_unit }}</p>
                         <div class="mt-3 flex items-center justify-between">
-                            <span class="text-sm font-semibold text-gray-900">{{ number_format($recent->total_amount ?? 0, 2) }} ج.م</span>
-                            <a href="{{ route('admin.installments.plans.show', $recent) }}" class="text-xs font-semibold text-sky-600 hover:text-sky-800">
+                            <span class="text-sm font-semibold tabular-nums text-ink">{{ number_format($recent->total_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></span>
+                            <a href="{{ route('admin.installments.plans.show', $recent) }}" class="text-xs font-medium text-accent hover:underline">
                                 عرض سريع <i class="fas fa-arrow-left text-[10px]"></i>
                             </a>
                         </div>
                     </div>
                 @empty
-                    <div class="text-sm text-gray-500">لا توجد خطط حديثة.</div>
+                    <p class="text-sm text-muted">لا توجد خطط حديثة.</p>
                 @endforelse
             </div>
-        </div>
+        </article>
     </div>
 
-    <div class="space-y-6">
-        <div class="flex items-center justify-between">
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
             <div>
-                <h2 class="text-2xl font-black text-gray-900">قائمة خطط التقسيط</h2>
-                <p class="text-sm text-gray-500 mt-1">كل الخطط المتاحة مع تفاصيل المبالغ، الدورية، وعدد الاتفاقيات المرتبطة.</p>
+                <h3 class="text-base font-semibold text-ink">قائمة خطط التقسيط</h3>
+                <p class="mt-0.5 text-xs text-muted">كل الخطط المتاحة مع تفاصيل المبالغ، الدورية، وعدد الاتفاقيات المرتبطة</p>
             </div>
+            <span class="inline-flex rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">{{ number_format($stats['total'] ?? 0) }} خطة</span>
         </div>
 
         @if($plans->count())
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 gap-4 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-3">
                 @foreach($plans as $plan)
-                    <div class="rounded-3xl border border-gray-100 bg-white shadow-lg hover:shadow-xl transition-all p-6 flex flex-col gap-5">
+                    @php $badge = $statusBadges[$plan->is_active] ?? null; @endphp
+                    <div class="flex flex-col gap-4 rounded-2xl border border-line bg-canvas/30 p-5 transition hover:shadow-soft">
                         <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <h3 class="text-lg font-black text-gray-900">{{ $plan->name }}</h3>
-                                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold {{ $statusColors[$plan->is_active] ?? 'bg-gray-100 text-gray-700' }}">
-                                        <span class="w-2 h-2 rounded-full {{ $plan->is_active ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
-                                        {{ $plan->is_active ? 'نشطة' : 'معطلة' }}
-                                    </span>
+                            <div class="min-w-0">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h4 class="text-base font-semibold text-ink">{{ $plan->name }}</h4>
+                                    @if($badge)
+                                        <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $badge['classes'] }}">{{ $badge['label'] }}</span>
+                                    @endif
                                     @if($plan->auto_generate_on_enrollment)
-                                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-sky-100 text-sky-600">
-                                            <i class="fas fa-robot"></i>
+                                        <span class="inline-flex items-center gap-1 rounded-lg bg-metal/15 px-2.5 py-1 text-xs font-medium text-metal">
+                                            <i class="fas fa-robot text-[10px]"></i>
                                             توليد تلقائي
                                         </span>
                                     @endif
                                 </div>
-                                <p class="text-xs text-sky-600 mt-2">{{ $plan->course->title ?? 'خطة عامة' }}</p>
+                                <p class="mt-1 text-xs text-accent">{{ $plan->course->title ?? 'خطة عامة' }}</p>
                             </div>
-                            <span class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-sky-100 text-sky-600">
-                                <i class="fas fa-wallet"></i>
+                            <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                                <i class="fas fa-wallet text-sm"></i>
                             </span>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="grid grid-cols-2 gap-3 text-sm">
                             <div>
-                                <p class="text-xs text-gray-500 uppercase">إجمالي المبلغ</p>
-                                <p class="mt-1 text-base font-black text-gray-900">{{ number_format($plan->total_amount ?? 0, 2) }} ج.م</p>
+                                <p class="text-[11px] font-medium uppercase text-muted">إجمالي المبلغ</p>
+                                <p class="mt-1 font-semibold tabular-nums text-ink">{{ number_format($plan->total_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500 uppercase">دفعة مقدمة</p>
-                                <p class="mt-1 text-base font-semibold text-gray-900">{{ number_format($plan->deposit_amount ?? 0, 2) }} ج.م</p>
+                                <p class="text-[11px] font-medium uppercase text-muted">دفعة مقدمة</p>
+                                <p class="mt-1 font-semibold tabular-nums text-ink">{{ number_format($plan->deposit_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500 uppercase">عدد الأقساط</p>
-                                <p class="mt-1 font-semibold text-gray-900">{{ $plan->installments_count }} دفعة</p>
+                                <p class="text-[11px] font-medium uppercase text-muted">عدد الأقساط</p>
+                                <p class="mt-1 font-medium text-ink">{{ $plan->installments_count }} دفعة</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500 uppercase">الدورية</p>
-                                <p class="mt-1 font-semibold text-gray-900">كل {{ $plan->frequency_interval }} {{ $unitLabels[$plan->frequency_unit] ?? $plan->frequency_unit }}</p>
+                                <p class="text-[11px] font-medium uppercase text-muted">الدورية</p>
+                                <p class="mt-1 font-medium text-ink">كل {{ $plan->frequency_interval }} {{ $unitLabels[$plan->frequency_unit] ?? $plan->frequency_unit }}</p>
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-between text-xs text-gray-500">
+                        <div class="flex items-center justify-between text-xs text-muted">
                             <span>أضيفت {{ optional($plan->created_at)->diffForHumans() }}</span>
-                            <span>اتفاقيات مرتبطة: {{ number_format($plan->agreements_count ?? 0) }}</span>
+                            <span>اتفاقيات: {{ number_format($plan->agreements_count ?? 0) }}</span>
                         </div>
 
-                        <div class="flex flex-wrap items-center gap-3">
-                            <a href="{{ route('admin.installments.plans.show', $plan) }}" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-2xl bg-sky-100 text-sky-600 font-semibold hover:bg-sky-200 transition-all">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <a href="{{ route('admin.installments.plans.show', $plan) }}" class="btn-press inline-flex h-8 flex-1 items-center justify-center gap-2 rounded-lg bg-accent px-3 text-xs font-medium text-white">
                                 <i class="fas fa-eye"></i>
                                 عرض التفاصيل
                             </a>
-                            <a href="{{ route('admin.installments.plans.edit', $plan) }}" class="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all" title="تعديل">
-                                <i class="fas fa-edit"></i>
+                            <a href="{{ route('admin.installments.plans.edit', $plan) }}" class="btn-press inline-flex size-8 items-center justify-center rounded-lg border border-line text-ink transition hover:border-accent/30 hover:text-accent" title="تعديل">
+                                <i class="fas fa-edit text-xs"></i>
                             </a>
                             <form action="{{ route('admin.installments.plans.destroy', $plan) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذه الخطة؟');" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-gray-100 text-rose-600 hover:bg-rose-50 transition-all" title="حذف">
-                                    <i class="fas fa-trash"></i>
+                                <button type="submit" class="btn-press inline-flex size-8 items-center justify-center rounded-lg border border-line text-rose-600 transition hover:border-rose-300 hover:bg-rose-50" title="حذف">
+                                    <i class="fas fa-trash text-xs"></i>
                                 </button>
                             </form>
                         </div>
@@ -259,16 +244,22 @@
                 @endforeach
             </div>
 
-            <div>
-                {{ $plans->withQueryString()->links() }}
-            </div>
+            @if($plans->hasPages())
+                <div class="border-t border-line px-4 py-4 sm:px-5">{{ $plans->withQueryString()->links() }}</div>
+            @endif
         @else
-            <div class="bg-white rounded-3xl border border-gray-100 shadow-lg p-12 text-center text-gray-500">
-                <i class="fas fa-folder-open text-4xl mb-4"></i>
-                <p class="font-semibold">لا توجد خطط تقسيط بعد</p>
-                <p class="text-sm text-gray-400 mt-2">ابدأ بإنشاء أول خطة لتفعيل نظام الأقساط.</p>
+            <div class="px-4 py-16 text-center sm:px-5">
+                <div class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <p class="text-sm font-medium text-ink">لا توجد خطط تقسيط بعد</p>
+                <p class="mt-1 text-xs text-muted">ابدأ بإنشاء أول خطة لتفعيل نظام الأقساط.</p>
+                <a href="{{ route('admin.installments.plans.create') }}" class="btn-press mt-4 inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                    <i class="fas fa-plus text-xs"></i>
+                    إضافة خطة جديدة
+                </a>
             </div>
         @endif
-    </div>
+    </article>
 </div>
 @endsection

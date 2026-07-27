@@ -1,0 +1,82 @@
+/*
+ * Sana — Public marketing design tokens
+ * Design-only. Source of truth for designs/public-pages/*.html
+ * Brand: config/brand.php + landing/sana/theme.blade.php
+ */
+:root {
+  --brand-purple: #6A2CFF;
+  --brand-purple-dark: #5520CC;
+  --brand-purple-deep: #4C1D95;
+  --brand-purple-light: #F0EBFF;
+  --brand-blue: #1D4EDB;
+  --brand-yellow: #F4B000;
+  --brand-yellow-dark: #D99E00;
+
+  --p: #6D28D9;
+  --p-dark: #5B21B6;
+  --p-deep: #4C1D95;
+  --p-light: #8B5CF6;
+  --gold: #FBBF24;
+
+  --bg: #F8F7FC;
+  --surface: #ffffff;
+  --text: #1e1b4b;
+  --muted: #64748b;
+  --line: #e2e8f0;
+
+  --radius: 24px;
+  --radius-sm: 14px;
+  --font: "Tajawal", "Cairo", system-ui, sans-serif;
+  --font-display: "Cairo", "Tajawal", system-ui, sans-serif;
+  --shadow: 0 24px 60px -24px rgba(91, 33, 182, 0.35);
+  --max: 1200px;
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  direction: rtl;
+  text-align: right;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  line-height: 1.25;
+  margin: 0 0 0.5em;
+}
+
+p { margin: 0 0 1em; line-height: 1.7; color: var(--muted); }
+
+a { color: inherit; text-decoration: none; }
+
+img { max-width: 100%; display: block; }
+
+.container {
+  width: min(100% - 2rem, var(--max));
+  margin-inline: auto;
+}
+
+.badge-design {
+  position: fixed;
+  inset-inline-start: 12px;
+  bottom: 12px;
+  z-index: 9999;
+  background: #0f172a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 999px;
+  opacity: 0.85;
+  pointer-events: none;
+}

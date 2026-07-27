@@ -5,7 +5,6 @@
 
 @section('content')
 <div class="space-y-4">
-  @include('partials.crm-admin-nav')
 
   <form method="GET" class="flex flex-wrap gap-2">
     <select name="type" class="rounded-lg border px-3 py-2 text-sm">

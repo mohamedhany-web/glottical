@@ -1,0 +1,1 @@
+ <?php /**PATH C:\xampp\htdocs\glottical\resources\views\admin\subjects\index.blade.php ENDPATH**/ ?>

@@ -1,124 +1,159 @@
 @extends('layouts.admin')
 
 @section('title', 'تفاصيل الفاتورة')
-@section('header', 'تفاصيل الفاتورة')
+@section('page_title', 'تفاصيل الفاتورة')
 
 @section('content')
-<div class="space-y-10 invoice-print-wrapper">
-    <section class="rounded-3xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-5 py-6 sm:px-8 lg:px-12 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between" data-print-hide>
-            <div>
-                <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">فاتورة رقم</p>
-                <h2 class="mt-1 text-2xl font-bold text-slate-900">#{{ $invoice->invoice_number }}</h2>
-                <p class="text-sm text-slate-500 mt-1">أُنشئت في {{ $invoice->created_at->format('Y-m-d') }}</p>
-            </div>
-            <div class="flex flex-wrap items-center gap-3">
-                <a href="{{ route('admin.invoices.edit', $invoice) }}" class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-sky-300 hover:text-sky-600">
-                    <i class="fas fa-edit"></i>
-                    تعديل الفاتورة
-                </a>
-                <button type="button" onclick="window.printInvoice()" class="inline-flex items-center gap-2 rounded-2xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500">
-                    <i class="fas fa-print"></i>
-                    طباعة الفاتورة
-                </button>
-                <a href="{{ route('admin.invoices.index') }}" class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
-                    <i class="fas fa-arrow-right"></i>
-                    العودة
-                </a>
-            </div>
-        </div>
+@php
+    $statusBadges = [
+        'paid' => ['label' => 'مدفوعة', 'classes' => 'bg-accent-soft text-accent'],
+        'pending' => ['label' => 'معلقة', 'classes' => 'bg-metal/15 text-metal'],
+        'overdue' => ['label' => 'متأخرة', 'classes' => 'bg-canvas-muted text-muted'],
+        'partial' => ['label' => 'مدفوعة جزئياً', 'classes' => 'bg-metal/15 text-metal'],
+        'cancelled' => ['label' => 'ملغاة', 'classes' => 'bg-canvas-muted text-muted'],
+        'refunded' => ['label' => 'مستردة', 'classes' => 'bg-canvas-muted text-muted'],
+        'draft' => ['label' => 'مسودة', 'classes' => 'bg-canvas-muted text-muted'],
+    ];
+    $badge = $statusBadges[$invoice->status] ?? ['label' => $invoice->status, 'classes' => 'bg-canvas-muted text-muted'];
+@endphp
 
-        <div id="invoice-print-area" class="px-5 py-6 sm:px-8 lg:px-12 space-y-10">
-            <div class="flex flex-col gap-6 rounded-2xl border border-slate-200 bg-white/85 p-6 print-card">
-                <div class="flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
+<div class="space-y-5 invoice-print-wrapper">
+    <section class="flex flex-wrap items-end justify-between gap-4" data-print-hide>
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">المحاسبة · الفواتير · #{{ $invoice->invoice_number }}</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">فاتورة #{{ $invoice->invoice_number }}</h2>
+            <p class="mt-1 text-sm text-muted">أُنشئت في {{ $invoice->created_at->format('Y-m-d') }}</p>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.invoices.edit', $invoice) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-edit text-xs"></i>
+                تعديل الفاتورة
+            </a>
+            <button type="button" onclick="window.printInvoice()" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-print text-xs"></i>
+                طباعة الفاتورة
+            </button>
+            <a href="{{ route('admin.invoices.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                العودة
+            </a>
+        </div>
+    </section>
+
+    @if(session('success'))
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status" data-print-hide>
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="alert" data-print-hide>
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-canvas-muted text-muted"><i class="fas fa-exclamation-circle text-sm"></i></span>
+            <p>{{ session('error') }}</p>
+        </div>
+    @endif
+
+    <section class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div id="invoice-print-area" class="space-y-5 p-4 sm:p-5 lg:p-6">
+            <div class="rounded-2xl border border-line bg-surface p-5 print-card">
+                <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <h1 class="text-2xl font-bold text-slate-900">{{ config('app.name') }}</h1>
-                        <p class="text-sm text-slate-500 mt-2">{{ config('services.platform.support_email') }} · {{ config('services.platform.support_phone') }}</p>
+                        <h3 class="text-xl font-semibold text-ink">{{ config('app.name') }}</h3>
+                        <p class="mt-2 text-sm text-muted">{{ config('services.platform.support_email') }} · {{ config('services.platform.support_phone') }}</p>
                     </div>
-                    <div class="text-sm text-slate-500 text-left md:text-right">
-                        <p><span class="text-slate-400">رقم الفاتورة:</span> <span class="font-semibold text-slate-900">#{{ $invoice->invoice_number }}</span></p>
-                        <p><span class="text-slate-400">تاريخ الإنشاء:</span> <span class="font-semibold text-slate-900">{{ $invoice->created_at->format('Y-m-d') }}</span></p>
-                        <p><span class="text-slate-400">تاريخ الطباعة:</span> <span class="font-semibold text-slate-900">{{ now()->format('Y-m-d H:i') }}</span></p>
+                    <div class="text-sm text-muted md:text-left">
+                        <p><span class="text-muted">رقم الفاتورة:</span> <span class="font-semibold text-ink">#{{ $invoice->invoice_number }}</span></p>
+                        <p><span class="text-muted">تاريخ الإنشاء:</span> <span class="font-semibold text-ink">{{ $invoice->created_at->format('Y-m-d') }}</span></p>
+                        <p><span class="text-muted">تاريخ الطباعة:</span> <span class="font-semibold text-ink">{{ now()->format('Y-m-d H:i') }}</span></p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <div class="rounded-2xl bg-slate-50/60 p-5 text-sm text-slate-600 print-strip">
-                        <h3 class="text-base font-semibold text-slate-900 mb-3">بيانات العميل</h3>
-                        <dl class="space-y-2">
-                            <div class="flex justify-between gap-6"><dt>الاسم</dt><dd class="font-semibold text-slate-900">{{ $invoice->user->name ?? 'غير معروف' }}</dd></div>
-                            <div class="flex justify-between gap-6"><dt>رقم الهاتف</dt><dd class="font-semibold text-slate-900">{{ $invoice->user->phone ?? '—' }}</dd></div>
-                            <div class="flex justify-between gap-6"><dt>البريد الإلكتروني</dt><dd class="font-semibold text-slate-900">{{ $invoice->user->email ?? '—' }}</dd></div>
-                            <div class="flex justify-between gap-6"><dt>نوع الفاتورة</dt><dd class="font-semibold text-slate-900">{{ $invoice->type }}</dd></div>
+                <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div class="rounded-2xl border border-line bg-canvas-muted/40 p-5 text-sm text-ink-soft print-strip">
+                        <h4 class="text-base font-semibold text-ink">بيانات العميل</h4>
+                        <dl class="mt-3 space-y-2">
+                            <div class="flex justify-between gap-6"><dt class="text-muted">الاسم</dt><dd class="font-semibold text-ink">{{ $invoice->user->name ?? 'غير معروف' }}</dd></div>
+                            <div class="flex justify-between gap-6"><dt class="text-muted">رقم الهاتف</dt><dd class="font-semibold text-ink">{{ $invoice->user->phone ?? '—' }}</dd></div>
+                            <div class="flex justify-between gap-6"><dt class="text-muted">البريد الإلكتروني</dt><dd class="font-semibold text-ink">{{ $invoice->user->email ?? '—' }}</dd></div>
+                            <div class="flex justify-between gap-6"><dt class="text-muted">نوع الفاتورة</dt><dd class="font-semibold text-ink">{{ $invoice->type }}</dd></div>
                         </dl>
                     </div>
-                    <div class="rounded-2xl bg-slate-50/60 p-5 text-sm text-slate-600 print-strip">
-                        <h3 class="text-base font-semibold text-slate-900 mb-3">حالة الفاتورة</h3>
-                        <dl class="space-y-2">
-                            <div class="flex justify-between gap-6"><dt>الحالة</dt><dd>
-                                <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold status-badge" data-status="{{ $invoice->status }}">
-                                    <span class="h-2 w-2 rounded-full bg-current"></span>
-                                    {{ $invoice->status === 'paid' ? 'مدفوعة' : ($invoice->status === 'pending' ? 'معلقة' : 'متأخرة') }}
+                    <div class="rounded-2xl border border-line bg-canvas-muted/40 p-5 text-sm text-ink-soft print-strip">
+                        <h4 class="text-base font-semibold text-ink">حالة الفاتورة</h4>
+                        <dl class="mt-3 space-y-2">
+                            <div class="flex justify-between gap-6"><dt class="text-muted">الحالة</dt><dd>
+                                <span class="inline-flex items-center gap-2 rounded-lg px-2.5 py-1 text-xs font-medium status-badge {{ $badge['classes'] }}" data-status="{{ $invoice->status }}">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+                                    {{ $badge['label'] }}
                                 </span>
                             </dd></div>
-                            <div class="flex justify-between gap-6"><dt>تاريخ الاستحقاق</dt><dd class="font-semibold text-slate-900">{{ $invoice->due_date ? $invoice->due_date->format('Y-m-d') : '—' }}</dd></div>
-                            <div class="flex justify-between gap-6"><dt>آخر تحديث</dt><dd class="font-semibold text-slate-900">{{ $invoice->updated_at->format('Y-m-d H:i') }}</dd></div>
-                            <div class="flex justify-between gap-6"><dt>ملاحظات</dt><dd class="font-semibold text-slate-900">{{ $invoice->notes ?: '—' }}</dd></div>
+                            <div class="flex justify-between gap-6"><dt class="text-muted">تاريخ الاستحقاق</dt><dd class="font-semibold text-ink">{{ $invoice->due_date ? $invoice->due_date->format('Y-m-d') : '—' }}</dd></div>
+                            <div class="flex justify-between gap-6"><dt class="text-muted">آخر تحديث</dt><dd class="font-semibold text-ink">{{ $invoice->updated_at->format('Y-m-d H:i') }}</dd></div>
+                            <div class="flex justify-between gap-6"><dt class="text-muted">ملاحظات</dt><dd class="font-semibold text-ink">{{ $invoice->notes ?: '—' }}</dd></div>
                         </dl>
                     </div>
                 </div>
             </div>
 
-            <div class="rounded-2xl border border-slate-200 bg-white/85 p-6 print-card">
-                <h3 class="text-lg font-bold text-slate-900">ملخص الرسوم</h3>
-                <table class="mt-4 w-full text-sm text-slate-600">
-                    <tbody class="divide-y divide-slate-200">
-                        <tr class="flex items-center justify-between py-3">
-                            <td>المبلغ الفرعي</td>
-                            <td class="font-semibold text-slate-900">{{ number_format($invoice->subtotal, 2) }} ج.م</td>
-                        </tr>
-                        @if ($invoice->tax_amount > 0)
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface print-card">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">ملخص الرسوم</h3>
+                </div>
+                <div class="p-4 sm:p-5">
+                    <table class="w-full text-sm text-ink-soft">
+                        <tbody class="divide-y divide-line">
                             <tr class="flex items-center justify-between py-3">
-                                <td>الضريبة</td>
-                                <td class="font-semibold text-slate-900">{{ number_format($invoice->tax_amount, 2) }} ج.م</td>
+                                <td>المبلغ الفرعي</td>
+                                <td class="font-semibold tabular-nums text-ink">{{ number_format($invoice->subtotal, 2) }} ج.م</td>
                             </tr>
-                        @endif
-                        @if ($invoice->discount_amount > 0)
-                            <tr class="flex items-center justify-between py-3">
-                                <td>الخصم</td>
-                                <td class="font-semibold text-rose-600">-{{ number_format($invoice->discount_amount, 2) }} ج.م</td>
-                            </tr>
-                        @endif
-                        <tr class="flex items-center justify-between py-3 text-lg font-bold text-slate-900">
-                            <td>الإجمالي المستحق</td>
-                            <td class="text-sky-600">{{ number_format($invoice->total_amount, 2) }} ج.م</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            @if ($invoice->payments && $invoice->payments->count() > 0)
-                <div class="rounded-2xl border border-slate-200 bg-white/85 p-6 print-card">
-                    <h3 class="text-lg font-bold text-slate-900">سجل المدفوعات</h3>
-                    <table class="mt-4 w-full text-sm text-slate-600">
-                        <thead>
-                            <tr class="grid grid-cols-3 gap-4 border-b border-slate-200 pb-3 text-xs uppercase tracking-widest text-slate-400">
-                                <th class="text-right">رقم الدفعة</th>
-                                <th class="text-center">تاريخ الدفع</th>
-                                <th class="text-left">المبلغ</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200">
-                            @foreach ($invoice->payments as $payment)
-                                <tr class="grid grid-cols-3 items-center gap-4 py-3">
-                                    <td class="text-right font-semibold text-slate-900">{{ $payment->payment_number }}</td>
-                                    <td class="text-center">{{ $payment->paid_at ? $payment->paid_at->format('Y-m-d') : '—' }}</td>
-                                    <td class="text-left font-semibold text-slate-900">{{ number_format($payment->amount, 2) }} ج.م</td>
+                            @if ($invoice->tax_amount > 0)
+                                <tr class="flex items-center justify-between py-3">
+                                    <td>الضريبة</td>
+                                    <td class="font-semibold tabular-nums text-ink">{{ number_format($invoice->tax_amount, 2) }} ج.م</td>
                                 </tr>
-                            @endforeach
+                            @endif
+                            @if ($invoice->discount_amount > 0)
+                                <tr class="flex items-center justify-between py-3">
+                                    <td>الخصم</td>
+                                    <td class="font-semibold tabular-nums text-metal">-{{ number_format($invoice->discount_amount, 2) }} ج.م</td>
+                                </tr>
+                            @endif
+                            <tr class="flex items-center justify-between py-3 text-base font-semibold text-ink">
+                                <td>الإجمالي المستحق</td>
+                                <td class="tabular-nums text-accent">{{ number_format($invoice->total_amount, 2) }} ج.م</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
+            </article>
+
+            @if ($invoice->payments && $invoice->payments->count() > 0)
+                <article class="overflow-hidden rounded-2xl border border-line bg-surface print-card">
+                    <div class="border-b border-line px-4 py-4 sm:px-5">
+                        <h3 class="text-base font-semibold text-ink">سجل المدفوعات</h3>
+                    </div>
+                    <div class="admin-table-wrap overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="border-b border-line bg-canvas/60 text-xs text-muted">
+                                <tr>
+                                    <th class="px-4 py-3 text-start font-medium">رقم الدفعة</th>
+                                    <th class="px-4 py-3 text-center font-medium">تاريخ الدفع</th>
+                                    <th class="px-4 py-3 text-end font-medium">المبلغ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-line">
+                                @foreach ($invoice->payments as $payment)
+                                    <tr class="hover:bg-canvas/40">
+                                        <td class="px-4 py-3 font-semibold text-ink">{{ $payment->payment_number }}</td>
+                                        <td class="px-4 py-3 text-center text-muted">{{ $payment->paid_at ? $payment->paid_at->format('Y-m-d') : '—' }}</td>
+                                        <td class="px-4 py-3 text-end font-semibold tabular-nums text-ink">{{ number_format($payment->amount, 2) }} ج.م</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
             @endif
         </div>
     </section>
@@ -126,12 +161,12 @@
 
 @push('styles')
 <style>
-    .print-strip { border: 1px solid rgba(226, 232, 240, 0.6); }
-    .status-badge[data-status="paid"] { background: rgba(34, 197, 94, 0.18) !important; color: #15803d !important; }
-    .status-badge[data-status="pending"] { background: rgba(245, 158, 11, 0.18) !important; color: #b45309 !important; }
+    .print-strip { border: 1px solid var(--color-line, rgba(226, 232, 240, 0.8)); }
+    .status-badge[data-status="paid"] { background: color-mix(in srgb, var(--color-accent, #0B3D91) 12%, transparent) !important; color: var(--color-accent, #0B3D91) !important; }
+    .status-badge[data-status="pending"] { background: color-mix(in srgb, var(--color-metal, #64748b) 15%, transparent) !important; color: var(--color-metal, #64748b) !important; }
     .status-badge[data-status="overdue"],
     .status-badge[data-status="unpaid"],
-    .status-badge[data-status="cancelled"] { background: rgba(248, 113, 113, 0.18) !important; color: #b91c1c !important; }
+    .status-badge[data-status="cancelled"] { background: var(--color-canvas-muted, #f1f5f9) !important; color: var(--color-muted, #64748b) !important; }
 </style>
 @endpush
 
@@ -206,4 +241,3 @@
 </script>
 @endpush
 @endsection
-

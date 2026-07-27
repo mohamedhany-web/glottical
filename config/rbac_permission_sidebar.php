@@ -90,16 +90,10 @@ return [
             'icon' => 'fas fa-wallet',
             'route_patterns' => ['admin.wallets.*'],
         ],
-        'manage.subscriptions' => [
-            'route' => 'admin.subscriptions.index',
-            'icon' => 'fas fa-calendar-check',
-            'dedupe_key' => 'admin.subscriptions.hub',
-            'route_patterns' => ['admin.subscriptions.*', 'admin.portfolio-marketing-profiles.*'],
-        ],
         'manage.student-control' => [
-            'route' => 'admin.students-control.consumption',
+            'route' => 'admin.students-accounts.index',
             'icon' => 'fas fa-eye',
-            'route_patterns' => ['admin.students-control.*'],
+            'route_patterns' => ['admin.students-accounts.*', 'admin.quality-control.*'],
         ],
         'manage.installments' => [
             'route' => 'admin.installments.plans.index',
@@ -156,7 +150,7 @@ return [
             'route' => 'admin.advanced-courses.index',
             'icon' => 'fas fa-graduation-cap',
             'dedupe_key' => 'hub.advanced-courses',
-            'route_patterns' => ['admin.advanced-courses.*', 'admin.academic-years.*', 'admin.academic-subjects.*', 'admin.learning-paths.*'],
+            'route_patterns' => ['admin.advanced-courses.*', 'admin.academic-years.*', 'admin.academic-subjects.*'],
         ],
         'manage.academic-years' => [
             'route' => 'admin.academic-years.index',
@@ -174,7 +168,7 @@ return [
             'route' => 'admin.online-enrollments.index',
             'icon' => 'fas fa-user-graduate',
             'dedupe_key' => 'hub.online-enrollments',
-            'route_patterns' => ['admin.online-enrollments.*', 'admin.learning-path-enrollments.*'],
+            'route_patterns' => ['admin.online-enrollments.*'],
         ],
         'manage.lectures' => [
             'route' => 'admin.lectures.index',
@@ -230,11 +224,6 @@ return [
             'route' => 'admin.site-testimonials.index',
             'icon' => 'fas fa-quote-right',
             'route_patterns' => ['admin.site-testimonials.*'],
-        ],
-        'manage.homepage-sliders' => [
-            'route' => 'admin.homepage-sliders.index',
-            'icon' => 'fas fa-images',
-            'route_patterns' => ['admin.homepage-sliders.*'],
         ],
         'manage.system-settings' => [
             'route' => 'admin.system-settings.edit',
@@ -311,16 +300,6 @@ return [
             'route' => 'admin.video-providers.index',
             'icon' => 'fas fa-server',
             'route_patterns' => ['admin.video-providers.*'],
-        ],
-        'manage.teacher-features' => [
-            'route' => 'admin.teacher-features.index',
-            'icon' => 'fas fa-chalkboard-teacher',
-            'route_patterns' => ['admin.teacher-features.*'],
-        ],
-        'manage.curriculum-library' => [
-            'route' => 'admin.curriculum-library.index',
-            'icon' => 'fas fa-book-open',
-            'route_patterns' => ['admin.curriculum-library.*'],
         ],
         'manage.popup-ads' => [
             'route' => 'admin.popup-ads.index',
@@ -399,12 +378,6 @@ return [
             'route' => 'admin.consultations.index',
             'icon' => 'fas fa-comments-dollar',
             'route_patterns' => ['admin.consultations.*'],
-        ],
-        'manage.hiring-academies' => [
-            'route' => 'admin.hiring-academies.index',
-            'icon' => 'fas fa-school',
-            'dedupe_key' => 'admin.hiring-academies.hub',
-            'route_patterns' => ['admin.hiring-academies.*', 'admin.academy-opportunities.*'],
         ],
         'manage.students-accounts' => [
             'route' => 'admin.students-accounts.index',

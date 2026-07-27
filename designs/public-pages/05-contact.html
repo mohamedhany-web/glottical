@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+  <title>تواصل معنا — Sana</title>
+  <meta name="theme-color" content="#5B21B6">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@800;900&family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- CSS مستخرج من landing/sana: theme + courses-catalog-theme + contact-theme -->
+  <link rel="stylesheet" href="assets/sana-theme.css">
+  <link rel="stylesheet" href="assets/sana-courses-catalog-theme.css">
+  <link rel="stylesheet" href="assets/sana-contact-theme.css">
+  <style>
+    .design-mirror-badge {
+      position: fixed; z-index: 99999; bottom: 12px; inset-inline-start: 12px;
+      background: #1e1b4b; color: #fff; font: 700 .72rem/1 Tajawal,sans-serif;
+      padding: .45rem .7rem; border-radius: 999px; opacity: .85; pointer-events: none;
+    }
+  </style>
+</head>
+<body class="sana-home sana-courses-page">
+<div class="design-mirror-badge">مرآة تصميم الإنتاج · public/contact.blade.php</div>
+<div id="sana-scroll-progress"></div>
+
+<header id="sana-nav" class="sana-nav sana-nav--hero">
+  <div class="sana-container">
+    <div class="sana-nav__inner">
+      <a href="01-home.html" class="sana-nav__brand"><span class="sana-nav__logo-text">SANA</span></a>
+      <nav class="sana-nav__links" aria-label="القائمة">
+        <a href="01-home.html">الرئيسية</a>
+        <a href="03-courses.html" class="sana-nav__path sana-nav__path--family">للطلاب وأولياء الأمور</a>
+        <a href="02-about.html">كيف تعمل سنا؟</a>
+        <a href="05-contact.html" class="is-active">تواصل معنا</a>
+      </nav>
+      <div class="sana-nav__actions">
+        <a href="06-auth-login.html" class="sana-nav__login">تسجيل الدخول</a>
+        <a href="05-contact.html" class="sana-nav__signup">احجز تقييم مستوى</a>
+      </div>
+      <button type="button" id="sana-mobile-toggle" class="sana-nav__burger" aria-expanded="false" aria-controls="sana-mobile-menu" aria-label="فتح القائمة">
+        <i class="fas fa-bars" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div id="sana-mobile-menu" class="sana-nav__mobile" aria-hidden="true">
+      <a href="01-home.html">الرئيسية</a>
+      <a href="03-courses.html" class="sana-nav__path sana-nav__path--family">للطلاب وأولياء الأمور</a>
+      <a href="02-about.html">كيف تعمل سنا؟</a>
+      <a href="05-contact.html" class="is-active">تواصل معنا</a>
+      <a href="06-auth-login.html">تسجيل الدخول</a>
+      <a href="05-contact.html" class="sana-nav__signup sana-nav__signup--block">احجز تقييم مستوى</a>
+      <a href="05-contact.html" class="sana-nav__signup sana-nav__signup--block sana-nav__signup--wa">تواصل عبر واتساب</a>
+    </div>
+  </div>
+</header>
+<div id="sana-mobile-backdrop" class="sana-nav__backdrop" aria-hidden="true"></div>
+
+<main class="sana-contact-page">
+
+<section class="sana-ct-hero">
+  <div class="sana-container">
+    <div class="sana-ct-hero__grid sana-reveal">
+      <div class="sana-ct-hero__content">
+        <span class="sana-ct-hero__eyebrow"><i class="fas fa-headset"></i> مركز الدعم</span>
+        <h1 class="sana-ct-hero__title">
+          نحن هنا
+          <span class="hl">لمساعدتك</span>
+        </h1>
+        <p class="sana-ct-hero__sub">سواء كنت طالباً، وليّ أمر، أو معلّماً — فريق Sana جاهز للإجابة في أوقات العمل (السعودية ومصر).</p>
+        <div class="sana-ct-hero__actions">
+          <a href="#contact-form" class="sana-btn sana-btn--yellow sana-btn--lg"><i class="fas fa-paper-plane"></i> أرسل رسالة</a>
+          <a href="#" class="sana-btn sana-btn--wa sana-btn--lg"><i class="fab fa-whatsapp"></i> تحدّث عبر واتساب</a>
+        </div>
+        <div class="sana-ct-hero__trust">
+          <span><i class="fas fa-bolt"></i> رد خلال 24 ساعة</span>
+          <span><i class="fas fa-shield-halved"></i> بياناتك محمية</span>
+          <span><i class="fas fa-globe-americas"></i> دعم السعودية ومصر</span>
+        </div>
+      </div>
+      <div class="sana-ct-hero__visual">
+        <div class="sana-ct-scene" aria-hidden="true">
+          <div class="sana-ct-scene__deco">
+            <span class="sana-ct-scene__ring"></span>
+            <span class="sana-ct-scene__blob sana-ct-scene__blob--1"></span>
+            <span class="sana-ct-scene__blob sana-ct-scene__blob--2"></span>
+            <span class="sana-ct-scene__spark">✦</span>
+          </div>
+          <svg class="sana-ct-scene__main" viewBox="0 0 360 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="ctGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#8B5CF6"/><stop offset="100%" stop-color="#5B21B6"/></linearGradient>
+              <linearGradient id="ctGold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FCD34D"/><stop offset="100%" stop-color="#F59E0B"/></linearGradient>
+            </defs>
+            <g transform="translate(180 155)">
+              <circle cx="0" cy="0" r="72" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+              <path d="M-36 -8 C-36 -32 36 -32 36 -8 V16 C36 28 24 36 12 36 H-12 C-24 36 -36 28 -36 16 Z" fill="url(#ctGrad)"/>
+              <rect x="-44" y="-4" width="16" height="28" rx="8" fill="rgba(255,255,255,0.9)"/>
+              <rect x="28" y="-4" width="16" height="28" rx="8" fill="rgba(255,255,255,0.9)"/>
+            </g>
+            <g transform="translate(68 108)">
+              <rect x="0" y="0" width="72" height="44" rx="14" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.25)"/>
+            </g>
+            <g transform="translate(248 210) rotate(8)">
+              <rect x="0" y="0" width="64" height="44" rx="10" fill="url(#ctGold)" opacity="0.9"/>
+            </g>
+          </svg>
+          <div class="sana-ct-scene__chip"><i class="fas fa-clock"></i> 9 ص – 9 م</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sana-section">
+  <div class="sana-container">
+    <div class="sana-head sana-head--center sana-reveal" style="margin-bottom:32px">
+      <span class="sana-head__eyebrow">Sana</span>
+      <h2 class="sana-head__title">اختر <span class="hl">طريقة التواصل</span></h2>
+      <span class="sana-head__line"></span>
+      <p class="sana-head__sub">قنوات متعددة — اختر الأنسب لك. البريد الرسمي على نطاق المنصة.</p>
+    </div>
+    <p class="sana-ct-official-email sana-reveal" role="note">
+      <i class="fas fa-envelope-circle-check"></i>
+      <span>البريد الرسمي على نطاق المنصة: <strong dir="ltr">info@sanaedu.com</strong></span>
+    </p>
+    <div class="sana-ct-channels" id="social-links">
+      <a href="#" class="sana-ct-channel sana-reveal">
+        <span class="sana-ct-channel__icon sana-ct-channel__icon--wa"><i class="fab fa-whatsapp"></i></span>
+        <strong>واتساب</strong>
+        <p>رد سريع عبر المحادثة — الأفضل لأولياء الأمور.</p>
+        <span class="sana-ct-channel__btn">افتح واتساب <i class="fas fa-arrow-left"></i></span>
+      </a>
+      <a href="mailto:info@sanaedu.com" class="sana-ct-channel sana-reveal">
+        <span class="sana-ct-channel__icon sana-ct-channel__icon--email"><i class="fas fa-envelope"></i></span>
+        <strong>البريد الإلكتروني</strong>
+        <p>أرسل تفاصيل طلبك — سنرد خلال 24 ساعة.</p>
+        <span class="sana-ct-channel__info">info@sanaedu.com</span>
+        <span class="sana-ct-channel__btn">أرسل بريداً <i class="fas fa-arrow-left"></i></span>
+      </a>
+      <a href="#contact-form" class="sana-ct-channel sana-reveal">
+        <span class="sana-ct-channel__icon sana-ct-channel__icon--chat"><i class="fas fa-comments"></i></span>
+        <strong>دردشة فورية</strong>
+        <p>تواصل لحظي مع فريق الدعم — متاح في أوقات العمل.</p>
+        <span class="sana-ct-channel__btn">ابدأ المحادثة <i class="fas fa-arrow-left"></i></span>
+      </a>
+      <div class="sana-ct-channel sana-reveal is-disabled">
+        <span class="sana-ct-channel__icon sana-ct-channel__icon--social"><i class="fas fa-share-nodes"></i></span>
+        <strong>وسائل التواصل</strong>
+        <p>تابعنا وتواصل معنا على منصاتنا الاجتماعية.</p>
+        <span class="sana-ct-channel__btn">زيارة الحسابات</span>
+      </div>
+      <a href="#" class="sana-ct-channel sana-reveal">
+        <span class="sana-ct-channel__icon sana-ct-channel__icon--help"><i class="fas fa-circle-question"></i></span>
+        <strong>مركز المساعدة</strong>
+        <p>أدلة وشروحات — قد تجد إجابتك دون انتظار.</p>
+        <span class="sana-ct-channel__btn">تصفّح المساعدة <i class="fas fa-arrow-left"></i></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="sana-section sana-section--soft" id="contact-form">
+  <div class="sana-container">
+    <div class="sana-ct-form-wrap">
+      <div class="sana-reveal">
+        <span class="sana-head__eyebrow">Sana</span>
+        <h2 class="sana-head__title" style="text-align:right;margin-bottom:8px">
+          ما <span class="hl">نوع استفسارك؟</span>
+        </h2>
+        <p class="sana-head__sub" style="margin:0 0 20px;text-align:right;max-width:none">اختر التصنيف الأقرب — لنوجّه رسالتك للفريق المناسب.</p>
+        <div class="sana-ct-categories">
+          <button type="button" class="sana-ct-cat is-active"><i class="fas fa-clipboard-check"></i><span>تقييم مستوى مجاني</span></button>
+          <button type="button" class="sana-ct-cat"><i class="fas fa-screwdriver-wrench"></i><span>دعم فني</span></button>
+          <button type="button" class="sana-ct-cat"><i class="fas fa-book-open"></i><span>أسئلة الدورات</span></button>
+          <button type="button" class="sana-ct-cat"><i class="fas fa-chalkboard-user"></i><span>طلبات المعلّمين</span></button>
+          <button type="button" class="sana-ct-cat"><i class="fas fa-handshake"></i><span>شراكات</span></button>
+          <button type="button" class="sana-ct-cat"><i class="fas fa-credit-card"></i><span>الفوترة والدفع</span></button>
+          <button type="button" class="sana-ct-cat"><i class="fas fa-comments"></i><span>استفسار عام</span></button>
+        </div>
+      </div>
+
+      <div class="sana-ct-form-card sana-reveal">
+        <div class="sana-head" style="margin-bottom:24px;text-align:right">
+          <h2 class="sana-head__title" style="font-size:1.35rem">
+            أرسل <span class="hl">رسالتك</span>
+          </h2>
+          <p class="sana-head__sub" style="margin:8px 0 0;text-align:right;max-width:none">املأ النموذج وسيتواصل معك أحد أعضاء فريقنا في أقرب وقت.</p>
+        </div>
+        <form onsubmit="event.preventDefault();" novalidate>
+          <div class="sana-ct-field">
+            <input type="text" id="name" required maxlength="255" placeholder=" " autocomplete="name">
+            <label for="name">الاسم الكامل *</label>
+          </div>
+          <div class="sana-ct-form-row">
+            <div class="sana-ct-field">
+              <input type="email" id="email" required maxlength="255" placeholder=" " dir="ltr" autocomplete="email">
+              <label for="email">البريد الإلكتروني *</label>
+            </div>
+            <div class="sana-ct-field">
+              <input type="tel" id="phone" maxlength="20" placeholder=" " dir="ltr" autocomplete="tel">
+              <label for="phone">رقم الجوال (اختياري)</label>
+            </div>
+          </div>
+          <div class="sana-ct-field">
+            <input type="text" id="subject" value="طلب تقييم مستوى مجاني" required maxlength="255" placeholder=" ">
+            <label for="subject">الموضوع *</label>
+          </div>
+          <div class="sana-ct-field">
+            <textarea id="message" required maxlength="5000" placeholder=" "></textarea>
+            <label for="message">الرسالة *</label>
+          </div>
+          <button type="submit" class="sana-btn sana-btn--purple sana-ct-submit">
+            <i class="fas fa-paper-plane"></i> إرسال الرسالة
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sana-section">
+  <div class="sana-container">
+    <div class="sana-head sana-head--center sana-reveal" style="margin-bottom:32px">
+      <h2 class="sana-head__title">ماذا <span class="hl">تتوقع؟</span></h2>
+      <span class="sana-head__line"></span>
+      <p class="sana-head__sub">شفافية كاملة — أوقات دعم موحّدة بتوقيت السعودية (GMT+3).</p>
+    </div>
+    <div class="sana-ct-response">
+      <div class="sana-ct-response__card sana-reveal">
+        <i class="fas fa-bolt"></i>
+        <strong>متوسط الرد</strong>
+        <em>خلال 24 ساعة</em>
+        <span>لبريد النموذج — واتساب أسرع في أوقات العمل.</span>
+      </div>
+      <div class="sana-ct-response__card sana-reveal">
+        <i class="fas fa-clock"></i>
+        <strong>أوقات الدعم</strong>
+        <em>9 ص – 9 م</em>
+        <span>الأحد – الخميس — توقيت السعودية (GMT+3).</span>
+      </div>
+      <div class="sana-ct-response__card sana-reveal">
+        <i class="fas fa-calendar-week"></i>
+        <strong>أيام العمل</strong>
+        <em>الأحد – الخميس</em>
+        <span>دعم محدود في عطلة نهاية الأسبوع.</span>
+      </div>
+      <div class="sana-ct-response__card sana-reveal">
+        <i class="fas fa-headset"></i>
+        <strong>قنوات الدعم</strong>
+        <em>3+ قنوات</em>
+        <span>بريد، نموذج تواصل، واتساب/هاتف عند التفعيل.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sana-section sana-section--soft" id="faq">
+  <div class="sana-container">
+    <div class="sana-head sana-head--center sana-reveal" style="margin-bottom:28px">
+      <h2 class="sana-head__title">مساعدة <span class="hl">سريعة</span></h2>
+      <span class="sana-head__line"></span>
+      <p class="sana-head__sub">إجابات فورية على الأسئلة الأكثر شيوعاً — قبل التواصل مع الدعم.</p>
+    </div>
+    <div class="sana-faq sana-reveal" id="sana-faq" style="max-width:720px;margin-inline:auto">
+      <div class="sana-faq-item is-open">
+        <button type="button" class="sana-faq-q" aria-expanded="true">كيف أسجّل في دورة؟ <i class="fas fa-chevron-down"></i></button>
+        <div class="sana-faq-a">تصفّح الدورات، اختر الدورة المناسبة، واضغط «سجّل الآن». يمكنك إنشاء حساب مجاني أو تسجيل الدخول إن كان لديك حساب.</div>
+      </div>
+      <div class="sana-faq-item">
+        <button type="button" class="sana-faq-q">كيف أحصل على شهادة؟ <i class="fas fa-chevron-down"></i></button>
+        <div class="sana-faq-a">بعد إتمام متطلبات الدورة (الحضور، الاختبارات، الواجبات) تُصدر شهادتك الرقمية تلقائياً — قابلة للتحقق عبر رابط فريد.</div>
+      </div>
+      <div class="sana-faq-item">
+        <button type="button" class="sana-faq-q">كيف أستعيد كلمة المرور؟ <i class="fas fa-chevron-down"></i></button>
+        <div class="sana-faq-a">من صفحة تسجيل الدخول اضغط «نسيت كلمة المرور»، أدخل بريدك، واتبع الرابط المرسل إليك.</div>
+      </div>
+      <div class="sana-faq-item">
+        <button type="button" class="sana-faq-q">كيف أتواصل مع معلّم؟ <i class="fas fa-chevron-down"></i></button>
+        <div class="sana-faq-a">من صفحة الدورة أو المعلّم يمكنك حجز حصة أو إرسال رسالة عبر المنصة — أو تواصل مع الدعم لمساعدتك.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sana-section">
+  <div class="sana-container">
+    <div class="sana-head sana-head--center sana-reveal" style="margin-bottom:32px">
+      <h2 class="sana-head__title">موقعنا <span class="hl">على الخريطة</span></h2>
+      <span class="sana-head__line"></span>
+      <p class="sana-head__sub">المقرّ في الرياض — الدعم والتعلّم عن بُعد للسعودية ومصر.</p>
+    </div>
+    <div class="sana-ct-location sana-reveal">
+      <div class="sana-ct-location__info">
+        <h3><i class="fas fa-building" style="color:var(--p)"></i> Sana</h3>
+        <div class="sana-ct-location__row">
+          <i class="fas fa-location-dot"></i>
+          <span>المقرّ: الرياض، المملكة العربية السعودية</span>
+        </div>
+        <div class="sana-ct-location__row sana-ct-location__row--note">
+          <i class="fas fa-circle-info"></i>
+          <span>الزيارة بالموعد المسبق — التسجيل والدعم يتمّان إلكترونياً.</span>
+        </div>
+        <div class="sana-ct-location__row">
+          <i class="fas fa-clock"></i>
+          <span>الأحد – الخميس: 9 ص – 9 م (توقيت السعودية (GMT+3))</span>
+        </div>
+        <div class="sana-ct-location__row">
+          <i class="fas fa-envelope"></i>
+          <a href="mailto:info@sanaedu.com" style="color:var(--p);font-weight:800;text-decoration:none">info@sanaedu.com</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sana-ct-final">
+  <div class="sana-container sana-reveal">
+    <div class="sana-ct-final__box">
+      <h2>ما زلت بحاجة للمساعدة؟</h2>
+      <p>فريقنا جاهز — لا تتردد في التواصل بأي طريقة تناسبك.</p>
+      <div class="sana-ct-final__actions">
+        <a href="#" class="sana-btn sana-btn--wa sana-btn--lg"><i class="fab fa-whatsapp"></i> تواصل عبر واتساب</a>
+        <a href="#contact-form" class="sana-btn sana-btn--yellow sana-btn--lg"><i class="fas fa-paper-plane"></i> أرسل رسالة</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="sana-foot-m">
+  <div class="sana-container">
+    <div class="sana-foot-m__grid">
+      <div class="sana-foot-m__brand">
+        <a href="01-home.html" class="sana-foot-m__logo"><span>SANA</span></a>
+        <p>منصة تعليمية عربية تفاعلية للأطفال والطلاب — تعلّم بمتعة وثقة.</p>
+      </div>
+      <div>
+        <h4>تصفّح</h4>
+        <ul>
+          <li><a href="02-about.html">كيف تعمل سنا؟</a></li>
+          <li><a href="03-courses.html">الكورسات</a></li>
+          <li><a href="09-instructors.html">المعلّمون</a></li>
+          <li><a href="04-pricing.html">الأسعار</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>روابط مهمة</h4>
+        <ul>
+          <li><a href="02-about.html">من نحن</a></li>
+          <li><a href="05-contact.html">اتصل بنا</a></li>
+          <li><a href="08-tutor-apply.html">تسجيل معلّم</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>تواصل معنا</h4>
+        <ul><li><a href="05-contact.html"><i class="fab fa-whatsapp"></i> واتساب</a></li></ul>
+      </div>
+    </div>
+    <p class="sana-foot-m__copy">&copy; 2026 Sana. جميع الحقوق محفوظة.</p>
+  </div>
+</footer>
+
+<script src="assets/sana-scripts.js"></script>
+</body>
+</html>

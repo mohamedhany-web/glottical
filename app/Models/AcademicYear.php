@@ -132,12 +132,4 @@ class AcademicYear extends Model
             ->withPivot(['status', 'progress', 'enrolled_at', 'activated_at'])
             ->withTimestamps();
     }
-
-    /**
-     * مشاريع البورتفوليو المرتبطة بهذا المسار
-     */
-    public function portfolioProjects()
-    {
-        return $this->hasMany(PortfolioProject::class, 'academic_year_id');
-    }
 }

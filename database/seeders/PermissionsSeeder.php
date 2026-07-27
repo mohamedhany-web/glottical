@@ -32,7 +32,7 @@ class PermissionsSeeder extends Seeder
             ['name' => 'manage.payments', 'display_name' => 'إدارة المدفوعات', 'description' => 'إدارة المدفوعات', 'group' => 'إدارة المحاسبة'],
             ['name' => 'manage.transactions', 'display_name' => 'إدارة المعاملات المالية', 'description' => 'إدارة المعاملات المالية', 'group' => 'إدارة المحاسبة'],
             ['name' => 'manage.wallets', 'display_name' => 'إدارة المحافظ', 'description' => 'إدارة محافظ المستخدمين', 'group' => 'إدارة المحاسبة'],
-            ['name' => 'manage.subscriptions', 'display_name' => 'إدارة الاشتراكات', 'description' => 'إدارة الاشتراكات', 'group' => 'إدارة المحاسبة'],
+            // ['name' => 'manage.subscriptions', 'display_name' => 'إدارة الاشتراكات', 'description' => 'إدارة الاشتراكات', 'group' => 'إدارة المحاسبة'], // removed SaaS
             ['name' => 'manage.installments', 'display_name' => 'إدارة خطط التقسيط', 'description' => 'إدارة خطط التقسيط والاشتراكات الذكية', 'group' => 'إدارة المحاسبة'],
 
             // إدارة التسويق
@@ -56,6 +56,7 @@ class PermissionsSeeder extends Seeder
             ['name' => 'manage.exams', 'display_name' => 'إدارة الامتحانات', 'description' => 'إدارة الامتحانات', 'group' => 'إدارة المحتوى'],
             ['name' => 'manage.question-bank', 'display_name' => 'إدارة بنك الأسئلة', 'description' => 'إدارة بنك الأسئلة', 'group' => 'إدارة المحتوى'],
             ['name' => 'manage.attendance', 'display_name' => 'إدارة الحضور (لوحة الأدمن)', 'description' => 'عرض وإدارة الحضور والربط مع Teams من لوحة التحكم', 'group' => 'إدارة المحتوى'],
+            ['name' => 'manage.tutoring-groups', 'display_name' => 'إدارة المجموعات الفردية والجماعية', 'description' => 'إنشاء مجموعات الحجز (فردي/جماعي) وجداول عمل المدربين والحجوزات — منفصل عن الكورسات', 'group' => 'إدارة المحتوى'],
 
             // إدارة الصفحات الخارجية
             ['name' => 'manage.about-page', 'display_name' => 'إدارة صفحة «من نحن»', 'description' => 'تعديل محتوى صفحة من نحن (الإدارة العليا) من لوحة الأدمن', 'group' => 'إدارة الصفحات الخارجية'],
@@ -64,7 +65,6 @@ class PermissionsSeeder extends Seeder
             ['name' => 'manage.free-trial-bookings', 'display_name' => 'إدارة الحجوزات المجانية', 'description' => 'مراجعة حجوزات الحصة المجانية وضبط أوقات الأسبوع من الصفحة الرئيسية', 'group' => 'إدارة الصفحات الخارجية'],
             ['name' => 'manage.site-services', 'display_name' => 'إدارة خدمات الموقع', 'description' => 'إدارة صفحة الخدمات ومحتوى كل خدمة في الواجهة العامة', 'group' => 'إدارة الصفحات الخارجية'],
             ['name' => 'manage.site-testimonials', 'display_name' => 'إدارة آراء الموقع (الرئيسية)', 'description' => 'إدارة شهادات المعلمين الظاهرة في الصفحة الرئيسية وصفحة الآراء', 'group' => 'إدارة الصفحات الخارجية'],
-            ['name' => 'manage.homepage-sliders', 'display_name' => 'إدارة سلايدر الصفحة الرئيسية', 'description' => 'التحكم في شرائح الهيرو (البانر) أعلى الصفحة الرئيسية — من الكورسات أو المسارات أو محتوى مخصص', 'group' => 'إدارة الصفحات الخارجية'],
             ['name' => 'manage.system-settings', 'display_name' => 'إعدادات النظام (الفوتر والتواصل)', 'description' => 'تعديل بيانات الفوتر والهاتف وروابط السوشيال في الواجهة العامة', 'group' => 'إدارة الصفحات الخارجية'],
 
             // المهام
@@ -97,8 +97,8 @@ class PermissionsSeeder extends Seeder
             // العناصر المدفوعة التفصيلية
             ['name' => 'manage.video-providers',     'display_name' => 'إدارة مصادر الفيديو',             'description' => 'إدارة مصادر وموفري الفيديو للمنصة',         'group' => 'إدارة المحتوى'],
             ['name' => 'manage.packages',            'display_name' => 'إدارة الباقات والأسعار',          'description' => 'إدارة باقات الاشتراك والتسعير',              'group' => 'العناصر المدفوعة'],
-            ['name' => 'manage.teacher-features',    'display_name' => 'إدارة مزايا اشتراك المدربين',     'description' => 'إدارة مزايا ومستويات اشتراك المدربين',       'group' => 'العناصر المدفوعة'],
-            ['name' => 'manage.curriculum-library',  'display_name' => 'إدارة مكتبة المناهج',             'description' => 'إدارة مكتبة مناهج ومحتوى المنصة',            'group' => 'العناصر المدفوعة'],
+            // ['name' => 'manage.teacher-features',    'display_name' => 'إدارة مزايا اشتراك المدربين',     'description' => 'إدارة مزايا ومستويات اشتراك المدربين',       'group' => 'العناصر المدفوعة'], // removed SaaS
+            // ['name' => 'manage.curriculum-library',  'display_name' => 'إدارة مكتبة المناهج',             'description' => 'إدارة مكتبة مناهج ومحتوى المنصة',            'group' => 'العناصر المدفوعة'], // removed SaaS
 
             // التسويق التفصيلي
             ['name' => 'manage.popup-ads',           'display_name' => 'إدارة الإعلانات المنبثقة',        'description' => 'إدارة البوبأب والإعلانات الترويجية',         'group' => 'إدارة التسويق'],
@@ -130,7 +130,7 @@ class PermissionsSeeder extends Seeder
             // التحكم بالطلاب والخدمات
             ['name' => 'manage.support-tickets',     'display_name' => 'إدارة تذاكر الدعم الفني',        'description' => 'إدارة تذاكر الدعم الفني وتصنيفاتها',         'group' => 'التحكم بالطلاب'],
             ['name' => 'manage.consultations',       'display_name' => 'إدارة استشارات المدربين',        'description' => 'إدارة جلسات الاستشارات مع المدربين',         'group' => 'التحكم بالطلاب'],
-            ['name' => 'manage.hiring-academies',    'display_name' => 'إدارة الأكاديميات وفرص العمل',   'description' => 'إدارة الأكاديميات التوظيفية وفرص العمل',     'group' => 'التحكم بالطلاب'],
+            // ['name' => 'manage.hiring-academies',    'display_name' => 'إدارة الأكاديميات وفرص العمل',   'description' => 'إدارة الأكاديميات التوظيفية وفرص العمل',     'group' => 'التحكم بالطلاب'], // removed SaaS
             ['name' => 'manage.students-accounts',   'display_name' => 'إدارة حسابات الطلاب',            'description' => 'إدارة حسابات ومعلومات الطلاب',               'group' => 'التحكم بالطلاب'],
 
             // صلاحيات المدرب

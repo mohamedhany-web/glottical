@@ -21,25 +21,28 @@ class CrmPipelineController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        $columns = [];
-        foreach ($stages as $status) {
-            $columns[$status] = [
+        $totalLeads = (int) $counts->sum();
+        $openLeads = SalesLead::query()->open()->count();
+
+        $stagesSummary = collect($stages)->map(function (string $status) use ($labels, $counts, $totalLeads) {
+            $count = (int) ($counts[$status] ?? 0);
+
+            return [
+                'status' => $status,
                 'label' => $labels[$status] ?? $status,
-                'count' => (int) ($counts[$status] ?? 0),
-                'leads' => SalesLead::query()
-                    ->where('status', $status)
-                    ->with(['assignedTo:id,name', 'marketingOwner:id,name'])
-                    ->latest()
-                    ->limit(12)
-                    ->get(),
+                'count' => $count,
+                'percent' => $totalLeads > 0 ? round(($count / $totalLeads) * 100, 1) : 0.0,
             ];
-        }
+        })->values();
 
         return view('admin.crm.pipeline.index', [
-            'columns' => $columns,
+            'stagesSummary' => $stagesSummary,
             'statusLabels' => $labels,
-            'totalLeads' => (int) $counts->sum(),
-            'openLeads' => SalesLead::query()->open()->count(),
+            'totalLeads' => $totalLeads,
+            'openLeads' => $openLeads,
+            'closedWon' => (int) ($counts[SalesLead::STATUS_CLOSED_WON] ?? 0),
+            'closedLost' => (int) ($counts[SalesLead::STATUS_CLOSED_LOST] ?? 0),
+            'paymentPending' => (int) ($counts[SalesLead::STATUS_PAYMENT_PENDING] ?? 0),
         ]);
     }
 }

@@ -1,257 +1,223 @@
 @extends('layouts.admin')
 
 @section('title', 'إضافة مستخدم جديد - ' . config('app.name'))
-@section('header', 'إضافة مستخدم جديد')
+@section('page_title', 'إضافة مستخدم جديد')
 
 @section('content')
-<div class="space-y-6">
-    <!-- الهيدر -->
-    <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-6 py-5 bg-slate-50 border-b border-slate-200 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md">
-                    <i class="fas fa-user-plus text-lg"></i>
-                </div>
-                <div>
-                    <nav class="text-xs font-medium text-slate-500 flex flex-wrap items-center gap-2 mb-1">
-                        <a href="{{ route('admin.dashboard') }}" class="text-blue-600 hover:text-blue-700">لوحة التحكم</a>
-                        <span>/</span>
-                        <a href="{{ route('admin.users.index') }}" class="text-blue-600 hover:text-blue-700">إدارة المستخدمين</a>
-                        <span>/</span>
-                        <span class="text-slate-600">إضافة مستخدم</span>
-                    </nav>
-                    <h2 class="text-2xl font-black text-slate-900 mt-1">إنشاء حساب مستخدم جديد</h2>
-                    <p class="text-sm text-slate-600 mt-1">أدخل بيانات المستخدم الأساسية، حدد دوره، واضبط حالة الحساب قبل الحفظ.</p>
-                </div>
-            </div>
-            <a href="{{ route('admin.users.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
-                <i class="fas fa-arrow-right"></i>
-                العودة للقائمة
-            </a>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $areaClass = 'w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $fromStudents = request('from') === 'students' || request('role') === 'student';
+    $listRoute = ($fromStudents && Route::has('admin.students-accounts.index'))
+        ? route('admin.students-accounts.index')
+        : route('admin.users.index');
+    $listLabel = ($fromStudents && Route::has('admin.students-accounts.index'))
+        ? 'إدارة الطلاب والحسابات'
+        : 'إدارة المستخدمين';
+    $phoneCountries = $phoneCountries ?? config('phone_countries.countries', []);
+    $defaultCountry = $defaultCountry ?? collect($phoneCountries)->firstWhere('code', config('phone_countries.default_country', 'SA'));
+    $defaultDialCode = (is_array($defaultCountry) && isset($defaultCountry['dial_code'])) ? $defaultCountry['dial_code'] : '+966';
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">الحسابات · {{ $listLabel }}</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إنشاء حساب مستخدم جديد</h2>
+            <p class="mt-1 text-sm text-muted">أدخل بيانات المستخدم الأساسية، حدد دوره، واضبط حالة الحساب قبل الحفظ</p>
         </div>
+        <a href="{{ $listRoute }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+            <i class="fas fa-arrow-right text-xs"></i>
+            رجوع للقائمة
+        </a>
     </section>
 
-    <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-        <form method="POST" action="{{ route('admin.users.store') }}" id="createUserForm" class="space-y-6">
-            @csrf
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
-                <div class="lg:col-span-2 space-y-6">
-                    <div class="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
-                        <div class="flex items-center gap-3 pb-4 border-b border-slate-200">
-                            <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
-                                <i class="fas fa-user text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-900">المعلومات الأساسية</h3>
-                                <p class="text-xs text-slate-600 mt-1">بيانات الهوية والتواصل يتم استخدامها في التنبيهات وتسجيل الدخول.</p>
-                            </div>
-                        </div>
-                        @php
-                            $phoneCountries = $phoneCountries ?? config('phone_countries.countries', []);
-                            $defaultCountry = $defaultCountry ?? collect($phoneCountries)->firstWhere('code', config('phone_countries.default_country', 'SA'));
-                            $defaultDialCode = (is_array($defaultCountry) && isset($defaultCountry['dial_code'])) ? $defaultCountry['dial_code'] : '+966';
-                        @endphp
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div class="space-y-1">
-                                <label for="name" class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                                    <i class="fas fa-user text-blue-600 text-sm"></i>
-                                    الاسم الكامل <span class="text-rose-500">*</span>
-                                </label>
-                                <input type="text" name="name" id="name" value="{{ old('name', '') }}" required maxlength="255" pattern="^[\p{Arabic}\s\p{N}]+$" title="الرجاء إدخال اسم صحيح (عربي فقط)" placeholder="أدخل الاسم الكامل" class="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-slate-400" />
-                                @error('name')<p class="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>@enderror
-                            </div>
-                            <div class="space-y-1">
-                                <label for="phone" class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                                    <i class="fas fa-phone text-blue-600 text-sm"></i>
-                                    رقم الهاتف <span class="text-rose-500">*</span>
-                                </label>
-                                <div class="flex rounded-xl overflow-hidden border-2 border-slate-300 bg-white focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 hover:border-slate-400 transition-all" dir="ltr">
-                                    <select name="country_code" id="country_code" required aria-label="كود الدولة" class="shrink-0 w-32 md:w-36 rounded-l-xl border-0 border-l-0 border-r-2 border-slate-300 bg-slate-50 px-3 py-3 text-sm text-slate-900 focus:ring-0 focus:border-slate-300 cursor-pointer">
-                                        @if(empty($phoneCountries))
-                                            <option value="+966" selected>+966 السعودية</option>
-                                        @endif
-                                        @foreach($phoneCountries as $c)
-                                            @php
-                                                $optValue = ($c['dial_code'] ?? '') === '' ? 'OTHER' : $c['dial_code'];
-                                                $current = old('country_code', $defaultDialCode);
-                                                $selected = ($current === ($c['dial_code'] ?? '')) || (($c['dial_code'] ?? '') === '' && $current === 'OTHER');
-                                            @endphp
-                                            <option value="{{ $optValue }}" {{ $selected ? 'selected' : '' }}>{{ $c['dial_code'] ?: '—' }} {{ $c['name_ar'] }}</option>
-                                        @endforeach
-                                    </select>
-                                    <input type="tel" name="phone" id="phone" value="{{ old('phone', '') }}" required placeholder="xxxxxxxx" maxlength="15" dir="ltr" aria-label="رقم الهاتف" class="flex-1 min-w-0 rounded-r-xl border-0 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-0 focus:border-0" />
-                                </div>
-                                @error('phone')<p class="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>@enderror
-                            </div>
-                            <div class="space-y-1 md:col-span-2">
-                                <label for="email" class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                                    <i class="fas fa-envelope text-blue-600 text-sm"></i>
-                                    البريد الإلكتروني <span class="text-rose-500">*</span>
-                                </label>
-                                <div class="relative">
-                                    <input type="email" name="email" id="email" value="{{ old('email', '') }}" required maxlength="255" placeholder="example@Glottical.com" class="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-slate-400" />
-                                    <i class="fas fa-envelope absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
-                                </div>
-                                @error('email')<p class="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>@enderror
-                                <p class="mt-1.5 text-xs text-slate-500 flex items-center gap-1"><i class="fas fa-info-circle text-blue-500"></i>سيتم استخدام البريد الإلكتروني في إرسال الإشعارات والتنبيهات.</p>
-                            </div>
-                            <div class="space-y-1 md:col-span-2">
-                                <label for="password" class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                                    <i class="fas fa-lock text-blue-600 text-sm"></i>
-                                    كلمة المرور <span class="text-rose-500">*</span>
-                                </label>
-                                <div class="relative">
-                                    <input type="password" name="password" id="password" required minlength="8" maxlength="255" autocomplete="new-password" placeholder="أدخل كلمة مرور قوية" class="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-slate-400" />
-                                    <button type="button" onclick="togglePasswordVisibility('password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded p-1">
-                                        <i class="fas fa-eye" id="password-eye"></i>
-                                    </button>
-                                </div>
-                                @error('password')<p class="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>@enderror
-                                <p class="mt-1.5 text-xs text-slate-600 flex items-center gap-1"><i class="fas fa-shield-alt text-emerald-500"></i>يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل.</p>
-                            </div>
-                        </div>
-                    </div>
+    @if($errors->any())
+        <div class="rounded-2xl border border-danger/20 bg-danger/5 p-4 text-sm text-danger shadow-soft">
+            <p class="mb-2 font-semibold">يرجى تصحيح ما يلي:</p>
+            <ul class="list-inside list-disc space-y-1">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-                    <div class="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
-                        <div class="flex items-center gap-3 pb-4 border-b border-slate-200">
-                            <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
-                                <i class="fas fa-user-shield text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-900">الدور والصلاحيات</h3>
-                                <p class="text-xs text-slate-600 mt-1">حدد مستوى الوصول المسموح للمستخدم وحالة الحساب عند الإنشاء.</p>
-                            </div>
+    <form method="POST" action="{{ route('admin.users.store') }}" id="createUserForm" class="space-y-5">
+        @csrf
+
+        <div class="grid gap-5 lg:grid-cols-3">
+            <div class="space-y-5 lg:col-span-2">
+                <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                    <div class="border-b border-line px-4 py-4 sm:px-5">
+                        <h3 class="text-base font-semibold text-ink">المعلومات الأساسية</h3>
+                        <p class="mt-0.5 text-xs text-muted">بيانات الهوية والتواصل · تُستخدم في التنبيهات وتسجيل الدخول</p>
+                    </div>
+                    <div class="grid grid-cols-1 gap-5 p-4 sm:p-5 md:grid-cols-2">
+                        <div>
+                            <label for="name" class="{{ $labelClass }}">الاسم الكامل <span class="text-danger">*</span></label>
+                            <input type="text" name="name" id="name" value="{{ old('name', '') }}" required maxlength="255" pattern="^[\p{Arabic}\s\p{N}]+$" title="الرجاء إدخال اسم صحيح (عربي فقط)" placeholder="أدخل الاسم الكامل" class="{{ $fieldClass }}" />
+                            @error('name')<p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>@enderror
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                            <div class="space-y-1">
-                                <label for="role" class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                                    <i class="fas fa-user-tag text-indigo-600 text-sm"></i>
-                                    الدور الأساسي في النظام <span class="text-rose-500">*</span>
-                                </label>
-                                <select name="role" id="role" required class="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all hover:border-slate-400 cursor-pointer">
-                                    <option value="">اختر الدور</option>
-                                    <option value="super_admin" {{ old('role') == 'super_admin' ? 'selected' : '' }}>إداري كامل (Super Admin)</option>
-                                    <option value="instructor" {{ old('role') == 'instructor' ? 'selected' : '' }}>مدرس / معلم</option>
-                                    <option value="student" {{ old('role') == 'student' ? 'selected' : '' }}>{{ __('admin.student_role_label') }}</option>
-                                </select>
-                                @error('role')<p class="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>@enderror
-                            </div>
-                            <div class="space-y-1">
-                                <label for="rbac_role" class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                                    <i class="fas fa-user-shield text-emerald-600 text-sm"></i>
-                                    دور مخصص من الأدوار الموجودة (اختياري)
-                                </label>
-                                <select name="rbac_role" id="rbac_role" class="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all hover:border-slate-400 cursor-pointer">
-                                    <option value="">بدون دور مخصص</option>
-                                    @foreach(($roles ?? []) as $roleModel)
-                                        <option value="{{ $roleModel->id }}" {{ old('rbac_role') == $roleModel->id ? 'selected' : '' }}>
-                                            {{ $roleModel->display_name }} ({{ $roleModel->name }})
-                                        </option>
+                        <div>
+                            <label for="phone" class="{{ $labelClass }}">رقم الهاتف <span class="text-danger">*</span></label>
+                            <div class="flex overflow-hidden rounded-xl border border-line bg-surface transition focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20" dir="ltr">
+                                <select name="country_code" id="country_code" required aria-label="كود الدولة" class="h-11 w-32 shrink-0 cursor-pointer border-0 border-l border-line bg-canvas px-3 text-sm text-ink focus:outline-none focus:ring-0 md:w-36">
+                                    @if(empty($phoneCountries))
+                                        <option value="+966" selected>+966 السعودية</option>
+                                    @endif
+                                    @foreach($phoneCountries as $c)
+                                        @php
+                                            $optValue = ($c['dial_code'] ?? '') === '' ? 'OTHER' : $c['dial_code'];
+                                            $current = old('country_code', $defaultDialCode);
+                                            $selected = ($current === ($c['dial_code'] ?? '')) || (($c['dial_code'] ?? '') === '' && $current === 'OTHER');
+                                        @endphp
+                                        <option value="{{ $optValue }}" {{ $selected ? 'selected' : '' }}>{{ $c['dial_code'] ?: '—' }} {{ $c['name_ar'] }}</option>
                                     @endforeach
                                 </select>
-                                <p class="mt-1 text-[11px] text-slate-500">
-                                    هذا الاختيار يربط المستخدم بأحد الأدوار المعرفة في النظام وتحدد صلاحياته ما يظهر له في السايدبار داخل لوحة الأدمن.
-                                </p>
+                                <input type="tel" name="phone" id="phone" value="{{ old('phone', '') }}" required placeholder="xxxxxxxx" maxlength="15" dir="ltr" aria-label="رقم الهاتف" class="h-11 min-w-0 flex-1 border-0 bg-transparent px-4 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-0" />
                             </div>
-                            <div class="space-y-1">
-                                <label for="is_active" class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                                    <i class="fas fa-toggle-on text-indigo-600 text-sm"></i>
-                                    حالة الحساب <span class="text-rose-500">*</span>
-                                </label>
-                                <select name="is_active" id="is_active" required class="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all hover:border-slate-400 cursor-pointer">
-                                    <option value="1" {{ old('is_active', '1') == '1' ? 'selected' : '' }}>نشط</option>
-                                    <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>غير نشط</option>
-                                </select>
-                                @error('is_active')<p class="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>@enderror
-                            </div>
+                            @error('phone')<p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>@enderror
                         </div>
-                        <div class="rounded-xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50 p-5 text-sm text-indigo-900 shadow-sm">
-                            <h4 class="font-bold mb-3 flex items-center gap-2 text-base">
-                                <i class="fas fa-info-circle text-indigo-600"></i>
+                        <div class="md:col-span-2">
+                            <label for="email" class="{{ $labelClass }}">البريد الإلكتروني <span class="text-danger">*</span></label>
+                            <input type="email" name="email" id="email" value="{{ old('email', '') }}" required maxlength="255" placeholder="example@Glottical.com" class="{{ $fieldClass }}" />
+                            @error('email')<p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>@enderror
+                            <p class="mt-1.5 text-xs text-muted">سيتم استخدام البريد الإلكتروني في إرسال الإشعارات والتنبيهات.</p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="password" class="{{ $labelClass }}">كلمة المرور <span class="text-danger">*</span></label>
+                            <div class="relative">
+                                <input type="password" name="password" id="password" required minlength="8" maxlength="255" autocomplete="new-password" placeholder="أدخل كلمة مرور قوية" class="{{ $fieldClass }} pl-4 pr-10" />
+                                <button type="button" onclick="togglePasswordVisibility('password')" class="absolute left-3 top-1/2 -translate-y-1/2 rounded p-1 text-muted transition hover:text-ink focus:outline-none focus:ring-2 focus:ring-accent/20">
+                                    <i class="fas fa-eye" id="password-eye"></i>
+                                </button>
+                            </div>
+                            @error('password')<p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>@enderror
+                            <p class="mt-1.5 text-xs text-muted">يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل.</p>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                    <div class="border-b border-line px-4 py-4 sm:px-5">
+                        <h3 class="text-base font-semibold text-ink">الدور والصلاحيات</h3>
+                        <p class="mt-0.5 text-xs text-muted">حدد مستوى الوصول المسموح للمستخدم وحالة الحساب عند الإنشاء</p>
+                    </div>
+                    <div class="grid grid-cols-1 gap-5 p-4 sm:p-5 md:grid-cols-3">
+                        <div>
+                            <label for="role" class="{{ $labelClass }}">الدور الأساسي في النظام <span class="text-danger">*</span></label>
+                            <select name="role" id="role" required class="{{ $fieldClass }} cursor-pointer">
+                                <option value="">اختر الدور</option>
+                                <option value="super_admin" {{ old('role') == 'super_admin' ? 'selected' : '' }}>إداري كامل (Super Admin)</option>
+                                <option value="instructor" {{ old('role') == 'instructor' ? 'selected' : '' }}>مدرس / معلم</option>
+                                <option value="student" {{ old('role', $fromStudents ? 'student' : '') == 'student' ? 'selected' : '' }}>{{ __('admin.student_role_label') }}</option>
+                            </select>
+                            @error('role')<p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label for="rbac_role" class="{{ $labelClass }}">دور مخصص من الأدوار الموجودة <span class="font-normal text-muted">(اختياري)</span></label>
+                            <select name="rbac_role" id="rbac_role" class="{{ $fieldClass }} cursor-pointer">
+                                <option value="">بدون دور مخصص</option>
+                                @foreach(($roles ?? []) as $roleModel)
+                                    <option value="{{ $roleModel->id }}" {{ old('rbac_role') == $roleModel->id ? 'selected' : '' }}>
+                                        {{ $roleModel->display_name }} ({{ $roleModel->name }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <p class="mt-1.5 text-[11px] text-muted">
+                                يربط المستخدم بأحد الأدوار المعرفة في النظام وتحدد صلاحياته ما يظهر له في السايدبار داخل لوحة الأدمن.
+                            </p>
+                        </div>
+                        <div>
+                            <label for="is_active" class="{{ $labelClass }}">حالة الحساب <span class="text-danger">*</span></label>
+                            <select name="is_active" id="is_active" required class="{{ $fieldClass }} cursor-pointer">
+                                <option value="1" {{ old('is_active', '1') == '1' ? 'selected' : '' }}>نشط</option>
+                                <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>غير نشط</option>
+                            </select>
+                            @error('is_active')<p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>@enderror
+                        </div>
+                    </div>
+                    <div class="border-t border-line px-4 py-4 sm:px-5">
+                        <div class="rounded-xl border border-line bg-canvas/60 p-4 text-sm text-ink">
+                            <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold text-ink">
+                                <i class="fas fa-info-circle text-accent"></i>
                                 وصف سريع للأدوار
                             </h4>
-                            <ul class="space-y-2.5 text-xs">
+                            <ul class="space-y-2.5 text-xs text-ink-soft">
                                 <li class="flex items-start gap-2.5">
-                                    <i class="fas fa-shield-alt text-indigo-600 mt-0.5 flex-shrink-0"></i>
-                                    <div><strong class="text-indigo-900">إداري:</strong> صلاحيات كاملة لإدارة المنصة والمستخدمين.</div>
+                                    <i class="fas fa-shield-alt mt-0.5 shrink-0 text-accent"></i>
+                                    <div><strong class="text-ink">إداري:</strong> صلاحيات كاملة لإدارة المنصة والمستخدمين.</div>
                                 </li>
                                 <li class="flex items-start gap-2.5">
-                                    <i class="fas fa-chalkboard-teacher text-indigo-600 mt-0.5 flex-shrink-0"></i>
-                                    <div><strong class="text-indigo-900">مدرس:</strong> إدارة المحتوى التعليمي، المحاضرات، الامتحانات.</div>
+                                    <i class="fas fa-chalkboard-teacher mt-0.5 shrink-0 text-metal"></i>
+                                    <div><strong class="text-ink">مدرس:</strong> إدارة المحتوى التعليمي، المحاضرات، الامتحانات.</div>
                                 </li>
                                 <li class="flex items-start gap-2.5">
-                                    <i class="fas fa-graduation-cap text-indigo-600 mt-0.5 flex-shrink-0"></i>
-                                    <div><strong class="text-indigo-900">{{ __('admin.student_role_label') }}:</strong> الوصول للكورسات، أداء الواجبات والامتحانات.</div>
+                                    <i class="fas fa-graduation-cap mt-0.5 shrink-0 text-accent"></i>
+                                    <div><strong class="text-ink">{{ __('admin.student_role_label') }}:</strong> الوصول للكورسات، أداء الواجبات والامتحانات.</div>
                                 </li>
                             </ul>
                         </div>
                     </div>
+                </article>
 
-                    <div class="rounded-xl border border-slate-200 bg-white p-6 space-y-3">
-                        <div class="flex items-center gap-3 pb-3 border-b border-slate-200">
-                            <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
-                                <i class="fas fa-align-right text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-900">معلومات إضافية</h3>
-                                <p class="text-xs text-slate-600 mt-1">معلومات إضافية عن المستخدم (اختياري).</p>
-                            </div>
-                        </div>
-                        <div>
-                            <label for="bio" class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                                <i class="fas fa-align-right text-purple-600 text-sm"></i>
-                                نبذة تعريفية (اختياري)
-                            </label>
-                            <textarea name="bio" id="bio" rows="4" maxlength="1000" placeholder="اكتب ملخصاً عن خبرات المستخدم أو ملاحظات داخلية..." class="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-sm leading-6 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all resize-none hover:border-slate-400">{{ old('bio', '') }}</textarea>
-                            <p class="mt-1.5 text-xs text-slate-500 flex items-center gap-1"><i class="fas fa-info-circle text-purple-500"></i>الحد الأقصى 1000 حرف. سيتم تنقية HTML تلقائياً.</p>
-                            @error('bio')<p class="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>@enderror
-                        </div>
+                <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                    <div class="border-b border-line px-4 py-4 sm:px-5">
+                        <h3 class="text-base font-semibold text-ink">معلومات إضافية</h3>
+                        <p class="mt-0.5 text-xs text-muted">اختياري · الحد الأقصى 1000 حرف</p>
                     </div>
-                </div>
-
-                <div class="space-y-6">
-                    <div class="rounded-xl border border-slate-200 bg-white p-6">
-                        <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-                            <i class="fas fa-info-circle text-blue-600"></i>
-                            إرشادات إنشاء الحساب
-                        </h3>
-                        <ul class="space-y-3 text-sm text-slate-600">
-                            <li class="flex items-start gap-2.5">
-                                <i class="fas fa-check-circle text-emerald-500 mt-0.5 flex-shrink-0"></i>
-                                <span>تأكد من صحة رقم الهاتف والبريد الإلكتروني لأنهما يُستخدمان في تسجيل الدخول والإشعارات.</span>
-                            </li>
-                            <li class="flex items-start gap-2.5">
-                                <i class="fas fa-check-circle text-emerald-500 mt-0.5 flex-shrink-0"></i>
-                                <span>اختر الدور المناسب بناءً على مهام المستخدم في الفريق.</span>
-                            </li>
-                            <li class="flex items-start gap-2.5">
-                                <i class="fas fa-check-circle text-emerald-500 mt-0.5 flex-shrink-0"></i>
-                                <span>يمكن تفعيل الحساب لاحقاً إذا رغبت في المراجعة أولاً.</span>
-                            </li>
-                            <li class="flex items-start gap-2.5">
-                                <i class="fas fa-check-circle text-emerald-500 mt-0.5 flex-shrink-0"></i>
-                                <span>أضف نبذة تعريفية للمدربين لعرضها في صفحة الكورس.</span>
-                            </li>
-                        </ul>
+                    <div class="p-4 sm:p-5">
+                        <label for="bio" class="{{ $labelClass }}">نبذة تعريفية <span class="font-normal text-muted">(اختياري)</span></label>
+                        <textarea name="bio" id="bio" rows="4" maxlength="1000" placeholder="اكتب ملخصاً عن خبرات المستخدم أو ملاحظات داخلية..." class="{{ $areaClass }} resize-none">{{ old('bio', '') }}</textarea>
+                        <p class="mt-1.5 text-xs text-muted">سيتم تنقية HTML تلقائياً.</p>
+                        @error('bio')<p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>@enderror
                     </div>
-
-                    <div class="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
-                        <p class="text-xs text-slate-600"><span class="text-rose-500 font-bold">*</span> الحقول المطلوبة لإكمال إنشاء الحساب.</p>
-                        <div class="flex flex-col gap-3">
-                            <button type="submit" id="submitBtn" class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]">
-                                <i class="fas fa-save"></i>
-                                <span>إنشاء المستخدم</span>
-                            </button>
-                            <a href="{{ route('admin.users.index') }}" class="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-slate-300 px-6 py-3.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all">
-                                <i class="fas fa-times"></i>
-                                <span>إلغاء والعودة</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                </article>
             </div>
-        </form>
-    </section>
+
+            <div class="space-y-5">
+                <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                    <div class="border-b border-line px-4 py-4 sm:px-5">
+                        <h3 class="text-base font-semibold text-ink">إرشادات إنشاء الحساب</h3>
+                    </div>
+                    <ul class="space-y-3 p-4 text-sm text-ink-soft sm:p-5">
+                        <li class="flex items-start gap-2.5">
+                            <i class="fas fa-check-circle mt-0.5 shrink-0 text-accent"></i>
+                            <span>تأكد من صحة رقم الهاتف والبريد الإلكتروني لأنهما يُستخدمان في تسجيل الدخول والإشعارات.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <i class="fas fa-check-circle mt-0.5 shrink-0 text-accent"></i>
+                            <span>اختر الدور المناسب بناءً على مهام المستخدم في الفريق.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <i class="fas fa-check-circle mt-0.5 shrink-0 text-accent"></i>
+                            <span>يمكن تفعيل الحساب لاحقاً إذا رغبت في المراجعة أولاً.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <i class="fas fa-check-circle mt-0.5 shrink-0 text-accent"></i>
+                            <span>أضف نبذة تعريفية للمدربين لعرضها في صفحة الكورس.</span>
+                        </li>
+                    </ul>
+                </article>
+
+                <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                    <div class="space-y-2 p-4 sm:p-5">
+                        <p class="mb-2 text-xs text-muted"><span class="font-semibold text-danger">*</span> الحقول المطلوبة لإكمال إنشاء الحساب.</p>
+                        <button type="submit" id="submitBtn" class="btn-press inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50">
+                            <i class="fas fa-save text-xs"></i>
+                            إنشاء المستخدم
+                        </button>
+                        <a href="{{ $listRoute }}" class="btn-press inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                            <i class="fas fa-times text-xs"></i>
+                            إلغاء والعودة
+                        </a>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </form>
 </div>
 
 @push('scripts')

@@ -2,192 +2,404 @@
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
     $brand = config('app.name', 'Glottical');
-    $inputClass = 'h-12 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted/80 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
-    $labelClass = 'mb-2 block text-sm font-medium text-ink';
+    $footer = \App\Services\PublicFooterSettings::payload();
+    $waUrl = $footer['whatsapp_url'] ?? '#';
+    $supportEmail = trim((string) ($supportEmail ?? ($footer['email'] ?? '')));
+    $supportPhone = trim((string) ($supportPhone ?? ($footer['phone'] ?? '')));
+    $socials = $footer['socials'] ?? [];
+    $hasSocials = is_array($socials) && count($socials) > 0;
+    $phoneHref = $supportPhone !== ''
+        ? 'tel:'.preg_replace('/[^\d+]/', '', $supportPhone)
+        : null;
+    $defaultSubject = $isRtl ? 'طلب تقييم مستوى مجاني' : 'Free level assessment request';
+    $categories = [
+        ['icon' => 'fas fa-clipboard-check', 'label' => $isRtl ? 'تقييم مستوى مجاني' : 'Free assessment', 'subject' => $defaultSubject],
+        ['icon' => 'fas fa-screwdriver-wrench', 'label' => $isRtl ? 'دعم فني' : 'Technical support', 'subject' => $isRtl ? 'دعم فني' : 'Technical support'],
+        ['icon' => 'fas fa-book-open', 'label' => $isRtl ? 'أسئلة الدورات' : 'Course questions', 'subject' => $isRtl ? 'استفسار عن الدورات' : 'Course inquiry'],
+        ['icon' => 'fas fa-chalkboard-user', 'label' => $isRtl ? 'طلبات المعلّمين' : 'Tutor requests', 'subject' => $isRtl ? 'طلب انضمام كمعلّم' : 'Tutor application'],
+        ['icon' => 'fas fa-handshake', 'label' => $isRtl ? 'شراكات' : 'Partnerships', 'subject' => $isRtl ? 'شراكة / تعاون' : 'Partnership'],
+        ['icon' => 'fas fa-credit-card', 'label' => $isRtl ? 'الفوترة والدفع' : 'Billing', 'subject' => $isRtl ? 'الفوترة والدفع' : 'Billing & payment'],
+        ['icon' => 'fas fa-comments', 'label' => $isRtl ? 'استفسار عام' : 'General', 'subject' => $isRtl ? 'استفسار عام' : 'General inquiry'],
+    ];
+    $oldSubject = old('subject', $defaultSubject);
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{{ __('public.contact_page_title') }} — {{ $brand }}</title>
-  <meta name="description" content="{{ $isRtl ? 'تواصل مع فريق '.$brand.' — استفسارات، دعم، واقتراحات. نرد في أقرب وقت.' : 'Contact the '.$brand.' team — questions, support, and suggestions. We reply promptly.' }}">
+  <meta name="description" content="{{ $isRtl ? 'تواصل مع '.$brand.' — واتساب، بريد، أو نموذج رسالة. تقييم مستوى مجاني ودعم للعائلات والمعلّمين.' : 'Contact '.$brand.' — WhatsApp, email, or message form. Free assessment and support for families and tutors.' }}">
+  <meta name="theme-color" content="#0B3D91">
   <link rel="canonical" href="{{ route('public.contact') }}">
   @include('partials.favicon-links')
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-  @include('partials.atheer-head')
-  <meta name="theme-color" content="#0f5c57">
+  @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog', 'contact']])
+  <style>
+    .gl-ct-page .sana-ct-hero {
+      padding: clamp(36px, 6vw, 60px) 0 clamp(40px, 6.5vw, 68px);
+    }
+    .gl-ct-page .sana-ct-hero__title {
+      font-size: clamp(1.55rem, 3.6vw, 2.25rem);
+      margin-bottom: 10px;
+    }
+    .gl-ct-page .sana-ct-hero__sub {
+      font-size: .88rem;
+      margin-bottom: 1.05rem;
+    }
+    .gl-ct-page .sana-ct-hero__actions .sana-btn,
+    .gl-ct-page .sana-ct-final__actions .sana-btn {
+      padding: .7rem 1.15rem;
+      font-size: .84rem;
+    }
+    .gl-ct-page .sana-ct-hero__trust { margin-top: 1.05rem; gap: 8px; }
+    .gl-ct-page .sana-ct-hero__trust span { padding: 6px 11px; font-size: .68rem; }
+    .gl-ct-page .sana-section { padding: clamp(32px, 5vw, 52px) 0; }
+    .gl-ct-page .sana-head { margin-bottom: 1.35rem !important; }
+    .gl-ct-page .sana-head__title { font-size: clamp(1.2rem, 2.5vw, 1.55rem); }
+    .gl-ct-page .sana-head__sub { font-size: .84rem; }
+    .gl-ct-page .sana-ct-channel { padding: 1.05rem .95rem; border-radius: 16px; }
+    .gl-ct-page .sana-ct-channel__icon { width: 42px; height: 42px; border-radius: 12px; margin-bottom: .65rem; font-size: 1rem; }
+    .gl-ct-page .sana-ct-channel strong { font-size: .86rem; }
+    .gl-ct-page .sana-ct-channel p { font-size: .74rem; }
+    .gl-ct-page .sana-ct-channel__btn { padding: 8px 12px; font-size: .72rem; }
+    .gl-ct-page .sana-ct-form-wrap { gap: 1.35rem; }
+    @media (min-width: 992px) {
+      .gl-ct-page .sana-ct-form-wrap { gap: 1.65rem; }
+    }
+    .gl-ct-page .sana-ct-cat { padding: .75rem .65rem; border-radius: 12px; }
+    .gl-ct-page .sana-ct-cat i { font-size: .95rem; margin-bottom: 6px; }
+    .gl-ct-page .sana-ct-cat span { font-size: .7rem; }
+    .gl-ct-page .sana-ct-form-card {
+      padding: 1.15rem 1.15rem 1.25rem;
+      border-radius: 18px;
+    }
+    .gl-ct-page .sana-ct-field { margin-bottom: .85rem; }
+    .gl-ct-page .sana-ct-field input,
+    .gl-ct-page .sana-ct-field textarea {
+      padding: 18px 14px 8px;
+      border-radius: 12px;
+      font-size: .86rem;
+    }
+    .gl-ct-page .sana-ct-field textarea { min-height: 120px; padding-top: 22px; }
+    .gl-ct-page .sana-ct-field label { top: 14px; inset-inline-end: 14px; font-size: .8rem; }
+    .gl-ct-page .sana-ct-field input:focus + label,
+    .gl-ct-page .sana-ct-field input:not(:placeholder-shown) + label,
+    .gl-ct-page .sana-ct-field textarea:focus + label,
+    .gl-ct-page .sana-ct-field textarea:not(:placeholder-shown) + label {
+      top: 6px; font-size: .64rem;
+    }
+    .gl-ct-page .sana-ct-submit {
+      padding: .75rem 1.15rem;
+      font-size: .86rem;
+      min-height: 0;
+      margin-top: .25rem;
+    }
+    .gl-ct-page .sana-ct-response__card { padding: 1.05rem .75rem; border-radius: 14px; }
+    .gl-ct-page .sana-ct-response__card em { font-size: .95rem; }
+    .gl-ct-page .sana-ct-final { padding: clamp(40px, 6vw, 64px) 0; }
+    .gl-ct-page .sana-ct-final__box {
+      padding: clamp(1.25rem, 3vw, 1.75rem);
+      border-radius: 18px;
+    }
+    .gl-ct-page .sana-ct-final__box h2 { font-size: clamp(1.15rem, 2.4vw, 1.45rem); }
+    .gl-ct-page .sana-ct-final__box p { font-size: .84rem; margin-bottom: 1rem; }
+    .gl-ct-page .sana-ct-scene { max-width: 300px; min-height: 240px; }
+  </style>
 </head>
-<body class="font-sans antialiased">
-@include('partials.atheer-home-header')
+<body class="sana-home sana-courses-page gl-ct-page">
+<div id="sana-scroll-progress"></div>
+@include('partials.landing.navbar', ['navActive' => 'contact', 'navHero' => true])
 
-<main class="page-enter">
-  <section class="container-wide py-10 md:py-14">
-    <nav class="mb-6" aria-label="{{ $isRtl ? 'مسار التنقل' : 'Breadcrumb' }}">
-      <ol class="flex flex-wrap items-center gap-2 text-sm text-muted">
-        <li><a href="{{ url('/') }}" class="transition hover:text-ink">{{ $isRtl ? 'الرئيسية' : 'Home' }}</a></li>
-        <li aria-hidden="true" class="text-line">/</li>
-        <li class="font-medium text-ink" aria-current="page">{{ __('public.contact_page_title') }}</li>
-      </ol>
-    </nav>
-    <div class="max-w-2xl space-y-3">
-      <p class="text-sm font-medium text-accent">{{ $brand }}</p>
-      <h1 class="text-balance text-3xl font-semibold tracking-tight text-ink md:text-4xl">{{ __('public.contact_page_title') }}</h1>
-      <p class="text-base leading-8 text-muted">
-        {{ $isRtl
-          ? 'املأ النموذج وسيتواصل فريقنا معك قريباً — أو استخدم البريد والهاتف للوصول المباشر.'
-          : 'Fill in the form and our team will get back to you soon — or reach us directly by email or phone.' }}
-      </p>
+<main class="sana-contact-page">
+
+  <section class="sana-ct-hero">
+    <div class="sana-container">
+      <div class="sana-ct-hero__grid sana-reveal">
+        <div class="sana-ct-hero__content">
+          <span class="sana-ct-hero__eyebrow"><i class="fas fa-headset"></i> {{ $isRtl ? 'مركز الدعم' : 'Support center' }}</span>
+          <h1 class="sana-ct-hero__title">
+            {{ $isRtl ? 'نحن هنا' : 'We’re here' }}
+            <span class="hl">{{ $isRtl ? 'لمساعدتك' : 'to help' }}</span>
+          </h1>
+          <p class="sana-ct-hero__sub">
+            {{ $isRtl
+              ? 'سواء كنت طالباً، وليّ أمر، أو معلّماً — فريق '.$brand.' جاهز للإجابة عبر واتساب أو النموذج.'
+              : 'Whether you’re a student, parent, or tutor — the '.$brand.' team is ready via WhatsApp or the form.' }}
+          </p>
+          <div class="sana-ct-hero__actions">
+            <a href="#contact-form" class="sana-btn sana-btn--yellow"><i class="fas fa-paper-plane"></i> {{ $isRtl ? 'أرسل رسالة' : 'Send a message' }}</a>
+            <a href="{{ $waUrl }}" class="sana-btn sana-btn--wa" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ $isRtl ? 'واتساب' : 'WhatsApp' }}</a>
+          </div>
+          <div class="sana-ct-hero__trust">
+            <span><i class="fas fa-bolt"></i> {{ $isRtl ? 'رد خلال 24 ساعة' : 'Reply within 24h' }}</span>
+            <span><i class="fas fa-shield-halved"></i> {{ $isRtl ? 'بياناتك محمية' : 'Your data is protected' }}</span>
+            <span><i class="fas fa-clipboard-check"></i> {{ $isRtl ? 'تقييم مستوى مجاني' : 'Free assessment' }}</span>
+          </div>
+        </div>
+        <div class="sana-ct-hero__visual">
+          <div class="sana-ct-scene" aria-hidden="true">
+            <div class="sana-ct-scene__deco">
+              <span class="sana-ct-scene__ring"></span>
+              <span class="sana-ct-scene__blob sana-ct-scene__blob--1"></span>
+              <span class="sana-ct-scene__blob sana-ct-scene__blob--2"></span>
+              <span class="sana-ct-scene__spark">✦</span>
+            </div>
+            <svg class="sana-ct-scene__main" viewBox="0 0 360 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="ctGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1A56B0"/><stop offset="100%" stop-color="#0B3D91"/></linearGradient>
+                <linearGradient id="ctGold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD24D"/><stop offset="100%" stop-color="#F5B800"/></linearGradient>
+              </defs>
+              <g transform="translate(180 155)">
+                <circle cx="0" cy="0" r="72" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+                <path d="M-36 -8 C-36 -32 36 -32 36 -8 V16 C36 28 24 36 12 36 H-12 C-24 36 -36 28 -36 16 Z" fill="url(#ctGrad)"/>
+                <rect x="-44" y="-4" width="16" height="28" rx="8" fill="rgba(255,255,255,0.9)"/>
+                <rect x="28" y="-4" width="16" height="28" rx="8" fill="rgba(255,255,255,0.9)"/>
+              </g>
+              <g transform="translate(68 108)">
+                <rect x="0" y="0" width="72" height="44" rx="14" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.25)"/>
+              </g>
+              <g transform="translate(248 210) rotate(8)">
+                <rect x="0" y="0" width="64" height="44" rx="10" fill="url(#ctGold)" opacity="0.95"/>
+              </g>
+            </svg>
+            <div class="sana-ct-scene__chip"><i class="fas fa-clock"></i> {{ $isRtl ? '9 ص – 9 م' : '9 AM – 9 PM' }}</div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <section class="container-wide pb-20 md:pb-24">
-    <div class="grid gap-8 lg:grid-cols-12 lg:gap-10 lg:items-start">
-      {{-- Form (interaction surface) --}}
-      <div class="lg:col-span-7">
-        <div class="rounded-2xl border border-line bg-surface p-6 shadow-soft sm:p-8">
-          @if (session('success'))
-            <div class="mb-6 flex items-start gap-3 rounded-xl border border-accent/20 bg-accent-soft px-4 py-3 text-sm font-medium text-accent" role="status">
-              <svg class="mt-0.5 size-5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
-              <span>{{ session('success') }}</span>
+  <section class="sana-section">
+    <div class="sana-container">
+      <div class="sana-head sana-head--center sana-reveal">
+        <span class="sana-head__eyebrow">{{ $brand }}</span>
+        <h2 class="sana-head__title">{{ $isRtl ? 'اختر' : 'Choose' }} <span class="hl">{{ $isRtl ? 'طريقة التواصل' : 'how to reach us' }}</span></h2>
+        <span class="sana-head__line"></span>
+        <p class="sana-head__sub">{{ $isRtl ? 'قنوات متعددة — اختر الأنسب لك.' : 'Multiple channels — pick what works for you.' }}</p>
+      </div>
+
+      @if ($supportEmail !== '')
+        <p class="sana-ct-official-email sana-reveal" role="note">
+          <i class="fas fa-envelope-circle-check"></i>
+          <span>{{ $isRtl ? 'البريد الرسمي:' : 'Official email:' }} <strong dir="ltr">{{ $supportEmail }}</strong></span>
+        </p>
+      @elseif ($supportPhone === '')
+        <p class="sana-ct-channels-empty sana-reveal">{{ __('public.contact_channels_empty_hint') }}</p>
+      @endif
+
+      <div class="sana-ct-channels" id="social-links">
+        <a href="{{ $waUrl }}" class="sana-ct-channel sana-reveal" target="_blank" rel="noopener">
+          <span class="sana-ct-channel__icon sana-ct-channel__icon--wa"><i class="fab fa-whatsapp"></i></span>
+          <strong>{{ $isRtl ? 'واتساب' : 'WhatsApp' }}</strong>
+          <p>{{ $isRtl ? 'رد سريع عبر المحادثة — الأفضل لأولياء الأمور.' : 'Quick chat replies — great for parents.' }}</p>
+          <span class="sana-ct-channel__btn">{{ $isRtl ? 'افتح واتساب' : 'Open WhatsApp' }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></span>
+        </a>
+
+        @if ($supportEmail !== '')
+          <a href="mailto:{{ $supportEmail }}" class="sana-ct-channel sana-reveal">
+            <span class="sana-ct-channel__icon sana-ct-channel__icon--email"><i class="fas fa-envelope"></i></span>
+            <strong>{{ $isRtl ? 'البريد الإلكتروني' : 'Email' }}</strong>
+            <p>{{ $isRtl ? 'أرسل تفاصيل طلبك — نرد عادة خلال 24 ساعة.' : 'Send details — we usually reply within 24 hours.' }}</p>
+            <span class="sana-ct-channel__info" dir="ltr">{{ $supportEmail }}</span>
+            <span class="sana-ct-channel__btn">{{ $isRtl ? 'أرسل بريداً' : 'Send email' }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></span>
+          </a>
+        @endif
+
+        @if ($phoneHref)
+          <a href="{{ $phoneHref }}" class="sana-ct-channel sana-reveal" dir="ltr">
+            <span class="sana-ct-channel__icon sana-ct-channel__icon--phone"><i class="fas fa-phone"></i></span>
+            <strong>{{ $isRtl ? 'الهاتف' : 'Phone' }}</strong>
+            <p>{{ $isRtl ? 'تواصل هاتفي في أوقات العمل.' : 'Call us during support hours.' }}</p>
+            <span class="sana-ct-channel__info">{{ $supportPhone }}</span>
+            <span class="sana-ct-channel__btn">{{ $isRtl ? 'اتصل الآن' : 'Call now' }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></span>
+          </a>
+        @endif
+
+        <a href="#contact-form" class="sana-ct-channel sana-reveal">
+          <span class="sana-ct-channel__icon sana-ct-channel__icon--chat"><i class="fas fa-comments"></i></span>
+          <strong>{{ $isRtl ? 'نموذج الرسالة' : 'Message form' }}</strong>
+          <p>{{ $isRtl ? 'اكتب استفسارك وسنوجّهه للفريق المناسب.' : 'Write your question and we’ll route it to the right team.' }}</p>
+          <span class="sana-ct-channel__btn">{{ $isRtl ? 'املأ النموذج' : 'Fill the form' }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></span>
+        </a>
+
+        @if ($hasSocials)
+          <div class="sana-ct-channel sana-reveal">
+            <span class="sana-ct-channel__icon sana-ct-channel__icon--social"><i class="fas fa-share-nodes"></i></span>
+            <strong>{{ $isRtl ? 'وسائل التواصل' : 'Social media' }}</strong>
+            <p>{{ $isRtl ? 'تابعنا وتواصل معنا على منصاتنا.' : 'Follow and reach us on our social channels.' }}</p>
+            <div class="sana-ct-socials">
+              @foreach ($socials as $social)
+                <a href="{{ $social['url'] }}" target="_blank" rel="noopener" aria-label="{{ $social['label'] }}"><i class="{{ $social['icon'] }}"></i></a>
+              @endforeach
+            </div>
+          </div>
+        @endif
+
+        <a href="{{ route('public.faq') }}" class="sana-ct-channel sana-reveal">
+          <span class="sana-ct-channel__icon sana-ct-channel__icon--help"><i class="fas fa-circle-question"></i></span>
+          <strong>{{ $isRtl ? 'الأسئلة الشائعة' : 'FAQ' }}</strong>
+          <p>{{ $isRtl ? 'قد تجد إجابتك فوراً دون انتظار.' : 'You may find your answer instantly.' }}</p>
+          <span class="sana-ct-channel__btn">{{ $isRtl ? 'تصفّح الأسئلة' : 'Browse FAQ' }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sana-section sana-section--soft" id="contact-form">
+    <div class="sana-container">
+      <div class="sana-ct-form-wrap">
+        <div class="sana-reveal">
+          <span class="sana-head__eyebrow">{{ $brand }}</span>
+          <h2 class="sana-head__title" style="text-align:{{ $isRtl ? 'right' : 'left' }};margin-bottom:8px">
+            {{ $isRtl ? 'ما' : 'What' }} <span class="hl">{{ $isRtl ? 'نوع استفسارك؟' : 'is your inquiry?' }}</span>
+          </h2>
+          <p class="sana-head__sub" style="margin:0 0 16px;text-align:{{ $isRtl ? 'right' : 'left' }};max-width:none">
+            {{ $isRtl ? 'اختر التصنيف الأقرب — لنوجّه رسالتك للفريق المناسب.' : 'Pick the closest category — we’ll route your message correctly.' }}
+          </p>
+          <div class="sana-ct-categories" data-ct-cats>
+            @foreach ($categories as $i => $cat)
+              <button type="button"
+                      class="sana-ct-cat{{ ($oldSubject === $cat['subject'] || ($i === 0 && ! old('subject'))) ? ' is-active' : '' }}"
+                      data-subject="{{ $cat['subject'] }}">
+                <i class="{{ $cat['icon'] }}"></i>
+                <span>{{ $cat['label'] }}</span>
+              </button>
+            @endforeach
+          </div>
+          <div style="margin-top:1.15rem">
+            <a href="{{ route('home') }}?open_trial=1" class="sana-btn sana-btn--outline-purple" style="width:100%;justify-content:center">
+              <i class="fas fa-clipboard-check"></i> {{ __('landing.academy.free_trial_cta') }}
+            </a>
+          </div>
+        </div>
+
+        <div class="sana-ct-form-card sana-reveal">
+          @if (session('success') || session('status'))
+            <div class="sana-ct-alert" role="status">
+              <i class="fas fa-circle-check"></i>
+              <span>{{ session('success') ?? session('status') }}</span>
             </div>
           @endif
 
-          <form method="post" action="{{ route('public.contact.store') }}" class="space-y-5">
+          <div class="sana-head" style="margin-bottom:1rem;text-align:{{ $isRtl ? 'right' : 'left' }}">
+            <h2 class="sana-head__title" style="font-size:1.15rem;margin:0">
+              {{ $isRtl ? 'أرسل' : 'Send' }} <span class="hl">{{ $isRtl ? 'رسالتك' : 'your message' }}</span>
+            </h2>
+            <p class="sana-head__sub" style="margin:6px 0 0;text-align:{{ $isRtl ? 'right' : 'left' }};max-width:none">
+              {{ $isRtl ? 'املأ النموذج وسيتواصل معك أحد أعضاء فريقنا قريباً.' : 'Fill the form and a team member will get back to you soon.' }}
+            </p>
+          </div>
+
+          <form method="post" action="{{ route('public.contact.store') }}" novalidate>
             @csrf
-            <div>
-              <label for="name" class="{{ $labelClass }}">{{ $isRtl ? 'الاسم الكامل' : 'Full name' }}</label>
-              <input type="text" name="name" id="name" value="{{ old('name') }}" required maxlength="255" class="{{ $inputClass }}" placeholder="{{ $isRtl ? 'اسمك' : 'Your name' }}" autocomplete="name">
-              @error('name')
-                <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
-              @enderror
+            <div class="sana-ct-field">
+              <input type="text" id="ct-name" name="name" value="{{ old('name') }}" required maxlength="255" placeholder=" " autocomplete="name" class="{{ $errors->has('name') ? 'is-error' : '' }}">
+              <label for="ct-name">{{ $isRtl ? 'الاسم الكامل *' : 'Full name *' }}</label>
+              @error('name')<p class="sana-ct-field__err">{{ $message }}</p>@enderror
             </div>
 
-            <div class="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label for="email" class="{{ $labelClass }}">{{ $isRtl ? 'البريد الإلكتروني' : 'Email' }}</label>
-                <input type="email" name="email" id="email" value="{{ old('email') }}" required maxlength="255" class="{{ $inputClass }}" placeholder="you@example.com" autocomplete="email">
-                @error('email')
-                  <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
-                @enderror
+            <div class="sana-ct-form-row">
+              <div class="sana-ct-field">
+                <input type="email" id="ct-email" name="email" value="{{ old('email') }}" required maxlength="255" placeholder=" " dir="ltr" autocomplete="email" class="{{ $errors->has('email') ? 'is-error' : '' }}">
+                <label for="ct-email">{{ $isRtl ? 'البريد الإلكتروني *' : 'Email *' }}</label>
+                @error('email')<p class="sana-ct-field__err">{{ $message }}</p>@enderror
               </div>
-              <div>
-                <label for="phone" class="{{ $labelClass }}">
-                  {{ $isRtl ? 'رقم الجوال' : 'Phone' }}
-                  <span class="font-normal text-muted">({{ $isRtl ? 'اختياري' : 'optional' }})</span>
-                </label>
-                <input type="text" name="phone" id="phone" value="{{ old('phone') }}" maxlength="20" class="{{ $inputClass }}" placeholder="{{ $isRtl ? '05xxxxxxxx' : '+20…' }}" autocomplete="tel">
-                @error('phone')
-                  <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
-                @enderror
+              <div class="sana-ct-field">
+                <input type="tel" id="ct-phone" name="phone" value="{{ old('phone') }}" maxlength="20" placeholder=" " dir="ltr" autocomplete="tel" class="{{ $errors->has('phone') ? 'is-error' : '' }}">
+                <label for="ct-phone">{{ $isRtl ? 'رقم الجوال (اختياري)' : 'Phone (optional)' }}</label>
+                @error('phone')<p class="sana-ct-field__err">{{ $message }}</p>@enderror
               </div>
             </div>
 
-            <div>
-              <label for="subject" class="{{ $labelClass }}">{{ $isRtl ? 'الموضوع' : 'Subject' }}</label>
-              <input type="text" name="subject" id="subject" value="{{ old('subject') }}" required maxlength="255" class="{{ $inputClass }}" placeholder="{{ $isRtl ? 'موجز لطلبك' : 'Brief summary' }}">
-              @error('subject')
-                <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
-              @enderror
+            <div class="sana-ct-field">
+              <input type="text" id="ct-subject" name="subject" value="{{ $oldSubject }}" required maxlength="255" placeholder=" " class="{{ $errors->has('subject') ? 'is-error' : '' }}">
+              <label for="ct-subject">{{ $isRtl ? 'الموضوع *' : 'Subject *' }}</label>
+              @error('subject')<p class="sana-ct-field__err">{{ $message }}</p>@enderror
             </div>
 
-            <div>
-              <label for="message" class="{{ $labelClass }}">{{ $isRtl ? 'الرسالة' : 'Message' }}</label>
-              <textarea name="message" id="message" rows="5" required maxlength="5000" class="min-h-[140px] w-full resize-y rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition placeholder:text-muted/80 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" placeholder="{{ $isRtl ? 'اكتب تفاصيل رسالتك…' : 'Write your message…' }}">{{ old('message') }}</textarea>
-              @error('message')
-                <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
-              @enderror
+            <div class="sana-ct-field">
+              <textarea id="ct-message" name="message" required maxlength="5000" placeholder=" " class="{{ $errors->has('message') ? 'is-error' : '' }}">{{ old('message') }}</textarea>
+              <label for="ct-message">{{ $isRtl ? 'الرسالة *' : 'Message *' }}</label>
+              @error('message')<p class="sana-ct-field__err">{{ $message }}</p>@enderror
             </div>
 
-            <button type="submit" class="btn-press inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-accent px-8 text-sm font-medium text-white transition hover:bg-[#0d4f4a] sm:w-auto">
-              <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-              {{ $isRtl ? 'إرسال الرسالة' : 'Send message' }}
+            <button type="submit" class="sana-btn sana-btn--purple sana-ct-submit">
+              <i class="fas fa-paper-plane"></i> {{ $isRtl ? 'إرسال الرسالة' : 'Send message' }}
             </button>
           </form>
         </div>
       </div>
-
-      {{-- Channels + help --}}
-      <aside class="space-y-6 lg:col-span-5">
-        <div class="space-y-5">
-          <div class="space-y-2">
-            <p class="text-sm font-medium text-accent">{{ $isRtl ? 'معلومات التواصل' : 'Contact details' }}</p>
-            <h2 class="text-xl font-semibold text-ink">{{ $isRtl ? 'تواصل مباشر' : 'Reach us directly' }}</h2>
-            <p class="text-sm leading-7 text-muted">
-              {{ $isRtl
-                ? 'منصة '.$brand.' — راسلنا أو اتصل بنا عبر القنوات التالية.'
-                : $brand.' — email or call us through the channels below.' }}
-            </p>
-          </div>
-
-          @if($supportEmail !== '' || $supportPhone !== '')
-            <ul class="space-y-3">
-              @if($supportEmail !== '')
-                <li>
-                  <a href="mailto:{{ $supportEmail }}" class="group flex items-start gap-3 rounded-2xl border border-line bg-surface p-4 shadow-soft transition hover:border-accent/30 hover:bg-accent-soft">
-                    <span class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent text-white" aria-hidden="true">
-                      <svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                    </span>
-                    <span>
-                      <span class="block text-xs font-medium text-muted">{{ $isRtl ? 'البريد' : 'Email' }}</span>
-                      <span class="break-all text-sm font-semibold text-ink group-hover:text-accent">{{ $supportEmail }}</span>
-                    </span>
-                  </a>
-                </li>
-              @endif
-              @if($supportPhone !== '')
-                <li>
-                  <a href="tel:{{ preg_replace('/\s+/', '', $supportPhone) }}" class="group flex items-start gap-3 rounded-2xl border border-line bg-surface p-4 shadow-soft transition hover:border-accent/30 hover:bg-accent-soft">
-                    <span class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-ink text-metal" aria-hidden="true">
-                      <svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    </span>
-                    <span>
-                      <span class="block text-xs font-medium text-muted">{{ $isRtl ? 'الهاتف' : 'Phone' }}</span>
-                      <span class="block text-sm font-semibold text-ink dir-ltr {{ $isRtl ? 'text-right' : 'text-left' }} group-hover:text-accent">{{ $supportPhone }}</span>
-                    </span>
-                  </a>
-                </li>
-              @endif
-            </ul>
-          @else
-            <p class="rounded-xl border border-dashed border-line px-4 py-3 text-sm text-muted">{{ __('public.contact_channels_empty_hint') }}</p>
-          @endif
-        </div>
-
-        <div class="rounded-2xl border border-line bg-canvas px-5 py-6 sm:px-6">
-          <p class="mb-1 text-sm font-medium text-accent">{{ $isRtl ? 'أسئلة سريعة؟' : 'Quick answers?' }}</p>
-          <h3 class="mb-2 text-lg font-semibold text-ink">{{ $isRtl ? 'قد تجد إجابتك فوراً' : 'You may find your answer instantly' }}</h3>
-          <p class="mb-5 text-sm leading-7 text-muted">{{ $isRtl ? 'تصفّح الأسئلة الشائعة أو مركز المساعدة قبل إرسال رسالة.' : 'Browse the FAQ or help center before sending a message.' }}</p>
-          <div class="flex flex-wrap gap-3">
-            @if(Route::has('public.faq'))
-              <a href="{{ route('public.faq') }}" class="inline-flex h-10 items-center rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">
-                {{ $isRtl ? 'الأسئلة الشائعة' : 'FAQ' }}
-              </a>
-            @endif
-            @if(Route::has('public.help'))
-              <a href="{{ route('public.help') }}" class="inline-flex h-10 items-center rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">
-                {{ $isRtl ? 'مركز المساعدة' : 'Help center' }}
-              </a>
-            @endif
-            <a href="{{ route('public.about') }}" class="inline-flex h-10 items-center rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">
-              {{ __('public.about_page_title') }}
-            </a>
-          </div>
-        </div>
-      </aside>
     </div>
   </section>
+
+  <section class="sana-section">
+    <div class="sana-container">
+      <div class="sana-head sana-head--center sana-reveal">
+        <h2 class="sana-head__title">{{ $isRtl ? 'ماذا' : 'What to' }} <span class="hl">{{ $isRtl ? 'تتوقع؟' : 'expect' }}</span></h2>
+        <span class="sana-head__line"></span>
+        <p class="sana-head__sub">{{ $isRtl ? 'شفافية في أوقات الرد والدعم.' : 'Clear expectations on response times and support.' }}</p>
+      </div>
+      <div class="sana-ct-response">
+        <div class="sana-ct-response__card sana-reveal">
+          <i class="fas fa-bolt"></i>
+          <strong>{{ $isRtl ? 'متوسط الرد' : 'Average reply' }}</strong>
+          <em>{{ $isRtl ? 'خلال 24 ساعة' : 'Within 24h' }}</em>
+          <span>{{ $isRtl ? 'لبريد النموذج — واتساب أسرع في أوقات العمل.' : 'For the form — WhatsApp is faster during hours.' }}</span>
+        </div>
+        <div class="sana-ct-response__card sana-reveal">
+          <i class="fas fa-clock"></i>
+          <strong>{{ $isRtl ? 'أوقات الدعم' : 'Support hours' }}</strong>
+          <em>{{ $isRtl ? '9 ص – 9 م' : '9 AM – 9 PM' }}</em>
+          <span>{{ $isRtl ? 'الأحد – الخميس (GMT+3).' : 'Sun–Thu (GMT+3).' }}</span>
+        </div>
+        <div class="sana-ct-response__card sana-reveal">
+          <i class="fas fa-calendar-week"></i>
+          <strong>{{ $isRtl ? 'أيام العمل' : 'Work days' }}</strong>
+          <em>{{ $isRtl ? 'الأحد – الخميس' : 'Sun – Thu' }}</em>
+          <span>{{ $isRtl ? 'دعم محدود في عطلة نهاية الأسبوع.' : 'Limited weekend support.' }}</span>
+        </div>
+        <div class="sana-ct-response__card sana-reveal">
+          <i class="fas fa-headset"></i>
+          <strong>{{ $isRtl ? 'قنوات الدعم' : 'Support channels' }}</strong>
+          <em>{{ $isRtl ? 'واتساب + نموذج' : 'WhatsApp + form' }}</em>
+          <span>{{ $isRtl ? 'وبريد رسمي عند التوفر.' : 'Plus official email when available.' }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sana-ct-final">
+    <div class="sana-container sana-reveal">
+      <div class="sana-ct-final__box">
+        <h2>{{ $isRtl ? 'جاهز تبدأ؟' : 'Ready to start?' }}</h2>
+        <p>{{ $isRtl ? 'احجز تقييم مستوى مجاني، أو راسلنا الآن — فريق '.$brand.' معك خطوة بخطوة.' : 'Book a free assessment, or message us now — the '.$brand.' team walks with you step by step.' }}</p>
+        <div class="sana-ct-final__actions">
+          <a href="{{ route('home') }}?open_trial=1" class="sana-btn sana-btn--yellow"><i class="fas fa-clipboard-check"></i> {{ __('landing.academy.free_trial_cta') }}</a>
+          <a href="{{ $waUrl }}" class="sana-btn sana-btn--wa" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ $isRtl ? 'واتساب' : 'WhatsApp' }}</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </main>
 
-@include('partials.atheer-home-footer')
+@include('partials.landing.footer')
 <script>
-  document.querySelectorAll('[data-open-free-trial]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      window.location.href = {{ \Illuminate\Support\Js::from(url('/?open_trial=1')) }};
+  (function () {
+    var cats = document.querySelector('[data-ct-cats]');
+    var subject = document.getElementById('ct-subject');
+    if (!cats || !subject) return;
+    cats.addEventListener('click', function (e) {
+      var btn = e.target.closest('.sana-ct-cat');
+      if (!btn) return;
+      cats.querySelectorAll('.sana-ct-cat').forEach(function (el) { el.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      var value = btn.getAttribute('data-subject') || '';
+      subject.value = value;
+      subject.dispatchEvent(new Event('input', { bubbles: true }));
     });
-  });
+  })();
 </script>
 </body>
 </html>

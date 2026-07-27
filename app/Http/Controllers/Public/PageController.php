@@ -57,11 +57,6 @@ class PageController extends Controller
 
     public function pricing()
     {
-        // باقات المعلمين من إعدادات "مزايا اشتراك المعلمين" (متزامنة مع /admin/teacher-features)
-        $featuresController = new \App\Http\Controllers\Admin\TeacherFeaturesController();
-        $teacherPlans = $featuresController->getSettings();
-
-        // جلب الباقات الأخرى (باقات الكورسات) من قاعدة البيانات
         $packages = \App\Models\Package::active()
             ->with(['courses' => function ($query) {
                 $query->where('is_active', true);
@@ -73,7 +68,15 @@ class PageController extends Controller
             ->orderBy('price', 'asc')
             ->get();
 
-        return view('public.pricing', compact('teacherPlans', 'packages'));
+        $tutoringGroups = \App\Models\TutoringGroup::query()
+            ->active()
+            ->with(['instructor:id,name'])
+            ->orderByDesc('is_featured')
+            ->orderBy('sort_order')
+            ->orderBy('price')
+            ->get();
+
+        return view('public.pricing', compact('packages', 'tutoringGroups'));
     }
 
     public function team()

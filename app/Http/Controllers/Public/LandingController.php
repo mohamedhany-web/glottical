@@ -3,18 +3,16 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
-use App\Models\AcademicYear;
 use App\Models\AdvancedCourse;
 use App\Models\Certificate;
+use App\Models\InstructorProfile;
 use App\Models\PopupAd;
 use App\Models\SiteTestimonial;
 use App\Models\SiteService;
 use App\Models\User;
 use App\Services\CourseSubscriptionService;
-use App\Services\InstructorMarketingRankingService;
 use App\Services\SeoAssets;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -38,11 +36,6 @@ class LandingController extends Controller
 
         $locale = app()->getLocale();
         $buildHomePayload = function () {
-            $landingPaths = $this->getPublicLearningPaths(8);
-
-            $featuresController = new \App\Http\Controllers\Admin\TeacherFeaturesController();
-            $teacherPlans = $featuresController->getSettings();
-
             $featuredCourses = AdvancedCourse::query()
                 ->where('is_active', true)
                 ->with(['instructor:id,name', 'courseCategory:id,name'])
@@ -63,7 +56,7 @@ class LandingController extends Controller
                 ->get();
 
             $homeCategories = $this->buildHomeCategories();
-            $homeInstructors = InstructorMarketingRankingService::rankApprovedProfiles()->take(8)->values();
+            $homeInstructors = $this->approvedActiveInstructorProfiles(8);
 
             $homeTestimonials = SiteTestimonial::query()
                 ->active()
@@ -97,8 +90,6 @@ class LandingController extends Controller
             ];
 
             return compact(
-                'landingPaths',
-                'teacherPlans',
                 'featuredCourses',
                 'oneToOneCourses',
                 'homeCategories',
@@ -112,9 +103,29 @@ class LandingController extends Controller
         // في وضع التطوير: بدون كاش حتى تظهر تحديثات التصميم فوراً
         $payload = config('app.debug')
             ? $buildHomePayload()
-            : Cache::remember('landing.home.v8.'.$locale, 180, $buildHomePayload);
+            : Cache::remember('landing.home.v10.'.$locale, 180, $buildHomePayload);
 
         return view('welcome', array_merge($payload, compact('popupAd')));
+    }
+
+    /**
+     * مدربون معتمدون ونشطون للعرض العام.
+     *
+     * @return \Illuminate\Support\Collection<int, InstructorProfile>
+     */
+    private function approvedActiveInstructorProfiles(int $limit = 8): \Illuminate\Support\Collection
+    {
+        return InstructorProfile::query()
+            ->approved()
+            ->whereHas('user', function ($q) {
+                $q->whereIn('role', ['instructor', 'teacher'])
+                    ->where('is_active', true);
+            })
+            ->with(['user:id,name,role,is_active'])
+            ->orderByDesc('reviewed_at')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
     }
 
     /**
@@ -138,60 +149,6 @@ class LandingController extends Controller
                 'description' => __('public.home_category_fallback_'.$i.'_desc'),
                 'icon' => $icon,
                 'url' => $servicesUrl,
-            ];
-        });
-    }
-
-    /**
-     * جلب المسارات التعليمية بنفس منطق صفحة المسارات (للاستخدام في الصفحة الرئيسية أو أي عرض عام).
-     * @param int|null $limit عدد المسارات (null = بدون حد)
-     */
-    public static function getPublicLearningPaths(?int $limit = null): \Illuminate\Support\Collection
-    {
-        $query = AcademicYear::where('is_active', true)
-            ->with(['linkedCourses' => function ($q) {
-                $q->where('is_active', true);
-            }, 'academicSubjects' => function ($q) {
-                $q->where('is_active', true);
-            }])
-            ->withCount(['linkedCourses', 'academicSubjects'])
-            ->orderBy('order');
-
-        if ($limit !== null) {
-            $query->limit($limit);
-        }
-
-        $academicYears = $query->get();
-
-        return $academicYears->map(function ($year) {
-            $linkedCourses = $year->linkedCourses ?? collect();
-            $subjectCourses = collect();
-            if ($year->academicSubjects && $year->academicSubjects->isNotEmpty()) {
-                $subjectIds = $year->academicSubjects->pluck('id')->toArray();
-                if (!empty($subjectIds)) {
-                    $subjectCourses = AdvancedCourse::where('is_active', true)
-                        ->whereIn('academic_subject_id', $subjectIds)
-                        ->get();
-                }
-            }
-            $courses = $linkedCourses->merge($subjectCourses)->unique('id');
-            $slug = Str::slug($year->name);
-            $thumb = $year->thumbnail ? str_replace('\\', '/', $year->thumbnail) : null;
-            $imageUrl = $thumb ? storage_public_url($thumb) : null;
-
-            return (object) [
-                'id' => $year->id,
-                'name' => $year->name,
-                'description' => $year->description,
-                'slug' => $slug,
-                'url' => $slug !== '' ? route('public.learning-path.show', $slug) : route('public.learning-paths.index'),
-                'price' => (float) ($year->price ?? 0),
-                'courses_count' => $courses->count(),
-                'thumbnail' => $year->thumbnail,
-                'image_url' => $imageUrl,
-                'icon' => $year->icon,
-                'color' => $year->color,
-                'code' => $year->code,
             ];
         });
     }

@@ -18,125 +18,129 @@
   <link rel="alternate" hreflang="en" href="{{ url('/courses') }}?lang=en">
   @include('partials.favicon-links')
   @include('partials.seo-jsonld', ['jsonldType' => 'website'])
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-  @include('partials.atheer-head')
-  <meta name="theme-color" content="#0f5c57">
+  @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog']])
+  <style>
+    .gl-catalog-panel{
+      margin:1.15rem 0 1.65rem;padding:1rem 1.05rem 1.1rem;
+      background:#fff;border:1.5px solid #D7DDE6;border-radius:18px;
+      box-shadow:0 10px 28px -20px rgba(11,61,145,.28);
+    }
+    .gl-search{
+      display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.65rem;align-items:stretch;
+      margin:0 0 1rem;padding-bottom:1rem;border-bottom:1px solid #E8EEF8;
+    }
+    .gl-search input{
+      width:100%;min-width:0;height:3rem;border-radius:14px;border:1.5px solid #D7DDE6;
+      padding:0 1rem;font:600 .95rem Tajawal,sans-serif;background:#F4F7FC;color:#0B1220;
+    }
+    .gl-search input:focus{outline:none;border-color:#0B3D91;box-shadow:0 0 0 3px rgba(11,61,145,.12);background:#fff}
+    .gl-search button{
+      height:3rem;padding:0 1.35rem;border:none;border-radius:14px;
+      background:var(--gold,#F5B800);color:var(--p-dark,#072A66);
+      font:800 .9rem Tajawal,sans-serif;cursor:pointer;white-space:nowrap;
+    }
+    .gl-filter-block{display:grid;gap:.55rem}
+    .gl-filter-block + .gl-filter-block{margin-top:.85rem;padding-top:.85rem;border-top:1px solid #E8EEF8}
+    .gl-filter-block__label{
+      margin:0;font:800 .72rem/1 Tajawal,sans-serif;color:#5B6577;
+      letter-spacing:.02em;text-transform:none;
+    }
+    .gl-filter-block__chips{
+      display:flex;flex-wrap:wrap;align-items:center;gap:.45rem .5rem;
+    }
+    .gl-chip{
+      display:inline-flex;align-items:center;justify-content:center;
+      min-height:2.35rem;padding:.4rem .95rem;border-radius:999px;
+      border:1.5px solid #D7DDE6;background:#fff;
+      font:700 .8rem/1.2 Tajawal,sans-serif;text-decoration:none!important;color:#0B1220;
+      transition:background .15s ease,border-color .15s ease,color .15s ease;
+    }
+    .gl-chip:hover{border-color:rgba(11,61,145,.35);color:#0B3D91}
+    .gl-chip.is-on{background:#0B3D91;border-color:#0B3D91;color:#fff}
+    .gl-chip.is-on:hover{color:#fff;background:#072A66;border-color:#072A66}
+    .gl-grid{display:grid;gap:1.1rem;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+    .gl-grid .card-lift,.gl-grid article{background:#fff}
+    @media (max-width:520px){
+      .gl-search{grid-template-columns:1fr}
+      .gl-search button{width:100%}
+    }
+  </style>
 </head>
-<body class="font-sans antialiased">
-@include('partials.atheer-home-header')
+<body class="sana-home sana-courses-page">
+<div id="sana-scroll-progress"></div>
+@include('partials.landing.navbar', ['navActive' => 'courses', 'navSolid' => true, 'navHero' => false])
 
-<main class="page-enter">
-  <section class="container-wide py-10 md:py-14">
-    <nav class="mb-6" aria-label="{{ $isRtl ? 'مسار التنقل' : 'Breadcrumb' }}">
-      <ol class="flex flex-wrap items-center gap-2 text-sm text-muted">
-        <li><a href="{{ url('/') }}" class="transition hover:text-ink">{{ $isRtl ? 'الرئيسية' : 'Home' }}</a></li>
-        <li aria-hidden="true" class="text-line">/</li>
-        <li class="font-medium text-ink" aria-current="page">{{ __('landing.nav.courses') }}</li>
-      </ol>
-    </nav>
-    <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-      <div class="max-w-2xl space-y-3">
-        <p class="text-sm font-medium text-accent">{{ $isRtl ? 'كتالوج التعلّم' : 'Learning catalog' }}</p>
-        <h1 class="text-balance text-3xl font-semibold tracking-tight text-ink md:text-4xl">{{ __('public.courses_page_title') }}</h1>
-        <p class="text-base leading-8 text-muted">{{ __('public.courses_subtitle') }}</p>
+<main class="sana-cat-page">
+  <section class="sana-cat-hero" id="cat-hero">
+    <div class="sana-container sana-cat-hero__inner sana-reveal">
+      <div class="sana-cat-hero__breadcrumb">
+        <a href="{{ route('home') }}">{{ $isRtl ? 'الرئيسية' : 'Home' }}</a>
+        <span>/</span>
+        <span>{{ __('landing.nav.courses') }}</span>
       </div>
-      <p class="text-sm text-muted shrink-0">
-        <span class="font-semibold text-ink">{{ number_format($courses->count()) }}</span>
-        {{ $isRtl ? 'كورساً متاحاً' : 'courses available' }}
-      </p>
+      <h1 class="sana-cat-hero__title">{{ __('public.courses_page_title') }}</h1>
+      <p class="sana-cat-hero__desc">{{ __('public.courses_subtitle') }}</p>
+      <p class="sana-cat-hero__stats"><span class="sana-cat-hero__stat"><i class="fas fa-book-open"></i> {{ number_format($courses->count()) }} {{ $isRtl ? 'كورساً' : 'courses' }}</span></p>
     </div>
   </section>
 
-  <section class="container-wide pb-8">
-    <form action="{{ route('public.courses') }}" method="get" class="flex flex-col gap-3 sm:flex-row">
-      @if($activeDelivery)
-        <input type="hidden" name="delivery" value="{{ $activeDelivery }}">
-      @endif
-      @if($activeCategoryId > 0)
-        <input type="hidden" name="category" value="{{ $activeCategoryId }}">
-      @endif
-      <div class="relative min-w-0 flex-1">
-        <svg class="pointer-events-none absolute top-1/2 {{ $isRtl ? 'right-3' : 'left-3' }} size-4 -translate-y-1/2 text-muted" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        <input type="search" name="q" value="{{ $searchQuery }}" placeholder="{{ __('public.search_course_placeholder') ?? ($isRtl ? 'ابحث عن كورس…' : 'Search courses…') }}" class="h-12 w-full rounded-xl border border-line bg-surface {{ $isRtl ? 'pr-10 pl-4' : 'pl-10 pr-4' }} text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" aria-label="{{ $isRtl ? 'بحث' : 'Search' }}">
-      </div>
-      <button type="submit" class="btn-press inline-flex h-12 shrink-0 items-center justify-center rounded-xl bg-accent px-6 text-sm font-medium text-white transition hover:bg-[#0d4f4a]">{{ $isRtl ? 'بحث' : 'Search' }}</button>
-    </form>
+  <section class="sana-container" style="padding-bottom:4rem">
+    <div class="gl-catalog-panel sana-reveal">
+      <form action="{{ route('public.courses') }}" method="get" class="gl-search" role="search">
+        @if($activeDelivery)<input type="hidden" name="delivery" value="{{ $activeDelivery }}">@endif
+        @if($activeCategoryId > 0)<input type="hidden" name="category" value="{{ $activeCategoryId }}">@endif
+        <input type="search" name="q" value="{{ $searchQuery }}" placeholder="{{ __('public.search_course_placeholder') ?? ($isRtl ? 'ابحث عن كورس…' : 'Search…') }}" aria-label="{{ $isRtl ? 'بحث الكورسات' : 'Search courses' }}">
+        <button type="submit">{{ $isRtl ? 'بحث' : 'Search' }}</button>
+      </form>
 
-    <div class="mt-5 flex flex-wrap gap-2">
-      @php
-        $chip = 'inline-flex h-10 items-center rounded-xl border px-3.5 text-sm font-medium transition';
-        $chipOn = 'border-accent bg-accent text-white';
-        $chipOff = 'border-line bg-surface text-ink-soft hover:border-accent/30 hover:bg-accent-soft hover:text-accent';
-      @endphp
-      <a href="{{ route('public.courses', array_filter(['q' => $searchQuery ?: null, 'category' => $activeCategoryId ?: null])) }}" class="{{ $chip }} {{ ! $activeDelivery ? $chipOn : $chipOff }}">{{ __('public.courses_filter_all') ?? ($isRtl ? 'الكل' : 'All') }}</a>
-      <a href="{{ route('public.courses', array_filter(['delivery' => 'group', 'q' => $searchQuery ?: null, 'category' => $activeCategoryId ?: null])) }}" class="{{ $chip }} {{ $activeDelivery === 'group' ? $chipOn : $chipOff }}">{{ __('public.courses_filter_group') ?? ($isRtl ? 'جماعي' : 'Group') }}</a>
-      <a href="{{ route('public.courses', array_filter(['delivery' => 'one_to_one', 'q' => $searchQuery ?: null, 'category' => $activeCategoryId ?: null])) }}" class="{{ $chip }} {{ $activeDelivery === 'one_to_one' ? $chipOn : $chipOff }}">
-        {{ __('public.courses_filter_one_to_one') ?? ($isRtl ? 'فردي' : '1:1') }}
-        @if(($oneToOneCount ?? 0) > 0)
-          <span class="ms-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-lg {{ $activeDelivery === 'one_to_one' ? 'bg-white/20' : 'bg-accent-soft text-accent' }} px-1.5 text-[11px] font-semibold">{{ $oneToOneCount }}</span>
-        @endif
-      </a>
+      <div class="gl-filter-block">
+        <p class="gl-filter-block__label">{{ $isRtl ? 'نوع التعلّم' : 'Delivery type' }}</p>
+        <div class="gl-filter-block__chips" role="group" aria-label="{{ $isRtl ? 'نوع التعلّم' : 'Delivery type' }}">
+          <a href="{{ route('public.courses', array_filter(['q' => $searchQuery ?: null, 'category' => $activeCategoryId ?: null])) }}" class="gl-chip {{ ! $activeDelivery ? 'is-on' : '' }}">{{ __('public.courses_filter_all') ?? ($isRtl ? 'الكل' : 'All') }}</a>
+          <a href="{{ route('public.courses', array_filter(['delivery' => 'group', 'q' => $searchQuery ?: null, 'category' => $activeCategoryId ?: null])) }}" class="gl-chip {{ $activeDelivery === 'group' ? 'is-on' : '' }}">{{ __('public.courses_filter_group') ?? ($isRtl ? 'جماعي' : 'Group') }}</a>
+          <a href="{{ route('public.courses', array_filter(['delivery' => 'one_to_one', 'q' => $searchQuery ?: null, 'category' => $activeCategoryId ?: null])) }}" class="gl-chip {{ $activeDelivery === 'one_to_one' ? 'is-on' : '' }}">{{ __('public.courses_filter_one_to_one') ?? ($isRtl ? 'فردي' : '1:1') }}</a>
+        </div>
+      </div>
+
+      @if(($courseFilterCategories ?? collect())->isNotEmpty())
+        <div class="gl-filter-block">
+          <p class="gl-filter-block__label">{{ $isRtl ? 'التصنيف' : 'Category' }}</p>
+          <div class="gl-filter-block__chips" role="group" aria-label="{{ $isRtl ? 'التصنيف' : 'Category' }}">
+            <a href="{{ route('public.courses', array_filter(['delivery' => $activeDelivery, 'q' => $searchQuery ?: null])) }}" class="gl-chip {{ $activeCategoryId === 0 ? 'is-on' : '' }}">{{ $isRtl ? 'كل التصنيفات' : 'All categories' }}</a>
+            @foreach($courseFilterCategories as $cat)
+              <a href="{{ route('public.courses', array_filter(['category' => $cat->id, 'delivery' => $activeDelivery, 'q' => $searchQuery ?: null])) }}" class="gl-chip {{ $activeCategoryId === (int) $cat->id ? 'is-on' : '' }}">{{ $cat->name }}</a>
+            @endforeach
+          </div>
+        </div>
+      @endif
     </div>
 
-    @if(($courseFilterCategories ?? collect())->isNotEmpty())
-      <div class="mt-4 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-        <a href="{{ route('public.courses', array_filter(['delivery' => $activeDelivery, 'q' => $searchQuery ?: null])) }}" class="{{ $chip }} shrink-0 {{ $activeCategoryId === 0 ? $chipOn : $chipOff }}">{{ __('public.all_course_categories') ?? ($isRtl ? 'كل التصنيفات' : 'All categories') }}</a>
-        @foreach($courseFilterCategories as $cat)
-          <a href="{{ route('public.courses', array_filter(['category' => $cat->id, 'delivery' => $activeDelivery, 'q' => $searchQuery ?: null])) }}" class="{{ $chip }} shrink-0 {{ $activeCategoryId === (int) $cat->id ? $chipOn : $chipOff }}">{{ $cat->name }}</a>
-        @endforeach
-      </div>
-    @endif
-  </section>
+    <div class="gl-grid">
+      @forelse($courses as $course)
+        @php
+          $thumb = $course->thumbnail_url ?: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&q=80';
+          $url = route('public.course.show', $course->id);
+          $price = $course->is_free ? (__('landing.free') ?? 'مجاني') : (number_format((float) ($course->price_after_discount ?? $course->price ?? 0), 0).' '.__('landing.currency'));
+        @endphp
+        <a href="{{ $url }}" class="sana-reveal" style="text-decoration:none;color:inherit;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 14px 40px -18px rgba(11,61,145,.28);display:flex;flex-direction:column">
+          <div style="aspect-ratio:4/5;background:#e8eef8;overflow:hidden"><img src="{{ $thumb }}" alt="{{ $course->title }}" style="width:100%;height:100%;object-fit:cover" loading="lazy"></div>
+          <div style="padding:14px 16px 18px;display:flex;flex-direction:column;gap:6px;flex:1">
+            <p style="margin:0;font-size:.75rem;color:#64748b">{{ $course->instructor->name ?? '' }}</p>
+            <h3 style="margin:0;font:800 .92rem/1.45 Cairo,Tajawal,sans-serif;color:#0B1220">{{ $course->title }}</h3>
+            <p style="margin:auto 0 0;font:800 .95rem Tajawal,sans-serif;color:var(--p)">{{ $price }}</p>
+          </div>
+        </a>
+      @empty
+        <p style="grid-column:1/-1;color:var(--muted);font-weight:700">{{ $isRtl ? 'لا توجد كورسات مطابقة.' : 'No matching courses.' }}</p>
+      @endforelse
+    </div>
 
-  <section class="container-wide pb-20 md:pb-24">
-    @if($courses->isNotEmpty())
-      <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
-        @foreach($courses as $i => $course)
-          @include('partials.landing-course-card-site', [
-            'course' => $course,
-            'badge' => ! empty($course->is_featured) ? (__('landing.featured_badge') ?? ($isRtl ? 'مميّز' : 'Featured')) : ($i < 2 && $searchQuery === '' && ! $activeCategoryId ? ($isRtl ? 'جديد' : 'New') : null),
-          ])
-        @endforeach
-      </div>
-    @else
-      <div class="rounded-2xl border border-line bg-surface p-10 text-center shadow-soft">
-        <p class="text-base text-muted">{{ $isRtl ? 'لا توجد كورسات مطابقة لبحثك حالياً.' : 'No courses match your filters right now.' }}</p>
-        <div class="mt-5 flex flex-wrap justify-center gap-3">
-          <a href="{{ route('public.courses') }}" class="btn-press inline-flex h-11 items-center rounded-xl bg-accent px-5 text-sm font-medium text-white transition hover:bg-[#0d4f4a]">{{ $isRtl ? 'عرض كل الكورسات' : 'View all courses' }}</a>
-          <a href="{{ route('public.categories') }}" class="inline-flex h-11 items-center rounded-xl border border-line px-5 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">{{ __('landing.nav.categories') }}</a>
-        </div>
-      </div>
-    @endif
-  </section>
-
-  <section class="container-wide pb-16 md:pb-20">
-    <div class="relative overflow-hidden rounded-3xl bg-ink px-6 py-10 text-white shadow-soft sm:px-10 md:py-12">
-      <div class="pointer-events-none absolute -top-20 {{ $isRtl ? '-left-16' : '-right-16' }} size-56 rounded-full bg-accent/25 blur-3xl"></div>
-      <div class="pointer-events-none absolute -bottom-24 {{ $isRtl ? '-right-10' : '-left-10' }} size-48 rounded-full bg-metal/20 blur-3xl"></div>
-      <div class="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-        <div class="max-w-xl space-y-3">
-          <p class="text-sm font-medium text-metal">{{ $isRtl ? 'لست متأكداً أي كورس يناسبك؟' : 'Not sure which course fits?' }}</p>
-          <h2 class="text-balance text-2xl font-semibold md:text-3xl">{{ $isRtl ? 'احجز تقييم مستوى مجاني وسنرشّح لك الأنسب' : 'Book a free assessment — we’ll recommend the best fit' }}</h2>
-        </div>
-        <div class="flex flex-col gap-3 sm:flex-row md:shrink-0">
-          <a href="{{ url('/?open_trial=1') }}" class="btn-press inline-flex h-12 items-center justify-center rounded-xl bg-accent px-6 text-sm font-medium text-white transition hover:bg-[#0d4f4a]">{{ __('landing.academy.free_trial_cta') }}</a>
-          <a href="{{ route('public.learning-paths.index') }}" class="btn-press inline-flex h-12 items-center justify-center rounded-xl border border-white/20 bg-white/5 px-6 text-sm font-medium transition hover:bg-white/10">{{ __('landing.nav.learning_paths') }}</a>
-        </div>
-      </div>
+    <div class="sana-reveal" style="margin-top:2.5rem;text-align:center">
+      <a href="{{ url('/?open_trial=1') }}" class="sana-btn sana-btn--yellow sana-btn--lg"><i class="fas fa-clipboard-check"></i> {{ __('landing.academy.free_trial_cta') }}</a>
     </div>
   </section>
 </main>
 
-@include('partials.atheer-home-footer')
-
-<script>
-  document.querySelectorAll('[data-open-free-trial]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      window.location.href = {{ \Illuminate\Support\Js::from(url('/?open_trial=1')) }};
-    });
-  });
-</script>
+@include('partials.landing.footer')
 </body>
 </html>

@@ -1,51 +1,28 @@
 @extends('layouts.admin')
 
 @section('title', 'إدارة الطلبات')
-@section('header', 'إدارة الطلبات')
+@section('page_title', 'إدارة الطلبات')
 
 @section('content')
 @php
-    $statCards = [
-        [
-            'label' => 'إجمالي الطلبات',
-            'value' => number_format($stats['total']),
-            'icon' => 'fas fa-shopping-cart',
-            'bg' => 'bg-blue-100',
-            'text' => 'text-blue-600',
-            'description' => 'كل الطلبات المسجلة في المنصة',
-        ],
-        [
-            'label' => 'طلبات قيد المراجعة',
-            'value' => number_format($stats['pending']),
-            'icon' => 'fas fa-hourglass-half',
-            'bg' => 'bg-amber-100',
-            'text' => 'text-amber-600',
-            'description' => 'بإنتظار الموافقة أو الرفض',
-        ],
-        [
-            'label' => 'طلبات مكتملة',
-            'value' => number_format($stats['approved']),
-            'icon' => 'fas fa-check-circle',
-            'bg' => 'bg-emerald-100',
-            'text' => 'text-emerald-600',
-            'description' => 'تمت الموافقة عليها بنجاح',
-        ],
-        [
-            'label' => 'طلبات مرفوضة',
-            'value' => number_format($stats['rejected']),
-            'icon' => 'fas fa-times-circle',
-            'bg' => 'bg-rose-100',
-            'text' => 'text-rose-600',
-            'description' => 'تم رفضها بعد المراجعة',
-        ],
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $kpis = [
+        ['label' => 'إجمالي الطلبات', 'value' => $stats['total'], 'icon' => 'fa-shopping-cart', 'tone' => 'accent', 'note' => 'كل الطلبات المسجلة'],
+        ['label' => 'قيد المراجعة', 'value' => $stats['pending'], 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'note' => 'بانتظار الموافقة أو الرفض'],
+        ['label' => 'مكتملة', 'value' => $stats['approved'], 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => 'تمت الموافقة عليها'],
+        ['label' => 'مرفوضة', 'value' => $stats['rejected'], 'icon' => 'fa-times-circle', 'tone' => 'muted', 'note' => 'تم رفضها بعد المراجعة'],
     ];
-
+    $toneClass = [
+        'accent' => 'bg-accent-soft text-accent',
+        'metal' => 'bg-metal/15 text-metal',
+        'muted' => 'bg-canvas-muted text-muted',
+    ];
     $statusBadges = [
-        'pending' => ['label' => 'في الانتظار', 'classes' => 'bg-amber-100 text-amber-700 border border-amber-200'],
-        'approved' => ['label' => 'مقبولة', 'classes' => 'bg-emerald-100 text-emerald-700 border border-emerald-200'],
-        'rejected' => ['label' => 'مرفوضة', 'classes' => 'bg-rose-100 text-rose-700 border border-rose-200'],
+        'pending' => ['label' => 'في الانتظار', 'classes' => 'bg-metal/15 text-metal'],
+        'approved' => ['label' => 'مقبولة', 'classes' => 'bg-accent-soft text-accent'],
+        'rejected' => ['label' => 'مرفوضة', 'classes' => 'bg-canvas-muted text-muted'],
     ];
-
     $paymentMethodLabels = [
         'bank_transfer' => 'تحويل بنكي',
         'wallet' => 'محفظة إلكترونية',
@@ -53,262 +30,227 @@
         'cash' => 'نقدي',
         'other' => 'أخرى',
     ];
+    $avgAmount = $stats['total'] > 0 ? (float) \App\Models\Order::avg('amount') : 0;
+    $monthCount = \App\Models\Order::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
+    $acceptRate = $stats['total'] > 0 ? round(($stats['approved'] / $stats['total']) * 100, 1) : 0;
 @endphp
 
-<div class="space-y-6">
-    {{-- 1. الهيدر + كاردات الإحصائيات --}}
-    <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-6 py-5 bg-slate-50 border-b border-slate-200 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md">
-                    <i class="fas fa-shopping-cart text-lg"></i>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">المبيعات · الطلبات</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إدارة الطلبات</h2>
+            <p class="mt-1 text-sm text-muted">متابعة تسجيلات شراء الكورسات والموافقة عليها</p>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.sales.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-chart-pie text-xs"></i>
+                تحليلات المبيعات
+            </a>
+            <a href="{{ route('admin.crm.leads.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-users text-xs"></i>
+                CRM
+            </a>
+        </div>
+    </section>
+
+    @if(session('success'))
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
+        </div>
+    @endif
+
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach($kpis as $kpi)
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $toneClass[$kpi['tone']] }}">
+                    <i class="fas {{ $kpi['icon'] }} text-sm"></i>
                 </div>
-                <div>
-                    <h2 class="text-2xl font-black text-slate-900">لوحة إدارة الطلبات</h2>
-                    <p class="text-sm text-slate-600 mt-1">متابعة حركة التسجيلات والطلبات المالية عبر المسارات التعليمية.</p>
-                </div>
+                <p class="mt-3 text-xs text-muted">{{ $kpi['label'] }}</p>
+                <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ number_format($kpi['value']) }}</p>
+                <p class="mt-1 text-[11px] text-muted">{{ $kpi['note'] }}</p>
+            </article>
+        @endforeach
+    </section>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-4 py-4 sm:px-5">
+            <h3 class="text-base font-semibold text-ink">البحث والفلترة</h3>
+            <p class="mt-0.5 text-xs text-muted">حسب الحالة، طريقة الدفع، المندوب، أو بيانات العميل/الكورس</p>
+        </div>
+        <form method="GET" id="filterForm" action="{{ route('admin.orders.index') }}" class="grid grid-cols-1 gap-4 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-5 xl:items-end">
+            <div class="xl:col-span-2">
+                <label class="{{ $labelClass }}" for="search">البحث</label>
+                <input id="search" type="search" name="search" value="{{ old('search', request('search')) }}" maxlength="255" placeholder="اسم، بريد، هاتف، أو كورس…" class="{{ $fieldClass }}">
             </div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 p-6">
-            @foreach ($statCards as $card)
-                <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex-1">
-                            <p class="text-xs font-semibold text-slate-600 mb-1">{{ $card['label'] }}</p>
-                            <p class="text-2xl font-black text-slate-900">{{ $card['value'] }}</p>
-                        </div>
-                        <div class="w-12 h-12 rounded-lg {{ $card['bg'] }} flex items-center justify-center {{ $card['text'] }} shadow-sm">
-                            <i class="{{ $card['icon'] }} text-lg"></i>
-                        </div>
-                    </div>
-                    <p class="text-xs text-slate-600">{{ $card['description'] }}</p>
-                </div>
-            @endforeach
-        </div>
-    </section>
-
-    {{-- 2. الفلترة أسفل الكاردات --}}
-    <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
-            <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
-                <i class="fas fa-filter text-blue-600"></i>
-                البحث والفلترة
-            </h3>
-            <p class="text-xs text-slate-600 mt-1">فلترة الطلبات حسب الحالة، طريقة الدفع، أو بيانات المعلم.</p>
-        </div>
-        <div class="p-6">
-            <form method="GET" id="filterForm" class="flex flex-col gap-4 lg:flex-row lg:items-end lg:flex-wrap">
-                <div class="flex-1 min-w-[200px]">
-                    <label class="block text-xs font-semibold text-slate-700 mb-2">
-                        <i class="fas fa-search text-blue-600 ml-1"></i>
-                        البحث
-                    </label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 right-3 flex items-center text-blue-500 pointer-events-none"><i class="fas fa-search"></i></span>
-                        <input type="text" name="search" value="{{ old('search', request('search')) }}" maxlength="255" placeholder="اسم المعلم، البريد، الهاتف، أو اسم الكورس" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 pl-10 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
-                    </div>
-                </div>
-                <div class="w-full sm:w-auto min-w-[180px]">
-                    <label class="block text-xs font-semibold text-slate-700 mb-2">
-                        <i class="fas fa-toggle-on text-blue-600 ml-1"></i>
-                        الحالة
-                    </label>
-                    <select name="status" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <option value="">جميع الحالات</option>
-                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>في الانتظار</option>
-                        <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>مقبولة</option>
-                        <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>مرفوضة</option>
-                    </select>
-                </div>
-                <div class="w-full sm:w-auto min-w-[180px]">
-                    <label class="block text-xs font-semibold text-slate-700 mb-2">
-                        <i class="fas fa-wallet text-blue-600 ml-1"></i>
-                        طريقة الدفع
-                    </label>
-                    <select name="payment_method" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <option value="">جميع الطرق</option>
-                        <option value="bank_transfer" {{ request('payment_method') == 'bank_transfer' ? 'selected' : '' }}>تحويل بنكي</option>
-                        <option value="online" {{ request('payment_method') == 'online' ? 'selected' : '' }}>دفع إلكتروني</option>
-                        <option value="cash" {{ request('payment_method') == 'cash' ? 'selected' : '' }}>نقدي</option>
-                        <option value="other" {{ request('payment_method') == 'other' ? 'selected' : '' }}>أخرى</option>
-                    </select>
-                </div>
-                <div class="w-full sm:w-auto min-w-[200px]">
-                    <label class="block text-xs font-semibold text-slate-700 mb-2">
-                        <i class="fas fa-user-tie text-emerald-600 ml-1"></i>
-                        مندوب المبيعات
-                    </label>
-                    <select name="sales_owner_id" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-blue-500 transition-all">
-                        <option value="">الكل</option>
-                        <option value="unassigned" {{ request('sales_owner_id') === 'unassigned' ? 'selected' : '' }}>بدون مندوب</option>
-                        @foreach($salesEmployees ?? [] as $se)
-                            <option value="{{ $se->id }}" {{ (string) request('sales_owner_id') === (string) $se->id ? 'selected' : '' }}>{{ $se->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="flex items-center gap-2 flex-shrink-0">
-                    <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200">
-                        <i class="fas fa-filter"></i>
-                        تطبيق
-                    </button>
-                    @if(request()->anyFilled(['search', 'status', 'payment_method', 'sales_owner_id']))
-                    <a href="{{ route('admin.orders.index') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors" title="مسح الفلتر">
-                        <i class="fas fa-times"></i>
-                    </a>
-                    @endif
-                </div>
-            </form>
-        </div>
-    </section>
-
-    {{-- 3. قائمة الطلبات بعرض كامل --}}
-    <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-4 py-3 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-                <h3 class="text-base font-black text-slate-900">الطلبات</h3>
-                <p class="text-xs text-slate-600">آخر الطلبات مرتبة من الأحدث إلى الأقدم.</p>
+                <label class="{{ $labelClass }}" for="status">الحالة</label>
+                <select id="status" name="status" class="{{ $fieldClass }}">
+                    <option value="">جميع الحالات</option>
+                    <option value="pending" @selected(request('status') === 'pending')>في الانتظار</option>
+                    <option value="approved" @selected(request('status') === 'approved')>مقبولة</option>
+                    <option value="rejected" @selected(request('status') === 'rejected')>مرفوضة</option>
+                </select>
             </div>
-            <span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">{{ $orders->total() }} طلب</span>
+            <div>
+                <label class="{{ $labelClass }}" for="payment_method">طريقة الدفع</label>
+                <select id="payment_method" name="payment_method" class="{{ $fieldClass }}">
+                    <option value="">جميع الطرق</option>
+                    <option value="bank_transfer" @selected(request('payment_method') === 'bank_transfer')>تحويل بنكي</option>
+                    <option value="online" @selected(request('payment_method') === 'online')>دفع إلكتروني</option>
+                    <option value="cash" @selected(request('payment_method') === 'cash')>نقدي</option>
+                    <option value="other" @selected(request('payment_method') === 'other')>أخرى</option>
+                </select>
+            </div>
+            <div>
+                <label class="{{ $labelClass }}" for="sales_owner_id">مندوب المبيعات</label>
+                <select id="sales_owner_id" name="sales_owner_id" class="{{ $fieldClass }}">
+                    <option value="">الكل</option>
+                    <option value="unassigned" @selected(request('sales_owner_id') === 'unassigned')>بدون مندوب</option>
+                    @foreach($salesEmployees ?? [] as $se)
+                        <option value="{{ $se->id }}" @selected((string) request('sales_owner_id') === (string) $se->id)>{{ $se->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="flex flex-wrap gap-2 xl:col-span-5">
+                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white">
+                    <i class="fas fa-filter text-xs"></i>
+                    تطبيق
+                </button>
+                @if(request()->anyFilled(['search', 'status', 'payment_method', 'sales_owner_id']))
+                    <a href="{{ route('admin.orders.index') }}" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line px-5 text-sm font-medium text-ink hover:bg-canvas">
+                        <i class="fas fa-times text-xs"></i>
+                        مسح
+                    </a>
+                @endif
+            </div>
+        </form>
+    </article>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+            <div>
+                <h3 class="text-base font-semibold text-ink">قائمة الطلبات</h3>
+                <p class="mt-0.5 text-xs text-muted">من الأحدث إلى الأقدم</p>
+            </div>
+            <span class="inline-flex rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">{{ number_format($orders->total()) }} طلب</span>
         </div>
-        <div class="overflow-x-auto">
-            <div class="p-3 space-y-1.5">
-                @forelse ($orders as $order)
-                    <div class="rounded-lg border border-slate-200 bg-slate-50/50 hover:border-blue-200 hover:bg-white transition-all duration-200 overflow-hidden">
-                        <div class="px-3 py-2.5">
-                            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                {{-- أيقونة الحالة --}}
-                                <div class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg
-                                    @if($order->status === 'pending') bg-amber-100 text-amber-600
-                                    @elseif($order->status === 'approved') bg-emerald-100 text-emerald-600
-                                    @else bg-rose-100 text-rose-600
-                                    @endif">
-                                    <i class="{{ $order->status === 'approved' ? 'fas fa-check' : ($order->status === 'pending' ? 'fas fa-clock' : 'fas fa-times') }} text-sm"></i>
-                                </div>
-                                {{-- بيانات الطلب --}}
-                                <div class="flex-1 min-w-0 space-y-1">
-                                    <div class="flex flex-wrap items-center justify-between gap-2">
-                                        <div>
-                                            <p class="text-sm font-bold text-slate-900">{{ htmlspecialchars($order->user->name ?? '—') }}</p>
-                                            <p class="text-xs text-slate-600">{{ htmlspecialchars($order->user->email ?? $order->user->phone ?? '—') }}</p>
-                                        </div>
-                                        @php $badge = $statusBadges[$order->status] ?? null; @endphp
-                                        @if($badge)
-                                            <span class="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold {{ $badge['classes'] }}">
-                                                <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
-                                                {{ $badge['label'] }}
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <div class="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-600">
-                                        @if($order->salesOwner)
-                                            <span class="text-emerald-700 font-semibold"><i class="fas fa-headset ml-0.5"></i> {{ $order->salesOwner->name }}</span>
-                                        @elseif($order->status === 'pending')
-                                            <span class="text-amber-600">بدون مندوب مبيعات</span>
-                                        @endif
-                                        @if($order->academic_year_id && $order->learningPath)
-                                            <span class="font-semibold text-slate-800">{{ htmlspecialchars($order->learningPath->name ?? 'مسار تعليمي') }}</span>
-                                            <span class="text-blue-600"><i class="fas fa-route ml-0.5"></i> مسار تعليمي</span>
-                                        @elseif($order->course)
-                                            <span class="font-semibold text-slate-800">{{ htmlspecialchars($order->course->title ?? 'كورس') }}</span>
-                                            @if($order->course->academicYear || $order->course->academicSubject)
-                                                <span>{{ optional($order->course->academicYear)->name }}{{ $order->course->academicSubject ? ' • ' . $order->course->academicSubject->name : '' }}</span>
-                                            @endif
-                                        @else
-                                            <span class="text-slate-500">—</span>
-                                        @endif
-                                    </div>
-                                    <div class="flex flex-wrap items-center gap-3 text-xs text-slate-600">
-                                        <span class="inline-flex items-center gap-1">
-                                            <i class="fas fa-money-bill-wave text-blue-500 text-[10px]"></i>
-                                            <strong>{{ number_format($order->amount, 2) }}</strong> ج.م
-                                        </span>
-                                        <span class="inline-flex items-center gap-1">
-                                            <i class="fas fa-calendar text-blue-500 text-[10px]"></i>
-                                            {{ $order->created_at->format('d/m/Y H:i') }}
-                                        </span>
-                                        <span class="inline-flex items-center gap-1">
-                                            <i class="fas fa-wallet text-blue-500 text-[10px]"></i>
-                                            {{ $paymentMethodLabels[$order->payment_method] ?? $order->payment_method ?? '—' }}
-                                        </span>
-                                    </div>
-                                </div>
-                                {{-- أزرار الإجراءات --}}
-                                <div class="flex items-center gap-1.5 flex-shrink-0">
-                                    <a href="{{ route('admin.orders.show', $order) }}" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-colors text-sm" title="عرض التفاصيل">
+
+        <div class="admin-table-wrap overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="border-b border-line bg-canvas/60 text-xs text-muted">
+                    <tr>
+                        <th class="px-4 py-3 text-start font-medium">#</th>
+                        <th class="px-4 py-3 text-start font-medium">العميل</th>
+                        <th class="px-4 py-3 text-start font-medium">الكورس / المسار</th>
+                        <th class="px-4 py-3 text-start font-medium">المبلغ</th>
+                        <th class="px-4 py-3 text-start font-medium">الدفع</th>
+                        <th class="px-4 py-3 text-start font-medium">المندوب</th>
+                        <th class="px-4 py-3 text-start font-medium">الحالة</th>
+                        <th class="px-4 py-3 text-start font-medium">التاريخ</th>
+                        <th class="px-4 py-3 text-start font-medium">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-line">
+                    @forelse($orders as $order)
+                        @php $badge = $statusBadges[$order->status] ?? null; @endphp
+                        <tr class="hover:bg-canvas/40">
+                            <td class="px-4 py-3 tabular-nums text-muted">{{ $order->id }}</td>
+                            <td class="px-4 py-3">
+                                <p class="font-semibold text-ink">{{ $order->user->name ?? '—' }}</p>
+                                <p class="mt-0.5 text-[11px] text-muted">{{ $order->user->email ?? $order->user->phone ?? '—' }}</p>
+                            </td>
+                            <td class="px-4 py-3">
+                                @if($order->academic_year_id && ! $order->advanced_course_id)
+                                    <p class="font-medium text-ink">{{ $order->learningPath->name ?? 'طلب قديم' }}</p>
+                                    <p class="text-[11px] text-muted">طلب قديم</p>
+                                @elseif($order->course)
+                                    <p class="font-medium text-ink">{{ $order->course->title ?? 'كورس' }}</p>
+                                    @if($order->course->academicYear || $order->course->academicSubject)
+                                        <p class="text-[11px] text-muted">
+                                            {{ optional($order->course->academicYear)->name }}{{ $order->course->academicSubject ? ' · '.$order->course->academicSubject->name : '' }}
+                                        </p>
+                                    @endif
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($order->amount, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></td>
+                            <td class="px-4 py-3 text-ink-soft">{{ $paymentMethodLabels[$order->payment_method] ?? $order->payment_method ?? '—' }}</td>
+                            <td class="px-4 py-3 text-ink-soft">
+                                @if($order->salesOwner)
+                                    {{ $order->salesOwner->name }}
+                                @elseif($order->status === 'pending')
+                                    <span class="text-metal">بدون مندوب</span>
+                                @else
+                                    —
+                                @endif
+                            </td>
+                            <td class="px-4 py-3">
+                                @if($badge)
+                                    <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $badge['classes'] }}">{{ $badge['label'] }}</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-xs tabular-nums text-muted">{{ $order->created_at->format('Y-m-d H:i') }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex flex-wrap gap-1.5">
+                                    <a href="{{ route('admin.orders.show', $order) }}" class="btn-press inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-ink hover:border-accent/30 hover:text-accent" title="التفاصيل">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    @if ($order->status === 'pending')
-                                        <button type="button" class="approve-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-300 bg-white text-emerald-600 hover:bg-emerald-50 hover:border-emerald-400 transition-colors text-sm" title="موافقة" data-order-id="{{ $order->id }}" data-url="{{ route('admin.orders.approve', $order) }}">
+                                    @if($order->status === 'pending')
+                                        <button type="button" class="approve-btn btn-press inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-accent hover:border-accent/40" title="موافقة" data-order-id="{{ $order->id }}" data-url="{{ route('admin.orders.approve', $order) }}">
                                             <i class="fas fa-check"></i>
                                         </button>
-                                        <button type="button" class="reject-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-300 bg-white text-rose-600 hover:bg-rose-50 hover:border-rose-400 transition-colors text-sm" title="رفض" data-order-id="{{ $order->id }}" data-url="{{ route('admin.orders.reject', $order) }}">
+                                        <button type="button" class="reject-btn btn-press inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-rose-600 hover:border-rose-300 hover:bg-rose-50" title="رفض" data-order-id="{{ $order->id }}" data-url="{{ route('admin.orders.reject', $order) }}">
                                             <i class="fas fa-times"></i>
                                         </button>
                                     @endif
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                @empty
-                    <div class="rounded-xl border border-slate-200 bg-white p-12 text-center">
-                        <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-                            <i class="fas fa-shopping-cart text-3xl"></i>
-                        </div>
-                        <p class="text-lg font-bold text-slate-900 mb-1">لا توجد طلبات</p>
-                        <p class="text-sm text-slate-600">لا توجد طلبات مطابقة لخيارات البحث والفلترة الحالية.</p>
-                    </div>
-                @endforelse
-            </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="9" class="px-4 py-16 text-center">
+                                <div class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <p class="text-sm font-medium text-ink">لا توجد طلبات</p>
+                                <p class="mt-1 text-xs text-muted">لا توجد نتائج مطابقة للفلاتر الحالية.</p>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-            @if ($orders->hasPages())
-                <div class="border-t border-slate-200 px-4 py-3">
-                    {{ $orders->appends(request()->query())->links() }}
-                </div>
-            @endif
-        </div>
-    </section>
+        @if($orders->hasPages())
+            <div class="border-t border-line px-4 py-4 sm:px-5">{{ $orders->appends(request()->query())->links() }}</div>
+        @endif
+    </article>
 
-    {{-- 4. تحليل سريع --}}
-    <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
-            <h3 class="text-lg font-black text-slate-900">مؤشرات سريعة</h3>
-            <p class="text-xs text-slate-600 mt-1">معدل القبول وطلبات الشهر ومتوسط قيمة الطلب.</p>
-        </div>
-        <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="rounded-xl border border-emerald-200 bg-emerald-50/80 p-5">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
-                        <i class="fas fa-percentage text-lg"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold text-emerald-700 mb-1">معدل القبول</p>
-                        <p class="text-xl font-black text-emerald-700">{{ $stats['total'] > 0 ? round(($stats['approved'] / $stats['total']) * 100, 1) : 0 }}%</p>
-                    </div>
-                </div>
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-3">
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                <i class="fas fa-percentage text-sm"></i>
             </div>
-            <div class="rounded-xl border border-blue-200 bg-blue-50/80 p-5">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-                        <i class="fas fa-calendar text-lg"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold text-blue-700 mb-1">طلبات هذا الشهر</p>
-                        <p class="text-xl font-black text-blue-700">{{ \App\Models\Order::whereMonth('created_at', now()->month)->count() }}</p>
-                    </div>
-                </div>
+            <p class="mt-3 text-xs text-muted">معدل القبول</p>
+            <p class="mt-1 text-xl font-semibold tabular-nums text-ink">{{ $acceptRate }}%</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-metal/15 text-metal">
+                <i class="fas fa-calendar text-sm"></i>
             </div>
-            <div class="rounded-xl border border-purple-200 bg-purple-50/80 p-5">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-purple-100 text-purple-600">
-                        <i class="fas fa-coins text-lg"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold text-purple-700 mb-1">متوسط قيمة الطلب</p>
-                        <p class="text-xl font-black text-purple-700">{{ $stats['total'] > 0 ? number_format(\App\Models\Order::avg('amount'), 2) : 0 }} ج.م</p>
-                    </div>
-                </div>
+            <p class="mt-3 text-xs text-muted">طلبات هذا الشهر</p>
+            <p class="mt-1 text-xl font-semibold tabular-nums text-ink">{{ number_format($monthCount) }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-canvas-muted text-muted">
+                <i class="fas fa-coins text-sm"></i>
             </div>
-        </div>
+            <p class="mt-3 text-xs text-muted">متوسط قيمة الطلب</p>
+            <p class="mt-1 text-xl font-semibold tabular-nums text-ink">{{ number_format($avgAmount, 2) }} <span class="text-sm font-normal text-muted">ج.م</span></p>
+        </article>
     </section>
 </div>
 
@@ -318,7 +260,7 @@
     var csrfToken = document.querySelector('meta[name="csrf-token"]') && document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     if (!csrfToken) return;
 
-    function sendRequest(url, isApprove, btn) {
+    function sendRequest(url, btn) {
         var formData = new FormData();
         formData.append('_token', csrfToken);
         var originalHtml = btn.innerHTML;
@@ -349,16 +291,14 @@
             if (data && data.success) {
                 if (data.message) alert(data.message);
                 window.location.reload();
-            } else {
-                var msg = (data && (data.error || data.message)) || 'حدث خطأ أثناء المعالجة';
-                alert(msg);
+            } else if (data) {
+                alert((data.error || data.message) || 'حدث خطأ أثناء المعالجة');
                 btn.disabled = false;
                 btn.innerHTML = originalHtml;
             }
         })
         .catch(function(err) {
-            var msg = err.message || 'حدث خطأ أثناء المعالجة';
-            alert(msg);
+            alert(err.message || 'حدث خطأ أثناء المعالجة');
             btn.disabled = false;
             btn.innerHTML = originalHtml;
         });
@@ -366,15 +306,15 @@
 
     document.querySelectorAll('.approve-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            if (!confirm('هل أنت متأكد من الموافقة على هذا الطلب؟\nسيتم تفعيل الكورس للمعلم تلقائياً.')) return;
-            sendRequest(btn.getAttribute('data-url'), true, btn);
+            if (!confirm('هل أنت متأكد من الموافقة على هذا الطلب؟\nسيتم تفعيل الكورس تلقائياً.')) return;
+            sendRequest(btn.getAttribute('data-url'), btn);
         });
     });
 
     document.querySelectorAll('.reject-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
             if (!confirm('هل أنت متأكد من رفض هذا الطلب؟')) return;
-            sendRequest(btn.getAttribute('data-url'), false, btn);
+            sendRequest(btn.getAttribute('data-url'), btn);
         });
     });
 

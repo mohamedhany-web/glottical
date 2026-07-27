@@ -27,49 +27,30 @@
             <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-slate-50">
                     <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas {{ $order->academic_year_id ? 'fa-route' : 'fa-book-open' }} text-sky-600"></i>
-                        {{ $order->academic_year_id ? __('student.learning_path_info') : __('student.course_info') }}
+                        <i class="fas fa-book-open text-sky-600"></i>
+                        {{ $order->academic_year_id && ! $order->advanced_course_id ? 'طلب قديم' : __('student.course_info') }}
                     </h2>
                 </div>
                 <div class="p-6">
                     <div class="flex flex-col sm:flex-row gap-4">
-                        <div class="w-full sm:w-24 h-24 bg-gradient-to-br {{ $order->academic_year_id ? 'from-green-500 to-green-600' : 'from-sky-500 to-sky-600' }} rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                            @if($order->academic_year_id && $order->learningPath && $order->learningPath->thumbnail)
-                                <img src="{{ storage_asset($order->learningPath->thumbnail) }}" alt="{{ $order->learningPath->name ?? 'مسار تعليمي' }}" 
-                                     class="w-full h-full object-cover rounded-xl">
-                            @elseif($order->course && $order->course->thumbnail)
+                        <div class="w-full sm:w-24 h-24 bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                            @if($order->course && $order->course->thumbnail)
                                 <img src="{{ storage_asset($order->course->thumbnail) }}" alt="{{ $order->course->title ?? 'كورس' }}" 
                                      class="w-full h-full object-cover rounded-xl">
                             @else
-                                <i class="fas {{ $order->academic_year_id ? 'fa-route' : 'fa-play-circle' }} text-white text-3xl"></i>
+                                <i class="fas fa-play-circle text-white text-3xl"></i>
                             @endif
                         </div>
                         
                         <div class="flex-1">
-                            @if($order->academic_year_id && $order->learningPath)
-                                <h3 class="text-lg font-bold text-gray-900 mb-2">{{ $order->learningPath->name ?? 'مسار تعليمي' }}</h3>
+                            @if($order->academic_year_id && ! $order->advanced_course_id)
+                                <h3 class="text-lg font-bold text-gray-900 mb-2">{{ $order->learningPath->name ?? 'طلب قديم' }}</h3>
                                 <div class="flex flex-wrap items-center gap-2 mb-3">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                        <i class="fas fa-route ml-1 text-xs"></i>
-                                        مسار تعليمي
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                        <i class="fas fa-clock ml-1 text-xs"></i>
+                                        طلب قديم
                                     </span>
-                                    @if($order->learningPath->price)
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-                                        <i class="fas fa-money-bill-wave ml-1 text-xs"></i>
-                                        {{ number_format($order->learningPath->price, 2) }} ج.م
-                                    </span>
-                                    @endif
                                 </div>
-                                @if($order->learningPath->description)
-                                    <p class="text-sm text-gray-600 mb-3">
-                                        {{ Str::limit($order->learningPath->description, 120) }}
-                                    </p>
-                                @endif
-                                <a href="{{ route('public.learning-path.show', Str::slug($order->learningPath->name)) }}" 
-                                   class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg font-medium transition-colors shadow-lg shadow-green-500/30">
-                                    <i class="fas fa-eye"></i>
-                                    عرض المسار
-                                </a>
                             @elseif($order->course)
                                 <h3 class="text-lg font-bold text-gray-900 mb-2">{{ $order->course->title ?? 'كورس غير محدد' }}</h3>
                                 @if($order->course->academicYear || $order->course->academicSubject)

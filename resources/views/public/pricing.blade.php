@@ -1,245 +1,347 @@
 @php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
-    $planKeys = ['teacher_starter', 'teacher_pro'];
-    $activePlans = collect($planKeys)
-        ->mapWithKeys(fn ($key) => [$key => $teacherPlans[$key] ?? null])
-        ->filter();
+    $brand = config('app.name', 'Glottical');
+    $packages = $packages ?? collect();
+    $tutoringGroups = $tutoringGroups ?? collect();
+    $footer = \App\Services\PublicFooterSettings::payload();
+    $waUrl = $footer['whatsapp_url'] ?? '#';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>{{ __('public.pricing_page_title') }} - {{ __('public.site_suffix') }}</title>
-    <meta name="description" content="{{ __('public.pricing_meta_description') }}">
-    <meta name="theme-color" content="#0d1528">
-    <link rel="canonical" href="{{ route('public.pricing') }}">
-    @include('partials.favicon-links')
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        acad: {
-                            blue: '{{ config('academy-theme.blue') }}',
-                            cyan: '{{ config('academy-theme.cyan') }}',
-                            yellow: '{{ config('academy-theme.yellow') }}',
-                            navy: '{{ config('academy-theme.navy') }}',
-                            navyMid: '{{ config('academy-theme.navy_mid') }}',
-                        },
-                    },
-                    fontFamily: {
-                        sans: ['Cairo', 'Tajawal', 'IBM Plex Sans Arabic', 'system-ui', 'sans-serif'],
-                    },
-                },
-            },
-        };
-    </script>
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
-    @include('partials.public-academy-surface')
-    <style>
-        .line-clamp-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-        .reveal.s1{transition-delay:.06s}.reveal.s2{transition-delay:.12s}
-        .pricing-pop{box-shadow:0 24px 60px -20px rgba(0,212,255,.25)}
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+  <title>{{ __('public.pricing_page_title') }} — {{ $brand }}</title>
+  <meta name="description" content="{{ __('public.pricing_meta_description') }}">
+  <link rel="canonical" href="{{ route('public.pricing') }}">
+  @include('partials.favicon-links')
+  @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog', 'pricing']])
+  <style>
+    .gl-prx-grid {
+      display: grid;
+      gap: 1.15rem;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 700px) {
+      .gl-prx-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 1024px) {
+      .gl-prx-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .gl-prx-card {
+      display: flex;
+      flex-direction: column;
+      border-radius: 18px;
+      border: 1.5px solid rgba(11, 61, 145, .12);
+      background: #fff;
+      box-shadow: 0 14px 36px -22px rgba(11, 61, 145, .35);
+      overflow: hidden;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .gl-prx-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 22px 44px -18px rgba(11, 61, 145, .4);
+    }
+    .gl-prx-card.is-popular {
+      border-color: rgba(245, 184, 0, .55);
+      box-shadow: 0 18px 40px -16px rgba(245, 184, 0, .35);
+    }
+    .gl-prx-card__body {
+      padding: 1.25rem 1.2rem 1.35rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: .75rem;
+    }
+    .gl-prx-card__badge {
+      align-self: flex-start;
+      font-size: .68rem;
+      font-weight: 800;
+      padding: .28rem .65rem;
+      border-radius: 999px;
+      background: var(--gold, #F5B800);
+      color: var(--p-deep, #051F4D);
+    }
+    .gl-prx-card__title {
+      font-family: Cairo, Tajawal, sans-serif;
+      font-weight: 900;
+      font-size: 1.15rem;
+      color: var(--p-deep, #051F4D);
+      line-height: 1.35;
+      margin: 0;
+    }
+    .gl-prx-card__meta {
+      font-size: .78rem;
+      color: rgba(5, 31, 77, .55);
+      margin: 0;
+    }
+    .gl-prx-card__price {
+      font-family: Cairo, sans-serif;
+      font-weight: 900;
+      font-size: 1.65rem;
+      color: var(--p, #0B3D91);
+      margin: 0;
+      line-height: 1.2;
+    }
+    .gl-prx-card__price span { font-size: .9rem; font-weight: 700; color: rgba(5, 31, 77, .45); }
+    .gl-prx-card__old {
+      font-size: .8rem;
+      color: rgba(5, 31, 77, .4);
+      text-decoration: line-through;
+      margin: 0;
+    }
+    .gl-prx-card__desc {
+      font-size: .84rem;
+      line-height: 1.7;
+      color: rgba(5, 31, 77, .62);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .gl-prx-card__list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: .4rem;
+      flex: 1;
+    }
+    .gl-prx-card__list li {
+      display: flex;
+      gap: .45rem;
+      align-items: flex-start;
+      font-size: .8rem;
+      color: rgba(5, 31, 77, .72);
+    }
+    .gl-prx-card__list i { color: #10b981; margin-top: .2rem; font-size: .7rem; }
+    .gl-prx-empty {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: rgba(5, 31, 77, .5);
+      font-size: .95rem;
+    }
+    .gl-prx-thumb {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: rgba(11, 61, 145, .08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--p, #0B3D91);
+    }
+    .gl-prx-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  </style>
 </head>
-<body class="page-academy font-sans antialiased text-white">
-    <div id="scroll-progress" class="fixed top-0 left-0 h-[3px] w-0 z-[100000] bg-gradient-to-l from-acad-yellow to-acad-cyan"></div>
+<body class="sana-home sana-courses-page sana-pricing-page">
+<div id="sana-scroll-progress"></div>
+@include('partials.landing.navbar', ['navActive' => 'pricing', 'navSolid' => true, 'navHero' => false])
 
-    @include('components.unified-navbar')
+<main>
+  <section class="sana-prx-hero">
+    <div class="sana-container sana-prx-hero__inner sana-reveal">
+      <nav class="sana-cat-hero__breadcrumb" aria-label="breadcrumb" style="justify-content:center;margin-bottom:1rem">
+        <a href="{{ route('home') }}">{{ __('public.home') }}</a>
+        <span aria-hidden="true">/</span>
+        <span>{{ __('public.pricing_page_title') }}</span>
+      </nav>
+      <span class="sana-prx-hero__eyebrow"><i class="fas fa-tags"></i> {{ __('public.pricing_hero_kicker') }}</span>
+      <h1 class="sana-prx-hero__title">
+        {{ __('public.pricing_hero_title') }}
+        <span class="hl">{{ __('public.pricing_hero_accent') }}</span>
+      </h1>
+      <p class="sana-prx-hero__sub">{{ __('public.pricing_hero_sub') }}</p>
+      <p class="sana-prx-pricing-note">{{ __('public.pricing_hero_note') }}</p>
+      <div class="sana-prx-hero__actions">
+        <a href="#packages" class="sana-btn sana-btn--yellow sana-btn--lg"><i class="fas fa-box-open"></i> {{ __('public.pricing_packages_title') }}</a>
+        <a href="#tutoring-groups" class="sana-btn sana-btn--white-outline sana-btn--lg"><i class="fas fa-users"></i> {{ __('public.pricing_groups_title') }}</a>
+      </div>
+    </div>
+  </section>
 
-    <main class="flex-1">
-        <section class="-mt-14 sm:-mt-[60px] pt-24 sm:pt-28 lg:pt-32 pb-10 sm:pb-14 overflow-hidden relative">
-            <div class="absolute inset-0 bg-acad-navy"></div>
-            <div class="absolute inset-0 opacity-[0.18] bg-cover bg-center"
-                 style="background-image:url('https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=2400&q=82')"></div>
-            <div class="absolute inset-0 bg-gradient-to-t from-acad-navy via-acad-navy/90 to-acad-navy/40"></div>
-            <div class="absolute inset-0 pattern-dots opacity-[0.12] pointer-events-none"></div>
+  <section class="sana-section" id="packages">
+    <div class="sana-container">
+      <div class="sana-head sana-head--center sana-reveal" style="margin-bottom:28px">
+        <span class="sana-head__eyebrow">{{ __('public.pricing_packages_badge') }}</span>
+        <h2 class="sana-head__title">{{ __('public.pricing_packages_title') }}</h2>
+        <span class="sana-head__line"></span>
+        <p class="sana-head__sub">{{ __('public.pricing_packages_sub') }}</p>
+      </div>
 
-            <div class="container-acad relative z-10 text-center max-w-4xl mx-auto">
-                <nav class="reveal text-sm text-white/50 mb-8 flex items-center justify-center gap-2 flex-wrap">
-                    <a href="{{ route('home') }}" class="hover:text-acad-cyan transition-colors">{{ __('public.home') }}</a>
-                    <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }} text-[8px] opacity-60"></i>
-                    <span class="text-white font-semibold">{{ __('public.pricing_page_title') }}</span>
-                </nav>
-
-                <span class="reveal inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-extrabold mb-6 glass-panel border border-white/10 text-acad-cyan">
-                    <i class="fas fa-tags text-[12px]"></i>
-                    {{ __('public.pricing_hero_kicker') }}
-                </span>
-
-                <h1 class="reveal text-[2rem] sm:text-[2.8rem] lg:text-[3.35rem] leading-[1.18] font-black text-white mb-5 font-display">
-                    {{ __('public.pricing_hero_title') }}
-                    <span class="block text-acad-yellow">{{ __('public.pricing_hero_accent') }}</span>
-                </h1>
-
-                <p class="reveal s1 text-white/70 text-base sm:text-lg leading-8 mb-4 max-w-3xl mx-auto">
-                    {{ __('public.pricing_hero_sub') }}
-                </p>
-                <p class="reveal s1 text-sm text-white/45 max-w-2xl mx-auto">
-                    {{ __('public.pricing_hero_note') }}
-                </p>
-            </div>
-        </section>
-
-        <section class="py-12 sm:py-16 relative">
-            <div class="absolute inset-0 bg-gradient-to-b from-acad-navy via-acad-navyMid/40 to-acad-navy pointer-events-none"></div>
-            <div class="container-acad relative z-10">
-                <div class="reveal text-center max-w-2xl mx-auto mb-12">
-                    <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-extrabold mb-4 glass-panel border border-white/10 text-acad-cyan">
-                        {{ __('public.pricing_teacher_plans_badge') }}
-                    </span>
-                    <h2 class="text-3xl sm:text-4xl font-black text-white mb-3">{{ __('public.pricing_teacher_plans_title') }}</h2>
-                    <p class="text-white/60 leading-8">{{ __('public.pricing_teacher_plans_sub') }}</p>
-                </div>
-
-                @if($activePlans->isNotEmpty())
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto items-stretch">
-                        @foreach($planKeys as $planKey)
-                            @php $plan = $teacherPlans[$planKey] ?? null; @endphp
-                            @if($plan)
-                                <x-teacher-plan-card
-                                    :plan-key="$planKey"
-                                    :plan="$plan"
-                                    :highlighted="$planKey === 'teacher_pro'"
-                                />
-                            @endif
-                        @endforeach
-                    </div>
-
-                    <p class="reveal text-center text-xs text-white/40 mt-8 max-w-2xl mx-auto">
-                        {{ __('public.pricing_sync_note') }}
-                    </p>
-                @else
-                    <p class="text-center text-white/50 py-12">{{ __('public.pricing_no_plans') }}</p>
+      @if($packages->isNotEmpty())
+        <div class="gl-prx-grid">
+          @foreach($packages as $package)
+            @php
+              $cardBody = trim((string) ($package->card_summary ?? '')) !== ''
+                  ? $package->card_summary
+                  : ($package->description ?? '');
+              $cardFeatures = collect($package->features ?? [])->map(fn ($f) => trim((string) $f))->filter()->values();
+              $isPopular = (bool) $package->is_popular;
+            @endphp
+            <article @class(['gl-prx-card sana-reveal', 'is-popular' => $isPopular])>
+              <div class="gl-prx-card__body">
+                @if($isPopular)
+                  <span class="gl-prx-card__badge">{{ __('public.pricing_package_popular') }}</span>
                 @endif
-            </div>
-        </section>
-
-        @if(isset($packages) && $packages->count() > 0)
-        <section class="py-12 sm:py-16 border-t border-white/5 bg-[#060d1a]/60">
-            <div class="container-acad">
-                <div class="reveal text-center max-w-2xl mx-auto mb-12">
-                    <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-extrabold mb-4 glass-panel border border-white/10 text-violet-300">
-                        {{ __('public.pricing_packages_badge') }}
-                    </span>
-                    <h2 class="text-3xl sm:text-4xl font-black text-white mb-3">{{ __('public.pricing_packages_title') }}</h2>
-                    <p class="text-white/60 leading-8">{{ __('public.pricing_packages_sub') }}</p>
+                <div style="display:flex;gap:.85rem;align-items:flex-start">
+                  <div class="gl-prx-thumb">
+                    @if($package->thumbnail)
+                      <img src="{{ storage_asset($package->thumbnail) }}" alt="" loading="lazy">
+                    @else
+                      <i class="fas fa-graduation-cap"></i>
+                    @endif
+                  </div>
+                  <div>
+                    <h3 class="gl-prx-card__title">{{ $package->name }}</h3>
+                    @if(($package->courses_count ?? 0) > 0)
+                      <p class="gl-prx-card__meta">
+                        <i class="fas fa-book-open"></i>
+                        {{ __('public.path_courses_count', ['count' => $package->courses_count]) }}
+                      </p>
+                    @endif
+                  </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                    @foreach($packages as $index => $package)
-                        @php
-                            $cardBody = trim((string) ($package->card_summary ?? '')) !== ''
-                                ? $package->card_summary
-                                : ($package->description ?? '');
-                            $cardFeatures = collect($package->features ?? [])->map(fn ($f) => trim((string) $f))->filter()->values();
-                            $isPopular = (bool) $package->is_popular;
-                        @endphp
-                        <article @class([
-                            'reveal card-stream flex flex-col overflow-hidden border',
-                            'border-acad-yellow/50 ring-1 ring-acad-yellow/30' => $isPopular,
-                            'border-white/10' => ! $isPopular,
-                            's'.min($index + 1, 4) => true,
-                        ])>
-                            <div class="p-6 sm:p-7 flex flex-col flex-1">
-                                @if($isPopular)
-                                    <span class="self-start text-[11px] font-black px-2.5 py-1 rounded-md bg-acad-yellow text-acad-blue mb-4">{{ __('public.pricing_package_popular') }}</span>
-                                @endif
+                <div>
+                  @if($package->original_price && $package->original_price > $package->price)
+                    <p class="gl-prx-card__old">{{ number_format($package->original_price, 0) }} {{ __('public.currency_egp') }}</p>
+                  @endif
+                  <p class="gl-prx-card__price">
+                    @if($package->price > 0)
+                      {{ number_format($package->price, 0) }} <span>{{ __('public.currency_egp') }}</span>
+                    @else
+                      {{ __('public.free_price') }}
+                    @endif
+                  </p>
+                </div>
 
-                                <div class="flex items-start gap-4 mb-5">
-                                    @if($package->thumbnail)
-                                        <div class="w-16 h-16 rounded-xl overflow-hidden shrink-0 ring-1 ring-white/15">
-                                            <img src="{{ storage_asset($package->thumbnail) }}" alt="" class="w-full h-full object-cover" loading="lazy">
-                                        </div>
-                                    @else
-                                        <div class="w-16 h-16 rounded-xl bg-acad-cyan/15 flex items-center justify-center shrink-0 text-acad-cyan">
-                                            <i class="fas fa-box text-2xl"></i>
-                                        </div>
-                                    @endif
-                                    <div class="min-w-0 text-start">
-                                        <h3 class="text-xl font-black text-white leading-snug">{{ $package->name }}</h3>
-                                        @if($package->courses_count > 0)
-                                            <p class="text-xs text-white/50 mt-1">
-                                                <i class="fas fa-graduation-cap {{ $isRtl ? 'ml-1' : 'mr-1' }}"></i>
-                                                {{ __('public.path_courses_count', ['count' => $package->courses_count]) }}
-                                            </p>
-                                        @endif
-                                    </div>
-                                </div>
+                @if($cardBody !== '')
+                  <p class="gl-prx-card__desc">{{ $cardBody }}</p>
+                @endif
 
-                                <div class="mb-4">
-                                    @if($package->original_price && $package->original_price > $package->price)
-                                        <p class="text-sm text-white/40 line-through tabular-nums">{{ number_format($package->original_price, 0) }} {{ __('public.currency_egp') }}</p>
-                                    @endif
-                                    <p class="text-3xl font-black text-acad-yellow tabular-nums">
-                                        @if($package->price > 0)
-                                            {{ number_format($package->price, 0) }} <span class="text-lg text-white/50">{{ __('public.currency_egp') }}</span>
-                                        @else
-                                            {{ __('public.free_price') }}
-                                        @endif
-                                    </p>
-                                </div>
-
-                                @if($cardBody !== '')
-                                    <p class="text-sm text-white/55 leading-relaxed line-clamp-3 mb-4">{{ $cardBody }}</p>
-                                @endif
-
-                                @if($cardFeatures->isNotEmpty())
-                                    <ul class="space-y-2 text-sm text-white/75 mb-6 flex-1">
-                                        @foreach($cardFeatures->take(5) as $feature)
-                                            <li class="flex items-start gap-2">
-                                                <i class="fas fa-check text-emerald-400 mt-1 text-xs shrink-0"></i>
-                                                <span>{{ $feature }}</span>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                @endif
-
-                                <a href="{{ route('public.package.show', $package->slug) }}"
-                                   class="mt-auto w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl font-extrabold text-sm transition
-                                   {{ $isPopular ? 'bg-acad-yellow text-acad-blue hover:brightness-110' : 'border border-white/20 text-white hover:bg-white/10' }}">
-                                    <i class="fas fa-{{ $package->price > 0 ? 'shopping-cart' : 'eye' }}"></i>
-                                    {{ $package->price > 0 ? __('public.pricing_package_buy') : __('public.view_details') }}
-                                </a>
-                            </div>
-                        </article>
+                @if($cardFeatures->isNotEmpty())
+                  <ul class="gl-prx-card__list">
+                    @foreach($cardFeatures->take(5) as $feature)
+                      <li><i class="fas fa-check"></i><span>{{ $feature }}</span></li>
                     @endforeach
+                  </ul>
+                @endif
+
+                <a href="{{ route('public.package.show', $package->slug) }}"
+                   class="sana-btn {{ $isPopular ? 'sana-btn--yellow' : 'sana-btn--purple' }}"
+                   style="margin-top:auto;justify-content:center">
+                  <i class="fas fa-{{ $package->price > 0 ? 'shopping-cart' : 'eye' }}"></i>
+                  {{ $package->price > 0 ? __('public.pricing_package_buy') : __('public.view_details') }}
+                </a>
+              </div>
+            </article>
+          @endforeach
+        </div>
+      @else
+        <p class="gl-prx-empty sana-reveal">{{ __('public.pricing_no_packages') }}</p>
+      @endif
+    </div>
+  </section>
+
+  <section class="sana-section sana-section--soft" id="tutoring-groups">
+    <div class="sana-container">
+      <div class="sana-head sana-head--center sana-reveal" style="margin-bottom:28px">
+        <span class="sana-head__eyebrow">{{ __('public.pricing_groups_badge') }}</span>
+        <h2 class="sana-head__title">{{ __('public.pricing_groups_title') }}</h2>
+        <span class="sana-head__line"></span>
+        <p class="sana-head__sub">{{ __('public.pricing_groups_sub') }}</p>
+      </div>
+
+      @if($tutoringGroups->isNotEmpty())
+        <div class="gl-prx-grid">
+          @foreach($tutoringGroups as $group)
+            @php
+              $img = $group->imageUrl();
+              $isFeatured = (bool) $group->is_featured;
+            @endphp
+            <article @class(['gl-prx-card sana-reveal', 'is-popular' => $isFeatured])>
+              <div class="gl-prx-card__body">
+                @if($isFeatured)
+                  <span class="gl-prx-card__badge">{{ __('public.pricing_package_popular') }}</span>
+                @endif
+                <div style="display:flex;gap:.85rem;align-items:flex-start">
+                  <div class="gl-prx-thumb">
+                    @if($img)
+                      <img src="{{ $img }}" alt="" loading="lazy">
+                    @else
+                      <i class="fas fa-{{ $group->isIndividual() ? 'user' : 'users' }}"></i>
+                    @endif
+                  </div>
+                  <div>
+                    <h3 class="gl-prx-card__title">{{ $group->title }}</h3>
+                    <p class="gl-prx-card__meta">
+                      {{ $group->typeLabel() }}
+                      @if($group->instructor)
+                        · {{ $group->instructor->name }}
+                      @endif
+                    </p>
+                  </div>
                 </div>
-            </div>
-        </section>
-        @endif
 
-        <section class="py-14 sm:py-16 border-t border-white/5">
-            <div class="container-acad">
-                <div class="reveal rounded-[28px] glass-panel border border-white/12 px-6 sm:px-10 py-10 sm:py-12 text-center">
-                    <h2 class="text-2xl sm:text-3xl font-black text-white mb-3">{{ __('public.pricing_footer_cta_title') }}</h2>
-                    <p class="text-white/60 max-w-2xl mx-auto mb-6">{{ __('public.pricing_footer_cta_sub') }}</p>
-                    <div class="flex flex-col sm:flex-row justify-center gap-3">
-                        <a href="{{ route('register') }}" class="btn-stream-primary px-8 py-3.5">{{ __('public.register_free') }}</a>
-                        <a href="{{ route('public.contact') }}" class="btn-stream-secondary px-8 py-3.5">{{ __('public.pricing_footer_contact') }}</a>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
+                <p class="gl-prx-card__price">
+                  @if($group->price !== null && (float) $group->price > 0)
+                    {{ number_format((float) $group->price, 0) }}
+                    <span>{{ $group->currency ?: __('public.currency_egp') }}</span>
+                  @else
+                    {{ __('public.pricing_groups_price_contact') }}
+                  @endif
+                </p>
 
-    @include('components.unified-footer')
+                @if(filled($group->description))
+                  <p class="gl-prx-card__desc">{{ $group->description }}</p>
+                @endif
 
-    <script>
-    (function(){
-        function p(){var s=window.pageYOffset||document.documentElement.scrollTop,h=document.documentElement.scrollHeight-window.innerHeight,b=document.getElementById('scroll-progress');if(b)b.style.width=(h>0?(s/h)*100:0)+'%';}
-        window.addEventListener('scroll',p,{passive:true});
-        function r(){var t=document.querySelectorAll('.reveal');if(!t.length)return;var o=new IntersectionObserver(function(e){e.forEach(function(n){if(n.isIntersecting){n.target.classList.add('revealed');o.unobserve(n.target);}});},{threshold:.08,rootMargin:'0px 0px -40px 0px'});t.forEach(function(el){o.observe(el);});}
-        if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',r);else r();
-    })();
-    </script>
+                <ul class="gl-prx-card__list">
+                  @if($group->duration_minutes)
+                    <li><i class="fas fa-clock"></i><span>{{ __('public.pricing_groups_duration', ['minutes' => $group->duration_minutes]) }}</span></li>
+                  @endif
+                  @if($group->capacity)
+                    <li><i class="fas fa-user-group"></i><span>{{ __('public.pricing_groups_capacity', ['count' => $group->capacity]) }}</span></li>
+                  @endif
+                </ul>
+
+                <a href="{{ route('public.groups.show', $group->slug) }}"
+                   class="sana-btn {{ $isFeatured ? 'sana-btn--yellow' : 'sana-btn--purple' }}"
+                   style="margin-top:auto;justify-content:center">
+                  <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i>
+                  {{ __('public.pricing_groups_cta') }}
+                </a>
+              </div>
+            </article>
+          @endforeach
+        </div>
+      @else
+        <p class="gl-prx-empty sana-reveal">{{ __('public.pricing_no_groups') }}</p>
+      @endif
+    </div>
+  </section>
+
+  <section class="sana-section">
+    <div class="sana-container">
+      <div class="sana-ab-final__box sana-reveal" style="text-align:center;padding:clamp(1.5rem,3vw,2.25rem);border-radius:22px;background:linear-gradient(135deg,#0B3D91,#072A66);color:#fff">
+        <h2 style="font-family:Cairo,sans-serif;font-weight:900;font-size:clamp(1.25rem,2.5vw,1.75rem);margin:0 0 .65rem">{{ __('public.pricing_footer_cta_title') }}</h2>
+        <p style="opacity:.75;max-width:36rem;margin:0 auto 1.15rem;line-height:1.7">{{ __('public.pricing_footer_cta_sub') }}</p>
+        <div style="display:flex;flex-wrap:wrap;gap:.65rem;justify-content:center">
+          <a href="{{ route('register') }}" class="sana-btn sana-btn--yellow">{{ __('public.register_free') }}</a>
+          <a href="{{ route('public.contact') }}" class="sana-btn sana-btn--white-outline">{{ __('public.pricing_footer_contact') }}</a>
+          <a href="{{ $waUrl }}" class="sana-btn sana-btn--wa" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+@include('partials.landing.footer')
+<script src="{{ versioned_asset('js/landing/site.js') }}" defer></script>
 </body>
 </html>

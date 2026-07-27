@@ -23,10 +23,17 @@ class FAQController extends Controller
             $query->where('category', $request->category);
         }
 
-        $faqs = $query->orderBy('order')->orderBy('created_at', 'desc')->paginate(20);
+        $faqs = $query->orderBy('order')->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
         $categories = FAQ::distinct()->pluck('category')->filter()->values();
 
-        return view('admin.faq.index', compact('faqs', 'categories'));
+        $stats = [
+            'total' => FAQ::count(),
+            'active' => FAQ::where('is_active', true)->count(),
+            'inactive' => FAQ::where('is_active', false)->count(),
+            'categories' => $categories->count(),
+        ];
+
+        return view('admin.faq.index', compact('faqs', 'categories', 'stats'));
     }
 
     public function create()
@@ -45,9 +52,8 @@ class FAQController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        if (!isset($validated['is_active'])) {
-            $validated['is_active'] = true;
-        }
+        $validated['is_active'] = $request->boolean('is_active');
+        $validated['order'] = $validated['order'] ?? 0;
 
         FAQ::create($validated);
 
@@ -75,6 +81,9 @@ class FAQController extends Controller
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
         ]);
+
+        $validated['is_active'] = $request->boolean('is_active');
+        $validated['order'] = $validated['order'] ?? 0;
 
         $faq->update($validated);
 

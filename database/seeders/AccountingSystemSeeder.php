@@ -12,7 +12,6 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Transaction;
 use App\Models\Expense;
-use App\Models\Subscription;
 use App\Models\InstallmentPlan;
 use App\Models\InstallmentAgreement;
 use App\Models\InstallmentPayment;
@@ -255,61 +254,7 @@ class AccountingSystemSeeder extends Seeder
                 echo "  ✓ Expense #{$expense->id} → Transaction #{$expenseTransaction->id}\n";
             }
 
-            // 4. إنشاء اشتراكات (Subscription → Invoice)
-            echo "\n📅 إنشاء اشتراكات وربطها بالفواتير...\n";
-            $subscriptions = [];
-
-            foreach ($students->skip(3)->take(2) as $student) {
-                $subscriptionType = ['monthly', 'quarterly', 'yearly'][rand(0, 2)];
-                $price = ['monthly' => 99, 'quarterly' => 249, 'yearly' => 899][$subscriptionType];
-
-                // إنشاء Invoice
-                $subscriptionInvoice = Invoice::create([
-                    'invoice_number' => 'INV-' . str_pad(Invoice::count() + 1, 8, '0', STR_PAD_LEFT),
-                    'user_id' => $student->id,
-                    'type' => 'subscription',
-                    'description' => 'فاتورة اشتراك: ' . $subscriptionType,
-                    'subtotal' => $price,
-                    'tax_amount' => 0,
-                    'discount_amount' => 0,
-                    'total_amount' => $price,
-                    'status' => 'pending',
-                    'due_date' => Carbon::now()->addDays(30),
-                    'notes' => 'فاتورة اشتراك تجريبي',
-                    'items' => [
-                        [
-                            'description' => 'اشتراك ' . $subscriptionType,
-                            'quantity' => 1,
-                            'price' => $price,
-                            'total' => $price,
-                        ]
-                    ],
-                ]);
-
-                // إنشاء Subscription
-                $subscription = Subscription::create([
-                    'user_id' => $student->id,
-                    'subscription_type' => $subscriptionType,
-                    'plan_name' => 'خطة ' . $subscriptionType,
-                    'price' => $price,
-                    'start_date' => Carbon::now(),
-                    'end_date' => match($subscriptionType) {
-                        'monthly' => Carbon::now()->addMonth(),
-                        'quarterly' => Carbon::now()->addMonths(3),
-                        'yearly' => Carbon::now()->addYear(),
-                        default => Carbon::now()->addMonth(),
-                    },
-                    'status' => 'active',
-                    'auto_renew' => rand(0, 1) === 1,
-                    'billing_cycle' => 1,
-                    'invoice_id' => $subscriptionInvoice->id,
-                ]);
-
-                $subscriptions[] = $subscription;
-                echo "  ✓ Subscription #{$subscription->id} → Invoice #{$subscriptionInvoice->id}\n";
-            }
-
-            // 5. إنشاء اتفاقيات تقسيط (InstallmentAgreement → InstallmentPayments)
+            // 4. إنشاء اتفاقيات تقسيط (InstallmentAgreement → InstallmentPayments)
             echo "\n📋 إنشاء اتفاقيات تقسيط...\n";
             
             // الحصول على أو إنشاء InstallmentPlan
@@ -476,7 +421,6 @@ class AccountingSystemSeeder extends Seeder
             echo "  • المدفوعات (Payments): " . Payment::count() . "\n";
             echo "  • المعاملات المالية (Transactions): " . Transaction::count() . "\n";
             echo "  • المصروفات (Expenses): " . Expense::count() . "\n";
-            echo "  • الاشتراكات (Subscriptions): " . Subscription::count() . "\n";
             echo "  • المحافظ (Wallets): " . Wallet::count() . "\n";
             echo "\n✨ جميع البيانات مترابطة بشكل صحيح!\n";
 

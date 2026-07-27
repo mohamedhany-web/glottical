@@ -1,7 +1,7 @@
 ﻿@extends('layouts.admin')
 
 @section('title', 'اتفاقيات التقسيط')
-@section('header', 'اتفاقيات التقسيط')
+@section('page_title', 'اتفاقيات التقسيط')
 
 @section('content')
 @php
@@ -10,182 +10,175 @@
     $activeCount = ($agreements instanceof \Illuminate\Pagination\LengthAwarePaginator)
         ? $agreements->where('status', \App\Models\InstallmentAgreement::STATUS_ACTIVE)->count()
         : $agreements->where('status', \App\Models\InstallmentAgreement::STATUS_ACTIVE)->count();
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $statusBadgeMap = [
+        \App\Models\InstallmentAgreement::STATUS_ACTIVE => 'bg-accent-soft text-accent',
+        \App\Models\InstallmentAgreement::STATUS_OVERDUE => 'bg-metal/15 text-metal',
+        \App\Models\InstallmentAgreement::STATUS_COMPLETED => 'bg-accent-soft text-accent',
+        \App\Models\InstallmentAgreement::STATUS_CANCELLED => 'bg-canvas-muted text-muted',
+    ];
+    $kpis = [
+        ['label' => 'اتفاقيات نشطة', 'value' => number_format($agreements->where('status', \App\Models\InstallmentAgreement::STATUS_ACTIVE)->count()), 'icon' => 'fa-bolt', 'tone' => 'accent', 'note' => 'الانتقالات الحالية التي تتطلب متابعة دورية'],
+        ['label' => 'إجمالي المبالغ الممولة', 'value' => number_format($agreements->sum('total_amount'), 2) . ' ج.م', 'icon' => 'fa-coins', 'tone' => 'metal', 'note' => 'القيمة الإجمالية التي تغطيها جميع الاتفاقيات'],
+        ['label' => 'دفعات مقدمة', 'value' => number_format($agreements->sum('deposit_amount'), 2) . ' ج.م', 'icon' => 'fa-hand-holding-usd', 'tone' => 'accent', 'note' => 'إجمالي المبالغ المحصلة كدفعات مقدمة'],
+        ['label' => 'اتفاقيات متأخرة', 'value' => number_format($agreements->where('status', \App\Models\InstallmentAgreement::STATUS_OVERDUE)->count()), 'icon' => 'fa-exclamation-circle', 'tone' => 'muted', 'note' => 'الاتفاقيات التي تحتاج تدخلاً بسبب تأخر السداد'],
+    ];
+    $toneClass = [
+        'accent' => 'bg-accent-soft text-accent',
+        'metal' => 'bg-metal/15 text-metal',
+        'muted' => 'bg-canvas-muted text-muted',
+    ];
 @endphp
-<div class="container mx-auto px-4 py-8 space-y-8">
-    <div class="bg-gradient-to-br from-sky-500 via-sky-600 to-purple-600 rounded-3xl shadow-xl text-white p-8 relative overflow-hidden">
-        <div class="absolute inset-y-0 right-0 w-1/3 pointer-events-none opacity-20">
-            <div class="w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-        </div>
-        <div class="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div>
-                <div class="flex items-center gap-3 flex-wrap">
-                    <h1 class="text-3xl font-black tracking-tight">إدارة اتفاقيات التقسيط</h1>
-                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/20">
-                        <i class="fas fa-file-signature text-xs"></i>
-                        إجمالي {{ number_format($total) }} اتفاقية
-                    </span>
-                </div>
-                <p class="mt-3 text-white/75 max-w-2xl">
-                    راقب اتفاقيات التقسيط للطلاب، حالات السداد، والمبالغ المتبقية لتضمن متابعة دقيقة لكل خطة.
-                </p>
-            </div>
-            <div class="flex flex-wrap gap-3 justify-end">
-                <a href="{{ route('admin.installments.plans.index') }}" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/20 text-white font-semibold border border-white/30 hover:bg-white/30 transition-all">
-                    <i class="fas fa-layer-group"></i>
-                    إدارة الخطط
-                </a>
-                <a href="{{ route('admin.installments.agreements.create') }}" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white text-sky-700 font-semibold shadow-lg hover:shadow-xl transition-all">
-                    <i class="fas fa-plus"></i>
-                    إنشاء اتفاقية جديدة
-                </a>
-            </div>
-        </div>
-    </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div class="rounded-2xl bg-white shadow-lg border border-sky-100 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-semibold text-sky-500">اتفاقيات نشطة</p>
-                    <p class="mt-2 text-3xl font-black text-gray-900">{{ number_format($agreements->where('status', \App\Models\InstallmentAgreement::STATUS_ACTIVE)->count()) }}</p>
-                </div>
-                <span class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-sky-100 text-sky-600">
-                    <i class="fas fa-bolt text-lg"></i>
-                </span>
-            </div>
-            <p class="text-xs text-gray-500 mt-3">الانتقالات الحالية التي تتطلب متابعة دورية.</p>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">المالية · التقسيط</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إدارة اتفاقيات التقسيط</h2>
+            <p class="mt-1 text-sm text-muted">راقب اتفاقيات التقسيط للطلاب، حالات السداد، والمبالغ المتبقية لتضمن متابعة دقيقة لكل خطة</p>
         </div>
-        <div class="rounded-2xl bg-white shadow-lg border border-emerald-100 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-semibold text-emerald-500">إجمالي المبالغ الممولة</p>
-                    <p class="mt-2 text-3xl font-black text-gray-900">{{ number_format($agreements->sum('total_amount'), 2) }} ج.م</p>
-                </div>
-                <span class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600">
-                    <i class="fas fa-coins text-lg"></i>
-                </span>
-            </div>
-            <p class="text-xs text-gray-500 mt-3">القيمة الإجمالية التي تغطيها جميع الاتفاقيات.</p>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.installments.plans.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-layer-group text-xs"></i>
+                إدارة الخطط
+            </a>
+            <a href="{{ route('admin.installments.agreements.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-plus text-xs"></i>
+                إنشاء اتفاقية جديدة
+            </a>
         </div>
-        <div class="rounded-2xl bg-white shadow-lg border border-amber-100 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-semibold text-amber-500">دفعات مقدمة</p>
-                    <p class="mt-2 text-3xl.font-black text-gray-900">{{ number_format($agreements->sum('deposit_amount'), 2) }} ج.م</p>
-                </div>
-                <span class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-amber-100 text-amber-600">
-                    <i class="fas fa-hand-holding-usd text-lg"></i>
-                </span>
-            </div>
-            <p class="text-xs text-gray-500 mt-3">إجمالي المبالغ المحصلة كدفعات مقدمة.</p>
-        </div>
-        <div class="rounded-2xl bg-white shadow-lg border border-purple-100 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-semibold text-purple-500">اتفاقيات متأخرة</p>
-                    <p class="mt-2 text-3xl font-black text-gray-900">{{ number_format($agreements->where('status', \App\Models\InstallmentAgreement::STATUS_OVERDUE)->count()) }}</p>
-                </div>
-                <span class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-purple-100 text-purple-600">
-                    <i class="fas fa-exclamation-circle text-lg"></i>
-                </span>
-            </div>
-            <p class="text-xs text-gray-500 mt-3">الاتفاقيات التي تحتاج تدخلاً بسبب تأخر السداد.</p>
-        </div>
-    </div>
+    </section>
 
-    <div class="bg-white rounded-3xl shadow-lg border border-gray-100 p-8 space-y-6">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
-                <h2 class="text-2xl font-black text-gray-900">جميع الاتفاقيات</h2>
-                <p class="text-sm text-gray-500">تتبع حالة الطلاب، المبالغ المتبقية، وجداول السداد.</p>
-            </div>
-            <form method="GET" class="flex flex-wrap gap-3 items-center">
-                <select name="status" class="px-4 py-2 rounded-2xl border border-gray-200 bg-gray-50 text-sm text-gray-700">
+    @if(session('success'))
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
+        </div>
+    @endif
+
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach($kpis as $kpi)
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $toneClass[$kpi['tone']] }}">
+                    <i class="fas {{ $kpi['icon'] }} text-sm"></i>
+                </div>
+                <p class="mt-3 text-xs text-muted">{{ $kpi['label'] }}</p>
+                <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ $kpi['value'] }}</p>
+                <p class="mt-1 text-[11px] text-muted">{{ $kpi['note'] }}</p>
+            </article>
+        @endforeach
+    </section>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-4 py-4 sm:px-5">
+            <h3 class="text-base font-semibold text-ink">البحث والفلترة</h3>
+            <p class="mt-0.5 text-xs text-muted">تصفية الاتفاقيات حسب الحالة</p>
+        </div>
+        <form method="GET" class="flex flex-wrap items-end gap-4 p-4 sm:p-5">
+            <div class="min-w-[200px] flex-1">
+                <label class="{{ $labelClass }}" for="status">الحالة</label>
+                <select id="status" name="status" class="{{ $fieldClass }}">
                     <option value="">كل الحالات</option>
                     @foreach($statuses as $value => $label)
                         <option value="{{ $value }}" {{ request('status') === $value ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
-                <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold">
-                    <i class="fas fa-filter"></i>
-                    تصفية
-                </button>
-            </form>
+            </div>
+            <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white">
+                <i class="fas fa-filter text-xs"></i>
+                تصفية
+            </button>
+            @if(request()->filled('status'))
+                <a href="{{ route('admin.installments.agreements.index') }}" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line px-5 text-sm font-medium text-ink hover:bg-canvas">
+                    <i class="fas fa-times text-xs"></i>
+                    مسح
+                </a>
+            @endif
+        </form>
+    </article>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+            <div>
+                <h3 class="text-base font-semibold text-ink">جميع الاتفاقيات</h3>
+                <p class="mt-0.5 text-xs text-muted">تتبع حالة الطلاب، المبالغ المتبقية، وجداول السداد</p>
+            </div>
+            <span class="inline-flex rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">{{ number_format($total) }} اتفاقية</span>
         </div>
 
         @if($agreements->count())
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 gap-4 p-4 sm:p-5 md:grid-cols-2">
                 @foreach($agreements as $agreement)
-                    <div class="rounded-3xl border border-gray-100 bg-gray-50/70 p-6 flex flex-col gap-4">
+                    @php
+                        $badgeClasses = $statusBadgeMap[$agreement->status] ?? 'bg-canvas-muted text-muted';
+                    @endphp
+                    <div class="flex flex-col gap-4 rounded-2xl border border-line bg-canvas/30 p-5">
                         <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <p class="text-sm font-semibold text-gray-900">{{ $agreement->student->name ?? 'طالب غير معروف' }}</p>
-                                <p class="text-xs text-sky-600 mt-1">{{ $agreement->course->title ?? 'خطة عامة' }}</p>
-                                <p class="text-[11px] text-gray-500 mt-1">بداية {{ optional($agreement->start_date)->format('Y-m-d') }}</p>
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-ink">{{ $agreement->student->name ?? 'طالب غير معروف' }}</p>
+                                <p class="mt-1 text-xs text-accent">{{ $agreement->course->title ?? 'خطة عامة' }}</p>
+                                <p class="mt-0.5 text-[11px] text-muted">بداية {{ optional($agreement->start_date)->format('Y-m-d') }}</p>
                             </div>
-                            <span class="inline-flex items-center_gap-2 px-3 py-1 rounded-full text-xs font-semibold
-                                @class([
-                                    'bg-emerald-100 text-emerald-700' => $agreement->status === \App\Models\InstallmentAgreement::STATUS_ACTIVE,
-                                    'bg-amber-100 text-amber-700' => $agreement->status === \App\Models\InstallmentAgreement::STATUS_OVERDUE,
-                                    'bg-purple-100 text-purple-700' => $agreement->status === \App\Models\InstallmentAgreement::STATUS_COMPLETED,
-                                    'bg-rose-100 text-rose-700' => $agreement->status === \App\Models\InstallmentAgreement::STATUS_CANCELLED,
-                                    'bg-gray-100 text-gray-700' => ! in_array($agreement->status, [\App\Models\InstallmentAgreement::STATUS_ACTIVE, \App\Models\InstallmentAgreement::STATUS_OVERDUE, \App\Models\InstallmentAgreement::STATUS_COMPLETED, \App\Models\InstallmentAgreement::STATUS_CANCELLED])
-                                ])">
-                                <span class="w-2 h-2 rounded-full bg-current/60"></span>
+                            <span class="inline-flex shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium {{ $badgeClasses }}">
                                 {{ $statuses[$agreement->status] ?? $agreement->status }}
                             </span>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="grid grid-cols-2 gap-3 text-sm">
                             <div>
-                                <p class="text-xs text-gray-500 uppercase">إجمالي الاتفاقية</p>
-                                <p class="mt-1 text-base font-semibold text-gray-900">{{ number_format($agreement->total_amount ?? 0, 2) }} ج.م</p>
+                                <p class="text-[11px] font-medium uppercase text-muted">إجمالي الاتفاقية</p>
+                                <p class="mt-1 font-semibold tabular-nums text-ink">{{ number_format($agreement->total_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500 uppercase">دفعة مقدمة</p>
-                                <p class="mt-1 text-base font-semibold text-gray-900">{{ number_format($agreement->deposit_amount ?? 0, 2) }} ج.م</p>
+                                <p class="text-[11px] font-medium uppercase text-muted">دفعة مقدمة</p>
+                                <p class="mt-1 font-semibold tabular-nums text-ink">{{ number_format($agreement->deposit_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500 uppercase">عدد الأقساط</p>
-                                <p class="mt-1 text-base font-semibold text-gray-900">{{ $agreement->installments_count }} دفعة</p>
+                                <p class="text-[11px] font-medium uppercase text-muted">عدد الأقساط</p>
+                                <p class="mt-1 font-medium text-ink">{{ $agreement->installments_count }} دفعة</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500 uppercase">القسط التالي</p>
-                                <p class="mt-1 text-base font-semibold text-gray-900">
+                                <p class="text-[11px] font-medium uppercase text-muted">القسط التالي</p>
+                                <p class="mt-1 font-medium tabular-nums text-ink">
                                     {{ optional($agreement->payments->where('status', \App\Models\InstallmentPayment::STATUS_PENDING)->sortBy('due_date')->first())->due_date?->format('Y-m-d') ?? '—' }}
                                 </p>
                             </div>
                         </div>
 
                         @if($agreement->notes)
-                            <p class="text-xs text-gray-500 leading-relaxed">{{ $agreement->notes }}</p>
+                            <p class="text-xs leading-relaxed text-muted">{{ $agreement->notes }}</p>
                         @endif
 
-                        <div class="flex flex-wrap items-center gap-3">
-                            <a href="{{ route('admin.installments.agreements.show', $agreement) }}" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-2xl bg-sky-100 text-sky-600 font-semibold hover:bg-sky-200 transition-all">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <a href="{{ route('admin.installments.agreements.show', $agreement) }}" class="btn-press inline-flex h-8 flex-1 items-center justify-center gap-2 rounded-lg bg-accent px-3 text-xs font-medium text-white">
                                 <i class="fas fa-eye"></i>
                                 عرض التفاصيل
                             </a>
-                            <a href="{{ route('admin.installments.agreements.edit', $agreement) }}" class="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all" title="تعديل">
-                                <i class="fas fa-edit"></i>
+                            <a href="{{ route('admin.installments.agreements.edit', $agreement) }}" class="btn-press inline-flex size-8 items-center justify-center rounded-lg border border-line text-ink transition hover:border-accent/30 hover:text-accent" title="تعديل">
+                                <i class="fas fa-edit text-xs"></i>
                             </a>
                         </div>
                     </div>
                 @endforeach
             </div>
 
-            @if($agreements instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                <div>
-                    {{ $agreements->withQueryString()->links() }}
-                </div>
+            @if($agreements instanceof \Illuminate\Pagination\LengthAwarePaginator && $agreements->hasPages())
+                <div class="border-t border-line px-4 py-4 sm:px-5">{{ $agreements->withQueryString()->links() }}</div>
             @endif
         @else
-            <div class="text-center text-gray-500 py-12">
-                <i class="fas fa-folder-open text-4xl mb-3"></i>
-                <p class="font-semibold">لا توجد أي اتفاقيات تقسيط بعد.</p>
-                <p class="text-sm text-gray-400 mt-2">ابدأ بإضافة أول اتفاقية لربط الطلاب بخطط التقسيط المتاحة.</p>
+            <div class="px-4 py-16 text-center sm:px-5">
+                <div class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <p class="text-sm font-medium text-ink">لا توجد أي اتفاقيات تقسيط بعد</p>
+                <p class="mt-1 text-xs text-muted">ابدأ بإضافة أول اتفاقية لربط الطلاب بخطط التقسيط المتاحة.</p>
+                <a href="{{ route('admin.installments.agreements.create') }}" class="btn-press mt-4 inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                    <i class="fas fa-plus text-xs"></i>
+                    إنشاء اتفاقية جديدة
+                </a>
             </div>
         @endif
-    </div>
+    </article>
 </div>
 @endsection

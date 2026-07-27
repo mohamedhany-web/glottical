@@ -62,46 +62,6 @@
             <span class="text-slate-400 text-xs font-mono hidden md:inline" id="timer">00:00:00</span>
         </div>
         <div class="flex items-center gap-2 flex-wrap justify-end">
-            @if(!empty($subscriptionFeatureMenuItems))
-            <div class="relative shrink-0" id="pkg-features-dd-wrap">
-                <button type="button" id="pkg-features-dd-btn" class="inline-flex items-center gap-2 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600/90 text-slate-100 text-sm font-medium transition-colors border border-slate-600 hover:border-cyan-500/35 max-w-[11rem] sm:max-w-none" aria-expanded="false" aria-haspopup="true" title="مزايا اشتراكك — تفتح في تاب جديد">
-                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-500/15 text-cyan-400 border border-cyan-500/20">
-                        <i class="fas fa-layer-group text-sm"></i>
-                    </span>
-                    <span class="flex min-w-0 flex-1 flex-col items-stretch text-right leading-tight">
-                        <span class="truncate font-semibold text-slate-100">مزايا الباقة</span>
-                        @if(!empty($subscriptionPackageLabel))
-                        <span class="truncate text-[10px] font-normal text-slate-400">{{ $subscriptionPackageLabel }}</span>
-                        @else
-                        <span class="text-[10px] font-normal text-slate-500">اشتراكك النشط</span>
-                        @endif
-                    </span>
-                    <i class="fas fa-chevron-down text-[10px] text-slate-400 shrink-0 transition-transform duration-200" id="pkg-features-dd-chevron" aria-hidden="true"></i>
-                </button>
-                <div id="pkg-features-dd-panel" class="pkg-features-dd-panel-inner hidden absolute top-[calc(100%+0.5rem)] end-0 w-[min(100vw-2rem,19.5rem)] rounded-xl border border-slate-600 bg-slate-900/98 backdrop-blur-md overflow-hidden" role="menu">
-                    <div class="px-3 py-2.5 border-b border-slate-700/90 bg-slate-800/70 flex items-start gap-2">
-                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-cyan-500/10 text-cyan-400">
-                            <i class="fas fa-arrow-up-left-from-square text-[10px]"></i>
-                        </span>
-                        <div class="min-w-0">
-                            <p class="text-xs font-semibold text-slate-200 m-0 leading-snug">روابط سريعة</p>
-                            <p class="text-[11px] text-slate-500 m-0 mt-0.5 leading-relaxed">كل رابط يُفتح في نافذة جديدة دون إغلاق البث.</p>
-                        </div>
-                    </div>
-                    <div class="max-h-[min(58vh,20rem)] overflow-y-auto py-1.5 px-1">
-                        @foreach($subscriptionFeatureMenuItems as $item)
-                        <a href="{{ $item['url'] }}" target="_blank" rel="noopener noreferrer" role="menuitem" class="group flex items-center gap-3 px-2.5 py-2 mx-0.5 rounded-lg text-slate-200 hover:bg-slate-700/70 transition-colors border border-transparent hover:border-slate-600/80">
-                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $item['icon_bg'] }} {{ $item['icon_text'] }} ring-1 ring-white/5 group-hover:ring-cyan-500/15 transition-[box-shadow]">
-                                <i class="fas {{ $item['icon'] }} text-sm"></i>
-                            </span>
-                            <span class="min-w-0 flex-1 text-sm font-medium leading-snug text-right group-hover:text-white">{{ $item['label'] }}</span>
-                            <i class="fas fa-arrow-up-left-from-square text-slate-500 group-hover:text-cyan-400/90 text-[11px] shrink-0 transition-colors"></i>
-                        </a>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-            @endif
             {{-- نفس سبورة Glottical Classroom (Excalidraw) --}}
             <button type="button" id="btn-wb-popup-open"
                     class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-amber-600/25 hover:bg-amber-600/35 text-amber-100 text-sm font-semibold transition-colors border border-amber-500/40"
@@ -497,30 +457,5 @@
             }
         });
     </script>
-    @if(!empty($subscriptionFeatureMenuItems))
-    <script>
-        (function () {
-            var wrap = document.getElementById('pkg-features-dd-wrap');
-            var btn = document.getElementById('pkg-features-dd-btn');
-            var panel = document.getElementById('pkg-features-dd-panel');
-            var chev = document.getElementById('pkg-features-dd-chevron');
-            if (!wrap || !btn || !panel) return;
-            function setOpen(open) {
-                panel.classList.toggle('hidden', !open);
-                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-                if (chev) chev.style.transform = open ? 'rotate(180deg)' : '';
-            }
-            btn.addEventListener('click', function (e) {
-                e.stopPropagation();
-                setOpen(panel.classList.contains('hidden'));
-            });
-            wrap.addEventListener('click', function (e) { e.stopPropagation(); });
-            document.addEventListener('click', function () { setOpen(false); });
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') setOpen(false);
-            });
-        })();
-    </script>
-    @endif
 </body>
 </html>

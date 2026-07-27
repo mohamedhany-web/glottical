@@ -1,89 +1,117 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>من نحن | أثير</title>
-  <meta name="description" content="قصة أثير — منصة تجارة إلكترونية عربية فاخرة صُممت لتختصر طريقك من البحث إلى الباب بثقة واكتشاف أذكى." />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+  <title>من نحن — Glottical</title>
+  <meta name="theme-color" content="#0f5c57">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="assets/js/tailwind-config.js"></script>
-  <link rel="stylesheet" href="assets/css/atheer.css" />
+  <script src="assets/js/atheer-tailwind-config.js"></script>
+  <link rel="stylesheet" href="assets/css/atheer.css">
+  <style>.design-mirror-badge{position:fixed;z-index:99999;bottom:12px;inset-inline-start:12px;background:#0b1220;color:#fff;font:700 .72rem/1 "IBM Plex Sans Arabic",sans-serif;padding:.45rem .7rem;border-radius:999px;opacity:.85;pointer-events:none}</style>
 </head>
 <body class="font-sans antialiased">
-  <div data-site-header></div>
-
-  <main class="page-enter">
-    <section class="relative overflow-hidden bg-ink py-20 text-white md:py-28">
-      <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=2400&q=80" alt="" class="absolute inset-0 h-full w-full object-cover opacity-40" aria-hidden="true" />
-      <div class="absolute inset-0 bg-gradient-to-l from-ink via-ink/80 to-ink/50"></div>
-      <div class="container-wide relative max-w-3xl space-y-5">
-        <p class="text-sm font-medium text-metal">قصة أثير</p>
-        <h1 class="text-balance text-3xl font-semibold md:text-5xl">تسوّق بثقة… واكتشف بأناقة</h1>
-        <p class="text-base leading-8 text-white/80 md:text-lg">أثير ليست مجرد متجر — إنها منصة عربية فاخرة صُممت لتختصر طريقك من البحث إلى الباب، باكتشاف أذكى وثقة أوضح وتجربة تليق بما تشتريه.</p>
+<div class="design-mirror-badge">site · Glottical · public/about</div>
+<div class="announce-bar bg-ink text-white">
+  <div class="container-wide flex h-10 items-center justify-center gap-2 sm:gap-3 text-center text-xs sm:text-sm">
+    <span class="text-metal shrink-0">✦</span>
+    <p class="min-w-0">تقييم مستوى مجاني · حصص مباشرة · شهادة معتمدة</p>
+    <a href="pricing.html" class="hidden underline underline-offset-4 opacity-90 transition hover:opacity-100 sm:inline shrink-0">احجز الآن</a>
+  </div>
+</div>
+<header class="site-header-shell sticky top-0 z-50 border-b border-line/80 bg-surface/90 backdrop-blur-xl">
+  <div class="container-wide flex h-16 min-w-0 items-center gap-2 md:h-20 md:gap-3">
+    <button type="button" id="nav-toggle" class="inline-flex size-10 shrink-0 items-center justify-center rounded-xl transition hover:bg-canvas lg:hidden" aria-label="القائمة" aria-expanded="false" aria-controls="mobile-nav">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </button>
+    <a href="index.html" class="shrink-0 text-xl font-bold tracking-tight text-ink md:text-2xl xl:text-3xl">Glottical</a>
+    <nav class="mr-1 hidden min-w-0 items-center gap-0 lg:flex" aria-label="nav">
+      <a class="nav-link rounded-lg px-2 py-2 text-sm text-ink-soft hover:bg-canvas xl:px-3" href="courses.html">الكورسات</a>
+      <a class="nav-link rounded-lg px-2 py-2 text-sm text-ink-soft hover:bg-canvas xl:px-3" href="courses.html">الكورسات</a>
+      <a class="nav-link rounded-lg px-2 py-2 text-sm text-ink-soft hover:bg-canvas xl:px-3" href="groups.html">المجموعات</a>
+      <a class="nav-link hidden rounded-lg px-2 py-2 text-sm text-ink-soft hover:bg-canvas xl:inline-flex xl:px-3" href="categories.html">التصنيفات</a>
+      <a class="nav-link rounded-lg px-2 py-2 text-sm text-ink-soft hover:bg-canvas xl:px-3" href="instructors.html">المدربون</a>
+    </nav>
+    <div class="mx-auto hidden min-w-0 max-w-md flex-1 xl:max-w-xl md:block">
+      <form action="courses.html" method="get" class="relative">
+        <svg class="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input name="q" class="h-11 w-full rounded-xl border border-line bg-surface pr-10 pl-4 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 xl:h-12" placeholder="ابحث عن دورات، مهارات، أو مدربين..." />
+      </form>
+    </div>
+    <div class="ms-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
+      <a href="pricing.html" class="btn-press hidden h-10 items-center rounded-xl bg-accent px-3 text-sm font-medium text-white hover:bg-[#0d4f4a] xl:inline-flex xl:px-4">احجز تقييم مستوى مجاني</a>
+      <a href="login.html" class="inline-flex size-10 items-center justify-center rounded-xl hover:bg-canvas" aria-label="تسجيل الدخول"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+      <a href="register.html" class="hidden h-10 items-center rounded-xl bg-accent px-3 text-sm font-medium text-white hover:bg-[#0d4f4a] sm:inline-flex xl:px-4">إنشاء حساب</a>
+      <div class="ms-1 hidden items-center overflow-hidden rounded-xl border border-line text-xs font-semibold sm:flex"><span class="px-2.5 py-2 bg-accent text-white">ع</span><span class="px-2.5 py-2">EN</span></div>
+    </div>
+  </div>
+  <div id="mobile-nav" class="hidden border-t border-line bg-surface px-4 py-4 lg:hidden">
+    <div class="flex flex-col gap-0.5 text-sm font-medium">
+      <a class="rounded-xl px-3 py-3 hover:bg-canvas" href="courses.html">الكورسات</a>
+      <a class="rounded-xl px-3 py-3 hover:bg-canvas" href="courses.html">الكورسات</a>
+      <a class="rounded-xl px-3 py-3 hover:bg-canvas" href="groups.html">المجموعات</a>
+      <a class="rounded-xl px-3 py-3 hover:bg-canvas" href="categories.html">التصنيفات</a>
+      <a class="rounded-xl px-3 py-3 hover:bg-canvas" href="instructors.html">المدربون</a>
+      <a class="rounded-xl px-3 py-3 font-semibold text-accent hover:bg-canvas" href="pricing.html">احجز تقييم مستوى مجاني</a>
+      <a class="rounded-xl px-3 py-3 hover:bg-canvas" href="login.html">تسجيل الدخول</a>
+      <a class="rounded-xl px-3 py-3 hover:bg-canvas" href="register.html">إنشاء حساب</a>
+      <a class="rounded-xl px-3 py-3 text-muted hover:bg-canvas" href="contact.html">تواصل معنا</a>
+    </div>
+  </div>
+</header><main class="page-enter"><section class="relative overflow-hidden bg-ink py-16 text-white md:py-24"><div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(15,92,87,0.4),transparent_45%),radial-gradient(circle_at_90%_80%,rgba(176,141,87,0.22),transparent_40%)]"></div><div class="container-wide relative max-w-3xl space-y-4"><p class="text-sm font-medium text-metal">قصة Glottical</p><h1 class="text-balance text-3xl font-semibold md:text-4xl">تعلّم لغة. احصل على وظيفة. ابدأ مستقبلك.</h1><p class="text-base leading-8 text-white/80">منصة متخصصة في تعليم اللغات المرتبطة بسوق العمل — كورسات عملية، جلسات خاصة، واستشارات مهنية.</p></div></section><section class="container-wide py-20 md:py-24"><div class="grid gap-12 lg:grid-cols-2 lg:items-center">
+  <div class="space-y-4"><p class="text-sm font-medium text-accent">من نحن</p><h2 class="text-2xl font-semibold text-ink">منصة أكاديمية عربية أولاً</h2><p class="text-base leading-8 text-muted">نبني تجربة تعلّم واضحة: تقييم مستوى، مسار مناسب، حصص مباشرة، ومتابعة حتى النتيجة.</p></div>
+  <div class="overflow-hidden rounded-3xl shadow-soft"><img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80" class="aspect-[4/3] w-full object-cover" alt=""></div>
+</div></section>
+<section class="bg-surface py-20 md:py-24"><div class="container-wide grid gap-12 md:grid-cols-2">
+  <div class="space-y-3"><p class="text-sm font-medium text-accent">رؤيتنا</p><h2 class="text-2xl font-semibold text-ink">لغة تفتح باب الفرصة</h2><p class="text-muted leading-8">نربط التعلّم بأهداف حقيقية — دراسة، عمل، وهجرة مهنية.</p></div>
+  <div class="space-y-3"><p class="text-sm font-medium text-accent">رسالتنا</p><h2 class="text-2xl font-semibold text-ink">تعليم عملي حتى التوظيف</h2><p class="text-muted leading-8">ممارسة يومية، مدربون محترفون، ومسارات قابلة للقياس.</p></div>
+</div></section></main><footer class="mt-24 border-t border-line bg-ink text-white">
+  <div class="container-wide py-16 md:py-20">
+    <div class="grid gap-12 lg:grid-cols-[1.15fr_2fr]">
+      <div class="space-y-5">
+        <p class="text-3xl font-bold">Glottical</p>
+        <p class="max-w-sm text-sm leading-8 text-white/70">انسَ الحفظ التقليدي. تعلّم بالممارسة اليومية، والمحادثات الحية، والأنشطة التفاعلية مع مدربين محترفين.</p>
+        <a href="pricing.html" class="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-medium hover:bg-white/10">احجز تقييم مستوى مجاني</a>
       </div>
-    </section>
-
-    <section class="container-wide py-20 md:py-24">
-      <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
-        <div class="space-y-4">
-          <p class="text-sm font-medium text-accent">رسالتنا</p>
-          <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">نجعل التسوق العربي أكثر وضوحاً وثقة</h2>
-          <p class="text-base leading-8 text-muted">نؤمن أن المتسوق العربي يستحق تجربة تُصمَّم له أولاً — لغة عربية أصيلة، مسارات واضحة، ومنتجات مختارة بمعايير لا تُساوم على الجودة. نختصر التصفح العشوائي ونستبدله باكتشاف ذكي يحترم وقتك وذوقك.</p>
-          <p class="text-base leading-8 text-muted">من اختيار العلامات إلى توضيح الشحن والإرجاع — كل تفصيلة في أثير تهدف إلى تقليل الاحتكاك وزيادة الثقة في كل خطوة.</p>
-        </div>
-        <div class="overflow-hidden rounded-3xl shadow-soft">
-          <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1200&q=80" alt="تجربة تسوق فاخرة وهادئة" class="aspect-[4/3] w-full object-cover" />
-        </div>
+      <div class="grid gap-10 sm:grid-cols-3">
+        <div><p class="mb-4 text-sm font-semibold">تعلّم</p>
+          <nav class="space-y-3 text-sm text-white/65">
+            <a class="block hover:text-white" href="courses.html">الكورسات</a>
+            <a class="block hover:text-white" href="courses.html">الكورسات</a>
+            <a class="block hover:text-white" href="groups.html">المجموعات</a>
+            <a class="block hover:text-white" href="categories.html">التصنيفات</a>
+            <a class="block hover:text-white" href="instructors.html">المدربون</a>
+          </nav></div>
+        <div><p class="mb-4 text-sm font-semibold">للطلاب</p>
+          <nav class="space-y-3 text-sm text-white/65">
+            <a class="block hover:text-white" href="register.html">إنشاء حساب</a>
+            <a class="block hover:text-white" href="login.html">تسجيل الدخول</a>
+            <a class="block hover:text-white" href="pricing.html">احجز تقييم مستوى مجاني</a>
+            <a class="block hover:text-white" href="contact.html">تواصل معنا</a>
+          </nav></div>
+        <div><p class="mb-4 text-sm font-semibold">Glottical</p>
+          <nav class="space-y-3 text-sm text-white/65">
+            <a class="block hover:text-white" href="about.html">من نحن</a>
+            <a class="block hover:text-white" href="contact.html">الدعم</a>
+          </nav></div>
       </div>
-    </section>
-
-    <section class="bg-surface py-20 md:py-24">
-      <div class="container-wide">
-        <div class="mb-10 max-w-2xl space-y-3 md:mb-14">
-          <p class="text-sm font-medium text-accent">قيمنا</p>
-          <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">ما يميّز أثير</h2>
-          <p class="text-base leading-8 text-muted">ثلاث ركائز تحكم كل قرار نتخذه — من اختيار المنتج إلى تصميم الواجهة.</p>
-        </div>
-        <div class="grid gap-6 md:grid-cols-3">
-          <article class="rounded-2xl border border-line bg-surface p-8 shadow-soft">
-            <div class="mb-4 flex size-12 items-center justify-center rounded-xl bg-accent-soft text-accent">
-              <svg class="size-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            </div>
-            <h3 class="mb-2 text-xl font-semibold text-ink">الثقة</h3>
-            <p class="text-sm leading-7 text-muted">شفافية في الأسعار والشحن والإرجاع. علامات مختارة بعناية وتقييمات حقيقية — لا وعود فارغة.</p>
-          </article>
-          <article class="rounded-2xl border border-line bg-surface p-8 shadow-soft">
-            <div class="mb-4 flex size-12 items-center justify-center rounded-xl bg-accent-soft text-accent">
-              <svg class="size-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-            </div>
-            <h3 class="mb-2 text-xl font-semibold text-ink">الاكتشاف الذكي</h3>
-            <p class="text-sm leading-7 text-muted">مساعد أثير ومجموعات منسّقة تقلّل التصفح العشوائي وتقترح ما يناسبك — هدية، مقارنة، أو مجموعة متكاملة.</p>
-          </article>
-          <article class="rounded-2xl border border-line bg-surface p-8 shadow-soft">
-            <div class="mb-4 flex size-12 items-center justify-center rounded-xl bg-accent-soft text-accent">
-              <svg class="size-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 7.65l.77.78L12 21.23l7.65-7.65.77-.78a5.4 5.4 0 0 0 0-7.65z"/></svg>
-            </div>
-            <h3 class="mb-2 text-xl font-semibold text-ink">الفخامة الهادئة</h3>
-            <p class="text-sm leading-7 text-muted">تصميم عربي أصيل بلا ضوضاء بصرية. كل شاشة تُبنى لتشعرك بالراحة والثقة — لا بالإرهاق.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="container-wide py-20 md:py-24">
-      <div class="rounded-3xl border border-line bg-surface px-6 py-10 text-center shadow-soft md:px-14 md:py-14">
-        <p class="mb-3 text-sm font-medium text-accent">انضم إلى أثير</p>
-        <h2 class="mb-4 text-balance text-2xl font-semibold text-ink md:text-3xl">ابدأ رحلة تسوق تليق بك</h2>
-        <p class="mx-auto mb-6 max-w-lg text-base leading-8 text-muted">اكتشف منتجات مختارة، عروض واضحة، ومساعد ذكي يرتّب لك الطريق.</p>
-        <div class="flex flex-wrap justify-center gap-3">
-          <a href="index.html" class="inline-flex h-12 items-center rounded-xl bg-accent px-7 font-medium text-white transition hover:bg-[#0d4f4a]">تسوّق الآن</a>
-          <a href="assistant.html" class="inline-flex h-12 items-center rounded-xl border border-line px-7 font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">اسأل مساعد أثير</a>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <div data-site-footer></div>
-  <script src="assets/js/storefront.js"></script>
-</body>
-</html>
+    </div>
+  </div>
+  <div class="border-t border-white/10"><div class="container-wide flex flex-wrap items-center justify-between gap-4 py-6 text-xs text-white/50">
+    <p>&copy; 2026 Glottical. جميع الحقوق محفوظة.</p>
+    <div class="flex flex-wrap gap-4"><a href="contact.html" class="hover:text-white/80">الخصوصية</a><a href="contact.html" class="hover:text-white/80">الشروط</a></div>
+  </div></div>
+</footer>
+<script>
+document.getElementById('nav-toggle')?.addEventListener('click', function () {
+  var nav = document.getElementById('mobile-nav');
+  if (!nav) return;
+  var open = !nav.classList.contains('hidden');
+  nav.classList.toggle('hidden', open);
+  this.setAttribute('aria-expanded', open ? 'false' : 'true');
+});
+</script>
+</body></html>

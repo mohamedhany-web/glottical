@@ -1,91 +1,201 @@
 @extends('layouts.admin')
-@section('title', 'خدمات الموقع')
-@section('header', 'خدمات الموقع (الصفحة العامة)')
+
+@section('title', 'خدمات الموقع - Glottical')
+@section('page_title', 'خدمات الموقع')
+
 @section('content')
-<div class="w-full space-y-6">
-    <div class="rounded-3xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-5 py-6 sm:px-8 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-slate-900">خدمات الموقع</h1>
-                <p class="text-slate-500 mt-1">تظهر في الصفحة العامة <code class="text-xs bg-slate-100 px-1 rounded">/services</code> وفي شريط التنقل. أضف اسم الخدمة، ومقدمة قصيرة، وتفاصيل كاملة.</p>
-            </div>
-            <a href="{{ route('admin.site-services.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-xl font-semibold shadow-lg shadow-sky-500/30 transition-all">
-                <i class="fas fa-plus"></i>
-                <span>خدمة جديدة</span>
+@php
+    $kpis = [
+        ['label' => 'إجمالي الخدمات', 'value' => $stats['total'], 'icon' => 'fa-concierge-bell', 'tone' => 'accent', 'note' => 'كل الخدمات المسجّلة'],
+        ['label' => 'نشطة', 'value' => $stats['active'], 'icon' => 'fa-eye', 'tone' => 'accent', 'note' => 'تظهر للزوار'],
+        ['label' => 'معطّلة', 'value' => $stats['inactive'], 'icon' => 'fa-eye-slash', 'tone' => 'muted', 'note' => 'مخفية عن الموقع'],
+        ['label' => 'بصور', 'value' => $stats['with_image'], 'icon' => 'fa-image', 'tone' => 'metal', 'note' => 'لها صورة مرفوعة'],
+    ];
+    $toneClass = [
+        'accent' => 'bg-accent-soft text-accent',
+        'metal' => 'bg-metal/15 text-metal',
+        'muted' => 'bg-canvas-muted text-muted',
+    ];
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">محتوى الموقع · تظهر في الصفحة العامة وشريط التنقل</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">خدمات الموقع</h2>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            @if(Route::has('public.services.index'))
+                <a href="{{ route('public.services.index') }}" target="_blank" rel="noopener" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                    <i class="fas fa-external-link-alt text-xs"></i>
+                    معاينة الموقع
+                </a>
+            @endif
+            <a href="{{ route('admin.site-services.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-plus text-xs"></i>
+                خدمة جديدة
             </a>
         </div>
-        <div class="p-5 sm:p-8">
-            @if(session('success'))
-                <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800">{{ session('success') }}</div>
-            @endif
+    </section>
 
-            <form method="GET" action="{{ route('admin.site-services.index') }}" class="flex flex-wrap gap-3 mb-6">
-                <input type="search" name="search" value="{{ request('search') }}" placeholder="بحث بالاسم أو الرابط..."
-                       class="flex-1 min-w-[200px] px-4 py-2 border border-slate-200 rounded-xl text-sm">
-                <select name="status" class="px-4 py-2 border border-slate-200 rounded-xl text-sm">
+    @if(session('success'))
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
+        </div>
+    @endif
+
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach($kpis as $kpi)
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $toneClass[$kpi['tone']] }}">
+                    <i class="fas {{ $kpi['icon'] }} text-sm"></i>
+                </div>
+                <p class="mt-3 text-xs text-muted">{{ $kpi['label'] }}</p>
+                <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ number_format($kpi['value']) }}</p>
+                <p class="mt-1 text-[11px] text-muted">{{ $kpi['note'] }}</p>
+            </article>
+        @endforeach
+    </section>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-4 py-4 sm:px-5">
+            <h3 class="text-base font-semibold text-ink">البحث والفلترة</h3>
+            <p class="mt-0.5 text-xs text-muted">ابحث بالاسم أو الرابط، أو صفِّ حسب حالة الظهور</p>
+        </div>
+        <form method="GET" action="{{ route('admin.site-services.index') }}" class="grid grid-cols-1 gap-4 p-4 sm:p-5 md:grid-cols-3 md:items-end">
+            <div>
+                <label class="{{ $labelClass }}" for="search">البحث</label>
+                <input id="search" type="search" name="search" value="{{ request('search') }}"
+                       placeholder="الاسم، الرابط، أو المقدمة..." class="{{ $fieldClass }}">
+            </div>
+            <div>
+                <label class="{{ $labelClass }}" for="status">الحالة</label>
+                <select id="status" name="status" class="{{ $fieldClass }}">
                     <option value="">كل الحالات</option>
-                    <option value="active" @selected(request('status')==='active')>نشط</option>
-                    <option value="inactive" @selected(request('status')==='inactive')>معطل</option>
+                    <option value="active" @selected(request('status') === 'active')>نشط</option>
+                    <option value="inactive" @selected(request('status') === 'inactive')>معطل</option>
                 </select>
-                <button type="submit" class="px-4 py-2 rounded-xl bg-slate-800 text-white text-sm font-semibold">تصفية</button>
-            </form>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white">
+                    <i class="fas fa-filter text-xs"></i>
+                    تصفية
+                </button>
+                @if(request()->anyFilled(['search', 'status']))
+                    <a href="{{ route('admin.site-services.index') }}" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line px-5 text-sm font-medium text-ink hover:bg-canvas">
+                        <i class="fas fa-times text-xs"></i>
+                        مسح
+                    </a>
+                @endif
+            </div>
+        </form>
+    </article>
 
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-200 text-right text-sm">
-                    <thead class="bg-slate-50">
-                        <tr class="text-xs font-semibold uppercase text-slate-500">
-                            <th class="px-4 py-3">الترتيب</th>
-                            <th class="px-4 py-3 w-20">صورة</th>
-                            <th class="px-4 py-3">الاسم</th>
-                            <th class="px-4 py-3">الرابط</th>
-                            <th class="px-4 py-3">الحالة</th>
-                            <th class="px-4 py-3">إجراءات</th>
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+            <div class="min-w-0">
+                <h3 class="text-base font-semibold text-ink">قائمة الخدمات</h3>
+                <p class="mt-0.5 text-xs text-muted">{{ number_format($services->total()) }} خدمة</p>
+            </div>
+            <a href="{{ route('admin.site-services.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-plus text-xs"></i>
+                إضافة
+            </a>
+        </div>
+
+        @if($services->count() > 0)
+            <div class="admin-table-wrap">
+                <table class="w-full min-w-[860px] text-right text-sm">
+                    <thead class="bg-canvas text-[11px] uppercase tracking-wide text-muted">
+                        <tr>
+                            <th class="px-5 py-3 font-medium">الترتيب</th>
+                            <th class="px-3 py-3 font-medium">الخدمة</th>
+                            <th class="px-3 py-3 font-medium">الرابط</th>
+                            <th class="px-3 py-3 font-medium">الحالة</th>
+                            <th class="px-5 py-3 font-medium">إجراءات</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-200">
-                        @forelse($services as $service)
-                        <tr class="hover:bg-slate-50">
-                            <td class="px-4 py-3 text-slate-600">{{ $service->sort_order }}</td>
-                            <td class="px-4 py-3">
-                                @if($service->publicImageUrl())
-                                    <img src="{{ $service->publicImageUrl() }}" alt="" class="w-14 h-10 object-cover rounded-lg border border-slate-200">
-                                @else
-                                    <span class="text-slate-300 text-xs">—</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-3 font-medium text-slate-800">{{ $service->name }}</td>
-                            <td class="px-4 py-3">
-                                <a href="{{ route('public.services.show', $service) }}" target="_blank" rel="noopener" class="text-sky-600 hover:underline text-xs font-mono">/services/{{ $service->slug }}</a>
-                            </td>
-                            <td class="px-4 py-3">
-                                @if($service->is_active)
-                                    <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-700">نشط</span>
-                                @else
-                                    <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-slate-100 text-slate-600">معطل</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-3">
-                                <a href="{{ route('admin.site-services.edit', $service) }}" class="text-sky-600 hover:text-sky-700 font-medium ml-2">تعديل</a>
-                                <form action="{{ route('admin.site-services.destroy', $service) }}" method="POST" class="inline" onsubmit="return confirm('حذف هذه الخدمة؟');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-rose-600 hover:text-rose-700 font-medium">حذف</button>
-                                </form>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="6" class="px-4 py-12 text-center text-slate-500">
-                                <i class="fas fa-concierge-bell text-4xl text-slate-300 mb-3 block"></i>
-                                <p>لا توجد خدمات. <a href="{{ route('admin.site-services.create') }}" class="text-sky-600 hover:underline">أضف خدمة</a></p>
-                            </td>
-                        </tr>
-                        @endforelse
+                    <tbody class="divide-y divide-line">
+                        @foreach($services as $service)
+                            <tr class="transition hover:bg-canvas">
+                                <td class="px-5 py-3 tabular-nums text-muted">{{ $service->sort_order }}</td>
+                                <td class="px-3 py-3">
+                                    <div class="flex items-center gap-3">
+                                        @if($service->publicImageUrl())
+                                            <img src="{{ $service->publicImageUrl() }}" alt="" class="size-11 shrink-0 rounded-xl border border-line object-cover">
+                                        @else
+                                            <span class="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-sm font-semibold text-accent">
+                                                {{ mb_substr($service->name, 0, 1, 'UTF-8') }}
+                                            </span>
+                                        @endif
+                                        <div class="min-w-0">
+                                            <p class="truncate font-semibold text-ink">{{ $service->name }}</p>
+                                            @if($service->summary)
+                                                <p class="mt-0.5 line-clamp-1 text-xs text-muted">{{ \Illuminate\Support\Str::limit($service->summary, 60) }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-3 py-3">
+                                    <a href="{{ route('public.services.show', $service) }}" target="_blank" rel="noopener" class="font-mono text-xs text-accent hover:underline" dir="ltr">/services/{{ $service->slug }}</a>
+                                </td>
+                                <td class="px-3 py-3">
+                                    @if($service->is_active)
+                                        <span class="rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">نشط</span>
+                                    @else
+                                        <span class="rounded-lg bg-canvas-muted px-2.5 py-1 text-xs font-medium text-muted">معطل</span>
+                                    @endif
+                                </td>
+                                <td class="px-5 py-3">
+                                    <div class="flex items-center gap-1.5">
+                                        <a href="{{ route('public.services.show', $service) }}" target="_blank" rel="noopener"
+                                           class="btn-press inline-flex size-8 items-center justify-center rounded-lg bg-canvas-muted text-muted transition hover:bg-ink hover:text-white"
+                                           title="معاينة">
+                                            <i class="fas fa-eye text-xs"></i>
+                                        </a>
+                                        <a href="{{ route('admin.site-services.edit', $service) }}"
+                                           class="btn-press inline-flex size-8 items-center justify-center rounded-lg bg-accent-soft text-accent transition hover:bg-accent hover:text-white"
+                                           title="تعديل">
+                                            <i class="fas fa-pen text-xs"></i>
+                                        </a>
+                                        <form action="{{ route('admin.site-services.destroy', $service) }}" method="POST" class="inline" onsubmit="return confirm('حذف هذه الخدمة؟');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="btn-press inline-flex size-8 items-center justify-center rounded-lg bg-danger/10 text-danger transition hover:bg-danger hover:text-white"
+                                                    title="حذف">
+                                                <i class="fas fa-trash text-xs"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
             </div>
-            <div class="mt-4">{{ $services->links() }}</div>
-        </div>
-    </div>
+
+            @if($services->hasPages())
+                <div class="border-t border-line px-4 py-4 sm:px-5">{{ $services->withQueryString()->links() }}</div>
+            @endif
+        @else
+            <div class="px-4 py-16 text-center sm:px-5">
+                <div class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+                    <i class="fas fa-concierge-bell"></i>
+                </div>
+                <p class="text-sm font-medium text-ink">لا توجد خدمات</p>
+                <p class="mt-1 text-xs text-muted">
+                    @if(request()->anyFilled(['search', 'status']))
+                        لا توجد نتائج مطابقة للفلتر الحالي.
+                    @else
+                        <a href="{{ route('admin.site-services.create') }}" class="text-accent hover:underline">أضف أول خدمة</a> لتظهر على الموقع.
+                    @endif
+                </p>
+            </div>
+        @endif
+    </article>
 </div>
 @endsection

@@ -1,131 +1,159 @@
 @extends('layouts.admin')
 
 @section('title', 'عرض المستخدم - ' . $user->name)
-@section('header', 'عرض المستخدم')
+@section('page_title', 'عرض المستخدم')
 
 @section('content')
 @php
     $roles = [
-        'super_admin' => ['label' => 'مدير عام', 'badge' => 'bg-rose-100 text-rose-700 border border-rose-200'],
-        'admin' => ['label' => 'إداري', 'badge' => 'bg-indigo-100 text-indigo-700 border border-indigo-200'],
-        'instructor' => ['label' => 'مدرب', 'badge' => 'bg-sky-100 text-sky-700 border border-sky-200'],
-        'teacher' => ['label' => 'مدرس', 'badge' => 'bg-sky-100 text-sky-700 border border-sky-200'],
-        'student' => ['label' => __('admin.student_role_label'), 'badge' => 'bg-emerald-100 text-emerald-700 border border-emerald-200'],
-        'parent' => ['label' => 'ولي أمر', 'badge' => 'bg-amber-100 text-amber-700 border border-amber-200'],
-        'employee' => ['label' => 'موظف', 'badge' => 'bg-amber-100 text-amber-700 border border-amber-200'],
+        'super_admin' => ['label' => 'مدير عام', 'badge' => 'bg-danger/10 text-danger'],
+        'admin' => ['label' => 'إداري', 'badge' => 'bg-accent-soft text-accent'],
+        'instructor' => ['label' => 'مدرب', 'badge' => 'bg-metal/15 text-metal'],
+        'teacher' => ['label' => 'مدرس', 'badge' => 'bg-metal/15 text-metal'],
+        'student' => ['label' => __('admin.student_role_label'), 'badge' => 'bg-accent-soft text-accent'],
+        'parent' => ['label' => 'ولي أمر', 'badge' => 'bg-canvas-muted text-muted'],
+        'employee' => ['label' => 'موظف', 'badge' => 'bg-metal/15 text-metal'],
     ];
     $roleKey = $user->is_employee ? 'employee' : $user->role;
     $roleMeta = $roles[$roleKey] ?? $roles['student'];
+    $listRoute = ($user->role === 'student' && Route::has('admin.students-accounts.index'))
+        ? route('admin.students-accounts.index')
+        : route('admin.users.index');
+    $listLabel = ($user->role === 'student' && Route::has('admin.students-accounts.index'))
+        ? 'إدارة الطلاب والحسابات'
+        : 'إدارة المستخدمين';
 @endphp
-<div class="space-y-6">
-    <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-6 py-5 bg-slate-50 border-b border-slate-200 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md">
-                    <i class="fas fa-user text-lg"></i>
-                </div>
-                <div>
-                    <nav class="text-xs font-medium text-slate-500 flex flex-wrap items-center gap-2 mb-1">
-                        <a href="{{ route('admin.dashboard') }}" class="text-blue-600 hover:text-blue-700">لوحة التحكم</a>
-                        <span>/</span>
-                        <a href="{{ route('admin.users.index') }}" class="text-blue-600 hover:text-blue-700">إدارة المستخدمين</a>
-                        <span>/</span>
-                        <span class="text-slate-600">عرض المستخدم</span>
-                    </nav>
-                    <h2 class="text-2xl font-black text-slate-900 mt-1">{{ $user->name }}</h2>
-                    <p class="text-sm text-slate-600 mt-1">تفاصيل الحساب والحالة</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-2">
-                <a href="{{ route('admin.users.edit', $user->id) }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 text-sm font-semibold transition-colors">
-                    <i class="fas fa-edit"></i>
-                    تعديل
-                </a>
-                <a href="{{ route('admin.users.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
-                    <i class="fas fa-arrow-right"></i>
-                    العودة للقائمة
-                </a>
-            </div>
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">الحسابات · {{ $listLabel }}</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ $user->name }}</h2>
+            <p class="mt-1 text-sm text-muted">عضوية #{{ str_pad($user->id, 5, '0', STR_PAD_LEFT) }} · تفاصيل الحساب والحالة</p>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.users.edit', $user->id) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-pen text-xs"></i>
+                تعديل
+            </a>
+            <a href="{{ $listRoute }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                رجوع للقائمة
+            </a>
         </div>
     </section>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 space-y-6">
-            <div class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-                <div class="px-6 py-5 border-b border-slate-200 bg-slate-50">
-                    <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <i class="fas fa-user text-blue-600"></i>
-                        البيانات الأساسية
-                    </h3>
-                </div>
-                <div class="p-6 space-y-4">
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-                        <div class="flex-shrink-0">
-                            @if($user->profile_image)
-                                <img src="{{ $user->profile_image_url }}" alt="{{ $user->name }}" class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-200">
-                            @else
-                                <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-3xl font-bold">
-                                    {{ mb_substr($user->name, 0, 1, 'UTF-8') }}
-                                </div>
-                            @endif
-                        </div>
-                        <div class="space-y-2 flex-1">
-                            <p class="text-sm text-slate-600 font-medium">الاسم</p>
-                            <p class="text-lg font-bold text-slate-900">{{ $user->name }}</p>
-                            <p class="text-sm text-slate-600 font-medium mt-3">البريد الإلكتروني</p>
-                            <p class="text-slate-900">{{ $user->email ?: '—' }}</p>
-                            <p class="text-sm text-slate-600 font-medium mt-2">رقم الهاتف</p>
-                            <p class="text-slate-900" dir="ltr">{{ $user->phone ?: '—' }}</p>
-                        </div>
-                    </div>
-                    @if($user->bio)
-                        <div class="pt-4 border-t border-slate-200">
-                            <p class="text-sm text-slate-600 font-medium mb-2">النبذة التعريفية</p>
-                            <p class="text-slate-800 whitespace-pre-wrap">{{ $user->bio }}</p>
-                        </div>
-                    @endif
-                </div>
-            </div>
+    @if(session('success'))
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
         </div>
-        <div class="space-y-6">
-            <div class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-                <div class="px-6 py-5 border-b border-slate-200 bg-slate-50">
-                    <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <i class="fas fa-info-circle text-blue-600"></i>
-                        الحالة والدور
-                    </h3>
-                </div>
-                <div class="p-6 space-y-4">
-                    <div>
-                        <p class="text-xs font-semibold text-slate-600 mb-1">الدور</p>
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold {{ $roleMeta['badge'] }}">
-                            {{ $roleMeta['label'] }}
-                        </span>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold text-slate-600 mb-1">حالة الحساب</p>
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold {{ $user->is_active ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200' }}">
-                            <span class="h-2 w-2 rounded-full bg-current"></span>
-                            {{ $user->is_active ? 'نشط' : 'غير نشط' }}
-                        </span>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold text-slate-600 mb-1">رقم العضوية</p>
-                        <p class="font-bold text-slate-900">#{{ str_pad($user->id, 5, '0', STR_PAD_LEFT) }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs font-semibold text-slate-600 mb-1">تاريخ التسجيل</p>
-                        <p class="text-slate-900">{{ $user->created_at ? $user->created_at->format('Y-m-d H:i') : '—' }}</p>
-                    </div>
-                    @if($user->last_login_at)
-                        <div>
-                            <p class="text-xs font-semibold text-slate-600 mb-1">آخر تسجيل دخول</p>
-                            <p class="text-slate-900">{{ $user->last_login_at->format('Y-m-d H:i') }}</p>
-                        </div>
-                    @endif
-                </div>
+    @endif
+
+    <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $roleMeta['badge'] }}">
+                <i class="fas fa-user-shield text-sm"></i>
             </div>
-        </div>
+            <p class="mt-3 text-xs text-muted">الدور</p>
+            <p class="mt-1">
+                <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold {{ $roleMeta['badge'] }}">{{ $roleMeta['label'] }}</span>
+            </p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $user->is_active ? 'bg-accent-soft text-accent' : 'bg-canvas-muted text-muted' }}">
+                <i class="fas fa-{{ $user->is_active ? 'user-check' : 'user-slash' }} text-sm"></i>
+            </div>
+            <p class="mt-3 text-xs text-muted">حالة الحساب</p>
+            <p class="mt-1">
+                @if($user->is_active)
+                    <span class="inline-flex items-center gap-1.5 rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-semibold text-accent">
+                        <span class="size-1.5 rounded-full bg-accent"></span>
+                        نشط
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 rounded-lg bg-canvas-muted px-2.5 py-1 text-xs font-semibold text-muted">
+                        <span class="size-1.5 rounded-full bg-muted"></span>
+                        غير نشط
+                    </span>
+                @endif
+            </p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                <i class="fas fa-calendar-plus text-sm"></i>
+            </div>
+            <p class="mt-3 text-xs text-muted">تاريخ التسجيل</p>
+            <p class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ $user->created_at ? $user->created_at->format('Y-m-d H:i') : '—' }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-metal/15 text-metal">
+                <i class="fas fa-clock text-sm"></i>
+            </div>
+            <p class="mt-3 text-xs text-muted">آخر تسجيل دخول</p>
+            <p class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ $user->last_login_at ? $user->last_login_at->format('Y-m-d H:i') : '—' }}</p>
+        </article>
+    </section>
+
+    <div class="grid gap-5 lg:grid-cols-5">
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft lg:col-span-3">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">البيانات الأساسية</h3>
+                <p class="mt-0.5 text-xs text-muted">الهوية وبيانات التواصل</p>
+            </div>
+            <div class="p-4 sm:p-5">
+                <div class="flex flex-col gap-5 sm:flex-row sm:items-start">
+                    <div class="shrink-0">
+                        @if($user->profile_image)
+                            <img src="{{ $user->profile_image_url }}" alt="{{ $user->name }}" class="size-24 rounded-2xl border border-line object-cover">
+                        @else
+                            <span class="inline-flex size-24 items-center justify-center rounded-2xl bg-accent-soft text-3xl font-semibold text-accent">
+                                {{ mb_substr($user->name, 0, 1, 'UTF-8') }}
+                            </span>
+                        @endif
+                    </div>
+                    <div class="min-w-0 flex-1 space-y-3">
+                        <div class="rounded-xl border border-line bg-canvas/60 p-4">
+                            <p class="text-xs font-medium text-muted">الاسم</p>
+                            <p class="mt-1 text-sm font-semibold text-ink">{{ $user->name }}</p>
+                        </div>
+                        <div class="rounded-xl border border-line bg-canvas/60 p-4">
+                            <p class="text-xs font-medium text-muted">البريد الإلكتروني</p>
+                            <p class="mt-1 break-all text-sm font-semibold text-ink">{{ $user->email ?: '—' }}</p>
+                        </div>
+                        <div class="rounded-xl border border-line bg-canvas/60 p-4">
+                            <p class="text-xs font-medium text-muted">رقم الهاتف</p>
+                            <p class="mt-1 text-sm font-semibold text-ink" dir="ltr">{{ $user->phone ?: '—' }}</p>
+                        </div>
+                    </div>
+                </div>
+                @if($user->bio)
+                    <div class="mt-5 border-t border-line pt-5">
+                        <p class="text-xs font-medium text-muted">النبذة التعريفية</p>
+                        <div class="mt-2 rounded-xl border border-line bg-canvas/60 p-4">
+                            <p class="whitespace-pre-wrap text-sm leading-7 text-ink">{{ $user->bio }}</p>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </article>
+
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft lg:col-span-2">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">إجراءات سريعة</h3>
+                <p class="mt-0.5 text-xs text-muted">تعديل أو العودة للقائمة</p>
+            </div>
+            <div class="space-y-2 p-4 sm:p-5">
+                <a href="{{ route('admin.users.edit', $user->id) }}" class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                    <i class="fas fa-pen text-xs"></i>
+                    تعديل بيانات المستخدم
+                </a>
+                <a href="{{ $listRoute }}" class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                    <i class="fas fa-arrow-right text-xs"></i>
+                    {{ $listLabel }}
+                </a>
+            </div>
+        </article>
     </div>
 </div>
 @endsection

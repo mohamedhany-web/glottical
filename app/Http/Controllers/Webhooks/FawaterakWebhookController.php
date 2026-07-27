@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Webhooks;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\SubscriptionRequest;
-use App\Services\TeacherSubscriptionActivationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -51,32 +49,6 @@ class FawaterakWebhookController extends Controller
 
         if ($order) {
             return $this->approveCourseOrder($order, $invoiceId, $payload);
-        }
-
-        $subRequest = SubscriptionRequest::query()
-            ->where('fawaterak_invoice_id', $invoiceId)
-            ->where('status', 'pending')
-            ->first();
-
-        if ($subRequest) {
-            try {
-                TeacherSubscriptionActivationService::activateAfterGatewayPayment(
-                    $subRequest,
-                    'fawaterak',
-                    $invoiceId,
-                    $payload,
-                    'فواتيرك (Webhook)'
-                );
-
-                return response()->json(['ok' => true, 'type' => 'subscription']);
-            } catch (\Throwable $e) {
-                Log::error('Fawaterak webhook subscription activation failed', [
-                    'invoice_id' => $invoiceId,
-                    'error' => $e->getMessage(),
-                ]);
-
-                return response()->json(['ok' => false], 500);
-            }
         }
 
         return response()->json(['ok' => true, 'message' => 'no matching pending record']);

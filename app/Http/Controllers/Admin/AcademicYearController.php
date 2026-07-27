@@ -85,6 +85,7 @@ class AcademicYearController extends Controller
         $data = $request->all();
         $data['is_active'] = $request->has('is_active');
         $data['order'] = $data['order'] ?? 0;
+        $data['price'] = $request->input('price', 0);
 
         if ($request->hasFile('thumbnail')) {
             $data['thumbnail'] = \App\Services\PublicMediaStorage::store(
@@ -97,7 +98,7 @@ class AcademicYearController extends Controller
         AcademicYear::create($data);
 
         return redirect()->route('admin.academic-years.index')
-            ->with('success', 'تم إضافة مسار التعلم بنجاح');
+            ->with('success', 'تم إضافة السنة الأكاديمية بنجاح');
     }
 
     public function show(AcademicYear $academicYear)
@@ -214,6 +215,7 @@ class AcademicYearController extends Controller
         $data = $request->all();
         $data['is_active'] = $request->has('is_active');
         $data['order'] = $data['order'] ?? 0;
+        $data['price'] = $request->input('price', $academicYear->price ?? 0);
 
         if ($request->hasFile('thumbnail')) {
             $data['thumbnail'] = \App\Services\PublicMediaStorage::store(
@@ -226,7 +228,7 @@ class AcademicYearController extends Controller
         $academicYear->update($data);
 
         return redirect()->route('admin.academic-years.edit', $academicYear)
-            ->with('success', 'تم تحديث مسار التعلم بنجاح');
+            ->with('success', 'تم تحديث السنة الأكاديمية بنجاح');
     }
 
     public function destroy(AcademicYear $academicYear)

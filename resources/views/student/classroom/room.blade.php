@@ -46,12 +46,10 @@
             justify-content: center;
         }
         /* القوائم: fixed + فوق الدرج والـ iframe قدر الإمكان */
-        #pkg-features-dd-panel,
         #mx-record-dd-panel {
             z-index: 220;
             will-change: auto;
         }
-        #pkg-features-dd-panel.mx-dd-visible,
         #mx-record-dd-panel.mx-dd-visible {
             will-change: opacity;
         }
@@ -63,7 +61,6 @@
             transform: translateX(0) !important;
             pointer-events: auto;
         }
-        .pkg-features-dd-panel-inner { box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(34, 211, 238, 0.06); }
         .classroom-room-toolbar-btn {
             display: inline-flex;
             align-items: center;
@@ -84,10 +81,6 @@
         }
         .mx-mobile-toolbar-scroll::-webkit-scrollbar {
             display: none;
-        }
-        #pkg-features-dd-btn:focus-visible {
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.9), 0 0 0 4px rgba(34, 211, 238, 0.35);
         }
         #wb-popup-stage { min-height: 50vh; }
         .classroom-excalidraw-host {
@@ -224,53 +217,13 @@
                 {{ (int) $effectiveDurationMinutes }} د
             </span>
             <span class="hidden sm:inline-flex text-amber-200 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 whitespace-nowrap" id="meeting-timer-chip">
-                مدة الاجتماع: {{ (int) $effectiveDurationMinutes }} دقيقة (حد الباقة {{ (int) $maxDurationMinutes }})
+                مدة الاجتماع: {{ (int) $effectiveDurationMinutes }} دقيقة (الحد {{ (int) $maxDurationMinutes }})
             </span>
             <span class="hidden text-sky-200 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-sky-500/20 border border-sky-500/30 max-w-[10rem] sm:max-w-[14rem] truncate" id="record-status-chip"></span>
             </div>
             <span class="hidden xl:block w-px h-4 bg-slate-600/50 shrink-0 rounded-full" aria-hidden="true"></span>
             <div class="flex w-full flex-col gap-2 md:w-auto md:flex-row md:flex-nowrap md:items-center md:justify-end md:gap-1.5">
             @unless($academicObserverMode)
-            @if(!empty($subscriptionFeatureMenuItems))
-            <div class="relative w-full shrink-0 md:w-auto" id="pkg-features-dd-wrap">
-                <button type="button" id="pkg-features-dd-btn" class="classroom-room-toolbar-btn w-full justify-between bg-slate-700/80 hover:bg-slate-600/90 text-slate-100 border border-slate-600 hover:border-cyan-500/35 md:w-auto md:max-w-[11rem] lg:max-w-none" aria-expanded="false" aria-haspopup="true" title="مزايا اشتراكك — تفتح في تاب جديد">
-                    <span class="flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-md bg-cyan-500/15 text-cyan-400 border border-cyan-500/20">
-                        <i class="fas fa-layer-group text-[11px] sm:text-xs"></i>
-                    </span>
-                    <span class="flex min-w-0 flex-1 flex-col items-stretch text-right leading-tight">
-                        <span class="truncate font-semibold text-slate-100 text-[11px] sm:text-xs">مزايا الباقة</span>
-                        @if(!empty($subscriptionPackageLabel))
-                        <span class="truncate text-[9px] sm:text-[10px] font-normal text-slate-400">{{ $subscriptionPackageLabel }}</span>
-                        @else
-                        <span class="text-[9px] sm:text-[10px] font-normal text-slate-500">اشتراكك النشط</span>
-                        @endif
-                    </span>
-                    <i class="fas fa-chevron-down text-[9px] text-slate-400 shrink-0 transition-transform duration-200" id="pkg-features-dd-chevron" aria-hidden="true"></i>
-                </button>
-                <div id="pkg-features-dd-panel" class="pkg-features-dd-panel-inner hidden w-[min(100vw-2rem,19.5rem)] max-w-[calc(100vw-1rem)] rounded-xl border border-slate-600 bg-slate-900/98 backdrop-blur-md overflow-hidden" role="menu">
-                    <div class="px-3 py-2.5 border-b border-slate-700/90 bg-slate-800/70 flex items-start gap-2">
-                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-cyan-500/10 text-cyan-400">
-                            <i class="fas fa-arrow-up-left-from-square text-[10px]"></i>
-                        </span>
-                        <div class="min-w-0">
-                            <p class="text-xs font-semibold text-slate-200 m-0 leading-snug">روابط سريعة</p>
-                            <p class="text-[11px] text-slate-500 m-0 mt-0.5 leading-relaxed">كل رابط يُفتح في نافذة جديدة دون إغلاق الاجتماع.</p>
-                        </div>
-                    </div>
-                    <div class="max-h-[min(58vh,20rem)] overflow-y-auto py-1.5 px-1">
-                        @foreach($subscriptionFeatureMenuItems as $item)
-                        <a href="{{ $item['url'] }}" target="_blank" rel="noopener noreferrer" role="menuitem" class="group flex items-center gap-3 px-2.5 py-2 mx-0.5 rounded-lg text-slate-200 hover:bg-slate-700/70 transition-colors border border-transparent hover:border-slate-600/80">
-                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $item['icon_bg'] }} {{ $item['icon_text'] }} ring-1 ring-white/5 group-hover:ring-cyan-500/15 transition-[box-shadow]">
-                                <i class="fas {{ $item['icon'] }} text-sm"></i>
-                            </span>
-                            <span class="min-w-0 flex-1 text-sm font-medium leading-snug text-right group-hover:text-white">{{ $item['label'] }}</span>
-                            <i class="fas fa-arrow-up-left-from-square text-slate-500 group-hover:text-cyan-400/90 text-[11px] shrink-0 transition-colors"></i>
-                        </a>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-            @endif
             <button type="button" id="btn-wb-popup-open" class="classroom-room-toolbar-btn w-full justify-center gap-2 bg-amber-600/25 hover:bg-amber-600/35 text-amber-100 border border-amber-500/40 md:w-auto md:justify-start" title="فتح الوايت بورد في نافذة منبثقة">
                 <i class="fas fa-expand text-amber-300 text-[11px]"></i>
                 <span class="sm:inline">الوايت بورد</span>
@@ -2419,58 +2372,6 @@
                 showError();
             };
             document.head.appendChild(script);
-        })();
-    </script>
-    <script>
-        (function () {
-            var wrap = document.getElementById('pkg-features-dd-wrap');
-            var btn = document.getElementById('pkg-features-dd-btn');
-            var panel = document.getElementById('pkg-features-dd-panel');
-            var chev = document.getElementById('pkg-features-dd-chevron');
-            if (!wrap || !btn || !panel) return;
-            function setOpen(open) {
-                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-                if (chev) chev.style.transform = open ? 'rotate(180deg)' : '';
-                if (!open) {
-                    panel.classList.add('hidden');
-                    if (typeof window.mxClearClassroomDropdownPosition === 'function') {
-                        window.mxClearClassroomDropdownPosition(panel);
-                    }
-                } else if (typeof window.mxPositionClassroomDropdown === 'function') {
-                    panel.style.opacity = '0';
-                    panel.style.pointerEvents = 'none';
-                    panel.classList.remove('hidden');
-                    panel.classList.add('mx-dd-visible');
-                    window.mxPositionClassroomDropdown(panel, wrap, btn);
-                    requestAnimationFrame(function () {
-                        requestAnimationFrame(function () {
-                            panel.style.transition = 'opacity 0.14s ease-out';
-                            panel.style.opacity = '1';
-                            panel.style.pointerEvents = '';
-                            window.mxPositionClassroomDropdown(panel, wrap, btn);
-                        });
-                    });
-                }
-            }
-            btn.addEventListener('click', function (e) {
-                e.stopPropagation();
-                setOpen(panel.classList.contains('hidden'));
-            });
-            document.addEventListener('mousedown', function (e) {
-                if (!wrap.contains(e.target)) setOpen(false);
-            }, true);
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') setOpen(false);
-            });
-            var pkgResizeT = null;
-            window.addEventListener('resize', function () {
-                if (panel.classList.contains('hidden') || typeof window.mxPositionClassroomDropdown !== 'function') return;
-                if (pkgResizeT) clearTimeout(pkgResizeT);
-                pkgResizeT = setTimeout(function () {
-                    pkgResizeT = null;
-                    window.mxPositionClassroomDropdown(panel, wrap, btn);
-                }, 80);
-            });
         })();
     </script>
 </body>

@@ -28,8 +28,8 @@
                         <div class="flex-1 min-w-0">
                             <div class="flex flex-wrap items-center gap-2 mb-3">
                                 <h3 class="text-base sm:text-lg font-bold text-gray-900">
-                                    @if($order->academic_year_id && $order->learningPath)
-                                        {{ $order->learningPath->name ?? __('student.learning_path_label') }}
+                                    @if($order->academic_year_id && ! $order->advanced_course_id)
+                                        {{ $order->learningPath->name ?? 'طلب قديم' }}
                                     @else
                                         {{ $order->course->title ?? __('student.course_undefined') }}
                                     @endif
@@ -44,11 +44,8 @@
                             </div>
 
                             <div class="flex flex-wrap items-center gap-2 text-sm text-gray-500 mb-3">
-                                @if($order->academic_year_id && $order->learningPath)
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 text-xs font-medium">{{ __('student.learning_path_label') }}</span>
-                                    @if($order->learningPath->price)
-                                        <span>{{ number_format($order->learningPath->price, 2) }} {{ __('public.currency_egp') }}</span>
-                                    @endif
+                                @if($order->academic_year_id && ! $order->advanced_course_id)
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 text-xs font-medium">طلب قديم</span>
                                 @elseif($order->course && ($order->course->academicYear || $order->course->academicSubject))
                                     @if($order->course->academicYear)
                                         <span>{{ $order->course->academicYear->name }}</span>

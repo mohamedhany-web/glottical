@@ -95,7 +95,6 @@ Route::get('/sitemap.xml', function () {
         ['url' => '/pricing',      'priority' => '0.8', 'changefreq' => 'weekly'],
         ['url' => '/about',        'priority' => '0.8', 'changefreq' => 'monthly'],
         ['url' => '/contact',      'priority' => '0.7', 'changefreq' => 'monthly'],
-        ['url' => '/portfolio',    'priority' => '0.7', 'changefreq' => 'weekly'],
         ['url' => '/services',     'priority' => '0.75', 'changefreq' => 'weekly'],
         ['url' => '/faq',          'priority' => '0.7', 'changefreq' => 'monthly'],
         ['url' => '/team',         'priority' => '0.6', 'changefreq' => 'monthly'],
@@ -285,20 +284,6 @@ Route::get('/faq', [\App\Http\Controllers\Public\PageController::class, 'faq'])-
 Route::get('/terms', [\App\Http\Controllers\Public\PageController::class, 'terms'])->name('public.terms');
 Route::get('/privacy', [\App\Http\Controllers\Public\PageController::class, 'privacy'])->name('public.privacy');
 Route::get('/pricing', [\App\Http\Controllers\Public\PageController::class, 'pricing'])->name('public.pricing');
-Route::get('/pricing/checkout/{plan}', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'show'])->name('public.subscription.checkout')->where('plan', 'teacher_starter|teacher_pro');
-Route::post('/pricing/checkout', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'store'])->name('public.subscription.checkout.store');
-Route::post('/pricing/checkout/{plan}/fawaterak/prepare', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'fawaterakPrepare'])
-    ->middleware('auth')
-    ->name('public.subscription.checkout.fawaterak.prepare')
-    ->where('plan', 'teacher_starter|teacher_pro');
-Route::get('/pricing/checkout/{plan}/fawaterak/methods', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'fawaterakPaymentMethods'])
-    ->middleware('auth')
-    ->name('public.subscription.checkout.fawaterak.methods')
-    ->where('plan', 'teacher_starter|teacher_pro');
-Route::post('/pricing/checkout/{plan}/fawaterak/pay', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'fawaterakPay'])
-    ->middleware('auth')
-    ->name('public.subscription.checkout.fawaterak.pay')
-    ->where('plan', 'teacher_starter|teacher_pro');
 Route::get('/team', [\App\Http\Controllers\Public\PageController::class, 'team'])->name('public.team');
 Route::get('/certificates', [\App\Http\Controllers\Public\PageController::class, 'certificates'])->name('public.certificates');
 Route::get('/certificates/verify', [\App\Http\Controllers\Public\CertificateVerificationController::class, 'verify'])->name('public.certificates.verify');
@@ -308,11 +293,6 @@ Route::get('/refund', [\App\Http\Controllers\Public\PageController::class, 'refu
 Route::get('/testimonials', [\App\Http\Controllers\Public\PageController::class, 'testimonials'])->name('public.testimonials');
 Route::get('/events', [\App\Http\Controllers\Public\PageController::class, 'events'])->name('public.events');
 Route::get('/partners', [\App\Http\Controllers\Public\PageController::class, 'partners'])->name('public.partners');
-
-// Portfolio (معرض أعمال الطلاب)
-Route::get('/portfolio', [\App\Http\Controllers\Public\PortfolioController::class, 'index'])->name('public.portfolio.index');
-Route::get('/portfolio/teacher/{id}', [\App\Http\Controllers\Public\PortfolioController::class, 'showTeacher'])->name('public.portfolio.teacher')->where('id', '[0-9]+');
-Route::get('/portfolio/{id}', [\App\Http\Controllers\Public\PortfolioController::class, 'show'])->name('public.portfolio.show')->where('id', '[0-9]+');
 
 // صفحة الخدمات (محتوى من لوحة الإدارة)
 Route::get('/services', [\App\Http\Controllers\Public\SiteServiceController::class, 'index'])->name('public.services.index');
@@ -343,6 +323,12 @@ Route::get('/categories', [\App\Http\Controllers\Public\CategoriesController::cl
 
 // نظام المجموعات: جماعي مقابل فردي (1:1)
 Route::get('/groups', [\App\Http\Controllers\Public\GroupsController::class, 'index'])->name('public.groups');
+Route::get('/groups/courses', [\App\Http\Controllers\Public\GroupsController::class, 'groupCourses'])->name('public.groups.courses');
+Route::get('/groups/one-to-one', [\App\Http\Controllers\Public\GroupsController::class, 'oneToOneCourses'])->name('public.groups.one-to-one');
+Route::get('/groups/{slug}', [\App\Http\Controllers\Public\GroupsController::class, 'show'])->name('public.groups.show');
+Route::post('/groups/{slug}/book', [\App\Http\Controllers\Public\GroupsController::class, 'book'])
+    ->middleware('throttle:20,1')
+    ->name('public.groups.book');
 
 // صفحة الكورسات العامة (?subject=id & ?delivery=one_to_one|group)
 Route::get('/courses', [\App\Http\Controllers\Public\CoursesController::class, 'index'])->name('public.courses');
@@ -401,24 +387,6 @@ Route::post('/course/{courseId}/enroll-free', [\App\Http\Controllers\Public\Chec
     ->middleware('auth')
     ->name('public.course.enroll.free');
 
-// المسارات التعليمية
-Route::get('/learning-paths', [\App\Http\Controllers\Public\LearningPathController::class, 'index'])->name('public.learning-paths.index');
-Route::get('/learning-path/{slug}', [\App\Http\Controllers\Public\LearningPathController::class, 'show'])
-    ->where('slug', '[a-z0-9-]+')
-    ->name('public.learning-path.show');
-Route::get('/learning-path/{slug}/checkout', [\App\Http\Controllers\Public\CheckoutController::class, 'showLearningPath'])
-    ->middleware('auth')
-    ->where('slug', '[a-z0-9-]+')
-    ->name('public.learning-path.checkout');
-Route::post('/learning-path/{slug}/checkout/complete', [\App\Http\Controllers\Public\CheckoutController::class, 'completeLearningPath'])
-    ->middleware('auth')
-    ->where('slug', '[a-z0-9-]+')
-    ->name('public.learning-path.checkout.complete');
-Route::post('/learning-path/{slug}/checkout/kashier', [\App\Http\Controllers\Public\CheckoutController::class, 'redirectToKashierLearningPath'])
-    ->middleware('auth')
-    ->where('slug', '[a-z0-9-]+')
-    ->name('public.learning-path.checkout.kashier');
-
 Route::get('/checkout/kashier/callback', [\App\Http\Controllers\Public\CheckoutController::class, 'kashierCallback'])
     ->name('public.checkout.kashier.callback');
 
@@ -427,14 +395,11 @@ Route::get('/checkout/fawaterak/{status}', [\App\Http\Controllers\Public\Checkou
     ->where('status', 'success|fail|pending')
     ->name('public.checkout.fawaterak.return');
 
-Route::post('/learning-path/{slug}/enroll-free', [\App\Http\Controllers\Public\CheckoutController::class, 'enrollFreeLearningPath'])
-    ->middleware('auth')
-    ->where('slug', '[a-z0-9-]+')
-    ->name('public.learning-path.enroll.free');
-Route::post('/learning-path/{slug}/enroll', [\App\Http\Controllers\Public\LearningPathController::class, 'enroll'])
-    ->middleware('auth')
-    ->where('slug', '[a-z0-9-]+')
-    ->name('public.learning-path.enroll');
+// روابط قديمة لمنتج المسارات التعليمية (أُزيل) → الكورسات
+Route::redirect('/learning-paths', '/courses', 301);
+Route::get('/learning-path/{slug}', function () {
+    return redirect()->route('public.courses', [], 301);
+})->where('slug', '[a-z0-9-]+');
 
 // صفحة تفاصيل الباقة (للتوافق مع الروابط القديمة)
 Route::get('/package/{slug}', function ($slug) {
@@ -526,10 +491,6 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             ->middleware(['ownership:course,course'])
             ->name('my-courses.show');
 
-        // المسار التعليمي ملغى — توجيه إلى لوحة التحكم
-        Route::get('/student/learning-path/{slug}', function () {
-            return redirect()->route('dashboard', [], 302);
-        })->name('student.learning-path.show');
         Route::get('/my-courses/{course}/learn', [\App\Http\Controllers\Student\MyCourseController::class, 'learn'])
             ->middleware(['ownership:course,course'])
             ->name('my-courses.learn');
@@ -690,38 +651,11 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/consultations/request/{instructor}', [\App\Http\Controllers\Student\ConsultationController::class, 'store'])->name('consultations.store');
         Route::get('/consultations/{consultation}', [\App\Http\Controllers\Student\ConsultationController::class, 'show'])->name('consultations.show');
         Route::post('/consultations/{consultation}/report-payment', [\App\Http\Controllers\Student\ConsultationController::class, 'reportPayment'])->name('consultations.report-payment');
-        // التسويق الشخصي / البورتفوليو للطالب (إدارة المشاريع)
-        Route::prefix('my-portfolio')->name('student.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'index'])->name('portfolio.index');
-            Route::get('/profile', [\App\Http\Controllers\Student\PortfolioProfileController::class, 'edit'])->name('portfolio.profile.edit');
-            Route::put('/profile', [\App\Http\Controllers\Student\PortfolioProfileController::class, 'update'])->name('portfolio.profile.update');
-            Route::get('/create', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'create'])->name('portfolio.create');
-            Route::post('/', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'store'])->name('portfolio.store');
-            Route::get('/{project}', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'show'])
-                ->name('portfolio.show');
-            Route::get('/{project}/edit', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'edit'])
-                ->name('portfolio.edit');
-            Route::put('/{project}', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'update'])
-                ->name('portfolio.update');
-            Route::delete('/{project}', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'destroy'])
-                ->name('portfolio.destroy');
-            Route::delete('/{project}/images/{image}', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'destroyImage'])
-                ->name('portfolio.images.destroy');
-        });
-        // صفحة اشتراكي (عرض الباقة الحالية ومدة التفاعيل والانتهاء)
-        Route::get('/my-subscription', [\App\Http\Controllers\Student\MySubscriptionController::class, 'show'])->name('student.my-subscription');
         Route::get('/my-course-subscriptions', [\App\Http\Controllers\Student\MyCourseSubscriptionController::class, 'index'])->name('student.my-course-subscriptions');
         Route::get('/one-to-one-sessions', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'index'])->name('student.one-to-one-sessions.index');
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'show'])->name('student.one-to-one-sessions.show');
         Route::post('/one-to-one-sessions/{oneToOneSession}/book', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'book'])->name('student.one-to-one-sessions.book');
-        Route::get('/ai-usages', [\App\Http\Controllers\Student\StudentAiUsageController::class, 'index'])->name('student.ai-usages.index');
-        Route::post('/ai-usages/saved-games', [\App\Http\Controllers\Student\StudentAiUsageController::class, 'store'])
-            ->middleware('throttle:30,1')
-            ->name('student.ai-usages.saved-games.store');
-        Route::delete('/ai-usages/saved-games/{game}', [\App\Http\Controllers\Student\StudentAiUsageController::class, 'destroy'])
-            ->whereNumber('game')
-            ->name('student.ai-usages.saved-games.destroy');
-        // Glottical Classroom — بديل Zoom للمعلم (رابط/كود للضيوف بدون اشتراك)
+        // Glottical Classroom — جلسات حية للدورات والمجموعات
         Route::get('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'index'])->name('student.classroom.index');
         Route::get('/classroom/create', [\App\Http\Controllers\Student\ClassroomController::class, 'create'])->name('student.classroom.create');
         Route::post('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'store'])->name('student.classroom.store');
@@ -746,32 +680,12 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/classroom/{meeting}/ai-report', [\App\Http\Controllers\Student\ClassroomController::class, 'generateAiReport'])->name('student.classroom.ai-report');
     });
 
-    // مزايا اشتراك Glottical (دعم، مكتبة، صفحات المزايا، …) — للطالب والمدرب حسب التحقق داخل المتحكم
+    // دعم المتعلمين والمدربين
     Route::middleware(['role:student|instructor|teacher'])->group(function () {
         Route::get('/support', [\App\Http\Controllers\Student\SupportTicketController::class, 'index'])->name('student.support.index');
         Route::post('/support', [\App\Http\Controllers\Student\SupportTicketController::class, 'store'])->name('student.support.store');
         Route::get('/support/{ticket}', [\App\Http\Controllers\Student\SupportTicketController::class, 'show'])->name('student.support.show');
         Route::post('/support/{ticket}/reply', [\App\Http\Controllers\Student\SupportTicketController::class, 'reply'])->name('student.support.reply');
-        Route::get('/academies/visibility', [\App\Http\Controllers\Student\AcademiesVisibilityController::class, 'index'])->name('student.academies.visibility');
-        Route::post('/academies/opportunities/{opportunity}/apply', [\App\Http\Controllers\Student\AcademiesVisibilityController::class, 'apply'])->name('student.academies.opportunities.apply');
-        Route::get('/teaching-opportunities', [\App\Http\Controllers\Student\TeachingOpportunityController::class, 'index'])->name('student.opportunities.index');
-        Route::post('/teaching-opportunities/{opportunity}/apply', [\App\Http\Controllers\Student\TeachingOpportunityController::class, 'apply'])->name('student.opportunities.apply');
-        Route::get('/features/{feature}', [\App\Http\Controllers\Student\SubscriptionFeatureController::class, 'show'])
-            ->name('student.features.show')
-            ->where('feature', 'library_access|ai_tools|classroom_access|support|visible_to_academies|can_apply_opportunities|full_ai_suite|teacher_evaluation|recommended_to_academies|priority_opportunities|direct_support');
-        Route::post('/features/full-ai-suite/preview', [\App\Http\Controllers\Student\SubscriptionFeatureController::class, 'previewFullAiSuite'])
-            ->middleware('throttle:20,1')
-            ->name('student.features.full-ai-suite.preview');
-        Route::get('/curriculum-library', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'index'])->name('curriculum-library.index');
-        Route::get('/curriculum-library/{item:slug}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'show'])->name('curriculum-library.show');
-        Route::get('/curriculum-library/{item:slug}/m/{material}/download', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'downloadMaterial'])->name('curriculum-library.material.download');
-        Route::get('/curriculum-library/{item:slug}/m/{material}/html', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialHtml'])->name('curriculum-library.material.html');
-        Route::get('/curriculum-library/{item:slug}/m/{material}/pdf', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialPdf'])->name('curriculum-library.material.pdf');
-        Route::get('/curriculum-library/{item:slug}/m/{material}/presentation', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialPresentation'])->name('curriculum-library.material.presentation');
-        Route::get('/curriculum-library/{item:slug}/file/{file}/download', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'download'])->name('curriculum-library.file.download');
-        Route::get('/curriculum-library/{item:slug}/file/{file}/view', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewHtml'])->name('curriculum-library.file.view');
-        Route::get('/curriculum-library/{item:slug}/file/{file}/pdf', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewPdf'])->name('curriculum-library.file.pdf');
-        Route::get('/curriculum-library/{item:slug}/file/{file}/presentation', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewPresentation'])->name('curriculum-library.file.presentation');
     });
 
     // لوحة الموظفين — عناصر القائمة تُحدَّد بصلاحيات الوظيفة (employee_jobs.permissions)
@@ -911,16 +825,6 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         // إدارة المستخدمين
         Route::get('/users', [\App\Http\Controllers\Admin\AdminController::class, 'users'])->name('users.index');
         Route::get('/students-accounts', [\App\Http\Controllers\Admin\AdminController::class, 'studentsAccounts'])->name('students-accounts.index');
-        Route::get('/students-control/paid-features', [\App\Http\Controllers\Admin\StudentControlController::class, 'paidFeatures'])->name('students-control.paid-features');
-        Route::get('/students-control/paid-features/{featureKey}', [\App\Http\Controllers\Admin\StudentControlController::class, 'featureUsers'])->name('students-control.paid-features.show');
-        Route::get('/students-control/consumption', [\App\Http\Controllers\Admin\StudentControlController::class, 'consumption'])->name('students-control.consumption');
-        Route::get('/students-control/consumption/user/{user}', [\App\Http\Controllers\Admin\StudentControlController::class, 'userConsumption'])->name('students-control.consumption.user');
-
-        // مراجعة الملف التعريفي التسويقي للطالب (قبل مسارات portfolio/{project} لتفادي أي التباس)
-        Route::get('/portfolio-marketing-profiles', [\App\Http\Controllers\Admin\PortfolioMarketingProfileController::class, 'index'])->name('portfolio-marketing-profiles.index');
-        Route::get('/portfolio-marketing-profiles/{user}', [\App\Http\Controllers\Admin\PortfolioMarketingProfileController::class, 'show'])->name('portfolio-marketing-profiles.show');
-        Route::post('/portfolio-marketing-profiles/{user}/approve', [\App\Http\Controllers\Admin\PortfolioMarketingProfileController::class, 'approve'])->name('portfolio-marketing-profiles.approve');
-        Route::post('/portfolio-marketing-profiles/{user}/reject', [\App\Http\Controllers\Admin\PortfolioMarketingProfileController::class, 'reject'])->name('portfolio-marketing-profiles.reject');
 
         Route::get('/users/create', [\App\Http\Controllers\Admin\AdminController::class, 'createUser'])->name('users.create');
         Route::post('/users', [\App\Http\Controllers\Admin\AdminController::class, 'storeUser'])
@@ -942,26 +846,32 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/academic-years/{academicYear}/add-instructor', [\App\Http\Controllers\Admin\AcademicYearController::class, 'addInstructor'])->name('academic-years.add-instructor');
         Route::delete('/academic-years/{academicYear}/remove-instructor/{instructor}', [\App\Http\Controllers\Admin\AcademicYearController::class, 'removeInstructor'])->name('academic-years.remove-instructor');
 
-        Route::prefix('learning-paths')->name('learning-paths.')->group(function () {
-            Route::get('/courses', [\App\Http\Controllers\Admin\LearningPathManagementController::class, 'coursesIndex'])->name('courses.index');
-            Route::get('/courses/{academicYear}', [\App\Http\Controllers\Admin\LearningPathManagementController::class, 'coursesManage'])->name('courses.manage');
-            Route::post('/courses/{academicYear}', [\App\Http\Controllers\Admin\LearningPathManagementController::class, 'coursesStore'])->name('courses.store');
-            Route::delete('/courses/{academicYear}/{course}', [\App\Http\Controllers\Admin\LearningPathManagementController::class, 'coursesDestroy'])->name('courses.destroy');
-            Route::post('/courses/{academicYear}/reorder', [\App\Http\Controllers\Admin\LearningPathManagementController::class, 'coursesUpdateOrder'])->name('courses.update-order');
-
-            Route::get('/instructors', [\App\Http\Controllers\Admin\LearningPathManagementController::class, 'instructorsIndex'])->name('instructors.index');
-            Route::get('/instructors/{academicYear}', [\App\Http\Controllers\Admin\LearningPathManagementController::class, 'instructorsManage'])->name('instructors.manage');
-            Route::post('/instructors/{academicYear}', [\App\Http\Controllers\Admin\LearningPathManagementController::class, 'instructorsStore'])->name('instructors.store');
-            Route::delete('/instructors/{academicYear}/{instructor}', [\App\Http\Controllers\Admin\LearningPathManagementController::class, 'instructorsDestroy'])->name('instructors.destroy');
-            Route::put('/instructors/{academicYear}/{instructor}/courses', [\App\Http\Controllers\Admin\LearningPathManagementController::class, 'instructorsUpdateCourses'])->name('instructors.update-courses');
-        });
-
         Route::resource('academic-subjects', \App\Http\Controllers\Admin\AcademicSubjectController::class);
         Route::post('/academic-subjects/{academicSubject}/toggle-status', [\App\Http\Controllers\Admin\AcademicSubjectController::class, 'toggleStatus'])->name('academic-subjects.toggle-status');
         Route::post('/academic-subjects/reorder', [\App\Http\Controllers\Admin\AcademicSubjectController::class, 'reorder'])->name('academic-subjects.reorder');
 
         // مسارات الكورسات (تصفية صفحة /courses العامة)
         Route::resource('course-categories', \App\Http\Controllers\Admin\CourseCategoryController::class)->except(['show', 'create']);
+
+        // مجموعات فردية / جماعية (منفصلة عن الكورسات)
+        Route::prefix('tutoring-groups/{type}')
+            ->whereIn('type', ['individual', 'collective'])
+            ->name('tutoring-groups.')
+            ->group(function () {
+                Route::get('/', [\App\Http\Controllers\Admin\TutoringGroupController::class, 'index'])->name('index');
+                Route::get('/create', [\App\Http\Controllers\Admin\TutoringGroupController::class, 'create'])->name('create');
+                Route::post('/', [\App\Http\Controllers\Admin\TutoringGroupController::class, 'store'])->name('store');
+                Route::get('/{tutoringGroup}/edit', [\App\Http\Controllers\Admin\TutoringGroupController::class, 'edit'])->name('edit');
+                Route::put('/{tutoringGroup}', [\App\Http\Controllers\Admin\TutoringGroupController::class, 'update'])->name('update');
+                Route::delete('/{tutoringGroup}', [\App\Http\Controllers\Admin\TutoringGroupController::class, 'destroy'])->name('destroy');
+                Route::post('/{tutoringGroup}/toggle-status', [\App\Http\Controllers\Admin\TutoringGroupController::class, 'toggleStatus'])->name('toggle-status');
+            });
+        Route::get('tutor-work-schedules', [\App\Http\Controllers\Admin\TutorWorkScheduleController::class, 'index'])->name('tutor-work-schedules.index');
+        Route::post('tutor-work-schedules/sync', [\App\Http\Controllers\Admin\TutorWorkScheduleController::class, 'sync'])->name('tutor-work-schedules.sync');
+        Route::get('tutoring-group-bookings', [\App\Http\Controllers\Admin\TutoringGroupBookingController::class, 'index'])->name('tutoring-group-bookings.index');
+        Route::get('tutoring-group-bookings/{tutoringGroupBooking}', [\App\Http\Controllers\Admin\TutoringGroupBookingController::class, 'show'])->name('tutoring-group-bookings.show');
+        Route::patch('tutoring-group-bookings/{tutoringGroupBooking}/status', [\App\Http\Controllers\Admin\TutoringGroupBookingController::class, 'updateStatus'])->name('tutoring-group-bookings.update-status');
+        Route::delete('tutoring-group-bookings/{tutoringGroupBooking}', [\App\Http\Controllers\Admin\TutoringGroupBookingController::class, 'destroy'])->name('tutoring-group-bookings.destroy');
 
         // إدارة الكورسات المتطورة
         Route::resource('advanced-courses', \App\Http\Controllers\Admin\AdvancedCourseController::class);
@@ -1062,7 +972,12 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\CrmDashboardController::class, 'index'])->name('dashboard');
             Route::get('/pipeline', [\App\Http\Controllers\Admin\CrmPipelineController::class, 'index'])->name('pipeline');
             Route::get('/leads', [\App\Http\Controllers\Admin\CrmLeadController::class, 'index'])->name('leads.index');
+            Route::get('/leads/create', [\App\Http\Controllers\Admin\CrmLeadController::class, 'create'])->name('leads.create');
+            Route::post('/leads', [\App\Http\Controllers\Admin\CrmLeadController::class, 'store'])->name('leads.store');
             Route::get('/leads/{salesLead}', [\App\Http\Controllers\Admin\CrmLeadController::class, 'show'])->name('leads.show');
+            Route::get('/leads/{salesLead}/edit', [\App\Http\Controllers\Admin\CrmLeadController::class, 'edit'])->name('leads.edit');
+            Route::put('/leads/{salesLead}', [\App\Http\Controllers\Admin\CrmLeadController::class, 'update'])->name('leads.update');
+            Route::delete('/leads/{salesLead}', [\App\Http\Controllers\Admin\CrmLeadController::class, 'destroy'])->name('leads.destroy');
             Route::post('/leads/{salesLead}/assign', [\App\Http\Controllers\Admin\CrmLeadController::class, 'assign'])->name('leads.assign');
             Route::post('/leads/{salesLead}/transition', [\App\Http\Controllers\Admin\CrmLeadController::class, 'transition'])->name('leads.transition');
             Route::post('/leads/{salesLead}/note', [\App\Http\Controllers\Admin\CrmLeadController::class, 'addNote'])->name('leads.note');
@@ -1140,14 +1055,6 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/tasks/{task}/comments', [\App\Http\Controllers\Admin\TaskController::class, 'addComment'])->name('tasks.add-comment');
         Route::post('/tasks/{task}/deliverables/{deliverable}/review', [\App\Http\Controllers\Admin\TaskController::class, 'reviewDeliverable'])->name('tasks.review-deliverable');
 
-        // البورتفوليو - الرقابة والجودة (الأدمن يرى الكل ويمكنه إخفاء مشروع)
-        Route::get('portfolio', [\App\Http\Controllers\Admin\PortfolioController::class, 'index'])->name('portfolio.index');
-        Route::get('portfolio/{project}', [\App\Http\Controllers\Admin\PortfolioController::class, 'show'])->name('portfolio.show');
-        Route::post('portfolio/{project}/approve', [\App\Http\Controllers\Admin\PortfolioController::class, 'approve'])->name('portfolio.approve');
-        Route::post('portfolio/{project}/reject', [\App\Http\Controllers\Admin\PortfolioController::class, 'reject'])->name('portfolio.reject');
-        Route::post('portfolio/{project}/publish', [\App\Http\Controllers\Admin\PortfolioController::class, 'publish'])->name('portfolio.publish');
-        Route::post('portfolio/{project}/toggle-visibility', [\App\Http\Controllers\Admin\PortfolioController::class, 'toggleVisibility'])->name('portfolio.toggle-visibility');
-
         // تم إيقاف مجتمع البيانات والذكاء الاصطناعي في لوحة الإدارة، لذا أزيلت جميع مساراته.
 
         // الإدارة العليا (من نحن وغيرها)
@@ -1171,10 +1078,6 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         Route::resource('site-services', \App\Http\Controllers\Admin\SiteServiceController::class)->except(['show']);
         Route::resource('site-testimonials', \App\Http\Controllers\Admin\SiteTestimonialController::class)->except(['show']);
-
-        Route::post('homepage-sliders/reorder', [\App\Http\Controllers\Admin\HomepageSliderController::class, 'reorder'])->name('homepage-sliders.reorder');
-        Route::post('homepage-sliders/{homepageSlider}/toggle-active', [\App\Http\Controllers\Admin\HomepageSliderController::class, 'toggleActive'])->name('homepage-sliders.toggle-active');
-        Route::resource('homepage-sliders', \App\Http\Controllers\Admin\HomepageSliderController::class)->except(['show']);
 
         Route::get('/system-settings', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'edit'])->name('system-settings.edit');
         Route::put('/system-settings', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'update'])->name('system-settings.update');
@@ -1270,12 +1173,6 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::post('/', [\App\Http\Controllers\Admin\VideoProviderController::class, 'store'])->name('store');
             Route::put('/{videoProvider}', [\App\Http\Controllers\Admin\VideoProviderController::class, 'update'])->name('update');
         });
-
-        Route::get('/learning-path-enrollments', [\App\Http\Controllers\Admin\LearningPathEnrollmentController::class, 'index'])->name('learning-path-enrollments.index');
-        Route::get('/learning-path-enrollments/create', [\App\Http\Controllers\Admin\LearningPathEnrollmentController::class, 'create'])->name('learning-path-enrollments.create');
-        Route::post('/learning-path-enrollments', [\App\Http\Controllers\Admin\LearningPathEnrollmentController::class, 'store'])->name('learning-path-enrollments.store');
-        Route::post('/learning-path-enrollments/{enrollment}/toggle-status', [\App\Http\Controllers\Admin\LearningPathEnrollmentController::class, 'toggleStatus'])->name('learning-path-enrollments.toggle-status');
-        Route::delete('/learning-path-enrollments/{enrollment}', [\App\Http\Controllers\Admin\LearningPathEnrollmentController::class, 'destroy'])->name('learning-path-enrollments.destroy');
 
         // إدارة الموظفين
         Route::resource('employees', \App\Http\Controllers\Admin\EmployeeController::class);
@@ -1374,13 +1271,6 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/expenses/{expense}', [\App\Http\Controllers\Admin\ExpenseController::class, 'update'])->middleware('throttle:20,5')->name('expenses.update');
         Route::delete('/expenses/{expense}', [\App\Http\Controllers\Admin\ExpenseController::class, 'destroy'])->middleware('throttle:10,1')->name('expenses.destroy');
 
-        Route::resource('subscriptions', \App\Http\Controllers\Admin\SubscriptionController::class)
-            ->middleware('throttle:60,1');
-        Route::get('/subscriptions/{subscription}/consumption', [\App\Http\Controllers\Admin\SubscriptionController::class, 'consumption'])->name('subscriptions.consumption');
-        Route::get('/teacher-features', [\App\Http\Controllers\Admin\TeacherFeaturesController::class, 'index'])
-            ->name('teacher-features.index');
-        Route::post('/teacher-features', [\App\Http\Controllers\Admin\TeacherFeaturesController::class, 'update'])
-            ->name('teacher-features.update');
         // نظام الدعم الفني
         Route::get('/support-tickets', [\App\Http\Controllers\Admin\SupportTicketController::class, 'index'])->name('support-tickets.index');
         Route::get('/support-tickets/{ticket}', [\App\Http\Controllers\Admin\SupportTicketController::class, 'show'])->name('support-tickets.show');
@@ -1403,54 +1293,6 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/one-to-one-sessions', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'index'])->name('one-to-one-sessions.index');
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'show'])->name('one-to-one-sessions.show');
 
-        // أكاديميات التوظيف (عملاء المنصة)
-        Route::resource('hiring-academies', \App\Http\Controllers\Admin\HiringAcademyController::class);
-
-        // فرص الأكاديميات
-        Route::resource('academy-opportunities', \App\Http\Controllers\Admin\AcademyOpportunityController::class)->except(['show']);
-        Route::get('/academy-opportunities/{academy_opportunity}/applications', [\App\Http\Controllers\Admin\AcademyOpportunityController::class, 'applications'])->name('academy-opportunities.applications');
-        Route::post('/academy-opportunities/{academy_opportunity}/applications/{application}/status', [\App\Http\Controllers\Admin\AcademyOpportunityController::class, 'updateApplicationStatus'])->name('academy-opportunities.applications.status');
-        // مكتب التوظيف: عروض المعلمين المعتمدة للأكاديميات
-        Route::get('/academy-opportunities/{academy_opportunity}/recruitment', [\App\Http\Controllers\Admin\RecruitmentDeskController::class, 'show'])->name('academy-opportunities.recruitment');
-        Route::get('/academy-opportunities/{academy_opportunity}/recruitment/instructors/search', [\App\Http\Controllers\Admin\RecruitmentDeskController::class, 'searchInstructors'])->name('academy-opportunities.recruitment.instructors.search');
-        Route::post('/academy-opportunities/{academy_opportunity}/recruitment/presentations', [\App\Http\Controllers\Admin\RecruitmentDeskController::class, 'storePresentation'])->name('academy-opportunities.recruitment.presentations.store');
-        Route::put('/academy-opportunities/{academy_opportunity}/recruitment/presentations/{presentation}', [\App\Http\Controllers\Admin\RecruitmentDeskController::class, 'updatePresentation'])->name('academy-opportunities.recruitment.presentations.update');
-        Route::delete('/academy-opportunities/{academy_opportunity}/recruitment/presentations/{presentation}', [\App\Http\Controllers\Admin\RecruitmentDeskController::class, 'destroyPresentation'])->name('academy-opportunities.recruitment.presentations.destroy');
-        Route::get('/academy-opportunities/{academy_opportunity}/recruitment/presentations/{presentation}/print', [\App\Http\Controllers\Admin\RecruitmentDeskController::class, 'printForAcademy'])->name('academy-opportunities.recruitment.presentations.print');
-        // مكتبة المناهج التفاعلية (إدارة)
-        Route::get('/curriculum-library', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'index'])->name('curriculum-library.index');
-        Route::get('/curriculum-library/categories', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'categories'])->name('curriculum-library.categories');
-        Route::get('/curriculum-library/categories/create', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'createCategory'])->name('curriculum-library.categories.create');
-        Route::post('/curriculum-library/categories', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'storeCategory'])->name('curriculum-library.categories.store');
-        Route::get('/curriculum-library/categories/{category}/edit', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'editCategory'])->name('curriculum-library.categories.edit');
-        Route::put('/curriculum-library/categories/{category}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'updateCategory'])->name('curriculum-library.categories.update');
-        Route::delete('/curriculum-library/categories/{category}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'destroyCategory'])->name('curriculum-library.categories.destroy');
-        Route::get('/curriculum-library/items/create', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'createItem'])->name('curriculum-library.items.create');
-        Route::post('/curriculum-library/items', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'storeItem'])->name('curriculum-library.items.store');
-        Route::get('/curriculum-library/items/{item}/structure', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'show'])->name('curriculum-library.items.structure');
-        Route::post('/curriculum-library/items/{item}/sections', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'storeSection'])->name('curriculum-library.items.sections.store');
-        Route::put('/curriculum-library/items/{item}/sections/{section}', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'updateSection'])->name('curriculum-library.items.sections.update');
-        Route::delete('/curriculum-library/items/{item}/sections/{section}', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'destroySection'])->name('curriculum-library.items.sections.destroy');
-        Route::post('/curriculum-library/items/{item}/sections/{section}/materials/presign-upload', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'presignMaterialUpload'])->name('curriculum-library.items.materials.presign-upload');
-        Route::post('/curriculum-library/items/{item}/sections/{section}/materials/complete-direct', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'completeMaterialDirectUpload'])->name('curriculum-library.items.materials.complete-direct');
-        Route::post('/curriculum-library/items/{item}/sections/{section}/materials/multipart-init', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'multipartInitMaterial'])->name('curriculum-library.items.materials.multipart-init');
-        Route::post('/curriculum-library/items/{item}/sections/{section}/materials/multipart-sign-part', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'multipartSignPartMaterial'])->name('curriculum-library.items.materials.multipart-sign-part');
-        Route::post('/curriculum-library/items/{item}/sections/{section}/materials/multipart-complete', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'multipartCompleteMaterial'])->name('curriculum-library.items.materials.multipart-complete');
-        Route::post('/curriculum-library/items/{item}/sections/{section}/materials/multipart-abort', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'multipartAbortMaterial'])->name('curriculum-library.items.materials.multipart-abort');
-        Route::post('/curriculum-library/items/{item}/sections/{section}/materials/multipart-proxy-part', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'multipartProxyUploadPartMaterial'])->name('curriculum-library.items.materials.multipart-proxy-part');
-        Route::post('/curriculum-library/items/{item}/sections/{section}/materials', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'storeMaterial'])->name('curriculum-library.items.materials.store');
-        Route::put('/curriculum-library/items/{item}/materials/{material}', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'updateMaterial'])->name('curriculum-library.items.materials.update');
-        Route::delete('/curriculum-library/items/{item}/materials/{material}', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'destroyMaterial'])->name('curriculum-library.items.materials.destroy');
-        Route::get('/curriculum-library/items/{item}/edit', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'editItem'])->name('curriculum-library.items.edit');
-        // دعم fallback لـ POST في حالة فشل method spoof (_method=PUT) على بعض البيئات
-        Route::post('/curriculum-library/items/{item}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'updateItem']);
-        Route::put('/curriculum-library/items/{item}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'updateItem'])->name('curriculum-library.items.update');
-        Route::delete('/curriculum-library/items/{item}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'destroyItem'])->name('curriculum-library.items.destroy');
-        Route::delete('/curriculum-library/items/{item}/files/{file}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'destroyFile'])->name('curriculum-library.items.files.destroy');
-        Route::post('/subscriptions/{subscription}', [\App\Http\Controllers\Admin\SubscriptionController::class, 'update'])->middleware('throttle:20,5')->name('subscriptions.update');
-        Route::delete('/subscriptions/{subscription}', [\App\Http\Controllers\Admin\SubscriptionController::class, 'destroy'])->middleware('throttle:10,1')->name('subscriptions.destroy');
-        Route::post('/subscription-requests/{subscriptionRequest}/approve', [\App\Http\Controllers\Admin\SubscriptionController::class, 'approveRequest'])->name('subscription-requests.approve');
-        Route::post('/subscription-requests/{subscriptionRequest}/reject', [\App\Http\Controllers\Admin\SubscriptionController::class, 'rejectRequest'])->name('subscription-requests.reject');
         Route::get('/accounting/instructor-accounts', [\App\Http\Controllers\Admin\InstructorAccountController::class, 'index'])->name('accounting.instructor-accounts.index');
         Route::get('/accounting/instructor-accounts/{instructor}', [\App\Http\Controllers\Admin\InstructorAccountController::class, 'show'])->name('accounting.instructor-accounts.show');
 
@@ -1765,6 +1607,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/one-to-one-sessions', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'index'])->name('one-to-one-sessions.index');
         Route::get('/one-to-one-availability', [\App\Http\Controllers\Instructor\OneToOneAvailabilityController::class, 'index'])->name('one-to-one-availability.index');
         Route::post('/one-to-one-availability', [\App\Http\Controllers\Instructor\OneToOneAvailabilityController::class, 'update'])->name('one-to-one-availability.update');
+        Route::get('/tutor-work-schedule', [\App\Http\Controllers\Instructor\TutorWorkScheduleController::class, 'index'])->name('tutor-work-schedule.index');
+        Route::post('/tutor-work-schedule', [\App\Http\Controllers\Instructor\TutorWorkScheduleController::class, 'update'])->name('tutor-work-schedule.update');
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'show'])->name('one-to-one-sessions.show');
         Route::post('/one-to-one-sessions/{oneToOneSession}/schedule', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'schedule'])->name('one-to-one-sessions.schedule');
         Route::post('/one-to-one-sessions/{oneToOneSession}/complete', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'complete'])->name('one-to-one-sessions.complete');
@@ -1828,13 +1672,6 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/lectures/{lecture}/sync-teams-attendance', [\App\Http\Controllers\Instructor\LectureController::class, 'syncTeamsAttendance'])->name('lectures.sync-teams-attendance');
         Route::post('/lectures/{lecture}/update-attendance', [\App\Http\Controllers\Instructor\LectureController::class, 'updateAttendance'])->name('lectures.update-attendance');
 
-        // المسار التعليمي ملغى — التوجيه إلى لوحة المدرب
-        Route::get('/learning-path', function () {
-            return redirect()->route('instructor.dashboard', [], 302);
-        })->name('learning-path.index');
-        Route::get('/learning-path/{slug}', function () {
-            return redirect()->route('instructor.dashboard', [], 302);
-        })->name('learning-path.show');
         Route::post('/lectures/{lecture}/update-status', [\App\Http\Controllers\Instructor\LectureController::class, 'updateStatus'])->name('lectures.update-status');
         Route::resource('assignments', \App\Http\Controllers\Instructor\AssignmentController::class);
         Route::get('/assignments/{assignment}/submissions', [\App\Http\Controllers\Instructor\AssignmentController::class, 'submissions'])->name('assignments.submissions');

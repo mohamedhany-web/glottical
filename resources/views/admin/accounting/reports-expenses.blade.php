@@ -1,84 +1,135 @@
 @extends('layouts.admin')
+
 @section('title', 'المصروفات - التقارير المحاسبية')
-@section('header', 'المصروفات')
+@section('page_title', 'المصروفات')
+
 @section('content')
-<div class="w-full space-y-6">
-    <nav class="text-sm text-slate-500 mb-2">
-        <a href="{{ route('admin.accounting.reports') }}" class="text-sky-600 hover:text-sky-700">التقارير المحاسبية</a>
-        <span class="mx-1">/</span>
-        <span class="text-slate-700">المصروفات</span>
-    </nav>
-    <section class="rounded-3xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-5 py-6 sm:px-8 border-b border-slate-200">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-                <h2 class="text-xl font-bold text-slate-900">المصروفات في الفترة</h2>
-                <a href="{{ route('admin.accounting.reports.export', array_merge(request()->query(), ['type' => 'expenses'])) }}" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-700">
-                    <i class="fas fa-file-excel"></i> تصدير Excel
-                </a>
-            </div>
-            <form method="GET" action="{{ route('admin.accounting.reports.expenses') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 mb-2">الفترة</label>
-                    <select name="period" class="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm" onchange="this.form.submit()">
-                        <option value="day" {{ ($period ?? '') == 'day' ? 'selected' : '' }}>اليوم</option>
-                        <option value="week" {{ ($period ?? '') == 'week' ? 'selected' : '' }}>هذا الأسبوع</option>
-                        <option value="month" {{ ($period ?? '') == 'month' ? 'selected' : '' }}>هذا الشهر</option>
-                        <option value="year" {{ ($period ?? '') == 'year' ? 'selected' : '' }}>هذه السنة</option>
-                        <option value="all" {{ ($period ?? '') == 'all' ? 'selected' : '' }}>الكل</option>
-                        <option value="custom" {{ ($period ?? '') == 'custom' ? 'selected' : '' }}>مخصص</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 mb-2">من تاريخ</label>
-                    <input type="date" name="start_date" value="{{ $startDate ? $startDate->format('Y-m-d') : '' }}" class="w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-sm" />
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 mb-2">إلى تاريخ</label>
-                    <input type="date" name="end_date" value="{{ $endDate ? $endDate->format('Y-m-d') : '' }}" class="w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-sm" />
-                </div>
-                <div class="flex items-end">
-                    <button type="submit" class="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-sky-700">
-                        <i class="fas fa-filter"></i> تطبيق
-                    </button>
-                </div>
-            </form>
-            <p class="text-sm text-slate-500 mt-3">من {{ $startDate->format('Y-m-d') }} إلى {{ $endDate->format('Y-m-d') }}</p>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $statusBadges = [
+        'approved' => ['label' => 'معتمد', 'classes' => 'bg-accent-soft text-accent'],
+        'pending' => ['label' => 'معلق', 'classes' => 'bg-metal/15 text-metal'],
+        'rejected' => ['label' => 'مرفوض', 'classes' => 'bg-canvas-muted text-muted'],
+    ];
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">
+                <a href="{{ route('admin.accounting.reports') }}" class="transition hover:text-accent">التقارير المحاسبية</a>
+                <span class="mx-1">/</span>
+                المصروفات
+            </p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">المصروفات في الفترة</h2>
+            <p class="mt-1 text-sm text-muted">من {{ $startDate->format('Y-m-d') }} إلى {{ $endDate->format('Y-m-d') }}</p>
         </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 text-right text-sm">
-                <thead class="bg-slate-50">
-                    <tr class="text-xs font-semibold uppercase text-slate-500">
-                        <th class="px-4 py-3">رقم المصروف</th>
-                        <th class="px-4 py-3">العنوان</th>
-                        <th class="px-4 py-3">الفئة</th>
-                        <th class="px-4 py-3">المبلغ</th>
-                        <th class="px-4 py-3">الحالة</th>
-                        <th class="px-4 py-3">التاريخ</th>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.accounting.reports.export', array_merge(request()->query(), ['type' => 'expenses'])) }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-file-excel text-xs"></i>
+                تصدير Excel
+            </a>
+            <a href="{{ route('admin.accounting.reports') }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                العودة للملخص
+            </a>
+        </div>
+    </section>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-4 py-4 sm:px-5">
+            <h3 class="text-base font-semibold text-ink">فلترة الفترة</h3>
+            <p class="mt-0.5 text-xs text-muted">اختر فترة جاهزة أو حدّد نطاقاً مخصصاً</p>
+        </div>
+        <form method="GET" action="{{ route('admin.accounting.reports.expenses') }}" class="grid grid-cols-1 gap-4 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-4 xl:items-end">
+            <div>
+                <label class="{{ $labelClass }}" for="period">الفترة</label>
+                <select id="period" name="period" class="{{ $fieldClass }}" onchange="this.form.submit()">
+                    <option value="day" {{ ($period ?? '') == 'day' ? 'selected' : '' }}>اليوم</option>
+                    <option value="week" {{ ($period ?? '') == 'week' ? 'selected' : '' }}>هذا الأسبوع</option>
+                    <option value="month" {{ ($period ?? '') == 'month' ? 'selected' : '' }}>هذا الشهر</option>
+                    <option value="year" {{ ($period ?? '') == 'year' ? 'selected' : '' }}>هذه السنة</option>
+                    <option value="all" {{ ($period ?? '') == 'all' ? 'selected' : '' }}>الكل</option>
+                    <option value="custom" {{ ($period ?? '') == 'custom' ? 'selected' : '' }}>مخصص</option>
+                </select>
+            </div>
+            <div>
+                <label class="{{ $labelClass }}" for="start_date">من تاريخ</label>
+                <input id="start_date" type="date" name="start_date" value="{{ $startDate ? $startDate->format('Y-m-d') : '' }}" class="{{ $fieldClass }}" />
+            </div>
+            <div>
+                <label class="{{ $labelClass }}" for="end_date">إلى تاريخ</label>
+                <input id="end_date" type="date" name="end_date" value="{{ $endDate ? $endDate->format('Y-m-d') : '' }}" class="{{ $fieldClass }}" />
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white">
+                    <i class="fas fa-filter text-xs"></i>
+                    تطبيق
+                </button>
+            </div>
+        </form>
+    </article>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+            <div>
+                <h3 class="text-base font-semibold text-ink">قائمة المصروفات</h3>
+                <p class="mt-0.5 text-xs text-muted">من الأحدث إلى الأقدم</p>
+            </div>
+            <span class="inline-flex rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">{{ number_format($items->total()) }} مصروف</span>
+        </div>
+
+        <div class="admin-table-wrap overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="border-b border-line bg-canvas/60 text-xs text-muted">
+                    <tr>
+                        <th class="px-4 py-3 text-start font-medium">رقم المصروف</th>
+                        <th class="px-4 py-3 text-start font-medium">العنوان</th>
+                        <th class="px-4 py-3 text-start font-medium">الفئة</th>
+                        <th class="px-4 py-3 text-start font-medium">المبلغ</th>
+                        <th class="px-4 py-3 text-start font-medium">الحالة</th>
+                        <th class="px-4 py-3 text-start font-medium">التاريخ</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-200">
+                <tbody class="divide-y divide-line">
                     @forelse($items as $expense)
-                    <tr class="hover:bg-slate-50">
-                        <td class="px-4 py-3"><a href="{{ route('admin.expenses.show', $expense) }}" class="font-semibold text-sky-600 hover:text-sky-700">{{ $expense->expense_number ?? '—' }}</a></td>
-                        <td class="px-4 py-3">{{ $expense->title ?? '—' }}</td>
-                        <td class="px-4 py-3">{{ \App\Models\Expense::categoryLabel($expense->category ?? '') }}</td>
-                        <td class="px-4 py-3 font-semibold text-rose-600">{{ number_format($expense->amount, 2) }} ج.م</td>
-                        <td class="px-4 py-3">
-                            @if($expense->status == 'approved')<span class="rounded-full px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-700">معتمد</span>
-                            @elseif($expense->status == 'pending')<span class="rounded-full px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-700">معلق</span>
-                            @else<span class="rounded-full px-2 py-0.5 text-xs font-semibold bg-rose-100 text-rose-700">مرفوض</span>@endif
-                        </td>
-                        <td class="px-4 py-3">{{ $expense->expense_date ? $expense->expense_date->format('Y-m-d') : '—' }}</td>
-                    </tr>
+                        @php $badge = $statusBadges[$expense->status] ?? ['label' => $expense->status, 'classes' => 'bg-canvas-muted text-muted']; @endphp
+                        <tr class="hover:bg-canvas/40">
+                            <td class="px-4 py-3">
+                                <a href="{{ route('admin.expenses.show', $expense) }}" class="font-semibold text-accent hover:text-accent">{{ $expense->expense_number ?? '—' }}</a>
+                            </td>
+                            <td class="px-4 py-3 text-ink-soft">{{ $expense->title ?? '—' }}</td>
+                            <td class="px-4 py-3 text-ink-soft">{{ \App\Models\Expense::categoryLabel($expense->category ?? '') }}</td>
+                            <td class="px-4 py-3 font-semibold tabular-nums text-ink">
+                                {{ number_format($expense->amount, 2) }}
+                                <span class="text-xs font-normal text-muted">ج.م</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $badge['classes'] }}">{{ $badge['label'] }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-xs tabular-nums text-muted">{{ $expense->expense_date ? $expense->expense_date->format('Y-m-d') : '—' }}</td>
+                        </tr>
                     @empty
-                    <tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">لا توجد مصروفات في هذه الفترة.</td></tr>
+                        <tr>
+                            <td colspan="6" class="px-4 py-16 text-center">
+                                <div class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <p class="text-sm font-medium text-ink">لا توجد مصروفات</p>
+                                <p class="mt-1 text-xs text-muted">لا توجد مصروفات في هذه الفترة.</p>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
         @if($items->hasPages())
-        <div class="px-5 py-4 border-t border-slate-200">{{ $items->links() }}</div>
+            <div class="border-t border-line px-4 py-4 sm:px-5">{{ $items->links() }}</div>
         @endif
-    </section>
+    </article>
 </div>
 @endsection

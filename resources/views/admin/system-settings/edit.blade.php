@@ -16,29 +16,72 @@
 <div class="space-y-5 pb-8">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0 max-w-3xl">
-            <p class="text-xs font-medium text-muted">إعدادات المنصة</p>
-            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink">مركز إعدادات النظام</h2>
+            <p class="text-xs font-medium text-muted">لوحة التحكم · إعدادات المنصة</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">مركز إعدادات النظام</h2>
             <p class="mt-2 text-sm leading-7 text-muted">
-                ضبط الفوتر والسوشيال، شعار اللوحة، بوابة الدفع، و<strong class="font-medium text-ink">المصادقة الثنائية لحسابات الأدمن</strong>.
+                ضبط الفوتر والسوشيال، شعار اللوحة، بوابة الدفع، و<span class="font-medium text-ink">المصادقة الثنائية لحسابات الأدمن</span>.
                 اترك أي حقل فوتر فارغاً واحفظ لاستعادة الافتراضي لهذا الحقل.
             </p>
         </div>
+        <a href="{{ route('home') }}" target="_blank" rel="noopener" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+            <i class="fas fa-external-link-alt text-xs"></i>
+            معاينة الموقع
+        </a>
+    </section>
+
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                <i class="fas fa-image text-sm"></i>
+            </div>
+            <p class="mt-3 text-xs text-muted">شعار اللوحة</p>
+            <p class="mt-1 text-sm font-semibold text-ink">{{ $adminPanelLogoUrl ? 'مرفوع' : 'افتراضي (G)' }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $fawaterakGatewayEnabled ? 'bg-accent-soft text-accent' : 'bg-canvas-muted text-muted' }}">
+                <i class="fas fa-credit-card text-sm"></i>
+            </div>
+            <p class="mt-3 text-xs text-muted">بوابة فواتيرك</p>
+            <p class="mt-1">
+                <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold {{ $fawaterakGatewayEnabled ? 'bg-accent-soft text-accent' : 'bg-canvas-muted text-muted' }}">
+                    {{ $fawaterakGatewayEnabled ? 'مفعّل' : 'معطّل' }}
+                </span>
+            </p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $fawaterakEnvConfigured ? 'bg-accent-soft text-accent' : 'bg-metal/15 text-metal' }}">
+                <i class="fas fa-key text-sm"></i>
+            </div>
+            <p class="mt-3 text-xs text-muted">مفاتيح API</p>
+            <p class="mt-1 text-sm font-semibold text-ink">{{ $fawaterakEnvConfigured ? 'مضبوطة' : 'غير مكتملة' }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $adminTwoFactorRequired ? 'bg-accent-soft text-accent' : 'bg-canvas-muted text-muted' }}">
+                <i class="fas fa-shield-alt text-sm"></i>
+            </div>
+            <p class="mt-3 text-xs text-muted">المصادقة الثنائية</p>
+            <p class="mt-1">
+                <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold {{ $adminTwoFactorRequired ? 'bg-accent-soft text-accent' : 'bg-canvas-muted text-muted' }}">
+                    {{ $adminTwoFactorRequired ? 'مفعّل' : 'غير مفعّل' }}
+                </span>
+            </p>
+        </article>
     </section>
 
     @if(session('success'))
-        <div class="flex items-center gap-3 rounded-2xl border border-success/20 bg-[#eef8f2] px-4 py-3 text-sm font-medium text-success shadow-soft" role="status">
-            <i class="fas fa-check-circle"></i>
-            {{ session('success') }}
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
         </div>
     @endif
     @if(session('info'))
         <div class="flex items-center gap-3 rounded-2xl border border-accent/20 bg-accent-soft px-4 py-3 text-sm font-medium text-accent shadow-soft" role="status">
-            <i class="fas fa-info-circle"></i>
-            {{ session('info') }}
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface text-accent"><i class="fas fa-info-circle text-sm"></i></span>
+            <p>{{ session('info') }}</p>
         </div>
     @endif
     @if($errors->any())
-        <div class="rounded-2xl border border-danger/20 bg-[#fdf2f1] p-4 text-sm text-danger shadow-soft">
+        <div class="rounded-2xl border border-danger/20 bg-danger/5 p-4 text-sm text-danger shadow-soft">
             <p class="mb-2 font-semibold">يرجى تصحيح ما يلي:</p>
             <ul class="list-inside list-disc space-y-1">
                 @foreach($errors->all() as $err)
@@ -55,7 +98,7 @@
         {{-- 1) Logo --}}
         <article class="{{ $panel }}">
             <div class="{{ $sectionHead }}">
-                <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-sm font-semibold text-accent">1</span>
+                <span class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-sm font-semibold text-accent">1</span>
                 <div class="min-w-0">
                     <h3 class="text-base font-semibold text-ink">شعار لوحة التحكم وأيقونة الموقع</h3>
                     <p class="mt-0.5 text-xs leading-6 text-muted">يظهر في الشريط الجانبي، النافبار العام، الشريط العلوي للأدمن، وكـ favicon.</p>
@@ -83,7 +126,7 @@
                     <div class="min-w-0 flex-1 space-y-3">
                         <label class="{{ $label }}">رفع شعار جديد</label>
                         <input type="file" name="admin_panel_logo" accept="image/jpeg,image/png,image/webp,image/gif"
-                               class="block w-full text-sm text-muted file:me-4 file:rounded-xl file:border-0 file:bg-accent-soft file:px-4 file:py-2 file:text-sm file:font-medium file:text-accent hover:file:bg-[#d9ebe9]">
+                               class="block w-full text-sm text-muted file:me-4 file:rounded-xl file:border-0 file:bg-accent-soft file:px-4 file:py-2 file:text-sm file:font-medium file:text-accent hover:file:bg-accent hover:file:text-white">
                         <p class="text-xs text-muted">JPG, PNG, WebP, GIF — حتى 2 ميغابايت. يُفضّل مربع بخلفية شفافة أو فاتحة.</p>
                         @if($adminPanelLogoUrl)
                             <label class="inline-flex cursor-pointer items-center gap-2 text-sm text-danger">
@@ -99,7 +142,7 @@
         {{-- R2 --}}
         <article class="{{ $panel }}">
             <div class="{{ $sectionHead }}">
-                <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-metal"><i class="fas fa-cloud text-sm"></i></span>
+                <span class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-metal"><i class="fas fa-cloud text-sm"></i></span>
                 <div class="min-w-0">
                     <h3 class="text-base font-semibold text-ink">رابط عرض الصور (Cloudflare R2)</h3>
                     <p class="mt-0.5 text-xs leading-6 text-muted">للشعار، السلايدر، صور الكورسات، وكل ملفات المنصة.</p>
@@ -124,7 +167,7 @@
         {{-- Footer --}}
         <article class="{{ $panel }}">
             <div class="{{ $sectionHead }}">
-                <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-sm font-semibold text-accent">2</span>
+                <span class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-sm font-semibold text-accent">2</span>
                 <div class="min-w-0">
                     <h3 class="text-base font-semibold text-ink">فوتر الموقع العام</h3>
                     <p class="mt-0.5 text-xs leading-6 text-muted">يُعرض في الصفحة الرئيسية والصفحات العامة.</p>
@@ -197,7 +240,7 @@
         {{-- Payment --}}
         <article class="{{ $panel }}">
             <div class="{{ $sectionHead }}">
-                <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-credit-card text-sm"></i></span>
+                <span class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-credit-card text-sm"></i></span>
                 <div class="min-w-0 flex-1">
                     <h3 class="text-base font-semibold text-ink">بوابة الدفع — فواتيرك (IFrame)</h3>
                     <p class="mt-0.5 text-xs leading-6 text-muted">عند التفعيل تُعرض بوابة الدفع فقط دون رفع إيصال يدوي.</p>
@@ -219,7 +262,7 @@
                     </span>
                 </label>
 
-                <div class="rounded-xl border px-4 py-3 text-xs leading-7 sm:text-sm {{ $fawaterakEnvConfigured ? 'border-success/20 bg-[#eef8f2] text-success' : 'border-metal/30 bg-[#fbf7ef] text-ink' }}">
+                <div class="rounded-xl border px-4 py-3 text-xs leading-7 sm:text-sm {{ $fawaterakEnvConfigured ? 'border-accent/20 bg-accent-soft text-accent' : 'border-metal/30 bg-canvas text-ink' }}">
                     @if($fawaterakEnvConfigured)
                         <i class="fas fa-check-circle ms-1"></i>
                         مفاتيح API مضبوطة في البيئة (<code class="rounded bg-surface px-1 text-[11px]" dir="ltr">FAWATERAK_VENDOR_KEY</code> /
@@ -249,11 +292,11 @@
         </article>
 
         <div class="sticky bottom-4 z-10 flex flex-wrap items-center gap-3">
-            <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-white shadow-soft transition hover:bg-[#0d4f4a]">
+            <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-white shadow-soft transition hover:bg-accent/90">
                 <i class="fas fa-save"></i>
                 حفظ كل الإعدادات
             </button>
-            <a href="{{ route('home') }}" target="_blank" rel="noopener" class="inline-flex h-11 items-center gap-2 rounded-xl border border-line bg-surface px-5 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">
+            <a href="{{ route('home') }}" target="_blank" rel="noopener" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line bg-surface px-5 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
                 <i class="fas fa-external-link-alt"></i>
                 معاينة الموقع العام
             </a>
@@ -263,7 +306,7 @@
     {{-- 3) 2FA — خارج النموذج الرئيسي --}}
     <article class="{{ $panel }}">
         <div class="{{ $sectionHead }}">
-            <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-sm font-semibold text-accent">3</span>
+            <span class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-sm font-semibold text-accent">3</span>
             <div class="min-w-0 flex-1">
                 <h3 class="text-base font-semibold text-ink">المصادقة الثنائية للمنصة</h3>
                 <p class="mt-0.5 text-xs leading-6 text-muted">إلزام رمز البريد بعد كلمة المرور لحسابات المدير العام والأدمن فقط.</p>
@@ -278,12 +321,12 @@
         </div>
         <div class="{{ $sectionBody }}">
             @if($errors->has('two_factor'))
-                <div class="rounded-xl border border-danger/20 bg-[#fdf2f1] px-4 py-3 text-sm font-medium text-danger">
+                <div class="rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm font-medium text-danger">
                     {{ $errors->first('two_factor') }}
                 </div>
             @endif
 
-            <div class="rounded-xl border border-metal/25 bg-[#fbf7ef] px-4 py-3 text-sm leading-7 text-ink">
+            <div class="rounded-xl border border-metal/25 bg-canvas px-4 py-3 text-sm leading-7 text-ink">
                 <i class="fas fa-exclamation-triangle ms-1 text-metal"></i>
                 تأكد أن إعدادات البريد تعمل قبل التفعيل. يمكن ضبط
                 <code class="rounded bg-surface px-1 text-[11px]" dir="ltr">ADMIN_2FA_REQUIRED</code>
@@ -308,7 +351,7 @@
                 <p class="text-sm leading-7 text-muted">اضغط الزر لإرسال رمز تحقق إلى بريدك، ثم أكّد التفعيل في الصفحة التالية.</p>
                 <form method="post" action="{{ route('admin.system-settings.two-factor.enable-request') }}" class="inline">
                     @csrf
-                    <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white transition hover:bg-[#0d4f4a]">
+                    <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white transition hover:bg-accent/90">
                         <i class="fas fa-paper-plane"></i>
                         تفعيل إلزام المصادقة الثنائية
                     </button>
@@ -324,7 +367,7 @@
                             <p class="mt-1.5 text-xs text-danger">{{ $message }}</p>
                         @enderror
                     </div>
-                    <button type="submit" class="inline-flex h-11 items-center gap-2 rounded-xl border border-danger/30 bg-[#fdf2f1] px-5 text-sm font-medium text-danger transition hover:bg-[#fbe8e6]">
+                    <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-danger/30 bg-danger/5 px-5 text-sm font-medium text-danger transition hover:bg-danger/10">
                         <i class="fas fa-power-off"></i>
                         تعطيل إلزام المصادقة الثنائية
                     </button>

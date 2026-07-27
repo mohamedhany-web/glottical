@@ -1,202 +1,187 @@
 @extends('layouts.admin')
 
 @section('title', 'تعديل المصروف')
-@section('header', 'تعديل المصروف')
+@section('page_title', 'تعديل المصروف')
 
 @section('content')
-<div class="p-6 bg-gray-50 min-h-screen">
-    <div class="mb-8">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                    <i class="fas fa-edit text-sky-600 ml-3"></i>
-                    {{ __('تعديل المصروف') }}
-                </h1>
-                <p class="text-gray-600">{{ __('تحديث بيانات المصروف رقم:') }} {{ $expense->expense_number }}</p>
-            </div>
-            <a href="{{ route('admin.expenses.show', $expense) }}"
-               class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2">
-                <i class="fas fa-arrow-right"></i>
-                <span>{{ __('العودة') }}</span>
-            </a>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $areaClass = 'w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $fileClass = 'w-full rounded-xl border border-line bg-surface px-4 py-2.5 text-sm text-ink file:me-3 file:rounded-lg file:border-0 file:bg-accent-soft file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-accent';
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">الحسابات · المصروفات · #{{ $expense->expense_number }}</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ __('تعديل المصروف') }}</h2>
+            <p class="mt-1 text-sm text-muted">{{ __('تحديث بيانات المصروف رقم:') }} {{ $expense->expense_number }}</p>
         </div>
-    </div>
+        <a href="{{ route('admin.expenses.show', $expense) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+            <i class="fas fa-arrow-right text-xs"></i>
+            {{ __('العودة') }}
+        </a>
+    </section>
 
-    <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
-        <form action="{{ route('admin.expenses.update', $expense) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
-            @csrf
-            @method('PUT')
+    @if($errors->any())
+        <div class="rounded-2xl border border-danger/20 bg-danger/5 p-4 text-sm text-danger shadow-soft">
+            <p class="mb-2 font-semibold">يرجى تصحيح ما يلي:</p>
+            <ul class="list-inside list-disc space-y-1">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <form action="{{ route('admin.expenses.update', $expense) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+        @csrf
+        @method('PUT')
+
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">بيانات المصروف</h3>
+                <p class="mt-0.5 text-xs text-muted">العنوان، الفئة، المبلغ، والتاريخ</p>
+            </div>
+            <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">
-                        <i class="fas fa-heading text-sky-600 ml-2"></i>
-                        {{ __('العنوان') }} *
-                    </label>
-                    <input type="text" name="title" value="{{ old('title', $expense->title) }}" required
-                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
-                           placeholder="{{ __('مثال: شراء معدات للقاعة') }}">
+                    <label class="{{ $labelClass }}" for="title">{{ __('العنوان') }} <span class="text-danger">*</span></label>
+                    <input id="title" type="text" name="title" value="{{ old('title', $expense->title) }}" required class="{{ $fieldClass }}" placeholder="{{ __('مثال: شراء معدات للقاعة') }}">
                     @error('title')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">
-                        <i class="fas fa-tags text-sky-600 ml-2"></i>
-                        {{ __('الفئة') }} *
-                    </label>
-                    <select name="category" required
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all">
+                    <label class="{{ $labelClass }}" for="category">{{ __('الفئة') }} <span class="text-danger">*</span></label>
+                    <select id="category" name="category" required class="{{ $fieldClass }}">
                         <option value="">{{ __('اختر الفئة') }}</option>
-                        <option value="operational" {{ old('category', $expense->category) == 'operational' ? 'selected' : '' }}>{{ __('تشغيلي') }}</option>
-                        <option value="marketing" {{ old('category', $expense->category) == 'marketing' ? 'selected' : '' }}>{{ __('تسويق') }}</option>
-                        <option value="salaries" {{ old('category', $expense->category) == 'salaries' ? 'selected' : '' }}>{{ __('رواتب') }}</option>
-                        <option value="utilities" {{ old('category', $expense->category) == 'utilities' ? 'selected' : '' }}>{{ __('مرافق') }}</option>
-                        <option value="equipment" {{ old('category', $expense->category) == 'equipment' ? 'selected' : '' }}>{{ __('معدات') }}</option>
-                        <option value="maintenance" {{ old('category', $expense->category) == 'maintenance' ? 'selected' : '' }}>{{ __('صيانة') }}</option>
-                        <option value="other" {{ old('category', $expense->category) == 'other' ? 'selected' : '' }}>{{ __('أخرى') }}</option>
+                        <option value="operational" @selected(old('category', $expense->category) == 'operational')>{{ __('تشغيلي') }}</option>
+                        <option value="marketing" @selected(old('category', $expense->category) == 'marketing')>{{ __('تسويق') }}</option>
+                        <option value="salaries" @selected(old('category', $expense->category) == 'salaries')>{{ __('رواتب') }}</option>
+                        <option value="utilities" @selected(old('category', $expense->category) == 'utilities')>{{ __('مرافق') }}</option>
+                        <option value="equipment" @selected(old('category', $expense->category) == 'equipment')>{{ __('معدات') }}</option>
+                        <option value="maintenance" @selected(old('category', $expense->category) == 'maintenance')>{{ __('صيانة') }}</option>
+                        <option value="other" @selected(old('category', $expense->category) == 'other')>{{ __('أخرى') }}</option>
                     </select>
                     @error('category')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">
-                        <i class="fas fa-money-bill-wave text-sky-600 ml-2"></i>
-                        {{ __('المبلغ') }} * (ج.م)
-                    </label>
-                    <input type="number" name="amount" step="0.01" min="0.01" value="{{ old('amount', $expense->amount) }}" required
-                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
-                           placeholder="0.00">
+                    <label class="{{ $labelClass }}" for="amount">{{ __('المبلغ') }} <span class="text-danger">*</span> (ج.م)</label>
+                    <input id="amount" type="number" name="amount" step="0.01" min="0.01" value="{{ old('amount', $expense->amount) }}" required class="{{ $fieldClass }}" placeholder="0.00">
                     @error('amount')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">
-                        <i class="fas fa-calendar-alt text-sky-600 ml-2"></i>
-                        {{ __('تاريخ المصروف') }} *
-                    </label>
-                    <input type="date" name="expense_date" value="{{ old('expense_date', optional($expense->expense_date)->format('Y-m-d')) }}" required
-                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all">
+                    <label class="{{ $labelClass }}" for="expense_date">{{ __('تاريخ المصروف') }} <span class="text-danger">*</span></label>
+                    <input id="expense_date" type="date" name="expense_date" value="{{ old('expense_date', optional($expense->expense_date)->format('Y-m-d')) }}" required class="{{ $fieldClass }}">
                     @error('expense_date')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                     @enderror
                 </div>
+            </div>
+        </article>
 
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">الدفع والمرفقات</h3>
+                <p class="mt-0.5 text-xs text-muted">طريقة الدفع، المحفظة، المرجع، والإيصال</p>
+            </div>
+            <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">
-                        <i class="fas fa-credit-card text-sky-600 ml-2"></i>
-                        {{ __('طريقة الدفع') }} *
-                    </label>
-                    <select name="payment_method" id="payment_method" required
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all">
+                    <label class="{{ $labelClass }}" for="payment_method">{{ __('طريقة الدفع') }} <span class="text-danger">*</span></label>
+                    <select id="payment_method" name="payment_method" required class="{{ $fieldClass }}">
                         <option value="">{{ __('اختر طريقة الدفع') }}</option>
-                        <option value="cash" {{ old('payment_method', $expense->payment_method) == 'cash' ? 'selected' : '' }}>{{ __('نقدي') }}</option>
-                        <option value="bank_transfer" {{ old('payment_method', $expense->payment_method) == 'bank_transfer' ? 'selected' : '' }}>{{ __('تحويل بنكي') }}</option>
-                        <option value="card" {{ old('payment_method', $expense->payment_method) == 'card' ? 'selected' : '' }}>{{ __('بطاقة') }}</option>
-                        <option value="wallet" {{ old('payment_method', $expense->payment_method) == 'wallet' ? 'selected' : '' }}>{{ __('محفظة إلكترونية') }}</option>
-                        <option value="other" {{ old('payment_method', $expense->payment_method) == 'other' ? 'selected' : '' }}>{{ __('أخرى') }}</option>
+                        <option value="cash" @selected(old('payment_method', $expense->payment_method) == 'cash')>{{ __('نقدي') }}</option>
+                        <option value="bank_transfer" @selected(old('payment_method', $expense->payment_method) == 'bank_transfer')>{{ __('تحويل بنكي') }}</option>
+                        <option value="card" @selected(old('payment_method', $expense->payment_method) == 'card')>{{ __('بطاقة') }}</option>
+                        <option value="wallet" @selected(old('payment_method', $expense->payment_method) == 'wallet')>{{ __('محفظة إلكترونية') }}</option>
+                        <option value="other" @selected(old('payment_method', $expense->payment_method) == 'other')>{{ __('أخرى') }}</option>
                     </select>
                     @error('payment_method')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div id="wallet_field" style="display: none;">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">
-                        <i class="fas fa-wallet text-sky-600 ml-2"></i>
-                        {{ __('المحفظة الإلكترونية') }}
-                    </label>
-                    <select name="wallet_id" id="wallet_id"
-                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all">
+                    <label class="{{ $labelClass }}" for="wallet_id">{{ __('المحفظة الإلكترونية') }}</label>
+                    <select id="wallet_id" name="wallet_id" class="{{ $fieldClass }}">
                         <option value="">{{ __('اختر محفظة') }}</option>
                         @foreach($wallets as $wallet)
-                            <option value="{{ $wallet->id }}" {{ old('wallet_id', $expense->wallet_id) == $wallet->id ? 'selected' : '' }}>
+                            <option value="{{ $wallet->id }}" @selected(old('wallet_id', $expense->wallet_id) == $wallet->id)>
                                 {{ $wallet->name }} ({{ $wallet->type_name }})
                             </option>
                         @endforeach
                     </select>
                     @error('wallet_id')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-hashtag text-sky-600 ml-2"></i>
-                        {{ __('رقم المرجع') }} (اختياري)
-                    </label>
-                    <input type="text" name="reference_number" value="{{ old('reference_number', $expense->reference_number) }}"
-                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
-                           placeholder="{{ __('رقم الفاتورة، رقم الشيك، إلخ') }}">
+                    <label class="{{ $labelClass }}" for="reference_number">{{ __('رقم المرجع') }} (اختياري)</label>
+                    <input id="reference_number" type="text" name="reference_number" value="{{ old('reference_number', $expense->reference_number) }}" class="{{ $fieldClass }}" placeholder="{{ __('رقم الفاتورة، رقم الشيك، إلخ') }}">
                     @error('reference_number')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">
-                        <i class="fas fa-paperclip text-sky-600 ml-2"></i>
-                        {{ __('صورة الفاتورة/الإيصال') }} (اختياري)
-                    </label>
-                    <input type="file" name="attachment" accept="image/*"
-                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all">
-                    <p class="text-xs text-gray-500 mt-1">{{ __('يُسمح بالصور فقط (JPEG, PNG, JPG) - الحد الأقصى 40 ميجابايت') }}</p>
+                    <label class="{{ $labelClass }}" for="attachment">{{ __('صورة الفاتورة/الإيصال') }} (اختياري)</label>
+                    <input id="attachment" type="file" name="attachment" accept="image/*" class="{{ $fileClass }}">
+                    <p class="mt-1 text-[11px] text-muted">{{ __('يُسمح بالصور فقط (JPEG, PNG, JPG) - الحد الأقصى 40 ميجابايت') }}</p>
                     @if($expense->attachment)
-                        <p class="text-xs text-sky-700 mt-1">
+                        <p class="mt-1 text-xs text-accent">
                             {{ __('يوجد مرفق حالي وسيتم استبداله عند رفع ملف جديد.') }}
                         </p>
                     @endif
                     @error('attachment')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
                     @enderror
                 </div>
             </div>
+        </article>
 
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">
-                    <i class="fas fa-align-right text-sky-600 ml-2"></i>
-                    {{ __('الوصف') }} (اختياري)
-                </label>
-                <textarea name="description" rows="3"
-                          class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
-                          placeholder="{{ __('وصف تفصيلي للمصروف...') }}">{{ old('description', $expense->description) }}</textarea>
-                @error('description')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">تفاصيل إضافية</h3>
+                <p class="mt-0.5 text-xs text-muted">الوصف والملاحظات (اختياري)</p>
             </div>
+            <div class="space-y-4 p-4 sm:p-5">
+                <div>
+                    <label class="{{ $labelClass }}" for="description">{{ __('الوصف') }} (اختياري)</label>
+                    <textarea id="description" name="description" rows="3" class="{{ $areaClass }}" placeholder="{{ __('وصف تفصيلي للمصروف...') }}">{{ old('description', $expense->description) }}</textarea>
+                    @error('description')
+                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
+                    @enderror
+                </div>
 
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">
-                    <i class="fas fa-sticky-note text-sky-600 ml-2"></i>
-                    {{ __('ملاحظات') }} (اختياري)
-                </label>
-                <textarea name="notes" rows="2"
-                          class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all"
-                          placeholder="{{ __('ملاحظات إضافية...') }}">{{ old('notes', $expense->notes) }}</textarea>
-                @error('notes')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <div>
+                    <label class="{{ $labelClass }}" for="notes">{{ __('ملاحظات') }} (اختياري)</label>
+                    <textarea id="notes" name="notes" rows="2" class="{{ $areaClass }}" placeholder="{{ __('ملاحظات إضافية...') }}">{{ old('notes', $expense->notes) }}</textarea>
+                    @error('notes')
+                        <p class="mt-1 text-xs text-danger">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
-
-            <div class="flex flex-wrap gap-4 pt-4 border-t border-gray-200">
-                <button type="submit"
-                        class="bg-gradient-to-l from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2">
-                    <i class="fas fa-save"></i>
-                    <span>{{ __('حفظ التعديلات') }}</span>
+            <div class="flex flex-wrap gap-3 border-t border-line px-4 py-4 sm:px-5">
+                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-white">
+                    <i class="fas fa-save text-xs"></i>
+                    {{ __('حفظ التعديلات') }}
                 </button>
-                <a href="{{ route('admin.expenses.show', $expense) }}"
-                   class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2">
-                    <i class="fas fa-times"></i>
-                    <span>{{ __('إلغاء') }}</span>
+                <a href="{{ route('admin.expenses.show', $expense) }}" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line px-6 text-sm font-medium text-ink hover:bg-canvas">
+                    <i class="fas fa-times text-xs"></i>
+                    {{ __('إلغاء') }}
                 </a>
             </div>
-        </form>
-    </div>
+        </article>
+    </form>
 </div>
 
 @push('scripts')

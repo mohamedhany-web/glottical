@@ -1,101 +1,153 @@
 @extends('layouts.admin')
 
 @section('title', 'حسابات المدربين - المحاسبة')
+@section('page_title', 'حسابات المدربين')
 @section('header', 'حسابات المدربين')
 
 @section('content')
-<div class="p-4 md:p-6 space-y-6" style="background: #f8fafc;">
-    <div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-slate-900">حسابات المدربين</h1>
-                <p class="text-slate-600 mt-1">رؤية كاملة: اتفاقيات، رواتب، مدفوعات، وأرباح نسبة الكورس لكل مدرب</p>
-            </div>
-            <a href="{{ route('admin.accounting.reports') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-medium">
-                <i class="fas fa-chart-pie"></i>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $toneClass = [
+        'accent' => 'bg-accent-soft text-accent',
+        'metal' => 'bg-metal/15 text-metal',
+        'muted' => 'bg-canvas-muted text-muted',
+    ];
+    $kpis = [
+        ['label' => 'عدد المدربين', 'value' => number_format($globalStats['instructors_count']), 'suffix' => '', 'icon' => 'fa-chalkboard-teacher', 'tone' => 'muted', 'note' => 'مدربون لديهم اتفاقيات أو مدفوعات'],
+        ['label' => 'إجمالي مطلوب الدفع', 'value' => number_format($globalStats['pending_total'], 2), 'suffix' => 'ج.م', 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'note' => 'مجموع المدفوعات المعلقة'],
+        ['label' => 'إجمالي تم الدفع', 'value' => number_format($globalStats['paid_total'], 2), 'suffix' => 'ج.م', 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => 'مجموع المدفوعات المنفّذة'],
+    ];
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">المحاسبة · حسابات المدربين</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">حسابات المدربين</h2>
+            <p class="mt-1 text-sm text-muted">رؤية كاملة: اتفاقيات، رواتب، مدفوعات، وأرباح نسبة الكورس لكل مدرب</p>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.accounting.reports') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-chart-pie text-xs"></i>
                 التقارير المحاسبية
             </a>
         </div>
-    </div>
+    </section>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white rounded-2xl shadow p-6 border-2 border-slate-200">
-            <p class="text-sm font-semibold text-slate-600 mb-1">عدد المدربين</p>
-            <p class="text-2xl font-black text-slate-900">{{ $globalStats['instructors_count'] }}</p>
-        </div>
-        <div class="bg-white rounded-2xl shadow p-6 border-2 border-amber-200">
-            <p class="text-sm font-semibold text-slate-600 mb-1">إجمالي مطلوب الدفع</p>
-            <p class="text-2xl font-black text-amber-700">{{ number_format($globalStats['pending_total'], 2) }} ج.م</p>
-        </div>
-        <div class="bg-white rounded-2xl shadow p-6 border-2 border-emerald-200">
-            <p class="text-sm font-semibold text-slate-600 mb-1">إجمالي تم الدفع</p>
-            <p class="text-2xl font-black text-emerald-700">{{ number_format($globalStats['paid_total'], 2) }} ج.م</p>
-        </div>
-    </div>
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        @foreach($kpis as $kpi)
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $toneClass[$kpi['tone']] }}">
+                    <i class="fas {{ $kpi['icon'] }} text-sm"></i>
+                </div>
+                <p class="mt-3 text-xs text-muted">{{ $kpi['label'] }}</p>
+                <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">
+                    {{ $kpi['value'] }}
+                    @if($kpi['suffix'])
+                        <span class="text-sm font-normal text-muted">{{ $kpi['suffix'] }}</span>
+                    @endif
+                </p>
+                <p class="mt-1 text-[11px] text-muted">{{ $kpi['note'] }}</p>
+            </article>
+        @endforeach
+    </section>
 
-    <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-200">
-        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h2 class="text-lg font-bold text-slate-900">قائمة المدربين</h2>
-            <form method="GET" action="{{ route('admin.accounting.instructor-accounts.index') }}" class="flex gap-2">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="بحث بالاسم أو البريد أو الهاتف..." class="rounded-xl border border-slate-200 px-4 py-2 text-sm w-64">
-                <button type="submit" class="px-4 py-2 bg-slate-700 text-white rounded-xl text-sm font-medium hover:bg-slate-800"><i class="fas fa-search ml-1"></i> بحث</button>
-            </form>
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-4 py-4 sm:px-5">
+            <h3 class="text-base font-semibold text-ink">البحث والفلترة</h3>
+            <p class="mt-0.5 text-xs text-muted">بحث بالاسم أو البريد أو الهاتف</p>
         </div>
+        <form method="GET" action="{{ route('admin.accounting.instructor-accounts.index') }}" class="flex flex-wrap items-end gap-3 p-4 sm:p-5">
+            <div class="min-w-[16rem] flex-1">
+                <label class="{{ $labelClass }}" for="search">البحث</label>
+                <input id="search" type="search" name="search" value="{{ request('search') }}" placeholder="بحث بالاسم أو البريد أو الهاتف..." class="{{ $fieldClass }}">
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white">
+                    <i class="fas fa-search text-xs"></i>
+                    بحث
+                </button>
+                @if(request()->filled('search'))
+                    <a href="{{ route('admin.accounting.instructor-accounts.index') }}" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line px-5 text-sm font-medium text-ink hover:bg-canvas">
+                        <i class="fas fa-times text-xs"></i>
+                        مسح
+                    </a>
+                @endif
+            </div>
+        </form>
+    </article>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+            <div>
+                <h3 class="text-base font-semibold text-ink">قائمة المدربين</h3>
+                <p class="mt-0.5 text-xs text-muted">عرض الحساب الكامل لكل مدرب</p>
+            </div>
+            <span class="inline-flex rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">{{ number_format($instructors->count()) }} مدرب</span>
+        </div>
+
         @if($instructors->count() > 0)
-        <div class="overflow-x-auto">
-            <table class="w-full text-right">
-                <thead class="bg-slate-100 text-sm text-slate-700">
-                    <tr>
-                        <th class="px-6 py-3">المدرب</th>
-                        <th class="px-6 py-3">عدد الاتفاقيات</th>
-                        <th class="px-6 py-3">مطلوب الدفع</th>
-                        <th class="px-6 py-3">تم الدفع</th>
-                        <th class="px-6 py-3">إجراء</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200">
-                    @foreach($instructors as $instructor)
-                    @php $stats = $statsByInstructor[$instructor->id] ?? []; @endphp
-                    <tr class="hover:bg-slate-50">
-                        <td class="px-6 py-4">
-                            <span class="font-medium text-slate-900">{{ $instructor->name }}</span>
-                            @if($instructor->email)<span class="block text-xs text-slate-500">{{ $instructor->email }}</span>@endif
-                            @if($instructor->phone)<span class="block text-xs text-slate-500">{{ $instructor->phone }}</span>@endif
-                        </td>
-                        <td class="px-6 py-4">{{ $stats['agreements_count'] ?? 0 }}</td>
-                        <td class="px-6 py-4">
-                            @if(($stats['pending_total'] ?? 0) > 0)
-                                <span class="font-bold text-amber-700">{{ number_format($stats['pending_total'], 2) }} ج.م</span>
-                                <span class="block text-xs text-slate-500">{{ $stats['pending_count'] ?? 0 }} مدفوعة</span>
-                            @else
-                                <span class="text-slate-400">—</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4">
-                            @if(($stats['paid_total'] ?? 0) > 0)
-                                <span class="font-bold text-emerald-700">{{ number_format($stats['paid_total'], 2) }} ج.م</span>
-                                <span class="block text-xs text-slate-500">{{ $stats['paid_count'] ?? 0 }} مدفوعة</span>
-                            @else
-                                <span class="text-slate-400">—</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4">
-                            <a href="{{ route('admin.accounting.instructor-accounts.show', $instructor) }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-xl font-medium">
-                                <i class="fas fa-file-invoice-dollar"></i>
-                                عرض الحساب الكامل
-                            </a>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+            <div class="admin-table-wrap overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="border-b border-line bg-canvas/60 text-xs text-muted">
+                        <tr>
+                            <th class="px-4 py-3 text-start font-medium">المدرب</th>
+                            <th class="px-4 py-3 text-start font-medium">عدد الاتفاقيات</th>
+                            <th class="px-4 py-3 text-start font-medium">مطلوب الدفع</th>
+                            <th class="px-4 py-3 text-start font-medium">تم الدفع</th>
+                            <th class="px-4 py-3 text-start font-medium">إجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-line">
+                        @foreach($instructors as $instructor)
+                            @php $stats = $statsByInstructor[$instructor->id] ?? []; @endphp
+                            <tr class="hover:bg-canvas/40">
+                                <td class="px-4 py-3">
+                                    <p class="font-semibold text-ink">{{ $instructor->name }}</p>
+                                    @if($instructor->email)
+                                        <p class="mt-0.5 text-[11px] text-muted">{{ $instructor->email }}</p>
+                                    @endif
+                                    @if($instructor->phone)
+                                        <p class="mt-0.5 text-[11px] text-muted">{{ $instructor->phone }}</p>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 tabular-nums text-ink-soft">{{ $stats['agreements_count'] ?? 0 }}</td>
+                                <td class="px-4 py-3">
+                                    @if(($stats['pending_total'] ?? 0) > 0)
+                                        <p class="font-semibold tabular-nums text-metal">{{ number_format($stats['pending_total'], 2) }} <span class="text-xs font-normal text-muted">ج.م</span></p>
+                                        <p class="mt-0.5 text-[11px] text-muted">{{ $stats['pending_count'] ?? 0 }} مدفوعة</p>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3">
+                                    @if(($stats['paid_total'] ?? 0) > 0)
+                                        <p class="font-semibold tabular-nums text-accent">{{ number_format($stats['paid_total'], 2) }} <span class="text-xs font-normal text-muted">ج.م</span></p>
+                                        <p class="mt-0.5 text-[11px] text-muted">{{ $stats['paid_count'] ?? 0 }} مدفوعة</p>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3">
+                                    <a href="{{ route('admin.accounting.instructor-accounts.show', $instructor) }}" class="btn-press inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-xs font-medium text-ink hover:border-accent/30 hover:text-accent">
+                                        <i class="fas fa-file-invoice-dollar"></i>
+                                        عرض الحساب الكامل
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         @else
-        <div class="px-6 py-12 text-center text-slate-500">
-            <i class="fas fa-users text-4xl text-slate-300 mb-4"></i>
-            <p class="font-medium">لا يوجد مدربون لديهم اتفاقيات أو مدفوعات.</p>
-        </div>
+            <div class="px-4 py-16 text-center">
+                <div class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+                    <i class="fas fa-users"></i>
+                </div>
+                <p class="text-sm font-medium text-ink">لا يوجد مدربون لديهم اتفاقيات أو مدفوعات.</p>
+            </div>
         @endif
-    </div>
+    </article>
 </div>
 @endsection

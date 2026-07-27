@@ -2,8 +2,13 @@
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
     $brand = config('app.name', 'Glottical');
-    $heroImg = 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=2400&q=80';
-    $missionImg = 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80';
+    $footer = \App\Services\PublicFooterSettings::payload();
+    $waUrl = $footer['whatsapp_url'] ?? '#';
+    $heroPath = public_path('img/glottical/hero-Photoroom.png');
+    $heroImg = file_exists($heroPath)
+        ? asset('img/glottical/hero-Photoroom.png').'?v='.filemtime($heroPath)
+        : asset('img/glottical/hero.png');
+    $stats = $stats ?? ['courses' => 0, 'students' => 0, 'instructors' => 0];
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -12,145 +17,377 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <title>{{ __('public.about_page_title') }} — {{ $brand }}</title>
   <meta name="description" content="{{ __('public.about_intro') }}">
+  <meta name="theme-color" content="#0B3D91">
   <link rel="canonical" href="{{ route('public.about') }}">
   @include('partials.favicon-links')
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-  @include('partials.atheer-head')
-  <meta name="theme-color" content="#0f5c57">
+  @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog', 'about']])
+  <style>
+    .gl-about-page .sana-ab-hero {
+      padding: clamp(36px, 6vw, 64px) 0 clamp(40px, 7vw, 72px);
+    }
+    .gl-about-page .sana-ab-hero__title {
+      font-size: clamp(1.55rem, 3.8vw, 2.35rem);
+      margin-bottom: 10px;
+    }
+    .gl-about-page .sana-ab-hero__mission {
+      font-size: clamp(.92rem, 2vw, 1.05rem);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .gl-about-page .sana-ab-hero__sub {
+      font-size: .88rem;
+      margin-bottom: 1.15rem;
+    }
+    .gl-about-page .sana-section { padding: clamp(36px, 5.5vw, 56px) 0; }
+    .gl-about-page .sana-head { margin-bottom: 1.5rem !important; }
+    .gl-about-page .sana-head__title { font-size: clamp(1.25rem, 2.6vw, 1.65rem); }
+    .gl-about-page .sana-ab-story { gap: 1.5rem; }
+    @media (min-width: 992px) {
+      .gl-about-page .sana-ab-story { gap: 2rem; }
+    }
+    .gl-about-page .sana-ab-story__intro p { font-size: .86rem; margin-bottom: .85rem; }
+    .gl-about-page .sana-ab-story__block { padding: .9rem 1rem; border-radius: 14px; }
+    .gl-about-page .sana-ab-story__block h4 { font-size: .78rem; }
+    .gl-about-page .sana-ab-story__block p { font-size: .8rem; }
+    .gl-about-page .sana-ab-timeline__item { padding-bottom: 1.1rem; }
+    .gl-about-page .sana-ab-timeline__item strong { font-size: .88rem; }
+    .gl-about-page .sana-ab-timeline__item p { font-size: .76rem; }
+    .gl-about-page .sana-ab-pillar { padding: 1.05rem .85rem; border-radius: 16px; }
+    .gl-about-page .sana-ab-pillar__icon { width: 42px; height: 42px; border-radius: 12px; font-size: 1rem; margin-bottom: .65rem; }
+    .gl-about-page .sana-ab-pillar strong { font-size: .8rem; }
+    .gl-about-page .sana-ab-pillar span { font-size: .72rem; }
+    .gl-about-page .sana-ab-vision__card { padding: 1rem; border-radius: 14px; gap: .75rem; }
+    .gl-about-page .sana-ab-vision__icon { width: 40px; height: 40px; min-width: 40px; border-radius: 11px; font-size: .95rem; }
+    .gl-about-page .sana-ab-vision__card strong { font-size: .84rem; }
+    .gl-about-page .sana-ab-vision__card p { font-size: .74rem; }
+    .gl-about-page .sana-ab-why__card { padding: 1.05rem .95rem; border-radius: 16px; }
+    .gl-about-page .sana-ab-why__icon { width: 42px; height: 42px; border-radius: 12px; margin-bottom: .65rem; font-size: 1rem; }
+    .gl-about-page .sana-ab-why__card strong { font-size: .86rem; }
+    .gl-about-page .sana-ab-why__card p { font-size: .76rem; }
+    .gl-about-page .sana-ab-metrics { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 575px) { .gl-about-page .sana-ab-metrics { grid-template-columns: 1fr; } }
+    .gl-about-page .sana-ab-metric { padding: 1.1rem .75rem; border-radius: 16px; }
+    .gl-about-page .sana-ab-metric strong { font-size: 1.35rem; }
+    .gl-about-page .sana-ab-metric span { font-size: .72rem; }
+    .gl-about-page .sana-ab-values { gap: .75rem; }
+    .gl-about-page .sana-ab-value { padding: .95rem .85rem; border-radius: 14px; }
+    .gl-about-page .sana-ab-hero-photo {
+      position: relative; z-index: 2; width: min(100%, 340px); margin-inline: auto;
+      filter: drop-shadow(0 18px 36px rgba(5,31,77,.35));
+      animation: sanaAbSceneFloat 5s ease-in-out infinite;
+    }
+    .gl-about-page .sana-ab-hero-photo img {
+      width: 100%; height: auto; display: block; object-fit: contain;
+    }
+    .gl-about-page .sana-ab-hero__actions { gap: .65rem; }
+    .gl-about-page .sana-ab-hero__actions .sana-btn {
+      padding: .7rem 1.15rem; font-size: .84rem;
+    }
+    .gl-about-page .sana-ab-final__box {
+      padding: clamp(1.35rem, 3vw, 1.85rem);
+      border-radius: 18px;
+    }
+    .gl-about-page .sana-ab-final__box h2 {
+      font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+      margin-bottom: .4rem;
+    }
+    .gl-about-page .sana-ab-final__box > p {
+      font-size: .86rem;
+      margin-bottom: 1rem;
+    }
+  </style>
 </head>
-<body class="font-sans antialiased">
-@include('partials.atheer-home-header')
+<body class="sana-home sana-courses-page gl-about-page">
+<div id="sana-scroll-progress"></div>
+@include('partials.landing.navbar', ['navActive' => 'about', 'navHero' => true])
 
-<main class="page-enter">
-  {{-- Full-bleed hero — brand first --}}
-  <section class="relative overflow-hidden bg-ink py-20 text-white md:py-28">
-    <img src="{{ $heroImg }}" alt="" class="absolute inset-0 h-full w-full object-cover opacity-40" aria-hidden="true" loading="eager" width="2400" height="1200">
-    <div class="absolute inset-0 {{ $isRtl ? 'bg-gradient-to-l' : 'bg-gradient-to-r' }} from-ink via-ink/80 to-ink/50"></div>
-    <div class="container-wide relative max-w-3xl space-y-5">
-      <p class="text-sm font-medium text-metal">{{ $isRtl ? 'قصة '.$brand : 'The '.$brand.' story' }}</p>
-      <p class="text-4xl font-bold tracking-tight md:text-5xl">{{ $brand }}</p>
-      <h1 class="text-balance text-2xl font-semibold text-white/95 md:text-4xl">{{ __('public.about_hero_sub') }}</h1>
-      <p class="text-base leading-8 text-white/80 md:text-lg">{{ __('public.about_intro') }}</p>
-    </div>
-  </section>
+<main class="sana-about-page">
 
-  {{-- Mission / story --}}
-  <section class="container-wide py-20 md:py-24">
-    <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
-      <div class="space-y-4">
-        <p class="text-sm font-medium text-accent">{{ __('public.about_heading') }}</p>
-        <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">{{ __('public.about_hero_sub') }}</h2>
-        <p class="text-base leading-8 text-muted">{!! __('public.about_para1', ['brand' => '<strong class="font-semibold text-ink">'.e($brand).'</strong>']) !!}</p>
-        <p class="text-base leading-8 text-muted">{{ __('public.about_para2') }}</p>
-      </div>
-      <div class="overflow-hidden rounded-3xl shadow-soft">
-        <img src="{{ $missionImg }}" alt="{{ $brand }}" class="aspect-[4/3] w-full object-cover" loading="lazy" width="1200" height="900">
-      </div>
-    </div>
-  </section>
-
-  {{-- Vision & mission — one purpose, clean columns --}}
-  <section class="bg-surface py-20 md:py-24">
-    <div class="container-wide">
-      <div class="grid gap-12 md:grid-cols-2 md:gap-16">
-        <div class="space-y-4">
-          <p class="text-sm font-medium text-accent">{{ __('public.our_vision') }}</p>
-          <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink">{{ $isRtl ? 'لغة تفتح باب الفرصة' : 'Language that opens opportunity' }}</h2>
-          <p class="text-base leading-8 text-muted">{{ __('public.vision_text') }}</p>
+  <section class="sana-ab-hero">
+    <div class="sana-container">
+      <div class="sana-ab-hero__grid sana-reveal">
+        <div class="sana-ab-hero__content">
+          <span class="sana-ab-hero__eyebrow"><i class="fas fa-heart"></i> {{ $isRtl ? 'قصة '.$brand : $brand.' story' }}</span>
+          <h1 class="sana-ab-hero__title">
+            {{ $brand }}
+            <span class="hl">{{ __('public.about_hero_sub') }}</span>
+          </h1>
+          <p class="sana-ab-hero__mission">{{ __('public.about_intro') }}</p>
+          <p class="sana-ab-hero__sub">{{ __('public.about_para2') }}</p>
+          <div class="sana-ab-hero__actions">
+            <div class="sana-site-cta sana-site-cta--hero">
+              <a href="{{ route('home') }}?open_trial=1" class="sana-btn sana-btn--yellow"><i class="fas fa-clipboard-check"></i> {{ __('landing.academy.free_trial_cta') }}</a>
+              <a href="{{ $waUrl }}" class="sana-btn sana-btn--wa" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ $isRtl ? 'واتساب' : 'WhatsApp' }}</a>
+            </div>
+            <a href="#story" class="sana-btn sana-btn--white-outline"><i class="fas fa-book-open"></i> {{ $isRtl ? 'اكتشف قصتنا' : 'Discover our story' }}</a>
+          </div>
         </div>
-        <div class="space-y-4">
-          <p class="text-sm font-medium text-accent">{{ __('public.our_mission') }}</p>
-          <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink">{{ $isRtl ? 'تعليم عملي حتى التوظيف' : 'Practical learning to hiring' }}</h2>
-          <p class="text-base leading-8 text-muted">{{ __('public.mission_intro') }}</p>
-          <ul class="space-y-3 text-sm leading-7 text-muted">
-            <li class="flex gap-3"><span class="mt-2 size-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true"></span><span>{{ __('public.mission_1') }}</span></li>
-            <li class="flex gap-3"><span class="mt-2 size-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true"></span><span>{{ __('public.mission_2') }}</span></li>
-            <li class="flex gap-3"><span class="mt-2 size-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true"></span><span>{{ __('public.mission_3') }}</span></li>
-          </ul>
+        <div class="sana-ab-hero__visual">
+          <div class="sana-ab-scene" aria-hidden="true">
+            <div class="sana-ab-scene__deco">
+              <span class="sana-ab-scene__glow"></span>
+              <span class="sana-ab-scene__ring sana-ab-scene__ring--1"></span>
+              <span class="sana-ab-scene__ring sana-ab-scene__ring--2"></span>
+              <span class="sana-ab-scene__spark sana-ab-scene__spark--1">✦</span>
+              <span class="sana-ab-scene__spark sana-ab-scene__spark--2">✦</span>
+            </div>
+            <div class="sana-ab-hero-photo">
+              <img src="{{ $heroImg }}" alt="{{ $brand }}" width="420" height="480" loading="eager" decoding="async">
+            </div>
+            <div class="sana-ab-scene__chip sana-ab-scene__chip--1"><i class="fas fa-video"></i><span>{{ $isRtl ? 'حصص مباشرة' : 'Live sessions' }}</span></div>
+            <div class="sana-ab-scene__chip sana-ab-scene__chip--2"><i class="fas fa-layer-group"></i><span>{{ $isRtl ? 'مستويات واضحة' : 'Clear levels' }}</span></div>
+            <div class="sana-ab-scene__chip sana-ab-scene__chip--3"><i class="fas fa-user-group"></i><span>{{ $isRtl ? 'متابعة الأهل' : 'Parent follow-up' }}</span></div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  {{-- Values — site/about pattern --}}
-  <section class="container-wide py-20 md:py-24">
-    <div class="mb-10 max-w-2xl space-y-3 md:mb-14">
-      <p class="text-sm font-medium text-accent">{{ __('public.our_values') }}</p>
-      <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">{{ __('public.why_platform') }}</h2>
-      <p class="text-base leading-8 text-muted">{{ $isRtl ? 'ثلاث ركائز تحكم كل قرار نتخذه — من تصميم الكورس إلى متابعة الطالب.' : 'Three pillars guide every decision — from course design to student follow-up.' }}</p>
-    </div>
-    <div class="grid gap-6 md:grid-cols-3">
-      <article class="rounded-2xl border border-line bg-surface p-8 shadow-soft">
-        <div class="mb-4 flex size-12 items-center justify-center rounded-xl bg-accent-soft text-accent">
-          <svg class="size-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  <section class="sana-section" id="story">
+    <div class="sana-container">
+      <div class="sana-head sana-head--center sana-reveal">
+        <span class="sana-head__eyebrow">{{ __('public.about_heading') }}</span>
+        <h2 class="sana-head__title">{{ $isRtl ? 'لماذا وُلدت' : 'Why' }} <span class="hl">{{ $brand }}</span>{{ $isRtl ? '؟' : '?' }}</h2>
+        <span class="sana-head__line"></span>
+      </div>
+      <div class="sana-ab-story">
+        <div class="sana-ab-story__intro sana-reveal">
+          <p>{!! __('public.about_para1', ['brand' => '<strong>'.e($brand).'</strong>']) !!}</p>
+          <p>{{ __('public.about_para2') }}</p>
+          <div class="sana-ab-story__blocks">
+            <div class="sana-ab-story__block">
+              <h4><i class="fas fa-circle-exclamation"></i> {{ __('public.about_challenge_title') }}</h4>
+              <p>{{ __('public.about_challenge_desc') }}</p>
+            </div>
+            <div class="sana-ab-story__block">
+              <h4><i class="fas fa-lightbulb"></i> {{ __('public.about_vision_block_title') }}</h4>
+              <p>{{ __('public.about_vision_block_desc') }}</p>
+            </div>
+            <div class="sana-ab-story__block">
+              <h4><i class="fas fa-chart-line"></i> {{ __('public.about_now_title') }}</h4>
+              <p>{{ __('public.about_now_desc') }}</p>
+            </div>
+          </div>
         </div>
-        <h3 class="mb-2 text-xl font-semibold text-ink">{{ __('public.value_1_title') }}</h3>
-        <p class="text-sm leading-7 text-muted">{{ __('public.value_1_desc') }}</p>
-      </article>
-      <article class="rounded-2xl border border-line bg-surface p-8 shadow-soft">
-        <div class="mb-4 flex size-12 items-center justify-center rounded-xl bg-accent-soft text-accent">
-          <svg class="size-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-        </div>
-        <h3 class="mb-2 text-xl font-semibold text-ink">{{ __('public.value_2_title') }}</h3>
-        <p class="text-sm leading-7 text-muted">{{ __('public.value_2_desc') }}</p>
-      </article>
-      <article class="rounded-2xl border border-line bg-surface p-8 shadow-soft">
-        <div class="mb-4 flex size-12 items-center justify-center rounded-xl bg-accent-soft text-accent">
-          <svg class="size-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 7.65l.77.78L12 21.23l7.65-7.65.77-.78a5.4 5.4 0 0 0 0-7.65z"/></svg>
-        </div>
-        <h3 class="mb-2 text-xl font-semibold text-ink">{{ __('public.value_3_title') }}</h3>
-        <p class="text-sm leading-7 text-muted">{{ __('public.value_3_desc') }}</p>
-      </article>
-    </div>
-  </section>
-
-  {{-- Quiet stats band (not first viewport) --}}
-  <section class="bg-ink py-14 text-white md:py-16">
-    <div class="container-wide">
-      <div class="grid grid-cols-2 gap-8 text-center md:grid-cols-4 md:gap-6">
-        <div class="space-y-1">
-          <p class="text-3xl font-semibold tracking-tight text-metal md:text-4xl">{{ number_format((int) ($stats['courses'] ?? 0)) }}+</p>
-          <p class="text-sm text-white/65">{{ __('public.stat_courses') }}</p>
-        </div>
-        <div class="space-y-1">
-          <p class="text-3xl font-semibold tracking-tight text-metal md:text-4xl">{{ number_format((int) ($stats['students'] ?? 0)) }}+</p>
-          <p class="text-sm text-white/65">{{ __('public.stat_students') }}</p>
-        </div>
-        <div class="space-y-1">
-          <p class="text-3xl font-semibold tracking-tight text-metal md:text-4xl">{{ number_format((int) ($stats['instructors'] ?? 0)) }}+</p>
-          <p class="text-sm text-white/65">{{ __('public.stat_instructors') }}</p>
-        </div>
-        <div class="space-y-1">
-          <p class="text-3xl font-semibold tracking-tight text-metal md:text-4xl">100%</p>
-          <p class="text-sm text-white/65">{{ __('public.stat_quality') }}</p>
+        <div class="sana-ab-timeline sana-reveal">
+          <div class="sana-ab-timeline__item">
+            <span class="sana-ab-timeline__dot"></span>
+            <span class="sana-ab-timeline__year">{{ $isRtl ? 'الفكرة' : 'Idea' }}</span>
+            <strong>{{ $isRtl ? 'سؤال واحد' : 'One question' }}</strong>
+            <p>{{ $isRtl ? 'كيف نجعل تعلّم اللغة تجربة تُعاش — لا مجرد حفظ؟' : 'How do we make language learning lived — not just memorized?' }}</p>
+          </div>
+          <div class="sana-ab-timeline__item">
+            <span class="sana-ab-timeline__dot"></span>
+            <span class="sana-ab-timeline__year">{{ $isRtl ? 'البناء' : 'Build' }}</span>
+            <strong>{{ $isRtl ? 'تجربة متكاملة' : 'A complete experience' }}</strong>
+            <p>{{ $isRtl ? 'حصص مباشرة، متابعة لولي الأمر، وشهادات — في نظام واحد.' : 'Live sessions, parent follow-up, and certificates — in one system.' }}</p>
+          </div>
+          <div class="sana-ab-timeline__item">
+            <span class="sana-ab-timeline__dot"></span>
+            <span class="sana-ab-timeline__year">{{ $isRtl ? 'الآن' : 'Now' }}</span>
+            <strong>{{ $isRtl ? 'تعلّم حيّ' : 'Live learning' }}</strong>
+            <p>{{ $isRtl ? 'مجالان رئيسيان وتقييم مجاني — جاهز للانطلاق مع العائلة.' : 'Two main areas and a free assessment — ready for families to start.' }}</p>
+          </div>
+          <div class="sana-ab-timeline__item">
+            <span class="sana-ab-timeline__dot"></span>
+            <span class="sana-ab-timeline__year">{{ $isRtl ? 'التالي' : 'Next' }}</span>
+            <strong>{{ $isRtl ? 'نمو تدريجي' : 'Steady growth' }}</strong>
+            <p>{{ $isRtl ? 'نوسّع المحتوى والجداول بشفافية — حسب جاهزية الجودة.' : 'We expand content and schedules transparently — as quality is ready.' }}</p>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  {{-- CTA --}}
-  <section class="container-wide py-20 md:py-24">
-    <div class="rounded-3xl border border-line bg-surface px-6 py-10 text-center shadow-soft md:px-14 md:py-14">
-      <p class="mb-3 text-sm font-medium text-accent">{{ $brand }}</p>
-      <h2 class="mb-4 text-balance text-2xl font-semibold text-ink md:text-3xl">{{ __('public.cta_about_title') }}</h2>
-      <p class="mx-auto mb-6 max-w-lg text-base leading-8 text-muted">{{ __('public.cta_about_desc') }}</p>
-      <div class="flex flex-wrap justify-center gap-3">
-        <a href="{{ route('register') }}" class="btn-press inline-flex h-12 items-center rounded-xl bg-accent px-7 font-medium text-white transition hover:bg-[#0d4f4a]">{{ __('public.register_free_now') ?? ($isRtl ? 'سجّل مجاناً الآن' : 'Register free now') }}</a>
-        <a href="{{ route('public.courses') }}" class="inline-flex h-12 items-center rounded-xl border border-line px-7 font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">{{ __('public.browse_all_courses_btn') }}</a>
+  <section class="sana-section sana-section--soft">
+    <div class="sana-container">
+      <div class="sana-head sana-head--center sana-reveal">
+        <span class="sana-head__eyebrow">{{ __('public.our_mission') }}</span>
+        <h2 class="sana-head__title">{{ $isRtl ? 'ما' : 'What we' }} <span class="hl">{{ $isRtl ? 'نؤمن به' : 'believe' }}</span></h2>
+        <span class="sana-head__line"></span>
+        <p class="sana-head__sub">{{ __('public.mission_intro') }}</p>
+      </div>
+      <div class="sana-ab-pillars">
+        <div class="sana-ab-pillar sana-reveal">
+          <div class="sana-ab-pillar__icon"><i class="fas fa-video"></i></div>
+          <strong>{{ __('public.mission_1') }}</strong>
+          <span>{{ $isRtl ? 'المعلّم حاضر — والطالب يتدرّب فعلاً.' : 'The tutor is present — the student actually practices.' }}</span>
+        </div>
+        <div class="sana-ab-pillar sana-reveal">
+          <div class="sana-ab-pillar__icon"><i class="fas fa-route"></i></div>
+          <strong>{{ __('public.mission_2') }}</strong>
+          <span>{{ $isRtl ? 'خطوات واضحة بدل التشتّت بين المحتوى.' : 'Clear steps instead of content chaos.' }}</span>
+        </div>
+        <div class="sana-ab-pillar sana-reveal">
+          <div class="sana-ab-pillar__icon"><i class="fas fa-user-group"></i></div>
+          <strong>{{ __('public.mission_3') }}</strong>
+          <span>{{ $isRtl ? 'العائلة ترى الحضور والتقدّم بثقة.' : 'Families see attendance and progress with confidence.' }}</span>
+        </div>
+        <div class="sana-ab-pillar sana-reveal">
+          <div class="sana-ab-pillar__icon"><i class="fas fa-certificate"></i></div>
+          <strong>{{ $isRtl ? 'شهادة عند الإتمام' : 'Certificate on completion' }}</strong>
+          <span>{{ $isRtl ? 'إثبات إنجاز واضح بعد إتمام متطلبات الكورس.' : 'Clear proof of achievement after course requirements.' }}</span>
+        </div>
       </div>
     </div>
   </section>
+
+  <section class="sana-section">
+    <div class="sana-container">
+      <div class="sana-head sana-head--center sana-reveal">
+        <span class="sana-head__eyebrow">{{ __('public.our_vision') }}</span>
+        <h2 class="sana-head__title">{{ $isRtl ? 'المستقبل الذي' : 'The future we' }} <span class="hl">{{ $isRtl ? 'نبنيه' : 'build' }}</span></h2>
+        <span class="sana-head__line"></span>
+        <p class="sana-head__sub">{{ __('public.vision_text') }}</p>
+      </div>
+      <div class="sana-ab-vision">
+        <div class="sana-ab-vision__card sana-reveal">
+          <span class="sana-ab-vision__icon"><i class="fas fa-comments"></i></span>
+          <div>
+            <strong>{{ $isRtl ? 'من الحفظ إلى الاستخدام' : 'From memorizing to using' }}</strong>
+            <p>{{ $isRtl ? 'حوار، ممارسة، وثقة في المواقف الحقيقية.' : 'Dialogue, practice, and confidence in real situations.' }}</p>
+          </div>
+        </div>
+        <div class="sana-ab-vision__card sana-reveal">
+          <span class="sana-ab-vision__icon"><i class="fas fa-house-user"></i></span>
+          <div>
+            <strong>{{ $isRtl ? 'عائلة مشاركة' : 'An involved family' }}</strong>
+            <p>{{ $isRtl ? 'وليّ الأمر شريك في الرحلة — لا متفرّج قلق.' : 'Parents as partners — not anxious spectators.' }}</p>
+          </div>
+        </div>
+        <div class="sana-ab-vision__card sana-reveal">
+          <span class="sana-ab-vision__icon"><i class="fas fa-graduation-cap"></i></span>
+          <div>
+            <strong>{{ $isRtl ? 'نجاح قابل للقياس' : 'Measurable success' }}</strong>
+            <p>{{ $isRtl ? 'تقدّم واضح، حضور، وشهادة عند الإتمام.' : 'Clear progress, attendance, and a certificate on completion.' }}</p>
+          </div>
+        </div>
+        <div class="sana-ab-vision__card sana-reveal">
+          <span class="sana-ab-vision__icon"><i class="fas fa-globe"></i></span>
+          <div>
+            <strong>{{ $isRtl ? 'عربي وإنجليزي على منصة واحدة' : 'Arabic & English on one platform' }}</strong>
+            <p>{{ $isRtl ? 'مجالان رئيسيان بجودة واحدة وتجربة موحّدة.' : 'Two main areas with one quality bar and shared experience.' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sana-section sana-section--soft">
+    <div class="sana-container">
+      <div class="sana-head sana-head--center sana-reveal">
+        <span class="sana-head__eyebrow">{{ __('public.why_platform') }}</span>
+        <h2 class="sana-head__title">{{ $isRtl ? 'لماذا يختارنا' : 'Why families choose' }} <span class="hl">{{ $isRtl ? 'الطلاب وأولياء الأمور' : 'us' }}</span></h2>
+        <span class="sana-head__line"></span>
+        <p class="sana-head__sub">{{ $isRtl ? 'مزايا حقيقية — لا شعارات فارغة.' : 'Real advantages — not empty slogans.' }}</p>
+      </div>
+      <div class="sana-ab-why">
+        <div class="sana-ab-why__card sana-reveal">
+          <div class="sana-ab-why__icon"><i class="fas fa-video"></i></div>
+          <strong>{{ __('public.why_1_title') }}</strong>
+          <p>{{ __('public.why_1_desc') }}</p>
+        </div>
+        <div class="sana-ab-why__card sana-reveal">
+          <div class="sana-ab-why__icon"><i class="fas fa-route"></i></div>
+          <strong>{{ __('public.why_2_title') }}</strong>
+          <p>{{ __('public.why_2_desc') }}</p>
+        </div>
+        <div class="sana-ab-why__card sana-reveal">
+          <div class="sana-ab-why__icon"><i class="fas fa-chart-line"></i></div>
+          <strong>{{ __('public.why_3_title') }}</strong>
+          <p>{{ __('public.why_3_desc') }}</p>
+        </div>
+        <div class="sana-ab-why__card sana-reveal">
+          <div class="sana-ab-why__icon"><i class="fas fa-certificate"></i></div>
+          <strong>{{ __('public.why_4_title') }}</strong>
+          <p>{{ __('public.why_4_desc') }}</p>
+        </div>
+        <div class="sana-ab-why__card sana-reveal">
+          <div class="sana-ab-why__icon"><i class="fas fa-chalkboard-user"></i></div>
+          <strong>{{ __('public.value_3_title') }}</strong>
+          <p>{{ __('public.value_3_desc') }}</p>
+        </div>
+        <div class="sana-ab-why__card sana-reveal">
+          <div class="sana-ab-why__icon"><i class="fas fa-comments"></i></div>
+          <strong>{{ __('public.value_1_title') }}</strong>
+          <p>{{ __('public.value_1_desc') }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sana-section">
+    <div class="sana-container">
+      <div class="sana-head sana-head--center sana-reveal">
+        <span class="sana-head__eyebrow">{{ $isRtl ? 'أرقام المنصة' : 'Platform numbers' }}</span>
+        <h2 class="sana-head__title">{{ $isRtl ? 'لمحة' : 'A snapshot' }} <span class="hl">{{ $isRtl ? 'سريعة' : 'today' }}</span></h2>
+        <span class="sana-head__line"></span>
+      </div>
+      <div class="sana-ab-metrics sana-reveal">
+        <div class="sana-ab-metric">
+          <i class="fas fa-book-open"></i>
+          <strong>{{ number_format((int) ($stats['courses'] ?? 0)) }}</strong>
+          <span>{{ __('public.stat_courses') }}</span>
+        </div>
+        <div class="sana-ab-metric">
+          <i class="fas fa-user-graduate"></i>
+          <strong>{{ number_format((int) ($stats['students'] ?? 0)) }}</strong>
+          <span>{{ __('public.stat_students') }}</span>
+        </div>
+        <div class="sana-ab-metric">
+          <i class="fas fa-chalkboard-user"></i>
+          <strong>{{ number_format((int) ($stats['instructors'] ?? 0)) }}</strong>
+          <span>{{ __('public.stat_instructors') }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sana-section sana-section--soft">
+    <div class="sana-container">
+      <div class="sana-head sana-head--center sana-reveal">
+        <span class="sana-head__eyebrow">{{ __('public.our_values') }}</span>
+        <h2 class="sana-head__title">{{ $isRtl ? 'ما' : 'What' }} <span class="hl">{{ $isRtl ? 'يميّزنا' : 'sets us apart' }}</span></h2>
+        <span class="sana-head__line"></span>
+      </div>
+      <div class="sana-ab-values">
+        <div class="sana-ab-value sana-reveal">
+          <div class="sana-ab-value__icon"><i class="fas fa-comments"></i></div>
+          <strong>{{ __('public.value_1_title') }}</strong>
+          <span>{{ __('public.value_1_desc') }}</span>
+        </div>
+        <div class="sana-ab-value sana-reveal">
+          <div class="sana-ab-value__icon"><i class="fas fa-shield-halved"></i></div>
+          <strong>{{ __('public.value_2_title') }}</strong>
+          <span>{{ __('public.value_2_desc') }}</span>
+        </div>
+        <div class="sana-ab-value sana-reveal">
+          <div class="sana-ab-value__icon"><i class="fas fa-chalkboard-user"></i></div>
+          <strong>{{ __('public.value_3_title') }}</strong>
+          <span>{{ __('public.value_3_desc') }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sana-ab-final">
+    <div class="sana-container sana-reveal">
+      <div class="sana-ab-final__box">
+        <h2>{{ __('public.cta_about_title') }}</h2>
+        <p>{{ __('public.cta_about_desc') }}</p>
+        <div class="sana-ab-final__actions">
+          <div class="sana-site-cta sana-site-cta--center">
+            <a href="{{ route('home') }}?open_trial=1" class="sana-btn sana-btn--yellow"><i class="fas fa-clipboard-check"></i> {{ __('landing.academy.free_trial_cta') }}</a>
+            <a href="{{ $waUrl }}" class="sana-btn sana-btn--wa" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ $isRtl ? 'واتساب' : 'WhatsApp' }}</a>
+          </div>
+          <a href="{{ route('public.courses') }}" class="sana-btn sana-btn--ghost-light" style="margin-top:10px">{{ __('public.browse_all_courses_btn') }} <i class="fas fa-compass"></i></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </main>
 
-@include('partials.atheer-home-footer')
-<script>
-  document.querySelectorAll('[data-open-free-trial]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      window.location.href = {{ \Illuminate\Support\Js::from(url('/?open_trial=1')) }};
-    });
-  });
-</script>
+@include('partials.landing.footer')
 </body>
 </html>

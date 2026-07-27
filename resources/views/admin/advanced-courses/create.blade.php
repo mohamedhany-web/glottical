@@ -48,16 +48,17 @@
                                 </div>
 
                                 <div class="space-y-2">
-                                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">المدرّس المسؤول</label>
-                                    <select name="instructor_id"
+                                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">المدرّس المسؤول *</label>
+                                    <select name="instructor_id" required
                                             class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
-                                        <option value="">بدون مدرّس محدد</option>
+                                        <option value="">— اختر المدرّس —</option>
                                         @foreach($instructors as $instructor)
                                             <option value="{{ $instructor->id }}" {{ old('instructor_id') == $instructor->id ? 'selected' : '' }}>
                                                 {{ $instructor->name }}
                                             </option>
                                         @endforeach
                                     </select>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">مطلوب للكورسات الجماعية والفردية — يظهر في صفحة المجموعات والتفاصيل.</p>
                                     @error('instructor_id') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                                 </div>
 
@@ -103,12 +104,14 @@
                                     <p class="text-xs text-slate-500 dark:text-slate-400">يُعرض على بطاقات الكورس كسعر قبل وبعد. الدفع والكوبونات تُحسب على هذا السعر.</p>
                                     @error('price_after_discount') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                                 </div>
-                                <div class="space-y-2 md:col-span-2">
-                                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">نوع الكورس</label>
-                                    <select name="delivery_type" class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-800 dark:text-slate-200">
-                                        <option value="group" @selected(old('delivery_type', 'group') === 'group')>جماعي</option>
-                                        <option value="one_to_one" @selected(old('delivery_type') === 'one_to_one')>فردي 1:1 مع معلم</option>
+                                <div class="space-y-2 md:col-span-2 rounded-xl border border-sky-100 dark:border-sky-900/40 bg-sky-50/70 dark:bg-sky-950/20 p-4">
+                                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">نوع التعلّم * <span class="text-slate-500 font-medium">(يظهر في /groups)</span></label>
+                                    <select name="delivery_type" required class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-800 dark:text-slate-200">
+                                        <option value="group" @selected(old('delivery_type', 'group') === 'group')>جماعي — مجموعة منظّمة مع مدرّس</option>
+                                        <option value="one_to_one" @selected(old('delivery_type') === 'one_to_one')>فردي 1:1 — جلسات خاصة مع المدرّس</option>
                                     </select>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">أكمل التوصيف (الوصف، الأهداف، ماذا ستتعلّم، المتطلبات) ليظهر بالكامل في صفحة تفاصيل الكورس العامة.</p>
+                                    @error('delivery_type') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div class="space-y-2 md:col-span-2">
                                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">نظام الدفع</label>

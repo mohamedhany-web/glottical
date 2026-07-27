@@ -221,26 +221,6 @@
         </a>
     </div>
 
-    @if(isset($activeSubscription) && $activeSubscription)
-    {{-- بطاقة الاشتراك الحالي --}}
-    <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200/80 dark:border-slate-700 overflow-hidden">
-        <div class="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 bg-gradient-to-l from-[#FFE5F7]/80 to-white dark:from-slate-800/90 dark:to-slate-900/90 border-b border-slate-100 dark:border-slate-700">
-            <div class="flex items-center gap-3">
-                <span class="w-10 h-10 rounded-xl bg-[#FFE5F7] dark:bg-indigo-900/40 text-[#283593] dark:text-indigo-300 flex items-center justify-center">
-                    <i class="fas fa-layer-group"></i>
-                </span>
-                <div>
-                    <h2 class="font-bold text-slate-800 dark:text-slate-100">{{ $activeSubscription->plan_name }}</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">مدة الباقة: {{ \App\Models\Subscription::getDurationLabel($activeSubscription->billing_cycle) }} · ينتهي في {{ $activeSubscription->end_date?->format('Y-m-d') }}</p>
-                </div>
-            </div>
-            <a href="{{ route('student.my-subscription') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#283593] text-white text-sm font-semibold hover:bg-[#1f2a7a] transition-colors">
-                <i class="fas fa-info-circle"></i>
-                تفاصيل اشتراكي
-            </a>
-        </div>
-    </div>
-    @endif
 
     {{-- الدورات + الشريط الجانبي --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

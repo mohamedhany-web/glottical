@@ -1,11 +1,25 @@
-<nav class="flex flex-wrap gap-2 rounded-2xl border bg-white p-3 text-sm">
-    <a href="{{ route('admin.crm.dashboard') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('admin.crm.dashboard') ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700' }}">لوحة CRM</a>
-    <a href="{{ route('admin.crm.pipeline') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('admin.crm.pipeline') ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-700' }}">Pipeline</a>
-    <a href="{{ route('admin.crm.leads.index') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('admin.crm.leads.*') ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700' }}">العملاء المحتملون</a>
-    <a href="{{ route('admin.crm.commissions.index') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('admin.crm.commissions.*') ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-700' }}">العمولات</a>
-    <a href="{{ route('admin.crm.audit.index') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('admin.crm.audit.*') ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700' }}">سجل المتابعة</a>
-    <a href="{{ route('admin.crm.groups.index') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('admin.crm.groups.*') ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-700' }}">مجموعات الفريق</a>
-    <a href="{{ route('admin.crm.reports.index') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('admin.crm.reports.*') ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-700' }}">تقارير CRM</a>
-    <a href="{{ route('admin.crm.sales-permissions.index') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('admin.crm.sales-permissions.*') ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-700' }}">صلاحيات المبيعات</a>
-    <a href="{{ route('admin.employee-jobs.index') }}" class="px-3 py-1.5 rounded-lg font-bold {{ request()->routeIs('admin.employee-jobs.*') ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-700' }}">صلاحيات الوظائف</a>
+<nav class="flex flex-wrap gap-2 rounded-2xl border border-line bg-surface p-3 shadow-soft">
+    @php
+        $crmLinks = [
+            ['route' => 'admin.crm.dashboard', 'match' => 'admin.crm.dashboard', 'label' => 'لوحة CRM', 'icon' => 'fa-chart-pie'],
+            ['route' => 'admin.crm.pipeline', 'match' => 'admin.crm.pipeline', 'label' => 'Pipeline', 'icon' => 'fa-columns'],
+            ['route' => 'admin.crm.leads.index', 'match' => 'admin.crm.leads.*', 'label' => 'العملاء المحتملون', 'icon' => 'fa-user-plus'],
+            ['route' => 'admin.crm.commissions.index', 'match' => 'admin.crm.commissions.*', 'label' => 'العمولات', 'icon' => 'fa-coins'],
+            ['route' => 'admin.crm.audit.index', 'match' => 'admin.crm.audit.*', 'label' => 'سجل المتابعة', 'icon' => 'fa-clipboard-list'],
+            ['route' => 'admin.crm.groups.index', 'match' => 'admin.crm.groups.*', 'label' => 'مجموعات الفريق', 'icon' => 'fa-people-group'],
+            ['route' => 'admin.crm.reports.index', 'match' => 'admin.crm.reports.*', 'label' => 'تقارير CRM', 'icon' => 'fa-file-alt'],
+            ['route' => 'admin.crm.sales-permissions.index', 'match' => 'admin.crm.sales-permissions.*', 'label' => 'صلاحيات المبيعات', 'icon' => 'fa-user-shield'],
+            ['route' => 'admin.employee-jobs.index', 'match' => 'admin.employee-jobs.*', 'label' => 'صلاحيات الوظائف', 'icon' => 'fa-briefcase'],
+        ];
+    @endphp
+    @foreach($crmLinks as $link)
+        @if(Route::has($link['route']))
+            @php $active = request()->routeIs($link['match']); @endphp
+            <a href="{{ route($link['route']) }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-medium transition {{ $active ? 'bg-accent text-white' : 'border border-line bg-surface text-ink-soft hover:border-accent/30 hover:text-accent' }}">
+                <i class="fas {{ $link['icon'] }} text-xs"></i>
+                {{ $link['label'] }}
+            </a>
+        @endif
+    @endforeach
 </nav>

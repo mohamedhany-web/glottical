@@ -39,7 +39,14 @@ class SiteServiceController extends Controller
 
         $services = $query->paginate(20)->withQueryString();
 
-        return view('admin.site-services.index', compact('services'));
+        $stats = [
+            'total' => SiteService::count(),
+            'active' => SiteService::where('is_active', true)->count(),
+            'inactive' => SiteService::where('is_active', false)->count(),
+            'with_image' => SiteService::whereNotNull('image_path')->where('image_path', '!=', '')->count(),
+        ];
+
+        return view('admin.site-services.index', compact('services', 'stats'));
     }
 
     public function create()

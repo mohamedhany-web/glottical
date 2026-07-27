@@ -2,19 +2,19 @@
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
     $a = 'landing.academy';
-    $itemTitle = isset($course) ? ($course->title ?? 'الكورس') : (isset($learningPath) ? ($learningPath->name ?? 'الطلب') : 'الطلب');
+    $itemTitle = $course->title ?? 'الكورس';
     $thumbUrl = null;
     if (isset($course) && ($course->thumbnail ?? null)) {
         $thumbUrl = storage_asset(str_replace('\\', '/', $course->thumbnail));
     }
     $platformLogoUrl = $platformLogoUrl ?? \App\Services\AdminPanelBranding::logoPublicUrl();
     $appName = config('app.name');
-    $isMonthlyCheckout = isset($course) && $course->isMonthlyBilling();
-    $baseCoursePrice = isset($course) ? (float) $course->effectiveCheckoutPrice() : (float) (isset($learningPath) ? ($learningPath->price ?? 0) : 0);
+    $isMonthlyCheckout = $course->isMonthlyBilling();
+    $baseCoursePrice = (float) $course->effectiveCheckoutPrice();
     $studentBal = isset($studentWalletBalance) ? (float) $studentWalletBalance : 0;
-    $checkoutHasWalletBalance = isset($course) && isset($studentWalletBalance) && (float) $studentWalletBalance > 0;
-    $fawaterakActive = !empty($fawaterakUseGateway) && isset($course);
-    $fawaterakMis = !empty($fawaterakMisconfigured) && isset($course);
+    $checkoutHasWalletBalance = isset($studentWalletBalance) && (float) $studentWalletBalance > 0;
+    $fawaterakActive = !empty($fawaterakUseGateway);
+    $fawaterakMis = !empty($fawaterakMisconfigured);
     $fawaterakIntegration = $fawaterakIntegration ?? 'iframe';
 @endphp
 <!DOCTYPE html>
@@ -143,7 +143,7 @@
                     <div class="lg:col-span-3 reveal">
                         <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-extrabold mb-5 glass-panel text-white border border-white/10">
                             <i class="fas fa-lock text-acad-cyan text-[11px]"></i>
-                            {{ isset($course) ? __('public.secure_checkout_badge') : __('public.checkout_page_label') }}
+                            {{ __('public.secure_checkout_badge') }}
                         </span>
                         <h1 class="text-3xl sm:text-4xl lg:text-[2.65rem] font-black text-white leading-[1.15] mb-4">
                             {{ __('public.checkout_page_label') }}
@@ -175,7 +175,7 @@
                                     <i class="fas fa-graduation-cap"></i>
                                 </div>
                                 <p class="text-xl font-black text-white leading-snug">{{ Str::limit($itemTitle, 80) }}</p>
-                                <p class="text-sm text-white/50 mt-2">{{ isset($course) ? ($course->academicSubject->name ?? '') : '' }}</p>
+                                <p class="text-sm text-white/50 mt-2">{{ $course->academicSubject->name ?? '' }}</p>
                             </div>
                         @endif
                     </div>
@@ -202,21 +202,21 @@
                             <h3 class="text-lg font-black text-white mb-5">{{ __('public.checkout_order_summary_title') }}</h3>
                             <div class="flex items-start gap-4 mb-6 pb-6 border-b border-white/10">
                                 <div class="w-14 h-14 rounded-2xl bg-acad-cyan/15 flex items-center justify-center flex-shrink-0 ring-1 ring-acad-cyan/25">
-                                    <i class="fas {{ isset($course) ? 'fa-graduation-cap' : 'fa-route' }} text-acad-cyan text-xl"></i>
+                                    <i class="fas fa-graduation-cap text-acad-cyan text-xl"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <h4 class="font-bold text-white text-base line-clamp-2 leading-snug">
-                                        @if(isset($course)){{ $course->title }}@elseif(isset($learningPath)){{ $learningPath->name }}@else الطلب @endif
+                                        {{ $course->title }}
                                     </h4>
                                     <p class="text-sm text-white/50 mt-1">
-                                        @if(isset($course)){{ $course->academicSubject->name ?? __('public.course_category_not_set') }}@else مسار تعليمي شامل @endif
+                                        {{ $course->academicSubject->name ?? __('public.course_category_not_set') }}
                                     </p>
                                 </div>
                             </div>
                             <div class="space-y-3 mb-6" id="checkout-pricing-summary"
                                  data-base-price="{{ $baseCoursePrice }}"
                                  data-student-balance="{{ $studentBal }}"
-                                 data-has-course="{{ isset($course) ? '1' : '0' }}"
+                                 data-has-course="1"
                                  data-is-monthly="{{ $isMonthlyCheckout ? '1' : '0' }}">
                                 @if($isMonthlyCheckout)
                                     <p class="text-xs font-semibold text-acad-cyan bg-acad-cyan/10 border border-acad-cyan/20 rounded-xl px-3 py-2">
@@ -305,8 +305,7 @@
                                 </div>
                             @endif
 
-                            @if(isset($course))
-                                <div class="mb-8 rounded-2xl border border-white/12 bg-white/[0.04] p-5 sm:p-6 space-y-4"
+                            <div class="mb-8 rounded-2xl border border-white/12 bg-white/[0.04] p-5 sm:p-6 space-y-4"
                                      id="checkout-discount-panel"
                                      data-quote-url="{{ route('public.course.checkout.quote', $course->id) }}"
                                      data-has-wallet="{{ $checkoutHasWalletBalance ? '1' : '0' }}">
@@ -353,7 +352,6 @@
                                         <span id="checkout_pricing_msg" class="text-sm font-medium text-white/55 hidden"></span>
                                     </div>
                                 </div>
-                            @endif
 
                             @if($fawaterakMis)
                                 <div class="alert-box alert-error mb-6">
@@ -431,12 +429,10 @@
                                     </div>
                                 </div>
 
-                                <form action="{{ isset($course) ? route('public.course.checkout.complete', $course->id) : (isset($learningPath) ? route('public.learning-path.checkout.complete', Str::slug($learningPath->name)) : '#') }}" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true" x-data="{paymentMethod:'bank_transfer'}" id="manual-checkout-form">
+                                <form action="{{ route('public.course.checkout.complete', $course->id) }}" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true" x-data="{paymentMethod:'bank_transfer'}" id="manual-checkout-form">
                                     @csrf
-                                    @if(isset($course))
-                                        <input type="hidden" name="coupon_code" id="form_coupon_code" value="{{ old('coupon_code', '') }}">
-                                        <input type="hidden" name="wallet_credit" id="form_wallet_credit" value="{{ old('wallet_credit', '0') }}">
-                                    @endif
+                                    <input type="hidden" name="coupon_code" id="form_coupon_code" value="{{ old('coupon_code', '') }}">
+                                    <input type="hidden" name="wallet_credit" id="form_wallet_credit" value="{{ old('wallet_credit', '0') }}">
                                     <div class="space-y-5 mb-8">
                                         <div>
                                             <label class="block text-sm font-bold text-white/75 mb-2">طريقة الدفع</label>
@@ -521,7 +517,6 @@
         else{scrollProgress();initReveal();}
     })();
     </script>
-    @if(isset($course))
     <script>
     (function(){
         var panel = document.getElementById('checkout-discount-panel');
@@ -633,8 +628,7 @@
         quote();
     })();
     </script>
-    @endif
-    @if(!empty($fawaterakUseGateway) && isset($course) && empty($fawaterakMisconfigured) && ($fawaterakIntegration ?? 'iframe') === 'iframe')
+    @if(!empty($fawaterakUseGateway) && empty($fawaterakMisconfigured) && ($fawaterakIntegration ?? 'iframe') === 'iframe')
     <script>
     (function(){
         var prepareUrl = @json(route('public.course.checkout.fawaterak.prepare', $course->id));
@@ -797,7 +791,7 @@
     </script>
     @endif
 
-    @if(!empty($fawaterakUseGateway) && isset($course) && empty($fawaterakMisconfigured) && ($fawaterakIntegration ?? 'iframe') === 'api')
+    @if(!empty($fawaterakUseGateway) && empty($fawaterakMisconfigured) && ($fawaterakIntegration ?? 'iframe') === 'api')
     <script>
     (function(){
         var prepareUrl = @json(route('public.course.checkout.fawaterak.prepare', $course->id));

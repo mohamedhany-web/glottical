@@ -1,70 +1,127 @@
 @extends('layouts.admin')
 
-@section('title', 'العملاء المحتملون')
-@section('header', 'العملاء المحتملون (Leads)')
+@section('title', 'عملاء المبيعات المحتملون')
+@section('page_title', 'عملاء المبيعات')
 
 @section('content')
-<div class="space-y-6">
-    <p class="text-sm text-slate-600">عرض كل الـ Leads التي يسجّلها فريق المبيعات. التعديل والتحويل من لوحة الموظف.</p>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+@endphp
 
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6">
-        <form method="GET" class="flex flex-wrap items-end gap-4">
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">المبيعات · العملاء المحتملون</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">عملاء المبيعات</h2>
+            <p class="mt-1 text-sm text-muted">عرض الـ Leads — للإدارة الكاملة استخدم CRM</p>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.crm.leads.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-external-link-alt text-xs"></i>
+                فتح في CRM
+            </a>
+            <a href="{{ route('admin.sales.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-chart-pie text-xs"></i>
+                تحليلات المبيعات
+            </a>
+        </div>
+    </section>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-4 py-4 sm:px-5">
+            <h3 class="text-base font-semibold text-ink">البحث والفلترة</h3>
+        </div>
+        <form method="GET" action="{{ route('admin.sales.leads.index') }}" class="grid grid-cols-1 gap-4 p-4 sm:p-5 md:grid-cols-3 md:items-end">
             <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">بحث</label>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="اسم، بريد، هاتف، رقم…"
-                       class="rounded-lg border border-slate-300 px-3 py-2 text-sm w-64 max-w-full">
+                <label class="{{ $labelClass }}" for="search">بحث</label>
+                <input id="search" type="search" name="search" value="{{ request('search') }}" placeholder="اسم، بريد، هاتف، رقم…" class="{{ $fieldClass }}">
             </div>
             <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">الحالة</label>
-                <select name="status" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                <label class="{{ $labelClass }}" for="status">الحالة</label>
+                <select id="status" name="status" class="{{ $fieldClass }}">
                     <option value="">الكل</option>
                     @foreach(\App\Models\SalesLead::statusLabels() as $val => $label)
-                        <option value="{{ $val }}" {{ request('status') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                        <option value="{{ $val }}" @selected(request('status') === $val)>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>
-            <button type="submit" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold">تصفية</button>
-            <a href="{{ route('admin.sales.leads.index') }}" class="px-4 py-2 rounded-lg bg-slate-200 text-slate-800 text-sm font-semibold">إعادة ضبط</a>
+            <div class="flex flex-wrap gap-2">
+                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white">
+                    <i class="fas fa-filter text-xs"></i>
+                    تصفية
+                </button>
+                @if(request()->anyFilled(['search', 'status']))
+                    <a href="{{ route('admin.sales.leads.index') }}" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line px-5 text-sm font-medium text-ink hover:bg-canvas">
+                        مسح
+                    </a>
+                @endif
+            </div>
         </form>
-    </div>
+    </article>
 
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+            <div>
+                <h3 class="text-base font-semibold text-ink">القائمة</h3>
+                <p class="mt-0.5 text-xs text-muted">{{ number_format($leads->total()) }} نتيجة</p>
+            </div>
+        </div>
+        <div class="admin-table-wrap overflow-x-auto">
             <table class="min-w-full text-sm">
-                <thead class="bg-slate-50 text-slate-600 font-semibold">
+                <thead class="border-b border-line bg-canvas/60 text-xs text-muted">
                     <tr>
-                        <th class="text-right px-4 py-3">#</th>
-                        <th class="text-right px-4 py-3">الاسم</th>
-                        <th class="text-right px-4 py-3">تواصل</th>
-                        <th class="text-right px-4 py-3">الحالة</th>
-                        <th class="text-right px-4 py-3">المسؤول</th>
-                        <th class="text-right px-4 py-3">التاريخ</th>
+                        <th class="px-4 py-3 text-start font-medium">#</th>
+                        <th class="px-4 py-3 text-start font-medium">الاسم</th>
+                        <th class="px-4 py-3 text-start font-medium">تواصل</th>
+                        <th class="px-4 py-3 text-start font-medium">الحالة</th>
+                        <th class="px-4 py-3 text-start font-medium">المسؤول</th>
+                        <th class="px-4 py-3 text-start font-medium">التاريخ</th>
+                        <th class="px-4 py-3 text-start font-medium">إجراء</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-line">
                     @forelse($leads as $lead)
-                    <tr class="hover:bg-slate-50/80">
-                        <td class="px-4 py-3">
-                            <a href="{{ route('admin.sales.leads.show', $lead) }}" class="font-bold text-emerald-700 hover:underline">#{{ $lead->id }}</a>
-                        </td>
-                        <td class="px-4 py-3 font-medium text-slate-900">{{ $lead->name }}</td>
-                        <td class="px-4 py-3 text-xs text-slate-600">
-                            <div>{{ $lead->email ?: '—' }}</div>
-                            <div>{{ $lead->phone }}</div>
-                        </td>
-                        <td class="px-4 py-3">{{ $lead->status_label }}</td>
-                        <td class="px-4 py-3 text-slate-700">{{ $lead->assignedTo?->name ?? '—' }}</td>
-                        <td class="px-4 py-3 text-xs text-slate-500">{{ $lead->created_at?->format('Y-m-d') }}</td>
-                    </tr>
+                        <tr class="hover:bg-canvas/40">
+                            <td class="px-4 py-3 tabular-nums text-muted">{{ $lead->id }}</td>
+                            <td class="px-4 py-3 font-semibold text-ink">{{ $lead->name }}</td>
+                            <td class="px-4 py-3 text-xs text-muted">
+                                <div>{{ $lead->email ?: '—' }}</div>
+                                <div>{{ $lead->phone ?: '—' }}</div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">{{ $lead->status_label }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-ink-soft">{{ $lead->assignedTo?->name ?? '—' }}</td>
+                            <td class="px-4 py-3 text-xs tabular-nums text-muted">{{ $lead->created_at?->format('Y-m-d') }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex flex-wrap gap-1.5">
+                                    <a href="{{ route('admin.sales.leads.show', $lead) }}" class="btn-press inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-ink hover:border-accent/30 hover:text-accent" title="عرض">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('admin.crm.leads.show', $lead) }}" class="btn-press inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-ink hover:border-accent/30 hover:text-accent" title="CRM">
+                                        <i class="fas fa-project-diagram"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
                     @empty
-                    <tr><td colspan="6" class="px-4 py-12 text-center text-slate-500">لا توجد سجلات.</td></tr>
+                        <tr>
+                            <td colspan="7" class="px-4 py-16 text-center">
+                                <div class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <p class="text-sm font-medium text-ink">لا توجد سجلات</p>
+                                <p class="mt-1 text-xs text-muted">جرّب مسح الفلاتر أو أضف عميلاً من CRM.</p>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
         @if($leads->hasPages())
-            <div class="px-4 py-3 border-t border-slate-100">{{ $leads->links() }}</div>
+            <div class="border-t border-line px-4 py-4 sm:px-5">{{ $leads->links() }}</div>
         @endif
-    </div>
+    </article>
 </div>
 @endsection

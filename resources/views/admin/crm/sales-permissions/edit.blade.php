@@ -5,7 +5,6 @@
 
 @section('content')
 <div class="space-y-4 max-w-4xl">
-  @include('partials.crm-admin-nav')
 
   <div class="rounded-xl border bg-white p-4 text-sm">
     <p><strong>{{ $employee->name }}</strong> — {{ $employee->employeeJob?->name }}</p>

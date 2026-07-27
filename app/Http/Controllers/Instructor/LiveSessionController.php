@@ -11,7 +11,6 @@ use App\Models\LiveSessionReport;
 use App\Models\IntegrationSetting;
 use App\Models\LiveSetting;
 use App\Models\SessionAttendance;
-use App\Services\ClassroomSubscriptionFeatureMenuService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -142,8 +141,8 @@ class LiveSessionController extends Controller
 
         $jitsiDomain = $liveSession->server?->normalized_domain ?: LiveSetting::getJitsiDomain();
         $user = auth()->user();
-        $subscriptionFeatureMenuItems = ClassroomSubscriptionFeatureMenuService::menuItemsForUser($user, true);
-        $subscriptionPackageLabel = $user->activeSubscription()?->plan_name;
+        $subscriptionFeatureMenuItems = [];
+        $subscriptionPackageLabel = null;
 
         return view('instructor.live-sessions.room', compact(
             'liveSession',

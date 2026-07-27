@@ -57,6 +57,19 @@ class AdvancedCourseController extends Controller
             $query->where('is_active', $request->status === 'active');
         }
 
+        // فلترة حسب نوع التعلّم (جماعي / فردي)
+        if ($request->filled('delivery_type')) {
+            $delivery = $request->input('delivery_type');
+            if ($delivery === 'one_to_one') {
+                $query->where('delivery_type', 'one_to_one');
+            } elseif ($delivery === 'group') {
+                $query->where(function ($q) {
+                    $q->whereNull('delivery_type')
+                        ->orWhere('delivery_type', 'group');
+                });
+            }
+        }
+
         // البحث في العنوان والوصف
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -153,14 +166,14 @@ class AdvancedCourseController extends Controller
             'description' => 'nullable|string',
             'video_url' => 'nullable|url|max:500',
             'objectives' => 'nullable|string',
-            'instructor_id' => 'nullable|exists:users,id|required_if:delivery_type,one_to_one',
+            'instructor_id' => 'required|exists:users,id',
             'programming_language' => 'nullable|string|max:100',
             'framework' => 'nullable|string|max:100',
             'duration_hours' => 'nullable|numeric|min:0',
             'duration_minutes' => 'nullable|integer|min:0|max:59',
             'price' => 'nullable|numeric|min:0',
             'price_after_discount' => 'nullable|numeric|min:0',
-            'delivery_type' => 'nullable|in:group,one_to_one',
+            'delivery_type' => 'required|in:group,one_to_one',
             'billing_mode' => 'nullable|in:one_time,monthly',
             'monthly_price' => 'nullable|numeric|min:0',
             'monthly_price_after_discount' => 'nullable|numeric|min:0',
@@ -183,6 +196,8 @@ class AdvancedCourseController extends Controller
             'academic_subject_id.exists' => 'مجموعة المهارات المحددة غير موجودة',
             'course_category_id.exists' => 'التصنيف المحدد غير موجود',
             'instructor_id.exists' => 'المدرب المحدد غير موجود',
+            'instructor_id.required' => 'يجب تعيين مدرّس مسؤول للكورس',
+            'delivery_type.required' => 'اختر نوع التعلّم (جماعي أو فردي)',
             'duration_hours.numeric' => 'مدة الكورس يجب أن تكون رقم',
             'duration_hours.min' => 'مدة الكورس لا يمكن أن تكون أقل من صفر',
             'duration_minutes.integer' => 'المدة الإضافية يجب أن تكون رقم صحيح',
@@ -373,14 +388,14 @@ class AdvancedCourseController extends Controller
             'description' => 'nullable|string',
             'video_url' => 'nullable|url|max:500',
             'objectives' => 'nullable|string',
-            'instructor_id' => 'nullable|exists:users,id|required_if:delivery_type,one_to_one',
+            'instructor_id' => 'required|exists:users,id',
             'programming_language' => 'nullable|string|max:100',
             'framework' => 'nullable|string|max:100',
             'duration_hours' => 'nullable|numeric|min:0',
             'duration_minutes' => 'nullable|integer|min:0|max:59',
             'price' => 'nullable|numeric|min:0',
             'price_after_discount' => 'nullable|numeric|min:0',
-            'delivery_type' => 'nullable|in:group,one_to_one',
+            'delivery_type' => 'required|in:group,one_to_one',
             'billing_mode' => 'nullable|in:one_time,monthly',
             'monthly_price' => 'nullable|numeric|min:0',
             'monthly_price_after_discount' => 'nullable|numeric|min:0',
@@ -403,6 +418,8 @@ class AdvancedCourseController extends Controller
             'academic_subject_id.exists' => 'مجموعة المهارات المحددة غير موجودة',
             'course_category_id.exists' => 'التصنيف المحدد غير موجود',
             'instructor_id.exists' => 'المدرب المحدد غير موجود',
+            'instructor_id.required' => 'يجب تعيين مدرّس مسؤول للكورس',
+            'delivery_type.required' => 'اختر نوع التعلّم (جماعي أو فردي)',
             'duration_minutes.max' => 'الدقائق يجب ألا تتجاوز 59 دقيقة',
             'price_after_discount.numeric' => 'سعر بعد الخصم يجب أن يكون رقماً',
             'price_after_discount.min' => 'سعر بعد الخصم لا يمكن أن يكون سالباً',

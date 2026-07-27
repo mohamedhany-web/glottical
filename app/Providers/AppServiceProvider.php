@@ -224,7 +224,6 @@ class AppServiceProvider extends ServiceProvider
                 'public.services.index',
                 'public.services.show',
                 'public.pricing',
-                'public.portfolio.index',
             ],
             function ($view) {
                 $view->with('publicFooter', PublicFooterSettings::payload());

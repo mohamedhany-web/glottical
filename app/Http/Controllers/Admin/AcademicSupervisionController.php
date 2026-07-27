@@ -7,11 +7,15 @@ use App\Models\ClassroomMeeting;
 use App\Models\EmployeeJob;
 use App\Models\LiveSetting;
 use App\Models\User;
-use App\Services\SubscriptionLimitService;
 use Illuminate\Http\Request;
 
 class AcademicSupervisionController extends Controller
 {
+    private const CLASSROOM_MAX_PARTICIPANTS = 50;
+
+    private const CLASSROOM_MAX_DURATION_MINUTES = 180;
+
+    private const CLASSROOM_DEFAULT_DURATION_MINUTES = 60;
     public function index(Request $request)
     {
         $job = EmployeeJob::query()->where('code', 'academic_supervisor')->first();
@@ -137,10 +141,18 @@ class AcademicSupervisionController extends Controller
             ->limit(30)
             ->get();
 
-        $subscription = $student->activeSubscription();
-        $limits = SubscriptionLimitService::limitsForUser($student);
-        $usedMeetingsThisMonth = SubscriptionLimitService::monthlyClassroomUsage($student);
-        $hasClassroom = $student->hasSubscriptionFeature('classroom_access');
+        $subscription = null;
+        $limits = [
+            'classroom_meetings_per_month' => 9999,
+            'classroom_max_participants' => self::CLASSROOM_MAX_PARTICIPANTS,
+            'classroom_default_duration_minutes' => self::CLASSROOM_DEFAULT_DURATION_MINUTES,
+            'classroom_max_duration_minutes' => self::CLASSROOM_MAX_DURATION_MINUTES,
+        ];
+        $usedMeetingsThisMonth = ClassroomMeeting::query()
+            ->where('user_id', $student->id)
+            ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+            ->count();
+        $hasClassroom = true;
 
         $meetings = ClassroomMeeting::query()
             ->where('user_id', $student->id)
@@ -190,9 +202,8 @@ class AcademicSupervisionController extends Controller
                 ->with('error', 'الاجتماع غير نشط حالياً.');
         }
 
-        $limits = SubscriptionLimitService::limitsForUser($student);
-        $maxDurationMinutes = (int) $limits['classroom_max_duration_minutes'];
-        $effectiveDurationMinutes = (int) ($meeting->planned_duration_minutes ?: $maxDurationMinutes);
+        $maxDurationMinutes = self::CLASSROOM_MAX_DURATION_MINUTES;
+        $effectiveDurationMinutes = (int) ($meeting->planned_duration_minutes ?: self::CLASSROOM_DEFAULT_DURATION_MINUTES);
         if ($effectiveDurationMinutes > $maxDurationMinutes) {
             $effectiveDurationMinutes = $maxDurationMinutes;
         }

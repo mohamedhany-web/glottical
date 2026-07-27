@@ -14,7 +14,7 @@
         <div>
           <p class="mb-4 text-sm font-semibold">{{ $isRtl ? 'تعلّم' : 'Learn' }}</p>
           <nav class="space-y-3 text-sm text-white/65" aria-label="{{ $isRtl ? 'روابط التعلم' : 'Learn links' }}">
-            <a class="block transition hover:text-white" href="{{ route('public.learning-paths.index') }}">{{ __('landing.nav.learning_paths') }}</a>
+            <a class="block transition hover:text-white" href="{{ route('public.courses') }}">{{ __('landing.nav.courses') }}</a>
             <a class="block transition hover:text-white" href="{{ route('public.courses') }}">{{ __('landing.nav.courses') }}</a>
             <a class="block transition hover:text-white" href="{{ route('public.groups') }}">{{ __('landing.nav.groups') }}</a>
             <a class="block transition hover:text-white" href="{{ route('public.categories') }}">{{ __('landing.nav.categories') }}</a>

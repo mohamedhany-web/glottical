@@ -1,451 +1,379 @@
 ﻿@extends('layouts.admin')
 
 @section('title', 'تفاصيل المصروف #' . $expense->expense_number)
-@section('header', 'تفاصيل المصروف #' . $expense->expense_number)
+@section('page_title', 'تفاصيل المصروف #' . $expense->expense_number)
 
 @section('content')
-<div class="p-6 bg-gray-50 min-h-screen">
-    <!-- Header Section -->
-    <div class="mb-8">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                    <i class="fas fa-receipt text-sky-600 ml-3"></i>
-                    {{ __('تفاصيل المصروف') }} #{{ $expense->expense_number }}
-                </h1>
-                <p class="text-gray-600 flex items-center gap-2">
-                    <i class="fas fa-calendar-alt text-xs"></i>
-                    {{ $expense->created_at->format('d/m/Y - H:i') }}
-                </p>
-            </div>
-            <div class="flex flex-wrap gap-2">
-                <a href="{{ route('admin.expenses.edit', $expense) }}" 
-                   class="bg-gradient-to-l from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2">
-                    <i class="fas fa-edit"></i>
-                    <span>{{ __('تعديل') }}</span>
-                </a>
-                <a href="{{ route('admin.expenses.index') }}" 
-                   class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2">
-                    <i class="fas fa-arrow-right"></i>
-                    <span>{{ __('العودة') }}</span>
-                </a>
-            </div>
+@php
+    $statusTone = match ($expense->status) {
+        'pending' => ['badge' => 'bg-metal/15 text-metal', 'icon' => 'fa-hourglass-half', 'label' => __('قيد الانتظار')],
+        'approved' => ['badge' => 'bg-accent-soft text-accent', 'icon' => 'fa-check-circle', 'label' => __('موافق عليه')],
+        default => ['badge' => 'bg-canvas-muted text-muted', 'icon' => 'fa-times-circle', 'label' => __('مرفوض')],
+    };
+    $paymentMethods = [
+        'cash' => 'نقدي',
+        'bank_transfer' => 'تحويل بنكي',
+        'card' => 'بطاقة',
+        'wallet' => 'محفظة إلكترونية',
+        'other' => 'أخرى',
+    ];
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">الحسابات · المصروفات · #{{ $expense->expense_number }}</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ __('تفاصيل المصروف') }} #{{ $expense->expense_number }}</h2>
+            <p class="mt-1 text-sm text-muted">
+                <i class="fas fa-calendar-alt text-xs"></i>
+                {{ $expense->created_at->format('d/m/Y - H:i') }}
+            </p>
         </div>
-    </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.expenses.edit', $expense) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-edit text-xs"></i>
+                {{ __('تعديل') }}
+            </a>
+            <a href="{{ route('admin.expenses.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                {{ __('العودة') }}
+            </a>
+        </div>
+    </section>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- المحتوى الرئيسي -->
-        <div class="lg:col-span-2 space-y-6">
-            <!-- معلومات المصروف الأساسية -->
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-slate-50">
-                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-info-circle text-sky-600"></i>
-                        {{ __('معلومات المصروف') }}
-                    </h2>
+    @if(session('success'))
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
+        </div>
+    @endif
+
+    <div class="grid grid-cols-1 gap-5 xl:grid-cols-3">
+        <div class="space-y-5 xl:col-span-2">
+            {{-- معلومات المصروف --}}
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">{{ __('معلومات المصروف') }}</h3>
+                    <p class="mt-0.5 text-xs text-muted">البيانات الأساسية للمصروف</p>
                 </div>
-                <div class="p-6">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="p-4 bg-gradient-to-br from-sky-50 to-slate-50 rounded-xl border border-sky-100">
-                            <label class="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
-                                <i class="fas fa-heading text-sky-600 ml-1"></i>
-                                {{ __('العنوان') }}
-                            </label>
-                            <div class="text-base font-bold text-gray-900">{{ $expense->title }}</div>
-                        </div>
-
-                        <div class="p-4 bg-gradient-to-br from-sky-50 to-slate-50 rounded-xl border border-sky-100">
-                            <label class="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
-                                <i class="fas fa-tags text-sky-600 ml-1"></i>
-                                {{ __('الفئة') }}
-                            </label>
-                            <div class="text-base font-bold text-gray-900">{{ $expense->category_label ?? $expense->category }}</div>
-                        </div>
-
-                        <div class="p-4 bg-gradient-to-br from-sky-50 to-slate-50 rounded-xl border border-sky-100">
-                            <label class="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
-                                <i class="fas fa-money-bill-wave text-sky-600 ml-1"></i>
-                                {{ __('المبلغ') }}
-                            </label>
-                            <div class="text-2xl font-bold text-red-600">{{ number_format($expense->amount, 2) }} {{ $expense->currency }}</div>
-                        </div>
-
-                        <div class="p-4 bg-gradient-to-br from-sky-50 to-slate-50 rounded-xl border border-sky-100">
-                            <label class="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
-                                <i class="fas fa-calendar-alt text-sky-600 ml-1"></i>
-                                {{ __('تاريخ المصروف') }}
-                            </label>
-                            <div class="text-base font-bold text-gray-900">{{ $expense->expense_date->format('d/m/Y') }}</div>
-                        </div>
-
-                        <div class="p-4 bg-gradient-to-br from-sky-50 to-slate-50 rounded-xl border border-sky-100">
-                            <label class="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
-                                <i class="fas fa-credit-card text-sky-600 ml-1"></i>
-                                {{ __('طريقة الدفع') }}
-                            </label>
-                            <div class="text-base font-bold text-gray-900">
-                                @php
-                                    $paymentMethods = [
-                                        'cash' => 'نقدي',
-                                        'bank_transfer' => 'تحويل بنكي',
-                                        'card' => 'بطاقة',
-                                        'wallet' => 'محفظة إلكترونية',
-                                        'other' => 'أخرى',
-                                    ];
-                                @endphp
-                                {{ $paymentMethods[$expense->payment_method] ?? $expense->payment_method }}
-                            </div>
-                        </div>
-
-                        <div class="p-4 bg-gradient-to-br from-sky-50 to-slate-50 rounded-xl border border-sky-100">
-                            <label class="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
-                                <i class="fas fa-hashtag text-sky-600 ml-1"></i>
-                                {{ __('رقم المرجع') }}
-                            </label>
-                            <div class="text-base font-bold text-gray-900">{{ $expense->reference_number ?? '—' }}</div>
-                        </div>
+                <dl class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
+                    <div class="rounded-xl border border-line bg-canvas/40 p-4">
+                        <dt class="text-xs font-medium text-muted">{{ __('العنوان') }}</dt>
+                        <dd class="mt-1 text-sm font-semibold text-ink">{{ $expense->title }}</dd>
                     </div>
-
-                    @if($expense->description)
-                    <div class="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                        <label class="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
-                            <i class="fas fa-align-right text-sky-600 ml-1"></i>
-                            {{ __('الوصف') }}
-                        </label>
-                        <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ $expense->description }}</p>
+                    <div class="rounded-xl border border-line bg-canvas/40 p-4">
+                        <dt class="text-xs font-medium text-muted">{{ __('الفئة') }}</dt>
+                        <dd class="mt-1 text-sm font-semibold text-ink">{{ $expense->category_label ?? $expense->category }}</dd>
                     </div>
-                    @endif
-
-                    @if($expense->notes)
-                    <div class="mt-4 p-4 bg-amber-50 rounded-xl border border-amber-200">
-                        <label class="block text-xs font-semibold text-amber-600 mb-2 uppercase tracking-wide">
-                            <i class="fas fa-sticky-note text-amber-600 ml-1"></i>
-                            {{ __('ملاحظات') }}
-                        </label>
-                        <p class="text-sm text-amber-800 whitespace-pre-wrap">{{ $expense->notes }}</p>
+                    <div class="rounded-xl border border-line bg-canvas/40 p-4">
+                        <dt class="text-xs font-medium text-muted">{{ __('المبلغ') }}</dt>
+                        <dd class="mt-1 text-xl font-semibold tabular-nums text-ink">{{ number_format($expense->amount, 2) }} <span class="text-sm font-normal text-muted">{{ $expense->currency }}</span></dd>
                     </div>
-                    @endif
+                    <div class="rounded-xl border border-line bg-canvas/40 p-4">
+                        <dt class="text-xs font-medium text-muted">{{ __('تاريخ المصروف') }}</dt>
+                        <dd class="mt-1 text-sm font-semibold text-ink">{{ $expense->expense_date->format('d/m/Y') }}</dd>
+                    </div>
+                    <div class="rounded-xl border border-line bg-canvas/40 p-4">
+                        <dt class="text-xs font-medium text-muted">{{ __('طريقة الدفع') }}</dt>
+                        <dd class="mt-1 text-sm font-semibold text-ink">{{ $paymentMethods[$expense->payment_method] ?? $expense->payment_method }}</dd>
+                    </div>
+                    <div class="rounded-xl border border-line bg-canvas/40 p-4">
+                        <dt class="text-xs font-medium text-muted">{{ __('رقم المرجع') }}</dt>
+                        <dd class="mt-1 text-sm font-semibold text-ink">{{ $expense->reference_number ?? '—' }}</dd>
+                    </div>
+                </dl>
+
+                @if($expense->description)
+                <div class="border-t border-line px-4 py-4 sm:px-5">
+                    <p class="text-xs font-medium text-muted">{{ __('الوصف') }}</p>
+                    <p class="mt-2 whitespace-pre-wrap text-sm text-ink-soft">{{ $expense->description }}</p>
                 </div>
-            </div>
+                @endif
 
-            <!-- حالة المصروف -->
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-slate-50">
-                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-check-circle text-sky-600"></i>
-                        {{ __('حالة المصروف') }}
-                    </h2>
+                @if($expense->notes)
+                <div class="border-t border-line px-4 py-4 sm:px-5">
+                    <p class="text-xs font-medium text-muted">{{ __('ملاحظات') }}</p>
+                    <p class="mt-2 whitespace-pre-wrap text-sm text-ink-soft">{{ $expense->notes }}</p>
                 </div>
-                <div class="p-6">
-                    <div class="flex items-center gap-4">
-                        <span class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold
-                            @if($expense->status === 'approved') bg-emerald-100 text-emerald-700
-                            @elseif($expense->status === 'pending') bg-amber-100 text-amber-700
-                            @else bg-rose-100 text-rose-700
-                            @endif">
-                            @if($expense->status === 'approved')
-                                <i class="fas fa-check-circle ml-2"></i>
-                                {{ __('موافق عليه') }}
-                            @elseif($expense->status === 'pending')
-                                <i class="fas fa-hourglass-half ml-2"></i>
-                                {{ __('قيد الانتظار') }}
-                            @else
-                                <i class="fas fa-times-circle ml-2"></i>
-                                {{ __('مرفوض') }}
-                            @endif
+                @endif
+            </article>
+
+            {{-- حالة المصروف --}}
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">{{ __('حالة المصروف') }}</h3>
+                    <p class="mt-0.5 text-xs text-muted">الموافقة والتتبع</p>
+                </div>
+                <div class="space-y-4 p-4 sm:p-5">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold {{ $statusTone['badge'] }}">
+                            <i class="fas {{ $statusTone['icon'] }} text-xs"></i>
+                            {{ $statusTone['label'] }}
                         </span>
 
                         @if($expense->approved_at)
-                        <div class="text-sm text-gray-600">
-                            <i class="fas fa-user-check text-sky-600 ml-1"></i>
-                            {{ __('تمت الموافقة بواسطة:') }} 
-                            <span class="font-bold text-gray-900">{{ $expense->approvedBy->name ?? 'غير محدد' }}</span>
-                            <span class="mr-2">في {{ $expense->approved_at->format('d/m/Y - H:i') }}</span>
-                        </div>
-                        @endif
-
-                        @if($expense->createdBy)
-                        <div class="text-sm text-gray-600 mr-auto">
-                            <i class="fas fa-user-plus text-sky-600 ml-1"></i>
-                            {{ __('أنشأ بواسطة:') }} 
-                            <span class="font-bold text-gray-900">{{ $expense->createdBy->name ?? 'غير محدد' }}</span>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <!-- المرفق (صورة الإيصال) -->
-            @if($expense->attachment)
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-slate-50">
-                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-paperclip text-sky-600"></i>
-                        {{ __('صورة الإيصال/الفاتورة') }}
-                    </h2>
-                </div>
-                <div class="p-6">
-                    <div class="text-center">
-                        <div class="inline-block p-2 bg-gray-50 rounded-xl border border-gray-200">
-                            @php
-                                $imagePath = 'storage/' . $expense->attachment;
-                                $fullPath = storage_path('app/public/' . $expense->attachment);
-                                $imageExists = file_exists($fullPath);
-                                $imageUrl = asset($imagePath);
-                            @endphp
-                            @if($imageExists)
-                            <img src="{{ $imageUrl }}" 
-                                 alt="مرفق المصروف" 
-                                 class="max-w-full h-auto rounded-lg shadow-md cursor-pointer hover:shadow-xl transition-all duration-300"
-                                 onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';"
-                                 onclick="openImageModal(this.src)">
-                            <div class="hidden p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                <p class="text-sm text-yellow-800 flex items-center gap-2">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <span>الصورة غير متوفرة حالياً</span>
-                                </p>
-                            </div>
-                            @else
-                            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                <p class="text-sm text-yellow-800 flex items-center gap-2">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <span>المرفق غير موجود. محاولة العرض عبر Route بديل.</span>
-                                </p>
-                                <img src="{{ route('storage.fallback', ['path' => $expense->attachment]) }}" 
-                                     alt="مرفق المصروف (بديل)" 
-                                     class="max-w-full h-auto rounded-lg shadow-md cursor-pointer hover:shadow-xl transition-all duration-300 mt-4"
-                                     onerror="this.onerror=null; this.style.display='none'; this.previousElementSibling.style.display='block';"
-                                     onclick="openImageModal(this.src)">
-                            </div>
-                            @endif
-                        </div>
-                        <p class="text-sm text-gray-500 mt-4 flex items-center justify-center gap-2">
-                            <i class="fas fa-info-circle"></i>
-                            اضغط على الصورة لعرضها بحجم أكبر
+                        <p class="text-sm text-muted">
+                            <i class="fas fa-user-check text-accent text-xs"></i>
+                            {{ __('تمت الموافقة بواسطة:') }}
+                            <span class="font-semibold text-ink">{{ $expense->approvedBy->name ?? 'غير محدد' }}</span>
+                            <span class="ms-2">في {{ $expense->approved_at->format('d/m/Y - H:i') }}</span>
                         </p>
+                        @endif
+                    </div>
+
+                    @if($expense->createdBy)
+                    <p class="text-sm text-muted">
+                        <i class="fas fa-user-plus text-accent text-xs"></i>
+                        {{ __('أنشأ بواسطة:') }}
+                        <span class="font-semibold text-ink">{{ $expense->createdBy->name ?? 'غير محدد' }}</span>
+                    </p>
+                    @endif
+                </div>
+            </article>
+
+            {{-- المرفق --}}
+            @if($expense->attachment)
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">{{ __('صورة الإيصال/الفاتورة') }}</h3>
+                    <p class="mt-0.5 text-xs text-muted">اضغط على الصورة لعرضها بحجم أكبر</p>
+                </div>
+                <div class="p-4 text-center sm:p-5">
+                    <div class="inline-block rounded-xl border border-line bg-canvas/40 p-2">
+                        @php
+                            $imagePath = 'storage/' . $expense->attachment;
+                            $fullPath = storage_path('app/public/' . $expense->attachment);
+                            $imageExists = file_exists($fullPath);
+                            $imageUrl = asset($imagePath);
+                        @endphp
+                        @if($imageExists)
+                        <img src="{{ $imageUrl }}"
+                             alt="مرفق المصروف"
+                             class="max-w-full cursor-pointer rounded-lg shadow-soft transition hover:shadow-md"
+                             onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';"
+                             onclick="openImageModal(this.src)">
+                        <div class="hidden rounded-lg border border-line bg-canvas-muted p-4">
+                            <p class="flex items-center justify-center gap-2 text-sm text-muted">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>الصورة غير متوفرة حالياً</span>
+                            </p>
+                        </div>
+                        @else
+                        <div class="rounded-lg border border-line bg-canvas-muted p-4">
+                            <p class="flex items-center justify-center gap-2 text-sm text-muted">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>المرفق غير موجود. محاولة العرض عبر Route بديل.</span>
+                            </p>
+                            <img src="{{ route('storage.fallback', ['path' => $expense->attachment]) }}"
+                                 alt="مرفق المصروف (بديل)"
+                                 class="mt-4 max-w-full cursor-pointer rounded-lg shadow-soft transition hover:shadow-md"
+                                 onerror="this.onerror=null; this.style.display='none'; this.previousElementSibling.style.display='block';"
+                                 onclick="openImageModal(this.src)">
+                        </div>
+                        @endif
                     </div>
                 </div>
-            </div>
+            </article>
             @endif
 
-            <!-- الترابطات -->
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-slate-50">
-                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-link text-sky-600"></i>
-                        {{ __('الترابطات') }}
-                    </h2>
+            {{-- الترابطات --}}
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">{{ __('الترابطات') }}</h3>
+                    <p class="mt-0.5 text-xs text-muted">المعاملات والمحافظ والفواتير المرتبطة</p>
                 </div>
-                <div class="p-6 space-y-4">
-                    <!-- المعاملة المالية المرتبطة -->
+                <div class="space-y-4 p-4 sm:p-5">
                     @if($expense->transaction)
-                    <div class="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
-                        <div class="flex items-center justify-between">
+                    <div class="rounded-xl border border-line bg-canvas/40 p-4">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                                    <i class="fas fa-exchange-alt text-emerald-600"></i>
+                                <div class="inline-flex size-10 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                                    <i class="fas fa-exchange-alt"></i>
                                 </div>
                                 <div>
-                                    <p class="text-sm font-semibold text-gray-700">{{ __('المعاملة المالية المرتبطة') }}</p>
-                                    <p class="text-xs text-gray-500">#{{ $expense->transaction->transaction_number ?? $expense->transaction->id }}</p>
+                                    <p class="text-sm font-semibold text-ink">{{ __('المعاملة المالية المرتبطة') }}</p>
+                                    <p class="text-xs text-muted">#{{ $expense->transaction->transaction_number ?? $expense->transaction->id }}</p>
                                 </div>
                             </div>
-                            <a href="{{ route('admin.transactions.show', $expense->transaction) }}" 
-                               class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-                                <span>{{ __('عرض') }}</span>
-                                <i class="fas fa-external-link-alt text-xs"></i>
+                            <a href="{{ route('admin.transactions.show', $expense->transaction) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-xs font-medium text-ink hover:border-accent/30 hover:text-accent">
+                                {{ __('عرض') }}
+                                <i class="fas fa-external-link-alt text-[10px]"></i>
                             </a>
                         </div>
-                        <div class="mt-3 pt-3 border-t border-emerald-200">
-                            <div class="grid grid-cols-2 gap-4 text-xs">
-                                <div>
-                                    <span class="text-gray-500">{{ __('المبلغ:') }}</span>
-                                    <span class="font-bold text-gray-900 mr-2">{{ number_format($expense->transaction->amount, 2) }} {{ $expense->transaction->currency }}</span>
-                                </div>
-                                <div>
-                                    <span class="text-gray-500">{{ __('النوع:') }}</span>
-                                    <span class="font-bold text-red-600 mr-2">debit (مصروف)</span>
-                                </div>
-                                <div>
-                                    <span class="text-gray-500">{{ __('الحالة:') }}</span>
-                                    <span class="font-bold 
-                                        @if($expense->transaction->status === 'completed') text-emerald-600
-                                        @elseif($expense->transaction->status === 'pending') text-amber-600
-                                        @else text-red-600
-                                        @endif mr-2">
-                                        {{ $expense->transaction->status === 'completed' ? 'مكتملة' : ($expense->transaction->status === 'pending' ? 'معلقة' : 'ملغاة') }}
-                                    </span>
-                                </div>
-                                <div>
-                                    <span class="text-gray-500">{{ __('التاريخ:') }}</span>
-                                    <span class="font-bold text-gray-900 mr-2">{{ $expense->transaction->created_at->format('d/m/Y') }}</span>
-                                </div>
+                        <dl class="mt-3 grid grid-cols-2 gap-3 border-t border-line pt-3 text-xs">
+                            <div>
+                                <dt class="text-muted">{{ __('المبلغ:') }}</dt>
+                                <dd class="mt-0.5 font-semibold text-ink">{{ number_format($expense->transaction->amount, 2) }} {{ $expense->transaction->currency }}</dd>
                             </div>
-                        </div>
+                            <div>
+                                <dt class="text-muted">{{ __('النوع:') }}</dt>
+                                <dd class="mt-0.5 font-semibold text-ink">debit (مصروف)</dd>
+                            </div>
+                            <div>
+                                <dt class="text-muted">{{ __('الحالة:') }}</dt>
+                                <dd class="mt-0.5 font-semibold text-ink">
+                                    @if($expense->transaction->status === 'completed')
+                                        <span class="text-accent">مكتملة</span>
+                                    @elseif($expense->transaction->status === 'pending')
+                                        <span class="text-metal">معلقة</span>
+                                    @else
+                                        <span class="text-muted">ملغاة</span>
+                                    @endif
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-muted">{{ __('التاريخ:') }}</dt>
+                                <dd class="mt-0.5 font-semibold text-ink">{{ $expense->transaction->created_at->format('d/m/Y') }}</dd>
+                            </div>
+                        </dl>
                     </div>
                     @endif
 
-                    <!-- المحفظة المرتبطة -->
                     @if($expense->wallet)
-                    <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                                    <i class="fas fa-wallet text-blue-600"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-700">{{ __('المحفظة المستخدمة') }}</p>
-                                    <p class="text-xs text-gray-500">{{ $expense->wallet->name ?? $expense->wallet->type_name }}</p>
-                                </div>
+                    <div class="rounded-xl border border-line bg-canvas/40 p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="inline-flex size-10 items-center justify-center rounded-xl bg-metal/15 text-metal">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-ink">{{ __('المحفظة المستخدمة') }}</p>
+                                <p class="text-xs text-muted">{{ $expense->wallet->name ?? $expense->wallet->type_name }}</p>
                             </div>
                         </div>
-                        <div class="mt-3 pt-3 border-t border-blue-200">
-                            <div class="grid grid-cols-2 gap-4 text-xs">
-                                <div>
-                                    <span class="text-gray-500">{{ __('النوع:') }}</span>
-                                    <span class="font-bold text-gray-900 mr-2">{{ $expense->wallet->type_name }}</span>
-                                </div>
-                                <div>
-                                    <span class="text-gray-500">{{ __('رقم الحساب:') }}</span>
-                                    <span class="font-bold text-gray-900 mr-2">{{ $expense->wallet->account_number }}</span>
-                                </div>
-                                @if($expense->wallet->bank_name)
-                                <div>
-                                    <span class="text-gray-500">{{ __('اسم البنك:') }}</span>
-                                    <span class="font-bold text-gray-900 mr-2">{{ $expense->wallet->bank_name }}</span>
-                                </div>
-                                @endif
-                                @if($expense->wallet->account_holder)
-                                <div>
-                                    <span class="text-gray-500">{{ __('صاحب الحساب:') }}</span>
-                                    <span class="font-bold text-gray-900 mr-2">{{ $expense->wallet->account_holder }}</span>
-                                </div>
-                                @endif
+                        <dl class="mt-3 grid grid-cols-2 gap-3 border-t border-line pt-3 text-xs">
+                            <div>
+                                <dt class="text-muted">{{ __('النوع:') }}</dt>
+                                <dd class="mt-0.5 font-semibold text-ink">{{ $expense->wallet->type_name }}</dd>
                             </div>
-                        </div>
+                            <div>
+                                <dt class="text-muted">{{ __('رقم الحساب:') }}</dt>
+                                <dd class="mt-0.5 font-semibold text-ink">{{ $expense->wallet->account_number }}</dd>
+                            </div>
+                            @if($expense->wallet->bank_name)
+                            <div>
+                                <dt class="text-muted">{{ __('اسم البنك:') }}</dt>
+                                <dd class="mt-0.5 font-semibold text-ink">{{ $expense->wallet->bank_name }}</dd>
+                            </div>
+                            @endif
+                            @if($expense->wallet->account_holder)
+                            <div>
+                                <dt class="text-muted">{{ __('صاحب الحساب:') }}</dt>
+                                <dd class="mt-0.5 font-semibold text-ink">{{ $expense->wallet->account_holder }}</dd>
+                            </div>
+                            @endif
+                        </dl>
                     </div>
                     @endif
 
-                    <!-- الفاتورة المرتبطة -->
                     @if($expense->invoice)
-                    <div class="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
-                        <div class="flex items-center justify-between">
+                    <div class="rounded-xl border border-line bg-canvas/40 p-4">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-                                    <i class="fas fa-file-invoice text-purple-600"></i>
+                                <div class="inline-flex size-10 items-center justify-center rounded-xl bg-canvas-muted text-muted">
+                                    <i class="fas fa-file-invoice"></i>
                                 </div>
                                 <div>
-                                    <p class="text-sm font-semibold text-gray-700">{{ __('الفاتورة المرتبطة') }}</p>
-                                    <p class="text-xs text-gray-500">#{{ $expense->invoice->invoice_number }}</p>
+                                    <p class="text-sm font-semibold text-ink">{{ __('الفاتورة المرتبطة') }}</p>
+                                    <p class="text-xs text-muted">#{{ $expense->invoice->invoice_number }}</p>
                                 </div>
                             </div>
-                            <a href="{{ route('admin.invoices.show', $expense->invoice) }}" 
-                               class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-                                <span>{{ __('عرض') }}</span>
-                                <i class="fas fa-external-link-alt text-xs"></i>
+                            <a href="{{ route('admin.invoices.show', $expense->invoice) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-xs font-medium text-ink hover:border-accent/30 hover:text-accent">
+                                {{ __('عرض') }}
+                                <i class="fas fa-external-link-alt text-[10px]"></i>
                             </a>
                         </div>
-                        <div class="mt-3 pt-3 border-t border-purple-200">
-                            <div class="grid grid-cols-2 gap-4 text-xs">
-                                <div>
-                                    <span class="text-gray-500">{{ __('المبلغ:') }}</span>
-                                    <span class="font-bold text-gray-900 mr-2">{{ number_format($expense->invoice->total_amount, 2) }} {{ $expense->invoice->currency ?? 'EGP' }}</span>
-                                </div>
-                                <div>
-                                    <span class="text-gray-500">{{ __('الحالة:') }}</span>
-                                    <span class="font-bold 
-                                        @if($expense->invoice->status === 'paid') text-emerald-600
-                                        @elseif($expense->invoice->status === 'pending') text-amber-600
-                                        @else text-red-600
-                                        @endif mr-2">
-                                        {{ $expense->invoice->status === 'paid' ? 'مدفوعة' : ($expense->invoice->status === 'pending' ? 'معلقة' : 'متأخرة') }}
-                                    </span>
-                                </div>
+                        <dl class="mt-3 grid grid-cols-2 gap-3 border-t border-line pt-3 text-xs">
+                            <div>
+                                <dt class="text-muted">{{ __('المبلغ:') }}</dt>
+                                <dd class="mt-0.5 font-semibold text-ink">{{ number_format($expense->invoice->total_amount, 2) }} {{ $expense->invoice->currency ?? 'EGP' }}</dd>
                             </div>
-                        </div>
+                            <div>
+                                <dt class="text-muted">{{ __('الحالة:') }}</dt>
+                                <dd class="mt-0.5 font-semibold text-ink">
+                                    @if($expense->invoice->status === 'paid')
+                                        <span class="text-accent">مدفوعة</span>
+                                    @elseif($expense->invoice->status === 'pending')
+                                        <span class="text-metal">معلقة</span>
+                                    @else
+                                        <span class="text-muted">متأخرة</span>
+                                    @endif
+                                </dd>
+                            </div>
+                        </dl>
                     </div>
                     @endif
 
                     @if(!$expense->transaction && !$expense->wallet && !$expense->invoice)
-                    <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-center">
-                        <p class="text-sm text-gray-500">
-                            <i class="fas fa-info-circle ml-2"></i>
+                    <div class="rounded-xl border border-line bg-canvas/40 p-6 text-center">
+                        <p class="text-sm text-muted">
+                            <i class="fas fa-info-circle"></i>
                             {{ __('لا توجد ترابطات مرتبطة بهذا المصروف') }}
                         </p>
                     </div>
                     @endif
                 </div>
-            </div>
+            </article>
         </div>
 
-        <!-- الشريط الجانبي -->
-        <div class="space-y-6">
-            <!-- معلومات سريعة -->
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-slate-50">
-                    <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-chart-line text-sky-600"></i>
-                        {{ __('معلومات سريعة') }}
-                    </h3>
+        {{-- الشريط الجانبي --}}
+        <div class="space-y-5">
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">{{ __('معلومات سريعة') }}</h3>
                 </div>
-                <div class="p-6 space-y-4">
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                        <span class="text-sm text-gray-600">{{ __('رقم المصروف') }}</span>
-                        <span class="font-bold text-gray-900">#{{ $expense->expense_number }}</span>
+                <div class="divide-y divide-line">
+                    <div class="flex items-center justify-between px-4 py-3 sm:px-5">
+                        <span class="text-sm text-muted">{{ __('رقم المصروف') }}</span>
+                        <span class="font-semibold tabular-nums text-ink">#{{ $expense->expense_number }}</span>
                     </div>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                        <span class="text-sm text-gray-600">{{ __('تاريخ الإنشاء') }}</span>
-                        <span class="font-bold text-gray-900">{{ $expense->created_at->format('d/m/Y') }}</span>
+                    <div class="flex items-center justify-between px-4 py-3 sm:px-5">
+                        <span class="text-sm text-muted">{{ __('تاريخ الإنشاء') }}</span>
+                        <span class="font-semibold tabular-nums text-ink">{{ $expense->created_at->format('d/m/Y') }}</span>
                     </div>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                        <span class="text-sm text-gray-600">{{ __('آخر تحديث') }}</span>
-                        <span class="font-bold text-gray-900">{{ $expense->updated_at->format('d/m/Y') }}</span>
+                    <div class="flex items-center justify-between px-4 py-3 sm:px-5">
+                        <span class="text-sm text-muted">{{ __('آخر تحديث') }}</span>
+                        <span class="font-semibold tabular-nums text-ink">{{ $expense->updated_at->format('d/m/Y') }}</span>
                     </div>
                 </div>
-            </div>
+            </article>
 
-            <!-- الإجراءات -->
             @if($expense->status === 'pending')
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-slate-50">
-                    <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-cog text-sky-600"></i>
-                        {{ __('الإجراءات') }}
-                    </h3>
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">{{ __('الإجراءات') }}</h3>
+                    <p class="mt-0.5 text-xs text-muted">موافقة أو رفض المصروف</p>
                 </div>
-                <div class="p-6 space-y-3">
-                    <form action="{{ route('admin.expenses.approve', $expense) }}" method="POST" class="inline-block w-full">
+                <div class="space-y-3 p-4 sm:p-5">
+                    <form action="{{ route('admin.expenses.approve', $expense) }}" method="POST">
                         @csrf
-                        <button type="submit" 
-                                class="w-full bg-gradient-to-l from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white px-4 py-3 rounded-xl font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2">
-                            <i class="fas fa-check"></i>
-                            <span>{{ __('الموافقة على المصروف') }}</span>
+                        <button type="submit" class="btn-press inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                            <i class="fas fa-check text-xs"></i>
+                            {{ __('الموافقة على المصروف') }}
                         </button>
                     </form>
-                    <form action="{{ route('admin.expenses.reject', $expense) }}" method="POST" class="inline-block w-full">
+                    <form action="{{ route('admin.expenses.reject', $expense) }}" method="POST">
                         @csrf
-                        <button type="submit" 
-                                class="w-full bg-gradient-to-l from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white px-4 py-3 rounded-xl font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2">
-                            <i class="fas fa-times"></i>
-                            <span>{{ __('رفض المصروف') }}</span>
+                        <button type="submit" class="btn-press inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-canvas">
+                            <i class="fas fa-times text-xs"></i>
+                            {{ __('رفض المصروف') }}
                         </button>
                     </form>
                 </div>
-            </div>
+            </article>
             @endif
         </div>
     </div>
 </div>
 
-<!-- Modal لعرض الصورة بحجم أكبر -->
-<div id="imageModal" class="hidden fixed inset-0 z-50 overflow-y-auto" onclick="closeImageModal()">
-    <div class="flex items-center justify-center min-h-screen px-4">
-        <div class="fixed inset-0 bg-black bg-opacity-75 transition-opacity" onclick="closeImageModal()"></div>
-        <div class="relative bg-white rounded-2xl max-w-4xl w-full p-4">
-            <button onclick="closeImageModal()" class="absolute top-4 left-4 text-gray-500 hover:text-gray-700">
+{{-- Modal لعرض الصورة بحجم أكبر --}}
+<div id="imageModal" class="fixed inset-0 z-50 hidden overflow-y-auto" onclick="closeImageModal()">
+    <div class="flex min-h-screen items-center justify-center px-4">
+        <div class="fixed inset-0 bg-black/75 transition-opacity" onclick="closeImageModal()"></div>
+        <div class="relative w-full max-w-4xl rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <button type="button" onclick="closeImageModal()" class="absolute start-4 top-4 text-muted transition hover:text-ink">
                 <i class="fas fa-times text-2xl"></i>
             </button>
-            <img id="modalImage" src="" alt="صورة مكبرة" class="w-full h-auto rounded-lg">
+            <img id="modalImage" src="" alt="صورة مكبرة" class="w-full rounded-lg">
         </div>
     </div>
 </div>
@@ -465,4 +393,3 @@ function closeImageModal() {
 </script>
 @endpush
 @endsection
-

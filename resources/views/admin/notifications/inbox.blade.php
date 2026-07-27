@@ -1,73 +1,135 @@
 @extends('layouts.admin')
 
-@section('title', 'وارد الإشعارات')
-@section('header', 'وارد الإشعارات')
+@section('title', 'وارد الإشعارات - Glottical')
+@section('page_title', 'وارد الإشعارات')
 
 @section('content')
-<div class="space-y-6">
-    <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-6 py-5 bg-slate-50 border-b border-slate-200 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h2 class="text-xl font-black text-slate-900">وارد الإشعارات</h2>
-                <p class="text-sm text-slate-600 mt-1">
-                    التنبيهات الموجهة لحسابك (مثل تذاكر الدعم الفني من الطلاب). صفحة «إدارة الإشعارات» في القائمة مخصصة لإرسال تنبيهات للطلاب.
-                </p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-                @if($stats['unread'] > 0)
+@php
+    $status = request('status');
+    $readCount = max(0, (int) ($stats['total'] ?? 0) - (int) ($stats['unread'] ?? 0));
+    $filterTabs = [
+        ['key' => null, 'label' => 'الكل', 'url' => route('admin.notifications.inbox')],
+        ['key' => 'unread', 'label' => 'غير مقروء', 'url' => route('admin.notifications.inbox', ['status' => 'unread'])],
+        ['key' => 'read', 'label' => 'مقروء', 'url' => route('admin.notifications.inbox', ['status' => 'read'])],
+    ];
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">تنبيهات حسابك · تذاكر الدعم والتنبيهات التشغيلية</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">وارد الإشعارات</h2>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            @if(($stats['unread'] ?? 0) > 0)
                 <form action="{{ route('admin.notifications.inbox.mark-all-read') }}" method="post" class="inline" id="inbox-mark-all-form">
                     @csrf
-                    <button type="submit" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
-                        <i class="fas fa-check-double"></i>
+                    <button type="submit" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-canvas">
+                        <i class="fas fa-check-double text-xs"></i>
                         تعيين الكل كمقروء
                     </button>
                 </form>
-                @endif
-                @if(auth()->user()->isSuperAdmin())
-                <a href="{{ route('admin.notifications.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-colors">
-                    <i class="fas fa-paper-plane"></i>
-                    مركز إرسال الإشعارات للطلاب
+            @endif
+            @if(auth()->user()->isSuperAdmin())
+                <a href="{{ route('admin.notifications.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                    <i class="fas fa-paper-plane text-xs"></i>
+                    إرسال للطلاب
                 </a>
-                @endif
+            @endif
+        </div>
+    </section>
+
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-3">
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                <i class="fas fa-bell text-sm"></i>
+            </div>
+            <p class="mt-3 text-xs text-muted">إجمالي الوارد</p>
+            <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ number_format($stats['total'] ?? 0) }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-metal/15 text-metal">
+                <i class="fas fa-envelope-open text-sm"></i>
+            </div>
+            <p class="mt-3 text-xs text-muted">غير مقروء</p>
+            <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ number_format($stats['unread'] ?? 0) }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-canvas-muted text-muted">
+                <i class="fas fa-check text-sm"></i>
+            </div>
+            <p class="mt-3 text-xs text-muted">مقروء</p>
+            <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ number_format($readCount) }}</p>
+        </article>
+    </section>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+            <div class="min-w-0">
+                <h3 class="text-base font-semibold text-ink">قائمة الإشعارات</h3>
+                <p class="mt-0.5 text-xs text-muted">اضغط أي إشعار لفتح التفاصيل أو الإجراء المرتبط</p>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+                @foreach($filterTabs as $tab)
+                    @php $active = $status === $tab['key'] || ($tab['key'] === null && ! request()->filled('status')); @endphp
+                    <a href="{{ $tab['url'] }}"
+                       class="btn-press rounded-xl px-3 py-1.5 text-xs font-medium transition {{ $active ? 'bg-accent text-white' : 'text-muted hover:bg-accent-soft hover:text-accent' }}">
+                        {{ $tab['label'] }}
+                    </a>
+                @endforeach
             </div>
         </div>
-        <div class="px-6 py-4 border-b border-slate-100 flex flex-wrap gap-2 items-center">
-            <span class="text-xs font-semibold text-slate-500">غير مقروء: {{ number_format($stats['unread']) }}</span>
-            <span class="text-slate-300">|</span>
-            <span class="text-xs font-semibold text-slate-500">الإجمالي: {{ number_format($stats['total']) }}</span>
-            <span class="grow"></span>
-            <a href="{{ route('admin.notifications.inbox', ['status' => 'unread']) }}" class="text-xs font-semibold px-3 py-1.5 rounded-lg {{ request('status') === 'unread' ? 'bg-sky-100 text-sky-800' : 'text-slate-600 hover:bg-slate-100' }}">غير مقروء فقط</a>
-            <a href="{{ route('admin.notifications.inbox', ['status' => 'read']) }}" class="text-xs font-semibold px-3 py-1.5 rounded-lg {{ request('status') === 'read' ? 'bg-sky-100 text-sky-800' : 'text-slate-600 hover:bg-slate-100' }}">مقروء</a>
-            <a href="{{ route('admin.notifications.inbox') }}" class="text-xs font-semibold px-3 py-1.5 rounded-lg {{ ! request()->filled('status') ? 'bg-sky-100 text-sky-800' : 'text-slate-600 hover:bg-slate-100' }}">الكل</a>
-        </div>
-        <div class="divide-y divide-slate-100">
+
+        <div class="divide-y divide-line">
             @forelse ($notifications as $notification)
                 <a href="{{ $notification->action_url ?: route('admin.notifications.show', $notification) }}"
-                   class="flex items-start gap-4 px-6 py-4 hover:bg-slate-50 transition-colors {{ ! $notification->is_read ? 'bg-amber-50/40' : '' }}">
-                    <div class="mt-0.5 shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-sm {{ $notification->is_read ? 'bg-slate-100 text-slate-500' : 'bg-amber-100 text-amber-700' }}">
+                   class="flex items-start gap-3 px-4 py-4 transition hover:bg-[#f7f8fa] sm:gap-4 sm:px-5 {{ ! $notification->is_read ? 'bg-accent-soft/30' : '' }}">
+                    <div class="mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-xl text-sm {{ $notification->is_read ? 'bg-canvas-muted text-muted' : 'bg-accent-soft text-accent' }}">
                         <i class="{{ $notification->type_icon }}"></i>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-sm font-bold text-slate-900 truncate">{{ $notification->title }}</p>
-                        <p class="text-xs text-slate-600 mt-1 line-clamp-2">{{ $notification->message }}</p>
-                        <p class="text-[10px] text-slate-400 mt-2">{{ $notification->created_at->diffForHumans() }}</p>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <p class="truncate text-sm font-semibold text-ink">{{ $notification->title }}</p>
+                            @if(! $notification->is_read)
+                                <span class="rounded-lg bg-metal/15 px-2 py-0.5 text-[10px] font-medium text-metal">جديد</span>
+                            @endif
+                        </div>
+                        <p class="mt-1 line-clamp-2 text-xs leading-5 text-muted">{{ $notification->message }}</p>
+                        <p class="mt-2 text-[11px] tabular-nums text-muted">{{ $notification->created_at->diffForHumans() }}</p>
                     </div>
                     @if(! $notification->is_read)
-                        <span class="shrink-0 w-2 h-2 rounded-full bg-rose-500 mt-2" title="غير مقروء"></span>
+                        <span class="mt-2 size-2 shrink-0 rounded-full bg-accent" title="غير مقروء"></span>
                     @endif
                 </a>
             @empty
-                <div class="px-6 py-16 text-center text-sm text-slate-500">
-                    لا توجد إشعارات في الوارد حالياً.
+                <div class="px-4 py-16 text-center sm:px-5">
+                    <div class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <p class="text-sm font-medium text-ink">لا توجد إشعارات حالياً</p>
+                    <p class="mt-1 text-xs text-muted">
+                        @if($status === 'unread')
+                            لا يوجد غير مقروء في الوارد.
+                        @elseif($status === 'read')
+                            لا توجد إشعارات مقروءة ضمن هذا الفلتر.
+                        @else
+                            سيظهر هنا أي تنبيه موجّه لحسابك.
+                        @endif
+                    </p>
                 </div>
             @endforelse
         </div>
+
         @if($notifications->hasPages())
-            <div class="px-6 py-4 border-t border-slate-100">
+            <div class="border-t border-line px-4 py-4 sm:px-5">
                 {{ $notifications->links() }}
             </div>
         @endif
-    </section>
+    </article>
+
+    <p class="text-xs text-muted">
+        صفحة «إدارة الإشعارات» مخصّصة لإرسال تنبيهات للطلاب، بينما هذه الصفحة تعرض ما يصل إلى حسابك أنت.
+    </p>
 </div>
 
 @push('scripts')

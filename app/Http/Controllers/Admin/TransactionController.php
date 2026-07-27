@@ -22,7 +22,7 @@ class TransactionController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Transaction::with(['user', 'payment', 'invoice', 'expense', 'subscription'])
+            $query = Transaction::with(['user', 'payment', 'invoice', 'expense'])
                 ->orderBy('created_at', 'desc');
 
             // فلترة حسب الحالة - حماية من SQL Injection
@@ -76,7 +76,7 @@ class TransactionController extends Controller
 
     public function show(Transaction $transaction)
     {
-        $transaction->load('user', 'payment', 'invoice', 'expense', 'subscription', 'createdBy');
+        $transaction->load('user', 'payment', 'invoice', 'expense', 'createdBy');
         return view('admin.transactions.show', compact('transaction'));
     }
 
@@ -103,7 +103,6 @@ class TransactionController extends Controller
             'payment_id' => 'nullable|exists:payments,id',
             'invoice_id' => 'nullable|exists:invoices,id',
             'expense_id' => 'nullable|exists:expenses,id',
-            'subscription_id' => 'nullable|exists:subscriptions,id',
         ]);
 
         Transaction::create([
@@ -112,7 +111,7 @@ class TransactionController extends Controller
             'payment_id' => $validated['payment_id'] ?? null,
             'invoice_id' => $validated['invoice_id'] ?? null,
             'expense_id' => $validated['expense_id'] ?? null,
-            'subscription_id' => $validated['subscription_id'] ?? null,
+            'subscription_id' => null,
             'type' => $validated['type'],
             'category' => $validated['category'] ?? 'other',
             'amount' => $validated['amount'],

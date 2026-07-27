@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\ClassroomMeeting;
 use App\Models\ClassroomMeetingParticipant;
 use App\Models\LiveSetting;
-use App\Services\SubscriptionLimitService;
 use App\Support\ShareAnnotationSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -13,6 +12,8 @@ use Illuminate\Support\Str;
 
 class ClassroomJoinController extends Controller
 {
+    private const MAX_DURATION_MINUTES = 180;
+    private const DEFAULT_DURATION_MINUTES = 60;
     /**
      * صفحة الدخول كضيف — لا تتطلب تسجيل دخول.
      * الرابط يُشارك من المعلم: /classroom/join/{code}
@@ -54,14 +55,12 @@ class ClassroomJoinController extends Controller
             ], 422);
         }
 
-        $owner = $meeting->user;
-        if ($owner && $meeting->started_at) {
-            $limits = SubscriptionLimitService::limitsForUser($owner);
-            $packageMax = (int) $limits['classroom_max_duration_minutes'];
-            $packageDefault = (int) ($limits['classroom_default_duration_minutes'] ?? 60);
-            $effectiveDuration = (int) ($meeting->planned_duration_minutes ?: $packageDefault);
-            if ($effectiveDuration > $packageMax) {
-                $effectiveDuration = $packageMax;
+        if ($meeting->started_at) {
+            $maxDuration = self::MAX_DURATION_MINUTES;
+            $defaultDuration = self::DEFAULT_DURATION_MINUTES;
+            $effectiveDuration = (int) ($meeting->planned_duration_minutes ?: $defaultDuration);
+            if ($effectiveDuration > $maxDuration) {
+                $effectiveDuration = $maxDuration;
             }
             $expiresAt = $meeting->started_at->copy()->addMinutes($effectiveDuration);
             if ($expiresAt->isPast()) {
@@ -69,7 +68,7 @@ class ClassroomJoinController extends Controller
 
                 return response()->json([
                     'ok' => false,
-                    'message' => 'انتهت مدة هذا الاجتماع حسب قيود الباقة.',
+                    'message' => 'انتهت مدة هذا الاجتماع.',
                 ], 422);
             }
         }

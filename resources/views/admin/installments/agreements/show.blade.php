@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'تفاصيل اتفاقية التقسيط')
-@section('header', 'تفاصيل اتفاقية التقسيط')
+@section('page_title', 'تفاصيل اتفاقية التقسيط')
 
 @section('content')
 @php
@@ -12,144 +12,151 @@
     $payments = $agreement?->payments ?? collect();
     $pendingPayments = $payments->where('status', \App\Models\InstallmentPayment::STATUS_PENDING)->sortBy('due_date');
     $nextPayment = $pendingPayments->first();
+    $statusBadgeMap = [
+        \App\Models\InstallmentAgreement::STATUS_ACTIVE => 'bg-accent-soft text-accent',
+        \App\Models\InstallmentAgreement::STATUS_OVERDUE => 'bg-metal/15 text-metal',
+        \App\Models\InstallmentAgreement::STATUS_COMPLETED => 'bg-accent-soft text-accent',
+        \App\Models\InstallmentAgreement::STATUS_CANCELLED => 'bg-canvas-muted text-muted',
+    ];
+    $paymentBadgeMap = [
+        \App\Models\InstallmentPayment::STATUS_PAID => 'bg-accent-soft text-accent',
+        \App\Models\InstallmentPayment::STATUS_OVERDUE => 'bg-metal/15 text-metal',
+        \App\Models\InstallmentPayment::STATUS_SKIPPED => 'bg-canvas-muted text-muted',
+        \App\Models\InstallmentPayment::STATUS_PENDING => 'bg-canvas-muted text-muted',
+    ];
+    $statusBadge = $statusBadgeMap[$agreement->status] ?? 'bg-canvas-muted text-muted';
+    $kpis = [
+        ['label' => 'إجمالي الاتفاقية', 'value' => number_format($agreement->total_amount ?? 0, 2) . ' ج.م', 'icon' => 'fa-wallet', 'tone' => 'accent', 'note' => 'القيمة الكاملة التي سيتم سدادها عبر الخطة'],
+        ['label' => 'الدفعة المقدمة', 'value' => number_format($agreement->deposit_amount ?? 0, 2) . ' ج.م', 'icon' => 'fa-hand-holding-usd', 'tone' => 'metal', 'note' => 'تم تحصيلها عند توقيع الاتفاقية'],
+        ['label' => 'الأقساط المتبقية', 'value' => $pendingPayments->count(), 'icon' => 'fa-stream', 'tone' => 'accent', 'note' => 'القيمة التالية: ' . (optional($nextPayment)->amount ? number_format($nextPayment->amount, 2) . ' ج.م' : '—')],
+        ['label' => 'القسط القادم', 'value' => optional($nextPayment)->due_date?->format('Y-m-d') ?? '—', 'icon' => 'fa-calendar', 'tone' => 'muted', 'note' => 'عدد الأقساط الكلي: ' . $agreement->installments_count],
+    ];
+    $toneClass = [
+        'accent' => 'bg-accent-soft text-accent',
+        'metal' => 'bg-metal/15 text-metal',
+        'muted' => 'bg-canvas-muted text-muted',
+    ];
+    $paidTotal = $payments->where('status', \App\Models\InstallmentPayment::STATUS_PAID)->sum('amount');
+    $remainingTotal = ($agreement->total_amount ?? 0) - $paidTotal;
+    $overdueCount = $payments->where('status', \App\Models\InstallmentPayment::STATUS_OVERDUE)->count();
 @endphp
-<div class="container mx-auto px-4 py-8 space-y-8">
-    <div class="bg-gradient-to-br from-emerald-500 via-emerald-600 to-sky-600 rounded-3xl shadow-xl text-white p-8 relative overflow-hidden">
-        <div class="absolute inset-y-0 right-0 w-1/3 pointer-events-none opacity-20">
-            <div class="w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-        </div>
-        <div class="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div>
-                <div class="flex items-center gap-3 flex-wrap">
-                    <h1 class="text-3xl font-black tracking-tight">{{ $student->name ?? 'معلم غير معروف' }}</h1>
-                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold
-                        @class([
-                            'bg-emerald-100 text-emerald-700' => $agreement->status === \App\Models\InstallmentAgreement::STATUS_ACTIVE,
-                            'bg-amber-100 text-amber-700' => $agreement->status === \App\Models\InstallmentAgreement::STATUS_OVERDUE,
-                            'bg-purple-100 text-purple-700' => $agreement->status === \App\Models\InstallmentAgreement::STATUS_COMPLETED,
-                            'bg-rose-100 text-rose-700' => $agreement->status === \App\Models\InstallmentAgreement::STATUS_CANCELLED,
-                            'bg-white/20 text-white' => !in_array($agreement->status, [\App\Models\InstallmentAgreement::STATUS_ACTIVE, \App\Models\InstallmentAgreement::STATUS_OVERDUE, \App\Models\InstallmentAgreement::STATUS_COMPLETED, \App\Models\InstallmentAgreement::STATUS_CANCELLED])
-                        ])">
-                        <span class="w-2 h-2 rounded-full bg-current/60"></span>
-                        {{ $statuses[$agreement->status] ?? $agreement->status }}
-                    </span>
-                </div>
-                <p class="mt-3 text-white/80 max-w-2xl">
-                    الكورس: {{ $course->title ?? 'خطة عامة' }} — بدأت في {{ optional($agreement->start_date)->format('Y-m-d') }}. تتبع أدناه جدول الأقساط والمبالغ المستحقة.
-                </p>
-            </div>
-            <div class="flex flex-wrap gap-3 justify-end">
-                <a href="{{ route('admin.installments.agreements.edit', $agreement) }}" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white text-emerald-700 font-semibold shadow-lg hover:shadow-xl transition-all">
-                    <i class="fas fa-edit"></i>
-                    تعديل الاتفاقية
-                </a>
-                <a href="{{ route('admin.installments.agreements.index') }}" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/20 text-white font-semibold border border-white/30 hover:bg-white/30 transition-all">
-                    <i class="fas fa-arrow-right"></i>
-                    العودة للقائمة
-                </a>
-            </div>
-        </div>
-    </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div class="rounded-2xl bg-white shadow-lg border border-sky-100 p-6">
-            <p class="text-sm font-semibold text-sky-500">إجمالي الاتفاقية</p>
-            <p class="mt-2 text-3xl font-black text-gray-900">{{ number_format($agreement->total_amount ?? 0, 2) }} ج.م</p>
-            <p class="text-xs text-gray-500 mt-3">القيمة الكاملة التي سيتم سدادها عبر الخطة.</p>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">المالية · التقسيط · اتفاقيات</p>
+            <div class="mt-1 flex flex-wrap items-center gap-2">
+                <h2 class="text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ $student->name ?? 'معلم غير معروف' }}</h2>
+                <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $statusBadge }}">
+                    {{ $statuses[$agreement->status] ?? $agreement->status }}
+                </span>
+            </div>
+            <p class="mt-1 text-sm text-muted">
+                الكورس: {{ $course->title ?? 'خطة عامة' }} — بدأت في {{ optional($agreement->start_date)->format('Y-m-d') }}. تتبع أدناه جدول الأقساط والمبالغ المستحقة.
+            </p>
         </div>
-        <div class="rounded-2xl bg-white shadow-lg border border-emerald-100 p-6">
-            <p class="text-sm font-semibold text-emerald-500">الدفعة المقدمة</p>
-            <p class="mt-2 text-3xl font-black text-gray-900">{{ number_format($agreement->deposit_amount ?? 0, 2) }} ج.م</p>
-            <p class="text-xs text-gray-500 mt-3">تم تحصيلها عند توقيع الاتفاقية.</p>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.installments.agreements.edit', $agreement) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-edit text-xs"></i>
+                تعديل الاتفاقية
+            </a>
+            <a href="{{ route('admin.installments.agreements.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                العودة للقائمة
+            </a>
         </div>
-        <div class="rounded-2xl bg-white shadow-lg border border-amber-100.dark:border-gray-700 p-6">
-            <p class="text-sm font-semibold text-amber-500">الأقساط المتبقية</p>
-            <p class="mt-2 text-3xl font-black text-gray-900">{{ $pendingPayments->count() }}</p>
-            <p class="text-xs text-gray-500 mt-3">القيمة التالية: {{ optional($nextPayment)->amount ? number_format($nextPayment->amount, 2) . ' ج.م' : '—' }}</p>
-        </div>
-        <div class="rounded-2xl bg-white shadow-lg border border-purple-100 p-6">
-            <p class="text-sm font-semibold text-purple-500">القسط القادم</p>
-            <p class="mt-2 text-3xl font-black text-gray-900">{{ optional($nextPayment)->due_date?->format('Y-m-d') ?? '—' }}</p>
-            <p class="text-xs text-gray-500 mt-3">عدد الأقساط الكلي: {{ $agreement->installments_count }}</p>
-        </div>
-    </div>
+    </section>
 
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div class="xl:col-span-2 space-y-6">
-            <div class="bg-white.dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-100 p-6 space-y-6">
-                <h2 class="text-lg font-black text-gray-900">تفاصيل المعلم والكورس</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase">اسم المعلم</p>
-                        <p class="mt-2 text-base font-semibold text-gray-900">{{ $student->name ?? 'غير متوفر' }}</p>
-                        <p class="text-xs text-gray-500">{{ $student->phone ?? 'بدون هاتف' }} · {{ $student->email ?? 'بدون بريد' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase">الكورس</p>
-                        <p class="mt-2 text-base font-semibold text-gray-900">{{ $course->title ?? 'خطة عامة' }}</p>
-                        <p class="text-xs text-gray-500">سعر الكورس: {{ number_format($course->price ?? 0, 2) }} ج.م</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500 uppercase">الخطة</p>
-                        <p class="mt-2 text-base font-semibold text-gray-900">{{ $plan->name ?? 'غير محددة' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500.dark:text-gray-400 uppercase">دورية الأقساط</p>
-                        <p class="mt-2 text-base font-semibold text-gray-900">كل {{ $plan->frequency_interval ?? '—' }} {{ ($plan && $frequencyUnits[$plan->frequency_unit] ?? $plan->frequency_unit ?? '-') }}</p>
-                        <p class="text-xs text-gray-500">فترة السماح: {{ $plan->grace_period_days ?? 0 }} يوم</p>
-                    </div>
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach($kpis as $kpi)
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $toneClass[$kpi['tone']] }}">
+                    <i class="fas {{ $kpi['icon'] }} text-sm"></i>
                 </div>
+                <p class="mt-3 text-xs text-muted">{{ $kpi['label'] }}</p>
+                <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ $kpi['value'] }}</p>
+                <p class="mt-1 text-[11px] text-muted">{{ $kpi['note'] }}</p>
+            </article>
+        @endforeach
+    </section>
+
+    <div class="grid grid-cols-1 gap-5 xl:grid-cols-3">
+        <div class="space-y-5 xl:col-span-2">
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">تفاصيل المعلم والكورس</h3>
+                    <p class="mt-0.5 text-xs text-muted">بيانات الطالب والكورس المرتبط</p>
+                </div>
+                <dl class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
+                    <div>
+                        <dt class="text-xs font-medium text-muted">اسم المعلم</dt>
+                        <dd class="mt-1 text-sm font-semibold text-ink">{{ $student->name ?? 'غير متوفر' }}</dd>
+                        <dd class="mt-0.5 text-xs text-muted">{{ $student->phone ?? 'بدون هاتف' }} · {{ $student->email ?? 'بدون بريد' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium text-muted">الكورس</dt>
+                        <dd class="mt-1 text-sm font-semibold text-ink">{{ $course->title ?? 'خطة عامة' }}</dd>
+                        <dd class="mt-0.5 text-xs text-muted">سعر الكورس: {{ number_format($course->price ?? 0, 2) }} ج.م</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium text-muted">الخطة</dt>
+                        <dd class="mt-1 text-sm font-semibold text-ink">{{ $plan->name ?? 'غير محددة' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium text-muted">دورية الأقساط</dt>
+                        <dd class="mt-1 text-sm font-semibold text-ink">كل {{ $plan->frequency_interval ?? '—' }} {{ ($plan && ($frequencyUnits[$plan->frequency_unit] ?? $plan->frequency_unit)) ? ($frequencyUnits[$plan->frequency_unit] ?? $plan->frequency_unit) : '-' }}</dd>
+                        <dd class="mt-0.5 text-xs text-muted">فترة السماح: {{ $plan->grace_period_days ?? 0 }} يوم</dd>
+                    </div>
+                </dl>
                 @if($agreement->notes)
-                    <div class="bg-gray-50 rounded-2xl px-4 py-3 text-xs text-gray-600 leading-relaxed">
-                        <strong class="text-sm text-gray-900">ملاحظات الاتفاقية:</strong>
+                    <div class="border-t border-line px-4 py-3 text-xs leading-relaxed text-muted sm:px-5">
+                        <strong class="text-sm font-semibold text-ink">ملاحظات الاتفاقية:</strong>
                         <p class="mt-2">{{ $agreement->notes }}</p>
                     </div>
                 @endif
-            </div>
+            </article>
 
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 space-y-4">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-black text-gray-900">جدول الأقساط</h2>
-                    <span class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-sky-100 text-sky-700">
-                        <i class="fas fa-stream text-xs"></i>
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+                    <div>
+                        <h3 class="text-base font-semibold text-ink">جدول الأقساط</h3>
+                        <p class="mt-0.5 text-xs text-muted">جميع الدفعات المجدولة والمدفوعة</p>
+                    </div>
+                    <span class="inline-flex rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">
+                        <i class="fas fa-stream me-1 text-[10px]"></i>
                         {{ $payments->count() }} دفعات
                     </span>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm text-gray-700 divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                <div class="admin-table-wrap overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="border-b border-line bg-canvas/60 text-xs text-muted">
                             <tr>
-                                <th class="px-4 py-3 text-right">#</th>
-                                <th class="px-4 py-3 text-right">تاريخ الاستحقاق</th>
-                                <th class="px-4 py-3 text-right">المبلغ</th>
-                                <th class="px-4 py-3 text-right">الحالة</th>
-                                <th class="px-4 py-3 text-right">ملاحظات</th>
-                                <th class="px-4 py-3"></th>
+                                <th class="px-4 py-3 text-start font-medium">#</th>
+                                <th class="px-4 py-3 text-start font-medium">تاريخ الاستحقاق</th>
+                                <th class="px-4 py-3 text-start font-medium">المبلغ</th>
+                                <th class="px-4 py-3 text-start font-medium">الحالة</th>
+                                <th class="px-4 py-3 text-start font-medium">ملاحظات</th>
+                                <th class="px-4 py-3 text-start font-medium"></th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200">
+                        <tbody class="divide-y divide-line">
                             @forelse($payments as $payment)
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-4 py-3 font-semibold">{{ $payment->sequence_number }}</td>
-                                    <td class="px-4 py-3">{{ optional($payment->due_date)->format('Y-m-d') }}</td>
-                                    <td class="px-4 py-3 font-semibold text-gray-900">{{ number_format($payment->amount ?? 0, 2) }} ج.م</td>
+                                @php $payBadge = $paymentBadgeMap[$payment->status] ?? 'bg-canvas-muted text-muted'; @endphp
+                                <tr class="hover:bg-canvas/40">
+                                    <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ $payment->sequence_number }}</td>
+                                    <td class="px-4 py-3 tabular-nums text-ink-soft">{{ optional($payment->due_date)->format('Y-m-d') }}</td>
+                                    <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($payment->amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></td>
                                     <td class="px-4 py-3">
-                                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold
-                                            @class([
-                                                'bg-emerald-100 text-emerald-700' => $payment->status === \App\Models\InstallmentPayment::STATUS_PAID,
-                                                'bg-amber-100 text-amber-700' => $payment->status === \App\Models\InstallmentPayment::STATUS_OVERDUE,
-                                                'bg-rose-100 text-rose-700' => $payment->status === \App\Models\InstallmentPayment::STATUS_SKIPPED,
-                                                'bg-gray-100 text-gray-700' => $payment->status === \App\Models\InstallmentPayment::STATUS_PENDING,
-                                            ])">
+                                        <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $payBadge }}">
                                             {{ $paymentStatuses[$payment->status] ?? $payment->status }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3">{{ $payment->notes ?? '—' }}</td>
-                                    <td class="px-4 py-3 text-left">
-                                        <form action="{{ route('admin.installments.agreements.mark-payment', $payment) }}" method="POST" class="inline-flex gap-2">
+                                    <td class="px-4 py-3 text-ink-soft">{{ $payment->notes ?? '—' }}</td>
+                                    <td class="px-4 py-3">
+                                        <form action="{{ route('admin.installments.agreements.mark-payment', $payment) }}" method="POST" class="inline-flex">
                                             @csrf
                                             <input type="hidden" name="status" value="{{ $payment->status === \App\Models\InstallmentPayment::STATUS_PAID ? \App\Models\InstallmentPayment::STATUS_PENDING : \App\Models\InstallmentPayment::STATUS_PAID }}">
-                                            <button type="submit" class="text-xs px-3 py-1 rounded-xl bg-sky-100 text-sky-600 hover:bg-sky-200">
+                                            <button type="submit" class="btn-press inline-flex h-7 items-center rounded-lg border border-line px-3 text-xs font-medium text-accent hover:border-accent/40">
                                                 {{ $payment->status === \App\Models\InstallmentPayment::STATUS_PAID ? 'تعيين كقيد الانتظار' : 'وضع علامة كمدفوع' }}
                                             </button>
                                         </form>
@@ -157,47 +164,54 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-4 py-10 text-center text-gray-500 text-sm">لم يتم توليد جدول أقساط بعد.</td>
+                                    <td colspan="6" class="px-4 py-12 text-center">
+                                        <p class="text-sm font-medium text-ink">لم يتم توليد جدول أقساط بعد</p>
+                                        <p class="mt-1 text-xs text-muted">لا توجد دفعات مجدولة لهذه الاتفاقية.</p>
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </article>
         </div>
 
-        <div class="space-y-6">
-            <div class="bg-white rounded-3xl shadow-lg border border-gray-100 p-6">
-                <h2 class="text-lg font-black text-gray-900 mb-4">نظرة سريعة</h2>
-                <ul class="space-y-3 text-sm text-gray-600">
+        <div class="space-y-5">
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">نظرة سريعة</h3>
+                </div>
+                <ul class="space-y-3 p-4 text-sm text-ink-soft sm:p-5">
                     <li class="flex items-start gap-2">
-                        <i class="fas fa-wallet mt-1 text-emerald-500"></i>
-                        مجموع ما تم دفعه حتى الآن: {{ number_format($payments->where('status', \App\Models\InstallmentPayment::STATUS_PAID)->sum('amount'), 2) }} ج.م
+                        <i class="fas fa-wallet mt-0.5 text-accent"></i>
+                        مجموع ما تم دفعه حتى الآن: {{ number_format($paidTotal, 2) }} ج.م
                     </li>
                     <li class="flex items-start gap-2">
-                        <i class="fas fa-balance-scale mt-1 text-emerald-500"></i>
-                        المبلغ المتبقي: {{ number_format(($agreement->total_amount ?? 0) - $payments->where('status', \App\Models\InstallmentPayment::STATUS_PAID)->sum('amount'), 2) }} ج.م
+                        <i class="fas fa-balance-scale mt-0.5 text-accent"></i>
+                        المبلغ المتبقي: {{ number_format($remainingTotal, 2) }} ج.م
                     </li>
                     <li class="flex items-start gap-2">
-                        <i class="fas fa-exclamation-triangle mt-1 text-emerald-500"></i>
-                        الأقساط المتأخرة: {{ $payments->where('status', \App\Models\InstallmentPayment::STATUS_OVERDUE)->count() }} قسط
+                        <i class="fas fa-exclamation-triangle mt-0.5 text-metal"></i>
+                        الأقساط المتأخرة: {{ $overdueCount }} قسط
                     </li>
                 </ul>
-            </div>
+            </article>
 
-            <div class="bg-white rounded-3xl shadow-lg border border-gray-100 p-6">
-                <h2 class="text-lg font-black text-gray-900 mb-4">إجراءات إضافية</h2>
-                <div class="space-y-3">
-                    <form action="{{ route('admin.installments.agreements.destroy', $agreement) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من إلغاء الاتفاقية؟');" class="inline">
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">إجراءات إضافية</h3>
+                </div>
+                <div class="p-4 sm:p-5">
+                    <form action="{{ route('admin.installments.agreements.destroy', $agreement) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من إلغاء الاتفاقية؟');">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="flex items-center justify-between w-full px-4 py-3 rounded-2xl border border-rose-100 bg-rose-50/70 text-rose-600 hover:border-rose-200 transition-all">
-                            <span class="font-semibold text-sm">إلغاء الاتفاقية</span>
+                        <button type="submit" class="btn-press flex w-full items-center justify-between rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600 transition hover:border-rose-300">
+                            <span>إلغاء الاتفاقية</span>
                             <i class="fas fa-ban text-xs"></i>
                         </button>
                     </form>
                 </div>
-            </div>
+            </article>
         </div>
     </div>
 </div>

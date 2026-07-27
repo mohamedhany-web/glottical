@@ -131,12 +131,6 @@ class FileUploadSecurityMiddleware
      */
     private function getMaxSize(Request $request, string $fieldName): int
     {
-        if ($request->routeIs('admin.curriculum-library.items.materials.store')) {
-            $appCap = (int) config('upload_limits.curriculum_material_max_bytes', 150 * 1024 * 1024);
-
-            return min($this->phpIniUploadMaxBytes(), $appCap > 0 ? $appCap : 150 * 1024 * 1024);
-        }
-
         $maxBytes = (int) config('upload_limits.max_upload_bytes', 40 * 1024 * 1024);
 
         $sizeMap = [

@@ -285,8 +285,6 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        $activeSubscription = $user->activeSubscription();
-
         return view(
             'dashboard.student',
             compact(
@@ -296,8 +294,7 @@ class DashboardController extends Controller
                 'upcomingAssignments',
                 'upcomingExams',
                 'recentExamAttempts',
-                'recentCertificates',
-                'activeSubscription'
+                'recentCertificates'
             )
         );
     }

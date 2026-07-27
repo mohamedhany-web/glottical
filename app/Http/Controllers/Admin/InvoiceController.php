@@ -170,7 +170,7 @@ class InvoiceController extends Controller
     public function show(Invoice $invoice)
     {
         try {
-            $invoice->load('user', 'payments', 'transactions', 'order', 'subscription', 'expense');
+            $invoice->load('user', 'payments', 'transactions', 'order', 'expense');
             return view('admin.invoices.show', compact('invoice'));
         } catch (\Exception $e) {
             Log::error('Error in InvoiceController@show: ' . $e->getMessage());

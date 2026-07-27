@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+  <title>تسجيل الدخول — Sana</title>
+  <meta name="theme-color" content="#1D4EDB">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- CSS مستخرج من auth/partials/geometric-styles.blade.php -->
+  <link rel="stylesheet" href="assets/sana-auth-geo.css">
+  <style>
+    .design-mirror-badge {
+      position: fixed; z-index: 99999; bottom: 12px; inset-inline-start: 12px;
+      background: #1e1b4b; color: #fff; font: 700 .72rem/1 Tajawal,sans-serif;
+      padding: .45rem .7rem; border-radius: 999px; opacity: .85; pointer-events: none;
+    }
+    [x-cloak]{display:none!important}
+  </style>
+</head>
+<body class="geo-page">
+  <div class="design-mirror-badge">مرآة تصميم الإنتاج · auth/login.blade.php</div>
+  <canvas id="geo-canvas" aria-hidden="true"></canvas>
+
+  <div class="geo-layer">
+    <nav class="geo-nav">
+      <a href="01-home.html" class="geo-logo geo-logo--brand"><span>SANA</span></a>
+      <a href="07-auth-register.html" class="geo-nav-link">إنشاء حساب</a>
+    </nav>
+
+    <main class="geo-stage">
+      <div class="geo-panel geo-login-panel">
+        <div class="geo-brand-mark">
+          <span class="geo-logo" style="font-size:1.4rem">SANA</span>
+        </div>
+
+        <h1 class="geo-headline">مرحباً<br><em>بعودتك</em></h1>
+        <p class="geo-lead">اختر نوع حسابك ثم أدخل بيانات الدخول</p>
+
+        <form onsubmit="event.preventDefault();">
+          <div class="geo-role-switch">
+            <button type="button" class="geo-role-btn is-active">طالب</button>
+            <button type="button" class="geo-role-btn">ولي أمر</button>
+          </div>
+          <p class="geo-hint geo-hint--role" style="margin-top:-1rem;margin-bottom:1.25rem">
+            الطالب يدخل بحسابه — بريده الإلكتروني وكلمة مروره الخاصة.
+          </p>
+
+          <div class="geo-field-wrap">
+            <input type="email" class="geo-field" placeholder="البريد الإلكتروني" dir="ltr">
+            <span class="geo-field-line"></span>
+          </div>
+
+          <div class="geo-field-wrap">
+            <input type="password" class="geo-field" placeholder="كلمة المرور">
+            <button type="button" class="geo-pw-toggle"><span style="font-size:.7rem;font-weight:600">إظهار</span></button>
+            <span class="geo-field-line"></span>
+          </div>
+
+          <div class="geo-row">
+            <label class="geo-check">
+              <input type="checkbox">
+              <span>تذكّرني</span>
+            </label>
+            <a href="#" class="geo-link">نسيت كلمة المرور؟</a>
+          </div>
+
+          <button type="submit" class="geo-cta">
+            <span>دخول</span>
+            <span>→</span>
+          </button>
+        </form>
+
+        <p style="margin-top:2rem;font-size:.85rem;color:var(--edu-muted)">
+          جديد؟ <a href="07-auth-register.html" class="geo-link">ابدأ رحلتك</a>
+        </p>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

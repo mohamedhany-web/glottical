@@ -24,7 +24,7 @@
             <img src="{{ $logoUrl }}" alt="{{ config('app.name') }}" class="h-full w-full object-contain p-1" width="48" height="48" loading="eager" decoding="async" fetchpriority="high" onerror="this.onerror=null;this.src={{ \Illuminate\Support\Js::from(\App\Services\AdminPanelBranding::inlineFallbackDataUri()) }};">
         </div>
     @else
-        <div class="{{ $box }} flex items-center justify-center rounded-xl bg-accent text-white shadow-[0_10px_24px_rgba(15,92,87,0.28)] transition group-hover:bg-[#0d4f4a]">
+        <div class="{{ $box }} flex items-center justify-center rounded-xl bg-accent text-white shadow-[0_10px_24px_rgba(11,61,145,0.28)] transition group-hover:bg-[#072A66]">
             <span class="font-bold {{ $mText }}">G</span>
         </div>
     @endif

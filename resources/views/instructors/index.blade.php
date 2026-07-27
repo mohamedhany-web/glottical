@@ -173,7 +173,7 @@
         </div>
         <div class="flex flex-col gap-3 sm:flex-row md:shrink-0">
           <a href="{{ url('/?open_trial=1') }}" class="btn-press inline-flex h-12 items-center justify-center rounded-xl bg-accent px-6 text-sm font-medium text-white transition hover:bg-[#0d4f4a]">{{ __('landing.academy.free_trial_cta') }}</a>
-          <a href="{{ route('public.learning-paths.index') }}" class="btn-press inline-flex h-12 items-center justify-center rounded-xl border border-white/20 bg-white/5 px-6 text-sm font-medium transition hover:bg-white/10">{{ __('landing.nav.learning_paths') }}</a>
+          <a href="{{ route('public.courses') }}" class="btn-press inline-flex h-12 items-center justify-center rounded-xl border border-white/20 bg-white/5 px-6 text-sm font-medium transition hover:bg-white/10">{{ __('landing.nav.courses') }}</a>
         </div>
       </div>
     </div>

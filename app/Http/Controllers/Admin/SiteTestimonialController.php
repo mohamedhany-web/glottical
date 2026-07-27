@@ -43,7 +43,15 @@ class SiteTestimonialController extends Controller
 
         $rows = $query->paginate(20)->withQueryString();
 
-        return view('admin.site-testimonials.index', compact('rows'));
+        $stats = [
+            'total' => SiteTestimonial::count(),
+            'active' => SiteTestimonial::where('is_active', true)->count(),
+            'inactive' => SiteTestimonial::where('is_active', false)->count(),
+            'featured' => SiteTestimonial::where('is_featured', true)->count(),
+            'images' => SiteTestimonial::where('content_type', SiteTestimonial::CONTENT_IMAGE)->count(),
+        ];
+
+        return view('admin.site-testimonials.index', compact('rows', 'stats'));
     }
 
     public function create()

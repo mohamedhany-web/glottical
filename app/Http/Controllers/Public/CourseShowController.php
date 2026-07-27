@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdvancedCourse;
+use App\Services\CourseSubscriptionService;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class CourseShowController extends Controller
 {
-    public function show(int $id): View
+    public function show(Request $request, int $id): View
     {
         $course = AdvancedCourse::query()
             ->where('id', $id)
@@ -23,17 +25,33 @@ class CourseShowController extends Controller
             ->where('is_active', true)
             ->where('id', '!=', $course->id)
             ->where(function ($query) use ($course) {
-                if ($course->course_category_id) {
-                    $query->where('course_category_id', $course->course_category_id);
+                $delivery = $course->delivery_type ?: CourseSubscriptionService::DELIVERY_GROUP;
+                if ($delivery === CourseSubscriptionService::DELIVERY_ONE_TO_ONE) {
+                    $query->where('delivery_type', CourseSubscriptionService::DELIVERY_ONE_TO_ONE);
+                } else {
+                    $query->where(function ($q) {
+                        $q->whereNull('delivery_type')
+                            ->orWhere('delivery_type', CourseSubscriptionService::DELIVERY_GROUP);
+                    });
                 }
-                $query->orWhere('academic_subject_id', $course->academic_subject_id)
-                    ->orWhere('is_featured', true);
+                if ($course->course_category_id) {
+                    $query->where(function ($q) use ($course) {
+                        $q->where('course_category_id', $course->course_category_id)
+                            ->orWhere('academic_subject_id', $course->academic_subject_id)
+                            ->orWhere('is_featured', true);
+                    });
+                }
             })
             ->with(['academicSubject', 'instructor'])
             ->withCount('lessons')
             ->limit(3)
             ->get();
 
-        return view('course-show', compact('course', 'relatedCourses', 'isEnrolled'));
+        $from = $request->query('from');
+        if (! in_array($from, ['groups', 'one_to_one'], true)) {
+            $from = $course->isOneToOne() ? 'one_to_one' : 'groups';
+        }
+
+        return view('course-show', compact('course', 'relatedCourses', 'isEnrolled', 'from'));
     }
 }

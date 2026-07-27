@@ -39,7 +39,6 @@ return Application::configure(basePath: dirname(__DIR__))
                  ->withoutOverlapping();
 
         // انتهاء الاشتراكات يومياً
-        $schedule->command('subscriptions:expire')->dailyAt('00:05');
         $schedule->command('courses:expire-subscriptions')->dailyAt('00:10');
         $schedule->command('courses:process-auto-renewals')->dailyAt('08:30');
 

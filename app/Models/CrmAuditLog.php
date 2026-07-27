@@ -46,6 +46,7 @@ class CrmAuditLog extends Model
         return [
             'lead_created' => 'إنشاء Lead',
             'lead_updated' => 'تعديل Lead',
+            'lead_deleted' => 'حذف Lead',
             'lead_assigned' => 'تعيين لسيلز',
             'lead_submitted_to_sales' => 'إرسال لصندوق المبيعات',
             'lead_claimed_from_marketing' => 'استلام من المسوقين',

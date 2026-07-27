@@ -74,11 +74,6 @@ class Transaction extends Model
         return $this->belongsTo(Expense::class);
     }
 
-    public function subscription()
-    {
-        return $this->belongsTo(Subscription::class);
-    }
-
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');

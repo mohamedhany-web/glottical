@@ -1,21 +1,47 @@
 ﻿@extends('layouts.admin')
 
 @section('title', 'تعديل الدفعة')
-@section('header', 'تعديل الدفعة')
+@section('page_title', 'تعديل الدفعة')
 
 @section('content')
-<div class="space-y-6">
-    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">تعديل الدفعة #{{ $payment->payment_number }}</h1>
-        
-        <form action="{{ route('admin.payments.update', $payment) }}" method="POST" class="space-y-6">
-            @csrf
-            @method('PUT')
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $areaClass = 'w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">المحاسبة · المدفوعات · {{ $payment->payment_number }}</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">تعديل الدفعة #{{ $payment->payment_number }}</h2>
+            <p class="mt-1 text-sm text-muted">تحديث بيانات الدفعة والحالة وطريقة الدفع</p>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.payments.show', $payment) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-eye text-xs"></i>
+                عرض التفاصيل
+            </a>
+            <a href="{{ route('admin.payments.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                رجوع للقائمة
+            </a>
+        </div>
+    </section>
+
+    <form action="{{ route('admin.payments.update', $payment) }}" method="POST" class="space-y-5">
+        @csrf
+        @method('PUT')
+
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">بيانات الدفعة</h3>
+                <p class="mt-0.5 text-xs text-muted">تعديل العميل والفاتورة والمبلغ وطريقة الدفع والحالة</p>
+            </div>
+            <div class="grid grid-cols-1 gap-5 p-4 sm:p-5 md:grid-cols-2">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">العميل *</label>
-                    <select name="user_id" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                    <label class="{{ $labelClass }}">العميل *</label>
+                    <select name="user_id" required class="{{ $fieldClass }}">
                         @foreach($users as $user)
                         <option value="{{ $user->id }}" {{ $payment->user_id == $user->id ? 'selected' : '' }}>{{ $user->name }} - {{ $user->phone }}</option>
                         @endforeach
@@ -23,8 +49,8 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">الفاتورة</label>
-                    <select name="invoice_id" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                    <label class="{{ $labelClass }}">الفاتورة</label>
+                    <select name="invoice_id" required class="{{ $fieldClass }}">
                         @forelse($invoices as $invoice)
                             <option value="{{ $invoice->id }}" {{ $payment->invoice_id == $invoice->id ? 'selected' : '' }}>
                                 {{ $invoice->invoice_number }} · {{ $invoice->user->name }} · متبقي {{ number_format($invoice->remaining_amount + ($payment->invoice_id === $invoice->id ? $payment->amount : 0), 2) }} ج.م
@@ -36,14 +62,13 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">المبلغ *</label>
-                    <input type="number" name="amount" step="0.01" min="0" required value="{{ old('amount', $payment->amount) }}" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                    <label class="{{ $labelClass }}">المبلغ *</label>
+                    <input type="number" name="amount" step="0.01" min="0" required value="{{ old('amount', $payment->amount) }}" class="{{ $fieldClass }}">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">طريقة الدفع</label>
-                    <select name="payment_method" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                    <label class="{{ $labelClass }}">طريقة الدفع</label>
+                    <select name="payment_method" required class="{{ $fieldClass }}">
                         <option value="cash" {{ $payment->payment_method == 'cash' ? 'selected' : '' }}>نقدي</option>
                         <option value="card" {{ $payment->payment_method == 'card' ? 'selected' : '' }}>بطاقة</option>
                         <option value="bank_transfer" {{ $payment->payment_method == 'bank_transfer' ? 'selected' : '' }}>تحويل بنكي</option>
@@ -54,31 +79,31 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">الحالة *</label>
-                    <select name="status" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                    <label class="{{ $labelClass }}">الحالة *</label>
+                    <select name="status" required class="{{ $fieldClass }}">
                         <option value="pending" {{ $payment->status == 'pending' ? 'selected' : '' }}>معلقة</option>
                         <option value="completed" {{ $payment->status == 'completed' ? 'selected' : '' }}>مكتملة</option>
                         <option value="failed" {{ $payment->status == 'failed' ? 'selected' : '' }}>فاشلة</option>
                         <option value="cancelled" {{ $payment->status == 'cancelled' ? 'selected' : '' }}>ملغاة</option>
                     </select>
                 </div>
-            </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات</label>
-                <textarea name="notes" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">{{ old('notes', $payment->notes) }}</textarea>
+                <div class="md:col-span-2">
+                    <label class="{{ $labelClass }}">ملاحظات</label>
+                    <textarea name="notes" rows="3" class="{{ $areaClass }}">{{ old('notes', $payment->notes) }}</textarea>
+                </div>
             </div>
+        </article>
 
-            <div class="flex gap-4">
-                <button type="submit" class="bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-lg shadow-sky-500/30">
-                    تحديث الدفعة
-                </button>
-                <a href="{{ route('admin.payments.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-medium transition-colors">
-                    إلغاء
-                </a>
-            </div>
-        </form>
-    </div>
+        <div class="flex flex-wrap gap-2">
+            <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white">
+                <i class="fas fa-save text-xs"></i>
+                تحديث الدفعة
+            </button>
+            <a href="{{ route('admin.payments.index') }}" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line px-5 text-sm font-medium text-ink hover:bg-canvas">
+                إلغاء
+            </a>
+        </div>
+    </form>
 </div>
 @endsection
-

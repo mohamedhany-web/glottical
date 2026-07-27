@@ -1,134 +1,352 @@
 @php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
+    $brand = config('app.name', 'Glottical');
+    $footer = \App\Services\PublicFooterSettings::payload();
+    $waUrl = $footer['whatsapp_url'] ?? '#';
+    $imageUrl = $siteService->publicImageUrl();
+    $summary = trim((string) ($siteService->summary ?? ''));
+    $metaDesc = \Illuminate\Support\Str::limit(strip_tags($summary !== '' ? $summary : ($siteService->body ?? '')), 160);
+    $pageTitle = $siteService->name.' — '.__('public.services_page_title').' | '.$brand;
+    $pageUrl = route('public.services.show', $siteService);
+    $chevron = $isRtl ? 'left' : 'right';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>{{ $siteService->name }} - {{ __('public.services_page_title') }} | {{ __('public.site_suffix') }}</title>
-    <meta name="description" content="{{ Str::limit(strip_tags($siteService->summary ?: $siteService->body), 160) }}">
-    <meta name="theme-color" content="#283593">
-    @include('partials.favicon-links')
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                colors: {
-                    mx: {
-                        navy: '#283593',
-                        indigo: '#1F2A7A',
-                        orange: '#FB5607',
-                    }
-                },
-                fontFamily: {
-                    heading: ['Cairo','Tajawal','IBM Plex Sans Arabic','sans-serif'],
-                    body: ['Cairo','IBM Plex Sans Arabic','Tajawal','sans-serif'],
-                }
-            }
-        }
-    };
-    </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        *{font-family:'Cairo','IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif}
-        h1,h2,h3,h4,h5,h6,.font-heading{font-family:'Cairo','Tajawal','IBM Plex Sans Arabic',sans-serif}
-        html{scroll-behavior:smooth;overflow-x:hidden}
-        body{overflow-x:hidden;background:#fff;min-height:100vh;display:flex;flex-direction:column}
-        .container-1200{max-width:1200px;margin-inline:auto;padding-inline:24px}
-        @media (max-width: 768px){.container-1200{padding-inline:16px}}
-        #scroll-progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,#FB5607,#FFE569);z-index:9999}
-        .navbar-spacer{display:block!important}
-        #navbar,#navbar.nav-transparent,#navbar.nav-solid{
-            background:rgba(31,42,122,.92)!important;
-            backdrop-filter:blur(12px)!important;
-            -webkit-backdrop-filter:blur(12px)!important;
-            border-bottom:1px solid rgba(255,255,255,.08)!important;
-        }
-        .service-prose{line-height:1.9;color:#334155;font-size:1.05rem}
-        .service-prose p{margin-bottom:1rem}
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+  <title>{{ $pageTitle }}</title>
+  <meta name="description" content="{{ $metaDesc }}">
+  <meta name="theme-color" content="#0B3D91">
+  <link rel="canonical" href="{{ $pageUrl }}">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="{{ $pageUrl }}">
+  <meta property="og:title" content="{{ $pageTitle }}">
+  <meta property="og:description" content="{{ $metaDesc }}">
+  @if($imageUrl)
+    <meta property="og:image" content="{{ $imageUrl }}">
+  @endif
+  <meta property="og:site_name" content="{{ $brand }}">
+  @include('partials.favicon-links')
+  @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog', 'subpages']])
+  <style>
+    .gl-svc {
+      background:
+        radial-gradient(ellipse 80% 50% at 100% 0%, rgba(11,61,145,.08), transparent 55%),
+        radial-gradient(ellipse 60% 40% at 0% 30%, rgba(245,184,0,.07), transparent 50%),
+        var(--bg, #F4F7FC);
+      min-height: 60vh;
+      /* clear fixed navbar (72px desktop / 64px mobile) */
+      padding-top: 72px;
+    }
+    @media (max-width: 991px) {
+      .gl-svc { padding-top: 64px; }
+    }
+    .gl-svc-wrap.sana-container {
+      max-width: 1100px;
+      padding-top: 20px;
+      padding-bottom: 48px;
+    }
+    .gl-svc-crumb {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+      font-size: .72rem; font-weight: 700; color: #5B6577; margin-bottom: 1rem;
+    }
+    .gl-svc-crumb a { color: #0B3D91; text-decoration: none !important; }
+    .gl-svc-crumb a:hover { text-decoration: underline !important; }
+    .gl-svc-layout {
+      display: grid; gap: 1rem;
+    }
+    @media (min-width: 992px) {
+      .gl-svc-layout {
+        grid-template-columns: minmax(0, 1.4fr) minmax(280px, 320px);
+        gap: 1.15rem;
+        align-items: start;
+      }
+    }
+    .gl-svc-hero {
+      position: relative; overflow: hidden; border-radius: 18px;
+      background: linear-gradient(145deg, #051F4D, #0B3D91);
+      min-height: 200px;
+      box-shadow: 0 16px 40px -24px rgba(11,61,145,.45);
+    }
+    .gl-svc-hero--img { min-height: 0; aspect-ratio: 16 / 9; }
+    .gl-svc-hero img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; display: block;
+    }
+    .gl-svc-hero__shade {
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 35%, rgba(5,31,77,.72) 100%);
+      pointer-events: none;
+    }
+    .gl-svc-hero__inner {
+      position: relative; z-index: 1;
+      padding: clamp(1.4rem, 4vw, 2.2rem);
+      color: #fff;
+    }
+    .gl-svc-hero--img .gl-svc-hero__inner {
+      position: absolute; inset: auto 0 0 0;
+      padding: 1.1rem 1.25rem 1.25rem;
+    }
+    .gl-svc-eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 11px; border-radius: 999px;
+      background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.2);
+      font-size: .68rem; font-weight: 800; margin-bottom: .65rem;
+    }
+    .gl-svc-title {
+      margin: 0; font-family: Cairo, Tajawal, sans-serif;
+      font-size: clamp(1.35rem, 3.2vw, 1.95rem); font-weight: 900;
+      line-height: 1.25; color: #fff;
+    }
+    .gl-svc-brand {
+      display: block; margin-top: .35rem;
+      font-family: Cairo, Tajawal, sans-serif;
+      font-size: clamp(1rem, 2.2vw, 1.25rem); font-weight: 900;
+      color: #F5B800; line-height: 1.2;
+    }
+    .gl-svc-lead {
+      margin: .75rem 0 0; font-size: .88rem; line-height: 1.7;
+      color: rgba(255,255,255,.88); font-weight: 600; max-width: 42rem;
+    }
+    .gl-svc-card {
+      background: #fff; border: 1.5px solid #D7DDE6; border-radius: 16px;
+      padding: 1.15rem 1.2rem 1.25rem;
+      box-shadow: 0 10px 28px -20px rgba(11,61,145,.28);
+    }
+    .gl-svc-card h2 {
+      margin: 0 0 .75rem; font-family: Cairo, Tajawal, sans-serif;
+      font-size: 1.05rem; font-weight: 900; color: #0B1220;
+    }
+    .gl-svc-prose {
+      font-size: .9rem; line-height: 1.85; color: #3D4656; font-weight: 600;
+    }
+    .gl-svc-prose p { margin: 0 0 1rem; }
+    .gl-svc-prose p:last-child { margin-bottom: 0; }
+    .gl-svc-side {
+      background: #fff; border: 1.5px solid #D7DDE6; border-radius: 16px;
+      padding: 1rem 1.05rem 1.1rem;
+      box-shadow: 0 10px 28px -20px rgba(11,61,145,.28);
+    }
+    @media (min-width: 992px) {
+      .gl-svc-side { position: sticky; top: 88px; }
+    }
+    .gl-svc-side h3 {
+      margin: 0 0 .35rem; font-family: Cairo, Tajawal, sans-serif;
+      font-size: .95rem; font-weight: 900; color: #0B1220;
+    }
+    .gl-svc-side > p {
+      margin: 0 0 .85rem; font-size: .76rem; line-height: 1.55; color: #5B6577; font-weight: 600;
+    }
+    .gl-svc-side__actions {
+      display: flex; flex-direction: column; gap: .45rem;
+    }
+    .gl-svc-side__actions .sana-btn {
+      width: 100%; justify-content: center;
+      padding: .65rem 1rem; font-size: .82rem; min-height: 0;
+    }
+    .gl-svc-trust {
+      display: grid; gap: .4rem; margin-top: .85rem; padding-top: .85rem;
+      border-top: 1px solid #E8EEF8;
+    }
+    .gl-svc-trust__row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: .72rem; font-weight: 700; color: #5B6577;
+    }
+    .gl-svc-trust__row i {
+      width: 28px; height: 28px; border-radius: 8px;
+      display: grid; place-items: center;
+      background: #E8EEF8; color: #0B3D91; font-size: .75rem; flex-shrink: 0;
+    }
+    .gl-svc-more { margin-top: 1.35rem; }
+    .gl-svc-more__head {
+      display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between;
+      gap: .5rem; margin-bottom: .85rem;
+    }
+    .gl-svc-more__head h2 {
+      margin: 0; font-family: Cairo, Tajawal, sans-serif;
+      font-size: 1.1rem; font-weight: 900; color: #0B1220;
+    }
+    .gl-svc-more__head a {
+      font-size: .76rem; font-weight: 800; color: #0B3D91; text-decoration: none !important;
+    }
+    .gl-svc-more__grid {
+      display: grid; gap: .65rem;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 640px) {
+      .gl-svc-more__grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 992px) {
+      .gl-svc-more__grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .gl-svc-tile {
+      display: flex; flex-direction: column; gap: .45rem;
+      padding: .85rem; border-radius: 14px;
+      background: #fff; border: 1.5px solid #D7DDE6;
+      text-decoration: none !important; color: inherit;
+      transition: border-color .2s, box-shadow .2s, transform .2s;
+    }
+    .gl-svc-tile:hover {
+      border-color: rgba(11,61,145,.35);
+      box-shadow: 0 12px 28px -20px rgba(11,61,145,.35);
+      transform: translateY(-2px);
+    }
+    .gl-svc-tile__media {
+      height: 96px; border-radius: 10px; overflow: hidden;
+      background: linear-gradient(145deg, #051F4D, #0B3D91);
+      display: grid; place-items: center; color: rgba(255,255,255,.4); font-size: 1.5rem;
+    }
+    .gl-svc-tile__media img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .gl-svc-tile strong {
+      display: block; font-size: .86rem; font-weight: 900; color: #0B1220; line-height: 1.35;
+    }
+    .gl-svc-tile span {
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+      font-size: .72rem; line-height: 1.5; color: #5B6577; font-weight: 600;
+    }
+    .gl-svc-final {
+      margin-top: 1.5rem;
+      border-radius: 18px;
+      padding: clamp(1.25rem, 3vw, 1.75rem);
+      background: linear-gradient(135deg, #051F4D 0%, #0B3D91 55%, #072A66 100%);
+      color: #fff; text-align: center;
+      box-shadow: 0 16px 40px -24px rgba(11,61,145,.5);
+    }
+    .gl-svc-final h2 {
+      margin: 0 0 .4rem; font-family: Cairo, Tajawal, sans-serif;
+      font-size: clamp(1.1rem, 2.4vw, 1.4rem); font-weight: 900;
+    }
+    .gl-svc-final > p {
+      margin: 0 auto 1rem; max-width: 34rem;
+      font-size: .84rem; line-height: 1.65; color: rgba(255,255,255,.78); font-weight: 600;
+    }
+    .gl-svc-final__actions {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: .55rem;
+    }
+    .gl-svc-final__actions .sana-btn {
+      padding: .7rem 1.15rem; font-size: .84rem; min-height: 0;
+    }
+    .gl-svc-back {
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 1.15rem;
+      font-size: .8rem; font-weight: 800; color: #0B3D91; text-decoration: none !important;
+    }
+    .gl-svc-back:hover { color: #072A66; }
+  </style>
 </head>
-<body class="font-body text-slate-800">
-<div id="scroll-progress"></div>
-@include('components.unified-navbar')
+<body class="sana-home sana-courses-page gl-svc-page">
+<div id="sana-scroll-progress"></div>
+@include('partials.landing.navbar', ['navActive' => '', 'navSolid' => true, 'navHero' => false])
 
-<main class="flex-1">
-    <section class="pt-10 sm:pt-14 pb-10 sm:pb-14 overflow-hidden relative" style="background:radial-gradient(circle at 12% 80%,rgba(255,229,247,.55),transparent 30%),linear-gradient(180deg,#f4f6ff 0%,#ffffff 100%)">
-        <div class="container-1200 relative z-10">
-            <nav class="text-sm text-slate-500 mb-8 flex items-center gap-2 flex-wrap">
-                <a href="{{ route('home') }}" class="hover:text-mx-indigo transition-colors">{{ __('public.home') }}</a>
-                <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }} text-[8px] text-slate-400"></i>
-                <a href="{{ route('public.services.index') }}" class="hover:text-mx-indigo transition-colors">{{ __('public.services_page_title') }}</a>
-                <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }} text-[8px] text-slate-400"></i>
-                <span class="text-mx-indigo font-semibold">{{ Str::limit($siteService->name, 48) }}</span>
-            </nav>
+<main class="gl-svc">
+  <div class="sana-container gl-svc-wrap">
+    <nav class="gl-svc-crumb" aria-label="breadcrumb">
+      <a href="{{ route('home') }}">{{ __('public.home') }}</a>
+      <i class="fas fa-chevron-{{ $chevron }} text-[8px] opacity-50"></i>
+      <a href="{{ route('public.services.index') }}">{{ __('public.services_page_title') }}</a>
+      <i class="fas fa-chevron-{{ $chevron }} text-[8px] opacity-50"></i>
+      <span>{{ \Illuminate\Support\Str::limit($siteService->name, 42) }}</span>
+    </nav>
 
-            <div class="max-w-3xl">
-                <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold mb-5" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
-                    <i class="fas fa-concierge-bell"></i> {{ __('public.services_page_title') }}
-                </span>
-                @if($siteService->publicImageUrl())
-                <div class="mb-8 rounded-[24px] overflow-hidden border border-slate-200 shadow-[0_16px_40px_-24px_rgba(31,42,122,.35)] max-w-2xl">
-                    <img src="{{ $siteService->publicImageUrl() }}" alt="" class="w-full h-auto max-h-[320px] object-cover">
-                </div>
-                @endif
-                <h1 class="font-heading text-3xl sm:text-4xl lg:text-[2.75rem] font-black text-mx-indigo leading-tight mb-6">{{ $siteService->name }}</h1>
-                @if($siteService->summary)
-                <p class="text-lg text-slate-600 leading-8 mb-8">{{ $siteService->summary }}</p>
-                @endif
-            </div>
-        </div>
-    </section>
-
-    <section class="pb-16 sm:pb-20 bg-white">
-        <div class="container-1200">
-            <article class="max-w-3xl rounded-[24px] border border-slate-200 bg-white shadow-[0_16px_40px_-24px_rgba(31,42,122,.35)] p-6 sm:p-10">
-                <div class="service-prose">
-                    {!! nl2br(e($siteService->body)) !!}
-                </div>
-            </article>
-
-            @if($others->count() > 0)
-            <div class="mt-14">
-                <h2 class="font-heading text-xl font-black text-mx-indigo mb-5">{{ __('public.services_more_title') }}</h2>
-                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    @foreach($others as $o)
-                    <a href="{{ route('public.services.show', $o) }}" class="rounded-2xl border border-slate-200 p-4 hover:border-[#283593]/30 hover:shadow-lg transition-all bg-slate-50/50 hover:bg-white">
-                        <h3 class="font-heading font-bold text-mx-indigo mb-2">{{ $o->name }}</h3>
-                        <p class="text-sm text-slate-500 line-clamp-2">{{ Str::limit(strip_tags($o->summary ?: $o->body), 90) }}</p>
-                    </a>
-                    @endforeach
-                </div>
-            </div>
+    <div class="gl-svc-layout sana-reveal">
+      <div>
+        <header class="gl-svc-hero {{ $imageUrl ? 'gl-svc-hero--img' : '' }}">
+          @if($imageUrl)
+            <img src="{{ $imageUrl }}" alt="{{ $siteService->name }}" loading="eager" decoding="async">
+            <div class="gl-svc-hero__shade" aria-hidden="true"></div>
+          @endif
+          <div class="gl-svc-hero__inner">
+            <span class="gl-svc-eyebrow"><i class="fas fa-concierge-bell"></i> {{ __('public.services_page_title') }}</span>
+            <h1 class="gl-svc-title">
+              {{ $siteService->name }}
+              <span class="gl-svc-brand">{{ $brand }}</span>
+            </h1>
+            @if($summary !== '')
+              <p class="gl-svc-lead">{{ $summary }}</p>
             @endif
+          </div>
+        </header>
 
-            <div class="mt-12 flex flex-wrap gap-3">
-                <a href="{{ route('public.services.index') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-mx-indigo font-bold hover:bg-slate-50 transition-colors">
-                    <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }} text-xs"></i>
-                    {{ __('public.services_back_to_list') }}
-                </a>
-                <a href="{{ route('public.contact') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold transition-all" style="background:#FB5607">
-                    {{ __('public.contact_us') }}
-                    <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }} text-xs"></i>
-                </a>
-            </div>
+        <article class="gl-svc-card" style="margin-top:1rem">
+          <h2>{{ $isRtl ? 'تفاصيل الخدمة' : 'Service details' }}</h2>
+          <div class="gl-svc-prose">
+            {!! nl2br(e($siteService->body)) !!}
+          </div>
+        </article>
+
+        <a href="{{ route('public.services.index') }}" class="gl-svc-back">
+          <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }} text-xs"></i>
+          {{ __('public.services_back_to_list') }}
+        </a>
+      </div>
+
+      <aside class="gl-svc-side sana-reveal">
+        <h3>{{ $isRtl ? 'هل هذه الخدمة تناسبك؟' : 'Is this right for you?' }}</h3>
+        <p>{{ __('public.services_cta_text') }}</p>
+        <div class="gl-svc-side__actions">
+          <a href="{{ $waUrl }}" class="sana-btn sana-btn--wa" target="_blank" rel="noopener">
+            <i class="fab fa-whatsapp"></i> {{ $isRtl ? 'واتساب' : 'WhatsApp' }}
+          </a>
+          <a href="{{ route('public.contact') }}" class="sana-btn sana-btn--yellow">
+            <i class="fas fa-paper-plane"></i> {{ __('public.contact_us') }}
+          </a>
+          <a href="{{ route('home') }}?open_trial=1" class="sana-btn sana-btn--purple">
+            <i class="fas fa-clipboard-check"></i> {{ __('landing.academy.free_trial_cta') }}
+          </a>
         </div>
+        <div class="gl-svc-trust">
+          <div class="gl-svc-trust__row"><i class="fas fa-user-graduate"></i><span>{{ $isRtl ? 'معلّمون متخصصون' : 'Specialist tutors' }}</span></div>
+          <div class="gl-svc-trust__row"><i class="fas fa-comments"></i><span>{{ $isRtl ? 'متابعة ودعم مباشر' : 'Direct support' }}</span></div>
+          <div class="gl-svc-trust__row"><i class="fas fa-layer-group"></i><span>{{ $isRtl ? 'مستويات واضحة' : 'Clear levels' }}</span></div>
+        </div>
+      </aside>
+    </div>
+
+    @if($others->count() > 0)
+      <section class="gl-svc-more sana-reveal">
+        <div class="gl-svc-more__head">
+          <h2>{{ __('public.services_more_title') }}</h2>
+          <a href="{{ route('public.services.index') }}">{{ __('public.services_back_to_list') }} →</a>
+        </div>
+        <div class="gl-svc-more__grid">
+          @foreach($others as $o)
+            <a href="{{ route('public.services.show', $o) }}" class="gl-svc-tile">
+              <div class="gl-svc-tile__media">
+                @if($o->publicImageUrl())
+                  <img src="{{ $o->publicImageUrl() }}" alt="" loading="lazy" decoding="async">
+                @else
+                  <i class="fas fa-layer-group" aria-hidden="true"></i>
+                @endif
+              </div>
+              <strong>{{ $o->name }}</strong>
+              <span>{{ \Illuminate\Support\Str::limit(strip_tags($o->summary ?: $o->body), 90) }}</span>
+            </a>
+          @endforeach
+        </div>
+      </section>
+    @endif
+
+    <section class="gl-svc-final sana-reveal">
+      <h2>{{ __('public.services_cta_title') }}</h2>
+      <p>{{ __('public.services_cta_text') }}</p>
+      <div class="gl-svc-final__actions">
+        <a href="{{ route('home') }}?open_trial=1" class="sana-btn sana-btn--yellow">
+          <i class="fas fa-clipboard-check"></i> {{ __('landing.academy.free_trial_cta') }}
+        </a>
+        <a href="{{ $waUrl }}" class="sana-btn sana-btn--wa" target="_blank" rel="noopener">
+          <i class="fab fa-whatsapp"></i> {{ $isRtl ? 'واتساب' : 'WhatsApp' }}
+        </a>
+        <a href="{{ route('public.courses') }}" class="sana-btn sana-btn--white-outline">
+          {{ __('public.browse_courses') }}
+        </a>
+      </div>
     </section>
+  </div>
 </main>
 
-@include('components.unified-footer')
-
-<script>
-(function(){
-    function progress(){var s=window.pageYOffset||document.documentElement.scrollTop,h=document.documentElement.scrollHeight-window.innerHeight,p=h>0?(s/h)*100:0,b=document.getElementById('scroll-progress');if(b)b.style.width=p+'%';}
-    window.addEventListener('scroll',progress,{passive:true});progress();
-})();
-</script>
+@include('partials.landing.footer')
 </body>
 </html>

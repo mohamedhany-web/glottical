@@ -1,4 +1,4 @@
-@php
+﻿@php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
     $homeStats = $homeStats ?? ['learners' => 0, 'courses' => 0, 'certificates' => 0, 'services' => 0];
@@ -29,20 +29,6 @@
             'thumb' => $thumbUrl,
         ];
     }
-    $pathsList = ($landingPaths ?? collect())->take(10);
-    $hasManagedPaths = $pathsList->isNotEmpty();
-    if (! $hasManagedPaths) {
-        $pathsList = collect([
-            (object) ['name' => __($a.'.path_fallback_1'), 'description' => '', 'courses_count' => 0, 'image_url' => null, 'id' => 0, 'url' => route('public.learning-paths.index')],
-            (object) ['name' => __($a.'.path_fallback_2'), 'description' => '', 'courses_count' => 0, 'image_url' => null, 'id' => 0, 'url' => route('public.learning-paths.index')],
-            (object) ['name' => __($a.'.path_fallback_3'), 'description' => '', 'courses_count' => 0, 'image_url' => null, 'id' => 0, 'url' => route('public.learning-paths.index')],
-        ]);
-    }
-
-    $planStarter = $teacherPlans['teacher_starter'] ?? [];
-    $planPro = $teacherPlans['teacher_pro'] ?? [];
-    $starterPrice = (float) ($planStarter['price'] ?? 0);
-    $proPrice = (float) ($planPro['price'] ?? 0);
 
     $testimonialRows = ($homeTestimonials ?? collect());
     $countriesStat = 24;
@@ -88,11 +74,11 @@
 
     // Streaming search chips for an academy (no AI chip)
     $searchChipsForJs = [
-        ['id' => 'english', 'label' => __($a.'.chip_english'), 'keywords' => ['english', 'إنجليزي', 'grammar', 'speaking', 'ielts', 'toefl']],
-        ['id' => 'arabic', 'label' => __($a.'.chip_arabic'), 'keywords' => ['arabic', 'عربي', 'نحو', 'بلاغة', 'إملاء', 'قراءة']],
-        ['id' => 'fr', 'label' => __($a.'.chip_french'), 'keywords' => ['french', 'فرنسي', 'del f', 'delf', 'tcf']],
-        ['id' => 'kids', 'label' => __($a.'.chip_kids'), 'keywords' => ['kids', 'أطفال', 'طفل', 'kids', 'مبتدئين']],
-        ['id' => 'exams', 'label' => __($a.'.chip_exams'), 'keywords' => ['ielts', 'toefl', 'اختبار', 'امتحان', 'prep', 'تحضير']],
+        ['id' => 'english', 'label' => __($a.'.chip_english'), 'keywords' => ['english', 'Ø¥Ù†Ø¬Ù„ÙŠØ²ÙŠ', 'grammar', 'speaking', 'ielts', 'toefl']],
+        ['id' => 'arabic', 'label' => __($a.'.chip_arabic'), 'keywords' => ['arabic', 'Ø¹Ø±Ø¨ÙŠ', 'Ù†Ø­Ùˆ', 'Ø¨Ù„Ø§ØºØ©', 'Ø¥Ù…Ù„Ø§Ø¡', 'Ù‚Ø±Ø§Ø¡Ø©']],
+        ['id' => 'fr', 'label' => __($a.'.chip_french'), 'keywords' => ['french', 'ÙØ±Ù†Ø³ÙŠ', 'del f', 'delf', 'tcf']],
+        ['id' => 'kids', 'label' => __($a.'.chip_kids'), 'keywords' => ['kids', 'Ø£Ø·ÙØ§Ù„', 'Ø·ÙÙ„', 'kids', 'Ù…Ø¨ØªØ¯Ø¦ÙŠÙ†']],
+        ['id' => 'exams', 'label' => __($a.'.chip_exams'), 'keywords' => ['ielts', 'toefl', 'Ø§Ø®ØªØ¨Ø§Ø±', 'Ø§Ù…ØªØ­Ø§Ù†', 'prep', 'ØªØ­Ø¶ÙŠØ±']],
     ];
 @endphp
 <!DOCTYPE html>
@@ -132,79 +118,170 @@
         @endif
     @endif
 
-    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
-    @include('partials.atheer-head')
-    <meta name="theme-color" content="#0f5c57">
+    @include('partials.landing.head', ['landingCss' => ['theme']])
     <style>
         [x-cloak]{display:none!important}
-        /* Free-trial modal — self-contained so it never falls back to old dark UI */
+        .hidden{display:none !important}
+        /* Old Tailwind overlays â€” must stay off (landing CSS has no utilities) */
+        #market-search-overlay,
+        #quick-view-modal{display:none !important;visibility:hidden !important;pointer-events:none !important}
+
+        /* Free-trial modal â€” fully self-contained (no Tailwind dependency) */
         #free-trial-modal{
-            font-family:"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif;
+            font-family:"Tajawal","Cairo","Segoe UI",Tahoma,sans-serif;
+            position:fixed;
+            inset:0;
+            z-index:100070;
+            display:none;
+            align-items:flex-end;
+            justify-content:center;
+            padding:0;
+            box-sizing:border-box;
         }
-        #free-trial-modal.hidden{
-            display:none !important;
+        @media (min-width:640px){
+            #free-trial-modal{align-items:center;padding:1rem}
         }
+        #free-trial-modal.hidden{display:none !important}
+        #free-trial-modal.is-open,
+        #free-trial-modal.flex,
+        #free-trial-modal.ft-open{display:flex !important}
         #free-trial-modal .ft-backdrop{
+            position:absolute;
+            inset:0;
             background:rgba(11,18,32,.48);
             backdrop-filter:blur(3px);
             -webkit-backdrop-filter:blur(3px);
             opacity:0;
             transition:opacity 220ms ease;
         }
+        #free-trial-modal.is-open .ft-backdrop,
         #free-trial-modal.flex .ft-backdrop,
         #free-trial-modal.ft-open .ft-backdrop{opacity:1}
         #free-trial-modal .ft-dialog{
+            position:relative;
+            z-index:10;
+            display:flex;
+            flex-direction:column;
+            width:100%;
+            max-width:32rem;
+            max-height:min(94vh,100dvh);
+            overflow:hidden;
+            border-radius:1.5rem 1.5rem 0 0;
             background:#ffffff !important;
             color:#0b1220 !important;
-            border:1px solid #d7dde6 !important;
-            box-shadow:0 18px 50px rgba(11,18,32,.12);
+            border:1px solid rgba(11,61,145,.12) !important;
+            box-shadow:
+                0 28px 64px -16px rgba(11,61,145,.35),
+                0 0 0 1px rgba(255,255,255,.4) inset;
             opacity:0;
             transform:translateY(14px) scale(.985);
             transition:opacity 280ms cubic-bezier(.22,1,.36,1), transform 280ms cubic-bezier(.22,1,.36,1);
         }
+        @media (min-width:640px){
+            #free-trial-modal .ft-dialog{border-radius:1.5rem}
+        }
+        #free-trial-modal.is-open .ft-dialog,
         #free-trial-modal.flex .ft-dialog,
         #free-trial-modal.ft-open .ft-dialog{
             opacity:1;
             transform:translateY(0) scale(1);
         }
         #free-trial-modal .ft-head{
-            border-bottom:1px solid #d7dde6;
-            background:#fff;
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:.75rem;
+            padding:1.15rem 1.25rem 1.25rem;
+            border-bottom:0;
+            background:
+                radial-gradient(circle at 90% 0%, rgba(245,184,0,.22), transparent 42%),
+                linear-gradient(145deg, #051F4D 0%, #0B3D91 52%, #1A56B0 100%);
+            color:#fff;
+            position:relative;
         }
-        #free-trial-modal .ft-kicker{color:#b08d57;font-size:.875rem;font-weight:500}
-        #free-trial-modal .ft-title{color:#0b1220;font-size:1.25rem;font-weight:600;letter-spacing:-.01em;line-height:1.35}
-        #free-trial-modal .ft-sub{color:#5b6577;font-size:.875rem;line-height:1.75}
-        #free-trial-modal .ft-label{color:#0b1220;font-size:.875rem;font-weight:600}
+        #free-trial-modal .ft-head::after{
+            content:"";
+            position:absolute;
+            left:0;right:0;bottom:0;
+            height:3px;
+            background:linear-gradient(90deg, #F5B800, #FFD24D, #F5B800);
+        }
+        @media (min-width:640px){
+            #free-trial-modal .ft-head{padding:1.35rem 1.5rem 1.45rem}
+        }
+        #free-trial-modal .ft-body{flex:1;overflow-y:auto;padding:1.25rem;background:#F4F7FC}
+        @media (min-width:640px){
+            #free-trial-modal .ft-body{padding:1.5rem}
+        }
+        #free-trial-modal .ft-kicker{
+            display:inline-flex;align-items:center;gap:.4rem;
+            color:#F5B800;font-size:.8rem;font-weight:800;margin:0 0 .45rem;
+            background:rgba(245,184,0,.14);border:1px solid rgba(245,184,0,.35);
+            padding:.28rem .7rem;border-radius:999px;
+        }
+        #free-trial-modal .ft-title{color:#fff;font-family:"Cairo","Tajawal",sans-serif;font-size:1.3rem;font-weight:900;letter-spacing:-.01em;line-height:1.35;margin:0}
+        #free-trial-modal .ft-sub{color:rgba(255,255,255,.82);font-size:.875rem;line-height:1.75;margin:.4rem 0 0}
+        #free-trial-modal .ft-label{color:#0b1220;font-size:.875rem;font-weight:800;display:block;margin-bottom:.35rem}
         #free-trial-modal .ft-muted{color:#5b6577;font-size:.75rem}
-        #free-trial-modal .ft-close{
-            width:2.5rem;height:2.5rem;border-radius:.75rem;border:1px solid #d7dde6;
-            background:#f3f5f7;color:#1c2738;display:inline-flex;align-items:center;justify-content:center;
+        #free-trial-modal .ft-row{display:flex;align-items:flex-end;justify-content:space-between;gap:.75rem;margin-bottom:.75rem}
+        #free-trial-modal .ft-times{display:flex;flex-wrap:wrap;gap:.5rem}
+        #free-trial-modal .ft-form{
+            display:flex;flex-direction:column;gap:1rem;padding:1.15rem 1.1rem 1.2rem;
+            border-top:0;margin-top:.25rem;background:#fff;border:1px solid #d7dde6;border-radius:1.1rem;
         }
-        #free-trial-modal .ft-close:hover{border-color:rgba(15,92,87,.35);background:#e6f2f1;color:#0f5c57}
+        #free-trial-modal .ft-form-grid{display:grid;grid-template-columns:1fr;gap:1rem}
+        @media (min-width:640px){
+            #free-trial-modal .ft-form-grid{grid-template-columns:1fr 1fr}
+        }
+        #free-trial-modal .ft-field-wrap{display:flex;flex-direction:column;gap:.35rem}
+        #free-trial-modal .ft-calendar{display:flex;flex-direction:column;gap:1.25rem}
+        #free-trial-modal .ft-success{padding:1.5rem 0;text-align:center}
+        #free-trial-modal .ft-success .ft-title{color:#0B3D91}
+        #free-trial-modal .ft-success .ft-sub{color:#5b6577}
+        #free-trial-modal .ft-success .ft-close{margin:1.5rem auto 0}
+        #free-trial-modal .ft-icon-spin{
+            display:inline-flex;width:2rem;height:2rem;align-items:center;justify-content:center;
+            border-radius:.75rem;background:#E8EEF8;color:#0B3D91;
+        }
+        #free-trial-modal .ft-icon-spin svg{width:1rem;height:1rem;animation:ft-spin 1s linear infinite}
+        @keyframes ft-spin{to{transform:rotate(360deg)}}
+        #free-trial-modal .ft-close{
+            width:2.5rem;height:2.5rem;border-radius:999px;border:1px solid rgba(255,255,255,.28);
+            background:rgba(255,255,255,.12);color:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+        }
+        #free-trial-modal .ft-close:hover{background:rgba(255,255,255,.22);border-color:rgba(245,184,0,.55);color:#FFD24D}
+        #free-trial-modal .ft-success .ft-close,
+        #free-trial-modal .ft-body .ft-close{
+            border:1px solid #d7dde6;background:#fff;color:#0B3D91;
+        }
+        #free-trial-modal .ft-success .ft-close:hover,
+        #free-trial-modal .ft-body .ft-close:hover{
+            border-color:rgba(11,61,145,.35);background:#E8EEF8;color:#0B3D91;
+        }
         #free-trial-modal .ft-chip{
-            border:1px solid #d7dde6;
-            background:#f3f5f7;
-            color:#1c2738;
-            border-radius:.75rem;
+            border:1.5px solid #d7dde6;
+            background:#fff;
+            color:#0B1220;
+            border-radius:999px;
             font-size:.8125rem;
-            font-weight:600;
-            padding:.55rem .85rem;
-            transition:background-color 160ms ease,border-color 160ms ease,color 160ms ease;
+            font-weight:700;
+            padding:.6rem .95rem;
+            transition:background-color 160ms ease,border-color 160ms ease,color 160ms ease,box-shadow 160ms ease;
             flex:0 0 auto;
             scroll-snap-align:start;
+            cursor:pointer;
         }
         #free-trial-modal .ft-chip:hover{
-            border-color:rgba(15,92,87,.35);
-            background:#e6f2f1;
-            color:#0f5c57;
+            border-color:rgba(11,61,145,.4);
+            background:#E8EEF8;
+            color:#0B3D91;
         }
         #free-trial-modal .ft-chip.is-active{
-            background:#0f5c57 !important;
-            border-color:#0f5c57 !important;
+            background:#0B3D91 !important;
+            border-color:#0B3D91 !important;
             color:#fff !important;
+            box-shadow:0 8px 20px rgba(11,61,145,.28);
         }
         #free-trial-modal .ft-chip .ft-chip-day{
             display:block;
@@ -302,31 +379,35 @@
         #free-trial-modal .ft-field{
             width:100%;
             height:2.75rem;
-            border-radius:.75rem;
-            border:1px solid #d7dde6;
+            border-radius:999px;
+            border:1.5px solid #d7dde6;
             background:#fff;
-            padding:0 1rem;
+            padding:0 1.1rem;
             font-size:.875rem;
+            font-family:inherit;
             color:#0b1220;
+            box-sizing:border-box;
         }
         #free-trial-modal .ft-field:focus{
             outline:none;
-            border-color:#0f5c57;
-            box-shadow:0 0 0 3px rgba(15,92,87,.15);
+            border-color:#0B3D91;
+            box-shadow:0 0 0 3px rgba(11,61,145,.14);
         }
         #free-trial-modal .ft-field::placeholder{color:#5b6577;opacity:.7}
         #free-trial-modal .ft-submit{
-            width:100%;height:3rem;border-radius:.75rem;border:0;
-            background:#0f5c57;color:#fff;font-size:.875rem;font-weight:600;
+            width:100%;height:3.1rem;border-radius:999px;border:0;
+            background:linear-gradient(180deg, #FFD24D 0%, #F5B800 55%, #E5AB00 100%);
+            color:#0B1220;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;
+            box-shadow:0 12px 28px rgba(245,184,0,.4);
         }
-        #free-trial-modal .ft-submit:hover{background:#0d4f4a}
-        #free-trial-modal .ft-submit:disabled{opacity:.4;cursor:not-allowed}
+        #free-trial-modal .ft-submit:hover{filter:brightness(1.03)}
+        #free-trial-modal .ft-submit:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
         #free-trial-modal .ft-loading{
             align-items:center;gap:.75rem;
             border:1px solid #d7dde6;background:#f3f5f7;border-radius:1rem;
             padding:1.1rem 1rem;color:#5b6577;font-size:.875rem;
         }
-        /* مهم: لا تفرض display:flex هنا — يتغلب على .hidden ويبقى التحميل ظاهراً للأبد */
+        /* Ù…Ù‡Ù…: Ù„Ø§ ØªÙØ±Ø¶ display:flex Ù‡Ù†Ø§ â€” ÙŠØªØºÙ„Ø¨ Ø¹Ù„Ù‰ .hidden ÙˆÙŠØ¨Ù‚Ù‰ Ø§Ù„ØªØ­Ù…ÙŠÙ„ Ø¸Ø§Ù‡Ø±Ø§Ù‹ Ù„Ù„Ø£Ø¨Ø¯ */
         #free-trial-modal .ft-loading:not(.hidden){
             display:flex;
         }
@@ -340,7 +421,12 @@
         #free-trial-modal .ft-success-icon{
             width:3.5rem;height:3.5rem;margin:0 auto 1rem;
             display:inline-flex;align-items:center;justify-content:center;
-            border-radius:1rem;background:#e6f2f1;color:#0f5c57;
+            border-radius:1rem;background:#E8EEF8;color:#0B3D91;
+        }
+        #free-trial-modal .ft-scroll-btn{color:#0B3D91}
+        #free-trial-modal .ft-scroll-btn:hover{
+            background:#E8EEF8;
+            border-color:rgba(11,61,145,.35);
         }
         @media (prefers-reduced-motion: reduce){
             #free-trial-modal .ft-backdrop,
@@ -348,161 +434,105 @@
         }
     </style>
 </head>
-<body class="font-sans antialiased">
-@include('partials.atheer-home-header')
+<body class="sana-home">
+<div id="sana-scroll-progress"></div>
+@include('partials.landing.navbar', ['navActive' => 'home', 'navHero' => true])
 
-@include('partials.welcome-main-site')
+@include('partials.welcome-landing-main')
 
-{{-- Netflix-style full-screen search --}}
-<div id="market-search-overlay" class="fixed inset-0 z-[100050] hidden" aria-hidden="true">
-    <div class="absolute inset-0 bg-[#0d1528]/80 backdrop-blur-xl transition-opacity" data-close-search tabindex="-1"></div>
-    <div class="relative z-10 min-h-0 flex flex-col items-stretch pt-16 sm:pt-20 px-3 sm:px-6 pb-8 pointer-events-none">
-        <div class="max-w-5xl w-full mx-auto glass-panel-dark rounded-2xl border border-white/15 shadow-2xl pointer-events-auto search-overlay-enter max-h-[min(90vh,840px)] flex flex-col overflow-hidden">
-            <div class="flex items-center justify-between gap-3 p-4 border-b border-white/10">
-                <p class="text-sm font-black text-metal">{{ __($a.'.search_live') }}</p>
-                <button type="button" class="w-10 h-10 rounded-xl border border-white/15 text-white hover:bg-white/10 transition font-bold" data-close-search aria-label="{{ __($a.'.search_close') }}"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="p-4 border-b border-white/10 shrink-0">
-                <div class="flex items-center gap-3 rounded-2xl border border-white/12 bg-white/5 px-4 py-3 floating-search-glow">
-                    <i class="fas fa-magnifying-glass text-acad-cyan/90 text-sm"></i>
-                    <input type="search" id="market-overlay-input" autocomplete="off" placeholder="{{ __($a.'.search_placeholder') }}" class="flex-1 bg-transparent border-0 outline-none font-semibold text-white placeholder:text-white/40">
-                </div>
-                <div class="mt-4 flex flex-wrap gap-2" id="search-chip-row">
-                    @foreach($searchChipsForJs as $ch)
-                        <button type="button" class="search-chip text-xs font-extrabold px-3 py-1.5 rounded-full border border-white/15 bg-white/5 text-white/90 hover:bg-acad-yellow hover:text-acad-blue hover:border-acad-yellow transition" data-chip="{{ $ch['id'] }}">{{ $ch['label'] }}</button>
-                    @endforeach
-                </div>
-                <input type="hidden" id="ov-active-chip" value="">
-            </div>
-            <div class="flex-1 min-h-0 overflow-y-auto p-4 space-y-6">
-                <div class="grid md:grid-cols-3 gap-4">
-                    <div class="space-y-4">
-                        <div>
-                            <p class="text-xs font-extrabold text-white/45 uppercase mb-2">{{ __($a.'.search_recent') }}</p>
-                            <div id="market-recent-list" class="space-y-1 text-sm font-semibold text-acad-cyan"></div>
-                        </div>
-                        <div>
-                            <p class="text-xs font-extrabold text-white/45 uppercase mb-2">{{ __($a.'.search_trending') }}</p>
-                            <div id="market-trending-list" class="flex flex-wrap gap-2"></div>
-                        </div>
-                    </div>
-                    <div class="md:col-span-2">
-                        <p class="text-xs font-extrabold text-white/45 uppercase mb-2">{{ __($a.'.search_results_row') }}</p>
-                        <div id="market-live-results" class="netflix-row pb-2 -mx-1"></div>
-                        <p id="market-no-results" class="hidden text-sm text-white/50 font-medium py-8 text-center">{{ __($a.'.search_no_results') }}</p>
-                    </div>
-                </div>
-            </div>
-            <form action="{{ route('public.courses') }}" method="get" class="p-4 border-t border-white/10 bg-black/20 shrink-0 flex flex-wrap gap-2 justify-end">
-                <input type="hidden" name="q" id="market-overlay-q-hidden" value="">
-                <button type="submit" class="px-6 py-2.5 rounded-xl bg-accent text-white font-extrabold hover:brightness-110 transition">{{ __($a.'.search_btn') }}</button>
-            </form>
-        </div>
-    </div>
-</div>
-
-{{-- Free trial booking modal — light storefront brand (self-styled) --}}
-<div id="free-trial-modal" class="fixed inset-0 z-[100070] hidden items-end sm:items-center justify-center p-0 sm:p-4" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="ft-title">
-    <div class="ft-backdrop absolute inset-0" data-close-free-trial></div>
-    <div class="ft-dialog relative z-10 flex w-full sm:max-w-lg flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl max-h-[min(94vh,100dvh)]">
-        <div class="ft-head flex items-start justify-between gap-3 px-5 py-4 sm:px-6 sm:py-5">
-            <div class="min-w-0 space-y-1.5">
-                <p class="ft-kicker inline-flex items-center gap-1.5">
-                    <svg class="size-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+{{-- Free trial booking modal â€” self-styled (no Tailwind) --}}
+<div id="free-trial-modal" class="hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="ft-title">
+    <div class="ft-backdrop" data-close-free-trial></div>
+    <div class="ft-dialog">
+        <div class="ft-head">
+            <div class="ft-head-copy">
+                <p class="ft-kicker">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
                     Glottical · 30 {{ $isRtl ? 'دقيقة' : 'min' }}
                 </p>
-                <h3 id="ft-title" class="ft-title sm:text-2xl">{{ __($a.'.free_trial_modal_title') }}</h3>
+                <h3 id="ft-title" class="ft-title">{{ __($a.'.free_trial_modal_title') }}</h3>
                 <p class="ft-sub">{{ __($a.'.free_trial_modal_sub') }}</p>
             </div>
-            <button type="button" class="ft-close shrink-0" data-close-free-trial aria-label="{{ __($a.'.free_trial_close') }}">
-                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            <button type="button" class="ft-close" data-close-free-trial aria-label="{{ __($a.'.free_trial_close') }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
         </div>
 
-        <div class="flex-1 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6" style="background:#fff">
+        <div class="ft-body">
             <div id="ft-loading" class="ft-loading">
-                <span class="inline-flex size-8 items-center justify-center rounded-xl" style="background:#e6f2f1;color:#0f5c57">
-                    <svg class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                <span class="ft-icon-spin">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                 </span>
                 {{ __($a.'.free_trial_loading') }}
             </div>
 
-            <div id="ft-error" class="ft-error mb-4 hidden" role="alert"></div>
+            <div id="ft-error" class="ft-error hidden" role="alert"></div>
 
-            <div id="ft-calendar" class="hidden space-y-6">
+            <div id="ft-calendar" class="ft-calendar hidden">
                 <div>
-                    <div class="mb-3 flex items-end justify-between gap-3">
-                        <p class="ft-label">{{ __($a.'.free_trial_pick_date') }}</p>
+                    <div class="ft-row">
+                        <p class="ft-label" style="margin:0">{{ __($a.'.free_trial_pick_date') }}</p>
                         <p class="ft-muted">{{ $isRtl ? 'خلال أسبوعين' : 'Next 2 weeks' }}</p>
                     </div>
                     <div class="ft-scroll-wrap" data-ft-scroll-wrap>
                         <button type="button" class="ft-scroll-btn is-prev" data-ft-scroll="-1" aria-label="{{ $isRtl ? 'الأيام السابقة' : 'Previous days' }}" disabled>
-                            <svg class="size-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="{{ $isRtl ? 'm9 18 6-6-6-6' : 'm15 18-6-6 6-6' }}"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="{{ $isRtl ? 'm9 18 6-6-6-6' : 'm15 18-6-6 6-6' }}"/></svg>
                         </button>
                         <div id="ft-dates" class="ft-hscroll" role="listbox" aria-label="{{ __($a.'.free_trial_pick_date') }}"></div>
                         <button type="button" class="ft-scroll-btn is-next" data-ft-scroll="1" aria-label="{{ $isRtl ? 'الأيام التالية' : 'Next days' }}" disabled>
-                            <svg class="size-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="{{ $isRtl ? 'm15 18-6-6 6-6' : 'm9 18 6-6-6-6' }}"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="{{ $isRtl ? 'm15 18-6-6 6-6' : 'm9 18 6-6-6-6' }}"/></svg>
                         </button>
                     </div>
                 </div>
 
                 <div>
-                    <p class="ft-label mb-3">{{ __($a.'.free_trial_pick_time') }}</p>
-                    <div id="ft-times" class="flex flex-wrap gap-2"></div>
-                    <p id="ft-no-times" class="ft-sub mt-2 hidden">{{ __($a.'.free_trial_no_slots') }}</p>
+                    <p class="ft-label">{{ __($a.'.free_trial_pick_time') }}</p>
+                    <div id="ft-times" class="ft-times"></div>
+                    <p id="ft-no-times" class="ft-sub hidden">{{ __($a.'.free_trial_no_slots') }}</p>
                 </div>
 
-                <form id="ft-form" class="space-y-4 pt-5" style="border-top:1px solid #d7dde6">
+                <form id="ft-form" class="ft-form">
                     <input type="hidden" name="starts_at" id="ft-starts-at" required>
-                    <div class="space-y-2">
-                        <label for="ft-name" class="ft-label block">{{ __($a.'.free_trial_name') }}</label>
+                    <div class="ft-field-wrap">
+                        <label for="ft-name" class="ft-label">{{ __($a.'.free_trial_name') }}</label>
                         <input type="text" name="name" id="ft-name" required autocomplete="name" class="ft-field" value="{{ auth()->user()->name ?? '' }}">
                     </div>
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div class="space-y-2">
-                            <label for="ft-email" class="ft-label block">{{ __($a.'.free_trial_email') }}</label>
+                    <div class="ft-form-grid">
+                        <div class="ft-field-wrap">
+                            <label for="ft-email" class="ft-label">{{ __($a.'.free_trial_email') }}</label>
                             <input type="email" name="email" id="ft-email" autocomplete="email" class="ft-field" value="{{ auth()->user()->email ?? '' }}">
                         </div>
-                        <div class="space-y-2">
-                            <label for="ft-phone" class="ft-label block">{{ __($a.'.free_trial_phone') }}</label>
+                        <div class="ft-field-wrap">
+                            <label for="ft-phone" class="ft-label">{{ __($a.'.free_trial_phone') }}</label>
                             <input type="tel" name="phone" id="ft-phone" autocomplete="tel" class="ft-field" value="{{ auth()->user()->phone ?? '' }}">
                         </div>
                     </div>
-                    <div class="space-y-2">
-                        <label for="ft-goal" class="ft-label block">{{ __($a.'.free_trial_goal') }}</label>
-                        <input type="text" name="goal" id="ft-goal" class="ft-field" placeholder="{{ $isRtl ? 'سفر، عمل، دراسة…' : 'Travel, work, study…' }}">
+                    <div class="ft-field-wrap">
+                        <label for="ft-goal" class="ft-label">{{ __($a.'.free_trial_goal') }}</label>
+                        <input type="text" name="goal" id="ft-goal" class="ft-field" placeholder="{{ $isRtl ? 'سفر، عمل، دراسة…' : 'Travel, work, studyâ€¦' }}">
                     </div>
                     <button type="submit" id="ft-submit" disabled class="ft-submit">
                         {{ __($a.'.free_trial_submit') }}
                     </button>
-                    <p class="text-center ft-muted" style="line-height:1.6">{{ $isRtl ? 'بدون التزام · سنؤكد الموعد برسالة قصيرة' : 'No commitment · We’ll confirm by a short message' }}</p>
+                    <p class="ft-muted" style="text-align:center;line-height:1.6">{{ $isRtl ? 'بدون التزام · سنؤكد الموعد برسالة قصيرة' : 'No commitment Â· Weâ€™ll confirm by a short message' }}</p>
                 </form>
             </div>
 
-            <div id="ft-success" class="hidden py-6 text-center">
+            <div id="ft-success" class="ft-success hidden">
                 <div class="ft-success-icon">
-                    <svg class="size-7" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
                 </div>
                 <h4 class="ft-title">{{ __($a.'.free_trial_success') }}</h4>
-                <p id="ft-success-msg" class="ft-sub mx-auto mt-2 max-w-sm"></p>
-                <button type="button" data-close-free-trial class="ft-close mt-6" aria-label="{{ __($a.'.free_trial_close') }}">
-                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                <p id="ft-success-msg" class="ft-sub"></p>
+                <button type="button" data-close-free-trial class="ft-close" aria-label="{{ __($a.'.free_trial_close') }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-{{-- Quick view modal --}}
-<div id="quick-view-modal" class="fixed inset-0 z-[100060] hidden items-center justify-center p-4" aria-hidden="true">
-    <div class="absolute inset-0 bg-black/70 backdrop-blur-md" data-close-qv></div>
-    <div class="relative z-10 w-full max-w-lg rounded-2xl bg-slate-900/95 shadow-2xl border border-white/10 overflow-hidden max-h-[90vh] overflow-y-auto">
-        <button type="button" class="absolute top-3 {{ $isRtl ? 'left-3' : 'right-3' }} w-10 h-10 rounded-full bg-white/10 border border-white/15 text-white hover:bg-white/20 z-10" data-close-qv aria-label="{{ __($a.'.search_close') }}"><i class="fas fa-times"></i></button>
-        <div id="quick-view-body" class="p-6 pt-14 text-white"></div>
-    </div>
-</div>
-
-@include('partials.atheer-home-footer')
+@include('partials.landing.footer')
 
 @if(isset($popupAd) && $popupAd)
     @include('partials.popup-ad', ['ad' => $popupAd])
@@ -586,7 +616,7 @@
             if (!q || q.length < 1) { box.classList.add('hidden'); box.innerHTML = ''; return; }
             var m = suggests.filter(function(s){ return s.toLowerCase().indexOf(q.toLowerCase()) !== -1; });
             if (!m.length) m = suggests.slice(0, 4);
-            box.innerHTML = '<p class="text-xs font-bold text-white/45 px-2 py-1">' + (isRtl ? 'اقتراحات' : 'Suggestions') + '</p>' + m.map(function(s, idx){
+            box.innerHTML = '<p class="text-xs font-bold text-white/45 px-2 py-1">' + (isRtl ? 'Ø§Ù‚ØªØ±Ø§Ø­Ø§Øª' : 'Suggestions') + '</p>' + m.map(function(s, idx){
                 return '<button type="button" class="suggest-item w-full text-start px-3 py-2 rounded-lg hover:bg-white/10 text-sm font-semibold text-white/95" style="animation-delay:' + (idx*50) + 'ms">' + esc(s) + '</button>';
             }).join('');
             box.classList.remove('hidden');
@@ -652,7 +682,7 @@
         }
         if (no) no.classList.add('hidden');
         top.forEach(function(c){
-            var dur = c.duration ? (String(c.duration) + (isRtl ? ' س' : 'h')) : '';
+            var dur = c.duration ? (String(c.duration) + (isRtl ? ' Ø³' : 'h')) : '';
             var rt = c.rating ? Number(c.rating).toFixed(1) : '';
             var el = document.createElement('a');
             el.href = c.url;
@@ -663,7 +693,7 @@
                 (dur ? '<span class="absolute top-2 ' + (isRtl ? 'right-2' : 'left-2') + ' text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-black/60 text-white/95 border border-white/10">' + esc(dur) + '</span>' : '') +
                 '<div class="absolute bottom-0 inset-x-0 p-2">' +
                 '<p class="text-[11px] sm:text-xs font-black text-white leading-snug line-clamp-2">' + esc(c.title) + '</p>' +
-                (rt ? '<p class="text-[10px] text-amber-300/95 mt-0.5 font-bold">★ ' + esc(rt) + '</p>' : '') +
+                (rt ? '<p class="text-[10px] text-amber-300/95 mt-0.5 font-bold">â˜… ' + esc(rt) + '</p>' : '') +
                 '</div>' +
                 '<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/45">' +
                 '<span class="px-3 py-1.5 rounded-lg bg-accent text-white text-[10px] sm:text-[11px] font-extrabold shadow-lg">' + esc(streamPlayLabel) + '</span>' +
@@ -858,12 +888,12 @@
             var c = byId[String(id)];
             if (!c) return;
             var price = c.isFree ? freeLabel : (Math.round(c.price).toLocaleString() + ' ' + currencyLabel);
-            var stars = c.rating >= 4 ? '★★★★★' : (c.rating >= 3 ? '★★★★☆' : '★★★☆☆');
+            var stars = c.rating >= 4 ? 'â˜…â˜…â˜…â˜…â˜…' : (c.rating >= 3 ? 'â˜…â˜…â˜…â˜…â˜†' : 'â˜…â˜…â˜…â˜†â˜†');
             body.innerHTML = '<div class="aspect-video rounded-xl overflow-hidden bg-white/5 border border-white/10 mb-4">' +
                 (c.thumb ? '<img src="' + esc(c.thumb) + '" alt="" class="w-full h-full object-cover">' : '') +
                 '</div><h3 class="text-xl font-black text-white">' + esc(c.title) + '</h3>' +
                 '<p class="text-sm text-white/55 mt-1">' + esc(c.instructor) + '</p>' +
-                '<p class="text-amber-300 text-sm mt-2">' + esc(stars) + ' ' + (c.rating || '—') + '</p>' +
+                '<p class="text-amber-300 text-sm mt-2">' + esc(stars) + ' ' + (c.rating || 'â€”') + '</p>' +
                 '<p class="text-lg font-black text-acad-cyan mt-3">' + esc(price) + '</p>' +
                 '<a href="' + esc(c.url) + '" class="mt-4 block text-center py-3 rounded-xl bg-accent text-white font-extrabold hover:brightness-110 transition">' + esc(enrollLabel) + '</a>';
             modal.classList.remove('hidden');
@@ -946,17 +976,16 @@
 
         function openModal(){
             modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            modal.classList.add('is-open', 'flex', 'ft-open');
             modal.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
-            requestAnimationFrame(function(){ modal.classList.add('ft-open'); });
             loadSlots();
         }
         function closeModal(){
-            modal.classList.remove('ft-open');
+            modal.classList.remove('ft-open', 'is-open');
             setTimeout(function(){
                 modal.classList.add('hidden');
-                modal.classList.remove('flex');
+                modal.classList.remove('flex', 'is-open', 'ft-open');
                 modal.setAttribute('aria-hidden', 'true');
                 document.body.style.overflow = '';
             }, 200);
@@ -1065,7 +1094,7 @@
             window.addEventListener('resize', sync);
             if (prev) prev.addEventListener('click', function(){ scroller.scrollBy({ left: (@json($isRtl) ? 1 : -1) * Math.max(180, scroller.clientWidth * 0.7), behavior: 'smooth' }); });
             if (next) next.addEventListener('click', function(){ scroller.scrollBy({ left: (@json($isRtl) ? -1 : 1) * Math.max(180, scroller.clientWidth * 0.7), behavior: 'smooth' }); });
-            // سحب بالماوس على سطح المكتب
+            // Ø³Ø­Ø¨ Ø¨Ø§Ù„Ù…Ø§ÙˆØ³ Ø¹Ù„Ù‰ Ø³Ø·Ø­ Ø§Ù„Ù…ÙƒØªØ¨
             var dragging = false, startX = 0, startLeft = 0;
             scroller.addEventListener('pointerdown', function(e){
                 if (e.pointerType !== 'mouse' || e.button !== 0) return;
@@ -1172,14 +1201,14 @@
             }).then(function(r){ return r.json().then(function(j){ return { ok: r.ok, status: r.status, body: j }; }); })
             .then(function(res){
                 if (!res.ok) {
-                    err.textContent = (res.body && res.body.message) ? res.body.message : ((res.body && res.body.errors) ? Object.values(res.body.errors)[0][0] : 'فشل الحجز');
+                    err.textContent = (res.body && res.body.message) ? res.body.message : ((res.body && res.body.errors) ? Object.values(res.body.errors)[0][0] : 'ÙØ´Ù„ Ø§Ù„Ø­Ø¬Ø²');
                     err.classList.remove('hidden');
                     document.getElementById('ft-submit').disabled = false;
                     return;
                 }
                 document.getElementById('ft-calendar').classList.add('hidden');
                 document.getElementById('ft-success').classList.remove('hidden');
-                document.getElementById('ft-success-msg').textContent = (res.body.message || '') + (res.body.booking && res.body.booking.label ? (' — ' + res.body.booking.label) : '');
+                document.getElementById('ft-success-msg').textContent = (res.body.message || '') + (res.body.booking && res.body.booking.label ? (' â€” ' + res.body.booking.label) : '');
             }).catch(function(){
                 err.textContent = 'فشل الاتصال — حاول مجدداً';
                 err.classList.remove('hidden');
@@ -1189,16 +1218,19 @@
     }
 
     function boot(){
-        reveal();
-        heroParallax();
-        heroSlider();
-        searchSuggest();
-        marketSearchOverlay();
-        quickViewModal();
-        counters();
-        testimonialCarousel();
-        scrollProgress();
-        freeTrialBooking();
+        var steps = [
+            reveal,
+            heroParallax,
+            heroSlider,
+            searchSuggest,
+            counters,
+            testimonialCarousel,
+            scrollProgress,
+            freeTrialBooking
+        ];
+        steps.forEach(function(fn){
+            try { fn(); } catch (err) { if (window.console && console.warn) console.warn('[home]', err); }
+        });
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

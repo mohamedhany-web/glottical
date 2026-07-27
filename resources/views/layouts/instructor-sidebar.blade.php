@@ -83,16 +83,6 @@
             </a>
             @endif
 
-            @if(Route::has('curriculum-library.index'))
-            <a href="{{ route('curriculum-library.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
-               class="ins-nav {{ request()->routeIs('curriculum-library.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
-                    <i class="fas fa-folder-open text-sm"></i>
-                </span>
-                <span class="flex-1 truncate">مكتبة المناهج</span>
-            </a>
-            @endif
-
             {{-- ─── أدوات التدريس ─── --}}
             <div class="ins-nav-group mt-3">
                 <span class="inline-flex items-center gap-1.5">
@@ -192,6 +182,15 @@
                     <i class="fas fa-calendar-week text-sm"></i>
                 </span>
                 <span class="flex-1 truncate">{{ __('student.one_to_one_availability_title') }}</span>
+            </a>
+            @endif
+            @if(Route::has('instructor.tutor-work-schedule.index'))
+            <a href="{{ route('instructor.tutor-work-schedule.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+               class="ins-nav {{ request()->routeIs('instructor.tutor-work-schedule.*') ? 'active' : '' }}">
+                <span class="ins-icon bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400">
+                    <i class="fas fa-users text-sm"></i>
+                </span>
+                <span class="flex-1 truncate">جدول عمل المجموعات</span>
             </a>
             @endif
             @if(Route::has('instructor.calendar'))

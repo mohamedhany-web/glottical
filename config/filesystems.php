@@ -126,8 +126,6 @@ return [
     */
     'r2_public_url' => env('R2_PUBLIC_URL'),
 
-    'homepage_sliders_disk' => env('HOMEPAGE_SLIDERS_DISK', env('PUBLIC_MEDIA_DISK', 'public')),
-
     /*
     |--------------------------------------------------------------------------
     | شعار لوحة التحكم (Admin)

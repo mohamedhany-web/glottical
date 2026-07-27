@@ -1,54 +1,22 @@
-# فهرس صفحات `site/` الجاهزة
+# فهرس التصميم — Glottical public
 
-مرجع سريع فقط — لا تُنفَّذ صفحات جديدة من هذا الفهرس إلا بطلب صريح. عند تصميم صفحة في التطبيق: افتح ملف `site/` المقابل أولاً وطابق البنية/المكوّنات مع نظام التصميم.
+**المصدر:** `designs/glottical-public/` (متزامن مع `site/`)
 
-## واجهة المتجر (عامّة) → أكاديمية Glottical
+| مرآة HTML | الصفحة | Blade |
+|-----------|--------|-------|
+| `index.html` | الرئيسية | `welcome` |
+| `about.html` | من نحن | `public/about` |
+| `contact.html` | تواصل | `public/contact` |
+| `courses.html` | الكورسات | `courses` |
+| `course-show.html` | تفاصيل كورس | `course-show` |
+| `instructors.html` | المدربون | `instructors/index` |
+| `instructor-show.html` | ملف مدرب | `instructors/show` |
+| `categories.html` | التصنيفات | `public/categories` |
+| `groups.html` | المجموعات | `public/groups` |
+| `pricing.html` | أسعار / تقييم | `public/pricing` |
+| `login.html` | دخول | `auth/login` |
+| `register.html` | تسجيل | `auth/register` |
 
-| ملف `site/` | العنوان في التصميم | استخدام مقترح في الأكاديمية |
-|-------------|-------------------|------------------------------|
-| `index.html` | الصفحة الرئيسية | هوم بيج / لاندنج (مطبّق جزئياً) |
-| `categories.html` | التصنيفات | تصنيفات اللغات / مجالات التعلم — مطبّق عبر `/categories` |
-| `collections.html` | المجموعات | مسارات التعلم `/learning-paths` + شرح المجموعات `/groups` |
-| `brands.html` | العلامات | المدرّبون — قائمة `/instructors` وتفاصيل المدرب `/instructors/{id}` |
-| `new-arrivals.html` | وصل حديثاً | أحدث الكورسات / كتالوج `/courses` — مطبّق |
-| `offers.html` | العروض | عروض / مقاعد محدودة / خصومات |
-| `product.html` | صفحة منتج | صفحة كورس تفصيلية — مطبّق عبر `/course/{id}` |
-| `compare.html` | مقارنة المنتجات | مقارنة كورسات أو مسارات |
-| `assistant.html` | مساعد أثير | تقييم المستوى / مساعد اختيار مسار |
-| `account.html` | حسابي | حساب الطالب — صفحات login/register بأسلوب أثير |
-| `about.html` | من نحن | عن Glottical — مطبّق عبر `/about` |
-| `help.html` | مركز المساعدة | مساعدة / دعم / FAQ — ومرجع بصري لـ `/contact` |
-| `cart.html` | سلة التسوق | قائمة رغبات أو سلة تسجيل (بحذر — ليس متجراً) |
-| `checkout.html` | إتمام الشراء | إتمام التسجيل / الدفع |
-| `checkout-success.html` | تأكيد الطلب | نجاح الاشتراك / الدفع |
-| `checkout-failure.html` | فشل الدفع | فشل الدفع / إعادة المحاولة |
+معاينة محلية: `site/*.html` + `site/admin/` للأدمن.
 
-## لوحة التحكم `site/admin/` → أدمن الأكاديمية
-
-| ملف `site/` | العنوان | استخدام مقترح |
-|-------------|---------|----------------|
-| `admin/index.html` | لوحة التحكم | داشبورد الأدمن — مطبّق عبر `/admin/dashboard` (شِل + محتوى؛ روابط السايدبار الحالية) |
-| `admin/products.html` | كتالوج المنتجات | إدارة الكورسات |
-| `admin/categories.html` | التصنيفات | تصنيفات الكورسات |
-| `admin/orders.html` | الطلبات | الاشتراكات / الطلبات |
-| `admin/customers.html` | العملاء | الطلاب / المستخدمون |
-| `admin/inventory.html` | المخزون | مقاعد / سعة الدفعات (إن وُجدت) |
-| `admin/coupons.html` | القسائم | كوبونات الخصم |
-| `admin/reports.html` | التقارير | تقارير وتحليلات |
-| `admin/settings.html` | إعدادات المنصة | إعدادات النظام / الملف الشخصي للأدمن `/admin/profile` |
-
-## أصول مشتركة (ليست صفحات)
-
-| المسار | الدور |
-|--------|-------|
-| `assets/css/atheer.css` | توكنات الحركة والـ layout |
-| `assets/js/tailwind-config.js` | ألوان / ظلال / فونت Tailwind |
-| `assets/js/storefront.js` | هيدر/فوتر الواجهة العامة |
-| `assets/js/admin.js` | شِل لوحة التحكم |
-
-## قاعدة العمل
-
-1. أي صفحة جديدة أو إعادة تصميم → ابحث في هذا الفهرس أولاً.
-2. افتح ملف `site/` المطابق وانسخ **البنية والأنماط**، مع محتوى أكاديمي.
-3. لا تستورد منطق السلة/الدفع من `site/` كما هو إلا إذا طُلب صراحةً.
-4. **توحيد إلزامي:** صفحات الأدمن والموقع نفس الهوية البصرية — لا صفحة تختلف عن أخرى. راجع `admin.md` مع أي شاشة `/admin`.
+Sana: انظر `designs/public-pages/` فقط عند طلب صريح.

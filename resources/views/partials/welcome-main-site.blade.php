@@ -88,37 +88,6 @@
       </div>
     </section>
 
-    {{-- 4. Featured Collections = learning paths --}}
-    <section class="bg-surface py-20 md:py-24">
-      <div class="container-wide">
-        <div class="mb-8 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
-          <div class="max-w-2xl space-y-3">
-            <p class="text-sm font-medium text-accent">{{ __($a.'.paths_kicker') }}</p>
-            <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">{{ __($a.'.stream_paths_series') }}</h2>
-            <p class="text-base leading-8 text-muted">{{ __($a.'.stream_paths_sub') }}</p>
-          </div>
-          <a href="{{ route('public.learning-paths.index') }}" class="inline-flex h-10 shrink-0 items-center rounded-xl border border-line px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">{{ __('landing.view_all_paths') }}</a>
-        </div>
-        <div class="grid gap-5 lg:grid-cols-3">
-          @foreach($pathsList->take(3) as $path)
-            @php
-              $pImg = $path->image_url ?? 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1400&q=80';
-              $pathUrl = $path->url ?? (isset($path->slug) && $path->slug !== '' ? route('public.learning-path.show', $path->slug) : route('public.learning-paths.index'));
-            @endphp
-            <article class="group relative min-h-80 sm:min-h-96 overflow-hidden rounded-2xl card-lift">
-              <img src="{{ $pImg }}" alt="{{ $path->name }}" class="img-zoom absolute inset-0 h-full w-full object-cover" loading="lazy">
-              <div class="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-transparent"></div>
-              <div class="absolute inset-x-0 bottom-0 space-y-3 p-5 sm:p-6 text-white">
-                <h3 class="text-xl sm:text-2xl font-semibold">{{ $path->name }}</h3>
-                <p class="text-sm leading-7 text-white/75">{{ \Illuminate\Support\Str::limit(strip_tags((string)($path->description ?? '')), 90) ?: __($a.'.stream_badge_series') }}</p>
-                <a href="{{ $pathUrl }}" class="btn-press inline-flex h-10 items-center rounded-xl bg-white px-5 text-sm font-medium text-ink transition hover:bg-canvas">{{ __($a.'.path_continue') }}</a>
-              </div>
-            </article>
-          @endforeach
-        </div>
-      </div>
-    </section>
-
     {{-- 5. Best sellers / trending --}}
     <section class="container-wide py-20 md:py-24">
       <div class="mb-8 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
@@ -255,7 +224,7 @@
           <h2 class="text-balance text-2xl font-semibold tracking-tight text-ink md:text-3xl">{{ $isRtl ? 'قصص تعلّم تساعدك تتخيّل النتيجة' : 'Learning stories that help you picture the outcome' }}</h2>
           <p class="text-base leading-8 text-muted">{{ $isRtl ? 'سرد بصري يربط الكورس بأسلوب حياتك — لاكتشاف أعمق دون إعلانات مزعجة.' : 'Visual storytelling that connects courses to real life — deeper discovery without noise.' }}</p>
         </div>
-        <a href="{{ route('public.learning-paths.index') }}" class="inline-flex h-10 shrink-0 items-center rounded-xl border border-line px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">{{ $isRtl ? 'المزيد من الإلهام' : 'More inspiration' }}</a>
+        <a href="{{ route('public.courses') }}" class="inline-flex h-10 shrink-0 items-center rounded-xl border border-line px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:bg-accent-soft hover:text-accent">{{ $isRtl ? 'المزيد من الإلهام' : 'More inspiration' }}</a>
       </div>
       <div class="grid gap-4 md:grid-cols-3">
         @foreach($inspo as $item)

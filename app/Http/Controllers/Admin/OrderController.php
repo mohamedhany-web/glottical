@@ -8,7 +8,6 @@ use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\SalesOrderNote;
-use App\Models\StudentCourseEnrollment;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
@@ -251,25 +250,21 @@ class OrderController extends Controller
                     return back()->with('error', $msg);
                 }
 
-                // تحديد نوع الطلب (كورس أو مسار)
-                $isLearningPath = ! empty($order->academic_year_id);
-                Log::info('Order approve: order type', ['order_id' => $order->id, 'is_learning_path' => $isLearningPath]);
-                $orderTitle = '';
-                $orderType = 'course';
+                $order->loadMissing(['course', 'learningPath']);
 
-                if ($isLearningPath) {
+                if ($order->course) {
+                    $orderTitle = htmlspecialchars($order->course->title ?? 'كورس', ENT_QUOTES, 'UTF-8');
+                } elseif ($order->academic_year_id) {
                     if (! $order->relationLoaded('learningPath')) {
                         $order->load('learningPath');
                     }
-                    $learningPath = $order->learningPath;
-                    $orderTitle = $learningPath ? htmlspecialchars($learningPath->name ?? 'مسار تعليمي', ENT_QUOTES, 'UTF-8') : 'مسار تعليمي (محذوف)';
-                    $orderType = 'learning_path';
+                    $orderTitle = $order->learningPath
+                        ? htmlspecialchars($order->learningPath->name ?? 'طلب قديم', ENT_QUOTES, 'UTF-8')
+                        : 'طلب قديم';
                 } else {
-                    if (! $order->relationLoaded('course')) {
-                        $order->load('course');
-                    }
-                    $orderTitle = $order->course ? htmlspecialchars($order->course->title ?? 'كورس', ENT_QUOTES, 'UTF-8') : 'كورس (محذوف أو غير موجود)';
+                    $orderTitle = 'غير محدد';
                 }
+                $orderType = 'course';
 
                 // إنشاء الفاتورة تلقائياً
                 Log::info('Order approve: creating invoice', ['order_id' => $order->id, 'type' => $orderType]);
@@ -282,7 +277,9 @@ class OrderController extends Controller
                     'invoice_number' => $invoiceNumber,
                     'user_id' => $order->user_id,
                     'type' => $orderType,
-                    'description' => $isLearningPath ? 'فاتورة تسجيل في المسار التعليمي: '.$orderTitle : 'فاتورة تسجيل في الكورس: '.$orderTitle,
+                    'description' => $order->advanced_course_id
+                        ? 'فاتورة تسجيل في الكورس: '.$orderTitle
+                        : 'فاتورة طلب قديم: '.$orderTitle,
                     'subtotal' => $invOrig,
                     'tax_amount' => 0,
                     'discount_amount' => $invDiscountTotal,
@@ -293,7 +290,9 @@ class OrderController extends Controller
                     'notes' => 'فاتورة مسبقة الدفع - من طلب رقم: '.$order->id,
                     'items' => [
                         [
-                            'description' => $isLearningPath ? 'تسجيل في المسار التعليمي: '.$orderTitle : 'تسجيل في الكورس: '.$orderTitle,
+                            'description' => $order->advanced_course_id
+                                ? 'تسجيل في الكورس: '.$orderTitle
+                                : 'طلب قديم: '.$orderTitle,
                             'quantity' => 1,
                             'price' => $invOrig,
                             'total' => $invOrig,
@@ -346,11 +345,7 @@ class OrderController extends Controller
                     $wallet = \App\Models\Wallet::find($order->wallet_id);
                     if ($wallet) {
                         $description = 'إيداع من طلب رقم: '.$order->id.' - فاتورة: '.$invoice->invoice_number;
-                        if ($isLearningPath) {
-                            $description .= ' - المسار: '.($order->learningPath?->name ?? 'مسار تعليمي');
-                        } else {
-                            $description .= ' - الكورس: '.($order->course?->title ?? 'كورس');
-                        }
+                        $description .= ' - الكورس: '.($order->course?->title ?? ($orderTitle ?: 'طلب قديم'));
                         try {
                             $wallet->deposit(
                                 $order->amount,
@@ -373,9 +368,9 @@ class OrderController extends Controller
                 // إنشاء معاملة مالية (إيراد)
                 Log::info('Order approve: creating transaction', ['order_id' => $order->id]);
                 $transactionNumber = 'TXN-'.str_pad(Transaction::count() + 1, 8, '0', STR_PAD_LEFT);
-                $transactionDescription = $isLearningPath
-                    ? 'دفعة مقابل تسجيل في المسار التعليمي: '.($order->learningPath?->name ?? 'مسار تعليمي')
-                    : 'دفعة مقابل تسجيل في الكورس: '.($order->course?->title ?? 'كورس');
+                $transactionDescription = $order->advanced_course_id
+                    ? 'دفعة مقابل تسجيل في الكورس: '.($order->course?->title ?? 'كورس')
+                    : 'دفعة مقابل طلب قديم: '.$orderTitle;
                 $transactionDescription .= ' - طلب رقم: '.$order->id.' - فاتورة: '.$invoice->invoice_number.($wallet ? ' - محفظة: '.(optional($wallet)->name ?? $wallet->id) : '');
 
                 $transaction = Transaction::create([
@@ -458,51 +453,6 @@ class OrderController extends Controller
                     Log::warning('CRM commission/activation failed during order approval: '.$e->getMessage(), ['order_id' => $order->id]);
                 }
 
-                // إذا كان الطلب للمسار التعليمي، تسجيل الطالب في المسار (لا نوقف الموافقة إذا فشل)
-                if ($order->academic_year_id) {
-                    Log::info('Order approve: starting learning path enrollment', ['order_id' => $order->id, 'academic_year_id' => $order->academic_year_id]);
-                    try {
-                        if (! \Illuminate\Support\Facades\Schema::hasTable('learning_path_enrollments')) {
-                            \Log::warning('Learning path enrollment skipped: table learning_path_enrollments does not exist. Run migrations.');
-                        } else {
-                            $existingPathEnrollment = \App\Models\LearningPathEnrollment::where('user_id', $order->user_id)
-                                ->where('academic_year_id', $order->academic_year_id)
-                                ->first();
-
-                            if (! $existingPathEnrollment) {
-                                $pathEnrollment = \App\Models\LearningPathEnrollment::create([
-                                    'user_id' => $order->user_id,
-                                    'academic_year_id' => $order->academic_year_id,
-                                    'status' => 'active',
-                                    'enrolled_at' => now(),
-                                    'activated_at' => now(),
-                                    'activated_by' => auth()->id(),
-                                    'progress' => 0,
-                                ]);
-                                $this->enrollInPathCourses($pathEnrollment);
-                            } else {
-                                if ($existingPathEnrollment->status !== 'active') {
-                                    $existingPathEnrollment->update([
-                                        'status' => 'active',
-                                        'activated_at' => now(),
-                                        'activated_by' => auth()->id(),
-                                    ]);
-                                    $this->enrollInPathCourses($existingPathEnrollment);
-                                }
-                            }
-                        }
-                    } catch (\Throwable $e) {
-                        \Log::error('Order approve: learning path enrollment FAILED', [
-                            'order_id' => $order->id,
-                            'academic_year_id' => $order->academic_year_id,
-                            'message' => $e->getMessage(),
-                            'file' => $e->getFile(),
-                            'line' => $e->getLine(),
-                            'trace' => $e->getTraceAsString(),
-                        ]);
-                    }
-                }
-
                 // إذا كان الطلب للكورس، تسجيل الطالب في الكورس (لا نوقف الموافقة إذا فشل)
                 if ($order->advanced_course_id) {
                     Log::info('Order approve: starting course enrollment', ['order_id' => $order->id, 'advanced_course_id' => $order->advanced_course_id]);
@@ -574,14 +524,14 @@ class OrderController extends Controller
                 Log::info('Order approved successfully', [
                     'order_id' => $order->id,
                     'user_id' => $order->user_id,
-                    'is_learning_path' => $isLearningPath,
+                    'is_legacy_path_order' => $order->academic_year_id && ! $order->advanced_course_id,
                     'invoice_number' => $invoice->invoice_number ?? null,
                     'payment_number' => $payment->payment_number ?? null,
                 ]);
 
-                $successMessage = $isLearningPath
-                    ? 'تمت الموافقة على الطلب وتم تسجيل الطالب في المسار التعليمي وتفعيل جميع الكورسات. تم إنشاء الفاتورة رقم: '.$invoice->invoice_number.' والمدفوعات رقم: '.$payment->payment_number
-                    : 'تمت الموافقة على الطلب وتم تفعيل الكورس للطالب. تم إنشاء الفاتورة رقم: '.$invoice->invoice_number.' والمدفوعات رقم: '.$payment->payment_number;
+                $successMessage = $order->advanced_course_id
+                    ? 'تمت الموافقة على الطلب وتم تفعيل الكورس للطالب. تم إنشاء الفاتورة رقم: '.$invoice->invoice_number.' والمدفوعات رقم: '.$payment->payment_number
+                    : 'تمت الموافقة على الطلب القديم. تم إنشاء الفاتورة رقم: '.$invoice->invoice_number.' والمدفوعات رقم: '.$payment->payment_number;
 
                 // إذا كان الطلب AJAX، إرجاع JSON
                 if ($request->wantsJson() || $request->ajax()) {
@@ -773,79 +723,6 @@ class OrderController extends Controller
             }
 
             return back()->with('error', 'حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى.');
-        }
-    }
-
-    /**
-     * تسجيل الطالب في جميع الكورسات في المسار (المجانية والمدفوعة)
-     * لا يرمي استثناءات؛ أي خطأ يُسجّل ويُتجاهل حتى لا تكسر الموافقة على الطلب
-     */
-    private function enrollInPathCourses(\App\Models\LearningPathEnrollment $enrollment)
-    {
-        try {
-            Log::info('enrollInPathCourses: start', ['enrollment_id' => $enrollment->id, 'user_id' => $enrollment->user_id, 'academic_year_id' => $enrollment->academic_year_id]);
-            $learningPath = $enrollment->learningPath()->with(['academicSubjects'])->first();
-            if (! $learningPath) {
-                Log::info('enrollInPathCourses: no learning path (AcademicYear) found', ['enrollment_id' => $enrollment->id]);
-
-                return;
-            }
-
-            $courses = collect();
-
-            // الكورسات المرتبطة مباشرة بالمسار (جدول academic_year_courses)
-            if (\Illuminate\Support\Facades\Schema::hasTable('academic_year_courses')) {
-                try {
-                    $learningPath->load('linkedCourses');
-                    $linked = $learningPath->linkedCourses()->where('advanced_courses.is_active', true)->get();
-                    $courses = $courses->merge($linked);
-                } catch (\Throwable $e) {
-                    Log::warning('enrollInPathCourses: linkedCourses failed', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-                }
-            }
-
-            // الكورسات من المواد الدراسية
-            $subjects = $learningPath->academicSubjects ?? collect();
-            foreach ($subjects as $subject) {
-                try {
-                    $subjectCourses = $subject->advancedCourses()->where('is_active', true)->get();
-                    $courses = $courses->merge($subjectCourses);
-                } catch (\Throwable $e) {
-                    Log::warning('enrollInPathCourses: subject courses failed', ['subject_id' => $subject->id ?? null, 'message' => $e->getMessage()]);
-                }
-            }
-
-            $courses = $courses->unique('id');
-            Log::info('enrollInPathCourses: courses to enroll', ['count' => $courses->count(), 'enrollment_id' => $enrollment->id]);
-
-            foreach ($courses as $course) {
-                try {
-                    StudentCourseEnrollment::firstOrCreate(
-                        [
-                            'user_id' => $enrollment->user_id,
-                            'advanced_course_id' => $course->id,
-                        ],
-                        [
-                            'status' => 'active',
-                            'enrolled_at' => now(),
-                            'activated_at' => now(),
-                            'activated_by' => Auth::id(),
-                            'progress' => 0,
-                        ]
-                    );
-                } catch (\Throwable $e) {
-                    Log::warning('enrollInPathCourses: firstOrCreate failed for course', ['course_id' => $course->id ?? null, 'message' => $e->getMessage()]);
-                }
-            }
-            Log::info('enrollInPathCourses: done', ['enrollment_id' => $enrollment->id]);
-        } catch (\Throwable $e) {
-            Log::error('enrollInPathCourses: FAILED (سيظهر في الـ logs)', [
-                'enrollment_id' => $enrollment->id ?? null,
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ]);
         }
     }
 

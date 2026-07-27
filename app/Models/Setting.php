@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * إعدادات عامة في جدول settings (مفاتيح نصية بسيطة).
- * يُحفظ key=teacher_features لبيانات أخرى كـ JSON — لا تُستبدل.
  */
 class Setting extends Model
 {
@@ -16,10 +15,6 @@ class Setting extends Model
 
     public static function getValue(string $key): ?string
     {
-        if ($key === 'teacher_features') {
-            return null;
-        }
-
         $v = static::query()->where('key', $key)->value('value');
 
         return $v !== null ? (string) $v : null;
@@ -27,10 +22,6 @@ class Setting extends Model
 
     public static function setValue(string $key, ?string $value): void
     {
-        if ($key === 'teacher_features') {
-            return;
-        }
-
         $trimmed = $value !== null ? trim($value) : '';
         if ($trimmed === '') {
             static::query()->where('key', $key)->delete();

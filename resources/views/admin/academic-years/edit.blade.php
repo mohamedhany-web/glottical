@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تعديل مسار التعلم')
+@section('title', 'تعديل السنة الأكاديمية')
 
 @section('content')
 <div class="w-full max-w-full px-4 py-6 space-y-6" style="background: #f8fafc; min-height: 100vh;">
@@ -10,8 +10,8 @@
             <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div class="space-y-4">
                     <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 text-sm font-semibold">
-                        <i class="fas fa-route"></i>
-                        مسار التعلم
+                        <i class="fas fa-calendar-alt"></i>
+                        سنة أكاديمية
                     </div>
                     <h1 class="text-3xl sm:text-4xl font-bold">{{ $academicYear->name }}</h1>
                     <div class="flex flex-wrap items-center gap-3 text-sm text-white/80">
@@ -38,7 +38,7 @@
                         @csrf
                         <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-white/15 hover:bg-white/25 transition px-4 py-2 text-sm font-semibold">
                             <i class="fas fa-power-off"></i>
-                            {{ $academicYear->is_active ? 'إيقاف مؤقت' : 'تفعيل المسار' }}
+                            {{ $academicYear->is_active ? 'إيقاف مؤقت' : 'تفعيل السنة' }}
                         </button>
                     </form>
                     <a href="{{ route('admin.academic-subjects.index', ['track' => $academicYear->id]) }}" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-white text-sky-700 px-5 py-2 text-sm font-semibold shadow-lg shadow-sky-600/20 hover:bg-slate-100 transition">
@@ -57,10 +57,10 @@
             <div class="border-b border-gray-100 px-6 sm:px-8 py-5" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 50%, rgba(2, 132, 199, 0.08) 100%); border-bottom: 2px solid rgba(59, 130, 246, 0.3);">
                 <h2 class="text-xl font-black bg-gradient-to-r from-sky-700 via-blue-600 to-sky-600 bg-clip-text text-transparent">
                     <i class="fas fa-edit text-sky-600 ml-2"></i>
-                    بيانات المسار
+                    بيانات السنة الأكاديمية
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    حدّث بيانات المسار، اللون، الأيقونة وترتيب العرض. استخدم مربع الاختيار لتفعيل المسار أو إيقافه.
+                    حدّث بيانات السنة، اللون، الأيقونة وترتيب العرض. استخدم مربع الاختيار لتفعيل السنة أو إيقافها.
                 </p>
             </div>
             <form action="{{ route('admin.academic-years.update', $academicYear) }}" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-8">
@@ -69,13 +69,13 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-gray-700">اسم المسار *</label>
+                        <label class="block text-sm font-semibold text-gray-700">اسم السنة الأكاديمية *</label>
                         <input type="text" name="name" value="{{ old('name', $academicYear->name) }}" required
                                class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition">
                         @error('name') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-gray-700">رمز المسار *</label>
+                        <label class="block text-sm font-semibold text-gray-700">رمز السنة *</label>
                         <input type="text" name="code" value="{{ old('code', $academicYear->code) }}" required
                                class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition">
                         @error('code') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
@@ -88,21 +88,8 @@
                     </div>
                     <div class="md:col-span-2 space-y-2">
                         <label class="block text-sm font-semibold text-gray-700">
-                            <i class="fas fa-video text-sky-600 ml-1"></i>
-                            رابط فيديو المقدمة
-                        </label>
-                        <input type="url" name="video_url" value="{{ old('video_url', $academicYear->video_url) }}"
-                               class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition"
-                               placeholder="https://www.youtube.com/watch?v=VIDEO_ID أو https://youtu.be/VIDEO_ID أو https://vimeo.com/VIDEO_ID">
-                        <p class="mt-1 text-xs text-gray-500">
-                            يُعرض في صفحة المسار على الموقع. الصيغ المدعومة: YouTube، Vimeo، أو رابط مباشر لملف .mp4
-                        </p>
-                        @error('video_url') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
-                    </div>
-                    <div class="md:col-span-2 space-y-2">
-                        <label class="block text-sm font-semibold text-gray-700">
                             <i class="fas fa-image text-sky-600 ml-1"></i>
-                            صورة مصغرة للمسار
+                            صورة مصغرة (اختياري)
                         </label>
                         @if($academicYear->thumbnail)
                             <div class="mb-3">
@@ -113,22 +100,9 @@
                         <input type="file" name="thumbnail" accept="image/*"
                                class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition">
                         <p class="mt-1 text-xs text-gray-500">
-                            صورة مصغرة للمسار التعليمي. سيتم عرضها في قوائم المسارات.
+                            صورة اختيارية لتسهيل التعرف على السنة في لوحة التحكم. لا تُستخدم كمنتج عام على الموقع.
                         </p>
                         @error('thumbnail') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
-                    </div>
-                    <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-gray-700">
-                            <i class="fas fa-tag text-sky-600 ml-1"></i>
-                            سعر المسار (ج.م)
-                        </label>
-                        <input type="number" name="price" value="{{ old('price', $academicYear->price ?? 0) }}" min="0" step="0.01"
-                               class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition"
-                               placeholder="0">
-                        <p class="mt-1 text-xs text-gray-500">
-                            سعر المسار مستقل عن أسعار الكورسات. هذا السعر يظهر على الموقع للاشتراك في المسار. اتركه 0 للمسار المجاني.
-                        </p>
-                        @error('price') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div class="space-y-2">
                         <label class="block text-sm font-semibold text-gray-700">الأيقونة</label>
@@ -141,7 +115,7 @@
                                     'fas fa-school' => '🏫 مدرسة',
                                     'fas fa-book' => '📚 كتاب',
                                     'fas fa-user-graduate' => '👨‍🎓 طالب',
-                                    'fas fa-compass' => '🧭 مسار',
+                                    'fas fa-compass' => '🧭 تنظيم أكاديمي',
                                     'fas fa-lightbulb' => '💡 مهارات'
                                 ];
                             @endphp
@@ -166,11 +140,11 @@
                         @error('order') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-gray-700">حالة المسار</label>
+                        <label class="block text-sm font-semibold text-gray-700">حالة السنة</label>
                         <div class="flex items-center gap-2 px-4 py-3 rounded-2xl bg-slate-100 border border-slate-200">
                             <input type="checkbox" name="is_active" value="1" {{ old('is_active', $academicYear->is_active) ? 'checked' : '' }}
                                    class="w-5 h-5 text-sky-600 border-gray-300 rounded focus:ring-sky-500">
-                            <span class="text-sm text-gray-700">المسار متاح للطلاب</span>
+                            <span class="text-sm text-gray-700">السنة متاحة للاستخدام الداخلي</span>
                         </div>
                     </div>
                 </div>
@@ -196,7 +170,7 @@
                         <div>
                             <h2 class="text-lg font-semibold text-gray-900">المجموعات المهارية المرتبطة</h2>
                             <p class="text-sm text-gray-500 mt-1">
-                                راجع المجموعات المرتبطة بالمسار وانتقل لإدارتها أو تعديلها.
+                                راجع المجموعات المرتبطة بالسنة الأكاديمية وانتقل لإدارتها أو تعديلها.
                             </p>
                         </div>
                         <a href="{{ route('admin.academic-subjects.create', ['track' => $academicYear->id]) }}"
@@ -308,7 +282,7 @@
                     <div class="border-b border-gray-100 px-6 sm:px-8 py-4" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 50%, rgba(2, 132, 199, 0.08) 100%); border-bottom: 2px solid rgba(59, 130, 246, 0.3);">
                         <h3 class="text-lg font-black bg-gradient-to-r from-sky-700 via-blue-600 to-sky-600 bg-clip-text text-transparent">
                             <i class="fas fa-chart-bar text-sky-600 ml-2"></i>
-                            إحصائيات المسار
+                            إحصائيات السنة
                         </h3>
                     </div>
                     <div class="px-6 sm:px-8 py-5 space-y-4 text-sm text-gray-600">
@@ -355,17 +329,17 @@
                         </h3>
                     </div>
                     <div class="px-6 sm:px-8 py-5 space-y-4 text-sm text-gray-600">
-                        <p>حذف المسار سيزيله من لوحة التحكم. لا يمكن الحذف إذا كان يحتوي على مجموعات مهارية.</p>
-                        <form action="{{ route('admin.academic-years.destroy', $academicYear) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا المسار؟');">
+                        <p>حذف السنة سيزيلها من لوحة التحكم. لا يمكن الحذف إذا كانت تحتوي على مجموعات مهارية.</p>
+                        <form action="{{ route('admin.academic-years.destroy', $academicYear) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذه السنة الأكاديمية؟');">
                             @csrf
                             @method('DELETE')
                             <button type="submit" {{ $academicYear->academicSubjects->isNotEmpty() ? 'disabled' : '' }}
                                     class="inline-flex items-center gap-2 rounded-2xl px-5 py-2 text-sm font-semibold {{ $academicYear->academicSubjects->isNotEmpty() ? 'bg-rose-200 text-rose-700 cursor-not-allowed' : 'bg-rose-600 text-white hover:bg-rose-700' }}">
                                 <i class="fas fa-trash"></i>
-                                حذف المسار
+                                حذف السنة
                             </button>
                             @if($academicYear->academicSubjects->isNotEmpty())
-                                <p class="mt-2 text-xs text-rose-500">قم بحذف أو نقل المجموعات المرتبطة قبل حذف المسار.</p>
+                                <p class="mt-2 text-xs text-rose-500">قم بحذف أو نقل المجموعات المرتبطة قبل حذف السنة.</p>
                             @endif
                         </form>
                     </div>
@@ -373,17 +347,17 @@
             </div>
         </div>
 
-        <!-- إدارة الكورسات المرتبطة بالمسار -->
+        <!-- إدارة الكورسات المرتبطة بالسنة -->
         <div class="dashboard-card rounded-2xl card-hover-effect border-2 border-gray-200/50 hover:border-sky-300/70 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%);">
             <div class="border-b border-gray-100 px-6 sm:px-8 py-5" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 50%, rgba(2, 132, 199, 0.08) 100%); border-bottom: 2px solid rgba(59, 130, 246, 0.3);">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h2 class="text-lg font-black bg-gradient-to-r from-sky-700 via-blue-600 to-sky-600 bg-clip-text text-transparent">
                             <i class="fas fa-graduation-cap text-sky-600 ml-2"></i>
-                            الكورسات المرتبطة بالمسار
+                            الكورسات المرتبطة بالسنة
                         </h2>
                         <p class="text-sm text-gray-500 mt-1">
-                            أضف أو أزل الكورسات المرتبطة مباشرة بهذا المسار التعليمي.
+                            أضف أو أزل الكورسات المرتبطة مباشرة بهذه السنة الأكاديمية.
                         </p>
                     </div>
                     <button type="button" onclick="showAddCourseModal()" class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-sky-600 hover:from-sky-700 hover:via-blue-700 hover:to-sky-700 text-white px-4 py-2 text-sm font-bold shadow-lg shadow-sky-600/30 hover:shadow-xl transition-all duration-300">
@@ -422,7 +396,7 @@
                                         </span>
                                     </div>
                                 </div>
-                                <form method="POST" action="{{ route('admin.academic-years.remove-course', ['academicYear' => $academicYear->id, 'course' => $course->id]) }}" class="inline" onsubmit="return confirm('هل أنت متأكد من إزالة هذا الكورس من المسار؟');">
+                                <form method="POST" action="{{ route('admin.academic-years.remove-course', ['academicYear' => $academicYear->id, 'course' => $course->id]) }}" class="inline" onsubmit="return confirm('هل أنت متأكد من إزالة هذا الكورس من السنة؟');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 transition-all duration-300">
@@ -436,8 +410,8 @@
                 @else
                     <div class="text-center py-8 text-gray-500">
                         <i class="fas fa-graduation-cap text-4xl mb-3 text-gray-300"></i>
-                        <p>لا توجد كورسات مرتبطة مباشرة بهذا المسار</p>
-                        <p class="text-sm mt-1">استخدم زر "إضافة كورس" لإضافة كورسات للمسار</p>
+                        <p>لا توجد كورسات مرتبطة مباشرة بهذه السنة</p>
+                        <p class="text-sm mt-1">استخدم زر "إضافة كورس" لإضافة كورسات للسنة</p>
                     </div>
                 @endif
             </div>
@@ -450,10 +424,10 @@
                     <div>
                         <h2 class="text-lg font-black bg-gradient-to-r from-sky-700 via-blue-600 to-sky-600 bg-clip-text text-transparent">
                             <i class="fas fa-user-tie text-sky-600 ml-2"></i>
-                            المدربين في المسار
+                            المدربون في السنة
                         </h2>
                         <p class="text-sm text-gray-500 mt-1">
-                            حدد المدربين المسؤولين عن هذا المسار والكورسات المخصصة لكل مدرب.
+                            حدد المدربين المسؤولين عن هذه السنة والكورسات المخصصة لكل مدرب.
                         </p>
                     </div>
                     <button type="button" onclick="showAddInstructorModal()" class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-sky-600 hover:from-sky-700 hover:via-blue-700 hover:to-sky-700 text-white px-4 py-2 text-sm font-bold shadow-lg shadow-sky-600/30 hover:shadow-xl transition-all duration-300">
@@ -492,10 +466,10 @@
                                                 </div>
                                             </div>
                                         @else
-                                            <p class="text-xs text-gray-500 mt-2">جميع الكورسات في المسار</p>
+                                            <p class="text-xs text-gray-500 mt-2">جميع الكورسات في السنة</p>
                                         @endif
                                     </div>
-                                    <form method="POST" action="{{ route('admin.academic-years.remove-instructor', ['academicYear' => $academicYear->id, 'instructor' => $instructor->id]) }}" class="inline" onsubmit="return confirm('هل أنت متأكد من إزالة هذا المدرب من المسار؟');">
+                                    <form method="POST" action="{{ route('admin.academic-years.remove-instructor', ['academicYear' => $academicYear->id, 'instructor' => $instructor->id]) }}" class="inline" onsubmit="return confirm('هل أنت متأكد من إزالة هذا المدرب من السنة؟');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 transition-all duration-300">
@@ -510,8 +484,8 @@
                 @else
                     <div class="text-center py-8 text-gray-500">
                         <i class="fas fa-user-tie text-4xl mb-3 text-gray-300"></i>
-                        <p>لا يوجد مدربين مرتبطين بهذا المسار</p>
-                        <p class="text-sm mt-1">استخدم زر "إضافة مدرب" لإضافة مدربين للمسار</p>
+                        <p>لا يوجد مدربون مرتبطون بهذه السنة</p>
+                        <p class="text-sm mt-1">استخدم زر "إضافة مدرب" لإضافة مدربين للسنة</p>
                     </div>
                 @endif
             </div>
@@ -524,7 +498,7 @@
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto relative z-[10000]">
         <div class="p-6 border-b border-gray-200">
             <div class="flex items-center justify-between">
-                <h3 class="text-xl font-bold text-gray-900">إضافة كورس للمسار</h3>
+                <h3 class="text-xl font-bold text-gray-900">إضافة كورس للسنة</h3>
                 <button onclick="hideAddCourseModal()" class="text-gray-400 hover:text-gray-600">
                     <i class="fas fa-times text-xl"></i>
                 </button>
@@ -554,7 +528,7 @@
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">ترتيب الكورس في المسار</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">ترتيب الكورس في السنة</label>
                 <input type="number" name="order" value="0" min="0" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20">
             </div>
             <div class="flex items-center gap-2">
@@ -578,7 +552,7 @@
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto relative z-[10000]">
         <div class="p-6 border-b border-gray-200">
             <div class="flex items-center justify-between">
-                <h3 class="text-xl font-bold text-gray-900">إضافة مدرب للمسار</h3>
+                <h3 class="text-xl font-bold text-gray-900">إضافة مدرب للسنة</h3>
                 <button onclick="hideAddInstructorModal()" class="text-gray-400 hover:text-gray-600">
                     <i class="fas fa-times text-xl"></i>
                 </button>
@@ -599,7 +573,7 @@
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">الكورسات المخصصة (اختياري)</label>
-                <p class="text-xs text-gray-500 mb-2">اتركه فارغاً لتعيين جميع الكورسات في المسار</p>
+                <p class="text-xs text-gray-500 mb-2">اتركه فارغاً لتعيين جميع الكورسات في السنة</p>
                 <div class="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-xl p-3">
                     @foreach($academicYear->linkedCourses as $course)
                         <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
@@ -608,13 +582,13 @@
                         </label>
                     @endforeach
                     @if($academicYear->linkedCourses->count() == 0)
-                        <p class="text-sm text-gray-500 text-center py-4">أضف كورسات للمسار أولاً</p>
+                        <p class="text-sm text-gray-500 text-center py-4">أضف كورسات للسنة أولاً</p>
                     @endif
                 </div>
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">ملاحظات</label>
-                <textarea name="notes" rows="3" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20" placeholder="ملاحظات حول هذا المدرب في المسار..."></textarea>
+                <textarea name="notes" rows="3" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20" placeholder="ملاحظات حول هذا المدرب في السنة..."></textarea>
             </div>
             <div class="flex gap-3 pt-4">
                 <button type="button" onclick="hideAddInstructorModal()" class="flex-1 px-4 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold transition-colors">

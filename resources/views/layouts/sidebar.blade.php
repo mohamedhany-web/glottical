@@ -101,10 +101,10 @@
                 </li>
             @endhasAnyPermission
 
-            @hasAnyPermission('manage.invoices', 'manage.payments', 'manage.transactions', 'manage.wallets', 'manage.subscriptions', 'manage.installments', 'manage.expenses')
+            @hasAnyPermission('manage.invoices', 'manage.payments', 'manage.transactions', 'manage.wallets', 'manage.installments', 'manage.expenses')
                 <!-- إدارة المحاسبة -->
                 @php
-                    $accountingOpen = request()->routeIs('admin.invoices.*') || request()->routeIs('admin.payments.*') || request()->routeIs('admin.transactions.*') || request()->routeIs('admin.wallets.*') || request()->routeIs('admin.subscriptions.*') || request()->routeIs('admin.installments.*') || request()->routeIs('admin.expenses.*') || request()->routeIs('admin.accounting.reports');
+                    $accountingOpen = request()->routeIs('admin.invoices.*') || request()->routeIs('admin.payments.*') || request()->routeIs('admin.transactions.*') || request()->routeIs('admin.wallets.*') || request()->routeIs('admin.installments.*') || request()->routeIs('admin.expenses.*') || request()->routeIs('admin.accounting.reports');
                 @endphp
                 <li x-data="{ open: {{ $accountingOpen ? 'true' : 'false' }} }">
                     <button @click="open = !open" 
@@ -184,12 +184,6 @@
                                 </li>
                             </ul>
                         </li>
-                        @endhasPermission
-                        @hasPermission('manage.subscriptions')
-                        <li><a href="{{ route('admin.subscriptions.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800 transition-all duration-300 text-gray-600 dark:text-gray-400 hover:text-sky-700 dark:hover:text-sky-300 {{ request()->routeIs('admin.subscriptions.*') ? 'bg-gradient-to-r from-sky-100 to-slate-100 dark:from-sky-900/30 dark:to-slate-900/30 text-sky-700 dark:text-sky-300 font-semibold' : '' }}">
-                            <i class="fas fa-calendar-check w-4"></i>
-                            <span>الاشتراكات</span>
-                        </a></li>
                         @endhasPermission
                     </ul>
                 </li>
@@ -304,7 +298,7 @@
                         @hasPermission('manage.academic-years')
                         <li><a href="{{ route('admin.academic-years.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800 transition-all duration-300 text-gray-600 dark:text-gray-400 hover:text-sky-700 dark:hover:text-sky-300 {{ request()->routeIs('admin.academic-years.*') ? 'bg-gradient-to-r from-sky-100 to-slate-100 dark:from-sky-900/30 dark:to-slate-900/30 text-sky-700 dark:text-sky-300 font-semibold' : '' }}">
                             <i class="fas fa-compass w-4"></i>
-                            <span>مسارات التعلم</span>
+                            <span>السنوات الأكاديمية</span>
                         </a></li>
                         @endhasPermission
                         @hasPermission('manage.academic-subjects')

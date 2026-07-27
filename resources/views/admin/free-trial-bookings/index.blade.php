@@ -1,55 +1,74 @@
 @extends('layouts.admin')
 
-@section('title', 'حجوزات الحصة المجانية - ' . config('app.name'))
+@section('title', 'حجوزات الحصة المجانية - Glottical')
+@section('page_title', 'حجوزات الحصة المجانية')
 
 @section('content')
-<div class="p-6 bg-gray-50 min-h-screen">
-    <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                <i class="fas fa-calendar-check text-amber-500 ml-3"></i>
-                حجوزات الحصة المجانية
-            </h1>
-            <p class="text-gray-600">مراجعة حجوزات تقييم المستوى (30 دقيقة) من الصفحة الرئيسية</p>
+@php
+    $kpis = [
+        ['label' => 'الإجمالي', 'value' => $stats['total'], 'icon' => 'fa-inbox', 'tone' => 'accent'],
+        ['label' => 'مؤكد', 'value' => $stats['confirmed'], 'icon' => 'fa-check-circle', 'tone' => 'accent'],
+        ['label' => 'قادم', 'value' => $stats['upcoming'], 'icon' => 'fa-hourglass-half', 'tone' => 'metal'],
+        ['label' => 'اليوم', 'value' => $stats['today'], 'icon' => 'fa-calendar-day', 'tone' => 'metal'],
+        ['label' => 'مكتمل', 'value' => $stats['completed'], 'icon' => 'fa-flag-checkered', 'tone' => 'muted'],
+        ['label' => 'ملغي', 'value' => $stats['cancelled'], 'icon' => 'fa-ban', 'tone' => 'danger'],
+    ];
+    $toneClass = [
+        'accent' => 'bg-accent-soft text-accent',
+        'metal' => 'bg-metal/15 text-metal',
+        'muted' => 'bg-canvas-muted text-muted',
+        'danger' => 'bg-danger/10 text-danger',
+    ];
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">تقييم المستوى · 30 دقيقة من الصفحة الرئيسية</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">حجوزات الحصة المجانية</h2>
         </div>
-        <a href="{{ route('admin.free-trial-bookings.availability') }}"
-           class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B3D91] text-white font-bold hover:bg-[#072a66] transition shadow-lg">
-            <i class="fas fa-clock"></i>
-            ضبط أوقات الأسبوع
-        </a>
-    </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.free-trial-bookings.availability') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-clock text-xs"></i>
+                ضبط أوقات الأسبوع
+            </a>
+        </div>
+    </section>
 
     @if(session('success'))
-        <div class="mb-6 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 font-semibold">{{ session('success') }}</div>
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
+        </div>
     @endif
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
-        @foreach([
-            ['label' => 'الإجمالي', 'value' => $stats['total'], 'color' => 'sky', 'icon' => 'fa-inbox'],
-            ['label' => 'مؤكد', 'value' => $stats['confirmed'], 'color' => 'emerald', 'icon' => 'fa-check-circle'],
-            ['label' => 'قادم', 'value' => $stats['upcoming'], 'color' => 'amber', 'icon' => 'fa-hourglass-half'],
-            ['label' => 'اليوم', 'value' => $stats['today'], 'color' => 'indigo', 'icon' => 'fa-calendar-day'],
-            ['label' => 'مكتمل', 'value' => $stats['completed'], 'color' => 'blue', 'icon' => 'fa-flag-checkered'],
-            ['label' => 'ملغي', 'value' => $stats['cancelled'], 'color' => 'rose', 'icon' => 'fa-ban'],
-        ] as $card)
-            <div class="bg-white rounded-2xl shadow p-4 border-r-4 border-{{ $card['color'] }}-500">
-                <p class="text-xs text-gray-500 font-medium mb-1">{{ $card['label'] }}</p>
-                <p class="text-2xl font-bold text-gray-900">{{ number_format($card['value']) }}</p>
-                <i class="fas {{ $card['icon'] }} text-{{ $card['color'] }}-500 mt-2"></i>
-            </div>
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        @foreach($kpis as $kpi)
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $toneClass[$kpi['tone']] }}">
+                    <i class="fas {{ $kpi['icon'] }} text-sm"></i>
+                </div>
+                <p class="mt-3 text-xs text-muted">{{ $kpi['label'] }}</p>
+                <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ number_format($kpi['value']) }}</p>
+            </article>
         @endforeach
-    </div>
+    </section>
 
-    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-200">
-        <form method="get" class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-4 py-4 sm:px-5">
+            <h3 class="text-base font-semibold text-ink">البحث والفلترة</h3>
+            <p class="mt-0.5 text-xs text-muted">حدد الحالة أو نطاق التاريخ للوصول السريع للحجز</p>
+        </div>
+        <form method="get" class="grid grid-cols-1 gap-4 p-4 sm:p-5 md:grid-cols-5 md:items-end">
             <div class="md:col-span-2">
-                <label class="block text-xs font-bold text-gray-500 mb-1">بحث</label>
-                <input type="search" name="search" value="{{ request('search') }}" placeholder="اسم / بريد / هاتف / هدف"
-                       class="w-full rounded-xl border-gray-300 focus:ring-amber-400 focus:border-amber-400">
+                <label class="{{ $labelClass }}" for="search">بحث</label>
+                <input id="search" type="search" name="search" value="{{ request('search') }}" placeholder="اسم / بريد / هاتف / هدف" class="{{ $fieldClass }}">
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1">الحالة</label>
-                <select name="status" class="w-full rounded-xl border-gray-300">
+                <label class="{{ $labelClass }}" for="status">الحالة</label>
+                <select id="status" name="status" class="{{ $fieldClass }}">
                     <option value="">الكل</option>
                     <option value="confirmed" @selected(request('status')==='confirmed')>مؤكد</option>
                     <option value="completed" @selected(request('status')==='completed')>مكتمل</option>
@@ -57,40 +76,55 @@
                 </select>
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1">من تاريخ</label>
-                <input type="date" name="from" value="{{ request('from') }}" class="w-full rounded-xl border-gray-300">
+                <label class="{{ $labelClass }}" for="from">من تاريخ</label>
+                <input id="from" type="date" name="from" value="{{ request('from') }}" class="{{ $fieldClass }}">
             </div>
-            <div class="flex gap-2">
-                <div class="flex-1">
-                    <label class="block text-xs font-bold text-gray-500 mb-1">إلى</label>
-                    <input type="date" name="to" value="{{ request('to') }}" class="w-full rounded-xl border-gray-300">
-                </div>
-                <button type="submit" class="self-end px-4 py-2.5 rounded-xl bg-amber-400 text-[#0B3D91] font-bold hover:brightness-105">تصفية</button>
+            <div>
+                <label class="{{ $labelClass }}" for="to">إلى تاريخ</label>
+                <input id="to" type="date" name="to" value="{{ request('to') }}" class="{{ $fieldClass }}">
+            </div>
+            <div class="flex flex-wrap gap-2 md:col-span-5">
+                <button type="submit" class="btn-press inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white">
+                    <i class="fas fa-filter text-xs"></i>
+                    تصفية
+                </button>
+                @if(request()->anyFilled(['search', 'status', 'from', 'to']))
+                    <a href="{{ route('admin.free-trial-bookings.index') }}" class="btn-press inline-flex h-10 items-center gap-2 rounded-xl border border-line px-5 text-sm font-medium text-ink hover:bg-canvas">
+                        <i class="fas fa-times text-xs"></i>
+                        مسح الفلاتر
+                    </a>
+                @endif
             </div>
         </form>
-    </div>
+    </article>
 
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full text-sm">
-                <thead class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wide">
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+            <div class="min-w-0">
+                <h3 class="text-base font-semibold text-ink">سجل الحجوزات</h3>
+                <p class="mt-0.5 text-xs text-muted">{{ number_format($bookings->total()) }} حجز</p>
+            </div>
+        </div>
+        <div class="admin-table-wrap">
+            <table class="w-full min-w-[860px] text-right text-sm">
+                <thead class="bg-[#f7f8fa] text-[11px] uppercase tracking-wide text-muted">
                     <tr>
-                        <th class="px-4 py-3 text-right">#</th>
-                        <th class="px-4 py-3 text-right">الطالب</th>
-                        <th class="px-4 py-3 text-right">التواصل</th>
-                        <th class="px-4 py-3 text-right">الموعد</th>
-                        <th class="px-4 py-3 text-right">المدة</th>
-                        <th class="px-4 py-3 text-right">الحالة</th>
-                        <th class="px-4 py-3 text-right">إجراءات</th>
+                        <th class="px-5 py-3 font-medium">#</th>
+                        <th class="px-3 py-3 font-medium">الطالب</th>
+                        <th class="px-3 py-3 font-medium">التواصل</th>
+                        <th class="px-3 py-3 font-medium">الموعد</th>
+                        <th class="px-3 py-3 font-medium">المدة</th>
+                        <th class="px-3 py-3 font-medium">الحالة</th>
+                        <th class="px-5 py-3 font-medium">إجراءات</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+                <tbody class="divide-y divide-line">
                     @forelse($bookings as $b)
                         @php
-                            $statusCls = match($b->status) {
-                                'completed' => 'bg-blue-100 text-blue-800',
-                                'cancelled' => 'bg-rose-100 text-rose-800',
-                                default => 'bg-emerald-100 text-emerald-800',
+                            $badgeClass = match($b->status) {
+                                'completed' => 'bg-accent-soft text-accent',
+                                'cancelled' => 'bg-danger/10 text-danger',
+                                default => 'bg-metal/15 text-metal',
                             };
                             $statusLabel = match($b->status) {
                                 'completed' => 'مكتمل',
@@ -98,46 +132,60 @@
                                 default => 'مؤكد',
                             };
                         @endphp
-                        <tr class="hover:bg-amber-50/40">
-                            <td class="px-4 py-3 font-bold text-gray-500">{{ $b->id }}</td>
-                            <td class="px-4 py-3">
-                                <div class="font-bold text-gray-900">{{ $b->name }}</div>
+                        <tr class="transition hover:bg-[#f7f8fa]">
+                            <td class="px-5 py-3 tabular-nums text-muted">{{ $b->id }}</td>
+                            <td class="px-3 py-3">
+                                <p class="font-semibold text-ink">{{ $b->name }}</p>
                                 @if($b->goal)
-                                    <div class="text-xs text-gray-500 mt-0.5">{{ \Illuminate\Support\Str::limit($b->goal, 40) }}</div>
+                                    <p class="mt-0.5 text-xs text-muted">{{ \Illuminate\Support\Str::limit($b->goal, 40) }}</p>
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-gray-700">
-                                @if($b->email)<div><i class="fas fa-envelope text-gray-400 ml-1"></i>{{ $b->email }}</div>@endif
-                                @if($b->phone)<div><i class="fas fa-phone text-gray-400 ml-1"></i>{{ $b->phone }}</div>@endif
+                            <td class="px-3 py-3 text-xs text-muted">
+                                @if($b->email)<p><i class="fas fa-envelope ml-1 text-[10px]"></i>{{ $b->email }}</p>@endif
+                                @if($b->phone)<p class="mt-0.5"><i class="fas fa-phone ml-1 text-[10px]"></i>{{ $b->phone }}</p>@endif
                             </td>
-                            <td class="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">
+                            <td class="whitespace-nowrap px-3 py-3 font-medium tabular-nums text-ink">
                                 {{ $b->starts_at?->timezone(config('app.timezone'))->format('Y-m-d H:i') }}
                             </td>
-                            <td class="px-4 py-3">{{ $b->duration_minutes }} د</td>
-                            <td class="px-4 py-3">
-                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold {{ $statusCls }}">{{ $statusLabel }}</span>
+                            <td class="px-3 py-3 tabular-nums text-muted">{{ $b->duration_minutes }} د</td>
+                            <td class="px-3 py-3">
+                                <span class="rounded-lg px-2.5 py-1 text-xs font-medium {{ $badgeClass }}">{{ $statusLabel }}</span>
                             </td>
-                            <td class="px-4 py-3">
-                                <div class="flex items-center gap-2">
-                                    <a href="{{ route('admin.free-trial-bookings.show', $b) }}" class="text-[#0B3D91] font-bold hover:underline">عرض</a>
+                            <td class="px-5 py-3">
+                                <div class="flex items-center gap-1.5">
+                                    <a href="{{ route('admin.free-trial-bookings.show', $b) }}"
+                                       class="btn-press inline-flex size-8 items-center justify-center rounded-lg bg-accent-soft text-accent transition hover:bg-accent hover:text-white"
+                                       title="عرض">
+                                        <i class="fas fa-eye text-xs"></i>
+                                    </a>
                                     <form method="post" action="{{ route('admin.free-trial-bookings.destroy', $b) }}" onsubmit="return confirm('حذف هذا الحجز؟');">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="text-rose-600 font-bold hover:underline">حذف</button>
+                                        <button type="submit"
+                                                class="btn-press inline-flex size-8 items-center justify-center rounded-lg bg-danger/10 text-danger transition hover:bg-danger hover:text-white"
+                                                title="حذف">
+                                            <i class="fas fa-trash text-xs"></i>
+                                        </button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-12 text-center text-gray-500">لا توجد حجوزات بعد.</td>
+                            <td colspan="7" class="px-5 py-16 text-center">
+                                <div class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+                                    <i class="fas fa-calendar-check"></i>
+                                </div>
+                                <p class="text-sm font-medium text-ink">لا توجد حجوزات</p>
+                                <p class="mt-1 text-xs text-muted">ستظهر هنا حجوزات الحصة المجانية القادمة من الموقع.</p>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
         @if($bookings->hasPages())
-            <div class="px-4 py-3 border-t border-gray-100">{{ $bookings->links() }}</div>
+            <div class="border-t border-line px-4 py-4 sm:px-5">{{ $bookings->withQueryString()->links() }}</div>
         @endif
-    </div>
+    </article>
 </div>
 @endsection
