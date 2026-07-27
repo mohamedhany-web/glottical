@@ -281,8 +281,9 @@ Route::get('/css/landing/{sheet}.css', function (string $sheet) use ($serveAthee
         abort(404);
     }
 
+    // public أولاً (النسخة المحدّثة)، ثم resources كنسخة احتياطية
     return $serveAtheerAsset(
-        [resource_path("css/landing/{$sheet}.css"), public_path("css/landing/{$sheet}.css")],
+        [public_path("css/landing/{$sheet}.css"), resource_path("css/landing/{$sheet}.css")],
         'text/css; charset=UTF-8'
     );
 })->where('sheet', '[A-Za-z0-9\-]+')->name('assets.landing.css');
@@ -294,7 +295,7 @@ Route::get('/js/landing/{file}.js', function (string $file) use ($serveAtheerAss
     }
 
     return $serveAtheerAsset(
-        [resource_path("js/landing/{$file}.js"), public_path("js/landing/{$file}.js")],
+        [public_path("js/landing/{$file}.js"), resource_path("js/landing/{$file}.js")],
         'application/javascript; charset=UTF-8'
     );
 })->where('file', '[A-Za-z0-9\-]+')->name('assets.landing.js');

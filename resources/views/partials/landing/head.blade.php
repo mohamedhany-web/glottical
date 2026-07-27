@@ -3,6 +3,7 @@
     $landingCss = $landingCss ?? ['theme'];
     $themeColor = config('academy-theme.blue', '#0B3D91');
 @endphp
+<script>document.documentElement.classList.add('js');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@800;900&family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
@@ -10,9 +11,9 @@
 <meta name="theme-color" content="{{ $themeColor }}">
 @foreach($landingCss as $sheet)
   @php
-      $landingCssFile = resource_path('css/landing/'.$sheet.'.css');
+      $landingCssFile = public_path('css/landing/'.$sheet.'.css');
       if (! is_file($landingCssFile)) {
-          $landingCssFile = public_path('css/landing/'.$sheet.'.css');
+          $landingCssFile = resource_path('css/landing/'.$sheet.'.css');
       }
       $landingCssVer = is_file($landingCssFile) ? (string) filemtime($landingCssFile) : (string) time();
   @endphp
