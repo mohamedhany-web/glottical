@@ -21,6 +21,11 @@ class SetApplicationRootUrl
             config(['filesystems.disks.public.url' => $root.'/storage']);
         }
 
+        // منع mixed-content: صفحة https مع أصول http عندما APP_URL قديم
+        if ($request->isSecure()) {
+            URL::forceScheme('https');
+        }
+
         return $next($request);
     }
 }

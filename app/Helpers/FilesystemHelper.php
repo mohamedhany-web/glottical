@@ -60,13 +60,25 @@ if (! function_exists('storage_base_url')) {
 if (! function_exists('versioned_asset')) {
     /**
      * رابط أصل ثابت مع بصمة تعديل الملف — يكسر كاش المتصفح تلقائياً عند كل تحديث.
+     * يستخدم مساراً نسبياً لنفس أصل الصفحة حتى لا تنكسر CSS/JS إذا كان APP_URL خاطئاً على السيرفر.
      */
     function versioned_asset(string $path): string
     {
-        $url = asset($path);
-        $full = public_path(ltrim(str_replace('\\', '/', $path), '/'));
+        $path = ltrim(str_replace('\\', '/', $path), '/');
+        $full = public_path($path);
         $version = is_file($full) ? (string) filemtime($full) : (string) time();
 
-        return $url.(str_contains($url, '?') ? '&' : '?').'v='.$version;
+        // ASSET_URL صريح (CDN) — احترم الإعداد
+        $assetUrl = config('app.asset_url');
+        if (is_string($assetUrl) && $assetUrl !== '') {
+            $url = rtrim($assetUrl, '/').'/'.$path;
+
+            return $url.(str_contains($url, '?') ? '&' : '?').'v='.$version;
+        }
+
+        $basePath = \App\Support\ApplicationUrl::scriptBasePath();
+        $url = ($basePath !== '' ? $basePath : '').'/'.$path;
+
+        return $url.'?v='.$version;
     }
 }
