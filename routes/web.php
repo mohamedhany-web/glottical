@@ -273,6 +273,63 @@ Route::get('/js/atheer-tailwind-config.js', function () use ($serveAtheerAsset) 
         'application/javascript; charset=UTF-8'
     );
 })->name('assets.atheer.tailwind');
+
+// أصول اللاندنج عبر Laravel — على الاستضافة الحالية /css/landing/* و /js/landing/* و /img/* ترجع 404 كملفات ثابتة
+Route::get('/css/landing/{sheet}.css', function (string $sheet) use ($serveAtheerAsset) {
+    $sheet = basename($sheet);
+    if (! preg_match('/^[A-Za-z0-9\-]+$/', $sheet)) {
+        abort(404);
+    }
+
+    return $serveAtheerAsset(
+        [resource_path("css/landing/{$sheet}.css"), public_path("css/landing/{$sheet}.css")],
+        'text/css; charset=UTF-8'
+    );
+})->where('sheet', '[A-Za-z0-9\-]+')->name('assets.landing.css');
+
+Route::get('/js/landing/{file}.js', function (string $file) use ($serveAtheerAsset) {
+    $file = basename($file);
+    if (! preg_match('/^[A-Za-z0-9\-]+$/', $file)) {
+        abort(404);
+    }
+
+    return $serveAtheerAsset(
+        [resource_path("js/landing/{$file}.js"), public_path("js/landing/{$file}.js")],
+        'application/javascript; charset=UTF-8'
+    );
+})->where('file', '[A-Za-z0-9\-]+')->name('assets.landing.js');
+
+Route::get('/img/{folder}/{file}', function (string $folder, string $file) use ($serveAtheerAsset) {
+    $folder = basename($folder);
+    $file = basename($file);
+    if (! in_array($folder, ['glottical', 'sanua'], true)) {
+        abort(404);
+    }
+    if (! preg_match('/^[A-Za-z0-9._\-]+$/', $file) || ! preg_match('/\.(png|jpe?g|webp|gif|svg)$/i', $file)) {
+        abort(404);
+    }
+
+    $path = public_path("img/{$folder}/{$file}");
+    if (! is_file($path)) {
+        abort(404);
+    }
+
+    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    $types = [
+        'png' => 'image/png',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'webp' => 'image/webp',
+        'gif' => 'image/gif',
+        'svg' => 'image/svg+xml',
+    ];
+
+    return response((string) file_get_contents($path), 200, [
+        'Content-Type' => $types[$ext] ?? 'application/octet-stream',
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+})->where(['folder' => 'glottical|sanua', 'file' => '[A-Za-z0-9._\-]+'])->name('assets.landing.img');
+
 Route::get('/free-trial/slots', [\App\Http\Controllers\Public\FreeTrialBookingController::class, 'slots'])->name('public.free-trial.slots');
 Route::post('/free-trial/book', [\App\Http\Controllers\Public\FreeTrialBookingController::class, 'store'])
     ->middleware('throttle:10,1')

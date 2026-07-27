@@ -43,4 +43,11 @@
     </div>
   </div>
 </footer>
-<script src="{{ versioned_asset('js/landing/site.js') }}" defer></script>
+@php
+    $landingJsFile = resource_path('js/landing/site.js');
+    if (! is_file($landingJsFile)) {
+        $landingJsFile = public_path('js/landing/site.js');
+    }
+    $landingJsVer = is_file($landingJsFile) ? (string) filemtime($landingJsFile) : (string) time();
+@endphp
+<script src="{{ route('assets.landing.js', ['file' => 'site']) }}?v={{ $landingJsVer }}" defer></script>

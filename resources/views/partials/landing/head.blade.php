@@ -9,7 +9,14 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <meta name="theme-color" content="{{ $themeColor }}">
 @foreach($landingCss as $sheet)
-  <link rel="stylesheet" href="{{ versioned_asset('css/landing/'.$sheet.'.css') }}">
+  @php
+      $landingCssFile = resource_path('css/landing/'.$sheet.'.css');
+      if (! is_file($landingCssFile)) {
+          $landingCssFile = public_path('css/landing/'.$sheet.'.css');
+      }
+      $landingCssVer = is_file($landingCssFile) ? (string) filemtime($landingCssFile) : (string) time();
+  @endphp
+  <link rel="stylesheet" href="{{ route('assets.landing.css', ['sheet' => $sheet]) }}?v={{ $landingCssVer }}">
 @endforeach
 <style>
   :root {
