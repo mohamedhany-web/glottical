@@ -1,167 +1,158 @@
 @extends('layouts.admin')
 
 @section('title', 'إضافة محاضرة جديدة')
+@section('page_title', 'إضافة محاضرة')
 
 @section('content')
-<div class="w-full max-w-full px-4 py-6 space-y-6">
-    <!-- هيدر الصفحة -->
-    <div class="bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 rounded-2xl p-6 text-white shadow-lg">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="min-w-0">
-                <nav class="text-sm text-white/80 mb-2">
-                    <a href="{{ route('admin.dashboard') }}" class="hover:text-white">لوحة التحكم</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.lectures.index') }}" class="hover:text-white">المحاضرات</a>
-                    <span class="mx-2">/</span>
-                    <span class="text-white">إضافة محاضرة</span>
-                </nav>
-                <h1 class="text-xl sm:text-2xl font-bold mt-1">إضافة محاضرة جديدة</h1>
-                <p class="text-sm text-white/90 mt-1">إنشاء محاضرة جديدة وربطها بكورس ومحاضر</p>
-            </div>
-            <div class="flex flex-wrap gap-2 flex-shrink-0">
-                <a href="{{ $preselectedCourseId ? route('admin.lectures.by-course', $preselectedCourseId) : route('admin.lectures.index') }}" 
-                   class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
-                    <i class="fas fa-arrow-right"></i>
-                    {{ $preselectedCourseId ? 'العودة لمحاضرات الكورس' : 'العودة للمحاضرات' }}
-                </a>
-            </div>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $textareaClass = 'w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+@endphp
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">المحتوى · المحاضرات المباشرة</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إضافة محاضرة جديدة</h2>
+            <p class="mt-1 max-w-2xl text-sm text-muted">إنشاء محاضرة جديدة وربطها ببرنامج ومحاضر</p>
         </div>
-    </div>
+        <a href="{{ $preselectedCourseId ? route('admin.lectures.by-course', $preselectedCourseId) : route('admin.lectures.index') }}"
+           class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm text-ink-soft hover:bg-accent-soft hover:text-accent">
+            <i class="fas fa-arrow-right text-xs"></i>
+            {{ $preselectedCourseId ? 'العودة لمحاضرات البرنامج' : 'العودة للمحاضرات' }}
+        </a>
+    </section>
 
-    <!-- نموذج إضافة المحاضرة -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-            <h4 class="text-lg font-bold text-gray-900">بيانات المحاضرة</h4>
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-5 py-4">
+            <h3 class="text-sm font-semibold text-ink">بيانات المحاضرة</h3>
         </div>
 
-        <form action="{{ route('admin.lectures.store') }}" method="POST" class="p-6 sm:p-8">
+        <form action="{{ route('admin.lectures.store') }}" method="POST" class="p-5 sm:p-6">
             @csrf
-            
-            <div class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <div class="space-y-5">
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">الكورس <span class="text-red-500">*</span></label>
-                        <select name="course_id" required
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                            <option value="">اختر الكورس</option>
+                        <label class="{{ $labelClass }}" for="course_id">البرنامج <span class="text-rose-600">*</span></label>
+                        <select name="course_id" id="course_id" required class="{{ $fieldClass }}">
+                            <option value="">اختر البرنامج</option>
                             @foreach($courses as $course)
                                 <option value="{{ $course->id }}" {{ old('course_id', $preselectedCourseId ?? null) == $course->id ? 'selected' : '' }}>{{ Str::limit($course->title, 60) }}</option>
                             @endforeach
                         </select>
                         @error('course_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">المحاضر <span class="text-red-500">*</span></label>
-                        <select name="instructor_id" required
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                        <label class="{{ $labelClass }}" for="instructor_id">المحاضر <span class="text-rose-600">*</span></label>
+                        <select name="instructor_id" id="instructor_id" required class="{{ $fieldClass }}">
                             <option value="">اختر المحاضر</option>
                             @foreach($instructors as $instructor)
                                 <option value="{{ $instructor->id }}" {{ old('instructor_id') == $instructor->id ? 'selected' : '' }}>{{ $instructor->name }}</option>
                             @endforeach
                         </select>
                         @error('instructor_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">عنوان المحاضرة <span class="text-red-500">*</span></label>
-                    <input type="text" name="title" value="{{ old('title') }}" required
-                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    <label class="{{ $labelClass }}" for="title">عنوان المحاضرة <span class="text-rose-600">*</span></label>
+                    <input type="text" name="title" id="title" value="{{ old('title') }}" required
+                           class="{{ $fieldClass }}"
                            placeholder="مثال: المحاضرة الأولى - المقدمة">
                     @error('title')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">الوصف</label>
-                    <textarea name="description" rows="3"
-                              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    <label class="{{ $labelClass }}" for="description">الوصف</label>
+                    <textarea name="description" id="description" rows="3"
+                              class="{{ $textareaClass }}"
                               placeholder="وصف مختصر عن المحاضرة">{{ old('description') }}</textarea>
                     @error('description')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">تاريخ ووقت المحاضرة <span class="text-red-500">*</span></label>
-                        <input type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at') }}" required
-                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                        <label class="{{ $labelClass }}" for="scheduled_at">تاريخ ووقت المحاضرة <span class="text-rose-600">*</span></label>
+                        <input type="datetime-local" name="scheduled_at" id="scheduled_at" value="{{ old('scheduled_at') }}" required
+                               class="{{ $fieldClass }}">
                         @error('scheduled_at')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">مدة المحاضرة (دقيقة)</label>
-                        <input type="number" name="duration_minutes" value="{{ old('duration_minutes', 60) }}" min="1"
-                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                        <label class="{{ $labelClass }}" for="duration_minutes">مدة المحاضرة (دقيقة)</label>
+                        <input type="number" name="duration_minutes" id="duration_minutes" value="{{ old('duration_minutes', 60) }}" min="1"
+                               class="{{ $fieldClass }}"
                                placeholder="60">
                         @error('duration_minutes')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">رابط تسجيل المحاضرة (بعد الانتهاء)</label>
-                    <input type="url" name="recording_url" value="{{ old('recording_url') }}"
-                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    <label class="{{ $labelClass }}" for="recording_url">رابط تسجيل المحاضرة (بعد الانتهاء)</label>
+                    <input type="url" name="recording_url" id="recording_url" value="{{ old('recording_url') }}"
+                           class="{{ $fieldClass }}"
                            placeholder="رابط التسجيل أو الفيديو المسجل">
                     @error('recording_url')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">ملاحظات</label>
-                    <textarea name="notes" rows="3"
-                              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    <label class="{{ $labelClass }}" for="notes">ملاحظات</label>
+                    <textarea name="notes" id="notes" rows="3"
+                              class="{{ $textareaClass }}"
                               placeholder="ملاحظات إضافية">{{ old('notes') }}</textarea>
                     @error('notes')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                    <p class="text-sm font-semibold text-gray-700 mb-3">خيارات المحاضرة</p>
-                    <div class="flex flex-wrap gap-6 gap-y-3">
-                        <label class="flex items-center gap-2 cursor-pointer">
+                <div class="rounded-xl border border-line bg-[#f8faf9] p-4">
+                    <p class="text-xs font-medium text-muted">خيارات المحاضرة</p>
+                    <div class="mt-3 flex flex-wrap gap-x-6 gap-y-3">
+                        <label class="flex cursor-pointer items-center gap-2">
                             <input type="checkbox" name="has_attendance_tracking" value="1" {{ old('has_attendance_tracking', true) ? 'checked' : '' }}
-                                   class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2">
-                            <span class="text-sm font-medium text-gray-700">تتبع الحضور</span>
+                                   class="size-4 rounded border-line text-accent focus:ring-accent/20">
+                            <span class="text-sm text-ink">تتبع الحضور</span>
                         </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
+                        <label class="flex cursor-pointer items-center gap-2">
                             <input type="checkbox" name="has_assignment" value="1" {{ old('has_assignment') ? 'checked' : '' }}
-                                   class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2">
-                            <span class="text-sm font-medium text-gray-700">يوجد واجب</span>
+                                   class="size-4 rounded border-line text-accent focus:ring-accent/20">
+                            <span class="text-sm text-ink">يوجد واجب</span>
                         </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
+                        <label class="flex cursor-pointer items-center gap-2">
                             <input type="checkbox" name="has_evaluation" value="1" {{ old('has_evaluation') ? 'checked' : '' }}
-                                   class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2">
-                            <span class="text-sm font-medium text-gray-700">يوجد تقييم للمحاضر</span>
+                                   class="size-4 rounded border-line text-accent focus:ring-accent/20">
+                            <span class="text-sm text-ink">يوجد تقييم للمحاضر</span>
                         </label>
                     </div>
                 </div>
 
-                <div class="flex flex-wrap items-center justify-end gap-3 pt-6 border-t border-gray-200">
-                    <a href="{{ route('admin.lectures.index') }}" 
-                       class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors border border-gray-200">
+                <div class="flex flex-wrap items-center justify-end gap-2 border-t border-line pt-5">
+                    <a href="{{ route('admin.lectures.index') }}"
+                       class="btn-press inline-flex h-10 items-center rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
                         إلغاء
                     </a>
-                    <button type="submit" 
-                            class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-indigo-600/20">
-                        <i class="fas fa-save"></i>
+                    <button type="submit"
+                            class="btn-press inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                        <i class="fas fa-save text-xs"></i>
                         حفظ المحاضرة
                     </button>
                 </div>
             </div>
         </form>
-    </div>
+    </article>
 </div>
 @endsection
-

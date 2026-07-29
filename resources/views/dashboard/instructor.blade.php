@@ -4,312 +4,280 @@
 
 @push('styles')
 <style>
-    .dash-welcome {
+    .ins-dash { --ins-blue:#0B3D91; --ins-dark:#072A66; --ins-gold:#F5B800; --ins-canvas:#F4F7FC; --ins-line:#E8EEF8; --ins-muted:#5B6577; }
+    .ins-panel {
         background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 16px;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 1px 3px rgba(0,0,0,.05);
+        border: 1px solid var(--ins-line);
+        border-radius: 18px;
     }
-    html.dark .dash-welcome {
-        background: #1e293b;
-        border-color: #334155;
-        box-shadow: 0 1px 3px rgba(0,0,0,.15);
+    .dark .ins-panel { background: #111827; border-color: #1f2937; }
+    .ins-chip {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 12px; border-radius: 999px;
+        font-size: 11px; font-weight: 800;
+        background: #EEF3FB; color: var(--ins-blue);
     }
-    .dash-stat {
-        background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
-        transition: transform .2s, box-shadow .2s, border-color .2s;
+    .ins-action {
+        display: flex; flex-direction: column; gap: 10px;
+        padding: 16px; border-radius: 16px;
+        border: 1px solid var(--ins-line); background: #fff;
+        text-decoration: none !important; color: inherit;
+        transition: border-color .15s, transform .15s, box-shadow .15s;
+        min-height: 108px;
     }
-    .dash-stat:hover {
-        transform: translateY(-4px); box-shadow: 0 12px 28px -10px rgba(0,0,0,.12);
-        border-color: #cbd5e1;
+    .ins-action:hover {
+        border-color: #C5D4EF; transform: translateY(-2px);
+        box-shadow: 0 12px 28px -16px rgba(11,61,145,.25);
     }
-    html.dark .dash-stat {
-        background: rgba(30,41,59,.6); border-color: rgba(51,65,85,.8);
+    .dark .ins-action { background: #111827; border-color: #1f2937; }
+    .ins-action__icon {
+        width: 40px; height: 40px; border-radius: 12px;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: #EEF3FB; color: var(--ins-blue); font-size: 15px;
     }
-    html.dark .dash-stat:hover {
-        border-color: rgba(71,85,105,.9); box-shadow: 0 12px 28px -10px rgba(0,0,0,.35);
+    .ins-action--gold .ins-action__icon { background: #FFF6D6; color: #8A6A00; }
+    .ins-action--warn .ins-action__icon { background: #FFF1E8; color: #B45309; }
+    .ins-row {
+        display: flex; align-items: center; gap: 12px;
+        padding: 12px; border-radius: 14px;
+        border: 1px solid transparent;
+        transition: background .15s, border-color .15s;
+        text-decoration: none !important; color: inherit;
     }
-    .dash-card {
-        background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
-        overflow: hidden; transition: box-shadow .2s;
-    }
-    .dash-card:hover { box-shadow: 0 8px 24px -8px rgba(0,0,0,.08); }
-    html.dark .dash-card {
-        background: rgba(30,41,59,.6); border-color: rgba(51,65,85,.8);
-    }
-    html.dark .dash-card:hover { box-shadow: 0 8px 24px -8px rgba(0,0,0,.25); }
-    .dash-card-header {
-        padding: 14px 18px; border-bottom: 1px solid #f1f5f9;
-        display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    }
-    html.dark .dash-card-header { border-bottom-color: rgba(51,65,85,.6); }
-    .dash-row {
-        display: flex; align-items: center; gap: 12px; padding: 12px 18px;
-        transition: background .15s; border-bottom: 1px solid #f8fafc;
-    }
-    .dash-row:last-child { border-bottom: none; }
-    .dash-row:hover { background: #f8fafc; }
-    html.dark .dash-row { border-bottom-color: rgba(51,65,85,.4); }
-    html.dark .dash-row:hover { background: rgba(51,65,85,.3); }
-    .dash-quick {
-        display: flex; align-items: center; gap: 12px; padding: 14px 18px;
-        background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
-        transition: all .2s;
-    }
-    .dash-quick:hover {
-        border-color: #cbd5e1; box-shadow: 0 6px 16px -6px rgba(0,0,0,.08);
-        transform: translateY(-2px);
-    }
-    html.dark .dash-quick {
-        background: rgba(30,41,59,.6); border-color: rgba(51,65,85,.8);
-    }
-    html.dark .dash-quick:hover { border-color: rgba(71,85,105,.9); }
+    .ins-row:hover { background: var(--ins-canvas); border-color: var(--ins-line); }
+    .dark .ins-row:hover { background: #1f2937; border-color: #334155; }
 </style>
 @endpush
 
 @section('content')
-<div class="space-y-6 pb-4">
-    {{-- Welcome strip: light, clean --}}
-    <section class="dash-welcome px-5 py-6 sm:px-6 sm:py-7">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="flex items-start sm:items-center gap-4">
-                <div class="w-14 h-14 rounded-2xl bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-chalkboard-teacher text-2xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
+@php
+    $isRtl = app()->getLocale() === 'ar';
+    $pending = (int) ($stats['pending_submissions'] ?? 0);
+@endphp
+
+<div class="ins-dash space-y-5">
+    {{-- Greeting --}}
+    <section class="ins-panel overflow-hidden">
+        <div class="relative px-5 py-5 sm:px-6 sm:py-6">
+            <div class="absolute inset-y-0 {{ $isRtl ? 'left-0' : 'right-0' }} w-40 sm:w-56 pointer-events-none opacity-90"
+                 style="background: radial-gradient(ellipse at center, rgba(245,184,0,0.22), transparent 70%);"></div>
+            <div class="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+                <div class="min-w-0">
+                    <span class="ins-chip mb-3">
+                        <i class="fas fa-chalkboard-teacher text-[10px]"></i>
+                        {{ config('app.name') }} · {{ __('instructor.instructor_panel') }}
+                    </span>
+                    <h1 class="font-heading text-2xl sm:text-[28px] font-black tracking-tight text-[#0B1220] dark:text-white leading-tight">
                         {{ __('instructor.welcome') }}، {{ auth()->user()->name }}
                     </h1>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ __('instructor.overview_activity_today') }}</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-2 flex items-center gap-2">
-                        <i class="fas fa-calendar-day text-gray-400"></i>
+                    <p class="mt-1.5 text-sm text-[color:var(--ins-muted)] dark:text-gray-400 max-w-xl">
+                        {{ $isRtl ? 'التدريس المباشر أولاً — مجموعات وحصص فردية وبث، ثم الكورسات والواجبات.' : 'Live teaching first — groups, 1:1, and broadcasts; then courses and grading.' }}
+                    </p>
+                    <p class="mt-2 text-xs text-[color:var(--ins-muted)] flex items-center gap-2">
+                        <i class="fas fa-calendar-day opacity-60"></i>
                         <time datetime="{{ now()->toIso8601String() }}">{{ now()->translatedFormat('l، d F Y') }}</time>
                     </p>
                 </div>
-            </div>
-            <div class="flex flex-wrap items-center gap-3">
-                <a href="{{ route('instructor.lectures.create') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-xl transition-colors">
-                    <i class="fas fa-video text-sm"></i>
-                    {{ __('instructor.add_lecture') }}
-                </a>
-                <a href="{{ route('instructor.assignments.create') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-semibold rounded-xl border border-gray-200 dark:border-gray-600 transition-colors">
-                    <i class="fas fa-tasks text-sm"></i>
-                    {{ __('instructor.add_assignment') }}
-                </a>
+                <div class="flex flex-wrap gap-2">
+                    <a href="{{ route('instructor.lectures.create') }}"
+                       class="inline-flex h-10 items-center gap-2 rounded-xl bg-[#0B3D91] px-4 text-sm font-bold text-white hover:brightness-110">
+                        <i class="fas fa-video text-xs"></i> {{ __('instructor.add_lecture') }}
+                    </a>
+                    <a href="{{ route('instructor.assignments.create') }}"
+                       class="inline-flex h-10 items-center gap-2 rounded-xl border border-[#E8EEF8] dark:border-gray-600 bg-white dark:bg-gray-800 px-4 text-sm font-bold text-[#0B1220] dark:text-white hover:border-[#0B3D91]/40">
+                        <i class="fas fa-tasks text-xs"></i> {{ __('instructor.add_assignment') }}
+                    </a>
+                </div>
             </div>
         </div>
     </section>
 
-    {{-- Stats grid --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <a href="{{ route('instructor.courses.index') }}" class="dash-stat p-5 block group">
-            <div class="flex items-center justify-between mb-3">
-                <span class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <i class="fas fa-book text-lg"></i>
-                </span>
-                <span class="text-gray-300 dark:text-gray-600 group-hover:text-blue-400 transition-colors"><i class="fas fa-arrow-left text-sm"></i></span>
-            </div>
-            <div class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 tabular-nums leading-none">{{ number_format($stats['my_courses']) }}</div>
-            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1.5 uppercase tracking-wider">{{ __('instructor.my_courses') }}</div>
-        </a>
-
-        <a href="{{ route('instructor.courses.index') }}" class="dash-stat p-5 block group">
-            <div class="flex items-center justify-between mb-3">
-                <span class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <i class="fas fa-user-graduate text-lg"></i>
-                </span>
-                <span class="text-gray-300 dark:text-gray-600 group-hover:text-emerald-400 transition-colors"><i class="fas fa-arrow-left text-sm"></i></span>
-            </div>
-            <div class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 tabular-nums leading-none">{{ number_format($stats['total_students']) }}</div>
-            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1.5 uppercase tracking-wider">{{ __('instructor.total_students') }}</div>
-        </a>
-
-        <a href="{{ route('instructor.lectures.index') }}" class="dash-stat p-5 block group">
-            <div class="flex items-center justify-between mb-3">
-                <span class="w-12 h-12 rounded-xl bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <i class="fas fa-chalkboard text-lg"></i>
-                </span>
-                <span class="text-gray-300 dark:text-gray-600 group-hover:text-violet-400 transition-colors"><i class="fas fa-arrow-left text-sm"></i></span>
-            </div>
-            <div class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 tabular-nums leading-none">{{ number_format($stats['total_lectures']) }}</div>
-            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1.5 uppercase tracking-wider">
-                {{ __('instructor.lectures') }}
-                @if($stats['upcoming_lectures'] > 0)
-                    <span class="text-violet-500 dark:text-violet-400 font-normal"> · {{ $stats['upcoming_lectures'] }} {{ __('instructor.upcoming') }}</span>
-                @endif
-            </div>
-        </a>
-
-        <a href="{{ route('instructor.assignments.index') }}" class="dash-stat p-5 block group">
-            <div class="flex items-center justify-between mb-3">
-                <span class="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <i class="fas fa-tasks text-lg"></i>
-                </span>
-                <span class="text-gray-300 dark:text-gray-600 group-hover:text-amber-400 transition-colors"><i class="fas fa-arrow-left text-sm"></i></span>
-            </div>
-            <div class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 tabular-nums leading-none">{{ number_format($stats['total_assignments']) }}</div>
-            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1.5 uppercase tracking-wider">
-                {{ __('instructor.assignments') }}
-                @if($stats['pending_submissions'] > 0)
-                    <span class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-normal">
-                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-600 animate-pulse"></span>
-                        {{ $stats['pending_submissions'] }} {{ __('instructor.need_grading') }}
-                    </span>
-                @endif
-            </div>
-        </a>
-    </div>
-
-    {{-- Content grid --}}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {{-- Recent courses --}}
-        <div class="dash-card">
-            <div class="dash-card-header">
-                <div class="flex items-center gap-3">
-                    <span class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                        <i class="fas fa-book text-sm"></i>
-                    </span>
-                    <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ __('instructor.my_recent_courses') }}</h3>
+    {{-- Next live tutoring --}}
+    @if(!empty($upcomingTutoringBooking))
+        <section class="rounded-2xl overflow-hidden border border-[#0B3D91]/20 bg-[#0B3D91] text-white shadow-[0_18px_40px_-20px_rgba(11,61,145,0.55)]">
+            <div class="px-5 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="min-w-0">
+                    <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#F5B800]">{{ $isRtl ? 'حصتك المباشرة القادمة' : 'Next live session' }}</p>
+                    <h2 class="mt-1 text-xl font-black truncate">{{ $upcomingTutoringBooking->tutoringGroup?->title ?? ($isRtl ? 'حصة مجموعة' : 'Group session') }}</h2>
+                    <p class="mt-1 text-sm text-white/75">
+                        <i class="far fa-clock ml-1"></i>
+                        {{ $upcomingTutoringBooking->starts_at?->timezone(config('app.timezone'))->format('Y-m-d H:i') }}
+                        @if($upcomingTutoringBooking->user)
+                            · {{ $upcomingTutoringBooking->user->name }}
+                        @endif
+                    </p>
                 </div>
-                <a href="{{ route('instructor.courses.index') }}" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">{{ __('instructor.view_all') }} ←</a>
+                <div class="flex flex-wrap gap-2">
+                    @if($upcomingTutoringBooking->classroomMeeting)
+                        <a href="{{ url('classroom/join/'.$upcomingTutoringBooking->classroomMeeting->code) }}"
+                           class="inline-flex items-center gap-2 rounded-xl bg-[#F5B800] px-4 py-2.5 text-sm font-extrabold text-[#072A66] hover:brightness-105">
+                            <i class="fas fa-video"></i> {{ $isRtl ? 'دخول Live' : 'Join Live' }}
+                        </a>
+                    @endif
+                    @if(Route::has('instructor.tutoring-bookings.show'))
+                        <a href="{{ route('instructor.tutoring-bookings.show', $upcomingTutoringBooking) }}"
+                           class="inline-flex items-center rounded-xl border border-white/30 px-4 py-2.5 text-sm font-bold text-white hover:bg-white/10">
+                            {{ $isRtl ? 'التفاصيل' : 'Details' }}
+                        </a>
+                    @endif
+                </div>
             </div>
+        </section>
+    @else
+        <section class="ins-panel px-5 py-4 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                @forelse($my_courses as $course)
-                <a href="{{ route('instructor.courses.show', $course) }}" class="dash-row block">
-                    <span class="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-play text-xs"></i>
-                    </span>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{{ $course->title }}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                            {{ $course->active_students_count ?? 0 }} {{ __('instructor.student_single') }}
-                            @if($course->academicSubject) · {{ $course->academicSubject->name }} @endif
-                        </p>
-                    </div>
-                    <i class="fas fa-chevron-left text-gray-300 dark:text-gray-600 text-xs flex-shrink-0"></i>
-                </a>
-                @empty
-                <div class="px-6 py-12 text-center">
-                    <div class="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-700/60 flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-book text-2xl text-gray-400 dark:text-gray-500"></i>
-                    </div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('instructor.no_courses_assigned') }}</p>
-                </div>
-                @endforelse
+                <p class="text-sm font-bold text-[#0B1220] dark:text-white">{{ $isRtl ? 'لا توجد حصة مجموعة قادمة' : 'No upcoming group session' }}</p>
+                <p class="text-xs text-[color:var(--ins-muted)] mt-0.5">{{ $isRtl ? 'راجع الحجوزات والدفعات الجماعية عند توفرها.' : 'Check bookings and cohorts when available.' }}</p>
             </div>
-        </div>
-
-        {{-- Upcoming lectures --}}
-        <div class="dash-card">
-            <div class="dash-card-header">
-                <div class="flex items-center gap-3">
-                    <span class="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 flex items-center justify-center">
-                        <i class="fas fa-calendar-alt text-sm"></i>
-                    </span>
-                    <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ __('instructor.upcoming_lectures') }}</h3>
-                </div>
-                <a href="{{ route('instructor.lectures.index') }}" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">{{ __('instructor.view_all') }} ←</a>
-            </div>
-            <div>
-                @forelse($upcoming_lectures as $lecture)
-                <a href="{{ route('instructor.lectures.show', $lecture) }}" class="dash-row block">
-                    <span class="w-10 h-10 rounded-lg bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-video text-xs"></i>
-                    </span>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{{ $lecture->title }}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                            {{ $lecture->course->title ?? __('instructor.not_specified') }} · {{ $lecture->scheduled_at->format('m/d H:i') }}
-                        </p>
-                    </div>
-                    <span class="text-[10px] font-semibold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 px-2.5 py-1 rounded-lg flex-shrink-0">
-                        {{ $lecture->scheduled_at->diffForHumans() }}
-                    </span>
-                </a>
-                @empty
-                <div class="px-6 py-12 text-center">
-                    <div class="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-700/60 flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-calendar text-2xl text-gray-400 dark:text-gray-500"></i>
-                    </div>
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">{{ __('instructor.no_lectures') }}</p>
-                    <a href="{{ route('instructor.lectures.create') }}" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">{{ __('instructor.add_lecture') }} ←</a>
-                </div>
-                @endforelse
-            </div>
-        </div>
-    </div>
-
-    {{-- Pending assignments --}}
-    <div class="dash-card">
-        <div class="dash-card-header">
-            <div class="flex items-center gap-3">
-                <span class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                    <i class="fas fa-tasks text-sm"></i>
-                </span>
-                <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ __('instructor.assignments_need_grading') }}</h3>
-                @if($stats['pending_submissions'] > 0)
-                    <span class="inline-flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-bold">{{ $stats['pending_submissions'] }}</span>
+            <div class="flex flex-wrap gap-2">
+                @if(Route::has('instructor.tutoring-bookings.index'))
+                    <a href="{{ route('instructor.tutoring-bookings.index') }}" class="inline-flex h-10 items-center gap-2 rounded-xl bg-[#0B3D91] px-4 text-sm font-bold text-white">
+                        <i class="fas fa-calendar-check text-xs"></i> {{ $isRtl ? 'الحجوزات' : 'Bookings' }}
+                    </a>
                 @endif
             </div>
-            <a href="{{ route('instructor.assignments.index') }}" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">{{ __('instructor.view_all') }} ←</a>
-        </div>
-        <div>
-            @forelse($pending_assignments as $submission)
-            <a href="{{ route('instructor.assignments.submissions', $submission->assignment) }}" class="dash-row block">
-                <span class="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-file-alt text-xs"></i>
-                </span>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{{ $submission->assignment->title ?? __('instructor.assignment_default') }}</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ $submission->student->name ?? __('instructor.student_single') }} · {{ $submission->created_at->diffForHumans() }}</p>
-                </div>
-                <span class="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2.5 py-1 rounded-lg flex-shrink-0">
-                    {{ __('instructor.grade_assignment') }}
-                </span>
-            </a>
-            @empty
-            <div class="px-6 py-12 text-center">
-                <div class="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-check text-emerald-500 dark:text-emerald-400 text-xl"></i>
-                </div>
-                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('instructor.all_assignments_graded') }}</p>
-            </div>
-            @endforelse
-        </div>
-    </div>
+        </section>
+    @endif
 
     {{-- Quick actions --}}
-    <div>
-        <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 px-1">{{ __('instructor.quick_actions') }}</h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <a href="{{ route('instructor.lectures.create') }}" class="dash-quick group">
-                <span class="w-11 h-11 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                    <i class="fas fa-video"></i>
-                </span>
-                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{{ __('instructor.add_lecture') }}</span>
-            </a>
-            <a href="{{ route('instructor.assignments.create') }}" class="dash-quick group">
-                <span class="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                    <i class="fas fa-tasks"></i>
-                </span>
-                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{{ __('instructor.add_assignment') }}</span>
-            </a>
-            <a href="{{ route('instructor.exams.index') }}" class="dash-quick group">
-                <span class="w-11 h-11 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                    <i class="fas fa-clipboard-check"></i>
-                </span>
-                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">{{ __('instructor.manage_exams') }}</span>
-            </a>
-            <a href="{{ route('instructor.attendance.index') }}" class="dash-quick group">
-                <span class="w-11 h-11 rounded-xl bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                    <i class="fas fa-clipboard-list"></i>
-                </span>
-                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">{{ __('instructor.attendance_absence') }}</span>
-            </a>
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        @if(Route::has('instructor.tutoring-bookings.index'))
+        <a href="{{ route('instructor.tutoring-bookings.index') }}" class="ins-action ins-action--gold">
+            <span class="ins-action__icon"><i class="fas fa-users"></i></span>
+            <div>
+                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'حجوزات المجموعات' : 'Group bookings' }}</p>
+                <p class="text-[11px] text-[color:var(--ins-muted)] mt-0.5">{{ ($stats['upcoming_tutoring'] ?? 0) }} {{ $isRtl ? 'قادمة' : 'upcoming' }}</p>
+            </div>
+        </a>
+        @endif
+        @if(Route::has('instructor.live-sessions.index'))
+        <a href="{{ route('instructor.live-sessions.index') }}" class="ins-action">
+            <span class="ins-action__icon"><i class="fas fa-broadcast-tower"></i></span>
+            <div>
+                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'البث المباشر' : 'Live broadcast' }}</p>
+                <p class="text-[11px] text-[color:var(--ins-muted)] mt-0.5">{{ $isRtl ? 'إدارة البث' : 'Manage streams' }}</p>
+            </div>
+        </a>
+        @endif
+        <a href="{{ route('instructor.courses.index') }}" class="ins-action">
+            <span class="ins-action__icon"><i class="fas fa-book-open"></i></span>
+            <div>
+                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ __('instructor.my_courses') }}</p>
+                <p class="text-[11px] text-[color:var(--ins-muted)] mt-0.5">{{ $stats['my_courses'] }} {{ $isRtl ? 'كورس' : 'courses' }}</p>
+            </div>
+        </a>
+        <a href="{{ route('instructor.assignments.index') }}" class="ins-action {{ $pending > 0 ? 'ins-action--warn' : '' }}">
+            <span class="ins-action__icon"><i class="fas fa-tasks"></i></span>
+            <div>
+                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ __('instructor.assignments') }}</p>
+                <p class="text-[11px] text-[color:var(--ins-muted)] mt-0.5">
+                    @if($pending > 0)
+                        {{ $pending }} {{ __('instructor.need_grading') }}
+                    @else
+                        {{ $isRtl ? 'لا تقييمات معلّقة' : 'Nothing pending' }}
+                    @endif
+                </p>
+            </div>
+        </a>
+    </section>
+
+    {{-- Quiet stats --}}
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <a href="{{ route('instructor.courses.index') }}" class="ins-panel px-4 py-4 hover:border-[#0B3D91]/25 transition-colors block">
+            <p class="text-[11px] font-bold text-[color:var(--ins-muted)]">{{ __('instructor.my_courses') }}</p>
+            <p class="mt-1 text-2xl font-black text-[#0B3D91] dark:text-blue-300 tabular-nums">{{ number_format($stats['my_courses']) }}</p>
+        </a>
+        <a href="{{ route('instructor.courses.index') }}" class="ins-panel px-4 py-4 hover:border-[#0B3D91]/25 transition-colors block">
+            <p class="text-[11px] font-bold text-[color:var(--ins-muted)]">{{ __('instructor.total_students') }}</p>
+            <p class="mt-1 text-2xl font-black text-[#0B1220] dark:text-white tabular-nums">{{ number_format($stats['total_students']) }}</p>
+        </a>
+        <a href="{{ route('instructor.lectures.index') }}" class="ins-panel px-4 py-4 hover:border-[#0B3D91]/25 transition-colors block">
+            <p class="text-[11px] font-bold text-[color:var(--ins-muted)]">{{ __('instructor.lectures') }}</p>
+            <p class="mt-1 text-2xl font-black text-[#0B1220] dark:text-white tabular-nums">{{ number_format($stats['total_lectures']) }}</p>
+            @if(($stats['upcoming_lectures'] ?? 0) > 0)
+                <p class="text-[10px] font-bold text-[#0B3D91] mt-1">{{ $stats['upcoming_lectures'] }} {{ __('instructor.upcoming') }}</p>
+            @endif
+        </a>
+        <a href="{{ route('instructor.assignments.index') }}" class="ins-panel px-4 py-4 hover:border-[#0B3D91]/25 transition-colors block">
+            <p class="text-[11px] font-bold text-[color:var(--ins-muted)]">{{ __('instructor.need_grading') }}</p>
+            <p class="mt-1 text-2xl font-black text-[#8A6A00] tabular-nums">{{ number_format($pending) }}</p>
+        </a>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {{-- Courses --}}
+        <section class="lg:col-span-2 ins-panel min-w-0">
+            <div class="flex items-center justify-between gap-3 px-5 pt-5">
+                <h2 class="font-heading text-base font-extrabold text-[#0B1220] dark:text-white">{{ __('instructor.my_recent_courses') }}</h2>
+                <a href="{{ route('instructor.courses.index') }}" class="text-xs font-bold text-[#0B3D91] dark:text-blue-300">{{ __('instructor.view_all') }}</a>
+            </div>
+            <div class="p-3 sm:p-4 space-y-1">
+                @forelse($my_courses as $course)
+                    <a href="{{ route('instructor.courses.show', $course) }}" class="ins-row">
+                        <div class="w-10 h-10 rounded-xl bg-[#EEF3FB] text-[#0B3D91] flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-book text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-bold text-sm text-[#0B1220] dark:text-white truncate">{{ $course->title }}</h3>
+                            <p class="text-[11px] text-[color:var(--ins-muted)] mt-0.5 truncate">
+                                {{ $course->active_students_count ?? 0 }} {{ __('instructor.student_single') }}
+                                @if($course->academicSubject) · {{ $course->academicSubject->name }} @endif
+                            </p>
+                        </div>
+                        <i class="fas fa-chevron-left text-gray-300 dark:text-gray-600 text-xs flex-shrink-0"></i>
+                    </a>
+                @empty
+                    <div class="text-center py-10 px-4">
+                        <p class="font-bold text-[#0B1220] dark:text-white">{{ __('instructor.no_courses_assigned') }}</p>
+                    </div>
+                @endforelse
+            </div>
+        </section>
+
+        <div class="space-y-5 min-w-0">
+            {{-- Upcoming lectures --}}
+            <section class="ins-panel">
+                <div class="flex items-center justify-between px-4 pt-4">
+                    <h3 class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ __('instructor.upcoming_lectures') }}</h3>
+                    <a href="{{ route('instructor.lectures.index') }}" class="text-[11px] font-bold text-[#0B3D91]">{{ __('instructor.view_all') }}</a>
+                </div>
+                <div class="p-3 space-y-2">
+                    @forelse($upcoming_lectures->take(3) as $lecture)
+                        <a href="{{ route('instructor.lectures.show', $lecture) }}" class="block rounded-xl border border-[color:var(--ins-line)] dark:border-gray-700 px-3 py-2.5 hover:border-[#0B3D91]/30 transition-colors">
+                            <p class="text-xs font-bold text-[#0B1220] dark:text-white truncate">{{ $lecture->title }}</p>
+                            <p class="text-[11px] text-[color:var(--ins-muted)] truncate mt-0.5">{{ $lecture->course->title ?? __('instructor.not_specified') }}</p>
+                            <p class="text-[10px] font-bold text-[#0B3D91] mt-1.5">{{ $lecture->scheduled_at->diffForHumans() }}</p>
+                        </a>
+                    @empty
+                        <p class="text-center text-xs text-[color:var(--ins-muted)] py-6">{{ __('instructor.no_lectures') }}</p>
+                    @endforelse
+                </div>
+            </section>
+
+            {{-- Pending grading --}}
+            <section class="ins-panel">
+                <div class="flex items-center justify-between px-4 pt-4 gap-2">
+                    <h3 class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ __('instructor.assignments_need_grading') }}</h3>
+                    @if($pending > 0)
+                        <span class="ins-chip">{{ $pending }}</span>
+                    @endif
+                </div>
+                <div class="p-3 space-y-2">
+                    @forelse($pending_assignments->take(3) as $submission)
+                        <a href="{{ route('instructor.assignments.submissions', $submission->assignment) }}" class="block rounded-xl border border-[color:var(--ins-line)] dark:border-gray-700 px-3 py-2.5 hover:border-[#F5B800]/50 transition-colors">
+                            <p class="text-xs font-bold text-[#0B1220] dark:text-white truncate">{{ $submission->assignment->title ?? __('instructor.assignment_default') }}</p>
+                            <p class="text-[11px] text-[color:var(--ins-muted)] truncate mt-0.5">{{ $submission->student->name ?? __('instructor.student_single') }} · {{ $submission->created_at->diffForHumans() }}</p>
+                        </a>
+                    @empty
+                        <div class="text-center py-6">
+                            <div class="w-10 h-10 rounded-xl bg-[#EEF8F0] text-emerald-600 flex items-center justify-center mx-auto mb-2">
+                                <i class="fas fa-check text-sm"></i>
+                            </div>
+                            <p class="text-xs text-[color:var(--ins-muted)]">{{ __('instructor.all_assignments_graded') }}</p>
+                        </div>
+                    @endforelse
+                </div>
+            </section>
         </div>
     </div>
 </div>

@@ -56,13 +56,19 @@ class GroupsController extends Controller
         $group = TutoringGroup::query()
             ->active()
             ->where('slug', $slug)
-            ->with('instructor:id,name')
+            ->with([
+                'instructor:id,name',
+                'cohorts' => fn ($q) => $q->visible()->orderByDesc('starts_at'),
+                'packages' => fn ($q) => $q->active()->orderBy('sort_order')->orderBy('duration_months'),
+            ])
             ->firstOrFail();
 
         $slots = TutoringGroupAvailabilityService::availableSlots($group);
         $slotsByDate = $slots->groupBy('date');
+        $cohorts = $group->cohorts;
+        $packages = $group->packages;
 
-        return view('public.groups-show', compact('group', 'slots', 'slotsByDate'));
+        return view('public.groups-show', compact('group', 'slots', 'slotsByDate', 'cohorts', 'packages'));
     }
 
     public function book(Request $request, string $slug): RedirectResponse
@@ -71,6 +77,7 @@ class GroupsController extends Controller
 
         $data = $request->validate([
             'starts_at' => ['required', 'date'],
+            'cohort_id' => ['nullable', 'integer', 'exists:tutoring_group_cohorts,id'],
             'guest_name' => ['nullable', 'string', 'max:255'],
             'guest_phone' => ['nullable', 'string', 'max:40'],
             'guest_email' => ['nullable', 'email', 'max:255'],

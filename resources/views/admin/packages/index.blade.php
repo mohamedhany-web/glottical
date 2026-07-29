@@ -1,600 +1,542 @@
 @extends('layouts.admin')
 
-@section('title', 'إدارة الباقات والأسعار')
-@section('header', 'إدارة الباقات والأسعار')
+@section('title', 'الباقات والأسعار - ' . config('app.name'))
+@section('page_title', 'الباقات والأسعار')
 
 @section('content')
-<style>
-    @media (max-width: 640px) {
-        .course-card {
-            min-width: 100%;
-        }
-        .filter-section {
-            padding: 1rem;
-        }
-        .course-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-        }
-    }
-    /* إخفاء العناصر المخفية بـ x-cloak */
-    [x-cloak] {
-        display: none !important;
-    }
-    /* منع عرض الكود كـ text - إخفاء أي نص يحتوي على كود JavaScript */
-    script, style {
-        display: none !important;
-    }
-    /* تحسين overflow على الجوال */
-    @media (max-width: 768px) {
-        .overflow-x-auto {
-            -webkit-overflow-scrolling: touch;
-        }
-        /* منع overflow-x على الجوال */
-        body {
-            overflow-x: hidden;
-        }
-        /* تحسين عرض النصوص */
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-    }
-    /* تحسين عرض الأزرار على الجوال */
-    @media (max-width: 640px) {
-        button, a {
-            touch-action: manipulation;
-        }
-    }
-</style>
-
-<div class="space-y-4 sm:space-y-6" x-data="{ activeTab: '{{ request('tab', 'packages') }}' }">
-    <!-- الهيدر -->
-    <div class="bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-900">إدارة الباقات والأسعار</h1>
-                <p class="text-sm sm:text-base text-gray-600 mt-1">إدارة باقات الكورسات وأسعار الكورسات الفردية</p>
-            </div>
-            <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                <button x-show="activeTab === 'courses'" 
-                        @click="activeTab = 'packages'"
-                        class="flex-1 sm:flex-none bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-colors">
-                    <i class="fas fa-box mr-2"></i>
-                    الباقات
-                </button>
-                <button x-show="activeTab === 'packages'" 
-                        @click="activeTab = 'courses'"
-                        class="flex-1 sm:flex-none bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-colors">
-                    <i class="fas fa-tags mr-2"></i>
-                    أسعار الكورسات
-                </button>
-                <a href="{{ route('admin.packages.create') }}" 
-                   x-show="activeTab === 'packages'"
-                   class="flex-1 sm:flex-none bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-colors shadow-lg shadow-sky-500/30 text-center">
-                    <i class="fas fa-plus mr-2"></i>
-                    إضافة باقة جديدة
-                </a>
-            </div>
+@php
+    $activeTab = request('tab', 'packages');
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+@endphp
+<div class="space-y-5" x-data="{ activeTab: '{{ $activeTab }}' }">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">التجارة · تسعير Glottical</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">الباقات والأسعار</h2>
+            <p class="mt-1 max-w-2xl text-sm text-muted">مركز موحّد لباقات البرامج المسجّلة، أسعار البرامج، وباقات الحصص المباشرة وفق مواصفات المنصة (USD + حساب تلقائي).</p>
         </div>
-    </div>
-
-    <!-- التبويبات -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200">
-        <div class="border-b border-gray-200">
-            <nav class="flex space-x-8 space-x-reverse px-6">
-                <button @click="activeTab = 'packages'" 
-                        :class="activeTab === 'packages' ? 'border-sky-500 text-sky-600 ': ''border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                    <i class="fas fa-box ml-2"></i>
-                    الباقات ({{ $packageStats['total'] ?? 0 }})
-                </button>
-                <button @click="activeTab = 'courses'" 
-                        :class="activeTab === 'courses' ? 'border-sky-500 text-sky-600 ': ''border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
-                    <i class="fas fa-tags ml-2"></i>
-                    إدارة أسعار الكورسات ({{ $courseStats['total'] ?? 0 }})
-                </button>
-            </nav>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('admin.packages.create') }}"
+               x-show="activeTab === 'packages'"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-plus text-xs"></i>
+                باقة برامج جديدة
+            </a>
+            <a href="{{ route('admin.tutoring-groups.index', 'individual') }}"
+               x-show="activeTab === 'tutoring'"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink transition hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-users text-xs"></i>
+                مجموعات الحصص
+            </a>
         </div>
+    </section>
 
-        <div class="p-6">
-            <!-- تبويب الباقات -->
-            <div x-show="activeTab === 'packages'">
-                <!-- إحصائيات الباقات -->
-                @if(isset($packageStats))
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl shadow-lg p-6 border border-sky-200">
-                        <div class="text-sm text-gray-600">إجمالي الباقات</div>
-                        <div class="text-2xl font-bold text-gray-900 mt-2">{{ $packageStats['total'] ?? 0 }}</div>
-                    </div>
-                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-lg p-6 border border-green-200">
-                        <div class="text-sm text-gray-600">الباقات النشطة</div>
-                        <div class="text-2xl font-bold text-green-600 mt-2">{{ $packageStats['active'] ?? 0 }}</div>
-                    </div>
-                    <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl shadow-lg p-6 border border-red-200">
-                        <div class="text-sm text-gray-600">الباقات المعطلة</div>
-                        <div class="text-2xl font-bold text-red-600 mt-2">{{ $packageStats['inactive'] ?? 0 }}</div>
-                    </div>
-                    <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl shadow-lg p-6 border border-yellow-200">
-                        <div class="text-sm text-gray-600">الباقات المميزة</div>
-                        <div class="text-2xl font-bold text-yellow-600 mt-2">{{ $packageStats['featured'] ?? 0 }}</div>
-                    </div>
+    @if(session('success'))
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-soft">
+            <i class="fas fa-check-circle ml-1"></i> {{ session('success') }}
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800 shadow-soft">
+            <i class="fas fa-exclamation-circle ml-1"></i> {{ session('error') }}
+        </div>
+    @endif
+
+    <nav class="flex flex-wrap gap-2 rounded-2xl border border-line bg-surface p-2 shadow-soft">
+        <button type="button" @click="activeTab = 'packages'"
+                :class="activeTab === 'packages' ? 'bg-accent text-white' : 'text-ink-soft hover:bg-accent-soft hover:text-accent'"
+                class="btn-press inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-medium transition">
+            <i class="fas fa-box text-xs"></i>
+            باقات البرامج ({{ $packageStats['total'] ?? 0 }})
+        </button>
+        <button type="button" @click="activeTab = 'courses'"
+                :class="activeTab === 'courses' ? 'bg-accent text-white' : 'text-ink-soft hover:bg-accent-soft hover:text-accent'"
+                class="btn-press inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-medium transition">
+            <i class="fas fa-tags text-xs"></i>
+            أسعار البرامج ({{ $courseStats['total'] ?? 0 }})
+        </button>
+        <button type="button" @click="activeTab = 'tutoring'"
+                :class="activeTab === 'tutoring' ? 'bg-accent text-white' : 'text-ink-soft hover:bg-accent-soft hover:text-accent'"
+                class="btn-press inline-flex h-10 items-center gap-2 rounded-xl px-4 text-sm font-medium transition">
+            <i class="fas fa-chalkboard-teacher text-xs"></i>
+            باقات الحصص ({{ $tutoringStats['total'] ?? 0 }})
+        </button>
+    </nav>
+
+    {{-- ===== باقات البرامج المسجّلة ===== --}}
+    <div x-show="activeTab === 'packages'" x-cloak class="space-y-5">
+        <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-box text-sm"></i></div>
+                <p class="mt-3 text-xs font-medium text-muted">إجمالي الباقات</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $packageStats['total'] ?? 0 }}</p>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-check-circle text-sm"></i></div>
+                <p class="mt-3 text-xs font-medium text-muted">نشطة</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-emerald-700">{{ $packageStats['active'] ?? 0 }}</p>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-pause-circle text-sm"></i></div>
+                <p class="mt-3 text-xs font-medium text-muted">معطّلة</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-rose-700">{{ $packageStats['inactive'] ?? 0 }}</p>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-star text-sm"></i></div>
+                <p class="mt-3 text-xs font-medium text-muted">مميزة</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $packageStats['featured'] ?? 0 }}</p>
+            </article>
+        </section>
+
+        <form method="GET" action="{{ route('admin.packages.index') }}" class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <input type="hidden" name="tab" value="packages">
+            <div class="grid gap-3 md:grid-cols-4">
+                <div class="md:col-span-2">
+                    <label class="{{ $labelClass }}" for="search">بحث</label>
+                    <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="اسم أو وصف الباقة..."
+                           class="{{ $fieldClass }}">
                 </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="status">الحالة</label>
+                    <select name="status" id="status" class="{{ $fieldClass }}">
+                        <option value="">الكل</option>
+                        <option value="active" @selected(request('status') === 'active')>نشطة</option>
+                        <option value="inactive" @selected(request('status') === 'inactive')>معطّلة</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="track">المسار</label>
+                    <select name="track" id="track" class="{{ $fieldClass }}">
+                        <option value="">كل المسارات</option>
+                        @foreach(\App\Models\Package::trackLabels() as $key => $label)
+                            <option value="{{ $key }}" @selected(request('track') === $key)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                    <i class="fas fa-filter text-xs"></i> تطبيق
+                </button>
+                @if(request()->hasAny(['search', 'status', 'track']))
+                    <a href="{{ route('admin.packages.index', ['tab' => 'packages']) }}" class="inline-flex h-11 items-center rounded-xl border border-line px-4 text-sm text-muted hover:bg-accent-soft hover:text-accent">إعادة تعيين</a>
                 @endif
+            </div>
+        </form>
 
-                <!-- فلاتر الباقات -->
-                <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                    <form method="GET" action="{{ route('admin.packages.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <input type="hidden" name="tab" value="packages">
-                        <div>
-                            <label for="search" class="block text-sm font-medium text-gray-700 mb-1">البحث</label>
-                            <input type="text" name="search" id="search" value="{{ request('search') }}" 
-                                   placeholder="البحث في أسماء الباقات..."
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                        </div>
-                        <div>
-                            <label for="status" class="block text-sm font-medium text-gray-700 mb-1">الحالة</label>
-                            <select name="status" id="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                                <option value="">جميع الباقات</option>
-                                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشطة</option>
-                                <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>معطلة</option>
-                            </select>
-                        </div>
-                        <div class="flex items-end">
-                            <button type="submit" class="w-full bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-sky-500/30">
-                                <i class="fas fa-search mr-2"></i>
-                                بحث
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- قائمة الباقات -->
-                @if(isset($packages) && $packages->count() > 0)
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الباقة</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">عدد الكورسات</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">السعر</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الإجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                @foreach($packages as $package)
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4">
+        @if(isset($packages) && $packages->count() > 0)
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[720px] text-sm">
+                        <thead>
+                            <tr class="border-b border-line text-right text-xs font-medium text-muted">
+                                <th class="px-4 py-3">الباقة</th>
+                                <th class="px-4 py-3">المسار</th>
+                                <th class="px-4 py-3">البرامج</th>
+                                <th class="px-4 py-3">السعر (USD)</th>
+                                <th class="px-4 py-3">الحالة</th>
+                                <th class="px-4 py-3">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-line">
+                            @foreach($packages as $package)
+                                <tr class="hover:bg-[#f8faf9]">
+                                    <td class="px-4 py-3">
                                         <div class="flex items-center gap-3">
                                             @if($package->thumbnail)
-                                            <img src="{{ storage_asset($package->thumbnail) }}" alt="{{ $package->name }}" class="w-12 h-12 rounded-lg object-cover">
+                                                <img src="{{ storage_asset($package->thumbnail) }}" alt="" class="size-11 rounded-xl object-cover">
                                             @else
-                                            <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center">
-                                                <i class="fas fa-box text-white"></i>
-                                            </div>
+                                                <div class="inline-flex size-11 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-box"></i></div>
                                             @endif
                                             <div>
-                                                <div class="text-sm font-medium text-gray-900">{{ $package->name }}</div>
+                                                <div class="font-medium text-ink">{{ $package->name }}</div>
                                                 @if($package->description)
-                                                <div class="text-xs text-gray-500 mt-1">{{ Str::limit($package->description, 50) }}</div>
+                                                    <div class="mt-0.5 text-xs text-muted">{{ Str::limit($package->description, 48) }}</div>
                                                 @endif
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="text-sm text-gray-600">{{ $package->courses_count ?? 0 }} كورس</span>
+                                    <td class="px-4 py-3 text-muted">{{ $package->trackLabel() ?? '—' }}</td>
+                                    <td class="px-4 py-3 tabular-nums text-ink">{{ $package->courses_count ?? 0 }}</td>
+                                    <td class="px-4 py-3">
+                                        <div class="font-semibold tabular-nums text-ink">{{ $package->formattedPrice(2) }}</div>
+                                        @if($package->formattedOriginalPrice(2))
+                                            <div class="text-xs text-muted line-through">{{ $package->formattedOriginalPrice(2) }}</div>
+                                        @endif
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center gap-2">
-                                            @if($package->original_price && $package->original_price > $package->price)
-                                            <span class="text-sm text-gray-400 line-through">{{ number_format($package->original_price, 2) }} ج.م</span>
-                                            <span class="text-lg font-bold text-sky-600">{{ number_format($package->price, 2) }} ج.م</span>
-                                            @else
-                                            <span class="text-lg font-bold text-gray-900">{{ number_format($package->price, 2) }} ج.م</span>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center gap-2">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                {{ $package->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                                {{ $package->is_active ? 'نشط' : 'معطل' }}
+                                    <td class="px-4 py-3">
+                                        <div class="flex flex-wrap gap-1">
+                                            <span class="inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium {{ $package->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }}">
+                                                {{ $package->is_active ? 'نشط' : 'معطّل' }}
                                             </span>
                                             @if($package->is_featured)
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                مميز
-                                            </span>
+                                                <span class="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800">مميز</span>
                                             @endif
                                             @if($package->is_popular)
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                                شائع
-                                            </span>
+                                                <span class="inline-flex rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent">شائع</span>
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <td class="px-4 py-3">
                                         <div class="flex items-center gap-2">
-                                            <a href="{{ route('admin.packages.show', $package) }}" class="text-sky-600 hover:text-sky-900" title="عرض">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="{{ route('admin.packages.edit', $package) }}" class="text-blue-600 hover:text-blue-900" title="تعديل">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <form action="{{ route('admin.packages.destroy', $package) }}" method="POST" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذه الباقة؟');">
+                                            <a href="{{ route('admin.packages.show', $package) }}" class="inline-flex size-8 items-center justify-center rounded-lg border border-line text-muted hover:bg-accent-soft hover:text-accent" title="عرض"><i class="fas fa-eye text-xs"></i></a>
+                                            <a href="{{ route('admin.packages.edit', $package) }}" class="inline-flex size-8 items-center justify-center rounded-lg border border-line text-muted hover:bg-accent-soft hover:text-accent" title="تعديل"><i class="fas fa-edit text-xs"></i></a>
+                                            <form action="{{ route('admin.packages.destroy', $package) }}" method="POST" onsubmit="return confirm('حذف هذه الباقة؟');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900" title="حذف">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
+                                                <button type="submit" class="inline-flex size-8 items-center justify-center rounded-lg border border-line text-rose-600 hover:bg-rose-50" title="حذف"><i class="fas fa-trash text-xs"></i></button>
                                             </form>
                                         </div>
                                     </td>
                                 </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="px-6 py-4 border-t border-gray-200">
-                        {{ $packages->appends(['tab' => 'packages'])->links() }}
-                    </div>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
-                @else
-                <div class="bg-white rounded-xl shadow-lg p-12 text-center border border-gray-200">
-                    <i class="fas fa-box text-gray-400 text-6xl mb-4"></i>
-                    <p class="text-gray-600 text-lg">لا توجد باقات</p>
-                    <a href="{{ route('admin.packages.create') }}" class="mt-4 inline-block bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-lg shadow-sky-500/30">
-                        <i class="fas fa-plus mr-2"></i>
-                        إضافة باقة جديدة
-                    </a>
+                <div class="border-t border-line px-4 py-3">
+                    {{ $packages->appends(request()->except('packages_page') + ['tab' => 'packages'])->links() }}
                 </div>
+            </article>
+        @else
+            <article class="rounded-2xl border border-dashed border-line bg-surface px-6 py-14 text-center shadow-soft">
+                <div class="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-[#f2f5f4] text-accent"><i class="fas fa-box text-xl"></i></div>
+                <h3 class="mt-4 text-lg font-semibold text-ink">لا توجد باقات برامج</h3>
+                <p class="mt-1 text-sm text-muted">أنشئ باقة تجمع عدة برامج بسعر موحّد بالدولار.</p>
+                <a href="{{ route('admin.packages.create') }}" class="btn-press mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">إضافة باقة</a>
+            </article>
+        @endif
+    </div>
+
+    {{-- ===== أسعار البرامج ===== --}}
+    <div x-show="activeTab === 'courses'" x-cloak class="space-y-5">
+        <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-graduation-cap text-sm"></i></div>
+                <p class="mt-3 text-xs font-medium text-muted">إجمالي البرامج</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $courseStats['total'] ?? 0 }}</p>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-gift text-sm"></i></div>
+                <p class="mt-3 text-xs font-medium text-muted">مجانية</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-emerald-700">{{ $courseStats['free'] ?? 0 }}</p>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-dollar-sign text-sm"></i></div>
+                <p class="mt-3 text-xs font-medium text-muted">مدفوعة</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $courseStats['paid'] ?? 0 }}</p>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-chart-line text-sm"></i></div>
+                <p class="mt-3 text-xs font-medium text-muted">إجمالي قيمة الأسعار</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ number_format($courseStats['total_revenue'] ?? 0, 0) }} <span class="text-sm font-medium text-muted">USD</span></p>
+            </article>
+        </section>
+
+        <form method="GET" action="{{ route('admin.packages.index') }}" class="rounded-2xl border border-line bg-surface p-4 shadow-soft" x-data="{ showFilters: {{ request()->hasAny(['course_status','course_level','course_language','course_category','course_active']) ? 'true' : 'false' }} }">
+            <input type="hidden" name="tab" value="courses">
+            <div>
+                <label class="{{ $labelClass }}" for="course_search">بحث في البرامج</label>
+                <input type="text" name="course_search" id="course_search" value="{{ request('course_search') }}" placeholder="عنوان، وصف، لغة، مسار..."
+                       class="{{ $fieldClass }}">
+            </div>
+            <button type="button" @click="showFilters = !showFilters" class="mt-3 inline-flex items-center gap-2 text-sm font-medium text-muted hover:text-accent">
+                <i class="fas fa-sliders-h text-xs"></i>
+                فلاتر متقدمة
+                <i class="fas fa-chevron-down text-[10px] transition" :class="{ 'rotate-180': showFilters }"></i>
+            </button>
+            <div x-show="showFilters" x-cloak class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <div>
+                    <label class="{{ $labelClass }}">نوع السعر</label>
+                    <select name="course_status" class="{{ $fieldClass }}">
+                        <option value="">الكل</option>
+                        <option value="free" @selected(request('course_status') === 'free')>مجانية</option>
+                        <option value="paid" @selected(request('course_status') === 'paid')>مدفوعة</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}">المستوى</label>
+                    <select name="course_level" class="{{ $fieldClass }}">
+                        <option value="">الكل</option>
+                        <option value="beginner" @selected(request('course_level') === 'beginner')>مبتدئ</option>
+                        <option value="intermediate" @selected(request('course_level') === 'intermediate')>متوسط</option>
+                        <option value="advanced" @selected(request('course_level') === 'advanced')>متقدم</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}">اللغة / التخصص</label>
+                    <select name="course_language" class="{{ $fieldClass }}">
+                        <option value="">الكل</option>
+                        @foreach($programmingLanguages ?? [] as $lang)
+                            <option value="{{ $lang }}" @selected(request('course_language') == $lang)>{{ $lang }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}">المسار</label>
+                    <select name="course_category" class="{{ $fieldClass }}">
+                        <option value="">الكل</option>
+                        @foreach($categories ?? [] as $category)
+                            <option value="{{ $category }}" @selected(request('course_category') == $category)>{{ $category }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}">الحالة</label>
+                    <select name="course_active" class="{{ $fieldClass }}">
+                        <option value="">الكل</option>
+                        <option value="1" @selected(request('course_active') === '1')>نشط</option>
+                        <option value="0" @selected(request('course_active') === '0')>معطّل</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">تطبيق</button>
+                @if(request()->hasAny(['course_search', 'course_status', 'course_level', 'course_language', 'course_category', 'course_active']))
+                    <a href="{{ route('admin.packages.index', ['tab' => 'courses']) }}" class="inline-flex h-11 items-center rounded-xl border border-line px-4 text-sm text-muted">إعادة تعيين</a>
                 @endif
             </div>
+        </form>
 
-            <!-- تبويب إدارة أسعار الكورسات -->
-            <div x-show="activeTab === 'courses'">
-                <!-- إحصائيات الكورسات -->
-                @if(isset($courseStats))
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-6 border border-blue-200">
-                        <div class="text-sm text-gray-600">إجمالي الكورسات</div>
-                        <div class="text-2xl font-bold text-gray-900 mt-2">{{ $courseStats['total'] ?? 0 }}</div>
-                    </div>
-                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-lg p-6 border border-green-200">
-                        <div class="text-sm text-gray-600">الكورسات المجانية</div>
-                        <div class="text-2xl font-bold text-green-600 mt-2">{{ $courseStats['free'] ?? 0 }}</div>
-                    </div>
-                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-lg p-6 border border-purple-200">
-                        <div class="text-sm text-gray-600">الكورسات المدفوعة</div>
-                        <div class="text-2xl font-bold text-purple-600 mt-2">{{ $courseStats['paid'] ?? 0 }}</div>
-                    </div>
-                    <div class="bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl shadow-lg p-6 border border-sky-200">
-                        <div class="text-sm text-gray-600">إجمالي القيمة</div>
-                        <div class="text-2xl font-bold text-sky-600 mt-2">{{ number_format($courseStats['total_revenue'] ?? 0, 2) }} ج.م</div>
-                    </div>
-                </div>
-                @endif
-
-                <!-- فلاتر الكورسات -->
-                <div class="bg-white rounded-lg sm:rounded-xl shadow-lg border border-gray-200 p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 overflow-hidden" 
-                     x-data="{ showFilters: false }">
-                    <form method="GET" action="{{ route('admin.packages.index') }}" id="courses-filter-form">
-                        <input type="hidden" name="tab" value="courses">
-                        
-                        <!-- البحث الرئيسي -->
-                        <div class="mb-4">
-                            <div class="relative">
-                                <input type="text" name="course_search" id="course_search" value="{{ request('course_search') }}" 
-                                       placeholder="ابحث في الكورسات..."
-                                       class="w-full px-4 py-2.5 sm:py-3 pr-10 sm:pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm sm:text-base">
-                                <button type="submit" class="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-sky-600 p-2">
-                                    <i class="fas fa-search text-sm sm:text-base"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- الفلاتر المتقدمة -->
-                        <div class="border-t border-gray-200 pt-4">
-                            <button type="button" @click="showFilters = !showFilters" 
-                                    class="flex items-center justify-between w-full text-sm font-medium text-gray-700 hover:text-sky-600 transition-colors">
-                                <span>
-                                    <i class="fas fa-filter ml-2"></i>
-                                    فلاتر متقدمة
-                                </span>
-                                <i class="fas fa-chevron-down transition-transform" :class="{ 'rotate-180': showFilters }"></i>
-                            </button>
-                            
-                            <div x-show="showFilters" x-transition class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-                                <!-- فلتر الحالة (مجاني/مدفوع) -->
-                                <div>
-                                    <label for="course_status" class="block text-xs font-medium text-gray-700 mb-1.5 sm:mb-2">نوع السعر</label>
-                                    <select name="course_status" id="course_status" 
-                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                                        <option value="">الكل</option>
-                                        <option value="free" {{ request('course_status') == 'free' ? 'selected' : '' }}>مجانية</option>
-                                        <option value="paid" {{ request('course_status') == 'paid' ? 'selected' : '' }}>مدفوعة</option>
-                                    </select>
-                                </div>
-
-                                <!-- فلتر المستوى -->
-                                <div>
-                                    <label for="course_level" class="block text-xs font-medium text-gray-700 mb-1.5 sm:mb-2">المستوى</label>
-                                    <select name="course_level" id="course_level" 
-                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                                        <option value="">الكل</option>
-                                        <option value="beginner" {{ request('course_level') == 'beginner' ? 'selected' : '' }}>مبتدئ</option>
-                                        <option value="intermediate" {{ request('course_level') == 'intermediate' ? 'selected' : '' }}>متوسط</option>
-                                        <option value="advanced" {{ request('course_level') == 'advanced' ? 'selected' : '' }}>متقدم</option>
-                                    </select>
-                                </div>
-
-                                <!-- فلتر مجال التخصص -->
-                                <div>
-                                    <label for="course_language" class="block text-xs font-medium text-gray-700 mb-1.5 sm:mb-2">مجال التخصص</label>
-                                    <select name="course_language" id="course_language" 
-                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                                        <option value="">الكل</option>
-                                        @if(isset($programmingLanguages) && $programmingLanguages->count() > 0)
-                                            @foreach($programmingLanguages as $lang)
-                                                <option value="{{ $lang }}" {{ request('course_language') == $lang ? 'selected' : '' }}>{{ $lang }}</option>
-                                            @endforeach
-                                        @endif
-                                    </select>
-                                </div>
-
-                                <!-- فلتر المسار -->
-                                <div>
-                                    <label for="course_category" class="block text-xs font-medium text-gray-700 mb-1.5 sm:mb-2">المسار</label>
-                                    <select name="course_category" id="course_category" 
-                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                                        <option value="">الكل</option>
-                                        @if(isset($categories) && $categories->count() > 0)
-                                            @foreach($categories as $category)
-                                                <option value="{{ $category }}" {{ request('course_category') == $category ? 'selected' : '' }}>{{ $category }}</option>
-                                            @endforeach
-                                        @endif
-                                    </select>
-                                </div>
-
-                                <!-- فلتر الحالة (نشط/معطل) -->
-                                <div>
-                                    <label for="course_active" class="block text-xs font-medium text-gray-700 mb-1.5 sm:mb-2">الحالة</label>
-                                    <select name="course_active" id="course_active" 
-                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                                        <option value="">الكل</option>
-                                        <option value="1" {{ request('course_active') == '1' ? 'selected' : '' }}>نشط</option>
-                                        <option value="0" {{ request('course_active') == '0' ? 'selected' : '' }}>معطل</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- أزرار الإجراءات -->
-                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0 mt-4 pt-4 border-t border-gray-200">
-                                <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white px-4 sm:px-6 py-2.5 sm:py-2 rounded-lg font-medium transition-colors shadow-lg shadow-sky-500/30 text-sm">
-                                    <i class="fas fa-search ml-2"></i>
-                                    تطبيق الفلاتر
-                                </button>
-                                @if(request()->hasAny(['course_search', 'course_status', 'course_level', 'course_language', 'course_category', 'course_active']))
-                                <a href="{{ route('admin.packages.index', ['tab' => 'courses']) }}" class="w-full sm:w-auto text-center text-gray-600 hover:text-gray-900 text-sm font-medium py-2.5 sm:py-0">
-                                    <i class="fas fa-times ml-2"></i>
-                                    إلغاء الفلاتر
-                                </a>
-                                @endif
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- قائمة الكورسات -->
-                @if(isset($courses) && $courses->count() > 0)
-                <!-- معلومات النتائج -->
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-4">
-                    <div class="text-xs sm:text-sm text-gray-600">
-                        عرض <span class="font-semibold text-gray-900">{{ $courses->firstItem() }}</span> 
-                        إلى <span class="font-semibold text-gray-900">{{ $courses->lastItem() }}</span> 
-                        من أصل <span class="font-semibold text-gray-900">{{ $courses->total() }}</span> كورس
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 course-grid">
-                    @foreach($courses as $index => $course)
-                    <div class="bg-white rounded-lg sm:rounded-xl shadow-md sm:shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 course-card" 
-                         x-data="{
-                             editing: false, 
-                             price: {{ $course->price ?? 0 }}, 
-                             isFree: {{ $course->is_free ? 'true' : 'false' }},
-                             courseId: {{ $course->id }},
-                             updatePrice(event) {
-                                 event.preventDefault();
-                                 const form = event.target;
-                                 fetch(form.action, {
-                                     method: 'POST',
-                                     headers: {
-                                         'Content-Type': 'application/json',
-                                         'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                                         'Accept': 'application/json'
-                                     },
-                                     body: JSON.stringify({
-                                         price: this.price,
-                                         is_free: this.isFree || this.price == 0
-                                     })
-                                 })
-                                 .then(response => response.json())
-                                 .then(data => {
-                                     if (data.success) {
-                                         this.editing = false;
-                                         location.reload();
-                                     } else {
-                                         alert('حدث خطأ أثناء تحديث السعر');
+        @if(isset($courses) && $courses->count() > 0)
+            <p class="text-xs text-muted">عرض <span class="font-semibold text-ink">{{ $courses->firstItem() }}</span>–<span class="font-semibold text-ink">{{ $courses->lastItem() }}</span> من <span class="font-semibold text-ink">{{ $courses->total() }}</span></p>
+            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                @foreach($courses as $course)
+                    <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft"
+                             x-data="{
+                                 editing: false,
+                                 price: {{ (float) ($course->price ?? 0) }},
+                                 isFree: {{ $course->is_free ? 'true' : 'false' }},
+                                 saving: false,
+                                 async save(event) {
+                                     event.preventDefault();
+                                     this.saving = true;
+                                     try {
+                                         const res = await fetch(event.target.action, {
+                                             method: 'POST',
+                                             headers: {
+                                                 'Content-Type': 'application/json',
+                                                 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                                 'Accept': 'application/json'
+                                             },
+                                             body: JSON.stringify({ price: this.price, is_free: this.isFree || this.price == 0 })
+                                         });
+                                         const data = await res.json();
+                                         if (data.success) { this.editing = false; location.reload(); }
+                                         else { alert('تعذّر تحديث السعر'); }
+                                     } catch (e) {
+                                         alert('تعذّر تحديث السعر');
+                                     } finally {
+                                         this.saving = false;
                                      }
-                                 })
-                                 .catch(error => {
-                                     console.error('Error:', error);
-                                     alert('حدث خطأ أثناء تحديث السعر');
-                                 });
-                             }
-                         }">
-                        <!-- Course Header -->
-                        <div class="h-28 sm:h-32 bg-gradient-to-br flex items-center justify-center relative overflow-hidden
-                            @if($index % 6 == 0) from-sky-400 to-sky-600
-                            @elseif($index % 6 == 1) from-blue-500 to-blue-700
-                            @elseif($index % 6 == 2) from-indigo-500 to-indigo-700
-                            @elseif($index % 6 == 3) from-purple-500 to-purple-700
-                            @elseif($index % 6 == 4) from-pink-500 to-pink-700
-                            @else from-red-500 to-red-700
-                            @endif">
-                            @if($course->thumbnail)
-                                <img src="{{ storage_asset($course->thumbnail) }}" alt="{{ $course->title }}" class="w-full h-full object-cover">
-                            @else
-                                <i class="fas fa-code text-white text-4xl"></i>
-                            @endif
-                            @if($course->is_featured)
-                            <div class="absolute top-2 left-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold">
-                                مميز
-                            </div>
-                            @endif
-                            @if($course->level)
-                            <div class="absolute top-2 right-2 bg-white/20 backdrop-blur-sm rounded-full px-2 py-1">
-                                <span class="text-white text-xs font-medium">
-                                    @if($course->level == 'beginner') مبتدئ
-                                    @elseif($course->level == 'intermediate') متوسط
-                                    @else متقدم
+                                 }
+                             }">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <h3 class="truncate text-sm font-semibold text-ink">{{ $course->title }}</h3>
+                                <div class="mt-2 flex flex-wrap gap-1">
+                                    @if($course->programming_language)
+                                        <span class="rounded-full bg-[#f2f5f4] px-2 py-0.5 text-[11px] text-ink-soft">{{ $course->programming_language }}</span>
                                     @endif
-                                </span>
-                            </div>
-                            @endif
-                        </div>
-                        
-                        <!-- Course Content -->
-                        <div class="p-4 sm:p-5">
-                            <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-2 line-clamp-2">{{ $course->title }}</h3>
-                            @if($course->description)
-                            <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 line-clamp-2">{{ Str::limit($course->description, 80) }}</p>
-                            @endif
-                            
-                            <!-- Course Info -->
-                            <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4 text-[10px] sm:text-xs">
-                                @if($course->programming_language)
-                                <span class="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-800">
-                                    <i class="fas fa-code ml-1 text-[10px]"></i>
-                                    {{ $course->programming_language }}
-                                </span>
-                                @endif
-                                @if($course->category)
-                                <span class="inline-flex items-center px-2 py-1 rounded-full bg-purple-100 text-purple-800">
-                                    <i class="fas fa-tag ml-1 text-[10px]"></i>
-                                    {{ $course->category }}
-                                </span>
-                                @endif
-                                @if($course->lessons_count)
-                                <span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-700">
-                                    <i class="fas fa-play-circle ml-1 text-[10px]"></i>
-                                    {{ $course->lessons_count }} درس
-                                </span>
-                                @endif
-                                @if($course->duration_hours)
-                                <span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-700">
-                                    <i class="fas fa-clock ml-1 text-[10px]"></i>
-                                    {{ $course->duration_hours }} ساعة
-                                </span>
-                                @endif
-                            </div>
-                            
-                            <!-- Price Section -->
-                            <div class="border-t border-gray-200 pt-3 sm:pt-4 space-y-2 sm:space-y-3">
-                                <!-- Current Price -->
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs sm:text-sm text-gray-600">السعر الحالي:</span>
-                                    @if($course->is_free || $course->price == 0)
-                                        <span class="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium bg-green-100 text-green-800">
-                                            <i class="fas fa-gift ml-1 text-[10px] sm:text-xs"></i>
-                                            مجاني
-                                        </span>
-                                    @else
-                                        <span class="text-base sm:text-lg font-bold text-sky-600">{{ number_format($course->price, 2) }} ج.م</span>
+                                    @if($course->category)
+                                        <span class="rounded-full bg-[#f2f5f4] px-2 py-0.5 text-[11px] text-ink-soft">{{ $course->category }}</span>
                                     @endif
+                                    <span class="rounded-full px-2 py-0.5 text-[11px] font-medium {{ $course->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }}">
+                                        {{ $course->is_active ? 'نشط' : 'معطّل' }}
+                                    </span>
                                 </div>
-                                
-                                <!-- Edit Price -->
-                                <div x-show="!editing" class="flex items-center justify-between">
-                                    <span class="text-xs sm:text-sm text-gray-600">السعر الجديد:</span>
-                                    <div class="flex items-center gap-1.5 sm:gap-2">
-                                        <span class="text-xs sm:text-sm font-medium text-gray-700" x-text="isFree || price == 0 ? 'مجاني' : price.toFixed(2) + ' ج.م'"></span>
-                                        <button x-on:click="editing = true" class="p-1.5 sm:p-2 text-sky-600 hover:bg-sky-50 rounded-lg transition-colors">
-                                            <i class="fas fa-edit text-xs sm:text-sm"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <form x-show="editing" 
-                                      x-cloak
-                                      action="{{ route('admin.packages.update-price', $course) }}" 
-                                      method="POST"
-                                      x-on:submit.prevent="updatePrice($event)"
-                                      class="space-y-2">
-                                    @csrf
-                                    <div class="flex items-center gap-1.5 sm:gap-2">
-                                        <input type="number" x-model.number="price" step="0.01" min="0" 
-                                               class="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-sky-500">
-                                        <label class="flex items-center text-[10px] sm:text-xs text-gray-600 whitespace-nowrap">
-                                            <input type="checkbox" x-model="isFree" class="ml-1 w-3 h-3 sm:w-4 sm:h-4">
-                                            مجاني
-                                        </label>
-                                    </div>
-                                    <div class="flex items-center gap-1.5 sm:gap-2">
-                                        <button type="submit" class="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors">
-                                            <i class="fas fa-check ml-1 text-[10px] sm:text-xs"></i>
-                                            حفظ
-                                        </button>
-                                        <button type="button" x-on:click="editing = false; price = {{ $course->price ?? 0 }}; isFree = {{ $course->is_free ? 'true' : 'false' }}" class="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-xs sm:text-sm transition-colors">
-                                            <i class="fas fa-times text-xs"></i>
-                                        </button>
-                                    </div>
-                                </form>
                             </div>
-                            
-                            <!-- Status and Actions -->
-                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
-                                <span class="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium
-                                    {{ $course->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                    <i class="fas fa-circle ml-1 text-[6px]"></i>
-                                    {{ $course->is_active ? 'نشط' : 'معطل' }}
-                                </span>
-                                <a href="{{ route('admin.advanced-courses.show', $course) }}" class="text-sky-600 hover:text-sky-900 text-xs sm:text-sm font-medium">
-                                    <i class="fas fa-eye ml-1 text-xs"></i>
-                                    عرض التفاصيل
-                                </a>
-                            </div>
+                            <a href="{{ route('admin.advanced-courses.show', $course) }}" class="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-line text-muted hover:bg-accent-soft hover:text-accent"><i class="fas fa-eye text-xs"></i></a>
                         </div>
-                    </div>
-                    @endforeach
-                </div>
-                
-                <!-- Pagination -->
-                <div class="mt-4 sm:mt-6 flex justify-center overflow-x-auto">
-                    <div class="min-w-0">
-                        {{ $courses->appends(request()->except('courses_page'))->links() }}
-                    </div>
-                </div>
-                @else
-                <div class="bg-white rounded-xl shadow-lg p-12 text-center border border-gray-200">
-                    <div class="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-graduation-cap text-gray-400 text-4xl"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">لا توجد كورسات</h3>
-                    <p class="text-gray-600 mb-4">لم يتم العثور على كورسات تطابق معايير البحث</p>
-                    <a href="{{ route('admin.advanced-courses.create') }}" class="inline-block bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-lg shadow-sky-500/30">
-                        <i class="fas fa-plus mr-2"></i>
-                        إضافة كورس جديد
-                    </a>
-                </div>
-                @endif
+
+                        <div class="mt-4 border-t border-line pt-3">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-muted">السعر الحالي</span>
+                                @if($course->is_free || (float) $course->price == 0)
+                                    <span class="font-medium text-emerald-700">مجاني</span>
+                                @else
+                                    <span class="font-semibold tabular-nums text-ink">{{ number_format((float) $course->price, 2) }} USD</span>
+                                @endif
+                            </div>
+
+                            <div x-show="!editing" class="mt-3 flex items-center justify-between">
+                                <span class="text-xs text-muted">تعديل سريع</span>
+                                <button type="button" @click="editing = true" class="btn-press inline-flex h-8 items-center gap-1 rounded-lg border border-line px-3 text-xs font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                                    <i class="fas fa-edit"></i> تعديل
+                                </button>
+                            </div>
+
+                            <form x-show="editing" x-cloak action="{{ route('admin.packages.update-price', $course) }}" method="POST" @submit.prevent="save($event)" class="mt-3 space-y-2">
+                                @csrf
+                                <div class="flex items-center gap-2">
+                                    <input type="number" x-model.number="price" step="0.01" min="0" class="h-10 flex-1 rounded-xl border border-line px-3 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">
+                                    <label class="inline-flex items-center gap-1 text-xs text-muted whitespace-nowrap">
+                                        <input type="checkbox" x-model="isFree" class="rounded border-line text-accent focus:ring-accent/20"> مجاني
+                                    </label>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button type="submit" :disabled="saving" class="btn-press inline-flex h-9 flex-1 items-center justify-center rounded-xl bg-accent text-xs font-medium text-white">حفظ</button>
+                                    <button type="button" @click="editing = false; price = {{ (float) ($course->price ?? 0) }}; isFree = {{ $course->is_free ? 'true' : 'false' }}" class="inline-flex h-9 items-center rounded-xl border border-line px-3 text-xs text-muted">إلغاء</button>
+                                </div>
+                            </form>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+            <div class="flex justify-center">{{ $courses->appends(request()->except('courses_page') + ['tab' => 'courses'])->links() }}</div>
+        @else
+            <article class="rounded-2xl border border-dashed border-line bg-surface px-6 py-14 text-center shadow-soft">
+                <h3 class="text-lg font-semibold text-ink">لا توجد برامج</h3>
+                <p class="mt-1 text-sm text-muted">لم يُعثر على برامج تطابق الفلاتر.</p>
+            </article>
+        @endif
+    </div>
+
+    {{-- ===== باقات الحصص المباشرة ===== --}}
+    <div x-show="activeTab === 'tutoring'" x-cloak class="space-y-5">
+        <div class="rounded-2xl border border-accent/20 bg-accent-soft/40 px-4 py-4 text-sm text-ink shadow-soft">
+            <p class="font-semibold text-ink">حساب الباقة تلقائيًا (مواصفات Glottical)</p>
+            <p class="mt-1 text-muted">السعر الأصلي = سعر الساعة × حصص/شهر × عدد الأشهر. يمكن خفض السعر النهائي لمنح خصم على طبقات الاشتراك.</p>
+            <div class="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium">
+                <span class="rounded-xl border border-line bg-surface px-3 py-1.5">سعر الساعة 10$</span>
+                <span class="text-accent">×</span>
+                <span class="rounded-xl border border-line bg-surface px-3 py-1.5">8 حصص/شهر</span>
+                <span class="text-accent">×</span>
+                <span class="rounded-xl border border-line bg-surface px-3 py-1.5">3 أشهر</span>
+                <span class="text-accent">=</span>
+                <span class="rounded-xl bg-accent px-3 py-1.5 text-white">{{ number_format($exampleCalc['original_price'] ?? 240, 0) }}$ أصلي</span>
+                <span class="rounded-xl border border-line bg-surface px-3 py-1.5">عرض {{ number_format($exampleCalc['price'] ?? 200, 0) }}$ (وفر {{ number_format(($exampleCalc['original_price'] ?? 240) - ($exampleCalc['price'] ?? 200), 0) }}$)</span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+                @foreach($pricingTiers ?? [] as $tier)
+                    <span class="rounded-full bg-surface px-2.5 py-1 text-[11px] font-medium text-ink-soft border border-line">
+                        {{ $tier['months'] }} شهر · خصم مقترح {{ $tier['discount'] }}%
+                    </span>
+                @endforeach
             </div>
         </div>
+
+        <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-layer-group text-sm"></i></div>
+                <p class="mt-3 text-xs font-medium text-muted">باقات الحصص</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $tutoringStats['total'] ?? 0 }}</p>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-check text-sm"></i></div>
+                <p class="mt-3 text-xs font-medium text-muted">نشطة</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-emerald-700">{{ $tutoringStats['active'] ?? 0 }}</p>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-star text-sm"></i></div>
+                <p class="mt-3 text-xs font-medium text-muted">مميزة</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $tutoringStats['featured'] ?? 0 }}</p>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-percent text-sm"></i></div>
+                <p class="mt-3 text-xs font-medium text-muted">متوسط التوفير</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $tutoringStats['avg_savings'] ?? 0 }}%</p>
+            </article>
+        </section>
+
+        <form method="GET" action="{{ route('admin.packages.index') }}" class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <input type="hidden" name="tab" value="tutoring">
+            <div class="grid gap-3 md:grid-cols-3">
+                <div class="md:col-span-2">
+                    <label class="{{ $labelClass }}">بحث</label>
+                    <input type="text" name="tutoring_search" value="{{ request('tutoring_search') }}" placeholder="اسم الباقة أو المجموعة..." class="{{ $fieldClass }}">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}">الحالة</label>
+                    <select name="tutoring_status" class="{{ $fieldClass }}">
+                        <option value="">الكل</option>
+                        <option value="active" @selected(request('tutoring_status') === 'active')>نشطة</option>
+                        <option value="inactive" @selected(request('tutoring_status') === 'inactive')>معطّلة</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-3 flex gap-2">
+                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">تطبيق</button>
+                @if(request()->hasAny(['tutoring_search', 'tutoring_status']))
+                    <a href="{{ route('admin.packages.index', ['tab' => 'tutoring']) }}" class="inline-flex h-11 items-center rounded-xl border border-line px-4 text-sm text-muted">إعادة تعيين</a>
+                @endif
+            </div>
+        </form>
+
+        @if(isset($tutoringPackages) && $tutoringPackages->count() > 0)
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[900px] text-sm">
+                        <thead>
+                            <tr class="border-b border-line text-right text-xs font-medium text-muted">
+                                <th class="px-4 py-3">الباقة</th>
+                                <th class="px-4 py-3">المجموعة</th>
+                                <th class="px-4 py-3">الأشهر</th>
+                                <th class="px-4 py-3">حصص/شهر</th>
+                                <th class="px-4 py-3">سعر الساعة</th>
+                                <th class="px-4 py-3">الأصلي ← النهائي</th>
+                                <th class="px-4 py-3">توفير</th>
+                                <th class="px-4 py-3">إدارة</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-line">
+                            @foreach($tutoringPackages as $tp)
+                                @php $group = $tp->tutoringGroup; @endphp
+                                <tr class="hover:bg-[#f8faf9]">
+                                    <td class="px-4 py-3">
+                                        <div class="font-medium text-ink">{{ $tp->name }}</div>
+                                        <div class="mt-1 flex flex-wrap gap-1">
+                                            <span class="rounded-full px-2 py-0.5 text-[11px] font-medium {{ $tp->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }}">
+                                                {{ $tp->is_active ? 'نشط' : 'معطّل' }}
+                                            </span>
+                                            @if($tp->is_featured)
+                                                <span class="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800">مميز</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="text-ink">{{ $group?->title ?? '—' }}</div>
+                                        <div class="text-xs text-muted">{{ $group?->instructor?->name ?? '' }}</div>
+                                    </td>
+                                    <td class="px-4 py-3 tabular-nums">{{ $tp->duration_months }}</td>
+                                    <td class="px-4 py-3 tabular-nums">{{ $tp->sessions_per_month }}</td>
+                                    <td class="px-4 py-3 tabular-nums">{{ number_format((float) $tp->hourly_rate, 2) }} {{ $tp->currency ?: 'USD' }}</td>
+                                    <td class="px-4 py-3">
+                                        <div class="tabular-nums text-muted line-through text-xs">{{ number_format((float) ($tp->original_price ?? 0), 0) }}</div>
+                                        <div class="font-semibold tabular-nums text-ink">{{ $tp->formattedPrice() }}</div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        @if($tp->savingsPercent() > 0)
+                                            <span class="font-medium text-emerald-700">{{ $tp->savingsPercent() }}%</span>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        @if($group)
+                                            <div class="flex items-center gap-2">
+                                                <a href="{{ route('admin.tutoring-groups.packages.index', $group) }}" class="inline-flex h-8 items-center rounded-lg border border-line px-2.5 text-xs font-medium text-ink hover:bg-accent-soft hover:text-accent">باقات المجموعة</a>
+                                                <a href="{{ route('admin.tutoring-groups.packages.edit', [$group, $tp]) }}" class="inline-flex size-8 items-center justify-center rounded-lg border border-line text-muted hover:bg-accent-soft hover:text-accent" title="تعديل"><i class="fas fa-edit text-xs"></i></a>
+                                            </div>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="border-t border-line px-4 py-3">
+                    {{ $tutoringPackages->appends(request()->except('tutoring_page') + ['tab' => 'tutoring'])->links() }}
+                </div>
+            </article>
+        @else
+            <article class="rounded-2xl border border-dashed border-line bg-surface px-6 py-14 text-center shadow-soft">
+                <div class="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-[#f2f5f4] text-accent"><i class="fas fa-chalkboard-teacher text-xl"></i></div>
+                <h3 class="mt-4 text-lg font-semibold text-ink">لا توجد باقات حصص بعد</h3>
+                <p class="mt-1 text-sm text-muted">أضف باقات من داخل كل مجموعة (فردية أو جماعية) بالحساب التلقائي.</p>
+                <a href="{{ route('admin.tutoring-groups.index', 'individual') }}" class="btn-press mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">فتح مجموعات الحصص</a>
+            </article>
+        @endif
     </div>
 </div>
 @endsection

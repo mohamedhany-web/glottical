@@ -31,10 +31,14 @@
         nav?.classList.toggle('is-menu-open', open);
         document.body.classList.toggle('sana-menu-open', open);
         toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-        toggle.setAttribute('aria-label', open ? 'Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©' : 'ÙØªØ­ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©');
+        var isAr = document.documentElement.lang === 'ar' || document.documentElement.dir === 'rtl';
+        toggle.setAttribute('aria-label', open
+            ? (isAr ? 'إغلاق القائمة' : 'Close menu')
+            : (isAr ? 'فتح القائمة' : 'Open menu'));
         var icon = toggle.querySelector('i');
         if (icon) icon.className = open ? 'fas fa-times' : 'fas fa-bars';
         if (backdrop) backdrop.classList.toggle('is-visible', open);
+        if (open) closeLangDropdowns(null);
     }
 
     if (toggle && menu) {
@@ -46,12 +50,42 @@
         });
         backdrop?.addEventListener('click', function () { setMenuOpen(false); });
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') setMenuOpen(false);
+            if (e.key === 'Escape') {
+                setMenuOpen(false);
+                closeLangDropdowns(null);
+            }
         });
         window.addEventListener('resize', function () {
             if (window.innerWidth >= 992) setMenuOpen(false);
         });
     }
+
+    function closeLangDropdowns(except) {
+        document.querySelectorAll('[data-lang-dropdown].is-open').forEach(function (dd) {
+            if (dd === except) return;
+            dd.classList.remove('is-open');
+            var btn = dd.querySelector('.sana-nav__lang-btn');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+        });
+    }
+
+    document.querySelectorAll('[data-lang-dropdown]').forEach(function (dd) {
+        var btn = dd.querySelector('.sana-nav__lang-btn');
+        if (!btn) return;
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var open = !dd.classList.contains('is-open');
+            if (open) setMenuOpen(false);
+            closeLangDropdowns(open ? dd : null);
+            dd.classList.toggle('is-open', open);
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        dd.querySelectorAll('.sana-nav__lang-option').forEach(function (link) {
+            link.addEventListener('click', function () { closeLangDropdowns(null); });
+        });
+    });
+
+    document.addEventListener('click', function () { closeLangDropdowns(null); });
 
     document.querySelectorAll('.sana-reveal').forEach(function (el) {
         if ('IntersectionObserver' in window) {

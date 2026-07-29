@@ -130,6 +130,11 @@
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-2">
                                     <a href="{{ route('admin.tutoring-groups.edit', [$type, $group]) }}" class="btn-press inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-ink hover:border-accent/30 hover:text-accent">تعديل</a>
+                                    @if($type === 'collective')
+                                        <a href="{{ route('admin.tutoring-groups.cohorts.index', $group) }}" class="btn-press inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-ink hover:border-accent/30 hover:text-accent">دفعات</a>
+                                    @else
+                                        <a href="{{ route('admin.tutoring-groups.packages.index', $group) }}" class="btn-press inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-ink hover:border-accent/30 hover:text-accent">باقات</a>
+                                    @endif
                                     <form method="POST" action="{{ route('admin.tutoring-groups.toggle-status', [$type, $group]) }}">
                                         @csrf
                                         <button type="submit" class="btn-press inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-ink-soft hover:border-accent/30 hover:text-accent">

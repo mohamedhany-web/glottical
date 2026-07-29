@@ -4,442 +4,326 @@
 
 @push('styles')
 <style>
-    .stat-card {
-        background: white;
-        border: 1px solid rgba(226, 232, 240, 0.9);
-        border-radius: 16px;
-        padding: 1.25rem;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative; overflow: hidden;
+    .stu-dash { --stu-blue:#0B3D91; --stu-dark:#072A66; --stu-gold:#F5B800; --stu-canvas:#F4F7FC; --stu-line:#E8EEF8; --stu-muted:#5B6577; }
+    .stu-panel {
+        background: #fff;
+        border: 1px solid var(--stu-line);
+        border-radius: 18px;
     }
-    .stat-card::after {
-        content: ''; position: absolute; inset: 0;
-        background: linear-gradient(135deg, transparent 60%, rgba(40, 53, 147, 0.03) 100%);
-        pointer-events: none; border-radius: 16px;
+    .dark .stu-panel { background: #111827; border-color: #1f2937; }
+    .stu-progress {
+        height: 8px; border-radius: 999px; background: var(--stu-line); overflow: hidden;
     }
-    .stat-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 16px 40px -12px rgba(15, 23, 42, 0.08);
-        border-color: rgba(40, 53, 147, 0.18);
+    .dark .stu-progress { background: #334155; }
+    .stu-progress > span {
+        display: block; height: 100%; border-radius: 999px;
+        background: linear-gradient(90deg, var(--stu-gold), #FFD24D);
     }
-    .stat-icon {
-        width: 46px; height: 46px; border-radius: 12px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.1rem; color: white;
-        transition: transform 0.25s ease;
+    .stu-chip {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 12px; border-radius: 999px;
+        font-size: 11px; font-weight: 800;
+        background: #EEF3FB; color: var(--stu-blue);
     }
-    .stat-card:hover .stat-icon { transform: scale(1.08) rotate(2deg); }
-
-    .section-card {
-        background: white;
-        border: 1px solid rgba(226, 232, 240, 0.9);
-        border-radius: 16px;
-        transition: all 0.2s ease;
+    .stu-action {
+        display: flex; flex-direction: column; gap: 10px;
+        padding: 16px; border-radius: 16px;
+        border: 1px solid var(--stu-line); background: #fff;
+        text-decoration: none !important; color: inherit;
+        transition: border-color .15s, transform .15s, box-shadow .15s;
+        min-height: 108px;
     }
-    .section-card:hover {
-        box-shadow: 0 8px 25px -8px rgba(15, 23, 42, 0.06);
-        border-color: rgba(6, 182, 212, 0.12);
+    .stu-action:hover {
+        border-color: #C5D4EF; transform: translateY(-2px);
+        box-shadow: 0 12px 28px -16px rgba(11,61,145,.25);
     }
-
-    .progress-bar {
-        height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;
+    .dark .stu-action { background: #111827; border-color: #1f2937; }
+    .stu-action__icon {
+        width: 40px; height: 40px; border-radius: 12px;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: #EEF3FB; color: var(--stu-blue); font-size: 15px;
     }
-    .progress-bar .fill {
-        height: 100%; border-radius: 3px;
-        background: linear-gradient(90deg, #283593, #FB5607);
-        position: relative;
-    }
-    .progress-bar .fill::after {
-        content: ''; position: absolute; inset: 0;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
-        animation: shimmer 2.5s infinite;
-    }
-    @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
-
-    .course-row {
-        padding: 0.875rem 1rem; border-radius: 12px;
+    .stu-action--gold .stu-action__icon { background: #FFF6D6; color: #8A6A00; }
+    .stu-row {
+        display: flex; align-items: center; gap: 12px;
+        padding: 12px; border-radius: 14px;
         border: 1px solid transparent;
-        transition: all 0.2s ease;
+        transition: background .15s, border-color .15s;
+        text-decoration: none !important; color: inherit;
     }
-    .course-row:hover {
-        background: #f8fafc;
-        border-color: #e2e8f0;
-    }
-
-    .mini-card {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 0.75rem;
-        transition: all 0.2s ease;
-    }
-    .mini-card:hover {
-        background: white;
-        border-color: #cbd5e1;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-
-    .badge {
-        display: inline-flex; align-items: center; gap: 4px;
-        padding: 3px 10px; border-radius: 6px;
-        font-size: 11px; font-weight: 600;
-    }
-
-    /* وضع داكن — نفس منطق لوحة الإدارة / التخطيط العام (أنماط مخصصة كانت فاتحة فقط) */
-    .dark .course-row {
-        border-color: rgba(51, 65, 85, 0.5);
-    }
-    .dark .course-row:hover {
-        background: rgba(51, 65, 85, 0.45);
-        border-color: #475569;
-    }
-    .dark .mini-card {
-        background: rgba(30, 41, 59, 0.85) !important;
-        border-color: #475569 !important;
-        color: #e2e8f0;
-    }
-    .dark .mini-card:hover {
-        background: rgba(51, 65, 85, 0.55) !important;
-        border-color: #64748b !important;
-    }
-    .dark .progress-bar {
-        background: #334155;
-    }
-        .dark .progress-bar .fill {
-        background: linear-gradient(90deg, #818cf8, #fb7185);
-    }
+    .stu-row:hover { background: var(--stu-canvas); border-color: var(--stu-line); }
+    .dark .stu-row:hover { background: #1f2937; border-color: #334155; }
 </style>
 @endpush
 
 @section('content')
 @php
-    $progress = min((int) $stats['total_progress'], 100);
-    $circumference = 2 * 3.14159 * 40;
-    $strokeDashoffset = $circumference - ($progress / 100) * $circumference;
+    $progress = min((int) ($stats['total_progress'] ?? 0), 100);
+    $isRtl = app()->getLocale() === 'ar';
 @endphp
 
-<div class="space-y-6">
-    {{-- ترحيب --}}
-    <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200/80 dark:border-slate-700 overflow-hidden">
-        <div class="bg-gradient-to-l from-[#FFE5F7]/70 via-white to-white dark:from-slate-800/80 dark:via-slate-800/90 dark:to-slate-900/90 p-5 sm:p-6">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
-                <div class="flex-1 min-w-0">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#FFE5F7] dark:bg-brand-900/30 text-[#283593] dark:text-brand-300 text-xs font-bold mb-3 border border-[#f5c7e8] dark:border-brand-800/50">
-                        <i class="fas fa-chart-line text-[10px]"></i>
-                        {{ __('student.your_dashboard') }}
+<div class="stu-dash space-y-5">
+    {{-- Greeting strip --}}
+    <section class="stu-panel overflow-hidden">
+        <div class="relative px-5 py-5 sm:px-6 sm:py-6">
+            <div class="absolute inset-y-0 {{ $isRtl ? 'left-0' : 'right-0' }} w-40 sm:w-56 pointer-events-none opacity-90"
+                 style="background: radial-gradient(ellipse at center, rgba(245,184,0,0.22), transparent 70%);"></div>
+            <div class="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+                <div class="min-w-0">
+                    <span class="stu-chip mb-3">
+                        <i class="fas fa-language text-[10px]"></i>
+                        {{ config('app.name') }} · {{ __('student.your_dashboard') }}
                     </span>
-                    <h1 class="font-heading text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 mb-1 leading-tight">
+                    <h1 class="font-heading text-2xl sm:text-[28px] font-black tracking-tight text-[#0B1220] dark:text-white leading-tight">
                         {{ __('student.welcome_name', ['name' => auth()->user()->name]) }}
                     </h1>
-                    <p class="text-slate-500 dark:text-slate-400 text-sm max-w-lg">{{ __('student.dashboard_subtitle') }}</p>
+                    <p class="mt-1.5 text-sm text-[color:var(--stu-muted)] dark:text-gray-400 max-w-xl">
+                        {{ $isRtl ? 'منصتك للتعلّم المباشر أولاً — مجموعات وحصص فردية وبث، والكورسات المسجّلة داعمة لمسارك.' : 'Live learning first — groups, 1:1, and broadcasts; recorded courses support your path.' }}
+                    </p>
                 </div>
-                <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 flex-shrink-0">
-                    @hasPermission('student.view.courses')
-                    <a href="{{ route('public.courses') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#283593] hover:bg-[#1f2a7a] text-white text-sm font-bold shadow-md shadow-[#283593]/25 transition-colors order-2 sm:order-1">
-                        <i class="fas fa-th-large text-xs"></i>
-                        {{ __('student.courses') }}
+                <div class="w-full lg:w-56 flex-shrink-0">
+                    <div class="flex items-center justify-between text-xs font-bold mb-2">
+                        <span class="text-[color:var(--stu-muted)]">{{ __('student.total_progress') }}</span>
+                        <span class="text-[#0B3D91] dark:text-blue-300 tabular-nums">{{ $progress }}%</span>
+                    </div>
+                    <div class="stu-progress"><span style="width: {{ $progress }}%"></span></div>
+                    <p class="mt-1.5 text-[11px] text-[color:var(--stu-muted)]">{{ __('student.from_course_completion') }}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- Next live / tutoring --}}
+    @if(!empty($upcomingTutoringBooking))
+        <section class="rounded-2xl overflow-hidden border border-[#0B3D91]/20 bg-[#0B3D91] text-white shadow-[0_18px_40px_-20px_rgba(11,61,145,0.55)]">
+            <div class="px-5 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="min-w-0">
+                    <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#F5B800]">{{ $isRtl ? 'حصتك القادمة' : 'Next session' }}</p>
+                    <h2 class="mt-1 text-xl font-black truncate">{{ $upcomingTutoringBooking->tutoringGroup?->title ?? ($isRtl ? 'حصة مجموعة' : 'Group session') }}</h2>
+                    <p class="mt-1 text-sm text-white/75">
+                        <i class="far fa-clock ml-1"></i>
+                        {{ $upcomingTutoringBooking->starts_at?->timezone(config('app.timezone'))->format('Y-m-d H:i') }}
+                    </p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    @if($upcomingTutoringBooking->classroomMeeting)
+                        <a href="{{ url('classroom/join/'.$upcomingTutoringBooking->classroomMeeting->code) }}"
+                           class="inline-flex items-center gap-2 rounded-xl bg-[#F5B800] px-4 py-2.5 text-sm font-extrabold text-[#072A66] hover:brightness-105">
+                            <i class="fas fa-video"></i> {{ $isRtl ? 'دخول Live' : 'Join Live' }}
+                        </a>
+                    @endif
+                    <a href="{{ route('student.tutoring-bookings.show', $upcomingTutoringBooking) }}"
+                       class="inline-flex items-center rounded-xl border border-white/30 px-4 py-2.5 text-sm font-bold text-white hover:bg-white/10">
+                        {{ $isRtl ? 'التفاصيل' : 'Details' }}
                     </a>
-                    @endhasPermission
-                    <div class="relative flex items-center justify-center order-1 sm:order-2">
-                        <svg class="w-[88px] h-[88px]" viewBox="0 0 96 96" style="transform:rotate(-90deg)">
-                            <defs>
-                                <linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stop-color="#06b6d4"/>
-                                    <stop offset="100%" stop-color="#0891b2"/>
-                                </linearGradient>
-                            </defs>
-                            <circle cx="48" cy="48" r="40" fill="none" class="stroke-slate-200 dark:stroke-slate-600" stroke-width="5"/>
-                            <circle cx="48" cy="48" r="40" fill="none" stroke="url(#pg)" stroke-width="5" stroke-linecap="round"
-                                stroke-dasharray="{{ $circumference }}" stroke-dashoffset="{{ $strokeDashoffset }}"
-                                style="transition: stroke-dashoffset 0.8s ease"/>
-                        </svg>
-                        <span class="absolute inset-0 flex items-center justify-center font-heading text-lg font-black text-[#283593] dark:text-brand-300">{{ $progress }}%</span>
-                    </div>
-                    <div class="text-right hidden sm:block order-3">
-                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200">{{ __('student.total_progress') }}</p>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ __('student.from_course_completion') }}</p>
-                    </div>
                 </div>
             </div>
+        </section>
+    @else
+        <section class="stu-panel px-5 py-4 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+                <p class="text-sm font-bold text-[#0B1220] dark:text-white">{{ $isRtl ? 'لا توجد حصة مباشرة قادمة' : 'No upcoming live session' }}</p>
+                <p class="text-xs text-[color:var(--stu-muted)] mt-0.5">{{ $isRtl ? 'احجز مجموعة أو باقة فردية للبدء.' : 'Book a group or individual package to start.' }}</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                @if(Route::has('public.groups'))
+                    <a href="{{ route('public.groups') }}" class="inline-flex h-10 items-center gap-2 rounded-xl bg-[#0B3D91] px-4 text-sm font-bold text-white">
+                        <i class="fas fa-users text-xs"></i> {{ $isRtl ? 'تصفح المجموعات' : 'Browse groups' }}
+                    </a>
+                @endif
+            </div>
+        </section>
+    @endif
+
+    {{-- Quick actions — business pillars --}}
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        @if(Route::has('public.groups'))
+        <a href="{{ route('public.groups') }}" class="stu-action stu-action--gold">
+            <span class="stu-action__icon"><i class="fas fa-users"></i></span>
+            <div>
+                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'مجموعات حية' : 'Live groups' }}</p>
+                <p class="text-[11px] text-[color:var(--stu-muted)] mt-0.5">{{ $isRtl ? 'دفعات جماعية محدودة' : 'Capped cohorts' }}</p>
+            </div>
+        </a>
+        @endif
+        @if(Route::has('student.tutoring-subscriptions.index'))
+        <a href="{{ route('student.tutoring-subscriptions.index') }}" class="stu-action">
+            <span class="stu-action__icon"><i class="fas fa-user-graduate"></i></span>
+            <div>
+                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'باقات فردية' : '1:1 packages' }}</p>
+                <p class="text-[11px] text-[color:var(--stu-muted)] mt-0.5">{{ $isRtl ? 'حصصك المتبقية' : 'Sessions left' }}</p>
+            </div>
+        </a>
+        @endif
+        @if(Route::has('student.live-sessions.index'))
+        <a href="{{ route('student.live-sessions.index') }}" class="stu-action">
+            <span class="stu-action__icon"><i class="fas fa-broadcast-tower"></i></span>
+            <div>
+                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'البث المباشر' : 'Live broadcast' }}</p>
+                <p class="text-[11px] text-[color:var(--stu-muted)] mt-0.5">{{ $isRtl ? 'انضم الآن أو لاحقاً' : 'Join now or later' }}</p>
+            </div>
+        </a>
+        @endif
+        <a href="{{ route('my-courses.index') }}" class="stu-action">
+            <span class="stu-action__icon"><i class="fas fa-book-open"></i></span>
+            <div>
+                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ __('student.my_active_courses') }}</p>
+                <p class="text-[11px] text-[color:var(--stu-muted)] mt-0.5">{{ $stats['active_courses'] }} {{ $isRtl ? 'نشط' : 'active' }}</p>
+            </div>
+        </a>
+    </section>
+
+    {{-- Stats row (quiet) --}}
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <a href="{{ route('my-courses.index') }}" class="stu-panel px-4 py-4 hover:border-[#0B3D91]/25 transition-colors block">
+            <p class="text-[11px] font-bold text-[color:var(--stu-muted)]">{{ __('student.my_active_courses') }}</p>
+            <p class="mt-1 text-2xl font-black text-[#0B3D91] dark:text-blue-300 tabular-nums">{{ $stats['active_courses'] }}</p>
+        </a>
+        <a href="{{ route('student.certificates.index') }}" class="stu-panel px-4 py-4 hover:border-[#0B3D91]/25 transition-colors block">
+            <p class="text-[11px] font-bold text-[color:var(--stu-muted)]">{{ __('student.completed') }}</p>
+            <p class="mt-1 text-2xl font-black text-[#0B1220] dark:text-white tabular-nums">{{ $stats['completed_courses'] }}</p>
+        </a>
+        <div class="stu-panel px-4 py-4">
+            <p class="text-[11px] font-bold text-[color:var(--stu-muted)]">{{ __('student.total_progress') }}</p>
+            <p class="mt-1 text-2xl font-black text-[#8A6A00] tabular-nums">{{ $stats['total_progress'] }}%</p>
         </div>
-    </div>
-
-    {{-- إحصائيات --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <a href="{{ route('my-courses.index') }}" class="stat-card group">
-            <div class="flex items-start justify-between mb-3">
-                <div>
-                    <p class="text-xs font-medium text-slate-500 mb-1">{{ __('student.my_active_courses') }}</p>
-                    <p class="text-3xl font-heading font-black text-slate-800">{{ $stats['active_courses'] }}</p>
-                </div>
-                <div class="stat-icon bg-gradient-to-br from-[#283593] to-[#1F2A7A] shadow-lg shadow-[#283593]/25">
-                    <i class="fas fa-book-open"></i>
-                </div>
-            </div>
-            <p class="text-[11px] text-slate-400 font-medium">{{ __('student.active_courses_now') }}</p>
+        <a href="{{ route('orders.index') }}" class="stu-panel px-4 py-4 hover:border-[#0B3D91]/25 transition-colors block">
+            <p class="text-[11px] font-bold text-[color:var(--stu-muted)]">{{ __('student.pending_orders') }}</p>
+            <p class="mt-1 text-2xl font-black text-[#0B1220] dark:text-white tabular-nums">{{ $stats['pending_orders'] }}</p>
         </a>
+    </section>
 
-        <a href="{{ route('student.certificates.index') }}" class="stat-card group">
-            <div class="flex items-start justify-between mb-3">
-                <div>
-                    <p class="text-xs font-medium text-slate-500 mb-1">{{ __('student.completed') }}</p>
-                    <p class="text-3xl font-heading font-black text-slate-800">{{ $stats['completed_courses'] }}</p>
-                </div>
-                <div class="stat-icon bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/20">
-                    <i class="fas fa-check-circle"></i>
-                </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <section class="lg:col-span-2 stu-panel min-w-0">
+            <div class="flex items-center justify-between gap-3 px-5 pt-5">
+                <h2 class="font-heading text-base font-extrabold text-[#0B1220] dark:text-white">{{ __('student.my_active_courses') }}</h2>
+                <a href="{{ route('my-courses.index') }}" class="text-xs font-bold text-[#0B3D91] dark:text-blue-300">{{ __('student.view_all') }}</a>
             </div>
-            <p class="text-[11px] text-slate-400 font-medium">{{ __('student.completed_courses') }}</p>
-        </a>
-
-        <div class="stat-card group">
-            <div class="flex items-start justify-between mb-3">
-                <div>
-                    <p class="text-xs font-medium text-slate-500 mb-1">{{ __('student.total_progress') }}</p>
-                    <p class="text-3xl font-heading font-black text-slate-800">{{ $stats['total_progress'] }}%</p>
-                </div>
-                <div class="stat-icon bg-gradient-to-br from-[#FB5607] to-[#e84d00] shadow-lg shadow-[#FB5607]/25">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-            </div>
-            <div class="progress-bar">
-                <div class="fill" style="width: {{ $stats['total_progress'] }}%"></div>
-            </div>
-        </div>
-
-        <a href="{{ route('orders.index') }}" class="stat-card group">
-            <div class="flex items-start justify-between mb-3">
-                <div>
-                    <p class="text-xs font-medium text-slate-500 mb-1">{{ __('student.pending_orders') }}</p>
-                    <p class="text-3xl font-heading font-black text-slate-800">{{ $stats['pending_orders'] }}</p>
-                </div>
-                <div class="stat-icon bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg shadow-amber-500/20">
-                    <i class="fas fa-clock"></i>
-                </div>
-            </div>
-            <p class="text-[11px] text-slate-400 font-medium">{{ __('student.orders_in_processing') }}</p>
-        </a>
-    </div>
-
-
-    {{-- الدورات + الشريط الجانبي --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 min-w-0">
-            <div class="section-card">
-                <div class="flex items-center justify-between p-5 pb-0">
-                    <div class="flex items-center gap-3">
-                        <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#283593] to-[#FB5607] flex items-center justify-center text-white shadow-md shadow-[#283593]/25">
-                            <i class="fas fa-book-open text-sm"></i>
-                        </span>
-                        <h2 class="font-heading text-lg font-bold text-slate-800">{{ __('student.my_active_courses') }}</h2>
-                    </div>
-                    <div class="flex items-center gap-3 flex-wrap justify-end">
-                        @hasPermission('student.view.courses')
-                        <a href="{{ route('public.courses') }}" class="text-[#283593] dark:text-indigo-400 hover:text-[#1f2a7a] dark:hover:text-indigo-300 text-sm font-semibold flex items-center gap-1 transition-colors">
-                            <i class="fas fa-th-large text-[10px]"></i>
-                            {{ __('student.courses') }}
-                        </a>
-                        @endhasPermission
-                        <a href="{{ route('my-courses.index') }}" class="text-[#FB5607] hover:text-[#e84d00] text-sm font-semibold flex items-center gap-1 transition-colors">
-                            {{ __('student.view_all') }} <i class="fas fa-arrow-left text-[10px]"></i>
-                        </a>
-                    </div>
-                </div>
-                <div class="p-5 space-y-1">
-                    @forelse($activeCourses->take(5) as $course)
-                        @php $prog = (float) ($course->pivot->progress ?? optional($course->enrollment ?? null)->progress ?? 0); @endphp
-                        <a href="{{ route('my-courses.show', $course->id) }}" class="course-row flex items-center gap-4 block">
-                            <div class="w-11 h-11 rounded-xl bg-[#FFE5F7] border border-[#f5c7e8] flex items-center justify-center text-[#283593] flex-shrink-0">
-                                <i class="fas fa-book text-sm"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="font-bold text-slate-800 text-sm truncate mb-1">{{ $course->title }}</h3>
-                                <div class="flex items-center gap-3">
-                                    <div class="flex-1 progress-bar">
-                                        <div class="fill" style="width: {{ $prog }}%"></div>
-                                    </div>
-                                    <span class="text-xs font-bold text-slate-600 min-w-[36px] text-left">{{ $prog }}%</span>
-                                    <span class="text-[10px] font-bold text-amber-600 flex items-center gap-0.5 flex-shrink-0">
-                                        <i class="fas fa-star text-amber-400"></i>
-                                        {{ number_format((float)($course->student_points ?? 0), 0) }}
-                                    </span>
-                                </div>
-                            </div>
-                            <i class="fas fa-chevron-left text-slate-300 text-[10px] flex-shrink-0 hidden sm:block"></i>
-                        </a>
-                    @empty
-                        <div class="text-center py-12">
-                            <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700/80 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-book-open text-2xl text-slate-300 dark:text-slate-500"></i>
-                            </div>
-                            <p class="font-heading font-bold text-slate-700 dark:text-slate-200 mb-1">{{ __('student.no_active_courses') }}</p>
-                            <p class="text-sm text-slate-500 dark:text-slate-400 mb-5">{{ __('student.start_journey_now') }}</p>
-                            <a href="{{ route('public.courses') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#283593] to-[#1F2A7A] text-white rounded-xl text-sm font-bold shadow-lg shadow-[#283593]/25 hover:shadow-xl transition-all">
-                                <i class="fas fa-search text-xs"></i>
-                                {{ __('student.explore_courses') }}
-                            </a>
+            <div class="p-3 sm:p-4 space-y-1">
+                @forelse($activeCourses->take(5) as $course)
+                    @php $prog = (float) ($course->pivot->progress ?? optional($course->enrollment ?? null)->progress ?? 0); @endphp
+                    <a href="{{ route('my-courses.show', $course->id) }}" class="stu-row">
+                        <div class="w-10 h-10 rounded-xl bg-[#EEF3FB] text-[#0B3D91] flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-book text-sm"></i>
                         </div>
-                    @endforelse
-                </div>
-            </div>
-        </div>
-
-        <div class="space-y-6 min-w-0">
-            {{-- الواجبات --}}
-            <div class="section-card">
-                <div class="flex items-center justify-between p-4 pb-0">
-                    <div class="flex items-center gap-2.5">
-                        <span class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white shadow-md shadow-amber-500/20">
-                            <i class="fas fa-tasks text-xs"></i>
-                        </span>
-                        <h3 class="font-heading font-bold text-slate-800 text-sm">{{ __('student.assignments') }}</h3>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-bold text-sm text-[#0B1220] dark:text-white truncate">{{ $course->title }}</h3>
+                            <div class="mt-1.5 flex items-center gap-2">
+                                <div class="flex-1 stu-progress"><span style="width: {{ $prog }}%"></span></div>
+                                <span class="text-[11px] font-bold text-[color:var(--stu-muted)] tabular-nums w-8">{{ (int) $prog }}%</span>
+                            </div>
+                        </div>
+                    </a>
+                @empty
+                    <div class="text-center py-10 px-4">
+                        <p class="font-bold text-[#0B1220] dark:text-white">{{ __('student.no_active_courses') }}</p>
+                        <p class="text-sm text-[color:var(--stu-muted)] mt-1 mb-4">{{ __('student.start_journey_now') }}</p>
+                        <a href="{{ route('public.courses') }}" class="inline-flex items-center gap-2 rounded-xl bg-[#0B3D91] px-4 py-2.5 text-sm font-bold text-white">
+                            {{ __('student.explore_courses') }}
+                        </a>
                     </div>
+                @endforelse
+            </div>
+        </section>
+
+        <div class="space-y-5 min-w-0">
+            <section class="stu-panel">
+                <div class="flex items-center justify-between px-4 pt-4">
+                    <h3 class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ __('student.assignments') }}</h3>
                     @if($upcomingAssignments->count() > 0)
-                        <span class="badge bg-amber-50 text-amber-700 border border-amber-200">{{ $upcomingAssignments->count() }}</span>
+                        <span class="stu-chip">{{ $upcomingAssignments->count() }}</span>
                     @endif
                 </div>
-                <div class="p-4 space-y-2">
+                <div class="p-3 space-y-2">
                     @forelse($upcomingAssignments->take(3) as $assignment)
                         @php
                             $lecture = $assignment->lecture ?? null;
                             $course = $assignment->course ?? optional($lecture)->course;
                             $dueDate = optional($assignment->due_date);
-                            $isOverdue = $dueDate && $dueDate->isPast();
                         @endphp
-                        <div class="mini-card">
-                            <div class="font-bold text-slate-800 text-xs mb-1 truncate">{{ $assignment->title }}</div>
-                            @if($course)
-                                <div class="text-[11px] text-slate-500 mb-2 truncate">{{ $course->title }}</div>
-                            @endif
+                        <div class="rounded-xl border border-[color:var(--stu-line)] dark:border-gray-700 px-3 py-2.5">
+                            <p class="text-xs font-bold text-[#0B1220] dark:text-white truncate">{{ $assignment->title }}</p>
+                            @if($course)<p class="text-[11px] text-[color:var(--stu-muted)] truncate mt-0.5">{{ $course->title }}</p>@endif
                             @if($dueDate)
-                                <span class="badge {{ $isOverdue ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-[#FFE5F7] text-[#283593] border border-[#f5c7e8]' }}">
-                                    <i class="fas fa-calendar text-[9px]"></i>
-                                    {{ $dueDate->translatedFormat('d M') }}
-                                </span>
+                                <p class="text-[10px] font-bold text-[#0B3D91] mt-1.5">{{ $dueDate->translatedFormat('d M') }}</p>
                             @endif
                         </div>
                     @empty
-                        <div class="text-center py-6 text-slate-400">
-                            <i class="fas fa-clipboard-check text-2xl mb-2 opacity-40"></i>
-                            <p class="text-xs font-medium">{{ __('student.no_assignments') }}</p>
-                        </div>
+                        <p class="text-center text-xs text-[color:var(--stu-muted)] py-6">{{ __('student.no_assignments') }}</p>
                     @endforelse
                 </div>
-            </div>
+            </section>
 
-            {{-- الامتحانات --}}
-            <div class="section-card">
-                <div class="flex items-center justify-between p-4 pb-0">
-                    <div class="flex items-center gap-2.5">
-                        <span class="w-9 h-9 rounded-lg bg-gradient-to-br from-[#283593] to-[#FB5607] flex items-center justify-center text-white shadow-md shadow-[#283593]/25">
-                            <i class="fas fa-clipboard-check text-xs"></i>
-                        </span>
-                        <h3 class="font-heading font-bold text-slate-800 text-sm">{{ __('student.exams') }}</h3>
-                    </div>
+            <section class="stu-panel">
+                <div class="flex items-center justify-between px-4 pt-4">
+                    <h3 class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ __('student.exams') }}</h3>
                     @if($upcomingExams->count() > 0)
-                        <span class="badge bg-[#FFE5F7] text-[#283593] border border-[#f5c7e8]">{{ $upcomingExams->count() }}</span>
+                        <span class="stu-chip">{{ $upcomingExams->count() }}</span>
                     @endif
                 </div>
-                <div class="p-4 space-y-2">
+                <div class="p-3 space-y-2">
                     @forelse($upcomingExams->take(3) as $exam)
                         @php
                             $course = $exam->course;
                             $startAt = $exam->start_time ?? ($exam->start_date ? $exam->start_date->copy()->startOfDay() : null);
                             $isAvailableNow = $startAt ? $startAt->isPast() : true;
                         @endphp
-                        <a href="{{ route('student.exams.show', $exam) }}" class="mini-card block hover:border-indigo-200">
-                            <div class="font-bold text-slate-800 text-xs mb-1 truncate">{{ $exam->title }}</div>
-                            @if($course)
-                                <div class="text-[11px] text-slate-500 mb-2 truncate">{{ $course->title }}</div>
-                            @endif
-                            <span class="badge {{ $isAvailableNow ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200' }}">
-                                <i class="fas {{ $isAvailableNow ? 'fa-play-circle' : 'fa-clock' }} text-[9px]"></i>
+                        <a href="{{ route('student.exams.show', $exam) }}" class="block rounded-xl border border-[color:var(--stu-line)] dark:border-gray-700 px-3 py-2.5 hover:border-[#0B3D91]/30">
+                            <p class="text-xs font-bold text-[#0B1220] dark:text-white truncate">{{ $exam->title }}</p>
+                            @if($course)<p class="text-[11px] text-[color:var(--stu-muted)] truncate mt-0.5">{{ $course->title }}</p>@endif
+                            <p class="text-[10px] font-bold mt-1.5 {{ $isAvailableNow ? 'text-emerald-600' : 'text-[color:var(--stu-muted)]' }}">
                                 {{ $isAvailableNow ? __('student.available') : __('student.coming_soon') }}
-                            </span>
+                            </p>
                         </a>
                     @empty
-                        <div class="text-center py-6 text-slate-400">
-                            <i class="fas fa-file-alt text-2xl mb-2 opacity-40"></i>
-                            <p class="text-xs font-medium">{{ __('student.no_exams') }}</p>
-                        </div>
+                        <p class="text-center text-xs text-[color:var(--stu-muted)] py-6">{{ __('student.no_exams') }}</p>
                     @endforelse
                 </div>
-            </div>
+            </section>
         </div>
     </div>
 
-    {{-- نتائج الامتحانات + الشهادات --}}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="section-card min-w-0">
-            <div class="flex items-center gap-3 p-5 pb-0">
-                <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
-                    <i class="fas fa-chart-pie text-sm"></i>
-                </span>
-                <h2 class="font-heading text-base font-bold text-slate-800">{{ __('student.exam_results') }}</h2>
-            </div>
-            <div class="p-5 space-y-2">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <section class="stu-panel min-w-0">
+            <h2 class="font-heading text-sm font-extrabold text-[#0B1220] dark:text-white px-5 pt-5">{{ __('student.exam_results') }}</h2>
+            <div class="p-4 space-y-2">
                 @forelse($recentExamAttempts->take(4) as $attempt)
-                    @php $exam = $attempt->exam; $course = optional($exam)->course; @endphp
-                    <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50/80 border border-slate-100 hover:border-emerald-200 transition-colors">
-                        <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-award text-emerald-500"></i>
-                        </div>
+                    @php $exam = $attempt->exam; @endphp
+                    <div class="flex items-center gap-3 rounded-xl border border-[color:var(--stu-line)] dark:border-gray-700 px-3 py-2.5">
                         <div class="flex-1 min-w-0">
-                            <div class="font-bold text-slate-800 text-xs truncate">{{ $exam->title ?? __('student.exam_deleted') }}</div>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="badge bg-emerald-50 text-emerald-700 border border-emerald-200">{{ $attempt->result_status }}</span>
-                                @if(!is_null($attempt->percentage))
-                                    <span class="text-xs font-bold text-slate-600">{{ number_format($attempt->percentage, 1) }}%</span>
-                                @endif
-                            </div>
+                            <p class="text-xs font-bold truncate text-[#0B1220] dark:text-white">{{ $exam->title ?? __('student.exam_deleted') }}</p>
+                            <p class="text-[11px] text-[color:var(--stu-muted)] mt-0.5">
+                                {{ $attempt->result_status }}
+                                @if(!is_null($attempt->percentage)) · {{ number_format($attempt->percentage, 1) }}%@endif
+                            </p>
                         </div>
                         @if($exam)
-                            <a href="{{ route('student.exams.result', [$exam, $attempt]) }}" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[11px] font-bold hover:bg-emerald-700 transition-colors shadow-sm flex-shrink-0">
-                                {{ __('common.view') }}
-                            </a>
+                            <a href="{{ route('student.exams.result', [$exam, $attempt]) }}" class="text-[11px] font-bold text-[#0B3D91]">{{ __('common.view') }}</a>
                         @endif
                     </div>
                 @empty
-                    <div class="text-center py-10 text-slate-400">
-                        <i class="fas fa-poll text-3xl mb-2 opacity-30"></i>
-                        <p class="text-xs font-medium">{{ __('student.no_results_yet') }}</p>
-                    </div>
+                    <p class="text-center text-xs text-[color:var(--stu-muted)] py-8">{{ __('student.no_results_yet') }}</p>
                 @endforelse
             </div>
-        </div>
+        </section>
 
-        <div class="section-card min-w-0">
-            <div class="flex items-center gap-3 p-5 pb-0">
-                <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center text-white shadow-md shadow-amber-400/20">
-                    <i class="fas fa-certificate text-sm"></i>
-                </span>
-                <h2 class="font-heading text-base font-bold text-slate-800">{{ __('student.issued_certificates') }}</h2>
-            </div>
-            <div class="p-5 space-y-2">
+        <section class="stu-panel min-w-0">
+            <h2 class="font-heading text-sm font-extrabold text-[#0B1220] dark:text-white px-5 pt-5">{{ __('student.issued_certificates') }}</h2>
+            <div class="p-4 space-y-2">
                 @forelse($recentCertificates->take(4) as $certificate)
-                    <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50/80 border border-slate-100 hover:border-amber-200 transition-colors">
-                        <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-ribbon text-amber-500"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="font-bold text-slate-800 text-xs truncate">
-                                {{ $certificate->title ?? $certificate->course_name ?? __('student.certificate_untitled') }}
-                            </div>
-                            @if($certificate->certificate_number)
-                                <span class="badge bg-[#FFE5F7] text-[#283593] border border-[#f5c7e8] mt-1">
-                                    {{ $certificate->certificate_number }}
-                                </span>
-                            @endif
-                        </div>
+                    <div class="rounded-xl border border-[color:var(--stu-line)] dark:border-gray-700 px-3 py-2.5">
+                        <p class="text-xs font-bold truncate text-[#0B1220] dark:text-white">
+                            {{ $certificate->title ?? $certificate->course_name ?? __('student.certificate_untitled') }}
+                        </p>
+                        @if($certificate->certificate_number)
+                            <p class="text-[10px] font-bold text-[#0B3D91] mt-1">{{ $certificate->certificate_number }}</p>
+                        @endif
                     </div>
                 @empty
-                    <div class="text-center py-10 text-slate-400">
-                        <i class="fas fa-certificate text-3xl mb-2 opacity-30"></i>
-                        <p class="text-xs font-medium">{{ __('student.no_certificates_yet') }}</p>
-                    </div>
+                    <p class="text-center text-xs text-[color:var(--stu-muted)] py-8">{{ __('student.no_certificates_yet') }}</p>
                 @endforelse
             </div>
-        </div>
+        </section>
     </div>
 </div>
 @endsection

@@ -1,0 +1,57 @@
+<?php
+
+return [
+    'nav' => [
+        'bookings' => 'Group bookings',
+        'subscriptions' => 'My packages',
+        'cohorts' => 'My cohorts',
+        'instructor_bookings' => 'Tutoring bookings',
+        'instructor_cohorts' => 'Group cohorts',
+    ],
+    'public' => [
+        'cohorts_title' => 'Available cohorts',
+        'packages_title' => 'Individual session packages',
+        'join_cohort' => 'Join cohort',
+        'subscribe' => 'Subscribe',
+        'seats_left' => 'Seats left',
+        'save_amount' => 'Save :amount',
+        'status_open' => 'Open',
+        'status_full' => 'Full',
+        'status_closed' => 'Closed',
+        'status_postponed' => 'Postponed',
+        'guest_book' => 'Request booking',
+        'checkout' => 'Complete checkout',
+        'original_price' => 'Original price',
+        'study_days' => 'Study days',
+        'study_time' => 'Session time',
+        'starts_at' => 'Start date',
+    ],
+    'booking' => [
+        'pending' => 'Pending review',
+        'confirmed' => 'Confirmed',
+        'cancelled' => 'Cancelled',
+        'completed' => 'Completed',
+        'join_live' => 'Join live session',
+        'upcoming' => 'Your next session',
+        'no_bookings' => 'No bookings yet.',
+        'confirmed_success' => 'Booking confirmed and Live room created.',
+    ],
+    'subscription' => [
+        'active' => 'Active',
+        'expired' => 'Expired',
+        'cancelled' => 'Cancelled',
+        'sessions_left' => 'Sessions left',
+        'no_subscriptions' => 'No active packages.',
+    ],
+    'cohort' => [
+        'postponed_notice' => 'Cohort postponed due to minimum enrollment not met.',
+        'full' => 'This cohort is full.',
+        'closed' => 'Enrollment for this cohort has closed.',
+    ],
+    'payment' => [
+        'none' => 'No payment',
+        'pending' => 'Payment pending',
+        'paid' => 'Paid',
+        'refunded' => 'Refunded',
+    ],
+];

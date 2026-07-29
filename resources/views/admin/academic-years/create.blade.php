@@ -1,180 +1,305 @@
 @extends('layouts.admin')
 
+@section('title', 'إنشاء سنة أكاديمية - Glottical')
+@section('page_title', 'إنشاء سنة أكاديمية')
+
 @section('content')
-<div class="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6" style="background: #f8fafc; min-height: 100vh;">
-    <div class="max-w-5xl mx-auto space-y-6">
-        <div class="bg-gradient-to-br from-sky-500 via-sky-600 to-indigo-700 rounded-3xl p-6 sm:p-8 shadow-xl text-white relative overflow-hidden">
-            <div class="absolute inset-y-0 left-0 w-40 bg-white/10 blur-3xl pointer-events-none"></div>
-            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div class="space-y-4">
-                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 text-sm font-semibold">
-                        <i class="fas fa-calendar-alt"></i>
-                        إنشاء سنة أكاديمية جديدة
-                    </div>
-                    <h1 class="text-3xl sm:text-4xl font-bold">أضف سنة أكاديمية للتنظيم الداخلي</h1>
-                    <p class="text-sm text-white/80 max-w-2xl">
-                        استخدم السنوات الأكاديمية لتجميع مجموعات المهارات والكورسات ضمن هيكل تنظيمي واحد. اختر رمزاً ولوناً معبّرين وحدد ترتيب الظهور في لوحة التحكم.
-                    </p>
-                </div>
-                <a href="{{ route('admin.academic-years.index') }}" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/40 px-5 py-2 text-sm font-semibold hover:bg-white/10 transition">
-                    <i class="fas fa-arrow-right"></i>
-                    العودة للسنوات الأكاديمية
-                </a>
-            </div>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $areaClass = 'w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+
+    $icons = [
+        'fas fa-graduation-cap' => 'قبعة تخرج',
+        'fas fa-school' => 'مدرسة',
+        'fas fa-book-open' => 'كتاب',
+        'fas fa-user-graduate' => 'طالب',
+        'fas fa-chalkboard' => 'سبورة',
+        'fas fa-language' => 'لغة',
+        'fas fa-layer-group' => 'مراحل',
+        'fas fa-calendar-alt' => 'تقويم',
+    ];
+
+    $selectedIcon = old('icon', 'fas fa-graduation-cap');
+    $selectedColor = old('color', '#0B3D91');
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">إدارة المحتوى · السنوات الأكاديمية</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إنشاء سنة أكاديمية</h2>
+            <p class="mt-1 max-w-2xl text-sm text-muted">
+                السنة الأكاديمية طبقة تنظيمية لتجميع المواد والكورسات (مثل مرحلة إعدادي أو ثانوي). بعد الحفظ يمكنك ربط المواد والكورسات والمدربين من صفحة التعديل.
+            </p>
         </div>
+        <a href="{{ route('admin.academic-years.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+            <i class="fas fa-arrow-right text-xs"></i>
+            رجوع للقائمة
+        </a>
+    </section>
 
-        <div class="dashboard-card rounded-2xl card-hover-effect border-2 border-gray-200/50 hover:border-sky-300/70 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%);">
-            <div class="border-b border-gray-100 px-6 sm:px-8 py-5">
-                <h2 class="text-xl font-semibold text-gray-900">بيانات السنة الأكاديمية</h2>
-                <p class="text-sm text-gray-500 mt-1">
-                    أدخل الاسم، الرمز، الوصف، واختر الأيقونة واللون. يمكنك تعيين ترتيب الظهور وحالة السنة أثناء الإنشاء.
-                </p>
-            </div>
-            <form method="POST" action="{{ route('admin.academic-years.store') }}" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-8">
-                @csrf
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-2">
-                        <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">
-                            اسم السنة الأكاديمية <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" name="name" id="name" value="{{ old('name') }}" required
-                               class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition"
-                               placeholder="مثال: الصف الأول الثانوي">
-                        @error('name')
-                            <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="space-y-2">
-                        <label for="code" class="block text-sm font-semibold text-gray-700 mb-2">
-                            رمز السنة <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" name="code" id="code" value="{{ old('code') }}" required
-                               class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition"
-                               placeholder="مثال: G10 أو SEC-1">
-                        <p class="mt-1 text-xs text-gray-500">
-                            رمز مختصر باللغة الإنجليزية لربط السنة مع الكورسات والمجموعات المرتبطة.
-                        </p>
-                        @error('code')
-                            <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="md:col-span-2 space-y-2">
-                        <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">
-                            الوصف
-                        </label>
-                        <textarea name="description" id="description" rows="4"
-                                  class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition"
-                                  placeholder="اشرح الغرض من هذه السنة الأكاديمية والمحتوى الذي تضمّه.">{{ old('description') }}</textarea>
-                        @error('description')
-                            <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="md:col-span-2 space-y-2">
-                        <label for="thumbnail" class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-image text-sky-600 ml-1"></i>
-                            صورة مصغرة (اختياري)
-                        </label>
-                        <input type="file" name="thumbnail" id="thumbnail" accept="image/*"
-                               class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition">
-                        <p class="mt-1 text-xs text-gray-500">
-                            صورة اختيارية لتسهيل التعرف على السنة في لوحة التحكم. لا تُستخدم كمنتج عام على الموقع.
-                        </p>
-                        @error('thumbnail')
-                            <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="space-y-2">
-                        <label for="icon" class="block text-sm font-semibold text-gray-700 mb-2">
-                            الأيقونة
-                        </label>
-                        <select name="icon" id="icon"
-                                class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition">
-                            @php
-                                $icons = [
-                                    'fas fa-compass' => '🧭 تنظيم أكاديمي',
-                                    'fas fa-graduation-cap' => '🎓 تأهيل معلمين',
-                                    'fas fa-chalkboard-teacher' => '👩‍🏫 تدريس أونلاين',
-                                    'fas fa-laptop-house' => '💻 مهارات رقمية صفية',
-                                    'fas fa-briefcase' => '💼 تطوير مهني',
-                                    'fas fa-users' => '👥 قيادة وتفاعل',
-                                    'fas fa-certificate' => '🎓 شهادات وإنجاز',
-                                ];
-                            @endphp
-                            @foreach($icons as $value => $label)
-                                <option value="{{ $value }}" {{ old('icon') == $value ? 'selected' : '' }}>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                        @error('icon')
-                            <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="space-y-2">
-                        <label for="color" class="block text-sm font-semibold text-gray-700 mb-2">
-                            اللون
-                        </label>
-                        <input type="color" name="color" id="color" value="{{ old('color', '#0ea5e9') }}"
-                               class="w-full h-12 rounded-2xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500/40">
-                        <p class="mt-1 text-xs text-gray-500">
-                            يستخدم لتلوين البطاقة في لوحة التحكم.
-                        </p>
-                        @error('color')
-                            <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="space-y-2">
-                        <label for="order" class="block text-sm font-semibold text-gray-700 mb-2">
-                            ترتيب الظهور
-                        </label>
-                        <input type="number" name="order" id="order" value="{{ old('order', 0) }}" min="0"
-                               class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition"
-                               placeholder="0">
-                        <p class="mt-1 text-xs text-gray-500">
-                            0 تعني أن السنة تظهر أولاً ضمن القائمة.
-                        </p>
-                        @error('order')
-                            <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
+    @if($errors->any())
+        <div class="rounded-2xl border border-danger/20 bg-danger/5 p-4 text-sm text-danger shadow-soft">
+            <p class="mb-2 font-semibold">يرجى تصحيح ما يلي:</p>
+            <ul class="list-inside list-disc space-y-1">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-                <div class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-100 border border-slate-200">
-                    <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}
-                           class="w-5 h-5 text-sky-600 border-gray-300 rounded focus:ring-sky-500">
-                    <div>
-                        <label for="is_active" class="text-sm font-semibold text-gray-800">السنة نشطة</label>
-                        <p class="text-xs text-gray-500">
-                            السنوات النشطة متاحة لإضافة مجموعات مهارية وكورسات جديدة.
-                        </p>
-                    </div>
-                </div>
+    <form action="{{ route('admin.academic-years.store') }}" method="POST" enctype="multipart/form-data" class="space-y-5" id="academic-year-create-form">
+        @csrf
 
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify_between gap-4 pt-4 border-t border-gray-100">
-                    <span class="text-xs text-gray-500">
-                        بعد حفظ السنة يمكنك إضافة مجموعات مهارية وربط الكورسات ضمنها.
-                    </span>
-                    <div class="flex flex-col md:flex-row md:items-center gap-3">
-                        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-sky-600 hover:from-sky-700 hover:via-blue-700 hover:to-sky-700 text-white px-6 py-3 text-sm font-bold shadow-lg shadow-sky-600/30 hover:shadow-xl hover:shadow-sky-600/40 hover:-translate-y-0.5 transition-all duration-300">
-                            <i class="fas fa-save"></i>
+        <div class="grid grid-cols-1 gap-5 xl:grid-cols-3">
+            <div class="space-y-5 xl:col-span-2">
+                <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                    <div class="border-b border-line px-4 py-4 sm:px-5">
+                        <h3 class="text-base font-semibold text-ink">البيانات الأساسية</h3>
+                        <p class="mt-0.5 text-xs text-muted">الاسم والرمز والوصف الداخلي</p>
+                    </div>
+                    <div class="grid grid-cols-1 gap-5 p-4 sm:grid-cols-2 sm:p-5">
+                        <div class="sm:col-span-1">
+                            <label class="{{ $labelClass }}" for="name">اسم السنة الأكاديمية <span class="text-danger">*</span></label>
+                            <input id="name" type="text" name="name" value="{{ old('name') }}" required maxlength="255"
+                                   placeholder="مثال: الصف الأول الثانوي"
+                                   class="{{ $fieldClass }}" autocomplete="off">
+                            <p class="mt-1.5 text-xs text-muted">الاسم الظاهر في لوحة التحكم وعند ربط المحتوى.</p>
+                        </div>
+                        <div class="sm:col-span-1">
+                            <label class="{{ $labelClass }}" for="code">رمز السنة <span class="text-danger">*</span></label>
+                            <input id="code" type="text" name="code" value="{{ old('code') }}" required maxlength="10" dir="ltr"
+                                   placeholder="G10 أو SEC-1"
+                                   class="{{ $fieldClass }} font-mono uppercase" autocomplete="off">
+                            <p class="mt-1.5 text-xs text-muted">رمز إنجليزي مختصر وفريد (حتى 10 أحرف) لربط الكورسات والمواد.</p>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="{{ $labelClass }}" for="description">الوصف <span class="font-normal text-muted">(اختياري)</span></label>
+                            <textarea id="description" name="description" rows="4" class="{{ $areaClass }}"
+                                      placeholder="وصف مختصر للمرحلة وما تغطيه من مواد أو كورسات.">{{ old('description') }}</textarea>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                    <div class="border-b border-line px-4 py-4 sm:px-5">
+                        <h3 class="text-base font-semibold text-ink">المظهر والترتيب</h3>
+                        <p class="mt-0.5 text-xs text-muted">أيقونة ولون البطاقة في لوحة التحكم، وترتيب الظهور</p>
+                    </div>
+                    <div class="grid grid-cols-1 gap-5 p-4 sm:grid-cols-2 sm:p-5">
+                        <div>
+                            <label class="{{ $labelClass }}" for="icon">الأيقونة</label>
+                            <select id="icon" name="icon" class="{{ $fieldClass }}">
+                                @foreach($icons as $value => $label)
+                                    <option value="{{ $value }}" @selected($selectedIcon === $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="{{ $labelClass }}" for="color">لون البطاقة</label>
+                            <div class="flex items-center gap-3">
+                                <input id="color" type="color" name="color" value="{{ $selectedColor }}"
+                                       class="h-11 w-14 cursor-pointer rounded-xl border border-line bg-surface p-1">
+                                <input id="color_hex" type="text" value="{{ $selectedColor }}" dir="ltr" maxlength="7"
+                                       class="{{ $fieldClass }} font-mono" aria-label="كود اللون">
+                            </div>
+                            <p class="mt-1.5 text-xs text-muted">يظهر في بطاقات السنة داخل لوحة التحكم فقط.</p>
+                        </div>
+                        <div>
+                            <label class="{{ $labelClass }}" for="order">ترتيب الظهور</label>
+                            <input id="order" type="number" name="order" value="{{ old('order', 0) }}" min="0" class="{{ $fieldClass }}">
+                            <p class="mt-1.5 text-xs text-muted">الأصغر يظهر أولاً في القائمة (0 = الأول).</p>
+                        </div>
+                        <div>
+                            <label class="{{ $labelClass }}" for="thumbnail">صورة مصغرة <span class="font-normal text-muted">(اختياري)</span></label>
+                            <input id="thumbnail" type="file" name="thumbnail" accept="image/jpeg,image/png,image/jpg"
+                                   class="block w-full text-sm text-muted file:ml-4 file:rounded-xl file:border-0 file:bg-accent-soft file:px-4 file:py-2 file:text-sm file:font-medium file:text-accent hover:file:bg-accent hover:file:text-white">
+                            <p class="mt-1.5 text-xs text-muted">JPEG أو PNG — للتعرّف السريع داخل الأدمن.</p>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <input type="hidden" name="is_active" value="0">
+                            <label class="inline-flex h-11 w-full cursor-pointer items-center gap-2 rounded-xl border border-line bg-canvas px-4 sm:w-auto">
+                                <input type="checkbox" name="is_active" value="1" @checked((string) old('is_active', '1') !== '0') class="size-4 rounded border-line text-accent focus:ring-accent/20">
+                                <span class="text-sm font-medium text-ink">سنة نشطة — متاحة لربط المواد والكورسات</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-3 border-t border-line px-4 py-4 sm:px-5">
+                        <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-white">
+                            <i class="fas fa-save text-xs"></i>
                             حفظ السنة الأكاديمية
                         </button>
+                        <a href="{{ route('admin.academic-years.index') }}" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line px-6 text-sm font-medium text-ink hover:bg-canvas">
+                            إلغاء
+                        </a>
                     </div>
-                </div>
-            </form>
-        </div>
-
-        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 class="text-sm font-medium text-blue-800 mb-2">أمثلة على السنوات الأكاديمية:</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-blue-700">
-                <span>• الصف الأول الثانوي</span>
-                <span>• الصف الثاني الثانوي</span>
-                <span>• الصف الثالث الثانوي</span>
-                <span>• الصف الأول الإعدادي</span>
-                <span>• الصف الثاني الإعدادي</span>
-                <span>• الصف الثالث الإعدادي</span>
-                <span>• المرحلة الابتدائية</span>
-                <span>• التحضيري</span>
+                </article>
             </div>
+
+            <aside class="space-y-5">
+                <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                    <div class="border-b border-line px-4 py-4 sm:px-5">
+                        <h3 class="text-base font-semibold text-ink">معاينة البطاقة</h3>
+                        <p class="mt-0.5 text-xs text-muted">كيف ستظهر تقريباً في القائمة</p>
+                    </div>
+                    <div class="p-4 sm:p-5">
+                        <div class="rounded-2xl border border-line bg-canvas p-4">
+                            <div class="flex items-start gap-3">
+                                <span id="preview-icon-wrap" class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white shadow-soft" style="background: {{ $selectedColor }}">
+                                    <i id="preview-icon" class="{{ $selectedIcon }} text-lg"></i>
+                                </span>
+                                <div class="min-w-0 flex-1">
+                                    <p id="preview-name" class="truncate text-base font-semibold text-ink">{{ old('name') ?: 'اسم السنة' }}</p>
+                                    <p id="preview-code" class="mt-0.5 font-mono text-xs uppercase tracking-wide text-muted">{{ old('code') ?: 'CODE' }}</p>
+                                    <p id="preview-desc" class="mt-2 line-clamp-3 text-xs text-muted">{{ old('description') ?: 'سيظهر الوصف هنا إن أضفته.' }}</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <span class="inline-flex items-center gap-1 rounded-full bg-surface px-2.5 py-1 text-[11px] font-medium text-ink-soft border border-line">
+                                    <i class="fas fa-layer-group text-[10px]"></i> مواد لاحقاً
+                                </span>
+                                <span id="preview-status" class="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
+                                    نشطة
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                    <div class="border-b border-line px-4 py-4 sm:px-5">
+                        <h3 class="text-base font-semibold text-ink">أمثلة مقترحة</h3>
+                        <p class="mt-0.5 text-xs text-muted">اضغط لنسخ الاسم والرمز في النموذج</p>
+                    </div>
+                    <div class="grid grid-cols-1 gap-2 p-4 sm:p-5">
+                        @php
+                            $examples = [
+                                ['name' => 'الصف الأول الإعدادي', 'code' => 'PREP-1'],
+                                ['name' => 'الصف الثاني الإعدادي', 'code' => 'PREP-2'],
+                                ['name' => 'الصف الثالث الإعدادي', 'code' => 'PREP-3'],
+                                ['name' => 'الصف الأول الثانوي', 'code' => 'SEC-1'],
+                                ['name' => 'الصف الثاني الثانوي', 'code' => 'SEC-2'],
+                                ['name' => 'الصف الثالث الثانوي', 'code' => 'SEC-3'],
+                                ['name' => 'المرحلة الابتدائية', 'code' => 'PRIM'],
+                                ['name' => 'التحضيري', 'code' => 'KG'],
+                            ];
+                        @endphp
+                        @foreach($examples as $ex)
+                            <button type="button"
+                                    class="ay-example btn-press flex w-full items-center justify-between gap-2 rounded-xl border border-line bg-canvas px-3 py-2.5 text-start transition hover:border-accent/40 hover:bg-accent-soft/40"
+                                    data-name="{{ $ex['name'] }}"
+                                    data-code="{{ $ex['code'] }}">
+                                <span class="text-sm font-medium text-ink">{{ $ex['name'] }}</span>
+                                <span class="font-mono text-[11px] text-muted">{{ $ex['code'] }}</span>
+                            </button>
+                        @endforeach
+                    </div>
+                </article>
+
+                <div class="rounded-2xl border border-line bg-canvas px-4 py-3 text-xs leading-relaxed text-muted">
+                    <p class="font-medium text-ink-soft">بعد الحفظ</p>
+                    <p class="mt-1">من صفحة التعديل: أضف مواد/مجموعات، اربط الكورسات، وعيّن المدربين للسنة.</p>
+                </div>
+            </aside>
         </div>
-    </div>
+    </form>
 </div>
+
+<script>
+(function () {
+    const nameEl = document.getElementById('name');
+    const codeEl = document.getElementById('code');
+    const descEl = document.getElementById('description');
+    const iconEl = document.getElementById('icon');
+    const colorEl = document.getElementById('color');
+    const colorHex = document.getElementById('color_hex');
+    const activeEl = document.querySelector('input[name="is_active"][type="checkbox"]');
+
+    const previewName = document.getElementById('preview-name');
+    const previewCode = document.getElementById('preview-code');
+    const previewDesc = document.getElementById('preview-desc');
+    const previewIcon = document.getElementById('preview-icon');
+    const previewIconWrap = document.getElementById('preview-icon-wrap');
+    const previewStatus = document.getElementById('preview-status');
+
+    let codeTouched = {{ old('code') ? 'true' : 'false' }};
+
+    function syncPreview() {
+        previewName.textContent = (nameEl.value || '').trim() || 'اسم السنة';
+        previewCode.textContent = (codeEl.value || '').trim().toUpperCase() || 'CODE';
+        previewDesc.textContent = (descEl.value || '').trim() || 'سيظهر الوصف هنا إن أضفته.';
+        previewIcon.className = (iconEl.value || 'fas fa-graduation-cap') + ' text-lg';
+        const color = colorEl.value || '#0B3D91';
+        previewIconWrap.style.background = color;
+        if (colorHex && document.activeElement !== colorHex) {
+            colorHex.value = color;
+        }
+        if (activeEl && activeEl.checked) {
+            previewStatus.textContent = 'نشطة';
+            previewStatus.className = 'inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success';
+        } else {
+            previewStatus.textContent = 'موقوفة';
+            previewStatus.className = 'inline-flex items-center gap-1 rounded-full bg-danger/10 px-2.5 py-1 text-[11px] font-medium text-danger';
+        }
+    }
+
+    function suggestCodeFromName() {
+        if (codeTouched || !nameEl.value.trim()) return;
+        const map = {
+            'أول': '1', 'الأول': '1', 'اول': '1',
+            'ثاني': '2', 'الثاني': '2',
+            'ثالث': '3', 'الثالث': '3',
+        };
+        let prefix = 'YR';
+        const n = nameEl.value;
+        if (n.includes('إعداد') || n.includes('اعداد')) prefix = 'PREP';
+        else if (n.includes('ثانوي')) prefix = 'SEC';
+        else if (n.includes('ابتدائ')) prefix = 'PRIM';
+        else if (n.includes('تحضير') || n.includes('روضة')) prefix = 'KG';
+
+        let num = '';
+        for (const [k, v] of Object.entries(map)) {
+            if (n.includes(k)) { num = v; break; }
+        }
+        codeEl.value = num ? (prefix + '-' + num) : prefix;
+        syncPreview();
+    }
+
+    nameEl?.addEventListener('input', function () {
+        suggestCodeFromName();
+        syncPreview();
+    });
+    codeEl?.addEventListener('input', function () {
+        codeTouched = true;
+        codeEl.value = codeEl.value.toUpperCase().replace(/\s+/g, '-');
+        syncPreview();
+    });
+    descEl?.addEventListener('input', syncPreview);
+    iconEl?.addEventListener('change', syncPreview);
+    colorEl?.addEventListener('input', syncPreview);
+    activeEl?.addEventListener('change', syncPreview);
+
+    colorHex?.addEventListener('input', function () {
+        let v = colorHex.value.trim();
+        if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
+            colorEl.value = v;
+            syncPreview();
+        }
+    });
+
+    document.querySelectorAll('.ay-example').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            nameEl.value = btn.dataset.name || '';
+            codeEl.value = btn.dataset.code || '';
+            codeTouched = true;
+            syncPreview();
+            nameEl.focus();
+        });
+    });
+
+    syncPreview();
+})();
+</script>
 @endsection

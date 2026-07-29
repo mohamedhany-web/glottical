@@ -1,214 +1,254 @@
 @extends('layouts.admin')
 
 @section('title', 'طلب سحب #' . ($withdrawal->request_number ?? $withdrawal->id) . ' - ' . config('app.name'))
-@section('header', 'تفاصيل طلب السحب')
+@section('page_title', 'تفاصيل طلب السحب')
 
 @section('content')
-<div class="space-y-6">
-    <!-- الهيدر -->
-    <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-6 py-5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-md">
-                    <i class="fas fa-money-bill-wave text-lg"></i>
-                </div>
-                <div>
-                    <h2 class="text-xl font-black text-slate-900">طلب سحب {{ $withdrawal->request_number ?? '#' . $withdrawal->id }}</h2>
-                    <p class="text-sm text-slate-600 mt-1">{{ $withdrawal->created_at->format('Y-m-d H:i') }}</p>
-                </div>
-            </div>
-            <a href="{{ route('admin.withdrawals.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
-                <i class="fas fa-arrow-right"></i>
+@php
+    $fieldClass = 'w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $statusBadges = [
+        'pending' => ['label' => 'قيد المراجعة', 'classes' => 'bg-canvas-muted text-muted'],
+        'approved' => ['label' => 'موافق عليه', 'classes' => 'bg-amber-50 text-amber-700'],
+        'rejected' => ['label' => 'مرفوض', 'classes' => 'bg-rose-50 text-rose-700'],
+        'processing' => ['label' => 'قيد المعالجة', 'classes' => 'bg-amber-50 text-amber-700'],
+        'completed' => ['label' => 'مكتمل', 'classes' => 'bg-emerald-50 text-emerald-700'],
+        'cancelled' => ['label' => 'ملغي', 'classes' => 'bg-canvas-muted text-muted'],
+    ];
+    $status = $statusBadges[$withdrawal->status] ?? ['label' => $withdrawal->status, 'classes' => 'bg-canvas-muted text-muted'];
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">المالية · طلبات السحب · {{ $withdrawal->request_number ?? '#' . $withdrawal->id }}</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">طلب سحب {{ $withdrawal->request_number ?? '#' . $withdrawal->id }}</h2>
+            <p class="mt-1 text-sm text-muted">
+                <i class="fas fa-calendar-alt text-xs"></i>
+                {{ $withdrawal->created_at->format('Y-m-d H:i') }}
+            </p>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.withdrawals.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
                 العودة للقائمة
             </a>
         </div>
     </section>
 
     @if(session('success'))
-        <div class="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-800 text-sm font-medium">
-            {{ session('success') }}
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
         </div>
     @endif
     @if(session('error'))
-        <div class="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-800 text-sm font-medium">
-            {{ session('error') }}
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="alert">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-700"><i class="fas fa-exclamation-circle text-sm"></i></span>
+            <p>{{ session('error') }}</p>
         </div>
     @endif
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- تفاصيل الطلب والمدرب -->
-        <div class="lg:col-span-2 space-y-6">
-            <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
-                    <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
-                        <i class="fas fa-info-circle text-blue-600"></i>
-                        تفاصيل الطلب
-                    </h3>
-                </div>
-                <div class="p-6 space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                            <p class="text-xs font-semibold text-slate-500 mb-1">المبلغ</p>
-                            <p class="text-xl font-black text-slate-900">{{ number_format($withdrawal->amount, 2) }} ج.م</p>
-                        </div>
-                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                            <p class="text-xs font-semibold text-slate-500 mb-1">الحالة</p>
-                            @php
-                                $statusBadges = [
-                                    'pending' => ['label' => 'قيد المراجعة', 'classes' => 'bg-slate-100 text-slate-700 border-slate-200'],
-                                    'approved' => ['label' => 'موافق عليه', 'classes' => 'bg-amber-100 text-amber-700 border-amber-200'],
-                                    'rejected' => ['label' => 'مرفوض', 'classes' => 'bg-red-100 text-red-700 border-red-200'],
-                                    'processing' => ['label' => 'قيد المعالجة', 'classes' => 'bg-blue-100 text-blue-700 border-blue-200'],
-                                    'completed' => ['label' => 'مكتمل', 'classes' => 'bg-emerald-100 text-emerald-700 border-emerald-200'],
-                                    'cancelled' => ['label' => 'ملغي', 'classes' => 'bg-slate-100 text-slate-600 border-slate-200'],
-                                ];
-                                $status = $statusBadges[$withdrawal->status] ?? ['label' => $withdrawal->status, 'classes' => 'bg-slate-100 text-slate-700 border-slate-200'];
-                            @endphp
-                            <span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold border {{ $status['classes'] }}">
-                                <span class="h-2 w-2 rounded-full bg-current"></span>
-                                {{ $status['label'] }}
-                            </span>
-                        </div>
-                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 sm:col-span-2">
-                            <p class="text-xs font-semibold text-slate-500 mb-1">طريقة الاستلام</p>
-                            <p class="font-semibold text-slate-900">{{ $withdrawal->payment_method_label }}</p>
-                        </div>
+    <div class="grid grid-cols-1 gap-5 xl:grid-cols-3">
+        <div class="space-y-5 xl:col-span-2">
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+                    <div>
+                        <h3 class="text-base font-semibold text-ink">تفاصيل الطلب</h3>
+                        <p class="mt-0.5 text-xs text-muted">المبلغ وطريقة الاستلام والحالة</p>
                     </div>
-                    @if($withdrawal->notes)
-                        <div class="p-4 rounded-xl bg-amber-50/50 border border-amber-100">
-                            <p class="text-xs font-semibold text-amber-800 mb-1">ملاحظات المدرب</p>
-                            <p class="text-sm text-slate-700">{{ $withdrawal->notes }}</p>
-                        </div>
-                    @endif
+                    <span class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium {{ $status['classes'] }}">
+                        <span class="size-1.5 rounded-full bg-current"></span>
+                        {{ $status['label'] }}
+                    </span>
                 </div>
-            </section>
+                <dl class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
+                    <div>
+                        <dt class="text-xs font-medium text-muted">المبلغ</dt>
+                        <dd class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ number_format($withdrawal->amount, 2) }} <span class="text-sm font-normal text-muted">ج.م</span></dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium text-muted">طريقة الاستلام</dt>
+                        <dd class="mt-1 text-sm font-semibold text-ink">{{ $withdrawal->payment_method_label }}</dd>
+                    </div>
+                </dl>
+                @if($withdrawal->notes)
+                    <div class="border-t border-line px-4 py-4 sm:px-5">
+                        <p class="text-xs font-medium text-amber-700">ملاحظات المدرب</p>
+                        <p class="mt-1 text-sm text-ink">{{ $withdrawal->notes }}</p>
+                    </div>
+                @endif
+            </article>
 
             @if($withdrawal->payment_method === 'bank_transfer' && ($withdrawal->bank_name || $withdrawal->account_number || $withdrawal->account_holder_name || $withdrawal->iban))
-            <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
-                    <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
-                        <i class="fas fa-university text-blue-600"></i>
-                        بيانات التحويل البنكي
-                    </h3>
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <div class="flex items-center gap-3">
+                        <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                            <i class="fas fa-university text-sm"></i>
+                        </span>
+                        <div>
+                            <h3 class="text-base font-semibold text-ink">بيانات التحويل البنكي</h3>
+                            <p class="mt-0.5 text-xs text-muted">معلومات الحساب البنكي للمدرب</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="p-6 space-y-3">
+                <dl class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
                     @if($withdrawal->bank_name)
-                        <p class="text-sm"><span class="font-semibold text-slate-600">البنك:</span> <span class="text-slate-900">{{ $withdrawal->bank_name }}</span></p>
+                        <div>
+                            <dt class="text-xs font-medium text-muted">البنك</dt>
+                            <dd class="mt-1 text-sm font-semibold text-ink">{{ $withdrawal->bank_name }}</dd>
+                        </div>
                     @endif
                     @if($withdrawal->account_holder_name)
-                        <p class="text-sm"><span class="font-semibold text-slate-600">صاحب الحساب:</span> <span class="text-slate-900">{{ $withdrawal->account_holder_name }}</span></p>
+                        <div>
+                            <dt class="text-xs font-medium text-muted">صاحب الحساب</dt>
+                            <dd class="mt-1 text-sm font-semibold text-ink">{{ $withdrawal->account_holder_name }}</dd>
+                        </div>
                     @endif
                     @if($withdrawal->account_number)
-                        <p class="text-sm"><span class="font-semibold text-slate-600">رقم الحساب:</span> <span class="text-slate-900 font-mono">{{ $withdrawal->account_number }}</span></p>
+                        <div>
+                            <dt class="text-xs font-medium text-muted">رقم الحساب</dt>
+                            <dd class="mt-1 font-mono text-sm font-semibold text-ink">{{ $withdrawal->account_number }}</dd>
+                        </div>
                     @endif
                     @if($withdrawal->iban)
-                        <p class="text-sm"><span class="font-semibold text-slate-600">الآيبان:</span> <span class="text-slate-900 font-mono">{{ $withdrawal->iban }}</span></p>
+                        <div class="sm:col-span-2">
+                            <dt class="text-xs font-medium text-muted">الآيبان</dt>
+                            <dd class="mt-1 font-mono text-sm font-semibold text-ink">{{ $withdrawal->iban }}</dd>
+                        </div>
                     @endif
-                </div>
-            </section>
+                </dl>
+            </article>
             @endif
 
             @if($withdrawal->admin_notes || $withdrawal->processed_by)
-            <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
-                    <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
-                        <i class="fas fa-user-cog text-slate-600"></i>
-                        معالجة الإدارة
-                    </h3>
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <div class="flex items-center gap-3">
+                        <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                            <i class="fas fa-user-cog text-sm"></i>
+                        </span>
+                        <div>
+                            <h3 class="text-base font-semibold text-ink">معالجة الإدارة</h3>
+                            <p class="mt-0.5 text-xs text-muted">سجل المراجعة والملاحظات الإدارية</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="p-6 space-y-3">
+                <div class="space-y-4 p-4 sm:p-5">
                     @if($withdrawal->admin_notes)
-                        <p class="text-sm"><span class="font-semibold text-slate-600">ملاحظات الإدارة:</span></p>
-                        <p class="text-sm text-slate-700 bg-slate-50 p-3 rounded-lg">{{ $withdrawal->admin_notes }}</p>
+                        <div>
+                            <p class="text-xs font-medium text-muted">ملاحظات الإدارة</p>
+                            <p class="mt-1 rounded-xl border border-line bg-canvas/40 p-3 text-sm text-ink">{{ $withdrawal->admin_notes }}</p>
+                        </div>
                     @endif
                     @if($withdrawal->processedBy)
-                        <p class="text-sm"><span class="font-semibold text-slate-600">تمت المعالجة بواسطة:</span> <span class="text-slate-900">{{ $withdrawal->processedBy->name }}</span></p>
+                        <div>
+                            <p class="text-xs font-medium text-muted">تمت المعالجة بواسطة</p>
+                            <p class="mt-1 text-sm font-semibold text-ink">{{ $withdrawal->processedBy->name }}</p>
+                        </div>
                     @endif
                     @if($withdrawal->processed_at)
-                        <p class="text-sm"><span class="font-semibold text-slate-600">تاريخ المعالجة:</span> <span class="text-slate-900">{{ $withdrawal->processed_at->format('Y-m-d H:i') }}</span></p>
+                        <div>
+                            <p class="text-xs font-medium text-muted">تاريخ المعالجة</p>
+                            <p class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ $withdrawal->processed_at->format('Y-m-d H:i') }}</p>
+                        </div>
                     @endif
                 </div>
-            </section>
+            </article>
             @endif
         </div>
 
-        <!-- المدرب + إجراءات -->
-        <div class="space-y-6">
-            <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
-                    <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
-                        <i class="fas fa-chalkboard-teacher text-blue-600"></i>
-                        المدرب
-                    </h3>
+        <div class="space-y-5">
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <div class="flex items-center gap-3">
+                        <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                            <i class="fas fa-chalkboard-teacher text-sm"></i>
+                        </span>
+                        <div>
+                            <h3 class="text-base font-semibold text-ink">المدرب</h3>
+                            <p class="mt-0.5 text-xs text-muted">بيانات التواصل</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="p-6">
+                <div class="p-4 sm:p-5">
                     @if($withdrawal->instructor)
-                        <p class="font-bold text-slate-900">{{ $withdrawal->instructor->name }}</p>
+                        <p class="font-semibold text-ink">{{ $withdrawal->instructor->name }}</p>
                         @if($withdrawal->instructor->phone)
-                            <p class="text-sm text-slate-600 mt-1"><i class="fas fa-phone ml-1"></i> {{ $withdrawal->instructor->phone }}</p>
+                            <p class="mt-2 text-sm text-muted"><i class="fas fa-phone ml-1 text-xs"></i> {{ $withdrawal->instructor->phone }}</p>
                         @endif
                         @if($withdrawal->instructor->email)
-                            <p class="text-sm text-slate-600 mt-1"><i class="fas fa-envelope ml-1"></i> {{ $withdrawal->instructor->email }}</p>
+                            <p class="mt-1 break-all text-sm text-muted"><i class="fas fa-envelope ml-1 text-xs"></i> {{ $withdrawal->instructor->email }}</p>
                         @endif
                     @else
-                        <p class="text-slate-500">—</p>
+                        <p class="text-sm text-muted">—</p>
                     @endif
                 </div>
-            </section>
+            </article>
 
-            <!-- إجراءات -->
             @if($withdrawal->status === 'pending')
-            <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
-                    <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
-                        <i class="fas fa-tasks text-amber-600"></i>
-                        إجراءات
-                    </h3>
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <div class="flex items-center gap-3">
+                        <span class="inline-flex size-9 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+                            <i class="fas fa-tasks text-sm"></i>
+                        </span>
+                        <div>
+                            <h3 class="text-base font-semibold text-ink">إجراءات</h3>
+                            <p class="mt-0.5 text-xs text-muted">موافقة أو رفض الطلب</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="p-6 space-y-4">
+                <div class="space-y-5 p-4 sm:p-5">
                     <form action="{{ route('admin.withdrawals.approve', $withdrawal) }}" method="POST" class="space-y-3">
                         @csrf
-                        <label class="block text-xs font-semibold text-slate-700">ملاحظات (اختياري)</label>
-                        <textarea name="admin_notes" rows="2" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500" placeholder="ملاحظات عند الموافقة"></textarea>
-                        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition-colors">
+                        <label class="{{ $labelClass }}">ملاحظات (اختياري)</label>
+                        <textarea name="admin_notes" rows="2" class="{{ $fieldClass }}" placeholder="ملاحظات عند الموافقة"></textarea>
+                        <button type="submit" class="btn-press inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700">
                             <i class="fas fa-check"></i>
                             موافقة
                         </button>
                     </form>
                     <form action="{{ route('admin.withdrawals.reject', $withdrawal) }}" method="POST" class="space-y-3">
                         @csrf
-                        <label class="block text-xs font-semibold text-slate-700">ملاحظات (اختياري)</label>
-                        <textarea name="admin_notes" rows="2" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500" placeholder="سبب الرفض إن أردت"></textarea>
-                        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-colors"
+                        <label class="{{ $labelClass }}">ملاحظات (اختياري)</label>
+                        <textarea name="admin_notes" rows="2" class="{{ $fieldClass }}" placeholder="سبب الرفض إن أردت"></textarea>
+                        <button type="submit" class="btn-press inline-flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white hover:bg-rose-700"
                                 onclick="return confirm('هل أنت متأكد من رفض طلب السحب؟');">
                             <i class="fas fa-times"></i>
                             رفض
                         </button>
                     </form>
                 </div>
-            </section>
+            </article>
             @endif
 
             @if($withdrawal->status === 'approved')
-            <section class="rounded-2xl bg-white border border-amber-200 shadow-lg overflow-hidden">
-                <div class="px-6 py-4 border-b border-amber-200 bg-amber-50">
-                    <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
-                        <i class="fas fa-check-double text-amber-600"></i>
-                        إكمال الطلب
-                    </h3>
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line bg-amber-50/50 px-4 py-4 sm:px-5">
+                    <div class="flex items-center gap-3">
+                        <span class="inline-flex size-9 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+                            <i class="fas fa-check-double text-sm"></i>
+                        </span>
+                        <div>
+                            <h3 class="text-base font-semibold text-ink">إكمال الطلب</h3>
+                            <p class="mt-0.5 text-xs text-muted">تأكيد تنفيذ التحويل</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="p-6">
+                <div class="p-4 sm:p-5">
                     <form action="{{ route('admin.withdrawals.complete', $withdrawal) }}" method="POST" class="space-y-3">
                         @csrf
-                        <label class="block text-xs font-semibold text-slate-700">ملاحظات (اختياري)</label>
-                        <textarea name="admin_notes" rows="2" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500" placeholder="ملاحظات عند الإكمال"></textarea>
-                        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm transition-colors">
+                        <label class="{{ $labelClass }}">ملاحظات (اختياري)</label>
+                        <textarea name="admin_notes" rows="2" class="{{ $fieldClass }}" placeholder="ملاحظات عند الإكمال"></textarea>
+                        <button type="submit" class="btn-press inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-700">
                             <i class="fas fa-check-double"></i>
                             تم التحويل / إكمال
                         </button>
                     </form>
                 </div>
-            </section>
+            </article>
             @endif
         </div>
     </div>

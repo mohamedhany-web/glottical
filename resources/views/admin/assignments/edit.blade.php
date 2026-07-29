@@ -1,132 +1,139 @@
 @extends('layouts.admin')
 
-@section('title', 'تعديل الواجب: ' . $assignment->title)
-@section('header', 'تعديل الواجب')
+@section('title', 'تعديل الواجب: ' . $assignment->title . ' - ' . config('app.name'))
+@section('page_title', 'تعديل الواجب')
+
+@php
+    $courseId = $assignment->advanced_course_id ?? $assignment->course_id;
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $textareaClass = 'w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+@endphp
 
 @section('content')
-<div class="w-full max-w-full px-4 py-6 space-y-6">
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">
+                <a href="{{ route('admin.dashboard') }}" class="hover:text-accent">لوحة التحكم</a>
+                <span class="mx-1">·</span>
+                <a href="{{ route('admin.assignments.index') }}" class="hover:text-accent">الواجبات</a>
+                <span class="mx-1">·</span>
+                <a href="{{ route('admin.assignments.by-course', $courseId) }}" class="hover:text-accent">{{ Str::limit($assignment->course?->title ?? '', 25) }}</a>
+                <span class="mx-1">·</span>
+                <a href="{{ route('admin.assignments.show', $assignment) }}" class="hover:text-accent truncate">{{ Str::limit($assignment->title, 25) }}</a>
+                <span class="mx-1">·</span>
+                <span class="text-ink">تعديل</span>
+            </p>
+            <h2 class="mt-1 truncate text-2xl font-semibold tracking-tight text-ink md:text-[28px]">تعديل الواجب</h2>
+            <p class="mt-1 truncate text-sm text-muted">{{ $assignment->title }}</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('admin.assignments.show', $assignment) }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-eye text-xs"></i>
+                عرض
+            </a>
+            <a href="{{ route('admin.assignments.by-course', $courseId) }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm text-ink-soft hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                رجوع لواجبات البرنامج
+            </a>
+        </div>
+    </section>
+
     @if(session('success'))
-        <div class="rounded-xl bg-green-100 text-green-800 px-4 py-3 font-medium">{{ session('success') }}</div>
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-soft">
+            <i class="fas fa-check-circle ml-1"></i> {{ session('success') }}
+        </div>
     @endif
     @if(session('error'))
-        <div class="rounded-xl bg-red-100 text-red-800 px-4 py-3 font-medium">{{ session('error') }}</div>
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800 shadow-soft">
+            <i class="fas fa-exclamation-circle ml-1"></i> {{ session('error') }}
+        </div>
     @endif
 
-    @php $courseId = $assignment->advanced_course_id ?? $assignment->course_id; @endphp
-    <div class="bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 rounded-2xl p-6 text-white shadow-lg">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="min-w-0">
-                <nav class="text-sm text-white/80 mb-2">
-                    <a href="{{ route('admin.dashboard') }}" class="hover:text-white">لوحة التحكم</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.assignments.index') }}" class="hover:text-white">الواجبات</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.assignments.by-course', $courseId) }}" class="hover:text-white">{{ Str::limit($assignment->course?->title ?? '', 25) }}</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.assignments.show', $assignment) }}" class="hover:text-white truncate">{{ Str::limit($assignment->title, 25) }}</a>
-                    <span class="mx-2">/</span>
-                    <span class="text-white">تعديل</span>
-                </nav>
-                <h1 class="text-xl sm:text-2xl font-bold mt-1">تعديل الواجب</h1>
-                <p class="text-sm text-white/90 mt-1 truncate">{{ $assignment->title }}</p>
-            </div>
-            <div class="flex flex-wrap gap-2 flex-shrink-0">
-                <a href="{{ route('admin.assignments.show', $assignment) }}" class="inline-flex items-center gap-2 bg-white text-indigo-600 hover:bg-gray-100 px-4 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-eye"></i>
-                    عرض
-                </a>
-                <a href="{{ route('admin.assignments.by-course', $courseId) }}" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
-                    <i class="fas fa-arrow-right"></i>
-                    رجوع لواجبات الكورس
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-            <h4 class="text-lg font-bold text-gray-900">بيانات الواجب</h4>
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-5 py-4">
+            <h3 class="text-sm font-semibold text-ink">بيانات الواجب</h3>
+            <p class="mt-0.5 text-xs text-muted">عدّل تفاصيل الواجب وحفظ التغييرات.</p>
         </div>
 
-        <form action="{{ route('admin.assignments.update', $assignment) }}" method="POST" class="p-6 sm:p-8">
+        <form action="{{ route('admin.assignments.update', $assignment) }}" method="POST" class="p-5 sm:p-6">
             @csrf
             @method('PUT')
 
-            <div class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-5">
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">الكورس <span class="text-red-500">*</span></label>
-                        <select name="advanced_course_id" id="advanced_course_id" required
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                        <label class="{{ $labelClass }}" for="advanced_course_id">البرنامج <span class="text-rose-500">*</span></label>
+                        <select name="advanced_course_id" id="advanced_course_id" required class="{{ $fieldClass }}">
                             @foreach($courses as $c)
                                 <option value="{{ $c->id }}" {{ old('advanced_course_id', $assignment->advanced_course_id ?? $assignment->course_id) == $c->id ? 'selected' : '' }}>{{ Str::limit($c->title, 50) }}</option>
                             @endforeach
                         </select>
                         @error('advanced_course_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">الدرس (اختياري)</label>
-                        <select name="lesson_id" id="lesson_id"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                        <label class="{{ $labelClass }}" for="lesson_id">الدرس (اختياري)</label>
+                        <select name="lesson_id" id="lesson_id" class="{{ $fieldClass }}">
                             <option value="">بدون درس محدد</option>
                             @foreach($lessons as $les)
                                 <option value="{{ $les->id }}" {{ old('lesson_id', $assignment->lesson_id) == $les->id ? 'selected' : '' }}>{{ Str::limit($les->title, 40) }}</option>
                             @endforeach
                         </select>
-                        <p class="mt-1 text-xs text-gray-500">يتم تعبئة الدروس حسب الكورس المختار</p>
+                        <p class="mt-1 text-xs text-muted">يتم تعبئة الدروس حسب البرنامج المختار</p>
                         @error('lesson_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">عنوان الواجب <span class="text-red-500">*</span></label>
-                    <input type="text" name="title" value="{{ old('title', $assignment->title) }}" required
-                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    <label class="{{ $labelClass }}" for="title">عنوان الواجب <span class="text-rose-500">*</span></label>
+                    <input type="text" name="title" id="title" value="{{ old('title', $assignment->title) }}" required
+                           class="{{ $fieldClass }}"
                            placeholder="عنوان الواجب">
                     @error('title')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">الوصف</label>
-                    <textarea name="description" rows="3"
-                              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    <label class="{{ $labelClass }}" for="description">الوصف</label>
+                    <textarea name="description" id="description" rows="3" class="{{ $textareaClass }}"
                               placeholder="وصف مختصر">{{ old('description', $assignment->description) }}</textarea>
                     @error('description')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">التعليمات</label>
-                    <textarea name="instructions" rows="4"
-                              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                    <label class="{{ $labelClass }}" for="instructions">التعليمات</label>
+                    <textarea name="instructions" id="instructions" rows="4" class="{{ $textareaClass }}"
                               placeholder="تعليمات للطلاب">{{ old('instructions', $assignment->instructions) }}</textarea>
                     @error('instructions')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">تاريخ الاستحقاق</label>
-                        <input type="datetime-local" name="due_date" value="{{ old('due_date', $assignment->due_date ? $assignment->due_date->format('Y-m-d\TH:i') : '') }}"
-                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                        <label class="{{ $labelClass }}" for="due_date">تاريخ الاستحقاق</label>
+                        <input type="datetime-local" name="due_date" id="due_date" value="{{ old('due_date', $assignment->due_date ? $assignment->due_date->format('Y-m-d\TH:i') : '') }}"
+                               class="{{ $fieldClass }}">
                         @error('due_date')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">الدرجة الكلية <span class="text-red-500">*</span></label>
-                        <input type="number" name="max_score" value="{{ old('max_score', $assignment->max_score) }}" min="1" max="1000" required
-                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                        <label class="{{ $labelClass }}" for="max_score">الدرجة الكلية <span class="text-rose-500">*</span></label>
+                        <input type="number" name="max_score" id="max_score" value="{{ old('max_score', $assignment->max_score) }}" min="1" max="1000" required
+                               class="{{ $fieldClass }}">
                         @error('max_score')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
@@ -134,37 +141,38 @@
                 <div class="flex items-center gap-3">
                     <input type="checkbox" name="allow_late_submission" id="allow_late_submission" value="1"
                            {{ old('allow_late_submission', $assignment->allow_late_submission) ? 'checked' : '' }}
-                           class="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                    <label for="allow_late_submission" class="text-sm font-medium text-gray-700">السماح بالتسليم المتأخر</label>
+                           class="size-4 rounded border-line text-accent focus:ring-accent/20">
+                    <label for="allow_late_submission" class="text-sm font-medium text-ink">السماح بالتسليم المتأخر</label>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">الحالة <span class="text-red-500">*</span></label>
-                    <select name="status" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                    <label class="{{ $labelClass }}" for="status">الحالة <span class="text-rose-500">*</span></label>
+                    <select name="status" id="status" class="{{ $fieldClass }}">
                         <option value="draft" {{ old('status', $assignment->status) == 'draft' ? 'selected' : '' }}>مسودة</option>
                         <option value="published" {{ old('status', $assignment->status) == 'published' ? 'selected' : '' }}>منشور</option>
                         <option value="archived" {{ old('status', $assignment->status) == 'archived' ? 'selected' : '' }}>مؤرشف</option>
                     </select>
                     @error('status')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                     @enderror
                 </div>
             </div>
 
-            <div class="flex flex-wrap gap-3 mt-8 pt-6 border-t border-gray-200">
-                <button type="submit" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-save"></i>
+            <div class="mt-6 flex flex-wrap gap-2 border-t border-line pt-5">
+                <button type="submit" class="btn-press inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                    <i class="fas fa-save text-xs"></i>
                     حفظ التعديلات
                 </button>
-                <a href="{{ route('admin.assignments.by-course', $courseId) }}" class="inline-flex items-center gap-2 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-times"></i>
+                <a href="{{ route('admin.assignments.by-course', $courseId) }}" class="btn-press inline-flex h-10 items-center gap-2 rounded-xl border border-line px-5 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                    <i class="fas fa-times text-xs"></i>
                     إلغاء
                 </a>
             </div>
         </form>
-    </div>
+    </article>
 </div>
 
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const courseSelect = document.getElementById('advanced_course_id');
@@ -216,4 +224,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+@endpush
 @endsection

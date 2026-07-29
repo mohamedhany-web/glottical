@@ -15,9 +15,14 @@ class CourseController extends Controller
     public function index(Request $request)
     {
         $instructor = Auth::user();
-        
-        // جلب الكورسات التي تم تعيينها لهذا المدرس
-        $query = AdvancedCourse::where('instructor_id', $instructor->id)
+        $teachingIds = $instructor->teachingAdvancedCourseIds();
+
+        if ($teachingIds->isEmpty()) {
+            abort(403, 'لم يتم تعيين أي كورس عادي لك بعد.');
+        }
+
+        // جلب الكورسات التي تم تعيينها لهذا المدرس (مباشرة أو عبر المسار)
+        $query = AdvancedCourse::whereIn('id', $teachingIds)
             ->with(['academicYear', 'academicSubject'])
             ->withCount(['lectures', 'enrollments']);
 
@@ -43,12 +48,12 @@ class CourseController extends Controller
 
         // إحصائيات
         $stats = [
-            'total' => AdvancedCourse::where('instructor_id', $instructor->id)->count(),
-            'active' => AdvancedCourse::where('instructor_id', $instructor->id)->where('is_active', true)->count(),
-            'inactive' => AdvancedCourse::where('instructor_id', $instructor->id)->where('is_active', false)->count(),
-            'total_students' => \App\Models\StudentCourseEnrollment::whereHas('course', function($q) use ($instructor) {
-                $q->where('instructor_id', $instructor->id);
-            })->where('status', 'active')->count(),
+            'total' => $teachingIds->count(),
+            'active' => AdvancedCourse::whereIn('id', $teachingIds)->where('is_active', true)->count(),
+            'inactive' => AdvancedCourse::whereIn('id', $teachingIds)->where('is_active', false)->count(),
+            'total_students' => \App\Models\StudentCourseEnrollment::whereIn('advanced_course_id', $teachingIds)
+                ->where('status', 'active')
+                ->count(),
         ];
 
         return view('instructor.courses.index', compact('courses', 'stats'));
@@ -60,8 +65,13 @@ class CourseController extends Controller
     public function show($id)
     {
         $instructor = Auth::user();
-        
-        $course = AdvancedCourse::where('instructor_id', $instructor->id)
+        $teachingIds = $instructor->teachingAdvancedCourseIds();
+
+        if ($teachingIds->isEmpty() || ! $teachingIds->contains((int) $id)) {
+            abort(403, 'لم يتم تعيين هذا الكورس لك.');
+        }
+
+        $course = AdvancedCourse::whereIn('id', $teachingIds)
             ->with(['academicYear', 'academicSubject', 'instructor'])
             ->withCount(['lectures', 'enrollments'])
             ->findOrFail($id);

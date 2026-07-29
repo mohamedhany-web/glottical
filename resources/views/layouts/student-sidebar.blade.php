@@ -1,339 +1,281 @@
+@php
+    $user = auth()->user();
+    $isStudent = $user && ($user->role === 'student' || strtolower((string) $user->role) === 'student');
+    $coursesCount = $user ? $user->activeCourses()->count() : 0;
+    $enrollments = $user ? $user->courseEnrollments()->whereIn('status', ['active', 'completed'])->get() : collect();
+    $totalProgress = $enrollments->isEmpty() ? 0 : round($enrollments->avg('progress') ?? 0, 0);
+    $publicCoursesUrl = url('/courses');
+    $closeSidebar = 'if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)';
+
+    $tbUpcoming = 0;
+    if ($user && \Illuminate\Support\Facades\Schema::hasTable('tutoring_group_bookings')) {
+        $tbUpcoming = \App\Models\TutoringGroupBooking::where('user_id', $user->id)
+            ->where('status', 'confirmed')->where('starts_at', '>=', now())->count();
+    }
+    $studentLiveCount = 0;
+    try {
+        $studentLiveCount = \App\Models\LiveSession::where('status', 'live')->count();
+    } catch (\Throwable $e) {
+    }
+@endphp
+
 <div class="flex flex-col h-full">
-    {{-- Brand --}}
-    <div class="ins-sidebar-brand flex items-center gap-3 px-4 py-4 flex-shrink-0 relative">
-        <button @click="if (window.innerWidth < 1024) sidebarOpen = false"
-                class="lg:hidden absolute top-3 left-3 w-8 h-8 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center justify-center transition-colors z-10">
+    <div class="ins-sidebar-brand flex items-center gap-3 px-4 py-5 flex-shrink-0 relative">
+        <button @click="if (window.innerWidth < 1024) sidebarOpen = false" type="button"
+                class="lg:hidden absolute top-3 left-3 w-8 h-8 rounded-lg bg-white/15 text-white hover:bg-white/25 flex items-center justify-center transition-colors z-10"
+                aria-label="إغلاق">
             <i class="fas fa-times text-xs"></i>
         </button>
-        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-[#283593] to-[#FB5607] text-white flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#283593]/25">
-            <i class="fas fa-user-graduate text-lg"></i>
+        <div class="w-11 h-11 rounded-xl bg-[#F5B800] text-[#072A66] flex items-center justify-center flex-shrink-0 shadow-lg shadow-black/20">
+            <i class="fas fa-language text-lg"></i>
         </div>
         <div class="flex-1 min-w-0 relative z-10">
-            <h2 class="text-base font-bold text-gray-900 dark:text-gray-100 leading-tight">{{ config('app.name') }}</h2>
-            <p class="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-0.5">{{ __('student.learning_center') }}</p>
+            <h2 class="text-base font-extrabold text-white leading-tight truncate">{{ config('app.name') }}</h2>
+            <p class="text-[11px] text-white/70 font-medium mt-0.5">{{ __('student.learning_center') }}</p>
         </div>
     </div>
 
-    {{-- Stats cards --}}
-    @php
-        $coursesCount = auth()->user()->activeCourses()->count();
-        $enrollments = auth()->user()->courseEnrollments()->whereIn('status', ['active', 'completed'])->get();
-        $totalProgress = $enrollments->isEmpty() ? 0 : round($enrollments->avg('progress') ?? 0, 0);
-        /** صفحة الكورسات العامة (الواجهة الخارجية) */
-        $publicCoursesUrl = url('/courses');
-    @endphp
     <div class="px-3 py-3 flex-shrink-0">
-        <div class="grid grid-cols-2 gap-2.5">
-            <a href="{{ $publicCoursesUrl }}"
-               title="{{ __('student.browse_courses') }}"
-               class="ins-stat-card bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/80 block group cursor-pointer no-underline text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-[#283593] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 rounded-xl">
-                <div class="flex items-center gap-2 mb-1.5">
-                    <span class="w-8 h-8 rounded-lg bg-[#FFE5F7] dark:bg-violet-900/40 text-[#283593] dark:text-violet-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <i class="fas fa-book-open text-sm"></i>
-                    </span>
-                    <span class="text-[10px] font-bold text-[#283593] dark:text-violet-400 uppercase tracking-wider">{{ __('student.courses') }}</span>
-                </div>
-                <div class="text-xl font-black text-gray-900 dark:text-gray-100 leading-none tabular-nums">{{ $coursesCount }}</div>
-            </a>
-            <a href="{{ route('my-courses.index') }}" class="ins-stat-card bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/80 block group">
-                <div class="flex items-center gap-2 mb-1.5">
-                    <span class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <i class="fas fa-chart-line text-sm"></i>
-                    </span>
-                    <span class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">{{ __('student.progress') }}</span>
-                </div>
-                <div class="text-xl font-black text-gray-900 dark:text-gray-100 leading-none tabular-nums">{{ $totalProgress }}%</div>
-            </a>
+        <div class="rounded-2xl border border-[#E8EEF8] dark:border-gray-700 bg-[#F4F7FC] dark:bg-gray-800/80 p-3">
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="text-[11px] font-bold text-[#5B6577] dark:text-gray-400">{{ __('student.total_progress') }}</span>
+                <span class="text-sm font-black text-[#0B3D91] dark:text-blue-300 tabular-nums">{{ $totalProgress }}%</span>
+            </div>
+            <div class="h-1.5 rounded-full bg-[#E8EEF8] dark:bg-gray-700 overflow-hidden">
+                <div class="h-full rounded-full bg-[#F5B800]" style="width: {{ min(100, (int) $totalProgress) }}%"></div>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-2">
+                <a href="{{ $publicCoursesUrl }}" class="rounded-xl bg-white dark:bg-gray-900 border border-[#E8EEF8] dark:border-gray-700 px-2.5 py-2 text-center hover:border-[#0B3D91]/30 transition-colors">
+                    <p class="text-lg font-black text-[#0B3D91] dark:text-blue-300 tabular-nums leading-none">{{ $coursesCount }}</p>
+                    <p class="text-[10px] font-bold text-[#8A94A6] mt-1">{{ __('student.courses') }}</p>
+                </a>
+                <a href="{{ Route::has('student.tutoring-bookings.index') ? route('student.tutoring-bookings.index') : route('my-courses.index') }}"
+                   class="rounded-xl bg-white dark:bg-gray-900 border border-[#E8EEF8] dark:border-gray-700 px-2.5 py-2 text-center hover:border-[#F5B800]/50 transition-colors">
+                    <p class="text-lg font-black text-[#8A6A00] tabular-nums leading-none">{{ $tbUpcoming }}</p>
+                    <p class="text-[10px] font-bold text-[#8A94A6] mt-1">حصص قادمة</p>
+                </a>
+            </div>
         </div>
     </div>
 
-    {{-- Navigation --}}
-    <nav class="flex-1 overflow-y-auto sidebar-scroll px-0 py-2 space-y-0.5 min-h-0">
-        @php
-            $user = auth()->user();
-            $isStudent = $user->role === 'student' || strtolower($user->role) === 'student';
-        @endphp
-        @if($isStudent || $user->hasAnyPermission('student.view.courses', 'student.view.my-courses', 'student.view.orders', 'student.view.invoices', 'student.view.wallet', 'student.view.certificates', 'student.view.achievements', 'student.view.exams', 'student.view.calendar', 'student.view.notifications', 'student.view.profile', 'student.view.settings'))
+    <nav class="flex-1 overflow-y-auto sidebar-scroll px-0 py-1 space-y-0.5 min-h-0">
+        @if($isStudent || ($user && $user->hasAnyPermission('student.view.courses', 'student.view.my-courses', 'student.view.orders', 'student.view.invoices', 'student.view.wallet', 'student.view.certificates', 'student.view.achievements', 'student.view.exams', 'student.view.calendar', 'student.view.notifications', 'student.view.profile', 'student.view.settings')))
 
-            {{-- ─── الرئيسية ─── --}}
             <div class="ins-nav-group">
-                <span class="inline-flex items-center gap-1.5">
-                    <i class="fas fa-home text-[9px] opacity-50"></i>
-                    الرئيسية
-                </span>
+                <span><i class="fas fa-home text-[9px] opacity-50"></i> الرئيسية</span>
             </div>
-
-            <a href="{{ route('dashboard') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+            <a href="{{ route('dashboard') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <span class="ins-icon bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
-                    <i class="fas fa-th-large text-sm"></i>
-                </span>
+                <span class="ins-icon"><i class="fas fa-th-large"></i></span>
                 <span class="flex-1 truncate">{{ __('student.dashboard') }}</span>
             </a>
 
-            @hasPermission('student.view.courses')
-            @php $catalogActive = request()->routeIs('public.courses', 'public.course.*') || request()->routeIs('academic-years*') || request()->routeIs('subjects.*') || request()->routeIs('courses.show'); @endphp
-            <a href="{{ route('public.courses') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ $catalogActive ? 'active' : '' }}">
-                <span class="ins-icon bg-[#FFE5F7] dark:bg-indigo-900/40 text-[#283593] dark:text-indigo-400">
-                    <i class="fas fa-search text-sm"></i>
-                </span>
-                <span class="flex-1 truncate">{{ __('student.browse_courses') }}</span>
+            <div class="ins-nav-group mt-2">
+                <span><i class="fas fa-video text-[9px] opacity-50"></i> تعلّم مباشر</span>
+            </div>
+
+            @if(Route::has('student.tutoring-bookings.index'))
+            <a href="{{ route('student.tutoring-bookings.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('student.tutoring-bookings.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-users"></i></span>
+                <span class="flex-1 truncate">حجوزات المجموعات</span>
+                @if($tbUpcoming > 0)<span class="ins-nav-badge">{{ $tbUpcoming }}</span>@endif
             </a>
             @endif
 
-            @if($isStudent || $user->hasPermission('student.view.my-courses'))
-            <a href="{{ route('my-courses.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ request()->routeIs('my-courses.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-[#eef2ff] dark:bg-violet-900/40 text-[#283593] dark:text-violet-400">
-                    <i class="fas fa-book-open text-sm"></i>
-                </span>
-                <span class="flex-1 truncate">{{ __('student.my_courses') }}</span>
-                @if($coursesCount > 0)
-                    <span class="ins-nav-badge bg-[#eef2ff] dark:bg-violet-900/50 text-[#283593] dark:text-violet-300">{{ $coursesCount }}</span>
-                @endif
+            @if(Route::has('student.tutoring-subscriptions.index'))
+            <a href="{{ route('student.tutoring-subscriptions.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('student.tutoring-subscriptions.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-box-open"></i></span>
+                <span class="flex-1 truncate">باقات الحصص</span>
             </a>
-            <a href="{{ route('student.my-course-subscriptions') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ request()->routeIs('student.my-course-subscriptions') ? 'active' : '' }}">
-                <span class="ins-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
-                    <i class="fas fa-calendar-check text-sm"></i>
-                </span>
-                <span class="flex-1 truncate">{{ __('student.course_subscriptions_nav') }}</span>
-            </a>
+            @endif
+
             @if(Route::has('student.one-to-one-sessions.index'))
-            <a href="{{ route('student.one-to-one-sessions.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+            <a href="{{ route('student.one-to-one-sessions.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('student.one-to-one-sessions.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400">
-                    <i class="fas fa-user-graduate text-sm"></i>
-                </span>
+                <span class="ins-icon"><i class="fas fa-user-graduate"></i></span>
                 <span class="flex-1 truncate">{{ __('student.one_to_one_sessions_nav') }}</span>
             </a>
             @endif
-            @endif
 
             @if(Route::has('student.live-sessions.index'))
-            <a href="{{ route('student.live-sessions.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+            <a href="{{ route('student.live-sessions.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('student.live-sessions.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400">
-                    <i class="fas fa-broadcast-tower text-sm"></i>
-                </span>
+                <span class="ins-icon"><i class="fas fa-broadcast-tower"></i></span>
                 <span class="flex-1 truncate">البث المباشر</span>
-                @php $studentLiveCount = \App\Models\LiveSession::where('status', 'live')->count(); @endphp
                 @if($studentLiveCount > 0)
-                    <span class="ins-nav-badge bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400">
-                        <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse inline-block ml-1"></span>{{ $studentLiveCount }}
-                    </span>
+                    <span class="ins-nav-badge">{{ $studentLiveCount }}</span>
                 @endif
             </a>
             @endif
 
             @if(Route::has('student.live-recordings.index'))
-            <a href="{{ route('student.live-recordings.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+            <a href="{{ route('student.live-recordings.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('student.live-recordings.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
-                    <i class="fas fa-play-circle text-sm"></i>
-                </span>
+                <span class="ins-icon"><i class="fas fa-play-circle"></i></span>
                 <span class="flex-1 truncate">تسجيلات البث</span>
             </a>
             @endif
 
-            {{-- ─── التعلم والإنجازات ─── --}}
-            <div class="ins-nav-group mt-3">
-                <span class="inline-flex items-center gap-1.5">
-                    <i class="fas fa-trophy text-[9px] opacity-50"></i>
-                    التعلم والإنجازات
-                </span>
-            </div>
-
-            @if($isStudent || $user->hasPermission('student.view.orders'))
-            <a href="{{ route('orders.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ request()->routeIs('orders.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400">
-                    <i class="fas fa-shopping-bag text-sm"></i>
-                </span>
-                <span class="flex-1 truncate">{{ __('student.orders') }}</span>
+            @if(Route::has('consultations.index') && $isStudent)
+            <a href="{{ route('consultations.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('consultations.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-comments"></i></span>
+                <span class="flex-1 truncate">استشارات المدربين</span>
             </a>
             @endif
 
+            <div class="ins-nav-group mt-2">
+                <span><i class="fas fa-book-open text-[9px] opacity-50"></i> كورساتي</span>
+            </div>
+
+            @if($isStudent || $user->hasPermission('student.view.courses'))
+            @php $catalogActive = request()->routeIs('public.courses', 'public.course.*') || request()->routeIs('academic-years*') || request()->routeIs('subjects.*') || request()->routeIs('courses.show'); @endphp
+            <a href="{{ route('public.courses') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ $catalogActive ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-compass"></i></span>
+                <span class="flex-1 truncate">{{ __('student.browse_courses') }}</span>
+            </a>
+            @endif
+
+            @if($isStudent || $user->hasPermission('student.view.my-courses'))
+            <a href="{{ route('my-courses.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('my-courses.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-bookmark"></i></span>
+                <span class="flex-1 truncate">{{ __('student.my_courses') }}</span>
+                @if($coursesCount > 0)<span class="ins-nav-badge">{{ $coursesCount }}</span>@endif
+            </a>
+            <a href="{{ route('student.my-course-subscriptions') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('student.my-course-subscriptions') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-calendar-check"></i></span>
+                <span class="flex-1 truncate">{{ __('student.course_subscriptions_nav') }}</span>
+            </a>
+            @endif
+
+            <div class="ins-nav-group mt-2">
+                <span><i class="fas fa-chart-line text-[9px] opacity-50"></i> متابعة وإنجاز</span>
+            </div>
+
             @if($isStudent || $user->hasPermission('student.view.exams'))
-            <a href="{{ route('student.exams.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+            <a href="{{ route('student.exams.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('student.exams.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400">
-                    <i class="fas fa-clipboard-check text-sm"></i>
-                </span>
+                <span class="ins-icon"><i class="fas fa-clipboard-check"></i></span>
                 <span class="flex-1 truncate">{{ __('student.exams') }}</span>
             </a>
             @endif
 
             @if($isStudent)
-            <a href="{{ route('student.assignments.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+            <a href="{{ route('student.assignments.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('student.assignments.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
-                    <i class="fas fa-tasks text-sm"></i>
-                </span>
+                <span class="ins-icon"><i class="fas fa-tasks"></i></span>
                 <span class="flex-1 truncate">واجباتي</span>
             </a>
             @endif
 
             @if($isStudent || $user->hasPermission('student.view.certificates'))
-            <a href="{{ route('student.certificates.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+            <a href="{{ route('student.certificates.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('student.certificates.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
-                    <i class="fas fa-award text-sm"></i>
-                </span>
+                <span class="ins-icon"><i class="fas fa-award"></i></span>
                 <span class="flex-1 truncate">{{ __('student.certificates') }}</span>
             </a>
             @endif
 
+            @if($isStudent || $user->hasPermission('student.view.calendar'))
+            <a href="{{ route('calendar') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('calendar') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-calendar-alt"></i></span>
+                <span class="flex-1 truncate">{{ __('student.calendar') }}</span>
+            </a>
+            @endif
+
+            @if($isStudent || $user->hasPermission('student.view.orders'))
+            <a href="{{ route('orders.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('orders.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-receipt"></i></span>
+                <span class="flex-1 truncate">{{ __('student.orders') }}</span>
+            </a>
+            @endif
+
             @if($isStudent || $user->hasPermission('student.view.wallet'))
-            <a href="{{ route('student.wallet.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+            <a href="{{ route('student.wallet.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('student.wallet.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400">
-                    <i class="fas fa-wallet text-sm"></i>
-                </span>
+                <span class="ins-icon"><i class="fas fa-wallet"></i></span>
                 <span class="flex-1 truncate">{{ __('student.wallet') }}</span>
             </a>
             @endif
 
             @if($isStudent && Route::has('referrals.index'))
-            <a href="{{ route('referrals.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+            <a href="{{ route('referrals.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('referrals.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400">
-                    <i class="fas fa-user-friends text-sm"></i>
-                </span>
+                <span class="ins-icon"><i class="fas fa-user-friends"></i></span>
                 <span class="flex-1 truncate">برنامج الإحالات</span>
             </a>
             @endif
 
-            @if($isStudent || $user->hasPermission('student.view.calendar'))
-            @php
-                $upcomingEventsCount = 0;
-                try {
-                    $user = auth()->user();
-                    $upcomingEventsCount += \App\Models\Lecture::whereHas('course', function($q) use ($user) {
-                        $q->whereHas('enrollments', function($q2) use ($user) { $q2->where('user_id', $user->id)->where('status', 'active'); });
-                    })->where('status', 'scheduled')->where('scheduled_at', '>=', now())->count();
-                    $upcomingEventsCount += \App\Models\Exam::whereHas('course', function($q) use ($user) {
-                        $q->whereHas('enrollments', function($q2) use ($user) { $q2->where('user_id', $user->id)->where('status', 'active'); });
-                    })->where('is_active', true)->where('is_published', true)->where(function($q) { $q->where('start_time', '>=', now())->orWhere('start_date', '>=', now()); })->count();
-                    $upcomingEventsCount += \App\Models\Assignment::whereHas('course', function($q) use ($user) {
-                        $q->whereHas('enrollments', function($q2) use ($user) { $q2->where('user_id', $user->id)->where('status', 'active'); });
-                    })->where('status', 'published')->where('due_date', '>=', now())->count();
-                    $upcomingEventsCount += \App\Models\LectureAssignment::whereHas('lecture.course', function($q) use ($user) {
-                        $q->whereHas('enrollments', function($q2) use ($user) { $q2->where('user_id', $user->id)->where('status', 'active'); });
-                    })->where('status', 'published')->where('due_date', '>=', now())->count();
-                } catch (\Exception $e) {}
-            @endphp
-            <a href="{{ route('calendar') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ request()->routeIs('calendar') ? 'active' : '' }}">
-                <span class="ins-icon bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 relative">
-                    <i class="fas fa-calendar-alt text-sm"></i>
-                    @if($upcomingEventsCount > 0)
-                        <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center text-[7px] font-bold text-white">{{ $upcomingEventsCount > 9 ? '9+' : $upcomingEventsCount }}</span>
-                    @endif
-                </span>
-                <span class="flex-1 truncate">{{ __('student.calendar') }}</span>
-                @if($upcomingEventsCount > 0)
-                    <span class="ins-nav-badge bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">{{ $upcomingEventsCount }}</span>
-                @endif
-            </a>
-            @endif
-
-            @if(Route::has('consultations.index') && $isStudent)
-            <a href="{{ route('consultations.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ request()->routeIs('consultations.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
-                    <i class="fas fa-comments-dollar text-sm"></i>
-                </span>
-                <span class="flex-1 truncate">استشارات المدربين</span>
-            </a>
-            @endif
-
             @if($isStudent || $user->hasPermission('student.view.notifications'))
-            <a href="{{ route('notifications') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+            <a href="{{ route('notifications') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('notifications') ? 'active' : '' }}">
-                <span class="ins-icon bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 relative">
-                    <i class="fas fa-bell text-sm"></i>
-                    <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-900 animate-pulse"></span>
-                </span>
+                <span class="ins-icon"><i class="fas fa-bell"></i></span>
                 <span class="flex-1 truncate">{{ __('student.notifications') }}</span>
             </a>
             @endif
 
-            @endif
-
-            {{-- ─── الحساب ─── --}}
-            <div class="ins-nav-group mt-3">
-                <span class="inline-flex items-center gap-1.5">
-                    <i class="fas fa-user-cog text-[9px] opacity-50"></i>
-                    الحساب
-                </span>
+            <div class="ins-nav-group mt-2">
+                <span><i class="fas fa-user text-[9px] opacity-50"></i> الحساب</span>
             </div>
 
             @if($isStudent || $user->hasPermission('student.view.profile'))
-            <a href="{{ route('profile') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+            <a href="{{ route('profile') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('profile') ? 'active' : '' }}">
-                <span class="ins-icon bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-400">
-                    <i class="fas fa-user text-sm"></i>
-                </span>
+                <span class="ins-icon"><i class="fas fa-user"></i></span>
                 <span class="flex-1 truncate">{{ __('student.profile') }}</span>
             </a>
             @endif
 
             @if($isStudent || $user->hasPermission('student.view.settings'))
-            <a href="{{ route('settings') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+            <a href="{{ route('settings') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('settings') ? 'active' : '' }}">
-                <span class="ins-icon bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-400">
-                    <i class="fas fa-cog text-sm"></i>
-                </span>
+                <span class="ins-icon"><i class="fas fa-cog"></i></span>
                 <span class="flex-1 truncate">{{ __('student.settings') }}</span>
             </a>
             @endif
         @endif
 
-        @if(auth()->user()->isAdmin() || auth()->user()->isInstructor())
-            <div class="ins-nav-group mt-3">
-                <span class="inline-flex items-center gap-1.5">
-                    <i class="fas fa-exchange-alt text-[9px] opacity-50"></i>
-                    لوحة أخرى
-                </span>
+        @if($user && ($user->isAdmin() || $user->isInstructor()))
+            <div class="ins-nav-group mt-2">
+                <span><i class="fas fa-exchange-alt text-[9px] opacity-50"></i> لوحة أخرى</span>
             </div>
-            @if(auth()->user()->isAdmin())
-                <a href="{{ route('admin.dashboard') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+            @if($user->isAdmin())
+                <a href="{{ route('admin.dashboard') }}" @click="{{ $closeSidebar }}"
                    class="ins-nav {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                    <span class="ins-icon bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400">
-                        <i class="fas fa-shield-alt text-sm"></i>
-                    </span>
+                    <span class="ins-icon"><i class="fas fa-shield-alt"></i></span>
                     <span class="flex-1 truncate">{{ __('student.admin_panel') }}</span>
                 </a>
             @endif
-            @if(auth()->user()->isInstructor())
-                <a href="{{ route('dashboard') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-                   class="ins-nav">
-                <span class="ins-icon bg-[#FFE5F7] dark:bg-sky-900/40 text-[#283593] dark:text-sky-400">
-                        <i class="fas fa-chalkboard-teacher text-sm"></i>
-                    </span>
+            @if($user->isInstructor())
+                <a href="{{ route('dashboard') }}" @click="{{ $closeSidebar }}" class="ins-nav">
+                    <span class="ins-icon"><i class="fas fa-chalkboard-teacher"></i></span>
                     <span class="flex-1 truncate">لوحة المعلم</span>
                 </a>
             @endif
         @endif
     </nav>
 
-    {{-- User card --}}
-    <div class="px-3 py-3 flex-shrink-0 border-t border-gray-200/80 dark:border-gray-700/80">
+    <div class="px-3 py-3 flex-shrink-0 border-t border-[#E8EEF8] dark:border-gray-700/80">
         <div class="ins-user-card flex items-center gap-3">
             <div class="u-avatar flex-shrink-0 w-10 h-10 rounded-xl">
-                @if(auth()->user()->profile_image)
-                    <img src="{{ auth()->user()->profile_image_url }}" alt="" class="w-full h-full object-cover rounded-xl">
+                @if($user?->profile_image)
+                    <img src="{{ $user->profile_image_url }}" alt="" class="w-full h-full object-cover rounded-xl">
                 @else
-                    {{ mb_substr(auth()->user()->name, 0, 1) }}
+                    {{ mb_substr($user?->name ?? 'U', 0, 1) }}
                 @endif
             </div>
             <div class="flex-1 min-w-0">
-                <p class="text-sm font-bold text-gray-900 dark:text-gray-100 truncate leading-tight">{{ auth()->user()->name }}</p>
+                <p class="text-sm font-bold text-gray-900 dark:text-gray-100 truncate leading-tight">{{ $user?->name }}</p>
                 <p class="text-[10px] text-gray-500 dark:text-gray-400 truncate mt-0.5">
-                    @if(auth()->user()->isAdmin()) {{ __('student.admin_role') }}
-                    @elseif(auth()->user()->isInstructor()) {{ __('student.instructor_role') }}
+                    @if($user?->isAdmin()) {{ __('student.admin_role') }}
+                    @elseif($user?->isInstructor()) {{ __('student.instructor_role') }}
                     @else {{ __('student.student_role') }}
                     @endif
                 </p>

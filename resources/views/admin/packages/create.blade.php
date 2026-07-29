@@ -1,246 +1,200 @@
 @extends('layouts.admin')
 
-@section('title', 'إضافة باقة جديدة')
-@section('header', 'إضافة باقة جديدة')
+@section('title', 'إضافة باقة برامج - ' . config('app.name'))
+@section('page_title', 'باقة برامج جديدة')
 
 @section('content')
-<div class="space-y-6">
-    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold text-gray-900">إضافة باقة جديدة</h1>
-            <a href="{{ route('admin.packages.index') }}" class="text-gray-600 hover:text-gray-900">
-                <i class="fas fa-arrow-right"></i>
-            </a>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $coursesJson = $courses->map(fn ($c) => ['id' => $c->id, 'price' => (float) $c->price])->values()->toJson();
+@endphp
+<div class="space-y-5" x-data="packageForm({{ $coursesJson }}, {{ (float) old('price', 0) }})">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <p class="text-xs font-medium text-muted">الباقات والأسعار · برامج مسجّلة</p>
+            <h2 class="mt-1 text-2xl font-semibold text-ink">إنشاء باقة برامج</h2>
+            <p class="mt-1 text-sm text-muted">اجمع عدة برامج بسعر موحّد بالدولار مع مسار تعليمي اختياري.</p>
         </div>
-        
-        <form action="{{ route('admin.packages.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
-            @csrf
-            
-            <!-- المعلومات الأساسية -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">اسم الباقة *</label>
-                    <input type="text" name="name" required value="{{ old('name') }}" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-                           placeholder="مثال: باقة تأهيل المعلّمين الشاملة">
-                    @error('name')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
+        <a href="{{ route('admin.packages.index') }}" class="btn-press inline-flex h-9 items-center rounded-xl border border-line px-4 text-sm text-ink-soft">رجوع</a>
+    </section>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">الرابط (Slug)</label>
-                    <input type="text" name="slug" value="{{ old('slug') }}" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-                           placeholder="سيتم إنشاؤه تلقائياً من الاسم">
-                    <p class="mt-1 text-xs text-gray-500">سيتم إنشاء الرابط تلقائياً من الاسم إذا تركت فارغاً</p>
-                    @error('slug')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
+    @if($errors->any())
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 shadow-soft">
+            <ul class="list-disc pr-5 space-y-1">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">السعر *</label>
-                    <input type="number" name="price" step="0.01" min="0" required value="{{ old('price', 0) }}" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-                           placeholder="0.00">
-                    @error('price')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">السعر الأصلي (قبل الخصم)</label>
-                    <input type="number" name="original_price" step="0.01" min="0" value="{{ old('original_price') }}" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-                           placeholder="0.00">
-                    <p class="mt-1 text-xs text-gray-500">اتركه فارغاً إذا لم يكن هناك خصم</p>
-                    @error('original_price')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">ترتيب العرض</label>
-                    <input type="number" name="order" min="0" value="{{ old('order', 0) }}" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-                           placeholder="0">
-                    <p class="mt-1 text-xs text-gray-500">كلما قل الرقم، ظهرت الباقة أولاً</p>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">مدة الصلاحية (بالأيام)</label>
-                    <input type="number" name="duration_days" min="0" value="{{ old('duration_days') }}" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-                           placeholder="اتركه فارغاً للصلاحية الدائمة">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ البداية</label>
-                    <input type="datetime-local" name="starts_at" value="{{ old('starts_at') }}" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">تاريخ الانتهاء</label>
-                    <input type="datetime-local" name="ends_at" value="{{ old('ends_at') }}" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                </div>
-            </div>
-
-            <!-- الوصف -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">الوصف (صفحة تفاصيل الباقة)</label>
-                <textarea name="description" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="وصف الباقة...">{{ old('description') }}</textarea>
-                @error('description')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">نص البطاقة (صفحة الأسعار)</label>
-                <textarea name="card_summary" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="نص مختصر يظهر في بطاقة الباقة في صفحة الأسعار">{{ old('card_summary') }}</textarea>
-                <p class="mt-1 text-xs text-gray-500">اختياري. إن تُرك فارغاً يُستخدم الوصف في البطاقة. النقاط مع الصح تُملأ من «المميزات».</p>
-                @error('card_summary')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- الصورة -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">صورة الباقة</label>
-                <input type="file" name="thumbnail" accept="image/*" 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                <p class="mt-1 text-xs text-gray-500">الصيغ المدعومة: JPEG, PNG, JPG, GIF (حد أقصى 40 ميجابايت)</p>
-                @error('thumbnail')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- المميزات -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">المميزات</label>
-                <div id="features-container" class="space-y-2">
-                    <div class="flex gap-2">
-                        <input type="text" name="features[]" 
-                               class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-                               placeholder="مثال: وصول لجميع الكورسات">
-                        <button type="button" onclick="removeFeature(this)" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 hidden">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-                <button type="button" onclick="addFeature()" class="mt-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
-                    <i class="fas fa-plus ml-2"></i>
-                    إضافة ميزة
-                </button>
-                <p class="mt-1 text-xs text-gray-500">أضف المميزات التي ستظهر في صفحة الأسعار</p>
-            </div>
-
-            <!-- اختيار الكورسات -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">الكورسات *</label>
-                <div class="border border-gray-300 rounded-lg p-4 max-h-64 overflow-y-auto">
-                    @if($courses->count() > 0)
-                    <div class="space-y-2">
-                        @foreach($courses as $course)
-                        <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
-                            <input type="checkbox" name="courses[]" value="{{ $course->id }}" 
-                                   {{ in_array($course->id, old('courses', [])) ? 'checked' : '' }}
-                                   class="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500">
-                            <span class="mr-3 text-sm text-gray-700">
-                                {{ $course->title }}
-                                @if($course->price > 0)
-                                <span class="text-xs text-gray-500">({{ number_format($course->price, 2) }} ج.م)</span>
-                                @else
-                                <span class="text-xs text-green-600">(مجاني)</span>
-                                @endif
-                            </span>
-                        </label>
-                        @endforeach
-                    </div>
-                    @else
-                    <p class="text-sm text-gray-500 text-center">لا توجد كورسات متاحة</p>
-                    @endif
-                </div>
-                @error('courses')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- الخيارات -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <label class="flex items-center">
-                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }} 
-                           class="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500">
-                    <span class="mr-2 text-sm font-medium text-gray-700">نشط</span>
-                </label>
-
-                <label class="flex items-center">
-                    <input type="checkbox" name="is_featured" value="1" {{ old('is_featured') ? 'checked' : '' }} 
-                           class="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500">
-                    <span class="mr-2 text-sm font-medium text-gray-700">مميز</span>
-                </label>
-
-                <label class="flex items-center">
-                    <input type="checkbox" name="is_popular" value="1" {{ old('is_popular') ? 'checked' : '' }} 
-                           class="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500">
-                    <span class="mr-2 text-sm font-medium text-gray-700">الأكثر شعبية</span>
-                </label>
-            </div>
-
-            <!-- الأزرار -->
-            <div class="flex gap-4 pt-4 border-t border-gray-200">
-                <button type="submit" class="bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-lg shadow-sky-500/30">
-                    <i class="fas fa-save ml-2"></i>
-                    إنشاء الباقة
-                </button>
-                <a href="{{ route('admin.packages.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-medium transition-colors">
-                    <i class="fas fa-times ml-2"></i>
-                    إلغاء
-                </a>
-            </div>
-        </form>
+    <div class="rounded-2xl border border-accent/20 bg-accent-soft/40 px-4 py-3 text-sm text-ink">
+        <strong>حاسبة التوفير:</strong>
+        مجموع أسعار البرامج المختارة =
+        <span class="font-bold tabular-nums text-accent" x-text="coursesTotal.toFixed(2) + ' USD'"></span>
+        · سعر الباقة =
+        <span class="font-bold tabular-nums" x-text="packagePrice.toFixed(2) + ' USD'"></span>
+        · التوفير =
+        <span class="font-bold tabular-nums text-emerald-700" x-text="Math.max(0, coursesTotal - packagePrice).toFixed(2) + ' USD'"></span>
     </div>
+
+    <form action="{{ route('admin.packages.store') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+        @csrf
+
+        <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+            <h3 class="text-sm font-semibold text-ink">المعلومات الأساسية</h3>
+            <div class="mt-4 grid gap-4 md:grid-cols-2">
+                <div class="md:col-span-2">
+                    <label class="{{ $labelClass }}" for="name">اسم الباقة *</label>
+                    <input id="name" name="name" value="{{ old('name') }}" required class="{{ $fieldClass }}" placeholder="مثال: باقة Business English الشاملة">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="slug">الرابط (Slug)</label>
+                    <input id="slug" name="slug" value="{{ old('slug') }}" class="{{ $fieldClass }}" dir="ltr" placeholder="يُنشأ تلقائياً">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="track">المسار التعليمي</label>
+                    <select id="track" name="track" class="{{ $fieldClass }}">
+                        <option value="">بدون تحديد</option>
+                        @foreach(\App\Models\Package::trackLabels() as $key => $label)
+                            <option value="{{ $key }}" @selected(old('track') === $key)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="price">السعر النهائي *</label>
+                    <input type="number" step="0.01" min="0" id="price" name="price" x-model.number="packagePrice" required class="{{ $fieldClass }}">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="original_price">السعر الأصلي (قبل الخصم)</label>
+                    <input type="number" step="0.01" min="0" id="original_price" name="original_price" value="{{ old('original_price') }}" class="{{ $fieldClass }}">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="currency">العملة</label>
+                    <input id="currency" name="currency" value="{{ old('currency', 'USD') }}" class="{{ $fieldClass }}" dir="ltr">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="order">ترتيب العرض</label>
+                    <input type="number" min="0" id="order" name="order" value="{{ old('order', 0) }}" class="{{ $fieldClass }}">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="duration_days">مدة الصلاحية (أيام)</label>
+                    <input type="number" min="0" id="duration_days" name="duration_days" value="{{ old('duration_days') }}" class="{{ $fieldClass }}" placeholder="فارغ = دائم">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="starts_at">تاريخ البداية</label>
+                    <input type="datetime-local" id="starts_at" name="starts_at" value="{{ old('starts_at') }}" class="{{ $fieldClass }}">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="ends_at">تاريخ الانتهاء</label>
+                    <input type="datetime-local" id="ends_at" name="ends_at" value="{{ old('ends_at') }}" class="{{ $fieldClass }}">
+                </div>
+            </div>
+        </article>
+
+        <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft space-y-4">
+            <div>
+                <label class="{{ $labelClass }}" for="description">الوصف (صفحة التفاصيل)</label>
+                <textarea id="description" name="description" rows="4" class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">{{ old('description') }}</textarea>
+            </div>
+            <div>
+                <label class="{{ $labelClass }}" for="card_summary">نص البطاقة (صفحة الأسعار)</label>
+                <textarea id="card_summary" name="card_summary" rows="3" class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" placeholder="نص مختصر يظهر في بطاقة الباقة">{{ old('card_summary') }}</textarea>
+            </div>
+            <div>
+                <label class="{{ $labelClass }}" for="thumbnail">صورة الباقة</label>
+                <input type="file" id="thumbnail" name="thumbnail" accept="image/*" class="{{ $fieldClass }}">
+            </div>
+        </article>
+
+        <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+            <label class="{{ $labelClass }}">المميزات</label>
+            <div id="features-container" class="space-y-2">
+                <div class="flex gap-2">
+                    <input type="text" name="features[]" class="h-11 flex-1 rounded-xl border border-line px-4 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" placeholder="مثال: وصول لجميع برامج المسار">
+                    <button type="button" onclick="removeFeature(this)" class="hidden inline-flex h-11 w-11 items-center justify-center rounded-xl border border-line text-rose-600"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <button type="button" onclick="addFeature()" class="btn-press mt-3 inline-flex h-9 items-center gap-2 rounded-xl border border-line px-3 text-sm text-ink-soft hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-plus text-xs"></i> إضافة ميزة
+            </button>
+        </article>
+
+        <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+            <label class="{{ $labelClass }}">البرامج في الباقة *</label>
+            <div class="mt-2 max-h-72 space-y-1 overflow-y-auto rounded-xl border border-line p-3">
+                @forelse($courses as $course)
+                    <label class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#f8faf9]">
+                        <input type="checkbox" name="courses[]" value="{{ $course->id }}"
+                               data-price="{{ (float) $course->price }}"
+                               @checked(in_array($course->id, old('courses', [])))
+                               @change="recalc()"
+                               class="rounded border-line text-accent focus:ring-accent/20">
+                        <span class="flex-1 text-sm text-ink">{{ $course->title }}</span>
+                        <span class="text-xs tabular-nums text-muted">
+                            @if((float) $course->price > 0)
+                                {{ number_format((float) $course->price, 2) }} USD
+                            @else
+                                مجاني
+                            @endif
+                        </span>
+                    </label>
+                @empty
+                    <p class="py-6 text-center text-sm text-muted">لا توجد برامج نشطة</p>
+                @endforelse
+            </div>
+        </article>
+
+        <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+            <div class="flex flex-wrap gap-6">
+                <label class="inline-flex items-center gap-2 text-sm text-ink"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', true)) class="rounded border-line text-accent"> نشط</label>
+                <label class="inline-flex items-center gap-2 text-sm text-ink"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured')) class="rounded border-line text-accent"> مميز</label>
+                <label class="inline-flex items-center gap-2 text-sm text-ink"><input type="checkbox" name="is_popular" value="1" @checked(old('is_popular')) class="rounded border-line text-accent"> الأكثر شعبية</label>
+            </div>
+        </article>
+
+        <div class="flex flex-wrap gap-3">
+            <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-save text-xs"></i> إنشاء الباقة
+            </button>
+            <a href="{{ route('admin.packages.index') }}" class="inline-flex h-11 items-center rounded-xl border border-line px-5 text-sm text-ink-soft">إلغاء</a>
+        </div>
+    </form>
 </div>
 
 <script>
+function packageForm(courses, initialPrice) {
+    return {
+        packagePrice: initialPrice || 0,
+        coursesTotal: 0,
+        recalc() {
+            let total = 0;
+            document.querySelectorAll('input[name="courses[]"]:checked').forEach((el) => {
+                total += parseFloat(el.dataset.price || '0') || 0;
+            });
+            this.coursesTotal = total;
+        },
+        init() {
+            this.$nextTick(() => this.recalc());
+        }
+    };
+}
 function addFeature() {
     const container = document.getElementById('features-container');
-    const newFeature = document.createElement('div');
-    newFeature.className = 'flex gap-2';
-    newFeature.innerHTML = `
-        <input type="text" name="features[]" 
-               class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-               placeholder="مثال: وصول لجميع الكورسات">
-        <button type="button" onclick="removeFeature(this)" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    container.appendChild(newFeature);
-    
-    // إظهار أزرار الحذف للعناصر الموجودة
-    container.querySelectorAll('button').forEach(btn => {
-        if (btn.textContent.includes('times')) {
-            btn.classList.remove('hidden');
-        }
-    });
+    const row = document.createElement('div');
+    row.className = 'flex gap-2';
+    row.innerHTML = `<input type="text" name="features[]" class="h-11 flex-1 rounded-xl border border-line px-4 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" placeholder="ميزة إضافية">
+        <button type="button" onclick="removeFeature(this)" class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-line text-rose-600"><i class="fas fa-times"></i></button>`;
+    container.appendChild(row);
+    container.querySelectorAll('button').forEach(btn => btn.classList.remove('hidden'));
 }
-
 function removeFeature(button) {
-    button.parentElement.remove();
-    
-    // إخفاء أزرار الحذف إذا بقي عنصر واحد فقط
     const container = document.getElementById('features-container');
-    const inputs = container.querySelectorAll('input[type="text"]');
-    if (inputs.length === 1) {
-        container.querySelectorAll('button').forEach(btn => {
-            if (btn.textContent.includes('times')) {
-                btn.classList.add('hidden');
-            }
-        });
+    button.parentElement.remove();
+    if (container.querySelectorAll('input').length === 1) {
+        container.querySelectorAll('button').forEach(btn => btn.classList.add('hidden'));
     }
 }
 </script>
 @endsection
-

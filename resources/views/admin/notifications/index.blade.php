@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'إدارة الإشعارات')
-@section('header', 'إدارة الإشعارات')
+@section('title', 'إدارة الإشعارات - ' . config('app.name'))
+@section('page_title', 'إدارة الإشعارات')
 
 @section('content')
 @php
@@ -10,97 +10,79 @@
             'label' => 'إجمالي الإشعارات',
             'value' => number_format($stats['total']),
             'icon' => 'fas fa-bell',
-            'color' => 'blue',
         ],
         [
             'label' => 'غير المقروء',
             'value' => number_format($stats['unread']),
             'icon' => 'fas fa-envelope-open-text',
-            'color' => 'amber',
         ],
         [
             'label' => 'مقروء',
             'value' => number_format($stats['total'] - $stats['unread']),
             'icon' => 'fas fa-check-circle',
-            'color' => 'emerald',
         ],
         [
             'label' => 'أُرسلت اليوم',
             'value' => number_format($stats['today']),
             'icon' => 'fas fa-calendar-day',
-            'color' => 'purple',
         ],
     ];
 @endphp
 
-<div class="space-y-6">
-    <!-- الهيدر -->
-    <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-6 py-5 bg-slate-50 border-b border-slate-200 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md">
-                    <i class="fas fa-bell text-lg"></i>
-                </div>
-                <div>
-                    <h2 class="text-2xl font-black text-slate-900">مركز الإشعارات</h2>
-                    <p class="text-sm text-slate-600 mt-1">إرسال التنبيهات للطلاب ومتابعة حالة القراءة للمستلمين. تنبيهات تذاكر الدعم وغيرها من الرسائل الموجهة لك تظهر في <a href="{{ route('admin.notifications.inbox') }}" class="text-sky-600 font-semibold hover:underline">وارد الإشعارات</a>.</p>
-                </div>
-            </div>
-            <div class="flex flex-wrap items-center gap-3">
-                <a href="{{ route('admin.notifications.statistics') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
-                    <i class="fas fa-chart-line"></i>
-                    الإحصائيات
-                </a>
-                <a href="{{ route('admin.notifications.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200">
-                    <i class="fas fa-paper-plane"></i>
-                    إرسال إشعار جديد
-                </a>
-            </div>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">التنبيهات والرسائل · إرسال ومتابعة</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">مركز الإشعارات</h2>
+            <p class="mt-1 max-w-2xl text-sm text-muted">
+                إرسال التنبيهات للطلاب ومتابعة حالة القراءة للمستلمين. تنبيهات تذاكر الدعم وغيرها من الرسائل الموجهة لك تظهر في
+                <a href="{{ route('admin.notifications.inbox') }}" class="font-semibold text-accent hover:underline">وارد الإشعارات</a>.
+            </p>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 p-6">
-            @foreach ($summaryCards as $card)
-                <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex-1">
-                            <p class="text-xs font-semibold text-slate-600 mb-1">{{ $card['label'] }}</p>
-                            <p class="text-2xl font-black text-slate-900">{{ $card['value'] }}</p>
-                        </div>
-                        <div class="w-12 h-12 rounded-lg bg-{{ $card['color'] }}-100 flex items-center justify-center text-{{ $card['color'] }}-600 shadow-sm">
-                            <i class="{{ $card['icon'] }} text-lg"></i>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('admin.notifications.statistics') }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-chart-line text-xs"></i>
+                الإحصائيات
+            </a>
+            <a href="{{ route('admin.notifications.create') }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-paper-plane text-xs"></i>
+                إرسال إشعار جديد
+            </a>
         </div>
     </section>
 
-    <!-- البحث والفلترة -->
-    <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-6 py-5 border-b border-slate-200 bg-slate-50">
-            <h3 class="text-lg font-black text-slate-900 mb-2 flex items-center gap-2">
-                <i class="fas fa-filter text-blue-600"></i>
-                البحث والفلترة
-            </h3>
-            <p class="text-xs text-slate-600">تصفية الإشعارات حسب النوع والحالة أو البحث داخل العناوين.</p>
+    <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach ($summaryCards as $card)
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                    <i class="{{ $card['icon'] }} text-sm"></i>
+                </div>
+                <p class="mt-3 text-xs font-medium text-muted">{{ $card['label'] }}</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $card['value'] }}</p>
+            </article>
+        @endforeach
+    </section>
+
+    <section class="rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-4 py-4 sm:px-5">
+            <h3 class="text-sm font-semibold text-ink">البحث والفلترة</h3>
+            <p class="mt-0.5 text-xs text-muted">تصفية الإشعارات حسب النوع والحالة أو البحث داخل العناوين.</p>
         </div>
-        <div class="p-6">
-            <form method="GET" id="filterForm" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="p-4 sm:p-5">
+            <form method="GET" id="filterForm" class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                        <i class="fas fa-search text-blue-600 text-sm"></i>
-                        البحث
-                    </label>
+                    <label class="mb-1.5 block text-xs font-medium text-muted">البحث</label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-3 flex items-center text-blue-500"><i class="fas fa-search"></i></span>
-                        <input type="text" name="search" value="{{ old('search', request('search')) }}" maxlength="255" placeholder="عنوان الإشعار أو محتواه" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 pr-10 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                        <span class="absolute inset-y-0 start-3 flex items-center text-muted"><i class="fas fa-search text-xs"></i></span>
+                        <input type="text" name="search" value="{{ old('search', request('search')) }}" maxlength="255" placeholder="عنوان الإشعار أو محتواه"
+                               class="h-11 w-full rounded-xl border border-line bg-surface ps-9 pe-4 text-sm text-ink focus:border-accent focus:ring-accent/20" />
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                        <i class="fas fa-tag text-blue-600 text-sm"></i>
-                        نوع الإشعار
-                    </label>
-                    <select name="type" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    <label class="mb-1.5 block text-xs font-medium text-muted">نوع الإشعار</label>
+                    <select name="type" class="h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink focus:border-accent focus:ring-accent/20">
                         <option value="">جميع الأنواع</option>
                         @foreach ($notificationTypes as $key => $type)
                             <option value="{{ htmlspecialchars($key, ENT_QUOTES, 'UTF-8') }}" {{ request('type') == $key ? 'selected' : '' }}>{{ htmlspecialchars($type, ENT_QUOTES, 'UTF-8') }}</option>
@@ -108,219 +90,214 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                        <i class="fas fa-toggle-on text-blue-600 text-sm"></i>
-                        الحالة
-                    </label>
-                    <select name="status" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    <label class="mb-1.5 block text-xs font-medium text-muted">الحالة</label>
+                    <select name="status" class="h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink focus:border-accent focus:ring-accent/20">
                         <option value="">جميع الحالات</option>
                         <option value="read" {{ request('status') == 'read' ? 'selected' : '' }}>مقروءة</option>
                         <option value="unread" {{ request('status') == 'unread' ? 'selected' : '' }}>غير مقروءة</option>
                     </select>
                 </div>
                 <div class="flex items-end gap-2">
-                    <button type="submit" class="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200">
-                        <i class="fas fa-filter"></i>
+                    <button type="submit" class="btn-press inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                        <i class="fas fa-filter text-xs"></i>
                         تطبيق الفلاتر
                     </button>
                     @if(request()->anyFilled(['search', 'type', 'status']))
-                    <a href="{{ route('admin.notifications.index') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors" title="مسح الفلتر">
-                        <i class="fas fa-times"></i>
-                    </a>
+                        <a href="{{ route('admin.notifications.index') }}" class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-line text-muted hover:bg-canvas" title="مسح الفلتر">
+                            <i class="fas fa-times text-xs"></i>
+                        </a>
                     @endif
                 </div>
             </form>
         </div>
     </section>
 
-    <!-- الإشعارات المرسلة -->
-    <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-6 py-5 border-b border-slate-200 bg-slate-50 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="flex flex-col gap-3 border-b border-line px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div>
-                <h3 class="text-lg font-black text-slate-900">الإشعارات المرسلة</h3>
-                <p class="text-xs text-slate-600 mt-1">{{ $notifications->total() }} إشعار تم إرساله حتى الآن.</p>
+                <h3 class="text-sm font-semibold text-ink">الإشعارات المرسلة</h3>
+                <p class="mt-0.5 text-xs text-muted">
+                    <span class="font-semibold tabular-nums text-accent">{{ number_format($notifications->total()) }}</span>
+                    إشعار تم إرساله حتى الآن.
+                </p>
             </div>
-            <div class="flex flex-wrap items-center gap-3">
-                <button type="button" onclick="markAllAsRead()" class="inline-flex items-center gap-2 rounded-xl border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-600 bg-white hover:bg-emerald-50 transition-colors">
-                    <i class="fas fa-check-double"></i>
+            <div class="flex flex-wrap items-center gap-2">
+                <button type="button" onclick="markAllAsRead()"
+                        class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                    <i class="fas fa-check-double text-xs"></i>
                     تحديد الكل كمقروء
                 </button>
-                <button type="button" onclick="cleanupOld()" class="inline-flex items-center gap-2 rounded-xl border border-rose-300 px-4 py-2 text-sm font-semibold text-rose-600 bg-white hover:bg-rose-50 transition-colors">
-                    <i class="fas fa-trash-alt"></i>
+                <button type="button" onclick="cleanupOld()"
+                        class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-rose-200 px-4 text-sm font-medium text-rose-700 hover:bg-rose-50">
+                    <i class="fas fa-trash-alt text-xs"></i>
                     حذف القديمة
                 </button>
             </div>
         </div>
 
         @if ($notifications->count() > 0)
-            <div class="p-6 space-y-3">
+            <div class="divide-y divide-line">
                 @foreach ($notifications as $notification)
                     @php
                         $typeColor = match($notification->type_color ?? '') {
-                            'blue' => 'bg-blue-100 text-blue-600',
-                            'green' => 'bg-emerald-100 text-emerald-600',
-                            'yellow' => 'bg-amber-100 text-amber-600',
-                            'red' => 'bg-rose-100 text-rose-600',
-                            'purple' => 'bg-purple-100 text-purple-600',
-                            'orange' => 'bg-orange-100 text-orange-600',
-                            default => 'bg-slate-100 text-slate-600'
+                            'blue' => 'bg-[#f2f5f4] text-accent',
+                            'green' => 'bg-emerald-50 text-emerald-700',
+                            'yellow' => 'bg-amber-50 text-amber-700',
+                            'red' => 'bg-rose-50 text-rose-700',
+                            'purple' => 'bg-canvas text-muted',
+                            'orange' => 'bg-orange-50 text-orange-700',
+                            default => 'bg-canvas text-muted'
                         };
                         $priorityClasses = match($notification->priority ?? '') {
-                            'urgent' => 'bg-rose-100 text-rose-700 border border-rose-200',
-                            'high' => 'bg-amber-100 text-amber-700 border border-amber-200',
-                            'low' => 'bg-slate-100 text-slate-700 border border-slate-200',
-                            default => 'bg-blue-100 text-blue-700 border border-blue-200'
+                            'urgent' => 'bg-rose-50 text-rose-700 border border-rose-100',
+                            'high' => 'bg-amber-50 text-amber-700 border border-amber-100',
+                            'low' => 'bg-canvas text-muted border border-line',
+                            default => 'bg-[#f2f5f4] text-accent border border-line'
                         };
                     @endphp
-                    <div class="rounded-xl border border-slate-200 bg-white p-5 hover:border-blue-300 hover:shadow-md transition-all duration-200 {{ $notification->is_read ? 'opacity-75' : '' }}">
+                    <div class="p-4 transition hover:bg-canvas/60 sm:p-5 {{ $notification->is_read ? 'opacity-75' : '' }}">
                         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                             <div class="flex flex-1 items-start gap-4">
-                                <div class="w-12 h-12 flex-shrink-0 items-center justify-center rounded-xl {{ $typeColor }} flex">
-                                    <i class="{{ $notification->type_icon ?? 'fas fa-bell' }} text-lg"></i>
+                                <div class="inline-flex size-10 shrink-0 items-center justify-center rounded-xl {{ $typeColor }}">
+                                    <i class="{{ $notification->type_icon ?? 'fas fa-bell' }} text-sm"></i>
                                 </div>
-                                <div class="flex-1 space-y-2">
+                                <div class="min-w-0 flex-1 space-y-2">
                                     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                                        <h4 class="text-base font-bold text-slate-900">{{ htmlspecialchars($notification->title, ENT_QUOTES, 'UTF-8') }}</h4>
-                                        <span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold {{ $priorityClasses }}">
-                                            <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+                                        <h4 class="text-sm font-semibold text-ink">{{ htmlspecialchars($notification->title, ENT_QUOTES, 'UTF-8') }}</h4>
+                                        <span class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold {{ $priorityClasses }}">
+                                            <span class="size-1.5 rounded-full bg-current"></span>
                                             {{ htmlspecialchars(\App\Models\Notification::getPriorities()[$notification->priority] ?? $notification->priority, ENT_QUOTES, 'UTF-8') }}
                                         </span>
                                         @unless ($notification->is_read)
-                                            <span class="inline-flex items-center gap-1.5 rounded-lg bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700 border border-blue-200">
-                                                <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+                                            <span class="inline-flex items-center gap-1.5 rounded-lg border border-line bg-accent-soft px-2.5 py-1 text-[11px] font-semibold text-accent">
+                                                <span class="size-1.5 rounded-full bg-current"></span>
                                                 جديد
                                             </span>
                                         @endunless
                                     </div>
-                                    <p class="text-sm leading-relaxed text-slate-600">{{ htmlspecialchars(Str::limit($notification->message, 200), ENT_QUOTES, 'UTF-8') }}</p>
-                                    <div class="flex flex-wrap items-center gap-3 text-xs text-slate-600">
+                                    <p class="text-sm leading-relaxed text-muted">{{ htmlspecialchars(Str::limit($notification->message, 200), ENT_QUOTES, 'UTF-8') }}</p>
+                                    <div class="flex flex-wrap items-center gap-3 text-xs text-muted">
                                         <span class="inline-flex items-center gap-1.5">
-                                            <i class="fas fa-user text-blue-500"></i>
+                                            <i class="fas fa-user text-accent"></i>
                                             {{ htmlspecialchars($notification->user->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}
                                         </span>
                                         <span class="inline-flex items-center gap-1.5">
-                                            <i class="fas fa-tag text-blue-500"></i>
+                                            <i class="fas fa-tag text-accent"></i>
                                             {{ htmlspecialchars(\App\Models\Notification::getTypes()[$notification->type] ?? $notification->type, ENT_QUOTES, 'UTF-8') }}
                                         </span>
                                         <span class="inline-flex items-center gap-1.5">
-                                            <i class="fas fa-clock text-blue-500"></i>
+                                            <i class="fas fa-clock text-accent"></i>
                                             {{ $notification->created_at->diffForHumans() }}
                                         </span>
                                         @if ($notification->target_type !== 'individual')
                                             <span class="inline-flex items-center gap-1.5">
-                                                <i class="fas fa-users text-blue-500"></i>
+                                                <i class="fas fa-users text-accent"></i>
                                                 {{ htmlspecialchars(\App\Models\Notification::getTargetTypes()[$notification->target_type] ?? $notification->target_type, ENT_QUOTES, 'UTF-8') }}
                                             </span>
                                         @endif
                                         @if ($notification->action_url)
-                                            <span class="inline-flex items-center gap-1.5 text-blue-600">
-                                                <i class="fas fa-link text-blue-500"></i>
+                                            <span class="inline-flex items-center gap-1.5 text-accent">
+                                                <i class="fas fa-link"></i>
                                                 {{ htmlspecialchars($notification->action_text ?: 'رابط مرتبط', ENT_QUOTES, 'UTF-8') }}
                                             </span>
                                         @endif
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 self-end lg:self-start flex-shrink-0">
-                                <a href="{{ route('admin.notifications.show', $notification) }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-colors" title="عرض التفاصيل">
-                                    <i class="fas fa-eye text-sm"></i>
+                            <div class="flex shrink-0 items-center gap-2 self-end lg:self-start">
+                                <a href="{{ route('admin.notifications.show', $notification) }}"
+                                   class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-accent hover:bg-accent-soft hover:text-accent"
+                                   title="عرض التفاصيل">
+                                    <i class="fas fa-eye text-xs"></i>
                                 </a>
                                 <form action="{{ route('admin.notifications.destroy', $notification) }}" method="POST" class="delete-form" onsubmit="return confirmDelete(event);">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rose-300 bg-white text-rose-600 hover:bg-rose-50 hover:border-rose-400 transition-colors" title="حذف">
-                                        <i class="fas fa-trash text-sm"></i>
+                                    <button type="submit"
+                                            class="inline-flex size-9 items-center justify-center rounded-xl border border-rose-200 text-rose-700 hover:bg-rose-50"
+                                            title="حذف">
+                                        <i class="fas fa-trash text-xs"></i>
                                     </button>
                                 </form>
                             </div>
                         </div>
                     </div>
                 @endforeach
-
-                @if ($notifications->hasPages())
-                    <div class="border-t border-slate-200 pt-5">
-                        {{ $notifications->appends(request()->query())->links() }}
-                    </div>
-                @endif
             </div>
-        @else
-            <div class="p-12 text-center">
-                <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                    <i class="fas fa-bell-slash text-2xl"></i>
+
+            @if ($notifications->hasPages())
+                <div class="border-t border-line px-4 py-4 sm:px-5">
+                    {{ $notifications->appends(request()->query())->links() }}
                 </div>
-                <p class="font-bold text-slate-900 mb-1">لا توجد إشعارات</p>
-                <p class="text-sm text-slate-600">لا توجد إشعارات مطابقة للبحث الحالي.</p>
+            @endif
+        @else
+            <div class="px-4 py-16 text-center sm:px-5">
+                <div class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-[#f2f5f4] text-accent">
+                    <i class="fas fa-bell-slash text-lg"></i>
+                </div>
+                <p class="text-sm font-semibold text-ink">لا توجد إشعارات</p>
+                <p class="mt-1 text-xs text-muted">لا توجد إشعارات مطابقة للبحث الحالي.</p>
             </div>
         @endif
-    </section>
+    </article>
 
-    <section class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <!-- إرسال سريع -->
-        <div class="xl:col-span-2 rounded-xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-            <div class="px-6 py-5 border-b border-slate-200 bg-slate-50">
-                <h3 class="text-lg font-black text-slate-900 mb-2 flex items-center gap-2">
-                    <i class="fas fa-bolt text-blue-600"></i>
-                    إرسال سريع
-                </h3>
-                <p class="text-xs text-slate-600">أرسل تنبيهاً عاماً لجميع الطلاب بخطوات بسيطة.</p>
+    <section class="grid grid-cols-1 gap-5 xl:grid-cols-3">
+        <div class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft xl:col-span-2">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-sm font-semibold text-ink">إرسال سريع</h3>
+                <p class="mt-0.5 text-xs text-muted">أرسل تنبيهاً عاماً لجميع الطلاب بخطوات بسيطة.</p>
             </div>
-            <div class="p-6">
-                <form id="quick-send-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 sm:p-5">
+                <form id="quick-send-form" class="grid grid-cols-1 gap-3 md:grid-cols-2">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                            <i class="fas fa-heading text-blue-600 text-sm"></i>
-                            العنوان
-                        </label>
-                        <input type="text" id="quick_title" name="title" required maxlength="255" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="عنوان الإشعار" />
+                        <label class="mb-1.5 block text-xs font-medium text-muted">العنوان</label>
+                        <input type="text" id="quick_title" name="title" required maxlength="255"
+                               class="h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink focus:border-accent focus:ring-accent/20"
+                               placeholder="عنوان الإشعار" />
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                            <i class="fas fa-users text-blue-600 text-sm"></i>
-                            المستهدفون
-                        </label>
-                        <select id="quick_target" name="target_type" required onchange="updateQuickTargetCount()" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <label class="mb-1.5 block text-xs font-medium text-muted">المستهدفون</label>
+                        <select id="quick_target" name="target_type" required onchange="updateQuickTargetCount()"
+                                class="h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink focus:border-accent focus:ring-accent/20">
                             <option value="">اختر المستهدفين</option>
                             <option value="all_students">جميع الطلاب</option>
                         </select>
-                        <p class="mt-2 text-xs text-slate-600">سيتم الإرسال إلى <span id="quick-target-count" class="font-semibold text-blue-600">0</span> معلم.</p>
+                        <p class="mt-2 text-xs text-muted">سيتم الإرسال إلى <span id="quick-target-count" class="font-semibold text-accent">0</span> معلم.</p>
                     </div>
                     <div class="md:col-span-2">
-                        <label class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                            <i class="fas fa-align-right text-blue-600 text-sm"></i>
-                            نص الإشعار
-                        </label>
-                        <textarea id="quick_message" name="message" rows="3" required maxlength="1000" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm leading-relaxed text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none" placeholder="اكتب رسالة مختصرة ومباشرة..."></textarea>
+                        <label class="mb-1.5 block text-xs font-medium text-muted">نص الإشعار</label>
+                        <textarea id="quick_message" name="message" rows="3" required maxlength="1000"
+                                  class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm leading-relaxed text-ink focus:border-accent focus:ring-accent/20 resize-none"
+                                  placeholder="اكتب رسالة مختصرة ومباشرة..."></textarea>
                     </div>
-                    <div class="md:col-span-2 flex items-center justify-end">
-                        <button type="button" onclick="sendQuickNotification()" id="quick-send-btn" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <i class="fas fa-paper-plane"></i>
+                    <div class="flex items-center justify-end md:col-span-2">
+                        <button type="button" onclick="sendQuickNotification()" id="quick-send-btn"
+                                class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white hover:bg-[#0d4f4a] disabled:cursor-not-allowed disabled:opacity-50">
+                            <i class="fas fa-paper-plane text-xs"></i>
                             إرسال سريع
                         </button>
                     </div>
                 </form>
             </div>
         </div>
-        <!-- توزيع حسب النوع -->
-        <div class="rounded-xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-            <div class="px-6 py-5 border-b border-slate-200 bg-slate-50">
-                <h3 class="text-lg font-black text-slate-900 mb-2 flex items-center gap-2">
-                    <i class="fas fa-chart-pie text-blue-600"></i>
-                    توزيع حسب النوع
-                </h3>
-                <p class="text-xs text-slate-600">مؤشر سريع لأكثر أنواع الإشعارات استخداماً.</p>
+
+        <div class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-sm font-semibold text-ink">توزيع حسب النوع</h3>
+                <p class="mt-0.5 text-xs text-muted">مؤشر سريع لأكثر أنواع الإشعارات استخداماً.</p>
             </div>
-            <div class="p-6">
+            <div class="p-4 sm:p-5">
                 @if ($stats['by_type']->count() > 0)
                     <div class="grid grid-cols-2 gap-3">
                         @foreach ($stats['by_type'] as $type => $count)
-                            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-center">
-                                <p class="text-xl font-black text-slate-900">{{ $count }}</p>
-                                <p class="text-xs text-slate-600 mt-1">{{ htmlspecialchars($notificationTypes[$type] ?? $type, ENT_QUOTES, 'UTF-8') }}</p>
+                            <div class="rounded-xl border border-line bg-canvas p-4 text-center">
+                                <p class="text-xl font-semibold tabular-nums text-ink">{{ $count }}</p>
+                                <p class="mt-1 text-xs text-muted">{{ htmlspecialchars($notificationTypes[$type] ?? $type, ENT_QUOTES, 'UTF-8') }}</p>
                             </div>
                         @endforeach
                     </div>
                 @else
-                    <p class="text-sm text-slate-600 text-center py-4">لم يتم تجميع بيانات كافية بعد.</p>
+                    <p class="py-4 text-center text-sm text-muted">لم يتم تجميع بيانات كافية بعد.</p>
                 @endif
             </div>
         </div>

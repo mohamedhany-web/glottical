@@ -111,11 +111,6 @@ return [
             'icon' => 'fas fa-gift',
             'route_patterns' => ['admin.referrals.*'],
         ],
-        'manage.loyalty' => [
-            'route' => 'admin.loyalty.index',
-            'icon' => 'fas fa-star',
-            'route_patterns' => ['admin.loyalty.*'],
-        ],
         'manage.certificates' => [
             'route' => 'admin.certificates.index',
             'icon' => 'fas fa-certificate',

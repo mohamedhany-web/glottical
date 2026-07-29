@@ -86,16 +86,26 @@ class StudentEnrollmentController extends Controller
     /**
      * عرض صفحة إضافة تسجيل جديد
      */
-    public function create()
+    public function create(Request $request)
     {
-        // استخدام pagination للطلاب بدلاً من get() لتقليل استهلاك الذاكرة
-        $students = User::where('role', 'student')
+        $studentsQuery = User::where('role', 'student')
             ->where('is_active', true)
             ->orderBy('name')
-            ->select('id', 'name', 'phone')
-            ->paginate(50);
-        
-        // استخدام الكاش للكورسات
+            ->select('id', 'name', 'phone', 'email');
+
+        // ضمان ظهور الطالب الممرَّر من البحث السريع حتى لو خارج أول النتائج
+        $preselectId = (int) $request->input('student_id', old('user_id', 0));
+        $students = $studentsQuery->limit(500)->get();
+        if ($preselectId > 0 && ! $students->contains('id', $preselectId)) {
+            $extra = User::where('role', 'student')
+                ->where('id', $preselectId)
+                ->select('id', 'name', 'phone', 'email')
+                ->first();
+            if ($extra) {
+                $students = $students->prepend($extra)->unique('id')->values();
+            }
+        }
+
         $courses = Cache::remember('active_courses_list', now()->addHours(1), function () {
             return AdvancedCourse::active()
                 ->with(['academicYear', 'academicSubject'])
@@ -160,26 +170,15 @@ class StudentEnrollmentController extends Controller
         $enrollment = StudentCourseEnrollment::create($enrollmentData);
 
         if ($enrollment->status === 'active') {
-            $course = \App\Models\AdvancedCourse::find($request->advanced_course_id);
-            if ($course && $course->isMonthlyBilling()) {
-                \App\Services\CourseSubscriptionService::activateMonthlyEnrollment($enrollment, $course);
-            } elseif ($course) {
-                \App\Services\CourseSubscriptionService::activateLifetimeEnrollment($enrollment);
-            }
-            $enrollment = $enrollment->fresh();
-        }
+            $enrollment = $enrollment->fresh(['course']);
+            $this->activateCourseAccess($enrollment);
+            InstructorCoursePercentageService::processEnrollmentActivation($enrollment);
 
-        // عند التفعيل: إنشاء مدفوعة نسبة المدرب إن وُجدت اتفاقية "نسبة من الكورس"
-        if ($enrollment->status === 'active') {
-            $freshEnrollment = $enrollment->fresh();
-            InstructorCoursePercentageService::processEnrollmentActivation($freshEnrollment);
-
-            // إرسال بريد تفعيل الكورس للطالب
             try {
-                $freshEnrollment->loadMissing(['student', 'course']);
-                if ($freshEnrollment->student && $freshEnrollment->student->email) {
-                    Mail::to($freshEnrollment->student->email)
-                        ->send(new CourseEnrollmentActivatedMail($freshEnrollment));
+                $enrollment->loadMissing(['student', 'course']);
+                if ($enrollment->student && $enrollment->student->email) {
+                    Mail::to($enrollment->student->email)
+                        ->send(new CourseEnrollmentActivatedMail($enrollment));
                 }
             } catch (\Throwable $e) {
                 report($e);
@@ -187,7 +186,7 @@ class StudentEnrollmentController extends Controller
         }
 
         return redirect()->route('admin.online-enrollments.index')
-                        ->with('success', 'تم تسجيل الطالب في الكورس بنجاح');
+                        ->with('success', 'تم تسجيل الطالب في البرنامج بنجاح');
     }
 
     /**
@@ -195,8 +194,20 @@ class StudentEnrollmentController extends Controller
      */
     public function show(StudentCourseEnrollment $enrollment)
     {
-        $enrollment->load(['student', 'course.academicYear', 'course.academicSubject', 'activatedBy']);
-        
+        $enrollment->load([
+            'student',
+            'course.academicYear',
+            'course.academicSubject',
+            'activatedBy',
+        ]);
+
+        if ($enrollment->course) {
+            $enrollment->course->loadCount('lessons');
+            $enrollment->course->loadCount([
+                'enrollments as active_enrollments_count' => fn ($q) => $q->where('status', 'active'),
+            ]);
+        }
+
         return view('admin.online-enrollments.show', compact('enrollment'));
     }
 
@@ -239,7 +250,8 @@ class StudentEnrollmentController extends Controller
         $enrollment->activated_by = Auth::id();
         $enrollment->save();
 
-        $freshEnrollment = $enrollment->fresh();
+        $freshEnrollment = $enrollment->fresh(['course']);
+        $this->activateCourseAccess($freshEnrollment);
 
         // معالجة نسبة المدرب عند التفعيل
         InstructorCoursePercentageService::processEnrollmentActivation($freshEnrollment);
@@ -256,7 +268,7 @@ class StudentEnrollmentController extends Controller
         }
 
         return redirect()->route('admin.online-enrollments.index')
-            ->with('success', 'تم تفعيل الكورس للطالب وإرسال بريد التفعيل بنجاح.');
+            ->with('success', 'تم تفعيل البرنامج للطالب وإرسال بريد التفعيل بنجاح.');
     }
 
     /**
@@ -269,17 +281,18 @@ class StudentEnrollmentController extends Controller
         }
 
         $wasSuspended = $enrollment->status === 'suspended';
-        
+
         $enrollment->update([
             'status' => 'active',
             'activated_at' => now(),
             'activated_by' => Auth::id(),
         ]);
 
-        $freshEnrollment = $enrollment->fresh();
+        $freshEnrollment = $enrollment->fresh(['course']);
+        $this->activateCourseAccess($freshEnrollment);
         InstructorCoursePercentageService::processEnrollmentActivation($freshEnrollment);
 
-        // إرسال بريد تفعيل الكورس عند التفعيل اليدوي
+        // إرسال بريد تفعيل البرنامج عند التفعيل اليدوي
         try {
             $freshEnrollment->loadMissing(['student', 'course']);
             if ($freshEnrollment->student && $freshEnrollment->student->email) {
@@ -290,8 +303,8 @@ class StudentEnrollmentController extends Controller
             report($e);
         }
 
-        $message = $wasSuspended 
-            ? 'تم إعادة تفعيل التسجيل وفتح الكورس للطالب بنجاح' 
+        $message = $wasSuspended
+            ? 'تم إعادة تفعيل التسجيل وفتح البرنامج للطالب بنجاح'
             : 'تم تفعيل التسجيل بنجاح';
 
         return back()->with('success', $message);
@@ -415,5 +428,22 @@ class StudentEnrollmentController extends Controller
             'success' => true,
             'student' => $payload,
         ]);
+    }
+
+    /**
+     * تفعيل صلاحية الوصول للبرنامج (شهري / لمرة واحدة) بعد جعل الحالة active.
+     */
+    private function activateCourseAccess(StudentCourseEnrollment $enrollment): void
+    {
+        $course = $enrollment->course ?? AdvancedCourse::find($enrollment->advanced_course_id);
+        if (! $course) {
+            return;
+        }
+
+        if ($course->isMonthlyBilling()) {
+            \App\Services\CourseSubscriptionService::activateMonthlyEnrollment($enrollment, $course);
+        } else {
+            \App\Services\CourseSubscriptionService::activateLifetimeEnrollment($enrollment);
+        }
     }
 }

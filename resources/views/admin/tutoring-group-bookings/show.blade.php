@@ -28,6 +28,24 @@
             <p>{{ session('success') }}</p>
         </div>
     @endif
+    @if(session('error'))
+        <div class="rounded-2xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm font-medium text-danger">{{ session('error') }}</div>
+    @endif
+
+    @if($booking->classroomMeeting)
+        <article class="rounded-2xl border border-accent/25 bg-accent-soft/30 p-4 shadow-soft sm:p-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-accent">Live Meeting</p>
+                    <p class="mt-1 text-sm text-ink">رمز الغرفة: <span class="font-mono font-bold" dir="ltr">{{ $booking->classroomMeeting->code }}</span></p>
+                    <p class="text-xs text-muted">موعد: {{ $booking->classroomMeeting->scheduled_for?->format('Y-m-d H:i') }}</p>
+                </div>
+                <a href="{{ url('classroom/join/'.$booking->classroomMeeting->code) }}" target="_blank" rel="noopener" class="btn-press inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                    <i class="fas fa-video"></i> دخول الحصة
+                </a>
+            </div>
+        </article>
+    @endif
 
     <div class="grid gap-5 lg:grid-cols-2">
         <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
@@ -36,6 +54,12 @@
             </div>
             <dl class="space-y-3 p-4 text-sm sm:p-5">
                 <div class="flex justify-between gap-3"><dt class="text-muted">النوع</dt><dd class="font-medium text-ink">{{ $booking->tutoringGroup?->typeLabel() }}</dd></div>
+                @if($booking->cohort)
+                    <div class="flex justify-between gap-3"><dt class="text-muted">الدفعة</dt><dd class="font-medium text-ink">{{ $booking->cohort->title }}</dd></div>
+                @endif
+                @if($booking->package)
+                    <div class="flex justify-between gap-3"><dt class="text-muted">الباقة</dt><dd class="font-medium text-ink">{{ $booking->package->name }}</dd></div>
+                @endif
                 <div class="flex justify-between gap-3"><dt class="text-muted">المدرب</dt><dd class="font-medium text-ink">{{ $booking->instructor?->name }}</dd></div>
                 <div class="flex justify-between gap-3"><dt class="text-muted">الطالب</dt><dd class="font-medium text-ink">{{ $booking->contactName() }}</dd></div>
                 <div class="flex justify-between gap-3"><dt class="text-muted">الهاتف</dt><dd class="font-medium text-ink">{{ $booking->contactPhone() ?: '—' }}</dd></div>
@@ -43,6 +67,7 @@
                 <div class="flex justify-between gap-3"><dt class="text-muted">من</dt><dd class="font-medium tabular-nums text-ink">{{ $booking->starts_at?->format('Y-m-d H:i') }}</dd></div>
                 <div class="flex justify-between gap-3"><dt class="text-muted">إلى</dt><dd class="font-medium tabular-nums text-ink">{{ $booking->ends_at?->format('Y-m-d H:i') }}</dd></div>
                 <div class="flex justify-between gap-3"><dt class="text-muted">الحالة</dt><dd class="font-medium text-accent">{{ $booking->statusLabel() }}</dd></div>
+                <div class="flex justify-between gap-3"><dt class="text-muted">الدفع</dt><dd class="font-medium text-ink">{{ $booking->paymentStatusLabel() }}</dd></div>
                 @if($booking->student_notes)
                     <div><dt class="mb-1 text-muted">ملاحظات الطالب</dt><dd class="text-ink">{{ $booking->student_notes }}</dd></div>
                 @endif
@@ -52,6 +77,7 @@
         <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
             <div class="border-b border-line px-4 py-4 sm:px-5">
                 <h3 class="text-base font-semibold text-ink">تحديث الحالة</h3>
+                <p class="mt-1 text-xs text-muted">تأكيد الحجز ينشئ غرفة Live Meeting تلقائياً.</p>
             </div>
             <form method="POST" action="{{ route('admin.tutoring-group-bookings.update-status', $booking) }}" class="space-y-4 p-4 sm:p-5">
                 @csrf
@@ -59,7 +85,7 @@
                 <div>
                     <label class="{{ $labelClass }}" for="status">الحالة</label>
                     <select id="status" name="status" class="{{ $fieldClass }}" required>
-                        @foreach(['pending'=>'قيد المراجعة','confirmed'=>'مؤكد','cancelled'=>'ملغي','completed'=>'مكتمل'] as $val => $lab)
+                        @foreach(['pending'=>'قيد المراجعة','confirmed'=>'مؤكد (+ Live)','cancelled'=>'ملغي','completed'=>'مكتمل'] as $val => $lab)
                             <option value="{{ $val }}" @selected($booking->status === $val)>{{ $lab }}</option>
                         @endforeach
                     </select>

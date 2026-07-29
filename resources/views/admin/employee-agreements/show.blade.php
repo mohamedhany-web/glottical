@@ -1,150 +1,159 @@
 @extends('layouts.admin')
 
 @section('title', 'تفاصيل اتفاقية الموظف - ' . config('app.name'))
-@section('header', 'تفاصيل اتفاقية الموظف')
+@section('page_title', 'تفاصيل اتفاقية الموظف')
 
 @section('content')
-<div class="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6" style="background: #f8fafc; min-height: 100vh;">
-    <!-- Header -->
-    <section class="rounded-3xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-3">
-                    <i class="fas fa-file-contract text-emerald-600"></i>
-                    {{ $employeeAgreement->title }}
-                </h2>
-                <p class="text-sm text-slate-500 mt-2">رقم الاتفاقية: <span class="font-semibold">{{ $employeeAgreement->agreement_number }}</span></p>
-            </div>
-            <div class="flex items-center gap-2">
-                <a href="{{ route('admin.employee-agreements.edit', $employeeAgreement) }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-amber-600 rounded-xl shadow hover:bg-amber-700 transition-all">
-                    <i class="fas fa-edit"></i>
-                    تعديل
-                </a>
-                <a href="{{ route('admin.employee-agreements.index') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all">
-                    <i class="fas fa-arrow-right"></i>
-                    رجوع
-                </a>
-            </div>
-        </div>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $statusBadges = [
+        'draft' => ['label' => 'مسودة', 'classes' => 'bg-canvas text-muted'],
+        'active' => ['label' => 'نشط', 'classes' => 'bg-emerald-50 text-emerald-700'],
+        'suspended' => ['label' => 'معلق', 'classes' => 'bg-amber-50 text-amber-700'],
+        'terminated' => ['label' => 'منتهي', 'classes' => 'bg-rose-50 text-rose-700'],
+        'completed' => ['label' => 'مكتمل', 'classes' => 'bg-accent-soft text-accent'],
+    ];
+    $status = $statusBadges[$employeeAgreement->status] ?? ['label' => $employeeAgreement->status, 'classes' => 'bg-canvas text-muted'];
+    $statCards = [
+        ['label' => 'الراتب الأساسي', 'value' => number_format($employeeAgreement->salary, 2) . ' ج.م', 'icon' => 'fas fa-money-bill-wave'],
+        ['label' => 'إجمالي الخصومات', 'value' => number_format($stats['total_deductions'], 2) . ' ج.م', 'icon' => 'fas fa-minus-circle', 'tone' => 'rose'],
+        ['label' => 'إجمالي المدفوعات', 'value' => number_format($stats['total_payments'], 2) . ' ج.م', 'icon' => 'fas fa-check-circle', 'tone' => 'emerald'],
+        ['label' => 'الدفعات المعلقة', 'value' => $stats['pending_payments'], 'icon' => 'fas fa-clock', 'tone' => 'amber'],
+    ];
+@endphp
 
-        <!-- Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-5 sm:p-8">
-            <div class="rounded-2xl border border-slate-200 bg-white/70 p-5">
-                <p class="text-xs font-semibold text-slate-500 mb-2">الراتب الأساسي</p>
-                <p class="text-2xl font-bold text-slate-900">{{ number_format($employeeAgreement->salary, 2) }} ج.م</p>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">الموارد البشرية · اتفاقيات الموظفين</p>
+            <div class="mt-1 flex flex-wrap items-center gap-2">
+                <h2 class="text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ $employeeAgreement->title }}</h2>
+                <span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold {{ $status['classes'] }}">
+                    {{ $status['label'] }}
+                </span>
             </div>
-            <div class="rounded-2xl border border-slate-200 bg-white/70 p-5">
-                <p class="text-xs font-semibold text-slate-500 mb-2">إجمالي الخصومات</p>
-                <p class="text-2xl font-bold text-red-600">{{ number_format($stats['total_deductions'], 2) }} ج.م</p>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white/70 p-5">
-                <p class="text-xs font-semibold text-slate-500 mb-2">إجمالي المدفوعات</p>
-                <p class="text-2xl font-bold text-emerald-600">{{ number_format($stats['total_payments'], 2) }} ج.م</p>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-white/70 p-5">
-                <p class="text-xs font-semibold text-slate-500 mb-2">الدفعات المعلقة</p>
-                <p class="text-2xl font-bold text-amber-600">{{ $stats['pending_payments'] }}</p>
-            </div>
+            <p class="mt-1 text-sm text-muted">
+                رقم الاتفاقية: <span class="font-semibold text-ink">{{ $employeeAgreement->agreement_number }}</span>
+            </p>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.employee-agreements.edit', $employeeAgreement) }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-edit text-xs"></i>
+                تعديل
+            </a>
+            <a href="{{ route('admin.employee-agreements.index') }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                رجوع
+            </a>
         </div>
     </section>
 
-    <!-- Agreement Details -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div class="lg:col-span-2 space-y-4 sm:space-y-6">
-            <!-- Basic Info -->
-            <section class="rounded-3xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
-                <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200">
-                    <h3 class="text-lg font-bold text-slate-900">معلومات الاتفاقية</h3>
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach ($statCards as $card)
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                    <i class="{{ $card['icon'] }} text-sm"></i>
                 </div>
-                <div class="px-5 py-6 sm:px-8 lg:px-12 space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <p class="mt-3 text-xs text-muted">{{ $card['label'] }}</p>
+                <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight
+                    @if(($card['tone'] ?? '') === 'rose') text-rose-600
+                    @elseif(($card['tone'] ?? '') === 'emerald') text-emerald-600
+                    @elseif(($card['tone'] ?? '') === 'amber') text-amber-600
+                    @else text-ink
+                    @endif">{{ $card['value'] }}</p>
+            </article>
+        @endforeach
+    </section>
+
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div class="space-y-5 lg:col-span-2">
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">معلومات الاتفاقية</h3>
+                    <p class="mt-0.5 text-xs text-muted">تفاصيل العقد والموظف</p>
+                </div>
+                <div class="space-y-4 p-4 sm:p-5">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
-                            <p class="text-xs font-semibold text-slate-500 mb-1">الموظف</p>
-                            <p class="text-sm font-semibold text-slate-900">{{ $employeeAgreement->employee->name }}</p>
-                            <p class="text-xs text-slate-500">{{ $employeeAgreement->employee->email }}</p>
+                            <p class="text-xs font-medium text-muted">الموظف</p>
+                            <p class="mt-1 text-sm font-semibold text-ink">{{ $employeeAgreement->employee->name }}</p>
+                            <p class="text-xs text-muted">{{ $employeeAgreement->employee->email }}</p>
                         </div>
                         <div>
-                            <p class="text-xs font-semibold text-slate-500 mb-1">الراتب</p>
-                            <p class="text-sm font-semibold text-slate-900">{{ number_format($employeeAgreement->salary, 2) }} ج.م</p>
+                            <p class="text-xs font-medium text-muted">الراتب</p>
+                            <p class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($employeeAgreement->salary, 2) }} ج.م</p>
                         </div>
                         <div>
-                            <p class="text-xs font-semibold text-slate-500 mb-1">الحالة</p>
-                            @php
-                                $statusBadges = [
-                                    'draft' => ['label' => 'مسودة', 'classes' => 'bg-slate-100 text-slate-700'],
-                                    'active' => ['label' => 'نشط', 'classes' => 'bg-emerald-100 text-emerald-700'],
-                                    'suspended' => ['label' => 'معلق', 'classes' => 'bg-amber-100 text-amber-700'],
-                                    'terminated' => ['label' => 'منتهي', 'classes' => 'bg-rose-100 text-rose-700'],
-                                    'completed' => ['label' => 'مكتمل', 'classes' => 'bg-blue-100 text-blue-700'],
-                                ];
-                                $status = $statusBadges[$employeeAgreement->status] ?? ['label' => $employeeAgreement->status, 'classes' => 'bg-slate-100 text-slate-700'];
-                            @endphp
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold {{ $status['classes'] }}">
+                            <p class="text-xs font-medium text-muted">الحالة</p>
+                            <span class="mt-1 inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold {{ $status['classes'] }}">
                                 {{ $status['label'] }}
                             </span>
                         </div>
                         <div>
-                            <p class="text-xs font-semibold text-slate-500 mb-1">تاريخ البدء</p>
-                            <p class="text-sm font-semibold text-slate-900">{{ $employeeAgreement->start_date->format('Y-m-d') }}</p>
+                            <p class="text-xs font-medium text-muted">تاريخ البدء</p>
+                            <p class="mt-1 text-sm font-semibold text-ink">{{ $employeeAgreement->start_date->format('Y-m-d') }}</p>
                         </div>
                         @if($employeeAgreement->end_date)
                         <div>
-                            <p class="text-xs font-semibold text-slate-500 mb-1">تاريخ الانتهاء</p>
-                            <p class="text-sm font-semibold text-slate-900">{{ $employeeAgreement->end_date->format('Y-m-d') }}</p>
+                            <p class="text-xs font-medium text-muted">تاريخ الانتهاء</p>
+                            <p class="mt-1 text-sm font-semibold text-ink">{{ $employeeAgreement->end_date->format('Y-m-d') }}</p>
                         </div>
                         @endif
                     </div>
                     @if($employeeAgreement->description)
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 mb-1">الوصف</p>
-                        <p class="text-sm text-slate-700">{{ $employeeAgreement->description }}</p>
+                        <p class="text-xs font-medium text-muted">الوصف</p>
+                        <p class="mt-1 text-sm text-ink">{{ $employeeAgreement->description }}</p>
                     </div>
                     @endif
                     @if($employeeAgreement->contract_terms)
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 mb-1">شروط العقد</p>
-                        <div class="text-sm text-slate-700 whitespace-pre-line">{{ $employeeAgreement->contract_terms }}</div>
+                        <p class="text-xs font-medium text-muted">شروط العقد</p>
+                        <div class="mt-1 text-sm text-ink whitespace-pre-line">{{ $employeeAgreement->contract_terms }}</div>
                     </div>
                     @endif
                     @if($employeeAgreement->agreement_terms)
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 mb-1">بنود الاتفاقية</p>
-                        <div class="text-sm text-slate-700 whitespace-pre-line">{{ $employeeAgreement->agreement_terms }}</div>
+                        <p class="text-xs font-medium text-muted">بنود الاتفاقية</p>
+                        <div class="mt-1 text-sm text-ink whitespace-pre-line">{{ $employeeAgreement->agreement_terms }}</div>
                     </div>
                     @endif
                     @if($employeeAgreement->notes)
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 mb-1">ملاحظات</p>
-                        <div class="text-sm text-slate-700 whitespace-pre-line">{{ $employeeAgreement->notes }}</div>
+                        <p class="text-xs font-medium text-muted">ملاحظات</p>
+                        <div class="mt-1 text-sm text-ink whitespace-pre-line">{{ $employeeAgreement->notes }}</div>
                     </div>
                     @endif
                 </div>
-            </section>
+            </article>
 
-            <!-- Deductions -->
             @if($employeeAgreement->deductions->count() > 0)
-            <section class="rounded-3xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
-                <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200">
-                    <h3 class="text-lg font-bold text-slate-900">الخصومات</h3>
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">الخصومات</h3>
+                    <p class="mt-0.5 text-xs text-muted">{{ $employeeAgreement->deductions->count() }} خصم مسجل</p>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200">
-                        <thead class="bg-slate-50">
+                <div class="admin-table-wrap overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="border-b border-line bg-canvas text-xs text-muted">
                             <tr>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">رقم الخصم</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">العنوان</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">النوع</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">المبلغ</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">التاريخ</th>
+                                <th class="px-4 py-3 text-start font-medium">رقم الخصم</th>
+                                <th class="px-4 py-3 text-start font-medium">العنوان</th>
+                                <th class="px-4 py-3 text-start font-medium">النوع</th>
+                                <th class="px-4 py-3 text-start font-medium">المبلغ</th>
+                                <th class="px-4 py-3 text-start font-medium">التاريخ</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-slate-200">
+                        <tbody class="divide-y divide-line">
                             @foreach($employeeAgreement->deductions as $deduction)
-                            <tr class="hover:bg-slate-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ $deduction->deduction_number }}</td>
-                                <td class="px-6 py-4 text-sm text-slate-900">{{ $deduction->title }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-800">
+                            <tr class="hover:bg-canvas/40">
+                                <td class="whitespace-nowrap px-4 py-3 text-ink">{{ $deduction->deduction_number }}</td>
+                                <td class="px-4 py-3 text-ink">{{ $deduction->title }}</td>
+                                <td class="whitespace-nowrap px-4 py-3">
+                                    <span class="inline-flex rounded-lg bg-canvas px-2.5 py-1 text-xs font-semibold text-ink">
                                         @if($deduction->type === 'tax') ضريبة
                                         @elseif($deduction->type === 'insurance') تأمين
                                         @elseif($deduction->type === 'loan') قرض
@@ -153,76 +162,80 @@
                                         @endif
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">{{ number_format($deduction->amount, 2) }} ج.م</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ $deduction->deduction_date->format('Y-m-d') }}</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold tabular-nums text-rose-600">{{ number_format($deduction->amount, 2) }} ج.م</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-muted">{{ $deduction->deduction_date->format('Y-m-d') }}</td>
                             </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
-            </section>
+            </article>
             @endif
 
-            <!-- Payments -->
-            <section class="rounded-3xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
-                <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <h3 class="text-lg font-bold text-slate-900">سجل المدفوعات</h3>
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="flex flex-col gap-4 border-b border-line px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                    <div>
+                        <h3 class="text-base font-semibold text-ink">سجل المدفوعات</h3>
+                        <p class="mt-0.5 text-xs text-muted">دفعات الرواتب والتحويلات</p>
+                    </div>
                     @if($employeeAgreement->status === 'active')
-                    <button type="button" onclick="document.getElementById('new-payment-form').classList.toggle('hidden')" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-all">
-                        <i class="fas fa-plus"></i>
+                    <button type="button" onclick="document.getElementById('new-payment-form').classList.toggle('hidden')"
+                            class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                        <i class="fas fa-plus text-xs"></i>
                         إنشاء دفعة راتب
                     </button>
                     @endif
                 </div>
-                <!-- نموذج إنشاء دفعة راتب -->
+
                 @if($employeeAgreement->status === 'active')
-                <div id="new-payment-form" class="hidden px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 bg-slate-50/50">
+                <div id="new-payment-form" class="hidden border-b border-line bg-canvas/40 px-4 py-4 sm:px-5">
                     <form action="{{ route('admin.employee-agreements.payments.store', $employeeAgreement) }}" method="POST" class="flex flex-wrap items-end gap-4">
                         @csrf
                         <div>
-                            <label class="block text-xs font-semibold text-slate-500 mb-1">تاريخ الاستحقاق</label>
-                            <input type="date" name="payment_date" value="{{ now()->endOfMonth()->format('Y-m-d') }}" required class="rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                            <label class="{{ $labelClass }}">تاريخ الاستحقاق</label>
+                            <input type="date" name="payment_date" value="{{ now()->endOfMonth()->format('Y-m-d') }}" required class="{{ $fieldClass }} w-auto min-w-[160px]">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-500 mb-1">الخصومات (ج.م)</label>
-                            <input type="number" name="total_deductions" value="0" min="0" step="0.01" class="rounded-xl border border-slate-200 px-3 py-2 text-sm w-28">
+                            <label class="{{ $labelClass }}">الخصومات (ج.م)</label>
+                            <input type="number" name="total_deductions" value="0" min="0" step="0.01" class="{{ $fieldClass }} w-28">
                         </div>
-                        <div class="flex-1 min-w-[200px]">
-                            <label class="block text-xs font-semibold text-slate-500 mb-1">ملاحظات</label>
-                            <input type="text" name="notes" placeholder="اختياري" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                        <div class="min-w-[200px] flex-1">
+                            <label class="{{ $labelClass }}">ملاحظات</label>
+                            <input type="text" name="notes" placeholder="اختياري" class="{{ $fieldClass }}">
                         </div>
-                        <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700">إنشاء الدفعة</button>
+                        <button type="submit" class="btn-press inline-flex h-11 items-center rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">إنشاء الدفعة</button>
                     </form>
                 </div>
                 @endif
+
                 @if($employeeAgreement->payments->count() > 0)
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200">
-                        <thead class="bg-slate-50">
+                <div class="admin-table-wrap overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="border-b border-line bg-canvas text-xs text-muted">
                             <tr>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">رقم الدفعة</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">تاريخ الاستحقاق</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">الراتب الأساسي</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">الخصومات</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">صافي الراتب</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">الحالة</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">إجراء</th>
+                                <th class="px-4 py-3 text-start font-medium">رقم الدفعة</th>
+                                <th class="px-4 py-3 text-start font-medium">تاريخ الاستحقاق</th>
+                                <th class="px-4 py-3 text-start font-medium">الراتب الأساسي</th>
+                                <th class="px-4 py-3 text-start font-medium">الخصومات</th>
+                                <th class="px-4 py-3 text-start font-medium">صافي الراتب</th>
+                                <th class="px-4 py-3 text-start font-medium">الحالة</th>
+                                <th class="px-4 py-3 text-start font-medium">إجراء</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-slate-200">
+                        <tbody class="divide-y divide-line">
                             @foreach($employeeAgreement->payments as $payment)
-                            <tr class="hover:bg-slate-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{{ $payment->payment_number }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ $payment->payment_date->format('Y-m-d') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ number_format($payment->base_salary, 2) }} ج.م</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600">{{ number_format($payment->total_deductions, 2) }} ج.م</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-emerald-600">{{ number_format($payment->net_salary, 2) }} ج.م</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full
-                                        @if($payment->status === 'paid') bg-emerald-100 text-emerald-800
-                                        @elseif($payment->status === 'pending') bg-amber-100 text-amber-800
-                                        @elseif($payment->status === 'overdue') bg-rose-100 text-rose-800
-                                        @else bg-slate-100 text-slate-800
+                            <tr class="hover:bg-canvas/40">
+                                <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-ink">{{ $payment->payment_number }}</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-muted">{{ $payment->payment_date->format('Y-m-d') }}</td>
+                                <td class="whitespace-nowrap px-4 py-3 tabular-nums text-ink">{{ number_format($payment->base_salary, 2) }} ج.م</td>
+                                <td class="whitespace-nowrap px-4 py-3 tabular-nums text-rose-600">{{ number_format($payment->total_deductions, 2) }} ج.م</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold tabular-nums text-emerald-600">{{ number_format($payment->net_salary, 2) }} ج.م</td>
+                                <td class="whitespace-nowrap px-4 py-3">
+                                    <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-semibold
+                                        @if($payment->status === 'paid') bg-emerald-50 text-emerald-700
+                                        @elseif($payment->status === 'pending') bg-amber-50 text-amber-700
+                                        @elseif($payment->status === 'overdue') bg-rose-50 text-rose-700
+                                        @else bg-canvas text-muted
                                         @endif">
                                         @if($payment->status === 'paid') مدفوعة
                                         @elseif($payment->status === 'pending') معلقة
@@ -231,12 +244,12 @@
                                         @endif
                                     </span>
                                     @if($payment->status === 'paid' && $payment->transfer_receipt_path)
-                                        <a href="{{ storage_asset($payment->transfer_receipt_path) }}" target="_blank" class="block text-xs text-blue-600 hover:underline mt-1"><i class="fas fa-receipt mr-1"></i>الإيصال</a>
+                                        <a href="{{ storage_asset($payment->transfer_receipt_path) }}" target="_blank" class="mt-1 block text-xs text-accent hover:underline"><i class="fas fa-receipt mr-1"></i>الإيصال</a>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="whitespace-nowrap px-4 py-3">
                                     @if(in_array($payment->status, ['pending', 'overdue']))
-                                        <button type="button" class="open-pay-modal text-sm text-emerald-600 hover:text-emerald-800 font-medium" data-action="{{ route('admin.employee-agreements.payments.mark-paid', $payment) }}" data-payment-num="{{ $payment->payment_number }}">دفع ورفع إيصال</button>
+                                        <button type="button" class="open-pay-modal text-sm font-medium text-accent hover:text-[#0d4f4a]" data-action="{{ route('admin.employee-agreements.payments.mark-paid', $payment) }}" data-payment-num="{{ $payment->payment_number }}">دفع ورفع إيصال</button>
                                     @else
                                         —
                                     @endif
@@ -247,77 +260,80 @@
                     </table>
                 </div>
                 @else
-                <div class="px-5 py-8 text-center text-slate-500">لا توجد مدفوعات حتى الآن. استخدم "إنشاء دفعة راتب" لإضافة دفعة ثم تنفيذ التحويل ورفع الإيصال.</div>
+                <div class="px-4 py-8 text-center text-sm text-muted sm:px-5">لا توجد مدفوعات حتى الآن. استخدم "إنشاء دفعة راتب" لإضافة دفعة ثم تنفيذ التحويل ورفع الإيصال.</div>
                 @endif
-            </section>
+            </article>
         </div>
 
-        <!-- Sidebar -->
-        <div class="space-y-4 sm:space-y-6">
+        <div class="space-y-5">
             @php $emp = $employeeAgreement->employee; @endphp
             @if($emp && ($emp->bank_name || $emp->bank_account_number || $emp->bank_account_holder_name))
-            <section class="rounded-3xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
-                <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200">
-                    <h3 class="text-lg font-bold text-slate-900"><i class="fas fa-university text-indigo-600 mr-2"></i>البيانات البنكية للموظف</h3>
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">
+                        <i class="fas fa-university text-accent mr-2"></i>البيانات البنكية للموظف
+                    </h3>
                 </div>
-                <div class="px-5 py-6 sm:px-8 lg:px-12 space-y-2 text-sm">
-                    @if($emp->bank_name)<p><span class="text-slate-500">البنك:</span> <span class="font-semibold text-slate-900">{{ $emp->bank_name }}</span></p>@endif
-                    @if($emp->bank_branch)<p><span class="text-slate-500">الفرع:</span> {{ $emp->bank_branch }}</p>@endif
-                    @if($emp->bank_account_number)<p><span class="text-slate-500">رقم الحساب:</span> <span class="font-mono font-semibold">{{ $emp->bank_account_number }}</span></p>@endif
-                    @if($emp->bank_account_holder_name)<p><span class="text-slate-500">اسم صاحب الحساب:</span> {{ $emp->bank_account_holder_name }}</p>@endif
-                    @if($emp->bank_iban)<p><span class="text-slate-500">الآيبان:</span> <span class="font-mono">{{ $emp->bank_iban }}</span></p>@endif
+                <div class="space-y-2 p-4 text-sm sm:p-5">
+                    @if($emp->bank_name)<p><span class="text-muted">البنك:</span> <span class="font-semibold text-ink">{{ $emp->bank_name }}</span></p>@endif
+                    @if($emp->bank_branch)<p><span class="text-muted">الفرع:</span> <span class="text-ink">{{ $emp->bank_branch }}</span></p>@endif
+                    @if($emp->bank_account_number)<p><span class="text-muted">رقم الحساب:</span> <span class="font-mono font-semibold text-ink">{{ $emp->bank_account_number }}</span></p>@endif
+                    @if($emp->bank_account_holder_name)<p><span class="text-muted">اسم صاحب الحساب:</span> <span class="text-ink">{{ $emp->bank_account_holder_name }}</span></p>@endif
+                    @if($emp->bank_iban)<p><span class="text-muted">الآيبان:</span> <span class="font-mono text-ink">{{ $emp->bank_iban }}</span></p>@endif
                 </div>
-            </section>
+            </article>
             @endif
-            <section class="rounded-3xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
-                <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200">
-                    <h3 class="text-lg font-bold text-slate-900">معلومات إضافية</h3>
+
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">معلومات إضافية</h3>
                 </div>
-                <div class="px-5 py-6 sm:px-8 lg:px-12 space-y-4">
+                <div class="space-y-4 p-4 sm:p-5">
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 mb-1">منشئ الاتفاقية</p>
-                        <p class="text-sm font-semibold text-slate-900">{{ $employeeAgreement->creator->name ?? 'غير محدد' }}</p>
+                        <p class="text-xs font-medium text-muted">منشئ الاتفاقية</p>
+                        <p class="mt-1 text-sm font-semibold text-ink">{{ $employeeAgreement->creator->name ?? 'غير محدد' }}</p>
                     </div>
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 mb-1">تاريخ الإنشاء</p>
-                        <p class="text-sm text-slate-700">{{ $employeeAgreement->created_at->format('Y-m-d H:i') }}</p>
+                        <p class="text-xs font-medium text-muted">تاريخ الإنشاء</p>
+                        <p class="mt-1 text-sm text-ink">{{ $employeeAgreement->created_at->format('Y-m-d H:i') }}</p>
                     </div>
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 mb-1">آخر تحديث</p>
-                        <p class="text-sm text-slate-700">{{ $employeeAgreement->updated_at->format('Y-m-d H:i') }}</p>
+                        <p class="text-xs font-medium text-muted">آخر تحديث</p>
+                        <p class="mt-1 text-sm text-ink">{{ $employeeAgreement->updated_at->format('Y-m-d H:i') }}</p>
                     </div>
                 </div>
-            </section>
+            </article>
         </div>
     </div>
 
-    <!-- نافذة دفع ورفع إيصال (خارج الجدول لضمان ظهورها بشكل سليم) -->
+    {{-- نافذة دفع ورفع إيصال (خارج الجدول لضمان ظهورها بشكل سليم) --}}
     <div id="pay-receipt-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4" style="direction: rtl; background: rgba(0,0,0,0.5);">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden" onclick="event.stopPropagation()">
-            <div class="p-6 border-b border-slate-200">
-                <h4 class="text-lg font-bold text-slate-900">تسجيل الدفع ورفع إيصال التحويل</h4>
-                <p id="pay-modal-payment-num" class="text-sm text-slate-500 mt-1"></p>
+        <div class="w-full max-w-md overflow-hidden rounded-2xl border border-line bg-surface shadow-soft" onclick="event.stopPropagation()">
+            <div class="border-b border-line p-6">
+                <h4 class="text-lg font-semibold text-ink">تسجيل الدفع ورفع إيصال التحويل</h4>
+                <p id="pay-modal-payment-num" class="mt-1 text-sm text-muted"></p>
             </div>
             <form id="pay-receipt-form" method="POST" enctype="multipart/form-data" class="p-6">
                 @csrf
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">إيصال التحويل *</label>
-                        <input type="file" name="transfer_receipt" accept=".pdf,.jpg,.jpeg,.png" required class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2">
-                        <p class="text-xs text-slate-500 mt-1">PDF أو صورة، حجم أقصى 40 ميجابايت</p>
+                        <label class="{{ $labelClass }}">إيصال التحويل *</label>
+                        <input type="file" name="transfer_receipt" accept=".pdf,.jpg,.jpeg,.png" required class="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink file:me-3 file:rounded-lg file:border-0 file:bg-accent-soft file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-accent">
+                        <p class="mt-1 text-xs text-muted">PDF أو صورة، حجم أقصى 40 ميجابايت</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">ملاحظات (اختياري)</label>
-                        <textarea name="notes" rows="2" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"></textarea>
+                        <label class="{{ $labelClass }}">ملاحظات (اختياري)</label>
+                        <textarea name="notes" rows="2" class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"></textarea>
                     </div>
                 </div>
-                <div class="flex gap-2 mt-6">
-                    <button type="submit" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700">تسجيل الدفع</button>
-                    <button type="button" id="pay-modal-close" class="px-4 py-2.5 border border-slate-200 rounded-xl font-medium text-slate-700 hover:bg-slate-100">إلغاء</button>
+                <div class="mt-6 flex gap-2">
+                    <button type="submit" class="btn-press flex-1 rounded-xl bg-accent py-2.5 text-sm font-semibold text-white hover:bg-[#0d4f4a]">تسجيل الدفع</button>
+                    <button type="button" id="pay-modal-close" class="btn-press rounded-xl border border-line px-4 py-2.5 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">إلغاء</button>
                 </div>
             </form>
         </div>
     </div>
+
     <script>
         (function() {
             var modal = document.getElementById('pay-receipt-modal');

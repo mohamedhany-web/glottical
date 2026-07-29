@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\AdvancedCourse;
 use App\Models\Certificate;
-use App\Models\InstructorProfile;
 use App\Models\PopupAd;
 use App\Models\SiteTestimonial;
 use App\Models\SiteService;
+use App\Models\TutoringGroup;
 use App\Models\User;
 use App\Services\CourseSubscriptionService;
 use App\Services\SeoAssets;
@@ -56,7 +56,29 @@ class LandingController extends Controller
                 ->get();
 
             $homeCategories = $this->buildHomeCategories();
-            $homeInstructors = $this->approvedActiveInstructorProfiles(8);
+
+            $homeGroupCourses = TutoringGroup::query()
+                ->active()
+                ->collective()
+                ->with('instructor:id,name')
+                ->orderByDesc('is_featured')
+                ->orderBy('sort_order')
+                ->orderByDesc('created_at')
+                ->limit(4)
+                ->get();
+
+            $homeOneToOneGroups = TutoringGroup::query()
+                ->active()
+                ->individual()
+                ->with('instructor:id,name')
+                ->orderByDesc('is_featured')
+                ->orderBy('sort_order')
+                ->orderByDesc('created_at')
+                ->limit(4)
+                ->get();
+
+            $homeGroupCount = TutoringGroup::query()->active()->collective()->count();
+            $homeOneToOneCount = TutoringGroup::query()->active()->individual()->count();
 
             $homeTestimonials = SiteTestimonial::query()
                 ->active()
@@ -93,7 +115,10 @@ class LandingController extends Controller
                 'featuredCourses',
                 'oneToOneCourses',
                 'homeCategories',
-                'homeInstructors',
+                'homeGroupCourses',
+                'homeOneToOneGroups',
+                'homeGroupCount',
+                'homeOneToOneCount',
                 'homeTestimonials',
                 'homeStats',
                 'heroSlides'
@@ -103,34 +128,12 @@ class LandingController extends Controller
         // في وضع التطوير: بدون كاش حتى تظهر تحديثات التصميم فوراً
         $payload = config('app.debug')
             ? $buildHomePayload()
-            : Cache::remember('landing.home.v10.'.$locale, 180, $buildHomePayload);
+            : Cache::remember('landing.home.v11.'.$locale, 180, $buildHomePayload);
 
         return view('welcome', array_merge($payload, compact('popupAd')));
     }
 
     /**
-     * مدربون معتمدون ونشطون للعرض العام.
-     *
-     * @return \Illuminate\Support\Collection<int, InstructorProfile>
-     */
-    private function approvedActiveInstructorProfiles(int $limit = 8): \Illuminate\Support\Collection
-    {
-        return InstructorProfile::query()
-            ->approved()
-            ->whereHas('user', function ($q) {
-                $q->whereIn('role', ['instructor', 'teacher'])
-                    ->where('is_active', true);
-            })
-            ->with(['user:id,name,role,is_active'])
-            ->orderByDesc('reviewed_at')
-            ->orderByDesc('id')
-            ->limit($limit)
-            ->get();
-    }
-
-    /**
-     * بطاقات تميّز مجالات الخدمة على الصفحة الرئيسية — جميعها تؤدي إلى صفحة الخدمات.
-     *
      * @return \Illuminate\Support\Collection<int, array{name: string, description: string, icon: string, url: string}>
      */
     private function buildHomeCategories(): \Illuminate\Support\Collection

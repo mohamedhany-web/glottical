@@ -25,6 +25,12 @@
             <i class="fas fa-arrow-right text-xs"></i>
             رجوع للقائمة
         </a>
+        @if($mode === 'edit' && $type === 'collective')
+            <a href="{{ route('admin.tutoring-groups.cohorts.index', $group) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">إدارة الدفعات</a>
+        @endif
+        @if($mode === 'edit' && $type === 'individual')
+            <a href="{{ route('admin.tutoring-groups.packages.index', $group) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">إدارة الباقات</a>
+        @endif
     </section>
 
     @if($errors->any())
@@ -107,6 +113,26 @@
                 <div>
                     <label class="{{ $labelClass }}" for="sort_order">ترتيب العرض</label>
                     <input id="sort_order" type="number" min="0" name="sort_order" value="{{ old('sort_order', $group->sort_order ?: 0) }}" class="{{ $fieldClass }}">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="hourly_rate">سعر الساعة (لباقات الفردي)</label>
+                    <input id="hourly_rate" type="number" step="0.01" min="0" name="hourly_rate" value="{{ old('hourly_rate', $group->hourly_rate) }}" class="{{ $fieldClass }}">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="sessions_per_month">حصص شهرياً (افتراضي)</label>
+                    <input id="sessions_per_month" type="number" min="1" max="60" name="sessions_per_month" value="{{ old('sessions_per_month', $group->sessions_per_month ?: 8) }}" class="{{ $fieldClass }}">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="learning_path">المسار التعليمي</label>
+                    <select id="learning_path" name="learning_path" class="{{ $fieldClass }}">
+                        <option value="">—</option>
+                        <option value="arabic" @selected(old('learning_path', $group->learning_path) === 'arabic')>عربي / إسلامي</option>
+                        <option value="english" @selected(old('learning_path', $group->learning_path) === 'english')>إنجليزي</option>
+                    </select>
+                </div>
+                <div class="sm:col-span-2 lg:col-span-2">
+                    <label class="{{ $labelClass }}" for="whatsapp_group_url">رابط واتساب المجموعة</label>
+                    <input id="whatsapp_group_url" type="url" name="whatsapp_group_url" value="{{ old('whatsapp_group_url', $group->whatsapp_group_url) }}" class="{{ $fieldClass }}" dir="ltr">
                 </div>
             </div>
         </article>

@@ -1,151 +1,175 @@
 @extends('layouts.admin')
 
-@section('title', 'الكوبونات والخصومات')
-@section('header', '')
+@section('title', 'الكوبونات والخصومات - ' . config('app.name'))
+@section('page_title', 'الكوبونات والخصومات')
 
 @section('content')
-<div class="space-y-6">
-    {{-- رأس الصفحة --}}
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-800 dark:text-white font-heading">
-                <i class="fas fa-ticket-alt text-violet-500 ml-2"></i>الكوبونات والخصومات
-            </h1>
-            <p class="text-sm text-slate-500 mt-1">إدارة أكواد الخصم والاستخدامات</p>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">التسويق · العروض والخصومات</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">الكوبونات والخصومات</h2>
+            <p class="mt-1 max-w-2xl text-sm text-muted">إدارة أكواد الخصم والاستخدامات</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-            <a href="{{ route('admin.marketing.student-wallet-credit.create') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold text-sm transition-all">
-                <i class="fas fa-wallet"></i> رصيد محفظة طالب
+            <a href="{{ route('admin.marketing.student-wallet-credit.create') }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink transition hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-wallet text-xs"></i>
+                رصيد محفظة طالب
             </a>
-            <a href="{{ route('admin.coupons.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-semibold shadow-lg shadow-violet-500/25 transition-all">
-                <i class="fas fa-plus"></i> إضافة كوبون جديد
+            <a href="{{ route('admin.coupons.create') }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-plus text-xs"></i>
+                إضافة كوبون جديد
             </a>
         </div>
-    </div>
+    </section>
 
     @if(session('success'))
-    <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 text-emerald-700 dark:text-emerald-400 text-sm">
-        <i class="fas fa-check-circle ml-1"></i> {{ session('success') }}
-    </div>
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-soft">
+            <i class="fas fa-check-circle ml-1"></i> {{ session('success') }}
+        </div>
     @endif
     @if(session('error'))
-    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-red-700 dark:text-red-400 text-sm">
-        <i class="fas fa-exclamation-circle ml-1"></i> {{ session('error') }}
-    </div>
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800 shadow-soft">
+            <i class="fas fa-exclamation-circle ml-1"></i> {{ session('error') }}
+        </div>
     @endif
 
-    {{-- إحصائيات --}}
     @if(isset($stats))
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
-            <div class="text-sm text-slate-500 dark:text-slate-400">إجمالي الكوبونات</div>
-            <div class="text-2xl font-bold text-slate-800 dark:text-white mt-1">{{ $stats['total'] ?? 0 }}</div>
-        </div>
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
-            <div class="text-sm text-slate-500 dark:text-slate-400">نشطة</div>
-            <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{{ $stats['active'] ?? 0 }}</div>
-        </div>
-        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
-            <div class="text-sm text-slate-500 dark:text-slate-400">منتهية/غير نشطة</div>
-            <div class="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-1">{{ $stats['expired'] ?? 0 }}</div>
-        </div>
-    </div>
+        <section class="grid gap-3 sm:grid-cols-3">
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                    <i class="fas fa-ticket-alt text-sm"></i>
+                </div>
+                <p class="mt-3 text-xs font-medium text-muted">إجمالي الكوبونات</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $stats['total'] ?? 0 }}</p>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                    <i class="fas fa-check-circle text-sm"></i>
+                </div>
+                <p class="mt-3 text-xs font-medium text-muted">نشطة</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-emerald-700">{{ $stats['active'] ?? 0 }}</p>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                    <i class="fas fa-clock text-sm"></i>
+                </div>
+                <p class="mt-3 text-xs font-medium text-muted">منتهية/غير نشطة</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-rose-700">{{ $stats['expired'] ?? 0 }}</p>
+            </article>
+        </section>
     @endif
 
-    {{-- تصفية وبحث --}}
-    <form method="GET" action="{{ route('admin.coupons.index') }}" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex flex-wrap items-end gap-3">
-        <div class="flex-1 min-w-[200px]">
-            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">بحث</label>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="كود أو عنوان..." class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
+    <form method="GET" action="{{ route('admin.coupons.index') }}" class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+        <div class="grid gap-3 md:grid-cols-3">
+            <div class="md:col-span-1">
+                <label class="mb-1.5 block text-xs font-medium text-muted">بحث</label>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="كود أو عنوان..."
+                       class="h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">
+            </div>
+            <div>
+                <label class="mb-1.5 block text-xs font-medium text-muted">الحالة</label>
+                <select name="status" class="h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">
+                    <option value="">الكل</option>
+                    <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>نشط</option>
+                    <option value="expired" {{ request('status') === 'expired' ? 'selected' : '' }}>منتهي</option>
+                </select>
+            </div>
+            <div class="flex items-end gap-2">
+                <button type="submit" class="btn-press inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                    <i class="fas fa-filter text-xs"></i> تطبيق
+                </button>
+                @if(request()->hasAny(['search', 'status']))
+                    <a href="{{ route('admin.coupons.index') }}" class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-line text-muted transition hover:bg-accent-soft hover:text-accent" title="إعادة تعيين">
+                        <i class="fas fa-times text-xs"></i>
+                    </a>
+                @endif
+            </div>
         </div>
-        <div class="w-full sm:w-40">
-            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">الحالة</label>
-            <select name="status" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
-                <option value="">الكل</option>
-                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>نشط</option>
-                <option value="expired" {{ request('status') === 'expired' ? 'selected' : '' }}>منتهي</option>
-            </select>
-        </div>
-        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 dark:bg-slate-600 hover:bg-slate-700 text-white text-sm font-medium">
-            <i class="fas fa-filter"></i> تطبيق
-        </button>
-        @if(request()->hasAny(['search', 'status']))
-        <a href="{{ route('admin.coupons.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50">إعادة تعيين</a>
-        @endif
     </form>
 
-    {{-- الجدول --}}
     @if(isset($coupons) && $coupons->count() > 0)
-    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-600">
-                    <tr>
-                        <th class="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">الكود</th>
-                        <th class="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">العنوان</th>
-                        <th class="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">نوع الخصم</th>
-                        <th class="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">القيمة</th>
-                        <th class="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">الاستخدامات</th>
-                        <th class="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">الحالة</th>
-                        <th class="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">إجراءات</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-                    @foreach($coupons as $coupon)
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                        <td class="px-4 py-3 text-slate-900 dark:text-white font-mono font-medium">{{ $coupon->code }}</td>
-                        <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $coupon->title ?? $coupon->name ?? '—' }}</td>
-                        <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
-                            {{ $coupon->discount_type == 'percentage' ? 'نسبة مئوية' : 'مبلغ ثابت' }}
-                        </td>
-                        <td class="px-4 py-3 text-slate-900 dark:text-white font-medium">
-                            {{ $coupon->discount_type == 'percentage' ? $coupon->discount_value . '%' : number_format($coupon->discount_value, 2) . ' ج.م' }}
-                        </td>
-                        <td class="px-4 py-3 text-slate-600 dark:text-slate-400">
-                            <span title="استخدامات فعلية">{{ $coupon->used_count ?? ($coupon->usages_count ?? 0) }}</span>
-                            @if($coupon->usage_limit)
-                                / {{ $coupon->usage_limit }}
-                            @else
-                                <span class="text-slate-400">/ ∞</span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3">
-                            @php
-                                $isActive = $coupon->is_active && (!$coupon->expires_at || $coupon->expires_at >= now());
-                            @endphp
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                {{ $isActive ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300' }}">
-                                {{ $isActive ? 'نشط' : 'منتهي' }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <a href="{{ route('admin.coupons.show', $coupon) }}" class="text-violet-600 dark:text-violet-400 hover:underline text-xs font-medium">عرض</a>
-                                <a href="{{ route('admin.coupons.edit', $coupon) }}" class="text-slate-600 dark:text-slate-400 hover:underline text-xs font-medium">تعديل</a>
-                                <form method="POST" action="{{ route('admin.coupons.destroy', $coupon) }}" class="inline" onsubmit="return confirm('حذف هذا الكوبون؟');">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="text-rose-600 dark:text-rose-400 hover:underline text-xs font-medium">حذف</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/20">
-            {{ $coupons->links() }}
-        </div>
-    </div>
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
+                <div>
+                    <h3 class="text-sm font-semibold text-ink">قائمة الكوبونات</h3>
+                    <p class="text-xs text-muted"><span class="font-semibold tabular-nums text-accent">{{ number_format($coupons->total()) }}</span> نتيجة</p>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="border-b border-line bg-canvas text-xs text-muted">
+                        <tr>
+                            <th class="px-4 py-3 text-start font-medium">الكود</th>
+                            <th class="px-4 py-3 text-start font-medium">العنوان</th>
+                            <th class="px-4 py-3 text-start font-medium">نوع الخصم</th>
+                            <th class="px-4 py-3 text-start font-medium">القيمة</th>
+                            <th class="px-4 py-3 text-start font-medium">الاستخدامات</th>
+                            <th class="px-4 py-3 text-start font-medium">الحالة</th>
+                            <th class="px-4 py-3 text-end font-medium">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-line">
+                        @foreach($coupons as $coupon)
+                            <tr class="hover:bg-canvas/60">
+                                <td class="px-4 py-3 font-mono font-semibold text-ink">{{ $coupon->code }}</td>
+                                <td class="px-4 py-3 text-ink-soft">{{ $coupon->title ?? $coupon->name ?? '—' }}</td>
+                                <td class="px-4 py-3 text-ink-soft">
+                                    {{ $coupon->discount_type == 'percentage' ? 'نسبة مئوية' : 'مبلغ ثابت' }}
+                                </td>
+                                <td class="px-4 py-3 font-semibold tabular-nums text-ink">
+                                    {{ $coupon->discount_type == 'percentage' ? $coupon->discount_value . '%' : number_format($coupon->discount_value, 2) . ' ج.م' }}
+                                </td>
+                                <td class="px-4 py-3 tabular-nums text-muted">
+                                    <span title="استخدامات فعلية">{{ $coupon->used_count ?? ($coupon->usages_count ?? 0) }}</span>
+                                    @if($coupon->usage_limit)
+                                        / {{ $coupon->usage_limit }}
+                                    @else
+                                        <span class="text-muted">/ ∞</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3">
+                                    @php
+                                        $isActive = $coupon->is_active && (!$coupon->expires_at || $coupon->expires_at >= now());
+                                    @endphp
+                                    <span class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold
+                                        {{ $isActive ? 'border-emerald-100 bg-emerald-50 text-emerald-700' : 'border-line bg-canvas text-muted' }}">
+                                        <span class="size-1.5 rounded-full bg-current"></span>
+                                        {{ $isActive ? 'نشط' : 'منتهي' }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex flex-wrap items-center justify-end gap-2">
+                                        <a href="{{ route('admin.coupons.show', $coupon) }}" class="inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-ink transition hover:bg-accent-soft hover:text-accent">عرض</a>
+                                        <a href="{{ route('admin.coupons.edit', $coupon) }}" class="inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-medium text-ink transition hover:bg-accent-soft hover:text-accent">تعديل</a>
+                                        <form method="POST" action="{{ route('admin.coupons.destroy', $coupon) }}" class="inline" onsubmit="return confirm('حذف هذا الكوبون؟');">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="inline-flex h-8 items-center rounded-lg border border-rose-100 px-3 text-xs font-medium text-rose-700 transition hover:bg-rose-50">حذف</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <div class="border-t border-line bg-canvas/40 px-4 py-3">
+                {{ $coupons->links() }}
+            </div>
+        </article>
     @else
-    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-12 text-center">
-        <i class="fas fa-ticket-alt text-slate-300 dark:text-slate-600 text-5xl mb-4"></i>
-        <p class="text-slate-600 dark:text-slate-400 font-medium">لا توجد كوبونات</p>
-        <p class="text-sm text-slate-500 mt-1">أضف أول كوبون أو غيّر معايير البحث</p>
-        <a href="{{ route('admin.coupons.create') }}" class="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-semibold text-sm">
-            <i class="fas fa-plus"></i> إضافة كوبون
-        </a>
-    </div>
+        <article class="rounded-2xl border border-line bg-surface p-12 text-center shadow-soft">
+            <div class="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-[#f2f5f4] text-accent">
+                <i class="fas fa-ticket-alt text-2xl"></i>
+            </div>
+            <p class="mt-4 font-semibold text-ink">لا توجد كوبونات</p>
+            <p class="mt-1 text-sm text-muted">أضف أول كوبون أو غيّر معايير البحث</p>
+            <a href="{{ route('admin.coupons.create') }}" class="btn-press mt-5 inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-plus text-xs"></i> إضافة كوبون
+            </a>
+        </article>
     @endif
 </div>
 @endsection

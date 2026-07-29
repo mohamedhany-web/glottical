@@ -1,78 +1,10 @@
 @extends('layouts.admin')
 
 @section('title', ($pageTitle ?? 'إدارة المستخدمين') . ' - ' . config('app.name'))
-@section('header', $pageTitle ?? 'إدارة المستخدمين')
-
-@push('styles')
-<style>
-    .user-card {
-        transition: all 0.2s ease;
-        background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
-        border: 1px solid rgba(100, 116, 139, 0.2);
-    }
-
-    .user-card:hover {
-        border-color: rgba(59, 130, 246, 0.3);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .table-row {
-        transition: background-color 0.15s ease;
-    }
-
-    .table-row:hover {
-        background: rgba(59, 130, 246, 0.05);
-    }
-
-    .avatar-gradient {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    }
-
-    /* شكل خاص لصفحة إدارة الطلاب ليطابق Dashboard */
-    .students-dashboard-theme .hero-title {
-        color: #1e293b;
-        font-weight: 800;
-    }
-    .students-dashboard-theme .hero-subtitle {
-        color: #64748b;
-    }
-    .students-dashboard-theme .students-hero {
-        background: transparent;
-        border: 0;
-        box-shadow: none;
-        padding: 0;
-    }
-    .students-dashboard-theme .students-card {
-        background: #fff;
-        border: 1px solid rgba(226, 232, 240, 0.9);
-        border-radius: 16px;
-        overflow: hidden;
-    }
-    .students-dashboard-theme .students-card-header {
-        padding: 1rem 1.25rem;
-        border-bottom: 1px solid rgba(241, 245, 249, 0.9);
-        background: rgba(248, 250, 252, 0.4);
-    }
-    .dark .students-dashboard-theme .students-card {
-        background: #1e293b;
-        border-color: #334155;
-    }
-    .dark .students-dashboard-theme .students-card-header {
-        background: rgba(30, 41, 59, 0.8);
-        border-bottom-color: #334155;
-    }
-    .dark .students-dashboard-theme .hero-title {
-        color: #f1f5f9;
-    }
-    .dark .students-dashboard-theme .hero-subtitle {
-        color: #cbd5e1;
-    }
-</style>
-@endpush
+@section('page_title', $pageTitle ?? 'إدارة المستخدمين')
 
 @section('content')
 @php
-    // التأكد من وجود المتغيرات
     $stats = $stats ?? [];
     $trends = $trends ?? [];
     $users = $users ?? collect();
@@ -84,708 +16,420 @@
     $pageTitle = $pageTitle ?? 'إدارة المستخدمين';
     $pageDescription = $pageDescription ?? 'متابعة الحسابات، الصلاحيات، وحالة النشاط عبر المنصة';
     $indexRoute = $indexRoute ?? 'admin.users.index';
-    
-    $statsCards = [
+    $isStudents = $pageMode === 'students';
+
+    $roles = [
+        'super_admin' => ['label' => 'مدير عام', 'badge' => 'bg-rose-50 text-rose-700 border-rose-100'],
+        'admin' => ['label' => 'إداري', 'badge' => 'bg-rose-50 text-rose-700 border-rose-100'],
+        'instructor' => ['label' => 'مدرب', 'badge' => 'bg-[#f2f5f4] text-accent border-line'],
+        'teacher' => ['label' => 'مدرس', 'badge' => 'bg-[#f2f5f4] text-accent border-line'],
+        'student' => ['label' => __('admin.student_role_label'), 'badge' => 'bg-emerald-50 text-emerald-700 border-emerald-100'],
+        'parent' => ['label' => 'ولي أمر', 'badge' => 'bg-canvas text-ink border-line'],
+        'employee' => ['label' => 'موظف', 'badge' => 'bg-amber-50 text-amber-800 border-amber-100'],
+    ];
+
+    $kpiCards = [
         [
-            'label' => 'إجمالي المستخدمين',
+            'label' => $isStudents ? 'إجمالي الطلاب' : 'إجمالي المستخدمين',
             'value' => number_format($stats['total'] ?? 0),
-            'icon' => 'fas fa-users',
-            'color' => 'blue',
-            'description' => 'كل المستخدمين المسجلين',
-            'new_this_month' => $stats['new_this_month'] ?? 0,
+            'meta' => isset($stats['new_this_month']) ? ('+'.number_format($stats['new_this_month']).' هذا الشهر') : null,
             'trend' => $trends['users'] ?? null,
         ],
         [
-            'label' => 'المستخدمون النشطون',
+            'label' => 'نشطون',
             'value' => number_format($stats['active'] ?? 0),
-            'icon' => 'fas fa-user-check',
-            'color' => 'emerald',
-            'description' => 'حسابات نشطة',
+            'meta' => 'حسابات مفعّلة',
+            'trend' => null,
         ],
         [
-            'label' => 'المدرسون',
+            'label' => 'المدربون',
             'value' => number_format($stats['teachers'] ?? 0),
-            'icon' => 'fas fa-chalkboard-teacher',
-            'color' => 'indigo',
-            'description' => 'مدربون مسجلون',
-            'new_this_month' => $stats['new_teachers_this_month'] ?? 0,
+            'meta' => isset($stats['new_teachers_this_month']) ? ('+'.number_format($stats['new_teachers_this_month']).' هذا الشهر') : null,
             'trend' => $trends['teachers'] ?? null,
         ],
         [
             'label' => 'الطلاب',
             'value' => number_format($stats['students'] ?? 0),
-            'icon' => 'fas fa-user-graduate',
-            'color' => 'purple',
-            'description' => 'طلاب مسجلون',
-            'new_this_month' => $stats['new_students_this_month'] ?? 0,
+            'meta' => isset($stats['new_students_this_month']) ? ('+'.number_format($stats['new_students_this_month']).' هذا الشهر') : null,
             'trend' => $trends['students'] ?? null,
         ],
     ];
 
-    $roles = [
-        'super_admin' => ['label' => 'مدير عام', 'badge' => 'bg-rose-100 text-rose-700 border border-rose-200'],
-        'admin' => ['label' => 'إداري', 'badge' => 'bg-rose-100 text-rose-700 border border-rose-200'],
-        'instructor' => ['label' => 'مدرب', 'badge' => 'bg-sky-100 text-sky-700 border border-sky-200'],
-        'teacher' => ['label' => 'مدرس', 'badge' => 'bg-sky-100 text-sky-700 border border-sky-200'],
-        'student' => ['label' => __('admin.student_role_label'), 'badge' => 'bg-emerald-100 text-emerald-700 border border-emerald-200'],
-        'parent' => ['label' => 'ولي أمر', 'badge' => 'bg-indigo-100 text-indigo-700 border border-indigo-200'],
-        'employee' => ['label' => 'موظف', 'badge' => 'bg-amber-100 text-amber-700 border border-amber-200']
-    ];
-    
-    $colorConfigs = [
-        'blue' => [
-            'bg' => 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 249, 255, 0.95) 50%, rgba(224, 242, 254, 0.9) 100%)',
-            'border' => 'border-blue-200/50 hover:border-blue-300/70',
-            'text' => 'text-blue-800/80',
-            'value' => 'from-blue-700 via-blue-600 to-sky-600',
-            'icon' => 'from-blue-500 via-blue-600 to-sky-600',
-            'iconShadow' => 'rgba(59, 130, 246, 0.4)',
-            'hover' => 'from-blue-100/60 via-sky-100/40 to-blue-50/30',
+    $totalForPercentage = max(1, (int) ($stats['total'] ?? 0));
+    $roleDistribution = [
+        'admin' => [
+            'count' => (int) (($usersByRole['admin'] ?? 0) + ($usersByRole['super_admin'] ?? 0)),
+            'label' => 'إداريون',
+            'icon' => 'fas fa-user-shield',
         ],
-        'emerald' => [
-            'bg' => 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 253, 245, 0.95) 50%, rgba(209, 250, 229, 0.9) 100%)',
-            'border' => 'border-emerald-200/50 hover:border-emerald-300/70',
-            'text' => 'text-emerald-800/80',
-            'value' => 'from-emerald-700 via-green-600 to-teal-600',
-            'icon' => 'from-emerald-500 via-green-500 to-teal-600',
-            'iconShadow' => 'rgba(16, 185, 129, 0.4)',
-            'hover' => 'from-emerald-100/60 via-green-100/40 to-teal-50/30',
+        'instructor' => [
+            'count' => (int) (($usersByRole['instructor'] ?? 0) + ($usersByRole['teacher'] ?? 0)),
+            'label' => 'مدربون',
+            'icon' => 'fas fa-chalkboard-teacher',
         ],
-        'indigo' => [
-            'bg' => 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(238, 242, 255, 0.95) 50%, rgba(224, 231, 255, 0.9) 100%)',
-            'border' => 'border-indigo-200/50 hover:border-indigo-300/70',
-            'text' => 'text-indigo-800/80',
-            'value' => 'from-indigo-700 via-purple-600 to-violet-600',
-            'icon' => 'from-indigo-500 via-purple-500 to-violet-600',
-            'iconShadow' => 'rgba(99, 102, 241, 0.4)',
-            'hover' => 'from-indigo-100/60 via-purple-100/40 to-violet-50/30',
+        'student' => [
+            'count' => (int) ($usersByRole['student'] ?? 0),
+            'label' => __('admin.student_role_label'),
+            'icon' => 'fas fa-user-graduate',
         ],
-        'purple' => [
-            'bg' => 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(250, 245, 255, 0.95) 50%, rgba(243, 232, 255, 0.9) 100%)',
-            'border' => 'border-purple-200/50 hover:border-purple-300/70',
-            'text' => 'text-purple-800/80',
-            'value' => 'from-purple-700 via-purple-600 to-violet-600',
-            'icon' => 'from-purple-500 via-purple-500 to-violet-600',
-            'iconShadow' => 'rgba(168, 85, 247, 0.4)',
-            'hover' => 'from-purple-100/60 via-purple-100/40 to-violet-50/30',
+        'parent' => [
+            'count' => (int) ($usersByRole['parent'] ?? 0),
+            'label' => 'أولياء أمور',
+            'icon' => 'fas fa-user-friends',
+        ],
+        'employee' => [
+            'count' => (int) \App\Models\User::where('is_employee', true)->count(),
+            'label' => 'موظفون',
+            'icon' => 'fas fa-briefcase',
         ],
     ];
+
+    $monthNames = [
+        1 => 'يناير', 2 => 'فبراير', 3 => 'مارس', 4 => 'أبريل',
+        5 => 'مايو', 6 => 'يونيو', 7 => 'يوليو', 8 => 'أغسطس',
+        9 => 'سبتمبر', 10 => 'أكتوبر', 11 => 'نوفمبر', 12 => 'ديسمبر',
+    ];
+    $maxMonthCount = max(1, (int) ($usersByMonth->max('count') ?: 1));
 @endphp
 
-<div class="space-y-8 {{ $pageMode === 'students' ? 'students-dashboard-theme' : '' }}">
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">{{ $isStudents ? 'الطلاب والحسابات' : 'المستخدمون والصلاحيات' }}</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ $pageTitle }}</h2>
+            <p class="mt-1 max-w-2xl text-sm text-muted">{{ $pageDescription }}</p>
+        </div>
+        <a href="{{ route('admin.users.create') }}"
+           class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+            <i class="fas fa-user-plus text-xs"></i>
+            {{ $isStudents ? 'إضافة طالب' : 'إضافة مستخدم' }}
+        </a>
+    </section>
+
     @if(request('created') == '1')
-        <div class="rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 px-5 py-4 text-emerald-800 dark:text-emerald-200 text-sm font-medium flex items-center gap-2">
-            <i class="fas fa-check-circle text-emerald-600"></i>
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-soft">
             تم إنشاء المستخدم بنجاح.
         </div>
     @endif
     @if(session('success') || request('updated') == '1')
-        <div class="rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 px-5 py-4 text-emerald-800 dark:text-emerald-200 text-sm font-medium flex items-center gap-2">
-            <i class="fas fa-check-circle text-emerald-600"></i>
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-soft">
             {{ session('success', 'تم التعديل بنجاح') }}
         </div>
     @endif
     @if(session('warning'))
-        <div class="rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-5 py-4 text-amber-800 dark:text-amber-200 text-sm font-medium flex items-center gap-2">
-            <i class="fas fa-exclamation-triangle text-amber-600"></i>
+        <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 shadow-soft">
             {{ session('warning') }}
         </div>
     @endif
-    <!-- الهيدر المحسن -->
-    <div class="{{ $pageMode === 'students' ? 'students-hero animate-fade-in' : 'bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-lg' }}">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md {{ $pageMode === 'students' ? 'shadow-blue-500/25' : '' }}">
-                    <i class="fas fa-users text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-2xl sm:text-3xl mb-1 {{ $pageMode === 'students' ? 'hero-title font-heading' : 'font-black text-slate-900 dark:text-slate-100' }}">{{ $pageTitle }}</h1>
-                    <p class="text-sm sm:text-base font-medium {{ $pageMode === 'students' ? 'hero-subtitle' : 'text-slate-600 dark:text-slate-300' }}">{{ $pageDescription }}</p>
-                </div>
-            </div>
-            <a href="{{ route('admin.users.create') }}" 
-               class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-6 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-200">
-                <i class="fas fa-user-plus"></i>
-                <span>{{ $pageMode === 'students' ? 'إضافة حساب طالب جديد' : 'إضافة مستخدم جديد' }}</span>
-            </a>
+    @if(session('error'))
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800 shadow-soft">
+            {{ session('error') }}
         </div>
-    </div>
-
-    <!-- إحصائيات سريعة -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        @foreach ($statsCards as $stat)
-            @php $config = $colorConfigs[$stat['color']]; @endphp
-            <div class="rounded-2xl p-5 sm:p-6 relative overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-md hover:shadow-lg transition-all duration-200 w-full">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ $stat['label'] }}</p>
-                        <p class="text-4xl sm:text-3xl font-black text-slate-900 dark:text-slate-100">{{ $stat['value'] }}</p>
-                    </div>
-                    <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0 mr-3 sm:mr-0">
-                        <i class="{{ $stat['icon'] }} text-white text-xl"></i>
-                    </div>
-                </div>
-                @if(isset($stat['new_this_month']))
-                    <p class="text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
-                        {{ $stat['label'] == 'إجمالي المستخدمين' ? 'مستخدمون' : ($stat['label'] == 'المدرسون' ? 'مدربون' : 'طلاب') }} جدد هذا الشهر: 
-                        <span class="font-bold text-blue-600">{{ number_format($stat['new_this_month']) }}</span>
-                    </p>
-                @else
-                    <p class="text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">{{ $stat['description'] }}</p>
-                @endif
-                @if(isset($stat['trend']) && $stat['trend'])
-                    @php
-                        $diff = (int) round($stat['trend']['difference']);
-                        $percent = $stat['trend']['percent'];
-                        $positive = $diff >= 0;
-                    @endphp
-                    <div class="mt-2 flex items-center gap-2 text-sm flex-wrap">
-                        <span class="font-bold {{ $positive ? 'text-emerald-600' : 'text-rose-600' }}">
-                            {{ $positive ? '+' : '' }}{{ number_format($diff) }}
-                        </span>
-                        <span class="text-slate-600 dark:text-slate-400">عن الشهر الماضي</span>
-                        <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold {{ $positive ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200' }}">
-                            {{ $percent >= 0 ? '+' : '' }}{{ number_format($percent, 1) }}%
-                        </span>
-                    </div>
-                @endif
-            </div>
-        @endforeach
-    </div>
-
-    @if($pageMode === 'students')
-    <section class="students-card">
-        <div class="students-card-header">
-            <h3 class="text-base font-bold text-slate-900">اختصارات الخدمات الحالية</h3>
-        </div>
-        <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-3">
-            @if(Route::has('admin.tutoring-groups.index'))
-                <a href="{{ route('admin.tutoring-groups.index', 'individual') }}" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-accent text-white font-semibold hover:opacity-90 transition-colors">
-                    <i class="fas fa-user"></i>
-                    مجموعات فردية
-                </a>
-                <a href="{{ route('admin.tutoring-groups.index', 'collective') }}" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                    <i class="fas fa-users"></i>
-                    مجموعات جماعية
-                </a>
-            @endif
-            @if(Route::has('admin.advanced-courses.index'))
-                <a href="{{ route('admin.advanced-courses.index') }}" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                    <i class="fas fa-graduation-cap"></i>
-                    الكورسات
-                </a>
-            @endif
-        </div>
-    </section>
     @endif
 
-    <!-- البحث والفلترة -->
-    <section class="{{ $pageMode === 'students' ? 'students-card' : 'rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden' }}">
-        <div class="{{ $pageMode === 'students' ? 'students-card-header' : 'px-6 py-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40' }}">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md">
-                    <i class="fas fa-filter text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-lg font-black text-slate-900 dark:text-slate-100">البحث والفلترة</h3>
-                    <p class="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">ابحث وفلتر المستخدمين حسب الدور والحالة</p>
-                </div>
-            </div>
-        </div>
-        <div class="px-6 py-5">
-            <form method="GET" action="{{ route($indexRoute) }}" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                        <i class="fas fa-search text-blue-600 text-sm"></i>
-                        البحث
-                    </label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-3 flex items-center text-blue-500 dark:text-blue-400">
-                            <i class="fas fa-search"></i>
-                        </span>
-                        <input type="text" name="search" value="{{ request('search') }}" 
-                               placeholder="الاسم، البريد الإلكتروني، رقم الهاتف" 
-                               class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
-                    </div>
-                </div>
-                @if($pageMode !== 'students')
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                        <i class="fas fa-user-tag text-blue-600 text-sm"></i>
-                        الدور
-                    </label>
-                    <select name="role" 
-                            class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <option value="">جميع الأدوار</option>
-                        <option value="super_admin" {{ request('role') == 'super_admin' ? 'selected' : '' }}>مدير عام</option>
-                        <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>إداري</option>
-                        <option value="instructor" {{ request('role') == 'instructor' ? 'selected' : '' }}>مدرب</option>
-                        <option value="teacher" {{ request('role') == 'teacher' ? 'selected' : '' }}>مدرس</option>
-                        <option value="student" {{ request('role') == 'student' ? 'selected' : '' }}>{{ __('admin.student_role_label') }}</option>
-                        <option value="parent" {{ request('role') == 'parent' ? 'selected' : '' }}>ولي أمر</option>
-                        <option value="employee" {{ request('role') == 'employee' ? 'selected' : '' }}>موظف</option>
-                    </select>
-                </div>
+    <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach($kpiCards as $card)
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <p class="text-xs font-medium text-muted">{{ $card['label'] }}</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $card['value'] }}</p>
+                @if(!empty($card['meta']))
+                    <p class="mt-1 text-[11px] text-muted">{{ $card['meta'] }}</p>
                 @endif
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                        <i class="fas fa-toggle-on text-blue-600 text-sm"></i>
-                        الحالة
-                    </label>
-                    <select name="status" 
-                            class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <option value="">جميع الحالات</option>
-                        <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>نشط</option>
-                        <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>غير نشط</option>
-                    </select>
-                </div>
-                <div class="flex items-end gap-2">
-                    <button type="submit" 
-                            class="flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-4 py-2.5 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-200">
-                        <i class="fas fa-search"></i>
-                        <span>بحث</span>
-                    </button>
-                    @if(request()->anyFilled(['search', 'role', 'status']))
-                    <a href="{{ route($indexRoute) }}" 
-                       class="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl font-semibold transition-colors" 
-                       title="مسح الفلتر">
-                        <i class="fas fa-times"></i>
-                    </a>
-                    @endif
-                </div>
-            </form>
-        </div>
+                @if(!empty($card['trend']))
+                    @php
+                        $diff = (int) round($card['trend']['difference'] ?? 0);
+                        $percent = (float) ($card['trend']['percent'] ?? 0);
+                        $positive = $diff >= 0;
+                    @endphp
+                    <p class="mt-2 text-[11px] font-semibold {{ $positive ? 'text-emerald-700' : 'text-rose-700' }}">
+                        {{ $positive ? '+' : '' }}{{ number_format($diff) }}
+                        <span class="font-medium text-muted">({{ $percent >= 0 ? '+' : '' }}{{ number_format($percent, 1) }}%)</span>
+                    </p>
+                @endif
+            </article>
+        @endforeach
     </section>
 
-    <!-- قائمة المستخدمين -->
-    <section class="{{ $pageMode === 'students' ? 'students-card' : 'rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden' }}">
-        <div class="{{ $pageMode === 'students' ? 'students-card-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4' : 'px-6 py-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4' }}">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md">
-                    <i class="fas fa-users text-lg"></i>
-                </div>
+    @if($isStudents)
+        <section class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <p class="mb-3 text-xs font-medium text-muted">اختصارات الخدمات</p>
+            <div class="flex flex-wrap gap-2">
+                @if(Route::has('admin.tutoring-groups.index'))
+                    <a href="{{ route('admin.tutoring-groups.index', 'individual') }}"
+                       class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                        <i class="fas fa-user text-xs"></i> مجموعات فردية
+                    </a>
+                    <a href="{{ route('admin.tutoring-groups.index', 'collective') }}"
+                       class="inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                        <i class="fas fa-users text-xs"></i> مجموعات جماعية
+                    </a>
+                @endif
+                @if(Route::has('admin.advanced-courses.index'))
+                    <a href="{{ route('admin.advanced-courses.index') }}"
+                       class="inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                        <i class="fas fa-graduation-cap text-xs"></i> الكورسات
+                    </a>
+                @endif
+            </div>
+        </section>
+    @endif
+
+    <form method="GET" action="{{ route($indexRoute) }}" class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+        <div class="grid gap-3 md:grid-cols-2 {{ $isStudents ? 'xl:grid-cols-3' : 'xl:grid-cols-4' }}">
+            <div class="{{ $isStudents ? 'xl:col-span-1' : '' }}">
+                <label class="mb-1.5 block text-xs font-medium text-muted">بحث</label>
+                <input type="text" name="search" value="{{ request('search') }}"
+                       placeholder="الاسم، البريد، الهاتف"
+                       class="h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink focus:border-accent focus:ring-accent/20">
+            </div>
+            @unless($isStudents)
                 <div>
-                    <h3 class="text-lg font-black text-slate-900 dark:text-slate-100">{{ $pageMode === 'students' ? 'قائمة الطلاب والحسابات' : 'قائمة المستخدمين' }}</h3>
-                    <p class="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">
-                        <span class="font-bold text-blue-600">{{ $users->total() }}</span> {{ $pageMode === 'students' ? 'طالب' : 'مستخدم' }}
-                    </p>
+                    <label class="mb-1.5 block text-xs font-medium text-muted">الدور</label>
+                    <select name="role" class="h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink focus:border-accent focus:ring-accent/20">
+                        <option value="">جميع الأدوار</option>
+                        <option value="super_admin" @selected(request('role') == 'super_admin')>مدير عام</option>
+                        <option value="admin" @selected(request('role') == 'admin')>إداري</option>
+                        <option value="instructor" @selected(request('role') == 'instructor')>مدرب</option>
+                        <option value="teacher" @selected(request('role') == 'teacher')>مدرس</option>
+                        <option value="student" @selected(request('role') == 'student')>{{ __('admin.student_role_label') }}</option>
+                        <option value="parent" @selected(request('role') == 'parent')>ولي أمر</option>
+                        <option value="employee" @selected(request('role') == 'employee')>موظف</option>
+                    </select>
                 </div>
+            @endunless
+            <div>
+                <label class="mb-1.5 block text-xs font-medium text-muted">الحالة</label>
+                <select name="status" class="h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink focus:border-accent focus:ring-accent/20">
+                    <option value="">جميع الحالات</option>
+                    <option value="1" @selected(request('status') == '1')>نشط</option>
+                    <option value="0" @selected(request('status') == '0')>غير نشط</option>
+                </select>
+            </div>
+            <div class="flex items-end gap-2">
+                <button type="submit" class="btn-press inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                    <i class="fas fa-search text-xs"></i> بحث
+                </button>
+                @if(request()->anyFilled(['search', 'role', 'status']))
+                    <a href="{{ route($indexRoute) }}" class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-line text-muted hover:bg-canvas" title="مسح">
+                        <i class="fas fa-times text-xs"></i>
+                    </a>
+                @endif
             </div>
         </div>
+    </form>
 
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
+            <div>
+                <h3 class="text-sm font-semibold text-ink">{{ $isStudents ? 'قائمة الطلاب' : 'قائمة المستخدمين' }}</h3>
+                <p class="text-xs text-muted"><span class="font-semibold text-accent tabular-nums">{{ number_format($users->total()) }}</span> نتيجة</p>
+            </div>
+        </div>
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                <thead class="bg-slate-50 dark:bg-slate-900/40">
-                    <tr class="text-xs font-semibold uppercase tracking-widest text-slate-700 dark:text-slate-300">
-                        <th class="px-6 py-4 text-right">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-user text-blue-600"></i>
-                                <span>المستخدم</span>
-                            </div>
-                        </th>
-                        <th class="px-6 py-4 text-right">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-user-tag text-blue-600"></i>
-                                <span>الدور</span>
-                            </div>
-                        </th>
-                        <th class="px-6 py-4 text-right">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-toggle-on text-blue-600"></i>
-                                <span>الحالة</span>
-                            </div>
-                        </th>
-                        <th class="px-6 py-4 text-right whitespace-nowrap">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-calendar text-blue-600"></i>
-                                <span>تاريخ التسجيل</span>
-                            </div>
-                        </th>
-                        <th class="px-6 py-4 text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <i class="fas fa-cog text-blue-600"></i>
-                                <span>الإجراءات</span>
-                            </div>
-                        </th>
+            <table class="min-w-full text-sm">
+                <thead class="border-b border-line bg-canvas text-xs text-muted">
+                    <tr>
+                        <th class="px-4 py-3 text-start font-medium">المستخدم</th>
+                        <th class="px-4 py-3 text-start font-medium">الدور</th>
+                        <th class="px-4 py-3 text-start font-medium">الحالة</th>
+                        <th class="px-4 py-3 text-start font-medium">التسجيل</th>
+                        <th class="px-4 py-3 text-end font-medium">إجراءات</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-700 bg-white dark:bg-slate-800 text-sm">
-                    @forelse ($users as $user)
-                        <tr class="table-row">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-4">
-                                    <div class="avatar-gradient w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
+                <tbody class="divide-y divide-line">
+                    @forelse($users as $user)
+                        @php
+                            $roleKey = $user->is_employee ? 'employee' : $user->role;
+                            $roleMeta = $roles[$roleKey] ?? $roles['student'];
+                        @endphp
+                        <tr class="hover:bg-canvas/60">
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-sm font-bold text-accent">
                                         {{ mb_substr($user->name, 0, 1, 'UTF-8') }}
                                     </div>
-                                    <div class="space-y-1">
-                                        <p class="font-bold text-slate-900 dark:text-slate-100 text-base">{{ $user->name }}</p>
-                                        <p class="text-xs text-slate-600 dark:text-slate-400 font-medium flex items-center gap-2">
-                                            <i class="fas fa-envelope text-blue-500 text-xs"></i>
-                                            {{ $user->email ?: 'لا يوجد بريد إلكتروني' }}
-                                        </p>
-                                        <p class="text-xs text-slate-600 dark:text-slate-400 font-medium flex items-center gap-2">
-                                            <i class="fas fa-phone text-blue-500 text-xs"></i>
-                                            {{ $user->phone }}
-                                        </p>
+                                    <div class="min-w-0">
+                                        <p class="truncate font-semibold text-ink">{{ $user->name }}</p>
+                                        <p class="truncate text-xs text-muted">{{ $user->email ?: '—' }}</p>
+                                        <p class="truncate text-xs text-muted tabular-nums">{{ $user->phone ?: '—' }}</p>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
-                                @php
-                                    // التحقق من كون المستخدم موظف أولاً
-                                    if ($user->is_employee) {
-                                        $roleKey = 'employee';
-                                    } else {
-                                        $roleKey = $user->role;
-                                    }
-                                    $roleMeta = $roles[$roleKey] ?? $roles['student'];
-                                @endphp
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold {{ $roleMeta['badge'] }}">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex items-center rounded-lg border px-2.5 py-1 text-[11px] font-semibold {{ $roleMeta['badge'] }}">
                                     {{ $roleMeta['label'] }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold {{ $user->is_active ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800' }}">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold {{ $user->is_active ? 'border-emerald-100 bg-emerald-50 text-emerald-700' : 'border-rose-100 bg-rose-50 text-rose-700' }}">
+                                    <span class="size-1.5 rounded-full bg-current"></span>
                                     {{ $user->is_active ? 'نشط' : 'غير نشط' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">
-                                <div class="space-y-1">
-                                    <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $user->created_at->format('Y-m-d') }}</div>
-                                    <div class="text-xs text-slate-600 dark:text-slate-400 font-medium">{{ $user->created_at->format('H:i') }}</div>
-                                </div>
+                            <td class="px-4 py-3">
+                                <p class="font-medium tabular-nums text-ink">{{ $user->created_at?->format('Y-m-d') }}</p>
+                                <p class="text-xs text-muted tabular-nums">{{ $user->created_at?->format('H:i') }}</p>
                             </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center justify-center gap-2">
-                                    <a href="{{ route('admin.users.show', $user->id) }}" 
-                                       class="w-9 h-9 flex items-center justify-center bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 rounded-lg font-semibold transition-colors shadow-sm hover:shadow-md"
-                                       title="عرض">
-                                        <i class="fas fa-eye text-sm"></i>
-                                    </a>
-                                    <a href="{{ route('admin.users.edit', $user->id) }}" 
-                                       class="w-9 h-9 flex items-center justify-center bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-300 rounded-lg font-semibold transition-colors shadow-sm hover:shadow-md"
-                                       title="تعديل">
-                                        <i class="fas fa-edit text-sm"></i>
-                                    </a>
-                                    @if ($user->id !== auth()->id())
-                                        <button type="button" onclick="deleteUser(this)" 
+                            <td class="px-4 py-3">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <a href="{{ route('admin.users.show', $user->id) }}"
+                                       class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-muted hover:bg-canvas hover:text-accent"
+                                       title="عرض"><i class="fas fa-eye text-xs"></i></a>
+                                    <a href="{{ route('admin.users.edit', $user->id) }}"
+                                       class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-muted hover:bg-accent-soft hover:text-accent"
+                                       title="تعديل"><i class="fas fa-pen text-xs"></i></a>
+                                    @if($user->id !== auth()->id())
+                                        <button type="button" onclick="deleteUser(this)"
                                                 data-delete-url="{{ route('admin.users.delete', $user->id) }}"
-                                                class="w-9 h-9 flex items-center justify-center bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-300 rounded-lg font-semibold transition-colors shadow-sm hover:shadow-md"
-                                                title="حذف">
-                                            <i class="fas fa-trash text-sm"></i>
-                                        </button>
+                                                class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-rose-600 hover:bg-rose-50"
+                                                title="حذف"><i class="fas fa-trash text-xs"></i></button>
                                     @endif
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-16 text-center">
-                                <div class="flex flex-col items-center gap-4">
-                                    <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center">
-                                        <i class="fas fa-users text-3xl text-blue-600"></i>
-                                    </div>
-                                    <div>
-                                        <p class="font-bold text-slate-900 dark:text-slate-100 text-lg mb-1">لا توجد نتائج مطابقة</p>
-                                        <p class="text-sm text-slate-600 dark:text-slate-400 font-medium">جرب تغيير معايير البحث</p>
-                                    </div>
-                                </div>
-                            </td>
+                            <td colspan="5" class="px-4 py-12 text-center text-sm text-muted">لا توجد نتائج مطابقة.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-
-        @if ($users->hasPages())
-            <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40">
+        @if($users->hasPages())
+            <div class="border-t border-line px-4 py-3">
                 {{ $users->appends(request()->query())->links() }}
             </div>
         @endif
-    </section>
+    </article>
 
-    <!-- آخر المستخدمين والمستخدمين النشطون -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- آخر المستخدمين -->
-        <section class="user-card rounded-2xl shadow-lg overflow-hidden">
-            <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md">
-                        <i class="fas fa-user-plus text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-black text-slate-900 dark:text-slate-100">آخر المستخدمين المسجلين</h3>
-                        <p class="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">آخر 10 مستخدمين انضموا للمنصة</p>
-                    </div>
-                </div>
+    <div class="grid gap-5 lg:grid-cols-2">
+        <article class="rounded-2xl border border-line bg-surface shadow-soft overflow-hidden">
+            <div class="border-b border-line px-4 py-3">
+                <h3 class="text-sm font-semibold text-ink">آخر المسجّلين</h3>
+                <p class="text-xs text-muted">أحدث 10 حسابات</p>
             </div>
-            <div class="p-6 space-y-3 max-h-96 overflow-y-auto">
+            <div class="max-h-96 space-y-1 overflow-y-auto p-2">
                 @forelse($recentUsers as $recentUser)
-                <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-600">
-                    <div class="avatar-gradient w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
-                        {{ mb_substr($recentUser->name, 0, 1, 'UTF-8') }}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="font-bold text-slate-900 dark:text-slate-100 truncate">{{ $recentUser->name }}</p>
-                        <div class="flex items-center gap-3 mt-1 flex-wrap">
-                            @php
-                                $recentRoleKey = $recentUser->is_employee ? 'employee' : ($recentUser->role ?? 'student');
-                            @endphp
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold {{ ($roles[$recentRoleKey] ?? $roles['student'])['badge'] }}">
-                                <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
-                                {{ ($roles[$recentRoleKey] ?? $roles['student'])['label'] }}
-                            </span>
-                            <span class="text-xs text-slate-600 dark:text-slate-400 font-medium">{{ $recentUser->created_at->diffForHumans() }}</span>
+                    @php $rk = $recentUser->is_employee ? 'employee' : ($recentUser->role ?? 'student'); @endphp
+                    <a href="{{ route('admin.users.show', $recentUser->id) }}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-canvas">
+                        <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-xs font-bold text-accent">
+                            {{ mb_substr($recentUser->name, 0, 1, 'UTF-8') }}
                         </div>
-                    </div>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold {{ $recentUser->is_active ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800' }}">
-                        <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
-                        {{ $recentUser->is_active ? 'نشط' : 'غير نشط' }}
-                    </span>
-                </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate text-sm font-semibold text-ink">{{ $recentUser->name }}</p>
+                            <p class="text-[11px] text-muted">{{ ($roles[$rk] ?? $roles['student'])['label'] }} · {{ $recentUser->created_at?->diffForHumans() }}</p>
+                        </div>
+                        <span class="size-2 shrink-0 rounded-full {{ $recentUser->is_active ? 'bg-emerald-500' : 'bg-rose-400' }}"></span>
+                    </a>
                 @empty
-                <div class="text-center py-8">
-                    <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                        <i class="fas fa-users text-2xl text-blue-600"></i>
-                    </div>
-                    <p class="text-slate-600 dark:text-slate-400 font-medium">لا توجد مستخدمين بعد</p>
-                </div>
+                    <p class="px-3 py-8 text-center text-xs text-muted">لا يوجد مستخدمون بعد.</p>
                 @endforelse
             </div>
-        </section>
+        </article>
 
-        <!-- المستخدمين النشطون مؤخراً -->
-        <section class="user-card rounded-2xl shadow-lg overflow-hidden">
-            <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white shadow-md">
-                        <i class="fas fa-user-check text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-black text-slate-900 dark:text-slate-100">المستخدمين النشطون مؤخراً</h3>
-                        <p class="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">نشطوا خلال آخر 7 أيام</p>
-                    </div>
-                </div>
+        <article class="rounded-2xl border border-line bg-surface shadow-soft overflow-hidden">
+            <div class="border-b border-line px-4 py-3">
+                <h3 class="text-sm font-semibold text-ink">نشطون مؤخراً</h3>
+                <p class="text-xs text-muted">خلال آخر 7 أيام</p>
             </div>
-            <div class="p-6 space-y-3 max-h-96 overflow-y-auto">
+            <div class="max-h-96 space-y-1 overflow-y-auto p-2">
                 @forelse($recentlyActiveUsers as $activeUser)
-                <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-600">
-                    <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
-                        {{ mb_substr($activeUser->name, 0, 1, 'UTF-8') }}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="font-bold text-slate-900 dark:text-slate-100 truncate">{{ $activeUser->name }}</p>
-                        <div class="flex items-center gap-3 mt-1 flex-wrap">
-                            @php
-                                $activeRoleKey = $activeUser->is_employee ? 'employee' : ($activeUser->role ?? 'student');
-                            @endphp
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold {{ ($roles[$activeRoleKey] ?? $roles['student'])['badge'] }}">
-                                <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
-                                {{ ($roles[$activeRoleKey] ?? $roles['student'])['label'] }}
-                            </span>
-                            <span class="text-xs text-slate-600 dark:text-slate-400 font-medium">آخر نشاط: {{ $activeUser->updated_at->diffForHumans() }}</span>
+                    @php $ak = $activeUser->is_employee ? 'employee' : ($activeUser->role ?? 'student'); @endphp
+                    <a href="{{ route('admin.users.show', $activeUser->id) }}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-canvas">
+                        <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-xs font-bold text-accent">
+                            {{ mb_substr($activeUser->name, 0, 1, 'UTF-8') }}
                         </div>
-                    </div>
-                    <div class="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-md"></div>
-                </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate text-sm font-semibold text-ink">{{ $activeUser->name }}</p>
+                            <p class="text-[11px] text-muted">{{ ($roles[$ak] ?? $roles['student'])['label'] }} · {{ $activeUser->updated_at?->diffForHumans() }}</p>
+                        </div>
+                        <span class="size-2 shrink-0 rounded-full bg-emerald-500"></span>
+                    </a>
                 @empty
-                <div class="text-center py-8">
-                    <div class="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                        <i class="fas fa-user-check text-2xl text-emerald-600"></i>
-                    </div>
-                    <p class="text-slate-600 dark:text-slate-400 font-medium">لا يوجد مستخدمين نشطون مؤخراً</p>
-                </div>
+                    <p class="px-3 py-8 text-center text-xs text-muted">لا يوجد نشاط حديث.</p>
                 @endforelse
             </div>
-        </section>
+        </article>
     </div>
 
-    <!-- توزيع المستخدمين وإحصائيات التسجيل -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- توزيع المستخدمين حسب الدور -->
-        <section class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden">
-            <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md">
-                        <i class="fas fa-chart-pie text-lg"></i>
-                    </div>
+    <div class="grid gap-5 lg:grid-cols-2">
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <h3 class="text-sm font-semibold text-ink">توزيع الأدوار</h3>
+            <p class="mb-4 text-xs text-muted">نسبة كل دور من إجمالي المستخدمين</p>
+            <div class="space-y-3">
+                @foreach($roleDistribution as $roleData)
+                    @php $pct = round(($roleData['count'] / $totalForPercentage) * 100, 1); @endphp
                     <div>
-                        <h3 class="text-lg font-black text-slate-900 dark:text-slate-100">توزيع المستخدمين حسب الدور</h3>
-                        <p class="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">نظرة عامة على توزيع المستخدمين</p>
-                    </div>
-                </div>
-            </div>
-            <div class="p-6">
-                <div class="space-y-3">
-                    @php
-                        $totalForPercentage = $stats['total'] > 0 ? $stats['total'] : 1;
-                        $roleDistribution = [
-                            'super_admin' => ['count' => $usersByRole['super_admin'] ?? 0, 'label' => 'مدير عام', 'color' => 'rose', 'icon' => 'fas fa-user-shield'],
-                            'admin' => ['count' => $usersByRole['admin'] ?? 0, 'label' => 'إداري', 'color' => 'rose', 'icon' => 'fas fa-user-shield'],
-                            'instructor' => ['count' => $usersByRole['instructor'] ?? 0, 'label' => 'مدرب', 'color' => 'sky', 'icon' => 'fas fa-chalkboard-teacher'],
-                            'teacher' => ['count' => $usersByRole['teacher'] ?? 0, 'label' => 'مدرس', 'color' => 'sky', 'icon' => 'fas fa-chalkboard-teacher'],
-                            'student' => ['count' => $usersByRole['student'] ?? 0, 'label' => __('admin.student_role_label'), 'color' => 'emerald', 'icon' => 'fas fa-user-graduate'],
-                            'parent' => ['count' => $usersByRole['parent'] ?? 0, 'label' => 'ولي أمر', 'color' => 'indigo', 'icon' => 'fas fa-user-friends'],
-                            'employee' => ['count' => \App\Models\User::where('is_employee', true)->count(), 'label' => 'موظف', 'color' => 'amber', 'icon' => 'fas fa-briefcase'],
-                        ];
-                        // دمج super_admin مع admin
-                        if (isset($roleDistribution['super_admin']) && isset($roleDistribution['admin'])) {
-                            $roleDistribution['admin']['count'] += $roleDistribution['super_admin']['count'];
-                            unset($roleDistribution['super_admin']);
-                        }
-                        // دمج instructor مع teacher
-                        if (isset($roleDistribution['instructor']) && isset($roleDistribution['teacher'])) {
-                            $roleDistribution['instructor']['count'] += $roleDistribution['teacher']['count'];
-                            $roleDistribution['instructor']['label'] = 'مدرسون';
-                            unset($roleDistribution['teacher']);
-                        }
-                    @endphp
-                    @foreach($roleDistribution as $roleKey => $roleData)
-                        @php
-                            $percentage = ($roleData['count'] / $totalForPercentage) * 100;
-                            $colorClasses = [
-                                'rose' => ['bg' => 'bg-rose-500', 'text' => 'text-rose-600', 'light' => 'bg-rose-100', 'border' => 'border-rose-200'],
-                                'sky' => ['bg' => 'bg-blue-500', 'text' => 'text-blue-600', 'light' => 'bg-blue-100', 'border' => 'border-blue-200'],
-                                'emerald' => ['bg' => 'bg-emerald-500', 'text' => 'text-emerald-600', 'light' => 'bg-emerald-100', 'border' => 'border-emerald-200'],
-                                'indigo' => ['bg' => 'bg-indigo-500', 'text' => 'text-indigo-600', 'light' => 'bg-indigo-100', 'border' => 'border-indigo-200'],
-                                'amber' => ['bg' => 'bg-amber-500', 'text' => 'text-amber-600', 'light' => 'bg-amber-100', 'border' => 'border-amber-200'],
-                            ];
-                            $color = $colorClasses[$roleData['color']] ?? $colorClasses['sky'];
-                        @endphp
-                        <div class="p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-{{ $color['text'] }}/30 hover:shadow-md transition-all">
-                            <div class="flex items-center justify-between mb-2">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 {{ $color['light'] }} rounded-lg flex items-center justify-center">
-                                        <i class="{{ $roleData['icon'] }} {{ $color['text'] }} text-base"></i>
-                                    </div>
-                                    <div>
-                                        <p class="font-bold text-slate-900 dark:text-slate-100 text-sm">{{ $roleData['label'] }}</p>
-                                        <p class="text-xs text-slate-600 dark:text-slate-400 font-medium">{{ number_format($roleData['count']) }} مستخدم</p>
-                                    </div>
+                        <div class="mb-1.5 flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="flex size-8 items-center justify-center rounded-lg bg-[#f2f5f4] text-accent"><i class="{{ $roleData['icon'] }} text-xs"></i></span>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-medium text-ink">{{ $roleData['label'] }}</p>
+                                    <p class="text-[11px] text-muted tabular-nums">{{ number_format($roleData['count']) }}</p>
                                 </div>
-                                <span class="text-base font-bold {{ $color['text'] }}">{{ number_format($percentage, 1) }}%</span>
                             </div>
-                            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
-                                <div class="{{ $color['bg'] }} h-2 rounded-full transition-all duration-300" style="width: {{ $percentage }}%"></div>
+                            <span class="text-xs font-semibold tabular-nums text-accent">{{ $pct }}%</span>
+                        </div>
+                        <div class="h-1.5 overflow-hidden rounded-full bg-canvas">
+                            <div class="h-full rounded-full bg-accent" style="width: {{ min(100, $pct) }}%"></div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </article>
+
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <h3 class="text-sm font-semibold text-ink">التسجيل الشهري</h3>
+            <p class="mb-4 text-xs text-muted">آخر 6 أشهر</p>
+            @if($usersByMonth->count() > 0)
+                <div class="space-y-3">
+                    @foreach($usersByMonth->reverse() as $monthData)
+                        @php
+                            $bar = round(((int) $monthData->count / $maxMonthCount) * 100);
+                            $label = ($monthNames[(int) $monthData->month] ?? $monthData->month).' '.$monthData->year;
+                        @endphp
+                        <div>
+                            <div class="mb-1.5 flex items-center justify-between gap-2">
+                                <span class="text-sm font-medium text-ink">{{ $label }}</span>
+                                <span class="text-xs font-semibold tabular-nums text-ink">{{ number_format($monthData->count) }}</span>
+                            </div>
+                            <div class="h-1.5 overflow-hidden rounded-full bg-canvas">
+                                <div class="h-full rounded-full bg-accent/80" style="width: {{ max(4, $bar) }}%"></div>
                             </div>
                         </div>
                     @endforeach
                 </div>
-            </div>
-        </section>
-
-        <!-- إحصائيات التسجيل الشهرية -->
-        <section class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden">
-            <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white shadow-md">
-                        <i class="fas fa-chart-line text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-black text-slate-900 dark:text-slate-100">إحصائيات التسجيل الشهرية</h3>
-                        <p class="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">آخر 6 أشهر</p>
-                    </div>
-                </div>
-            </div>
-            <div class="p-6">
-                @if($usersByMonth->count() > 0)
-                    @php
-                        $maxCount = $usersByMonth->max('count') ?: 1;
-                        $monthNames = [
-                            1 => 'يناير', 2 => 'فبراير', 3 => 'مارس', 4 => 'أبريل',
-                            5 => 'مايو', 6 => 'يونيو', 7 => 'يوليو', 8 => 'أغسطس',
-                            9 => 'سبتمبر', 10 => 'أكتوبر', 11 => 'نوفمبر', 12 => 'ديسمبر'
-                        ];
-                    @endphp
-                    <div class="space-y-3">
-                        @foreach($usersByMonth->reverse() as $monthData)
-                            @php
-                                $barHeight = ($monthData->count / $maxCount) * 100;
-                                $monthName = $monthNames[$monthData->month] ?? $monthData->month;
-                            @endphp
-                            <div class="p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $monthName }} {{ $monthData->year }}</span>
-                                    <span class="text-base font-bold text-purple-600">{{ number_format($monthData->count) }}</span>
-                                </div>
-                                <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
-                                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-300" style="width: {{ $barHeight }}%"></div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center py-8">
-                        <div class="w-16 h-16 bg-purple-50 dark:bg-purple-900/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                            <i class="fas fa-chart-line text-2xl text-purple-600"></i>
-                        </div>
-                        <p class="text-slate-600 dark:text-slate-400 font-medium">لا توجد بيانات شهرية متاحة</p>
-                    </div>
-                @endif
-            </div>
-        </section>
+            @else
+                <p class="py-8 text-center text-xs text-muted">لا توجد بيانات شهرية.</p>
+            @endif
+        </article>
     </div>
 
-    <!-- الإجراءات السريعة -->
-    <section class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden">
-        <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md">
-                    <i class="fas fa-bolt text-lg"></i>
-                </div>
-                <div>
-                    <h3 class="text-lg font-black text-slate-900 dark:text-slate-100">إجراءات سريعة</h3>
-                    <p class="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">تنظيم وإدارة صلاحيات المستخدمين بكفاءة</p>
-                </div>
-            </div>
-            <span class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg">
-                <i class="fas fa-tools"></i>
-                Quick Actions
-            </span>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 p-6">
-            <a href="{{ route('admin.roles.index') }}" 
-               class="group rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all duration-200 user-card">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm">
-                        <i class="fas fa-shield-alt text-lg"></i>
-                    </div>
-                </div>
-                <h4 class="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">إدارة الأدوار</h4>
-                <p class="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">تعريف الصلاحيات وتوزيعها حسب الفريق</p>
+    <section class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+        <h3 class="mb-3 text-sm font-semibold text-ink">إجراءات سريعة</h3>
+        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            @if(Route::has('admin.roles.index'))
+                <a href="{{ route('admin.roles.index') }}" class="rounded-xl border border-line px-4 py-3 hover:bg-canvas">
+                    <p class="text-sm font-semibold text-ink">إدارة الأدوار</p>
+                    <p class="mt-0.5 text-xs text-muted">تعريف الصلاحيات حسب الفريق</p>
+                </a>
+            @endif
+            @if(Route::has('admin.permissions.index'))
+                <a href="{{ route('admin.permissions.index') }}" class="rounded-xl border border-line px-4 py-3 hover:bg-canvas">
+                    <p class="text-sm font-semibold text-ink">مصفوفة الصلاحيات</p>
+                    <p class="mt-0.5 text-xs text-muted">صلاحيات دقيقة لكل مستخدم</p>
+                </a>
+            @endif
+            <a href="{{ route('admin.users.create') }}" class="rounded-xl border border-line px-4 py-3 hover:bg-canvas">
+                <p class="text-sm font-semibold text-ink">إضافة حساب</p>
+                <p class="mt-0.5 text-xs text-muted">إنشاء مدرب أو طالب أو موظف</p>
             </a>
-            <a href="{{ route('admin.permissions.index') }}" 
-               class="group rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all duration-200 user-card">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm">
-                        <i class="fas fa-key text-lg"></i>
-                    </div>
-                </div>
-                <h4 class="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">مصفوفة الصلاحيات</h4>
-                <p class="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">إدارة الصلاحيات الدقيقة لكل مستخدم</p>
-            </a>
-            <a href="{{ route('admin.users.create') }}" 
-               class="group rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all duration-200 user-card">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm">
-                        <i class="fas fa-user-plus text-lg"></i>
-                    </div>
-                </div>
-                <h4 class="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">إضافة حساب جديد</h4>
-                <p class="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">إنشاء حسابات للمدرسين أو الطلاب الجدد</p>
-            </a>
-            <a href="{{ route('admin.activity-log') }}" 
-               class="group rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all duration-200 user-card">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 shadow-sm">
-                        <i class="fas fa-history text-lg"></i>
-                    </div>
-                </div>
-                <h4 class="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">سجل النشاطات</h4>
-                <p class="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">مراجعة تحركات الفريق على المنصة</p>
-            </a>
+            @if(Route::has('admin.activity-log'))
+                <a href="{{ route('admin.activity-log') }}" class="rounded-xl border border-line px-4 py-3 hover:bg-canvas">
+                    <p class="text-sm font-semibold text-ink">سجل النشاطات</p>
+                    <p class="mt-0.5 text-xs text-muted">مراجعة تحركات الفريق</p>
+                </a>
+            @endif
         </div>
     </section>
 </div>

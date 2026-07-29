@@ -16,6 +16,7 @@ class AcademicYearController extends Controller
     public function index()
     {
         $academicYears = AcademicYear::with(['academicSubjects'])
+            ->withCount('academicSubjects')
             ->ordered()
             ->get();
 
@@ -82,10 +83,14 @@ class AcademicYearController extends Controller
             'thumbnail.max' => 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت',
         ]);
 
-        $data = $request->all();
-        $data['is_active'] = $request->has('is_active');
-        $data['order'] = $data['order'] ?? 0;
-        $data['price'] = $request->input('price', 0);
+        $data = $request->only([
+            'name', 'code', 'description', 'video_url', 'price', 'icon', 'color', 'order',
+        ]);
+        $data['is_active'] = $request->boolean('is_active');
+        $data['order'] = (int) ($data['order'] ?? 0);
+        $data['price'] = $request->input('price', 0) ?: 0;
+        $data['icon'] = $data['icon'] ?? 'fas fa-graduation-cap';
+        $data['color'] = $data['color'] ?? '#0B3D91';
 
         if ($request->hasFile('thumbnail')) {
             $data['thumbnail'] = \App\Services\PublicMediaStorage::store(

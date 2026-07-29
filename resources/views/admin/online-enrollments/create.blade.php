@@ -1,305 +1,186 @@
 @extends('layouts.admin')
 
-@section('title', 'تسجيل معلم جديد')
-@section('header', 'تسجيل معلم جديد')
+@section('title', 'تسجيل طالب في برنامج - ' . config('app.name'))
+@section('page_title', 'تسجيل طالب جديد')
 
 @section('content')
-<div class="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6" style="background: #f8fafc; min-height: 100vh;">
-    <!-- معلومات التسجيل -->
-    <div class="bg-white rounded-2xl shadow-xl border border-gray-200/80">
-        <div class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-sky-50 via-blue-50 to-sky-50">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <h3 class="text-lg font-black bg-gradient-to-r from-sky-800 via-blue-700 to-sky-600 bg-clip-text text-transparent flex items-center gap-2">
-                    <i class="fas fa-user-plus text-sky-600"></i>
-                    تسجيل معلم في كورس أونلاين
-                </h3>
-                <a href="{{ route('admin.online-enrollments.index') }}" 
-                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold transition-all duration-300">
-                    <i class="fas fa-arrow-right"></i>
-                    العودة للقائمة
-                </a>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+@endphp
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <p class="text-xs font-medium text-muted">التسجيلات · البرامج المسجّلة</p>
+            <h2 class="mt-1 text-2xl font-semibold text-ink">تسجيل طالب في برنامج</h2>
+            <p class="mt-1 text-sm text-muted">اختر الطالب والبرنامج، وفعّل الوصول فوراً أو اتركه قيد الانتظار.</p>
+        </div>
+        <a href="{{ route('admin.online-enrollments.index') }}" class="btn-press inline-flex h-9 items-center rounded-xl border border-line px-4 text-sm text-ink-soft">رجوع</a>
+    </section>
+
+    @if($errors->any())
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 shadow-soft">
+            <ul class="list-disc space-y-1 pr-5">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('admin.online-enrollments.store') }}" class="space-y-5"
+          x-data="{
+              status: '{{ old('status', 'active') }}',
+              studentLabel: '',
+              studentPhone: '',
+              showStudent: false,
+              pickStudent() {
+                  const sel = document.getElementById('user_id');
+                  const opt = sel.options[sel.selectedIndex];
+                  if (!sel.value) { this.showStudent = false; return; }
+                  this.studentLabel = opt.text.split(' — ')[0] || opt.text;
+                  this.studentPhone = opt.dataset.phone || '';
+                  this.showStudent = true;
+              }
+          }"
+          x-init="$nextTick(() => pickStudent())">
+        @csrf
+
+        <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+            <h3 class="text-sm font-semibold text-ink">بيانات التسجيل</h3>
+            <div class="mt-4 grid gap-4 md:grid-cols-2">
+                <div>
+                    <label class="{{ $labelClass }}" for="user_id">الطالب *</label>
+                    <input type="text" id="studentSearchInput" placeholder="تصفية بالقائمة: اسم أو هاتف..."
+                           class="mb-2 h-9 w-full rounded-xl border border-line px-3 text-xs text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">
+                    <select name="user_id" id="user_id" required class="{{ $fieldClass }}" @change="pickStudent()">
+                        <option value="">اختر الطالب</option>
+                        @foreach($students as $student)
+                            <option value="{{ $student->id }}"
+                                    data-phone="{{ $student->phone }}"
+                                    data-email="{{ $student->email }}"
+                                    @selected((string) old('user_id', request('student_id')) === (string) $student->id)>
+                                {{ $student->name }} — {{ $student->phone ?: ($student->email ?: 'بدون هاتف') }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('user_id')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label class="{{ $labelClass }}" for="advanced_course_id">البرنامج *</label>
+                    <input type="text" id="courseSearchInput" placeholder="تصفية بالقائمة: اسم البرنامج..."
+                           class="mb-2 h-9 w-full rounded-xl border border-line px-3 text-xs text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">
+                    <select name="advanced_course_id" id="advanced_course_id" required class="{{ $fieldClass }}">
+                        <option value="">اختر البرنامج</option>
+                        @foreach($courses as $course)
+                            <option value="{{ $course->id }}" @selected(old('advanced_course_id') == $course->id)>
+                                {{ $course->title }}@if($course->academicYear?->name) — {{ $course->academicYear->name }}@endif
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('advanced_course_id')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label class="{{ $labelClass }}" for="status">حالة التسجيل *</label>
+                    <select name="status" id="status" required class="{{ $fieldClass }}" x-model="status">
+                        <option value="pending">في الانتظار</option>
+                        <option value="active">نشط (وصول فوري + بريد تفعيل)</option>
+                    </select>
+                    <p class="mt-1 text-xs text-muted">عند «نشط» يُفتح البرنامج للطالب وتُحسب نسبة المدرب إن وُجدت اتفاقية.</p>
+                </div>
+
+                <div x-show="status === 'active'" x-cloak>
+                    <label class="{{ $labelClass }}" for="final_price">مبلغ التفعيل (USD) — اختياري</label>
+                    <input type="number" name="final_price" id="final_price" value="{{ old('final_price') }}" min="0" step="0.01"
+                           class="{{ $fieldClass }}" placeholder="فارغ = سعر البرنامج">
+                    <p class="mt-1 text-xs text-muted">لحساب نسبة المدرب من مبلغ التفعيل الفعلي.</p>
+                </div>
             </div>
+
+            <div class="mt-4">
+                <label class="{{ $labelClass }}" for="notes">ملاحظات إدارية</label>
+                <textarea name="notes" id="notes" rows="3" class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" placeholder="اختياري">{{ old('notes') }}</textarea>
+            </div>
+        </article>
+
+        <div x-show="showStudent" x-cloak class="rounded-2xl border border-accent/20 bg-accent-soft/40 px-4 py-3 text-sm text-ink">
+            <strong>الطالب المختار:</strong>
+            <span x-text="studentLabel"></span>
+            <span class="text-muted" x-show="studentPhone"> · <span x-text="studentPhone" dir="ltr"></span></span>
         </div>
 
-        <form method="POST" action="{{ route('admin.online-enrollments.store') }}" class="p-6 space-y-6">
-            @csrf
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- المعلم -->
-                <div>
-                    <label for="user_id" class="block text-sm font-semibold text-gray-700 mb-2">
-                        اختيار المعلم <span class="text-red-500">*</span>
-                    </label>
-                    <div class="mb-2 flex items-center gap-2">
-                        <i class="fas fa-search text-xs text-gray-400"></i>
-                        <input id="studentSearchInput"
-                               type="text"
-                               placeholder="بحث سريع باسم المعلم أو رقم الهاتف داخل القائمة"
-                               class="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white/80">
-                    </div>
-                    <select name="user_id" id="user_id" required
-                            class="w-full px-3 py-2 rounded-xl border-2 border-gray-200 bg-white/70 focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition">
-                        <option value="">اختر المعلم</option>
-                        @foreach($students as $student)
-                            <option value="{{ $student->id }}" 
-                                    {{ (old('user_id', request('student_id')) == $student->id) ? 'selected' : '' }}
-                                    data-phone="{{ $student->phone }}">
-                                {{ $student->name }} - {{ $student->phone }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('user_id')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- الكورس -->
-                <div>
-                    <label for="advanced_course_id" class="block text-sm font-semibold text-gray-700 mb-2">
-                        اختيار الكورس <span class="text-red-500">*</span>
-                    </label>
-                    <div class="mb-2 flex items-center gap-2">
-                        <i class="fas fa-search text-xs text-gray-400"></i>
-                        <input id="courseSearchInput"
-                               type="text"
-                               placeholder="بحث سريع باسم الكورس داخل القائمة"
-                               class="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white/80">
-                    </div>
-                    <select name="advanced_course_id" id="advanced_course_id" required
-                            class="w-full px-3 py-2 rounded-xl border-2 border-gray-200 bg-white/70 focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition">
-                        <option value="">اختر الكورس</option>
-                        @foreach($courses as $course)
-                            <option value="{{ $course->id }}" {{ old('advanced_course_id') == $course->id ? 'selected' : '' }}>
-                                {{ $course->title }} - {{ $course->academicYear->name ?? 'غير محدد' }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('advanced_course_id')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- حالة التسجيل -->
-                <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
-                        حالة التسجيل <span class="text-red-500">*</span>
-                    </label>
-                    <select name="status" id="status" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="">اختر حالة التسجيل</option>
-                        <option value="pending" {{ old('status') == 'pending' ? 'selected' : '' }}>في الانتظار</option>
-                        <option value="active" {{ old('status', 'active') == 'active' ? 'selected' : '' }}>نشط</option>
-                    </select>
-                    @error('status')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                    <p class="mt-1 text-xs text-gray-500">
-                        "نشط" يعني أن المعلم يمكنه الوصول للكورس فوراً، وسيتم إرسال رسالة التفعيل إلى بريده الإلكتروني (إن كان مسجلاً)، وعند النشط تُحسب للمدرب نسبة من الكورس إن وُجدت اتفاقية.
-                    </p>
-                </div>
-
-                <!-- مبلغ التفعيل (يظهر عند اختيار "نشط") — يُستخدم لحساب نسبة المدرب -->
-                <div id="final_price_wrap" class="{{ old('status', 'active') !== 'active' ? 'hidden' : '' }}">
-                    <label for="final_price" class="block text-sm font-medium text-gray-700 mb-2">
-                        مبلغ التفعيل (ج.م) <span class="text-gray-400 text-xs">اختياري</span>
-                    </label>
-                    <input type="number" name="final_price" id="final_price" value="{{ old('final_price') }}" min="0" step="0.01"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="اتركه فارغاً لاستخدام سعر الكورس">
-                    <p class="mt-1 text-xs text-gray-500">إن وُجدت اتفاقية "نسبة من الكورس" للمدرب، تُحسب حصته من هذا المبلغ (أو سعر الكورس إن تركت الحقل فارغاً).</p>
-                    @error('final_price')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                </div>
+        <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+            <h3 class="text-sm font-semibold text-ink">بحث سريع برقم الهاتف</h3>
+            <div class="mt-3 flex flex-col gap-2 sm:flex-row">
+                <input type="text" id="quickPhoneSearch" placeholder="رقم هاتف الطالب..." class="{{ $fieldClass }} sm:flex-1">
+                <button type="button" onclick="searchByPhone()" class="btn-press inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                    <i class="fas fa-search text-xs"></i> بحث
+                </button>
             </div>
+            <div id="phoneSearchResult" class="mt-3 hidden"></div>
+        </article>
 
-            <!-- الملاحظات -->
-            <div class="mt-6">
-                <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
-                    ملاحظات إدارية
-                </label>
-                <textarea name="notes" id="notes" rows="3"
-                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="أي ملاحظات خاصة بهذا التسجيل (اختياري)">{{ old('notes') }}</textarea>
-                @error('notes')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- معلومات المعلم المختار -->
-            <div id="studentInfo" class="mt-6 hidden">
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 class="font-medium text-blue-900 mb-2">معلومات المعلم المختار:</h4>
-                    <div id="studentDetails" class="text-sm text-blue-800">
-                        <!-- ستتم إضافة معلومات المعلم هنا بواسطة JavaScript -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- البحث السريع بالهاتف -->
-            <div class="mt-6 bg-gradient-to-r from-slate-50 to-sky-50 rounded-xl p-4 border border-sky-100">
-                <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <i class="fas fa-mobile-alt text-sky-500"></i>
-                    البحث السريع عن المعلم برقم الهاتف
-                </h4>
-                <div class="flex gap-3">
-                    <input type="text" id="quickPhoneSearch" placeholder="أدخل رقم هاتف المعلم..."
-                           class="flex-1 px-3 py-2 rounded-xl border-2 border-gray-200 bg-white/80 focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition">
-                    <button type="button" onclick="searchByPhone()" 
-                            class="px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2">
-                        <i class="fas fa-search text-sm"></i>
-                        بحث
-                    </button>
-                </div>
-                <div id="phoneSearchResult" class="mt-3 hidden"></div>
-            </div>
-
-            <!-- أزرار الإجراءات -->
-            <div class="mt-8 pt-6 border-t border-gray-200">
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
-                    <a href="{{ route('admin.online-enrollments.index') }}" 
-                       class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold transition-colors duration-200 inline-flex items-center justify-center gap-2">
-                        <i class="fas fa-times text-sm"></i>
-                        إلغاء
-                    </a>
-                    <button type="submit" 
-                            class="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-sky-600 text-white font-bold hover:from-sky-700 hover:via-blue-700 hover:to-sky-700 shadow-md hover:shadow-lg transition-all duration-200 inline-flex items-center justify-center gap-2">
-                        <i class="fas fa-save text-sm"></i>
-                        تسجيل المعلم
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
+        <div class="flex flex-wrap gap-3">
+            <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-save text-xs"></i> حفظ التسجيل
+            </button>
+            <a href="{{ route('admin.online-enrollments.index') }}" class="inline-flex h-11 items-center rounded-xl border border-line px-5 text-sm text-ink-soft">إلغاء</a>
+        </div>
+    </form>
 </div>
 
 <script>
-// إظهار/إخفاء حقل مبلغ التفعيل حسب حالة التسجيل
-document.getElementById('status').addEventListener('change', function() {
-    var wrap = document.getElementById('final_price_wrap');
-    wrap.classList.toggle('hidden', this.value !== 'active');
-});
-
-// عرض معلومات المعلم عند الاختيار
-document.getElementById('user_id').addEventListener('change', function() {
-    const selectedOption = this.options[this.selectedIndex];
-    const studentInfo = document.getElementById('studentInfo');
-    const studentDetails = document.getElementById('studentDetails');
-    
-    if (this.value) {
-        const phone = selectedOption.getAttribute('data-phone');
-        
-        let details = `
-            <p><strong>الاسم:</strong> ${selectedOption.text.split(' - ')[0]}</p>
-            <p><strong>هاتف المعلم:</strong> ${phone}</p>
-        `;
-        
-        studentDetails.innerHTML = details;
-        studentInfo.classList.remove('hidden');
-    } else {
-        studentInfo.classList.add('hidden');
-    }
-});
-
-// البحث بالهاتف
 function searchByPhone() {
     const phone = document.getElementById('quickPhoneSearch').value.trim();
     const resultDiv = document.getElementById('phoneSearchResult');
-    
-    if (!phone) {
-        alert('يرجى إدخال رقم الهاتف');
-        return;
-    }
-    
-    // إظهار loader
-    resultDiv.innerHTML = '<div class="text-center py-2"><i class="fas fa-spinner fa-spin text-blue-600"></i> جاري البحث...</div>';
+    if (!phone) { alert('يرجى إدخال رقم الهاتف'); return; }
+    resultDiv.innerHTML = '<p class="text-sm text-muted">جاري البحث...</p>';
     resultDiv.classList.remove('hidden');
-    
-    fetch(`{{ route('admin.online-enrollments.search-by-phone') }}?phone=${encodeURIComponent(phone)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const student = data.student;
-                
-                // اختيار المعلم في القائمة
-                const userSelect = document.getElementById('user_id');
-                userSelect.value = student.id;
-                userSelect.dispatchEvent(new Event('change'));
-                
-                resultDiv.innerHTML = `
-                    <div class="bg-green-50 border border-green-200 rounded p-3">
-                        <div class="flex items-center">
-                            <i class="fas fa-check-circle text-green-600 mr-2"></i>
-                            <span class="text-green-800">تم العثور على المعلم واختياره تلقائياً</span>
-                        </div>
-                    </div>
-                `;
-                
-                // إخفاء النتيجة بعد 3 ثوان
-                setTimeout(() => {
-                    resultDiv.classList.add('hidden');
-                }, 3000);
-            } else {
-                resultDiv.innerHTML = `
-                    <div class="bg-red-50 border border-red-200 rounded p-3">
-                        <div class="flex items-center">
-                            <i class="fas fa-exclamation-circle text-red-600 mr-2"></i>
-                            <span class="text-red-800">${data.error}</span>
-                        </div>
-                    </div>
-                `;
+    fetch(`{{ route('admin.online-enrollments.search-by-phone') }}?phone=${encodeURIComponent(phone)}`, {
+        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin'
+    })
+    .then(r => r.json().then(d => ({ ok: r.ok, d })))
+    .then(({ ok, d }) => {
+        if (ok && d.success) {
+            const sel = document.getElementById('user_id');
+            let opt = Array.from(sel.options).find(o => o.value == d.student.id);
+            if (!opt) {
+                opt = new Option(`${d.student.name} — ${d.student.phone || ''}`, d.student.id);
+                opt.dataset.phone = d.student.phone || '';
+                sel.add(opt);
             }
-        })
-        .catch(error => {
-            resultDiv.innerHTML = `
-                <div class="bg-red-50 border border-red-200 rounded p-3">
-                    <div class="flex items-center">
-                        <i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>
-                        <span class="text-red-800">حدث خطأ في البحث</span>
-                    </div>
-                </div>
-            `;
-        });
+            sel.value = d.student.id;
+            sel.dispatchEvent(new Event('change'));
+            resultDiv.innerHTML = '<div class="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">تم العثور على الطالب واختياره.</div>';
+        } else {
+            resultDiv.innerHTML = `<div class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">${d.error || 'لم يُعثر على طالب'}</div>`;
+        }
+    })
+    .catch(() => {
+        resultDiv.innerHTML = '<div class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">تعذّر البحث</div>';
+    });
 }
-
-// البحث عند الضغط على Enter
-document.getElementById('quickPhoneSearch').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        searchByPhone();
-    }
+document.getElementById('quickPhoneSearch')?.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); searchByPhone(); }
 });
-
-// إذا كان هناك student_id في الـ URL، إظهار معلومات المعلم
-document.addEventListener('DOMContentLoaded', function() {
-    const userSelect = document.getElementById('user_id');
-    if (userSelect && userSelect.value) {
-        userSelect.dispatchEvent(new Event('change'));
-    }
-
-    // بحث سريع داخل قائمة الطلاب (بالاسم أو الهاتف)
-    const studentSearchInput = document.getElementById('studentSearchInput');
-    if (studentSearchInput && userSelect) {
-        studentSearchInput.addEventListener('input', function () {
-            const query = this.value.toLowerCase().trim();
-            Array.from(userSelect.options).forEach((option, index) => {
-                if (index === 0) return; // تخطي خيار "اختر المعلم"
-                const text = option.text.toLowerCase();
-                option.hidden = query && !text.includes(query);
+document.addEventListener('DOMContentLoaded', function () {
+    const bindFilter = (inputId, selectId) => {
+        const input = document.getElementById(inputId);
+        const select = document.getElementById(selectId);
+        if (!input || !select) return;
+        input.addEventListener('input', function () {
+            const q = this.value.toLowerCase().trim();
+            Array.from(select.options).forEach((option, index) => {
+                if (index === 0) return;
+                option.hidden = q && !option.text.toLowerCase().includes(q);
             });
         });
-    }
-
-    // بحث سريع داخل قائمة الكورسات (بالاسم)
-    const courseSelect = document.getElementById('advanced_course_id');
-    const courseSearchInput = document.getElementById('courseSearchInput');
-    if (courseSelect && courseSearchInput) {
-        courseSearchInput.addEventListener('input', function () {
-            const query = this.value.toLowerCase().trim();
-            Array.from(courseSelect.options).forEach((option, index) => {
-                if (index === 0) return; // تخطي خيار "اختر الكورس"
-                const text = option.text.toLowerCase();
-                option.hidden = query && !text.includes(query);
-            });
-        });
-    }
+    };
+    bindFilter('studentSearchInput', 'user_id');
+    bindFilter('courseSearchInput', 'advanced_course_id');
 });
 </script>
 @endsection

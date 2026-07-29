@@ -12,6 +12,10 @@ class Order extends Model
     protected $fillable = [
         'user_id',
         'advanced_course_id',
+        'tutoring_group_id',
+        'tutoring_group_package_id',
+        'tutoring_group_cohort_id',
+        'order_type',
         'academic_year_id',
         'coupon_id',
         'original_amount',
@@ -34,6 +38,12 @@ class Order extends Model
         'sales_contacted_at',
         'sales_lead_id',
     ];
+
+    public const TYPE_COURSE = 'course';
+
+    public const TYPE_TUTORING_PACKAGE = 'tutoring_package';
+
+    public const TYPE_TUTORING_COHORT = 'tutoring_cohort';
 
     protected $casts = [
         'amount' => 'decimal:2',
@@ -59,6 +69,27 @@ class Order extends Model
     public function course()
     {
         return $this->belongsTo(AdvancedCourse::class, 'advanced_course_id');
+    }
+
+    public function tutoringGroup()
+    {
+        return $this->belongsTo(TutoringGroup::class, 'tutoring_group_id');
+    }
+
+    public function tutoringPackage()
+    {
+        return $this->belongsTo(TutoringGroupPackage::class, 'tutoring_group_package_id');
+    }
+
+    public function tutoringCohort()
+    {
+        return $this->belongsTo(TutoringGroupCohort::class, 'tutoring_group_cohort_id');
+    }
+
+    public function isTutoringOrder(): bool
+    {
+        return in_array($this->order_type, [self::TYPE_TUTORING_PACKAGE, self::TYPE_TUTORING_COHORT], true)
+            || $this->tutoring_group_id !== null;
     }
 
     public function learningPath()

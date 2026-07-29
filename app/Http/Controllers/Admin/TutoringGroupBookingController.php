@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\TutoringGroup;
 use App\Models\TutoringGroupBooking;
+use App\Services\TutoringGroupOrchestrationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -30,6 +31,8 @@ class TutoringGroupBookingController extends Controller
                 'tutoringGroup:id,title,type,slug',
                 'instructor:id,name',
                 'user:id,name,email,phone',
+                'cohort:id,title',
+                'classroomMeeting:id,code',
             ]);
 
         if ($request->filled('search')) {
@@ -85,6 +88,10 @@ class TutoringGroupBookingController extends Controller
             'tutoringGroup',
             'instructor:id,name,email,phone',
             'user:id,name,email,phone',
+            'cohort',
+            'package',
+            'classroomMeeting',
+            'order',
         ]);
 
         return view('admin.tutoring-group-bookings.show', [
@@ -100,13 +107,23 @@ class TutoringGroupBookingController extends Controller
         ]);
 
         $tutoringGroupBooking->update([
-            'status' => $data['status'],
             'admin_notes' => $data['admin_notes'] ?? $tutoringGroupBooking->admin_notes,
         ]);
 
+        try {
+            match ($data['status']) {
+                TutoringGroupBooking::STATUS_CONFIRMED => TutoringGroupOrchestrationService::confirmBooking($tutoringGroupBooking),
+                TutoringGroupBooking::STATUS_CANCELLED => TutoringGroupOrchestrationService::cancelBooking($tutoringGroupBooking),
+                TutoringGroupBooking::STATUS_COMPLETED => TutoringGroupOrchestrationService::completeBooking($tutoringGroupBooking),
+                default => $tutoringGroupBooking->update(['status' => $data['status']]),
+            };
+        } catch (\InvalidArgumentException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
         return redirect()
             ->route('admin.tutoring-group-bookings.show', $tutoringGroupBooking)
-            ->with('success', 'تم تحديث حالة الحجز.');
+            ->with('success', 'تم تحديث حالة الحجز'.($data['status'] === 'confirmed' ? ' وإنشاء غرفة Live.' : '.'));
     }
 
     public function destroy(TutoringGroupBooking $tutoringGroupBooking): RedirectResponse

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\TutorWorkSchedule;
 use App\Models\TutoringGroup;
 use App\Models\TutoringGroupBooking;
+use App\Models\TutoringGroupCohort;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -180,17 +181,40 @@ class TutoringGroupAvailabilityService
             throw new InvalidArgumentException('أدخل البريد أو رقم الهاتف للمتابعة.');
         }
 
-        return TutoringGroupBooking::create([
-            'tutoring_group_id' => $group->id,
-            'instructor_id' => $group->instructor_id,
-            'user_id' => $userId,
-            'guest_name' => $data['guest_name'] ?? null,
-            'guest_phone' => $data['guest_phone'] ?? null,
-            'guest_email' => $data['guest_email'] ?? null,
-            'starts_at' => $starts,
-            'ends_at' => $ends,
-            'status' => TutoringGroupBooking::STATUS_PENDING,
-            'student_notes' => $data['student_notes'] ?? null,
-        ]);
+        $cohortId = isset($data['cohort_id']) ? (int) $data['cohort_id'] : null;
+        if ($cohortId) {
+            $cohort = TutoringGroupCohort::query()->find($cohortId);
+            if (! $cohort || (int) $cohort->tutoring_group_id !== (int) $group->id) {
+                throw new InvalidArgumentException('الدفعة غير صالحة لهذه المجموعة.');
+            }
+            if (! TutoringCohortService::isEnrollmentOpen($cohort)) {
+                throw new InvalidArgumentException('هذه الدفعة غير متاحة للاشتراك حالياً.');
+            }
+        }
+
+        return DB::transaction(function () use ($group, $data, $userId, $starts, $ends, $cohortId) {
+            $booking = TutoringGroupBooking::create([
+                'tutoring_group_id' => $group->id,
+                'cohort_id' => $cohortId,
+                'instructor_id' => $group->instructor_id,
+                'user_id' => $userId,
+                'guest_name' => $data['guest_name'] ?? null,
+                'guest_phone' => $data['guest_phone'] ?? null,
+                'guest_email' => $data['guest_email'] ?? null,
+                'starts_at' => $starts,
+                'ends_at' => $ends,
+                'status' => TutoringGroupBooking::STATUS_PENDING,
+                'payment_status' => TutoringGroupBooking::PAYMENT_NONE,
+                'student_notes' => $data['student_notes'] ?? null,
+            ]);
+
+            if ($cohortId) {
+                TutoringCohortService::enroll(TutoringGroupCohort::query()->findOrFail($cohortId));
+            }
+
+            TutoringCrmHookService::onBookingCreated($booking->fresh(['tutoringGroup', 'user']));
+
+            return $booking;
+        });
     }
 }

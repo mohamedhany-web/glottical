@@ -43,6 +43,19 @@
     <!-- Navigation -->
     <nav class="sidebar-nav flex-1 px-3 py-4 overflow-y-auto min-h-0">
         <ul class="space-y-0.5">
+            {{-- 0) تحليلات الأكاديمية — أقوى قسم قرار --}}
+            <li class="sidebar-section-label">ذكاء الأكاديمية</li>
+            @php $insightsActive = request()->routeIs('admin.academy-insights.*'); @endphp
+            <li>
+                <a href="{{ route('admin.academy-insights.index') }}"
+                   class="sidebar-link {{ $insightsActive ? 'active' : '' }}"
+                   style="{{ $insightsActive ? '' : 'box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);' }}">
+                    <i class="fas fa-brain"></i>
+                    <span>تحليلات وتوجهات</span>
+                    <span class="sidebar-badge bg-accent text-white" style="font-size:9px;letter-spacing:.02em;">LIVE</span>
+                </a>
+            </li>
+
             {{-- 1) الرئيسية --}}
             <li class="sidebar-section-label">الرئيسية</li>
             @php $dashboardActive = request()->routeIs('admin.dashboard'); @endphp
@@ -434,10 +447,10 @@
 
             @endif
 
-            @if($isFull || $u->hasPermission('manage.coupons') || $u->hasPermission('manage.referrals') || $u->hasPermission('manage.loyalty') || $u->hasPermission('manage.popup-ads') || $u->hasPermission('manage.personal-branding'))
+            @if($isFull || $u->hasPermission('manage.coupons') || $u->hasPermission('manage.referrals') || $u->hasPermission('manage.popup-ads') || $u->hasPermission('manage.personal-branding'))
             {{-- إدارة التسويق --}}
             @php
-                $marketingOpen = request()->routeIs('admin.coupons.*') || request()->routeIs('admin.coupon-commissions.*') || request()->routeIs('admin.referral-programs.*') || request()->routeIs('admin.referrals.*') || request()->routeIs('admin.loyalty.*') || request()->routeIs('admin.personal-branding.*') || request()->routeIs('admin.popup-ads.*');
+                $marketingOpen = request()->routeIs('admin.coupons.*') || request()->routeIs('admin.coupon-commissions.*') || request()->routeIs('admin.referral-programs.*') || request()->routeIs('admin.referrals.*') || request()->routeIs('admin.personal-branding.*') || request()->routeIs('admin.popup-ads.*');
             @endphp
             <li class="sidebar-section-label">التسويق</li>
             <li x-data="{ open: {{ $marketingOpen ? 'true' : 'false' }} }">
@@ -459,9 +472,6 @@
                     @if($isFull || $u->hasPermission('manage.referrals'))
                     <li><a href="{{ route('admin.referral-programs.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.referral-programs.*') ? 'active' : '' }}"><i class="fas fa-gift"></i><span>{{ __('admin.referral_programs') }}</span></a></li>
                     <li><a href="{{ route('admin.referrals.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.referrals.*') ? 'active' : '' }}"><i class="fas fa-user-friends"></i><span>{{ __('admin.referrals') }}</span></a></li>
-                    @endif
-                    @if($isFull || $u->hasPermission('manage.loyalty'))
-                    <li><a href="{{ route('admin.loyalty.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.loyalty.*') ? 'active' : '' }}"><i class="fas fa-star"></i><span>{{ __('admin.loyalty_programs') }}</span></a></li>
                     @endif
                 </ul>
             </li>
@@ -504,7 +514,7 @@
             {{-- إدارة المحتوى — الكورسات ومسارات التعلم --}}
             @if($isFull || $u->hasPermission('manage.courses') || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.academic-subjects') || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.assignments') || $u->hasPermission('manage.exams') || $u->hasPermission('manage.question-bank') || $u->hasPermission('manage.attendance') || $u->hasPermission('manage.achievements') || $u->hasPermission('manage.badges') || $u->hasPermission('manage.reviews'))
             @php
-                $contentManagementOpen = request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.academic-years.*') || request()->routeIs('admin.academic-subjects.*') || request()->routeIs('admin.course-categories.*') || request()->routeIs('admin.exams.*') || request()->routeIs('admin.question-bank.*') || request()->routeIs('admin.question-categories.*') || request()->routeIs('admin.lectures.*') || request()->routeIs('admin.assignments.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.achievements.*') || request()->routeIs('admin.badges.*') || request()->routeIs('admin.reviews.*') || request()->routeIs('admin.tutoring-groups.*') || request()->routeIs('admin.tutor-work-schedules.*') || request()->routeIs('admin.tutoring-group-bookings.*');
+                $contentManagementOpen = request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.academic-years.*') || request()->routeIs('admin.academic-subjects.*') || request()->routeIs('admin.academy-instructors.*') || request()->routeIs('admin.course-categories.*') || request()->routeIs('admin.exams.*') || request()->routeIs('admin.question-bank.*') || request()->routeIs('admin.question-categories.*') || request()->routeIs('admin.lectures.*') || request()->routeIs('admin.assignments.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.achievements.*') || request()->routeIs('admin.badges.*') || request()->routeIs('admin.reviews.*') || request()->routeIs('admin.tutoring-groups.*') || request()->routeIs('admin.tutor-work-schedules.*') || request()->routeIs('admin.tutoring-group-bookings.*');
             @endphp
             <li x-data="{ open: {{ $contentManagementOpen ? 'true' : 'false' }} }">
                 <button type="button" @click="open = !open" class="sidebar-group-btn">
@@ -514,6 +524,12 @@
                 <ul x-show="open" x-cloak class="mt-1 mr-3 space-y-0.5 border-r border-white/10 pr-3">
                     @if($isFull || $u->hasPermission('manage.academic-years'))
                     <li><a href="{{ route('admin.academic-years.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.academic-years.*') ? 'active' : '' }}"><i class="fas fa-calendar-alt"></i><span>السنوات الأكاديمية</span></a></li>
+                    @endif
+                    @if($isFull || $u->hasPermission('manage.academic-subjects') || $u->hasPermission('manage.academic-years'))
+                    <li><a href="{{ route('admin.academic-subjects.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.academic-subjects.*') ? 'active' : '' }}"><i class="fas fa-book"></i><span>المواد الدراسية</span></a></li>
+                    @endif
+                    @if($isFull || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.users'))
+                    <li><a href="{{ route('admin.academy-instructors.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.academy-instructors.*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i><span>مدربو الأكاديمية</span></a></li>
                     @endif
                     @if($isFull || $u->hasPermission('manage.tutoring-groups'))
                     <li><a href="{{ route('admin.tutoring-groups.index', 'individual') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutoring-groups.*') && request()->route('type') === 'individual' ? 'active' : '' }}"><i class="fas fa-user"></i><span>المجموعات الفردية</span></a></li>

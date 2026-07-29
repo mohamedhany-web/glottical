@@ -1,0 +1,57 @@
+<?php
+
+return [
+    'nav' => [
+        'bookings' => 'حجوزات المجموعات',
+        'subscriptions' => 'باقاتي',
+        'cohorts' => 'دفعاتي الجماعية',
+        'instructor_bookings' => 'حجوزات المجموعات',
+        'instructor_cohorts' => 'الدفعات الجماعية',
+    ],
+    'public' => [
+        'cohorts_title' => 'الدفعات المتاحة',
+        'packages_title' => 'باقات الحصص الفردية',
+        'join_cohort' => 'انضم للدفعة',
+        'subscribe' => 'اشترك',
+        'seats_left' => 'مقاعد متبقية',
+        'save_amount' => 'وفر :amount',
+        'status_open' => 'مفتوحة',
+        'status_full' => 'مكتملة',
+        'status_closed' => 'مغلقة',
+        'status_postponed' => 'مؤجلة',
+        'guest_book' => 'احجز للمراجعة',
+        'checkout' => 'إتمام الاشتراك',
+        'original_price' => 'السعر الأصلي',
+        'study_days' => 'أيام الدراسة',
+        'study_time' => 'وقت الحصة',
+        'starts_at' => 'تاريخ البدء',
+    ],
+    'booking' => [
+        'pending' => 'قيد المراجعة',
+        'confirmed' => 'مؤكد',
+        'cancelled' => 'ملغي',
+        'completed' => 'مكتمل',
+        'join_live' => 'دخول الحصة المباشرة',
+        'upcoming' => 'حصتك القادمة',
+        'no_bookings' => 'لا توجد حجوزات بعد.',
+        'confirmed_success' => 'تم تأكيد الحجز وإنشاء غرفة Live.',
+    ],
+    'subscription' => [
+        'active' => 'نشط',
+        'expired' => 'منتهٍ',
+        'cancelled' => 'ملغى',
+        'sessions_left' => 'حصص متبقية',
+        'no_subscriptions' => 'لا توجد باقات نشطة.',
+    ],
+    'cohort' => [
+        'postponed_notice' => 'تم تأجيل الدفعة لعدم اكتمال العدد الأدنى.',
+        'full' => 'الدفعة مكتملة العدد.',
+        'closed' => 'انتهى التسجيل في هذه الدفعة.',
+    ],
+    'payment' => [
+        'none' => 'بدون دفع',
+        'pending' => 'بانتظار الدفع',
+        'paid' => 'مدفوع',
+        'refunded' => 'مسترد',
+    ],
+];

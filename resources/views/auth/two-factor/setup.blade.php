@@ -1,81 +1,134 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>تفعيل المصادقة الثنائية — {{ config('app.name') }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * { font-family: 'Cairo', sans-serif; }
-        body {
-            min-height: 100vh;
-            background: linear-gradient(to bottom, #f0f9ff, #e0f2fe, #fff);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
+@extends('layouts.auth-landing')
+
+@section('title', __('auth.two_factor_setup_title'))
+
+@section('nav_action')
+  <a href="{{ route('home') }}" class="gl-auth-nav-link">{{ __('auth.back_to_home') }}</a>
+@endsection
+
+@section('content')
+@php
+    $isRtl = app()->getLocale() === 'ar';
+    $user = auth()->user();
+    $cancelRoute = route('home');
+    if ($user) {
+        if (method_exists($user, 'isEmployee') && $user->isEmployee()) {
+            $cancelRoute = route('employee.dashboard');
+        } elseif (in_array($user->role ?? '', ['admin', 'super_admin'], true)) {
+            $cancelRoute = route('admin.dashboard');
+        } else {
+            try {
+                $cancelRoute = route('instructor.courses.index');
+            } catch (\Throwable $e) {
+                $cancelRoute = route('home');
+            }
         }
-    </style>
-</head>
-<body>
-    <div class="w-full max-w-lg">
-        <div class="bg-white/90 backdrop-blur rounded-2xl shadow-xl border-2 border-blue-100 p-6 sm:p-8">
-            @if(session('warning'))
-                <div class="mb-6 p-4 rounded-xl bg-amber-50 border-2 border-amber-200 text-amber-800 text-sm font-medium flex items-center gap-2">
-                    <i class="fas fa-exclamation-triangle text-amber-600"></i>
-                    {{ session('warning') }}
-                </div>
-            @endif
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-blue-600 to-blue-500 flex items-center justify-center text-white shadow-lg mb-4">
-                    <i class="fas fa-mobile-alt text-2xl"></i>
-                </div>
-                <h1 class="text-xl font-black text-gray-900">تفعيل المصادقة الثنائية</h1>
-                <p class="text-sm text-gray-600 mt-2">المصادقة الثنائية إلزامية للدخول. امسح رمز QR بتطبيق Google Authenticator ثم أدخل الرمز للتفعيل.</p>
-            </div>
+    }
+@endphp
 
-            <div class="flex justify-center my-6">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode($qrCodeUrl) }}" alt="QR Code" class="rounded-xl border-2 border-gray-200">
-            </div>
+<div class="gl-auth-card gl-auth-card--wide">
+  <div class="gl-auth-brand">{{ config('app.name', 'Glottical') }}</div>
 
-            <p class="text-xs text-gray-600 text-center mb-4">
-                أو أدخل المفتاح يدوياً: <code class="bg-gray-100 px-2 py-1 rounded font-mono text-xs" dir="ltr">{{ $secret }}</code>
-            </p>
+  <div class="gl-auth-badge" aria-hidden="true">
+    <i class="fas fa-mobile-screen-button"></i>
+  </div>
 
-            @if($errors->has('code'))
-                <div class="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
-                    {{ $errors->first('code') }}
-                </div>
-            @endif
+  <h1 class="gl-auth-title">{{ __('auth.two_factor_setup_title') }}</h1>
+  <p class="gl-auth-lead">{{ __('auth.two_factor_setup_lead') }}</p>
 
-            <form action="{{ route('two-factor.enable') }}" method="POST" class="space-y-4">
-                @csrf
-                <div>
-                    <label for="code" class="block text-sm font-bold text-gray-800 mb-2">رمز التحقق (6 أرقام)</label>
-                    <input type="text"
-                           name="code"
-                           id="code"
-                           inputmode="numeric"
-                           maxlength="6"
-                           required
-                           class="w-full px-4 py-3 rounded-xl border-2 border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-center text-lg tracking-widest font-mono"
-                           placeholder="000000"
-                           dir="ltr">
-                </div>
-                <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold shadow-lg hover:shadow-xl transition-all">
-                    <i class="fas fa-check ml-2"></i>
-                    تفعيل المصادقة الثنائية
-                </button>
-            </form>
+  @if (session('warning'))
+    <div class="gl-auth-alert gl-auth-alert--warn">{{ session('warning') }}</div>
+  @endif
+  @if ($errors->has('code'))
+    <div class="gl-auth-alert gl-auth-alert--err">{{ $errors->first('code') }}</div>
+  @endif
 
-            <a href="{{ route(auth()->user()->isEmployee() ? 'employee.dashboard' : (auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin' ? 'admin.dashboard' : 'instructor.courses.index')) }}" class="block text-center text-sm text-gray-500 hover:text-gray-700 mt-4">
-                <i class="fas fa-arrow-right ml-1"></i>
-                إلغاء والعودة
-            </a>
-        </div>
+  <div class="gl-auth-qr">
+    <img
+      src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode($qrCodeUrl) }}"
+      alt="QR Code"
+      width="200"
+      height="200"
+      loading="lazy"
+    >
+  </div>
+
+  <p class="gl-auth-secret">
+    {{ __('auth.two_factor_manual_key') }}
+    <code dir="ltr">{{ $secret }}</code>
+  </p>
+
+  <form action="{{ route('two-factor.enable') }}" method="POST" novalidate>
+    @csrf
+    <div class="gl-auth-field">
+      <label for="code">{{ __('auth.two_factor_code_label') }}</label>
+      <div class="gl-auth-input-wrap">
+        <span class="gl-auth-icon" aria-hidden="true"><i class="fas fa-key"></i></span>
+        <input
+          type="text"
+          name="code"
+          id="code"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          maxlength="6"
+          autocomplete="one-time-code"
+          autofocus
+          required
+          dir="ltr"
+          placeholder="000000"
+          class="gl-auth-input gl-auth-input--otp has-icon @error('code') has-error @enderror"
+        >
+      </div>
+      @error('code')<p class="gl-auth-error">{{ $message }}</p>@enderror
     </div>
-</body>
-</html>
+
+    <button type="submit" class="gl-auth-submit">
+      <i class="fas fa-check" aria-hidden="true"></i>
+      <span>{{ __('auth.two_factor_enable_cta') }}</span>
+    </button>
+  </form>
+
+  <div class="gl-auth-foot">
+    <a href="{{ $cancelRoute }}" class="gl-auth-link">
+      <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+      {{ __('auth.two_factor_cancel') }}
+    </a>
+  </div>
+</div>
+@endsection
+
+@push('head')
+<style>
+  .gl-auth-badge {
+    width: 3.25rem; height: 3.25rem; margin: 0 auto .9rem;
+    border-radius: 16px; display: grid; place-items: center;
+    background: linear-gradient(145deg, #0B3D91, #072A66);
+    color: #fff; font-size: 1.15rem;
+    box-shadow: 0 12px 28px -10px rgba(11,61,145,.55);
+  }
+  .gl-auth-qr {
+    display: grid; place-items: center;
+    margin: .2rem auto 1rem; padding: .85rem;
+    width: fit-content; border-radius: 16px;
+    background: #F4F7FC; border: 1.5px solid #D7DDE6;
+  }
+  .gl-auth-qr img { display: block; border-radius: 10px; }
+  .gl-auth-secret {
+    margin: 0 0 1rem; text-align: center;
+    font: 600 .8rem/1.65 Tajawal, sans-serif; color: #5B6577;
+  }
+  .gl-auth-secret code {
+    display: inline-block; margin-top: .35rem;
+    padding: .35rem .65rem; border-radius: 8px;
+    background: #E8EEF8; color: #0B3D91;
+    font: 800 .78rem/1 ui-monospace, monospace;
+  }
+  .gl-auth-input--otp {
+    letter-spacing: .42em;
+    font-weight: 800;
+    font-size: 1.2rem;
+    text-align: center;
+    padding-inline: 2.55rem !important;
+  }
+</style>
+@endpush

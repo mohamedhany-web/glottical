@@ -1,192 +1,204 @@
 @extends('layouts.admin')
 
-@section('title', 'تفاصيل الواجب: ' . $assignment->title)
-@section('header', 'تفاصيل الواجب')
+@section('title', 'تفاصيل الواجب: ' . $assignment->title . ' - ' . config('app.name'))
+@section('page_title', 'تفاصيل الواجب')
+
+@php
+    $courseId = $assignment->advanced_course_id ?? $assignment->course_id;
+    $statusClass = $assignment->status == 'published' ? 'bg-emerald-50 text-emerald-700' : ($assignment->status == 'draft' ? 'bg-amber-50 text-amber-800' : 'bg-[#f2f5f4] text-muted');
+    $statusText = $assignment->status == 'published' ? 'منشور' : ($assignment->status == 'draft' ? 'مسودة' : 'مؤرشف');
+@endphp
 
 @section('content')
-<div class="w-full max-w-full px-4 py-6 space-y-6">
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">
+                <a href="{{ route('admin.dashboard') }}" class="hover:text-accent">لوحة التحكم</a>
+                <span class="mx-1">·</span>
+                <a href="{{ route('admin.assignments.index') }}" class="hover:text-accent">الواجبات</a>
+                <span class="mx-1">·</span>
+                <a href="{{ route('admin.assignments.by-course', $courseId) }}" class="hover:text-accent">{{ Str::limit($assignment->course?->title ?? '', 25) }}</a>
+                <span class="mx-1">·</span>
+                <span class="text-ink truncate">{{ Str::limit($assignment->title, 35) }}</span>
+            </p>
+            <h2 class="mt-1 truncate text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ $assignment->title }}</h2>
+            <p class="mt-1 text-sm text-muted">
+                {{ $assignment->course->title ?? '—' }} · {{ $assignment->course->instructor->name ?? '—' }}
+            </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('admin.assignments.submissions', $assignment) }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-inbox text-xs"></i>
+                التسليمات
+            </a>
+            <a href="{{ route('admin.assignments.edit', $assignment) }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm text-ink-soft hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-edit text-xs"></i>
+                تعديل
+            </a>
+            <a href="{{ route('admin.assignments.by-course', $courseId) }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm text-ink-soft hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                رجوع لواجبات البرنامج
+            </a>
+        </div>
+    </section>
+
     @if(session('success'))
-        <div class="rounded-xl bg-green-100 text-green-800 px-4 py-3 font-medium">{{ session('success') }}</div>
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-soft">
+            <i class="fas fa-check-circle ml-1"></i> {{ session('success') }}
+        </div>
     @endif
     @if(session('error'))
-        <div class="rounded-xl bg-red-100 text-red-800 px-4 py-3 font-medium">{{ session('error') }}</div>
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800 shadow-soft">
+            <i class="fas fa-exclamation-circle ml-1"></i> {{ session('error') }}
+        </div>
     @endif
 
-    @php $courseId = $assignment->advanced_course_id ?? $assignment->course_id; @endphp
-    <div class="bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 rounded-2xl p-6 text-white shadow-lg">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="min-w-0">
-                <nav class="text-sm text-white/80 mb-2">
-                    <a href="{{ route('admin.dashboard') }}" class="hover:text-white">لوحة التحكم</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.assignments.index') }}" class="hover:text-white">الواجبات</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.assignments.by-course', $courseId) }}" class="hover:text-white">{{ Str::limit($assignment->course?->title ?? '', 25) }}</a>
-                    <span class="mx-2">/</span>
-                    <span class="text-white truncate">{{ Str::limit($assignment->title, 35) }}</span>
-                </nav>
-                <h1 class="text-xl sm:text-2xl font-bold mt-1 truncate">{{ $assignment->title }}</h1>
-                <p class="text-sm text-white/90 mt-1">
-                    {{ $assignment->course->title ?? '—' }} · {{ $assignment->course->instructor->name ?? '—' }}
-                </p>
-            </div>
-            <div class="flex flex-wrap gap-2 flex-shrink-0">
-                <a href="{{ route('admin.assignments.submissions', $assignment) }}" class="inline-flex items-center gap-2 bg-white text-indigo-600 hover:bg-gray-100 px-4 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-inbox"></i>
-                    التسليمات
-                </a>
-                <a href="{{ route('admin.assignments.edit', $assignment) }}" class="inline-flex items-center gap-2 bg-white text-indigo-600 hover:bg-gray-100 px-4 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-edit"></i>
-                    تعديل
-                </a>
-                <a href="{{ route('admin.assignments.by-course', $courseId) }}" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
-                    <i class="fas fa-arrow-right"></i>
-                    رجوع لواجبات الكورس
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        <div class="xl:col-span-3 space-y-6">
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
-                    <h3 class="text-lg font-bold text-gray-900">معلومات الواجب</h3>
-                    @php
-                        $statusClass = $assignment->status == 'published' ? 'bg-green-100 text-green-800' : ($assignment->status == 'draft' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-800');
-                        $statusText = $assignment->status == 'published' ? 'منشور' : ($assignment->status == 'draft' ? 'مسودة' : 'مؤرشف');
-                    @endphp
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $statusClass }}">{{ $statusText }}</span>
+    <div class="grid gap-5 xl:grid-cols-4">
+        <div class="space-y-5 xl:col-span-3">
+            <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h3 class="text-sm font-semibold text-ink">معلومات الواجب</h3>
+                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium {{ $statusClass }}">{{ $statusText }}</span>
                 </div>
-                <div class="p-6 sm:p-8">
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                        <div class="p-3 bg-gray-50 rounded-xl">
-                            <div class="text-xs font-medium text-gray-500 mb-0.5">الكورس</div>
-                            <div class="text-sm font-semibold text-gray-900 truncate" title="{{ $assignment->course->title ?? '' }}">{{ Str::limit($assignment->course->title ?? '—', 25) }}</div>
-                        </div>
-                        <div class="p-3 bg-gray-50 rounded-xl">
-                            <div class="text-xs font-medium text-gray-500 mb-0.5">المدرب</div>
-                            <div class="text-sm font-semibold text-gray-900">{{ $assignment->course->instructor->name ?? '—' }}</div>
-                        </div>
-                        <div class="p-3 bg-gray-50 rounded-xl">
-                            <div class="text-xs font-medium text-gray-500 mb-0.5">الاستحقاق</div>
-                            <div class="text-sm font-semibold text-gray-900">{{ $assignment->due_date ? $assignment->due_date->format('Y-m-d H:i') : '—' }}</div>
-                        </div>
-                        <div class="p-3 bg-gray-50 rounded-xl">
-                            <div class="text-xs font-medium text-gray-500 mb-0.5">الدرجة الكلية</div>
-                            <div class="text-sm font-semibold text-gray-900">{{ $assignment->max_score }}</div>
-                        </div>
+
+                <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <div class="rounded-xl border border-line px-3 py-3">
+                        <p class="text-xs font-medium text-muted">البرنامج</p>
+                        <p class="mt-1 truncate text-sm font-semibold text-ink" title="{{ $assignment->course->title ?? '' }}">{{ Str::limit($assignment->course->title ?? '—', 25) }}</p>
                     </div>
-                    @if($assignment->description)
-                        <div class="mb-4">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">الوصف</label>
-                            <div class="text-gray-900 bg-gray-50 p-4 rounded-xl border border-gray-100">{{ $assignment->description }}</div>
-                        </div>
-                    @endif
-                    @if($assignment->instructions)
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">التعليمات</label>
-                            <div class="text-gray-900 bg-gray-50 p-4 rounded-xl border border-gray-100 whitespace-pre-wrap">{{ $assignment->instructions }}</div>
-                        </div>
-                    @endif
+                    <div class="rounded-xl border border-line px-3 py-3">
+                        <p class="text-xs font-medium text-muted">المدرب</p>
+                        <p class="mt-1 text-sm font-semibold text-ink">{{ $assignment->course->instructor->name ?? '—' }}</p>
+                    </div>
+                    <div class="rounded-xl border border-line px-3 py-3">
+                        <p class="text-xs font-medium text-muted">الاستحقاق</p>
+                        <p class="mt-1 text-sm tabular-nums font-semibold text-ink">{{ $assignment->due_date ? $assignment->due_date->format('Y-m-d H:i') : '—' }}</p>
+                    </div>
+                    <div class="rounded-xl border border-line px-3 py-3">
+                        <p class="text-xs font-medium text-muted">الدرجة الكلية</p>
+                        <p class="mt-1 text-sm tabular-nums font-semibold text-ink">{{ $assignment->max_score }}</p>
+                    </div>
                 </div>
-            </div>
 
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                    <h4 class="text-lg font-bold text-gray-900">آخر التسليمات</h4>
+                @if($assignment->description)
+                    <div class="mt-5">
+                        <p class="text-xs font-medium text-muted">الوصف</p>
+                        <div class="mt-2 rounded-xl border border-line bg-[#f8faf9] px-4 py-3 text-sm text-ink">{{ $assignment->description }}</div>
+                    </div>
+                @endif
+                @if($assignment->instructions)
+                    <div class="mt-5">
+                        <p class="text-xs font-medium text-muted">التعليمات</p>
+                        <div class="mt-2 whitespace-pre-wrap rounded-xl border border-line bg-[#f8faf9] px-4 py-3 text-sm text-ink">{{ $assignment->instructions }}</div>
+                    </div>
+                @endif
+            </article>
+
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-5 py-4">
+                    <h3 class="text-sm font-semibold text-ink">آخر التسليمات</h3>
                 </div>
                 @if($submissions->count() > 0)
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full divide-y divide-line">
+                            <thead class="bg-[#f8faf9]">
                                 <tr>
-                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">المعلم</th>
-                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">التاريخ</th>
-                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">الدرجة</th>
-                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">الحالة</th>
-                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">إجراء</th>
+                                    <th class="px-5 py-3 text-right text-xs font-medium text-muted">الطالب</th>
+                                    <th class="px-5 py-3 text-right text-xs font-medium text-muted">التاريخ</th>
+                                    <th class="px-5 py-3 text-right text-xs font-medium text-muted">الدرجة</th>
+                                    <th class="px-5 py-3 text-right text-xs font-medium text-muted">الحالة</th>
+                                    <th class="px-5 py-3 text-right text-xs font-medium text-muted">إجراء</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="divide-y divide-line bg-surface">
                                 @foreach($submissions as $sub)
                                     @php
-                                        $subStatusClass = $sub->status == 'graded' || $sub->status == 'returned' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800';
+                                        $subStatusClass = $sub->status == 'graded' || $sub->status == 'returned' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800';
                                         $subStatusText = $sub->status == 'returned' ? 'مُرجع' : ($sub->status == 'graded' ? 'مقيّم' : 'مُسلّم');
                                     @endphp
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $sub->student->name ?? '—' }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $sub->submitted_at ? $sub->submitted_at->format('Y-m-d H:i') : '—' }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $sub->score !== null ? $sub->score . ' / ' . $assignment->max_score : '—' }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $subStatusClass }}">{{ $subStatusText }}</span>
+                                    <tr class="transition hover:bg-accent-soft/30">
+                                        <td class="whitespace-nowrap px-5 py-4 text-sm font-medium text-ink">{{ $sub->student->name ?? '—' }}</td>
+                                        <td class="whitespace-nowrap px-5 py-4 text-sm tabular-nums text-ink-soft">{{ $sub->submitted_at ? $sub->submitted_at->format('Y-m-d H:i') : '—' }}</td>
+                                        <td class="whitespace-nowrap px-5 py-4 text-sm tabular-nums text-ink">{{ $sub->score !== null ? $sub->score . ' / ' . $assignment->max_score : '—' }}</td>
+                                        <td class="whitespace-nowrap px-5 py-4">
+                                            <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium {{ $subStatusClass }}">{{ $subStatusText }}</span>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <a href="{{ route('admin.assignments.submissions', $assignment) }}?grade={{ $sub->id }}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">تقييم</a>
+                                        <td class="whitespace-nowrap px-5 py-4">
+                                            <a href="{{ route('admin.assignments.submissions', $assignment) }}?grade={{ $sub->id }}"
+                                               class="text-sm font-medium text-accent hover:underline">تقييم</a>
                                         </td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
-                    <div class="px-6 py-4 border-t border-gray-200 bg-gray-50/50">
+                    <div class="border-t border-line px-5 py-4">
                         {{ $submissions->withQueryString()->links() }}
                     </div>
                 @else
-                    <div class="p-8 text-center text-gray-500">
-                        <i class="fas fa-inbox text-4xl text-gray-300 mb-3"></i>
-                        <p>لا توجد تسليمات حتى الآن</p>
-                        <a href="{{ route('admin.assignments.submissions', $assignment) }}" class="inline-flex items-center gap-2 mt-3 text-indigo-600 font-medium">عرض صفحة التسليمات</a>
+                    <div class="px-6 py-10 text-center">
+                        <div class="mx-auto inline-flex size-12 items-center justify-center rounded-xl bg-[#f2f5f4] text-muted">
+                            <i class="fas fa-inbox text-lg"></i>
+                        </div>
+                        <p class="mt-3 text-sm text-muted">لا توجد تسليمات حتى الآن</p>
+                        <a href="{{ route('admin.assignments.submissions', $assignment) }}"
+                           class="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline">
+                            عرض صفحة التسليمات
+                        </a>
                     </div>
                 @endif
-            </div>
+            </article>
         </div>
 
-        <div class="space-y-4">
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-lg p-5">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-inbox text-2xl text-indigo-600"></i>
+        <div class="space-y-3">
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="flex items-center gap-3">
+                    <div class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                        <i class="fas fa-inbox text-sm"></i>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-2xl font-bold text-gray-900">{{ $submissionStats['total'] }}</p>
-                        <p class="text-sm text-gray-500">إجمالي التسليمات</p>
+                        <p class="text-xl font-semibold tabular-nums text-ink">{{ $submissionStats['total'] }}</p>
+                        <p class="text-xs text-muted">إجمالي التسليمات</p>
                     </div>
                 </div>
-            </div>
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-lg p-5">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-paper-plane text-2xl text-amber-600"></i>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="flex items-center gap-3">
+                    <div class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                        <i class="fas fa-paper-plane text-sm"></i>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-2xl font-bold text-gray-900">{{ $submissionStats['submitted'] }}</p>
-                        <p class="text-sm text-gray-500">مُسلّم</p>
+                        <p class="text-xl font-semibold tabular-nums text-ink">{{ $submissionStats['submitted'] }}</p>
+                        <p class="text-xs text-muted">مُسلّم</p>
                     </div>
                 </div>
-            </div>
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-lg p-5">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-check-double text-2xl text-green-600"></i>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="flex items-center gap-3">
+                    <div class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                        <i class="fas fa-check-double text-sm"></i>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-2xl font-bold text-gray-900">{{ $submissionStats['graded'] }}</p>
-                        <p class="text-sm text-gray-500">مقيّم</p>
+                        <p class="text-xl font-semibold tabular-nums text-ink">{{ $submissionStats['graded'] }}</p>
+                        <p class="text-xs text-muted">مقيّم</p>
                     </div>
                 </div>
-            </div>
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-lg p-5">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-xl bg-cyan-100 flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-reply text-2xl text-cyan-600"></i>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="flex items-center gap-3">
+                    <div class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                        <i class="fas fa-reply text-sm"></i>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-2xl font-bold text-gray-900">{{ $submissionStats['returned'] }}</p>
-                        <p class="text-sm text-gray-500">مُرجع</p>
+                        <p class="text-xl font-semibold tabular-nums text-ink">{{ $submissionStats['returned'] }}</p>
+                        <p class="text-xs text-muted">مُرجع</p>
                     </div>
                 </div>
-            </div>
+            </article>
         </div>
     </div>
 </div>

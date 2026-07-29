@@ -174,7 +174,7 @@
             <span class="sana-ab-timeline__dot"></span>
             <span class="sana-ab-timeline__year">{{ $isRtl ? 'الفكرة' : 'Idea' }}</span>
             <strong>{{ $isRtl ? 'سؤال واحد' : 'One question' }}</strong>
-            <p>{{ $isRtl ? 'كيف نجعل تعلّم اللغة تجربة تُعاش — لا مجرد حفظ؟' : 'How do we make language learning lived — not just memorized?' }}</p>
+            <p>{{ $isRtl ? 'كيف نحوّل تعلّم اللغة إلى وظيفة ومستقبل واضح؟' : 'How do we turn language learning into a job and a clear future?' }}</p>
           </div>
           <div class="sana-ab-timeline__item">
             <span class="sana-ab-timeline__dot"></span>

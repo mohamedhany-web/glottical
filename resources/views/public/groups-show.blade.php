@@ -110,10 +110,96 @@
         </div>
       </article>
 
+      @if($group->isCollective() && ($cohorts ?? collect())->isNotEmpty())
+        <article class="gl-gs-card sana-reveal" style="grid-column:1/-1">
+          <div class="gl-gs-form">
+            <h2>{{ $isRtl ? 'الدفعات المتاحة' : 'Available cohorts' }}</h2>
+            <div style="display:grid;gap:.75rem;@media(min-width:768px){grid-template-columns:1fr 1fr}">
+              @foreach($cohorts as $cohort)
+                <div style="border:1.5px solid #D7DDE6;border-radius:14px;padding:1rem;background:{{ $cohort->isEnrollmentOpen() ? '#fff' : '#F8FAFC' }}">
+                  <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:flex-start">
+                    <strong style="font-size:.95rem;color:#0B1220">{{ $cohort->title }}</strong>
+                    <span style="font-size:.68rem;font-weight:800;padding:.2rem .55rem;border-radius:999px;background:#E8EEF8;color:#0B3D91">{{ $cohort->statusLabel() }}</span>
+                  </div>
+                  <p style="margin:.45rem 0;font-size:.8rem;color:#5B6577;font-weight:600">
+                    {{ $cohort->starts_at?->timezone($cohort->timezone ?: 'Africa/Cairo')->format('Y-m-d H:i') ?: '—' }}
+                    · {{ implode('، ', $cohort->studyDaysLabels()) ?: ($isRtl ? 'أيام حسب الجدول' : 'schedule TBD') }}
+                  </p>
+                  <p style="margin:0 0 .75rem;font-size:.78rem;font-weight:700;color:#5B6577">
+                    {{ $cohort->enrolled_count }}/{{ $cohort->capacity }} · {{ $cohort->seatsLeft() }} {{ $isRtl ? 'متبقي' : 'left' }}
+                  </p>
+                  @if($cohort->isEnrollmentOpen())
+                    @auth
+                      <a href="{{ route('public.groups.checkout', ['slug' => $group->slug, 'cohort' => $cohort->id]) }}" class="sana-btn sana-btn--yellow" style="width:100%;justify-content:center;padding:.55rem 1rem;font-size:.8rem">
+                        {{ $isRtl ? 'اشترك في الدفعة' : 'Join cohort' }}
+                      </a>
+                    @else
+                      <a href="{{ route('login') }}" class="sana-btn sana-btn--yellow" style="width:100%;justify-content:center;padding:.55rem 1rem;font-size:.8rem">
+                        {{ $isRtl ? 'سجّل للالتحاق' : 'Login to join' }}
+                      </a>
+                    @endauth
+                  @endif
+                </div>
+              @endforeach
+            </div>
+          </div>
+        </article>
+      @endif
+
+      @if($group->isIndividual() && ($packages ?? collect())->isNotEmpty())
+        <article class="gl-gs-card sana-reveal" style="grid-column:1/-1">
+          <div class="gl-gs-form">
+            <h2>{{ $isRtl ? 'باقات الحصص الفردية' : 'Private session packages' }}</h2>
+            <div style="display:grid;gap:.75rem;grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+              @foreach($packages as $package)
+                <div style="border:1.5px solid {{ $package->is_featured ? '#F5B800' : '#D7DDE6' }};border-radius:14px;padding:1rem;{{ $package->is_featured ? 'box-shadow:0 8px 24px rgba(245,184,0,.25)' : '' }}">
+                  @if($package->is_featured)
+                    <span style="font-size:.65rem;font-weight:900;color:#9A7200">{{ $isRtl ? 'الأكثر طلباً' : 'Popular' }}</span>
+                  @endif
+                  <strong style="display:block;margin:.25rem 0;font-size:.95rem">{{ $package->name }}</strong>
+                  @if($package->formattedOriginalPrice())
+                    <div style="text-decoration:line-through;color:#94A3B8;font-size:.8rem">{{ $package->formattedOriginalPrice() }}</div>
+                  @endif
+                  <div style="font-size:1.2rem;font-weight:900;color:#0B3D91">{{ $package->formattedPrice() }}</div>
+                  @if($package->savingsPercent() > 0)
+                    <div style="font-size:.72rem;font-weight:800;color:#059669">{{ $isRtl ? 'وفر' : 'Save' }} {{ $package->savingsPercent() }}%</div>
+                  @endif
+                  <p style="margin:.5rem 0 .85rem;font-size:.75rem;color:#5B6577;font-weight:600">
+                    {{ $package->sessions_count }} {{ $isRtl ? 'حصة' : 'sessions' }} · {{ $package->duration_months }} {{ $isRtl ? 'شهر' : 'mo' }}
+                  </p>
+                  @auth
+                    <a href="{{ route('public.groups.checkout', ['slug' => $group->slug, 'package' => $package->id]) }}" class="sana-btn sana-btn--yellow" style="width:100%;justify-content:center;padding:.55rem 1rem;font-size:.78rem">
+                      {{ $isRtl ? 'اشترك الآن' : 'Subscribe' }}
+                    </a>
+                  @else
+                    <a href="{{ route('login') }}" class="sana-btn sana-btn--yellow" style="width:100%;justify-content:center;padding:.55rem 1rem;font-size:.78rem">
+                      {{ $isRtl ? 'سجّل للاشتراك' : 'Login to subscribe' }}
+                    </a>
+                  @endauth
+                </div>
+              @endforeach
+            </div>
+            <p style="margin:1rem 0 0;font-size:.8rem;color:#5B6577;font-weight:600">
+              {{ $isRtl ? 'أو احجز موعداً للمراجعة بدون دفع (ضيف / طلب يدوي):' : 'Or request a review booking without payment:' }}
+            </p>
+          </div>
+        </article>
+      @endif
+
       <article class="gl-gs-card sana-reveal">
         <form method="POST" action="{{ route('public.groups.book', $group->slug) }}" class="gl-gs-form">
           @csrf
-          <h2>{{ __($g.'.book_cta') }}</h2>
+          <h2>{{ $isRtl ? 'حجز موعد للمراجعة' : 'Request a slot (review)' }}</h2>
+
+          @if($group->isCollective() && ($cohorts ?? collect())->filter->isEnrollmentOpen()->isNotEmpty())
+            <label class="gl-gs-label">{{ $isRtl ? 'الدفعة (اختياري)' : 'Cohort (optional)' }}</label>
+            <select name="cohort_id" class="gl-gs-select">
+              <option value="">—</option>
+              @foreach($cohorts->filter->isEnrollmentOpen() as $cohort)
+                <option value="{{ $cohort->id }}" @selected((string)old('cohort_id') === (string)$cohort->id)>{{ $cohort->title }}</option>
+              @endforeach
+            </select>
+          @endif
 
           @if($slots->isEmpty())
             <p style="color:#5B6577;font-size:.9rem;font-weight:700;margin:0 0 1rem">{{ __($g.'.no_slots') }}</p>

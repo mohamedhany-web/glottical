@@ -1,101 +1,98 @@
 @extends('layouts.admin')
 
 @section('title', 'إدارة أسئلة الامتحان')
-@section('header', 'إدارة أسئلة الامتحان')
+@section('page_title', 'إدارة أسئلة الامتحان')
 
 @php
     $currentQuestionIds = $exam->examQuestions->pluck('question_id')->toArray();
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $checkboxClass = 'size-4 rounded border-line text-accent focus:ring-accent/20';
 @endphp
 
 @section('content')
-<div class="w-full max-w-full px-4 py-6 space-y-6">
-    <!-- الهيدر -->
-    <div class="bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 rounded-2xl p-6 text-white shadow-lg">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="min-w-0">
-                <nav class="text-sm text-white/80 mb-2">
-                    <a href="{{ route('admin.dashboard') }}" class="hover:text-white">لوحة التحكم</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.exams.index') }}" class="hover:text-white">الامتحانات</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.exams.by-course', $exam->advanced_course_id) }}" class="hover:text-white">{{ Str::limit($exam->course?->title ?? '', 25) }}</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.exams.show', $exam) }}" class="hover:text-white">{{ Str::limit($exam->title, 25) }}</a>
-                    <span class="mx-2">/</span>
-                    <span class="text-white">الأسئلة</span>
-                </nav>
-                <h1 class="text-xl sm:text-2xl font-bold mt-1">إدارة أسئلة الامتحان</h1>
-                <p class="text-sm text-white/90 mt-1">{{ $exam->title }} — إجمالي الدرجات: {{ $exam->total_marks ?? 0 }}</p>
-            </div>
-            <div class="flex flex-wrap gap-2 flex-shrink-0">
-                <a href="{{ route('admin.exams.show', $exam) }}" class="inline-flex items-center gap-2 bg-white text-indigo-600 hover:bg-gray-100 px-4 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-eye"></i>
-                    عرض الامتحان
-                </a>
-                <a href="{{ route('admin.exams.by-course', $exam->advanced_course_id) }}" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
-                    <i class="fas fa-arrow-right"></i>
-                    رجوع لامتحانات الكورس
-                </a>
-                <a href="{{ route('admin.question-bank.index') }}" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
-                    <i class="fas fa-database"></i>
-                    بنك الأسئلة
-                </a>
-            </div>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">
+                <a href="{{ route('admin.dashboard') }}" class="hover:text-accent">لوحة التحكم</a>
+                <span class="mx-1">·</span>
+                <a href="{{ route('admin.exams.index') }}" class="hover:text-accent">الامتحانات</a>
+                <span class="mx-1">·</span>
+                <a href="{{ route('admin.exams.by-course', $exam->advanced_course_id) }}" class="hover:text-accent">{{ Str::limit($exam->course?->title ?? '', 25) }}</a>
+                <span class="mx-1">·</span>
+                <a href="{{ route('admin.exams.show', $exam) }}" class="hover:text-accent">{{ Str::limit($exam->title, 25) }}</a>
+                <span class="mx-1">·</span>
+                <span class="text-ink">الأسئلة</span>
+            </p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إدارة أسئلة الامتحان</h2>
+            <p class="mt-1 text-sm text-muted">{{ $exam->title }} — إجمالي الدرجات: {{ $exam->total_marks ?? 0 }}</p>
         </div>
-    </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('admin.exams.show', $exam) }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink transition hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-eye text-xs"></i>
+                عرض الامتحان
+            </a>
+            <a href="{{ route('admin.exams.by-course', $exam->advanced_course_id) }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink transition hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                رجوع لامتحانات البرنامج
+            </a>
+            <a href="{{ route('admin.question-bank.index') }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-database text-xs"></i>
+                بنك الأسئلة
+            </a>
+        </div>
+    </section>
 
     @if(session('success'))
-        <div class="rounded-xl bg-green-50 border border-green-200 text-green-800 px-4 py-3 flex items-center gap-2">
-            <i class="fas fa-check-circle text-green-600"></i>
-            <span>{{ session('success') }}</span>
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-soft">
+            <i class="fas fa-check-circle ml-1"></i> {{ session('success') }}
         </div>
     @endif
     @if(session('error'))
-        <div class="rounded-xl bg-red-50 border border-red-200 text-red-800 px-4 py-3 flex items-center gap-2">
-            <i class="fas fa-exclamation-circle text-red-600"></i>
-            <span>{{ session('error') }}</span>
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800 shadow-soft">
+            <i class="fas fa-exclamation-circle ml-1"></i> {{ session('error') }}
         </div>
     @endif
     @if($errors->any())
-        <div class="rounded-xl bg-red-50 border border-red-200 text-red-800 px-4 py-3">
-            <p class="font-semibold mb-1">يرجى تصحيح الأخطاء:</p>
-            <ul class="list-disc list-inside text-sm">
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 shadow-soft">
+            <p class="mb-1 font-semibold">يرجى تصحيح الأخطاء:</p>
+            <ul class="list-inside list-disc">
                 @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
             </ul>
         </div>
     @endif
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- أسئلة الامتحان الحالية -->
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div class="lg:col-span-2">
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex flex-wrap items-center justify-between gap-2">
-                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-list-ol text-indigo-600"></i>
-                        أسئلة الامتحان ({{ $exam->examQuestions->count() }})
-                    </h2>
-                    <span class="text-sm font-semibold text-gray-600">إجمالي الدرجات: {{ $exam->total_marks ?? 0 }}</span>
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-4">
+                    <h3 class="text-sm font-semibold text-ink">أسئلة الامتحان ({{ $exam->examQuestions->count() }})</h3>
+                    <span class="text-sm font-medium tabular-nums text-muted">إجمالي الدرجات: {{ $exam->total_marks ?? 0 }}</span>
                 </div>
-                <div class="p-6">
+                <div class="p-5">
                     @if($exam->examQuestions->count() > 0)
                         <ul class="space-y-3">
                             @foreach($exam->examQuestions as $eq)
                                 @php
                                     $q = $eq->question;
-                                    $diffClass = $q && $q->difficulty_level == 'easy' ? 'bg-green-100 text-green-800' : ($q && $q->difficulty_level == 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800');
+                                    $diffClass = $q && $q->difficulty_level == 'easy' ? 'bg-emerald-50 text-emerald-700' : ($q && $q->difficulty_level == 'medium' ? 'bg-amber-50 text-amber-800' : 'bg-rose-50 text-rose-700');
                                 @endphp
-                                <li class="flex flex-wrap items-start justify-between gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-indigo-200 transition-colors">
-                                    <div class="flex items-start gap-3 min-w-0 flex-1">
-                                        <span class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold flex-shrink-0">{{ $eq->order }}</span>
+                                <li class="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-line bg-[#f2f5f4]/50 p-4 transition hover:border-accent/30">
+                                    <div class="flex min-w-0 flex-1 items-start gap-3">
+                                        <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#f2f5f4] text-sm font-bold text-accent">{{ $eq->order }}</span>
                                         <div class="min-w-0">
-                                            <p class="font-medium text-gray-900">{{ Str::limit($q->question ?? '—', 120) }}</p>
-                                            <div class="flex flex-wrap items-center gap-2 mt-2 text-xs">
+                                            <p class="font-medium text-ink">{{ Str::limit($q->question ?? '—', 120) }}</p>
+                                            <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
                                                 @if($q)
-                                                    <span class="text-gray-500">{{ $q->getTypeLabel() }}</span>
-                                                    <span class="font-semibold text-indigo-600">{{ $eq->marks }} نقطة</span>
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded {{ $diffClass }}">{{ $q->getDifficultyLabel() }}</span>
+                                                    <span class="text-muted">{{ $q->getTypeLabel() }}</span>
+                                                    <span class="font-semibold text-accent">{{ $eq->marks }} نقطة</span>
+                                                    <span class="inline-flex items-center rounded px-2 py-0.5 {{ $diffClass }}">{{ $q->getDifficultyLabel() }}</span>
                                                     @if($eq->time_limit)
-                                                        <span class="text-gray-500">{{ $eq->time_limit }} ثانية</span>
+                                                        <span class="text-muted">{{ $eq->time_limit }} ثانية</span>
                                                     @endif
                                                 @endif
                                             </div>
@@ -104,44 +101,39 @@
                                     <form action="{{ route('admin.exams.questions.remove', [$exam, $eq]) }}" method="POST" class="inline" onsubmit="return confirm('هل تريد إزالة هذا السؤال من الامتحان؟');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="إزالة من الامتحان">
-                                            <i class="fas fa-trash"></i>
+                                        <button type="submit" class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-muted transition hover:bg-rose-50 hover:text-rose-700" title="إزالة من الامتحان">
+                                            <i class="fas fa-trash text-sm"></i>
                                         </button>
                                     </form>
                                 </li>
                             @endforeach
                         </ul>
                     @else
-                        <div class="text-center py-12 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50">
-                            <i class="fas fa-question-circle text-5xl text-gray-300 mb-4"></i>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">لا توجد أسئلة في الامتحان</h3>
-                            <p class="text-gray-500 mb-4">أضف أسئلة من بنك الأسئلة باستخدام النموذج على اليمين</p>
-                            <a href="{{ route('admin.question-bank.index') }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors">
-                                <i class="fas fa-database"></i>
+                        <div class="rounded-xl border border-dashed border-line bg-[#f2f5f4]/50 py-12 text-center">
+                            <i class="fas fa-question-circle mb-4 text-5xl text-muted/40"></i>
+                            <h3 class="mb-2 text-lg font-semibold text-ink">لا توجد أسئلة في الامتحان</h3>
+                            <p class="mb-4 text-sm text-muted">أضف أسئلة من بنك الأسئلة باستخدام النموذج على اليمين</p>
+                            <a href="{{ route('admin.question-bank.index') }}" class="btn-press inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                                <i class="fas fa-database text-xs"></i>
                                 بنك الأسئلة
                             </a>
                         </div>
                     @endif
                 </div>
-            </div>
+            </article>
         </div>
 
-        <!-- إضافة سؤال من البنك -->
         <div>
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden sticky top-4">
-                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-plus-circle text-indigo-600"></i>
-                        إضافة سؤال من البنك
-                    </h2>
+            <article class="sticky top-4 overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-5 py-4">
+                    <h3 class="text-sm font-semibold text-ink">إضافة سؤال من البنك</h3>
                 </div>
-                <div class="p-6">
+                <div class="p-5">
                     <form action="{{ route('admin.exams.questions.add', $exam) }}" method="POST" class="space-y-4">
                         @csrf
                         <div>
-                            <label for="question_id" class="block text-sm font-semibold text-gray-700 mb-2">السؤال <span class="text-red-500">*</span></label>
-                            <select name="question_id" id="question_id" required
-                                    class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <label for="question_id" class="{{ $labelClass }}">السؤال <span class="text-rose-600">*</span></label>
+                            <select name="question_id" id="question_id" required class="{{ $fieldClass }}">
                                 <option value="">اختر السؤال</option>
                                 @foreach($categories as $category)
                                     @if($category->questions && $category->questions->count() > 0)
@@ -157,34 +149,34 @@
                                     @endif
                                 @endforeach
                             </select>
-                            @error('question_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            @error('question_id')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                         </div>
                         <div>
-                            <label for="marks" class="block text-sm font-semibold text-gray-700 mb-2">الدرجة (نقطة) <span class="text-red-500">*</span></label>
+                            <label for="marks" class="{{ $labelClass }}">الدرجة (نقطة) <span class="text-rose-600">*</span></label>
                             <input type="number" name="marks" id="marks" value="{{ old('marks', 1) }}" required min="0.5" max="100" step="0.5"
-                                   class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="1">
-                            @error('marks')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                   class="{{ $fieldClass }}" placeholder="1">
+                            @error('marks')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                         </div>
                         <div>
-                            <label for="time_limit" class="block text-sm font-semibold text-gray-700 mb-2">حد زمني (ثانية) — اختياري</label>
+                            <label for="time_limit" class="{{ $labelClass }}">حد زمني (ثانية) — اختياري</label>
                             <input type="number" name="time_limit" id="time_limit" value="{{ old('time_limit') }}" min="10" max="600"
-                                   class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="—">
+                                   class="{{ $fieldClass }}" placeholder="—">
                         </div>
-                        <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 cursor-pointer">
+                        <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-3">
                             <input type="hidden" name="is_required" value="0">
-                            <input type="checkbox" name="is_required" value="1" {{ old('is_required', true) ? 'checked' : '' }} class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                            <span class="text-sm font-medium text-gray-800">سؤال مطلوب</span>
+                            <input type="checkbox" name="is_required" value="1" {{ old('is_required', true) ? 'checked' : '' }} class="{{ $checkboxClass }}">
+                            <span class="text-sm font-medium text-ink">سؤال مطلوب</span>
                         </label>
-                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl font-semibold transition-colors inline-flex items-center justify-center gap-2">
-                            <i class="fas fa-plus"></i>
+                        <button type="submit" class="btn-press inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                            <i class="fas fa-plus text-xs"></i>
                             إضافة السؤال للامتحان
                         </button>
                     </form>
                     @if(empty($categories) || $categories->sum(fn($c) => $c->questions ? $c->questions->count() : 0) == 0)
-                        <p class="text-sm text-gray-500 mt-4">لا توجد أسئلة في البنك. <a href="{{ route('admin.question-bank.index') }}" class="text-indigo-600 hover:underline">إضافة أسئلة</a></p>
+                        <p class="mt-4 text-sm text-muted">لا توجد أسئلة في البنك. <a href="{{ route('admin.question-bank.index') }}" class="font-medium text-accent hover:underline">إضافة أسئلة</a></p>
                     @endif
                 </div>
-            </div>
+            </article>
         </div>
     </div>
 </div>

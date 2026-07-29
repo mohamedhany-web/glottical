@@ -53,7 +53,6 @@ return [
         'live-servers' => ['manage.live-servers'],
         'live-settings' => ['manage.live-servers'],
         'live-sessions' => ['manage.live-sessions'],
-        'loyalty' => ['manage.loyalty'],
         'messages' => ['manage.messages'],
         'notifications' => ['manage.notifications'],
         'online-enrollments' => ['manage.enrollments'],

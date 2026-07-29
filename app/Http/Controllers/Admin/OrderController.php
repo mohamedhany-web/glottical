@@ -484,6 +484,14 @@ class OrderController extends Controller
                     Log::info('Order approve: course enrollment block done', ['order_id' => $order->id]);
                 }
 
+                if ($order->isTutoringOrder()) {
+                    try {
+                        \App\Services\TutoringGroupCheckoutService::fulfillApprovedOrder($order->fresh());
+                    } catch (\Throwable $e) {
+                        Log::warning('Tutoring fulfill failed during order approval: '.$e->getMessage(), ['order_id' => $order->id]);
+                    }
+                }
+
                 OrderWalletAndCouponFinalizer::run($order->fresh());
 
                 // الـ commit أولاً حتى لا يعطل سجل النشاط استجابة الموافقة

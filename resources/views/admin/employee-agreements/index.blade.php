@@ -1,250 +1,217 @@
 @extends('layouts.admin')
 
 @section('title', 'اتفاقيات الموظفين - ' . config('app.name'))
-@section('header', 'اتفاقيات الموظفين')
+@section('page_title', 'اتفاقيات الموظفين')
 
 @section('content')
-<div class="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 bg-slate-50 dark:bg-slate-900 min-h-screen">
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $statCards = [
+        [
+            'label' => 'إجمالي الاتفاقيات',
+            'value' => number_format($stats['total']),
+            'icon' => 'fas fa-handshake',
+            'description' => 'جميع اتفاقيات العمل المسجلة',
+        ],
+        [
+            'label' => 'اتفاقيات نشطة',
+            'value' => number_format($stats['active']),
+            'icon' => 'fas fa-check-circle',
+            'description' => 'عقود سارية المفعول',
+        ],
+        [
+            'label' => 'مسودات',
+            'value' => number_format($stats['draft']),
+            'icon' => 'fas fa-file-alt',
+            'description' => 'بانتظار التفعيل',
+        ],
+        [
+            'label' => 'إجمالي الرواتب',
+            'value' => number_format($stats['total_salary'], 2),
+            'icon' => 'fas fa-money-bill-wave',
+            'description' => 'ج.م — مجموع الرواتب الشهرية',
+        ],
+    ];
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">الموارد البشرية · اتفاقيات الموظفين</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إدارة اتفاقيات الموظفين</h2>
+            <p class="mt-1 text-sm text-muted">إدارة عقود العمل والرواتب للموظفين</p>
+        </div>
+        <a href="{{ route('admin.employee-agreements.create') }}"
+           class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+            <i class="fas fa-plus text-xs"></i>
+            إضافة اتفاقية جديدة
+        </a>
+    </section>
+
     @if(session('success'))
-        <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 px-5 py-4 flex items-center gap-3 shadow-sm">
-            <i class="fas fa-check-circle text-emerald-600 text-xl"></i>
-            <span class="font-semibold">{{ session('success') }}</span>
+        <div class="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-soft">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                <i class="fas fa-check text-sm"></i>
+            </span>
+            <span>{{ session('success') }}</span>
         </div>
     @endif
     @if(session('error'))
-        <div class="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-5 py-4 flex items-center gap-3 shadow-sm">
-            <i class="fas fa-exclamation-circle text-red-600 text-xl"></i>
-            <span class="font-semibold">{{ session('error') }}</span>
+        <div class="flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800 shadow-soft">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
+                <i class="fas fa-exclamation-circle text-sm"></i>
+            </span>
+            <span>{{ session('error') }}</span>
         </div>
     @endif
 
-    <!-- الهيدر -->
-    <section class="rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur border-2 border-slate-200/50 dark:border-slate-700 shadow-xl overflow-hidden">
-        <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 flex items-center justify-center text-white shadow-lg">
-                    <i class="fas fa-user-tie text-xl"></i>
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach ($statCards as $card)
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                    <i class="{{ $card['icon'] }} text-sm"></i>
                 </div>
-                <div>
-                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100">إدارة اتفاقيات الموظفين</h2>
-                    <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">إدارة عقود العمل والرواتب للموظفين</p>
-                </div>
-            </div>
-            <a href="{{ route('admin.employee-agreements.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-                <i class="fas fa-plus"></i>
-                إضافة اتفاقية جديدة
-            </a>
-        </div>
+                <p class="mt-3 text-xs text-muted">{{ $card['label'] }}</p>
+                <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ $card['value'] }}</p>
+                <p class="mt-1 text-[11px] text-muted">{{ $card['description'] }}</p>
+            </article>
+        @endforeach
     </section>
 
-    <!-- إحصائيات -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div class="dashboard-card rounded-2xl p-5 sm:p-6 card-hover-effect relative overflow-hidden group border-2 border-emerald-200/50 dark:border-emerald-800/40 hover:border-emerald-300/70 dark:hover:border-emerald-700/70 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-white/95 via-emerald-50/90 to-emerald-100/80 dark:from-slate-800 dark:via-emerald-900/20 dark:to-slate-800">
-            <div class="absolute inset-0 bg-gradient-to-br from-emerald-100/60 via-green-100/40 to-teal-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-400/20 to-transparent rounded-full blur-2xl"></div>
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <p class="text-sm font-bold text-emerald-800/80 dark:text-emerald-300 mb-1">إجمالي الاتفاقيات</p>
-                        <p class="text-4xl font-black bg-gradient-to-r from-emerald-700 via-green-600 to-teal-600 bg-clip-text text-transparent drop-shadow-sm">{{ number_format($stats['total']) }}</p>
-                    </div>
-                    <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300" style="box-shadow: 0 8px 20px 0 rgba(16, 185, 129, 0.4);">
-                        <i class="fas fa-handshake text-white text-xl"></i>
-                    </div>
-                </div>
-            </div>
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-4 py-4 sm:px-5">
+            <h3 class="text-base font-semibold text-ink">البحث والفلترة</h3>
+            <p class="mt-0.5 text-xs text-muted">ابحث برقم الاتفاقية أو اسم الموظف</p>
         </div>
-        
-        <div class="dashboard-card rounded-2xl p-6 card-hover-effect relative overflow-hidden group border-2 border-blue-200/50 dark:border-blue-800/40 hover:border-blue-300/70 dark:hover:border-blue-700/70 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-white/95 via-blue-50/90 to-sky-100/80 dark:from-slate-800 dark:via-blue-900/20 dark:to-slate-800">
-            <div class="absolute inset-0 bg-gradient-to-br from-blue-100/60 via-sky-100/40 to-blue-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-transparent rounded-full blur-2xl"></div>
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <p class="text-sm font-bold text-blue-800/80 dark:text-blue-300 mb-1">اتفاقيات نشطة</p>
-                        <p class="text-4xl font-black bg-gradient-to-r from-blue-700 via-blue-600 to-sky-600 bg-clip-text text-transparent drop-shadow-sm">{{ number_format($stats['active']) }}</p>
-                    </div>
-                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300" style="box-shadow: 0 8px 20px 0 rgba(59, 130, 246, 0.4);">
-                        <i class="fas fa-check-circle text-white text-xl"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="dashboard-card rounded-2xl p-6 card-hover-effect relative overflow-hidden group border-2 border-amber-200/50 dark:border-amber-800/40 hover:border-amber-300/70 dark:hover:border-amber-700/70 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-white/95 via-amber-50/90 to-yellow-100/80 dark:from-slate-800 dark:via-amber-900/20 dark:to-slate-800">
-            <div class="absolute inset-0 bg-gradient-to-br from-amber-100/60 via-yellow-100/40 to-orange-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-400/20 to-transparent rounded-full blur-2xl"></div>
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <p class="text-sm font-bold text-amber-800/80 dark:text-amber-300 mb-1">مسودات</p>
-                        <p class="text-4xl font-black bg-gradient-to-r from-amber-700 via-yellow-600 to-orange-600 bg-clip-text text-transparent drop-shadow-sm">{{ number_format($stats['draft']) }}</p>
-                    </div>
-                    <div class="w-16 h-16 bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300" style="box-shadow: 0 8px 20px 0 rgba(245, 158, 11, 0.4);">
-                        <i class="fas fa-file-alt text-white text-xl"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="dashboard-card rounded-2xl p-6 card-hover-effect relative overflow-hidden group border-2 border-purple-200/50 dark:border-purple-800/40 hover:border-purple-300/70 dark:hover:border-purple-700/70 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-white/95 via-purple-50/90 to-fuchsia-100/80 dark:from-slate-800 dark:via-purple-900/20 dark:to-slate-800">
-            <div class="absolute inset-0 bg-gradient-to-br from-purple-100/60 via-violet-100/40 to-fuchsia-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-transparent rounded-full blur-2xl"></div>
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <p class="text-sm font-bold text-purple-800/80 dark:text-purple-300 mb-1">إجمالي الرواتب</p>
-                        <p class="text-4xl font-black bg-gradient-to-r from-purple-700 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent drop-shadow-sm">{{ number_format($stats['total_salary'], 2) }}</p>
-                        <p class="text-xs font-medium text-purple-700/70 dark:text-purple-300/80 mt-1">ج.م</p>
-                    </div>
-                    <div class="w-16 h-16 bg-gradient-to-br from-purple-500 via-violet-500 to-fuchsia-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300" style="box-shadow: 0 8px 20px 0 rgba(168, 85, 247, 0.4);">
-                        <i class="fas fa-money-bill-wave text-white text-xl"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- البحث والفلترة -->
-    <section class="rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur border-2 border-slate-200/50 dark:border-slate-700 shadow-xl overflow-hidden">
-        <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800">
-            <h3 class="text-lg font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <i class="fas fa-filter text-emerald-600"></i>
-                البحث والفلترة
-            </h3>
-        </div>
-        <div class="p-6">
-            <form method="GET" action="{{ route('admin.employee-agreements.index') }}" id="filterForm" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">البحث</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 dark:text-slate-500">
-                            <i class="fas fa-search"></i>
-                        </span>
-                        <input type="text" name="search" value="{{ htmlspecialchars(request('search') ?? '', ENT_QUOTES, 'UTF-8') }}" maxlength="255" placeholder="رقم الاتفاقية، اسم الموظف" class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" />
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">الموظف</label>
-                    <select name="employee_id" class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
-                        <option value="">جميع الموظفين</option>
-                        @foreach($employees as $employee)
-                            <option value="{{ $employee->id }}" {{ request('employee_id') == $employee->id ? 'selected' : '' }}>{{ htmlspecialchars($employee->name, ENT_QUOTES, 'UTF-8') }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">الحالة</label>
-                    <select name="status" class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
-                        <option value="">جميع الحالات</option>
-                        <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>مسودة</option>
-                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
-                        <option value="suspended" {{ request('status') == 'suspended' ? 'selected' : '' }}>معلق</option>
-                        <option value="terminated" {{ request('status') == 'terminated' ? 'selected' : '' }}>منتهي</option>
-                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>مكتمل</option>
-                    </select>
-                </div>
-                <div class="flex items-end gap-2 md:col-span-3">
-                    <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200">
-                        <i class="fas fa-search"></i>
-                        بحث
-                    </button>
-                    @if(request()->anyFilled(['search', 'employee_id', 'status']))
-                    <a href="{{ route('admin.employee-agreements.index') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 dark:border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors" title="مسح الفلتر">
-                        <i class="fas fa-times"></i>
-                    </a>
-                    @endif
-                </div>
-            </form>
-        </div>
-    </section>
-
-    <!-- قائمة الاتفاقيات -->
-    <section class="rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur border-2 border-slate-200/50 dark:border-slate-700 shadow-xl overflow-hidden">
-        <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800 flex items-center justify-between">
+        <form method="GET" action="{{ route('admin.employee-agreements.index') }}" id="filterForm" class="grid grid-cols-1 gap-4 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-3 xl:items-end">
             <div>
-                <h3 class="text-lg font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    <i class="fas fa-file-contract text-emerald-600"></i>
-                    قائمة الاتفاقيات
-                </h3>
-                <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                    <span class="font-semibold text-emerald-600">{{ $agreements->total() }}</span> اتفاقية
+                <label class="{{ $labelClass }}" for="search">البحث</label>
+                <div class="relative">
+                    <span class="pointer-events-none absolute inset-y-0 start-3 flex items-center text-muted">
+                        <i class="fas fa-search text-xs"></i>
+                    </span>
+                    <input id="search" type="text" name="search" value="{{ htmlspecialchars(request('search') ?? '', ENT_QUOTES, 'UTF-8') }}" maxlength="255" placeholder="رقم الاتفاقية، اسم الموظف" class="{{ $fieldClass }} ps-9" />
+                </div>
+            </div>
+            <div>
+                <label class="{{ $labelClass }}" for="employee_id">الموظف</label>
+                <select id="employee_id" name="employee_id" class="{{ $fieldClass }}">
+                    <option value="">جميع الموظفين</option>
+                    @foreach($employees as $employee)
+                        <option value="{{ $employee->id }}" {{ request('employee_id') == $employee->id ? 'selected' : '' }}>{{ htmlspecialchars($employee->name, ENT_QUOTES, 'UTF-8') }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="{{ $labelClass }}" for="status">الحالة</label>
+                <select id="status" name="status" class="{{ $fieldClass }}">
+                    <option value="">جميع الحالات</option>
+                    <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>مسودة</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
+                    <option value="suspended" {{ request('status') == 'suspended' ? 'selected' : '' }}>معلق</option>
+                    <option value="terminated" {{ request('status') == 'terminated' ? 'selected' : '' }}>منتهي</option>
+                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>مكتمل</option>
+                </select>
+            </div>
+            <div class="flex flex-wrap gap-2 md:col-span-3">
+                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                    <i class="fas fa-search text-xs"></i>
+                    بحث
+                </button>
+                @if(request()->anyFilled(['search', 'employee_id', 'status']))
+                <a href="{{ route('admin.employee-agreements.index') }}"
+                   class="btn-press inline-flex h-11 items-center justify-center rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent"
+                   title="مسح الفلتر">
+                    <i class="fas fa-times"></i>
+                </a>
+                @endif
+            </div>
+        </form>
+    </article>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+            <div class="min-w-0">
+                <h3 class="text-base font-semibold text-ink">قائمة الاتفاقيات</h3>
+                <p class="mt-0.5 text-xs text-muted">
+                    <span class="font-semibold text-accent">{{ $agreements->total() }}</span> اتفاقية
                 </p>
             </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                <thead class="bg-slate-50 dark:bg-slate-900/40">
+        <div class="admin-table-wrap overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="border-b border-line bg-canvas text-xs text-muted">
                     <tr>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">رقم الاتفاقية</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">الموظف</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">الراتب</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">الحالة</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">تاريخ البدء</th>
-                        <th class="px-6 py-3 text-center text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">الإجراءات</th>
+                        <th class="px-4 py-3 text-start font-medium">رقم الاتفاقية</th>
+                        <th class="px-4 py-3 text-start font-medium">الموظف</th>
+                        <th class="px-4 py-3 text-start font-medium">الراتب</th>
+                        <th class="px-4 py-3 text-start font-medium">الحالة</th>
+                        <th class="px-4 py-3 text-start font-medium">تاريخ البدء</th>
+                        <th class="px-4 py-3 text-center font-medium">الإجراءات</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+                <tbody class="divide-y divide-line">
                     @forelse ($agreements as $agreement)
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors duration-200">
-                            <td class="px-6 py-4">
-                                <div class="font-semibold text-slate-900 dark:text-slate-100">{{ htmlspecialchars($agreement->agreement_number ?? 'N/A', ENT_QUOTES, 'UTF-8') }}</div>
-                                <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ htmlspecialchars($agreement->title ?? '', ENT_QUOTES, 'UTF-8') }}</div>
+                        <tr class="hover:bg-canvas/40">
+                            <td class="px-4 py-3">
+                                <div class="font-semibold text-ink">{{ htmlspecialchars($agreement->agreement_number ?? 'N/A', ENT_QUOTES, 'UTF-8') }}</div>
+                                <div class="mt-0.5 text-xs text-muted">{{ htmlspecialchars($agreement->title ?? '', ENT_QUOTES, 'UTF-8') }}</div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-4 py-3">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md">
+                                    <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-sm font-bold text-accent">
                                         {{ mb_substr($agreement->employee->name ?? '', 0, 1, 'UTF-8') }}
                                     </div>
-                                    <div>
-                                        <p class="font-semibold text-slate-900 dark:text-slate-100">{{ htmlspecialchars($agreement->employee->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</p>
-                                        <p class="text-xs text-slate-500 dark:text-slate-400">{{ htmlspecialchars($agreement->employee->email ?? '-', ENT_QUOTES, 'UTF-8') }}</p>
+                                    <div class="min-w-0">
+                                        <p class="font-semibold text-ink">{{ htmlspecialchars($agreement->employee->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</p>
+                                        <p class="text-[11px] text-muted">{{ htmlspecialchars($agreement->employee->email ?? '-', ENT_QUOTES, 'UTF-8') }}</p>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
-                                <div class="font-bold text-slate-900 dark:text-slate-100">{{ number_format($agreement->salary ?? 0, 2) }} ج.م</div>
-                                <div class="text-xs text-slate-500 dark:text-slate-400">شهرياً</div>
+                            <td class="px-4 py-3">
+                                <div class="font-semibold tabular-nums text-ink">{{ number_format($agreement->salary ?? 0, 2) }} ج.م</div>
+                                <div class="text-xs text-muted">شهرياً</div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-4 py-3">
                                 @php
                                     $statusBadges = [
-                                        'draft' => ['label' => 'مسودة', 'classes' => 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-600'],
-                                        'active' => ['label' => 'نشط', 'classes' => 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'],
-                                        'suspended' => ['label' => 'معلق', 'classes' => 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'],
-                                        'terminated' => ['label' => 'منتهي', 'classes' => 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'],
-                                        'completed' => ['label' => 'مكتمل', 'classes' => 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'],
+                                        'draft' => ['label' => 'مسودة', 'classes' => 'bg-canvas text-muted border-line'],
+                                        'active' => ['label' => 'نشط', 'classes' => 'bg-emerald-50 text-emerald-700 border-emerald-100'],
+                                        'suspended' => ['label' => 'معلق', 'classes' => 'bg-amber-50 text-amber-700 border-amber-100'],
+                                        'terminated' => ['label' => 'منتهي', 'classes' => 'bg-rose-50 text-rose-700 border-rose-100'],
+                                        'completed' => ['label' => 'مكتمل', 'classes' => 'bg-accent-soft text-accent border-line'],
                                     ];
-                                    $status = $statusBadges[$agreement->status] ?? ['label' => $agreement->status, 'classes' => 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-600'];
+                                    $status = $statusBadges[$agreement->status] ?? ['label' => $agreement->status, 'classes' => 'bg-canvas text-muted border-line'];
                                 @endphp
-                                <span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold border {{ $status['classes'] }}">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+                                <span class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 text-xs font-semibold {{ $status['classes'] }}">
+                                    <span class="size-1.5 rounded-full bg-current"></span>
                                     {{ $status['label'] }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-xs text-slate-700 dark:text-slate-300">
-                                <div class="font-medium">{{ $agreement->start_date ? $agreement->start_date->format('Y-m-d') : '-' }}</div>
+                            <td class="px-4 py-3 text-xs text-muted">
+                                <div class="font-medium text-ink">{{ $agreement->start_date ? $agreement->start_date->format('Y-m-d') : '-' }}</div>
                                 @if($agreement->end_date)
-                                    <div class="text-slate-500 dark:text-slate-400">حتى {{ $agreement->end_date->format('Y-m-d') }}</div>
+                                    <div class="mt-0.5">حتى {{ $agreement->end_date->format('Y-m-d') }}</div>
                                 @endif
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-4 py-3">
                                 <div class="flex items-center justify-center gap-2">
-                                    <a href="{{ route('admin.employee-agreements.show', $agreement) }}" 
-                                       class="w-9 h-9 flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 rounded-lg transition-colors duration-200"
+                                    <a href="{{ route('admin.employee-agreements.show', $agreement) }}"
+                                       class="btn-press inline-flex size-9 items-center justify-center rounded-xl border border-line text-accent hover:bg-accent-soft"
                                        title="عرض">
                                         <i class="fas fa-eye text-sm"></i>
                                     </a>
-                                    <a href="{{ route('admin.employee-agreements.edit', $agreement) }}" 
-                                       class="w-9 h-9 flex items-center justify-center bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-600 dark:text-amber-300 rounded-lg transition-colors duration-200"
+                                    <a href="{{ route('admin.employee-agreements.edit', $agreement) }}"
+                                       class="btn-press inline-flex size-9 items-center justify-center rounded-xl border border-line text-ink hover:bg-accent-soft hover:text-accent"
                                        title="تعديل">
                                         <i class="fas fa-edit text-sm"></i>
                                     </a>
                                     <form action="{{ route('admin.employee-agreements.destroy', $agreement) }}" method="POST" class="inline-block" onsubmit="return confirm('هل أنت متأكد من حذف هذه الاتفاقية؟');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="w-9 h-9 flex items-center justify-center bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-300 rounded-lg transition-colors duration-200" title="حذف">
+                                        <button type="submit" class="btn-press inline-flex size-9 items-center justify-center rounded-xl border border-line text-rose-600 hover:bg-rose-50" title="حذف">
                                             <i class="fas fa-trash text-sm"></i>
                                         </button>
                                     </form>
@@ -253,14 +220,14 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center">
+                            <td colspan="6" class="px-4 py-12 text-center">
                                 <div class="flex flex-col items-center gap-4">
-                                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center">
-                                        <i class="fas fa-user-tie text-slate-400 dark:text-slate-500 text-2xl"></i>
+                                    <div class="inline-flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+                                        <i class="fas fa-user-tie text-xl"></i>
                                     </div>
                                     <div>
-                                        <p class="font-bold text-slate-900 dark:text-slate-100">لا توجد اتفاقيات</p>
-                                        <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">ابدأ بإنشاء اتفاقية جديدة</p>
+                                        <p class="font-semibold text-ink">لا توجد اتفاقيات</p>
+                                        <p class="mt-1 text-sm text-muted">ابدأ بإنشاء اتفاقية جديدة</p>
                                     </div>
                                 </div>
                             </td>
@@ -271,11 +238,11 @@
         </div>
 
         @if ($agreements->hasPages())
-            <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40">
+            <div class="border-t border-line px-4 py-4 sm:px-5">
                 {{ $agreements->appends(request()->query())->links() }}
             </div>
         @endif
-    </section>
+    </article>
 </div>
 
 @push('scripts')

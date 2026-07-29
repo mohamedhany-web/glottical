@@ -1,15 +1,15 @@
 @extends('layouts.admin')
 
 @section('title', 'تفاصيل المحاضرة')
-@section('header', 'تفاصيل المحاضرة')
+@section('page_title', 'تفاصيل المحاضرة')
 
 @section('content')
 @php
     $statusMap = [
-        'scheduled' => ['label' => 'مجدولة', 'class' => 'bg-amber-100 text-amber-800'],
-        'in_progress' => ['label' => 'قيد التنفيذ', 'class' => 'bg-blue-100 text-blue-800'],
-        'completed' => ['label' => 'مكتملة', 'class' => 'bg-green-100 text-green-800'],
-        'cancelled' => ['label' => 'ملغاة', 'class' => 'bg-red-100 text-red-800'],
+        'scheduled' => ['label' => 'مجدولة', 'class' => 'bg-amber-50 text-amber-800'],
+        'in_progress' => ['label' => 'قيد التنفيذ', 'class' => 'bg-accent-soft text-accent'],
+        'completed' => ['label' => 'مكتملة', 'class' => 'bg-emerald-50 text-emerald-700'],
+        'cancelled' => ['label' => 'ملغاة', 'class' => 'bg-rose-50 text-rose-700'],
     ];
     $status = $statusMap[$lecture->status ?? 'scheduled'] ?? $statusMap['scheduled'];
     $platformLabels = [
@@ -17,254 +17,190 @@
     ];
     $platformLabel = $platformLabels[strtolower($lecture->video_platform ?? '')] ?? 'غير مدعوم';
 @endphp
-<div class="w-full max-w-full px-4 py-6 space-y-6">
-    <!-- الهيدر -->
-    <div class="bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 rounded-2xl p-6 text-white shadow-lg">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="min-w-0">
-                <nav class="text-sm text-white/80 mb-2">
-                    <a href="{{ route('admin.dashboard') }}" class="hover:text-white">لوحة التحكم</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.lectures.index') }}" class="hover:text-white">المحاضرات</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.lectures.by-course', $lecture->course_id) }}" class="hover:text-white">{{ Str::limit($lecture->course->title ?? '', 30) }}</a>
-                    <span class="mx-2">/</span>
-                    <span class="text-white">تفاصيل المحاضرة</span>
-                </nav>
-                <h1 class="text-xl sm:text-2xl font-bold mt-1">{{ $lecture->title }}</h1>
-                <p class="text-sm text-white/90 mt-1">{{ $lecture->course->title ?? '' }}</p>
-            </div>
-            <div class="flex flex-wrap gap-2 flex-shrink-0">
-                <a href="{{ route('admin.lectures.edit', $lecture) }}" class="inline-flex items-center gap-2 bg-white text-indigo-600 hover:bg-gray-100 px-4 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-edit"></i>
-                    تعديل
-                </a>
-                <a href="{{ route('admin.lectures.by-course', $lecture->course_id) }}" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
-                    <i class="fas fa-arrow-right"></i>
-                    رجوع لمحاضرات الكورس
-                </a>
-            </div>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">المحتوى · {{ Str::limit($lecture->course->title ?? '', 40) }}</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ $lecture->title }}</h2>
+            <p class="mt-1 text-sm text-muted">{{ $lecture->course->title ?? '' }}</p>
         </div>
-    </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="inline-flex rounded-full px-3 py-1 text-xs font-medium {{ $status['class'] }}">{{ $status['label'] }}</span>
+            <a href="{{ route('admin.lectures.edit', $lecture) }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-edit text-xs"></i>
+                تعديل
+            </a>
+            <a href="{{ route('admin.lectures.by-course', $lecture->course_id) }}"
+               class="btn-press inline-flex h-9 items-center rounded-xl border border-line px-4 text-sm text-ink-soft hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                رجوع لمحاضرات البرنامج
+            </a>
+        </div>
+    </section>
 
     @if(session('success'))
-        <div class="rounded-xl bg-green-50 border border-green-200 text-green-800 px-4 py-3 flex items-center gap-2">
-            <i class="fas fa-check-circle text-green-600"></i>
-            <span>{{ session('success') }}</span>
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-soft">
+            <i class="fas fa-check-circle ml-1"></i> {{ session('success') }}
         </div>
     @endif
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- العمود الرئيسي -->
-        <div class="lg:col-span-2 space-y-6">
-            <!-- المعلومات الأساسية -->
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-info-circle text-indigo-600"></i>
-                        المعلومات الأساسية
-                    </h2>
-                </div>
-                <div class="p-6 space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">الكورس</p>
-                            <p class="text-gray-900 font-medium">{{ $lecture->course->title ?? '—' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">المحاضر</p>
-                            <p class="text-gray-900 font-medium">{{ $lecture->instructor->name ?? '—' }}</p>
-                        </div>
-                        @if($lecture->lesson)
-                        <div class="sm:col-span-2">
-                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">الدرس المرتبط (اختياري)</p>
-                            <p class="text-gray-900 font-medium">{{ $lecture->lesson->title }}</p>
-                        </div>
-                        @endif
-                    </div>
-                    @if($lecture->description)
+    <div class="grid gap-5 xl:grid-cols-3">
+        <div class="space-y-5 xl:col-span-2">
+            <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                <h3 class="text-sm font-semibold text-ink">المعلومات الأساسية</h3>
+                <div class="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">الوصف</p>
-                        <p class="text-gray-700 whitespace-pre-wrap">{{ $lecture->description }}</p>
+                        <p class="text-xs font-medium text-muted">البرنامج</p>
+                        <p class="mt-1 font-semibold text-ink">{{ $lecture->course->title ?? '—' }}</p>
                     </div>
+                    <div>
+                        <p class="text-xs font-medium text-muted">المحاضر</p>
+                        <p class="mt-1 font-semibold text-ink">{{ $lecture->instructor->name ?? '—' }}</p>
+                    </div>
+                    @if($lecture->lesson)
+                        <div class="sm:col-span-2">
+                            <p class="text-xs font-medium text-muted">الدرس المرتبط (اختياري)</p>
+                            <p class="mt-1 text-ink">{{ $lecture->lesson->title }}</p>
+                        </div>
                     @endif
                 </div>
-            </div>
+                @if($lecture->description)
+                    <div class="mt-5 rounded-xl border border-line bg-[#f8faf9] px-4 py-3">
+                        <p class="text-xs font-medium text-muted">الوصف</p>
+                        <p class="mt-1 whitespace-pre-wrap text-sm text-ink">{{ $lecture->description }}</p>
+                    </div>
+                @endif
+            </article>
 
-            <!-- رابط التسجيل / الفيديو -->
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-video text-indigo-600"></i>
-                        رابط تسجيل المحاضرة
-                    </h2>
-                </div>
-                <div class="p-6 space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">منصة الفيديو</p>
-                            <p class="text-gray-900 font-medium">{{ $platformLabel }}</p>
-                        </div>
-                        @if($lecture->recording_url)
+            <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                <h3 class="text-sm font-semibold text-ink">رابط تسجيل المحاضرة</h3>
+                <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <p class="text-xs font-medium text-muted">منصة الفيديو</p>
+                        <p class="mt-1 font-medium text-ink">{{ $platformLabel }}</p>
+                    </div>
+                    @if($lecture->recording_url)
                         <div class="sm:col-span-2">
-                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">الرابط</p>
-                            <a href="{{ $lecture->recording_url }}" target="_blank" rel="noopener" class="text-indigo-600 hover:text-indigo-800 font-medium break-all inline-flex items-center gap-1">
+                            <p class="text-xs font-medium text-muted">الرابط</p>
+                            <a href="{{ $lecture->recording_url }}" target="_blank" rel="noopener"
+                               class="mt-1 inline-flex items-center gap-1 break-all text-sm font-medium text-accent hover:text-[#0d4f4a]">
                                 {{ Str::limit($lecture->recording_url, 60) }}
-                                <i class="fas fa-external-link-alt text-xs"></i>
+                                <i class="fas fa-external-link-alt text-[10px]"></i>
                             </a>
                         </div>
-                        @else
+                    @else
                         <div class="sm:col-span-2">
-                            <p class="text-gray-500">لم يُضف رابط تسجيل</p>
+                            <p class="text-sm text-muted">لم يُضف رابط تسجيل</p>
                         </div>
-                        @endif
+                    @endif
+                </div>
+            </article>
+
+            <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                <h3 class="text-sm font-semibold text-ink">التاريخ والوقت</h3>
+                <div class="mt-4 grid gap-4 sm:grid-cols-3">
+                    <div>
+                        <p class="text-xs font-medium text-muted">تاريخ ووقت المحاضرة</p>
+                        <p class="mt-1 tabular-nums text-ink">{{ $lecture->scheduled_at ? $lecture->scheduled_at->format('Y-m-d H:i') : '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-muted">المدة (دقيقة)</p>
+                        <p class="mt-1 tabular-nums text-ink">{{ $lecture->duration_minutes ?? '—' }} دقيقة</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-muted">الحالة</p>
+                        <span class="mt-1 inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium {{ $status['class'] }}">
+                            {{ $status['label'] }}
+                        </span>
                     </div>
                 </div>
-            </div>
+            </article>
 
-            <!-- التاريخ والوقت والمدة -->
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-calendar-alt text-indigo-600"></i>
-                        التاريخ والوقت
-                    </h2>
-                </div>
-                <div class="p-6">
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">تاريخ ووقت المحاضرة</p>
-                            <p class="text-gray-900 font-medium">{{ $lecture->scheduled_at ? $lecture->scheduled_at->format('Y-m-d H:i') : '—' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">المدة (دقيقة)</p>
-                            <p class="text-gray-900 font-medium">{{ $lecture->duration_minutes ?? '—' }} دقيقة</p>
-                        </div>
-                        <div>
-                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">الحالة</p>
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $status['class'] }}">
-                                {{ $status['label'] }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- مواد المحاضرة -->
             @if($lecture->materials->isNotEmpty())
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-paperclip text-indigo-600"></i>
-                        مواد المحاضرة
-                    </h2>
-                </div>
-                <div class="p-6">
-                    <ul class="space-y-3">
+                <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                    <h3 class="text-sm font-semibold text-ink">مواد المحاضرة</h3>
+                    <ul class="mt-4 space-y-3">
                         @foreach($lecture->materials as $material)
-                        <li class="flex flex-wrap items-center justify-between gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                            <div class="min-w-0 flex-1">
-                                <p class="font-medium text-gray-900">{{ $material->title ?: $material->file_name }}</p>
-                                <p class="text-sm text-gray-500 mt-0.5">{{ $material->file_name }}</p>
-                            </div>
-                            <div class="flex items-center gap-3 flex-shrink-0">
-                                @if($material->is_visible_to_student)
-                                    <span class="text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded-lg">ظاهر للطالب</span>
-                                @else
-                                    <span class="text-xs font-semibold text-gray-600 bg-gray-200 px-2 py-1 rounded-lg">مخفي</span>
-                                @endif
-                                <a href="{{ storage_asset($material->file_path) }}" target="_blank" class="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium text-sm">
-                                    <i class="fas fa-download"></i>
-                                    تحميل
-                                </a>
-                            </div>
-                        </li>
+                            <li class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-[#f8faf9] p-4">
+                                <div class="min-w-0 flex-1">
+                                    <p class="font-medium text-ink">{{ $material->title ?: $material->file_name }}</p>
+                                    <p class="mt-0.5 text-xs text-muted">{{ $material->file_name }}</p>
+                                </div>
+                                <div class="flex shrink-0 items-center gap-2">
+                                    @if($material->is_visible_to_student)
+                                        <span class="rounded-lg bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700">ظاهر للطالب</span>
+                                    @else
+                                        <span class="rounded-lg bg-[#f2f5f4] px-2 py-1 text-[11px] font-medium text-muted">مخفي</span>
+                                    @endif
+                                    <a href="{{ storage_asset($material->file_path) }}" target="_blank"
+                                       class="inline-flex items-center gap-1 text-xs font-medium text-accent hover:text-[#0d4f4a]">
+                                        <i class="fas fa-download"></i>
+                                        تحميل
+                                    </a>
+                                </div>
+                            </li>
                         @endforeach
                     </ul>
-                </div>
-            </div>
+                </article>
             @endif
 
-            <!-- الملاحظات -->
             @if($lecture->notes)
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-sticky-note text-indigo-600"></i>
-                        ملاحظات
-                    </h2>
-                </div>
-                <div class="p-6">
-                    <p class="text-gray-700 whitespace-pre-wrap">{{ $lecture->notes }}</p>
-                </div>
-            </div>
+                <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                    <h3 class="text-sm font-semibold text-ink">ملاحظات</h3>
+                    <div class="mt-4 rounded-xl border border-line bg-[#f8faf9] px-4 py-3">
+                        <p class="whitespace-pre-wrap text-sm text-ink">{{ $lecture->notes }}</p>
+                    </div>
+                </article>
             @endif
         </div>
 
-        <!-- الشريط الجانبي -->
-        <div class="space-y-6">
-            <!-- خيارات المحاضرة -->
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-cog text-indigo-600"></i>
-                        الخيارات
-                    </h2>
-                </div>
-                <div class="p-6 space-y-3">
-                    <div class="flex items-center gap-3 p-3 rounded-xl {{ $lecture->has_attendance_tracking ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200' }}">
-                        <i class="fas {{ $lecture->has_attendance_tracking ? 'fa-check-circle text-green-600' : 'fa-times-circle text-gray-400' }}"></i>
-                        <span class="font-medium {{ $lecture->has_attendance_tracking ? 'text-green-800' : 'text-gray-600' }}">تتبع الحضور</span>
+        <div class="space-y-5">
+            <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                <h3 class="text-sm font-semibold text-ink">الخيارات</h3>
+                <div class="mt-4 space-y-2">
+                    <div class="flex items-center gap-3 rounded-xl border border-line p-3 {{ $lecture->has_attendance_tracking ? 'bg-emerald-50 border-emerald-200' : 'bg-[#f8faf9]' }}">
+                        <i class="fas {{ $lecture->has_attendance_tracking ? 'fa-check-circle text-emerald-600' : 'fa-times-circle text-muted' }}"></i>
+                        <span class="text-sm font-medium {{ $lecture->has_attendance_tracking ? 'text-emerald-800' : 'text-muted' }}">تتبع الحضور</span>
                     </div>
-                    <div class="flex items-center gap-3 p-3 rounded-xl {{ $lecture->has_assignment ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 border border-gray-200' }}">
-                        <i class="fas {{ $lecture->has_assignment ? 'fa-check-circle text-blue-600' : 'fa-times-circle text-gray-400' }}"></i>
-                        <span class="font-medium {{ $lecture->has_assignment ? 'text-blue-800' : 'text-gray-600' }}">يوجد واجب</span>
+                    <div class="flex items-center gap-3 rounded-xl border border-line p-3 {{ $lecture->has_assignment ? 'bg-accent-soft border-accent/20' : 'bg-[#f8faf9]' }}">
+                        <i class="fas {{ $lecture->has_assignment ? 'fa-check-circle text-accent' : 'fa-times-circle text-muted' }}"></i>
+                        <span class="text-sm font-medium {{ $lecture->has_assignment ? 'text-accent' : 'text-muted' }}">يوجد واجب</span>
                     </div>
-                    <div class="flex items-center gap-3 p-3 rounded-xl {{ $lecture->has_evaluation ? 'bg-amber-50 border border-amber-200' : 'bg-gray-50 border border-gray-200' }}">
-                        <i class="fas {{ $lecture->has_evaluation ? 'fa-check-circle text-amber-600' : 'fa-times-circle text-gray-400' }}"></i>
-                        <span class="font-medium {{ $lecture->has_evaluation ? 'text-amber-800' : 'text-gray-600' }}">يوجد تقييم</span>
+                    <div class="flex items-center gap-3 rounded-xl border border-line p-3 {{ $lecture->has_evaluation ? 'bg-amber-50 border-amber-200' : 'bg-[#f8faf9]' }}">
+                        <i class="fas {{ $lecture->has_evaluation ? 'fa-check-circle text-amber-700' : 'fa-times-circle text-muted' }}"></i>
+                        <span class="text-sm font-medium {{ $lecture->has_evaluation ? 'text-amber-800' : 'text-muted' }}">يوجد تقييم</span>
                     </div>
                 </div>
-            </div>
+            </article>
 
             @if($lecture->has_attendance_tracking)
-            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                    <h2 class="text-lg font-bold text-gray-900">الحضور</h2>
-                </div>
-                <div class="p-6">
-                    <a href="{{ route('admin.attendance.lecture', $lecture) }}" class="block w-full text-center py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-colors">
+                <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                    <h3 class="text-sm font-semibold text-ink">الحضور</h3>
+                    <a href="{{ route('admin.attendance.lecture', $lecture) }}"
+                       class="btn-press mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent text-sm font-medium text-white hover:bg-[#0d4f4a]">
                         عرض تفاصيل الحضور
-                        <i class="fas fa-arrow-left mr-1"></i>
+                        <i class="fas fa-arrow-left text-xs"></i>
                     </a>
-                </div>
-            </div>
+                </article>
             @endif
         </div>
     </div>
 
-    <!-- واجبات المحاضرة -->
     @if($lecture->has_assignment && $lecture->assignments->isNotEmpty())
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <i class="fas fa-tasks text-indigo-600"></i>
-                واجبات المحاضرة
-            </h2>
-        </div>
-        <div class="p-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+            <h3 class="text-sm font-semibold text-ink">واجبات المحاضرة</h3>
+            <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach($lecture->assignments as $assignment)
-                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <h4 class="font-semibold text-gray-900">{{ $assignment->title }}</h4>
-                    <p class="text-sm text-gray-600 mt-1">
-                        تاريخ التسليم: {{ $assignment->due_date ? $assignment->due_date->format('Y-m-d H:i') : '—' }}
-                    </p>
-                </div>
+                    <div class="rounded-xl border border-line bg-[#f8faf9] p-4">
+                        <h4 class="font-semibold text-ink">{{ $assignment->title }}</h4>
+                        <p class="mt-1 text-xs text-muted">
+                            تاريخ التسليم: {{ $assignment->due_date ? $assignment->due_date->format('Y-m-d H:i') : '—' }}
+                        </p>
+                    </div>
                 @endforeach
             </div>
-        </div>
-    </div>
+        </article>
     @endif
 </div>
 @endsection

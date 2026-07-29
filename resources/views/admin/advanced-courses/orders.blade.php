@@ -1,170 +1,180 @@
 @extends('layouts.admin')
 
-@section('title', 'طلبات الكورس')
-@section('header', __('admin.courses_management'))
+@section('title', 'طلبات البرنامج - ' . config('app.name'))
+@section('page_title', 'طلبات البرنامج')
 
 @section('content')
-<div class="w-full max-w-full px-4 py-6 space-y-6">
-    <div class="section-card">
-        <div class="section-card-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="min-w-0">
-                <nav class="text-sm text-slate-500 dark:text-slate-400 mb-2">
-                    <a href="{{ route('admin.dashboard') }}" class="hover:text-sky-600 dark:hover:text-sky-400">{{ __('admin.dashboard') }}</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.advanced-courses.index') }}" class="hover:text-sky-600 dark:hover:text-sky-400">{{ __('admin.courses_management') }}</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.advanced-courses.show', $advancedCourse) }}" class="hover:text-sky-600 dark:hover:text-sky-400 truncate">{{ Str::limit($advancedCourse->title, 30) }}</a>
-                    <span class="mx-2">/</span>
-                    <span class="text-slate-700 dark:text-slate-300">الطلبات</span>
-                </nav>
-                <h1 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">طلبات التسجيل</h1>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1 truncate">{{ $advancedCourse->title }}</p>
-            </div>
-            <div class="flex flex-wrap gap-2 flex-shrink-0">
-                <a href="{{ route('admin.orders.index') }}"
-                   class="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-list"></i>
-                    جميع الطلبات
-                </a>
-                <a href="{{ route('admin.advanced-courses.show', $advancedCourse) }}"
-                   class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 px-4 py-2.5 font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
-                    <i class="fas fa-arrow-right"></i>
-                    العودة للكورس
-                </a>
-            </div>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">
+                <a href="{{ route('admin.dashboard') }}" class="hover:text-accent">{{ __('admin.dashboard') }}</a>
+                <span class="mx-1">·</span>
+                <a href="{{ route('admin.advanced-courses.index') }}" class="hover:text-accent">{{ __('admin.courses_management') }}</a>
+                <span class="mx-1">·</span>
+                <a href="{{ route('admin.advanced-courses.show', $advancedCourse) }}" class="hover:text-accent">{{ Str::limit($advancedCourse->title, 30) }}</a>
+                <span class="mx-1">·</span>
+                <span class="text-ink">الطلبات</span>
+            </p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">طلبات التسجيل</h2>
+            <p class="mt-1 truncate text-sm text-muted">{{ $advancedCourse->title }}</p>
         </div>
-    </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('admin.orders.index') }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-list text-xs"></i>
+                جميع الطلبات
+            </a>
+            <a href="{{ route('admin.advanced-courses.show', $advancedCourse) }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm text-ink-soft hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                العودة للبرنامج
+            </a>
+        </div>
+    </section>
 
-    <div class="section-card p-6">
+    <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
         <div class="flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center gap-4 min-w-0">
-                <div class="w-14 h-14 bg-sky-100 dark:bg-sky-900/40 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-graduation-cap text-2xl text-sky-600 dark:text-sky-400"></i>
+            <div class="flex min-w-0 items-center gap-3">
+                <div class="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                    <i class="fas fa-graduation-cap text-lg"></i>
                 </div>
                 <div class="min-w-0">
-                    <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 truncate">{{ $advancedCourse->title }}</h3>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">
+                    <h3 class="truncate text-sm font-semibold text-ink">{{ $advancedCourse->title }}</h3>
+                    <p class="text-xs text-muted">
                         {{ $advancedCourse->category ?? '—' }} · {{ $advancedCourse->instructor?->name ?? '—' }}
                     </p>
                 </div>
             </div>
-            <div class="text-center px-4 py-2 bg-sky-50 dark:bg-sky-900/30 rounded-xl border border-sky-100 dark:border-sky-800">
-                <div class="text-2xl font-bold text-sky-600 dark:text-sky-400">{{ $orders->total() }}</div>
-                <div class="text-sm text-slate-600 dark:text-slate-400 font-medium">إجمالي الطلبات</div>
+            <div class="rounded-xl border border-line px-4 py-2 text-center">
+                <div class="text-2xl font-semibold tabular-nums text-ink">{{ $orders->total() }}</div>
+                <div class="text-xs font-medium text-muted">إجمالي الطلبات</div>
             </div>
         </div>
-    </div>
+    </article>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="stat-card p-5">
-            <div class="flex items-center gap-4">
-                <div class="stat-icon bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0 w-12 h-12">
-                    <i class="fas fa-clock text-xl text-white"></i>
+    <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="flex items-center gap-3">
+                <div class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-amber-700">
+                    <i class="fas fa-clock text-sm"></i>
                 </div>
                 <div class="min-w-0">
-                    <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $orders->where('status', 'pending')->count() }}</p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">معلقة</p>
+                    <p class="text-2xl font-semibold tabular-nums text-ink">{{ $orders->where('status', 'pending')->count() }}</p>
+                    <p class="text-xs text-muted">معلّقة</p>
                 </div>
             </div>
-        </div>
-        <div class="stat-card p-5">
-            <div class="flex items-center gap-4">
-                <div class="stat-icon bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0 w-12 h-12">
-                    <i class="fas fa-check text-xl text-white"></i>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="flex items-center gap-3">
+                <div class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-emerald-700">
+                    <i class="fas fa-check text-sm"></i>
                 </div>
                 <div class="min-w-0">
-                    <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $orders->where('status', 'approved')->count() }}</p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">مقبولة</p>
+                    <p class="text-2xl font-semibold tabular-nums text-ink">{{ $orders->where('status', 'approved')->count() }}</p>
+                    <p class="text-xs text-muted">مقبولة</p>
                 </div>
             </div>
-        </div>
-        <div class="stat-card p-5">
-            <div class="flex items-center gap-4">
-                <div class="stat-icon bg-red-500 rounded-xl flex items-center justify-center flex-shrink-0 w-12 h-12">
-                    <i class="fas fa-times text-xl text-white"></i>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="flex items-center gap-3">
+                <div class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-rose-700">
+                    <i class="fas fa-times text-sm"></i>
                 </div>
                 <div class="min-w-0">
-                    <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $orders->where('status', 'rejected')->count() }}</p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">مرفوضة</p>
+                    <p class="text-2xl font-semibold tabular-nums text-ink">{{ $orders->where('status', 'rejected')->count() }}</p>
+                    <p class="text-xs text-muted">مرفوضة</p>
                 </div>
             </div>
-        </div>
-        <div class="stat-card p-5">
-            <div class="flex items-center gap-4">
-                <div class="stat-icon bg-sky-500 rounded-xl flex items-center justify-center flex-shrink-0 w-12 h-12">
-                    <i class="fas fa-shopping-cart text-xl text-white"></i>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="flex items-center gap-3">
+                <div class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                    <i class="fas fa-shopping-cart text-sm"></i>
                 </div>
                 <div class="min-w-0">
-                    <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $orders->total() }}</p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">إجمالي</p>
+                    <p class="text-2xl font-semibold tabular-nums text-ink">{{ $orders->total() }}</p>
+                    <p class="text-xs text-muted">إجمالي</p>
                 </div>
             </div>
-        </div>
+        </article>
     </div>
 
     @if($orders->count() > 0)
-        <div class="section-card overflow-hidden">
-            <div class="section-card-header">
-                <h4 class="text-lg font-bold text-slate-800 dark:text-slate-100">طلبات التسجيل</h4>
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-5 py-4">
+                <h4 class="text-sm font-semibold text-ink">طلبات التسجيل</h4>
             </div>
-            
+
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-600">
-                    <thead class="bg-slate-50 dark:bg-slate-700/50">
+                <table class="min-w-full divide-y divide-line">
+                    <thead class="bg-[#f8faf9]">
                         <tr>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">الطالب</th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">طريقة الدفع</th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">المبلغ</th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">الحالة</th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">تاريخ الطلب</th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">الإجراءات</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-muted">الطالب</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-muted">طريقة الدفع</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-muted">المبلغ</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-muted">الحالة</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-muted">تاريخ الطلب</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-muted">الإجراءات</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white dark:bg-slate-800/50 divide-y divide-slate-200 dark:divide-slate-600">
+                    <tbody class="divide-y divide-line bg-surface">
                         @foreach($orders as $order)
                             @php
-                                $statusClass = $order->status == 'pending' ? 'bg-amber-100 text-amber-800' : ($order->status == 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800');
-                                $paymentLabel = $order->payment_method == 'whatsapp' ? 'واتساب' : ($order->payment_method == 'bank_transfer' ? 'تحويل بنكي' : ($order->payment_method == 'cash' ? 'كاش' : $order->payment_method));
+                                $statusClass = match($order->status) {
+                                    'pending' => 'bg-amber-50 text-amber-800',
+                                    'approved' => 'bg-emerald-50 text-emerald-700',
+                                    default => 'bg-rose-50 text-rose-700',
+                                };
+                                $paymentLabel = match($order->payment_method) {
+                                    'whatsapp' => 'واتساب',
+                                    'bank_transfer' => 'تحويل بنكي',
+                                    'cash' => 'كاش',
+                                    default => $order->payment_method,
+                                };
                             @endphp
-                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap">
+                            <tr class="transition hover:bg-[#f8faf9]">
+                                <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 bg-sky-100 dark:bg-sky-900/40 rounded-xl flex items-center justify-center flex-shrink-0">
-                                            <span class="text-sky-600 dark:text-sky-400 font-semibold">{{ substr($order->user->name ?? '', 0, 1) }}</span>
+                                        <div class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-sm font-semibold text-accent">
+                                            {{ substr($order->user->name ?? '', 0, 1) }}
                                         </div>
                                         <div class="min-w-0">
-                                            <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ $order->user->name ?? '—' }}</div>
-                                            <div class="text-sm text-slate-500 dark:text-slate-400 truncate max-w-[180px]">{{ $order->user->email ?? '—' }}</div>
+                                            <div class="text-sm font-medium text-ink">{{ $order->user->name ?? '—' }}</div>
+                                            <div class="max-w-[180px] truncate text-xs text-muted" dir="ltr">{{ $order->user->email ?? '—' }}</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-800 dark:text-slate-200 font-medium">{{ $paymentLabel }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-100">{{ number_format($order->amount, 2) }} ج.م</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {{ $statusClass }}">
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-ink">{{ $paymentLabel }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold tabular-nums text-ink">{{ number_format($order->amount, 2) }} USD</td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span class="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium {{ $statusClass }}">
                                         {{ $order->status_text }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ $order->created_at->format('Y-m-d H:i') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center gap-2">
+                                <td class="px-4 py-3 whitespace-nowrap text-sm tabular-nums text-muted">{{ $order->created_at->format('Y-m-d H:i') }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="flex items-center gap-1.5">
                                         <a href="{{ route('admin.orders.show', $order) }}"
-                                           class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 hover:bg-sky-100 dark:hover:bg-sky-900/50 transition-colors" title="عرض">
-                                            <i class="fas fa-eye"></i>
+                                           class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent transition hover:bg-accent-soft"
+                                           title="عرض">
+                                            <i class="fas fa-eye text-xs"></i>
                                         </a>
                                         @if($order->status == 'pending')
                                             <form action="{{ route('admin.orders.approve', $order) }}" method="POST" class="inline">
                                                 @csrf
                                                 <button type="submit" onclick="return confirm('هل تريد الموافقة على هذا الطلب؟');"
-                                                        class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-colors" title="موافقة">
-                                                    <i class="fas fa-check"></i>
+                                                        class="inline-flex size-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100"
+                                                        title="موافقة">
+                                                    <i class="fas fa-check text-xs"></i>
                                                 </button>
                                             </form>
                                             <form action="{{ route('admin.orders.reject', $order) }}" method="POST" class="inline">
                                                 @csrf
                                                 <button type="submit" onclick="return confirm('هل تريد رفض هذا الطلب؟');"
-                                                        class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors" title="رفض">
-                                                    <i class="fas fa-times"></i>
+                                                        class="inline-flex size-9 items-center justify-center rounded-xl bg-rose-50 text-rose-700 transition hover:bg-rose-100"
+                                                        title="رفض">
+                                                    <i class="fas fa-times text-xs"></i>
                                                 </button>
                                             </form>
                                         @endif
@@ -176,23 +186,23 @@
                 </table>
             </div>
 
-            <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/30">
+            <div class="border-t border-line bg-[#f8faf9] px-5 py-4">
                 {{ $orders->links() }}
             </div>
-        </div>
+        </article>
     @else
-        <div class="section-card p-12 text-center">
-            <div class="w-20 h-20 rounded-2xl bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400 flex items-center justify-center text-4xl mx-auto mb-4">
-                <i class="fas fa-shopping-cart"></i>
+        <article class="rounded-2xl border border-dashed border-line bg-surface px-6 py-14 text-center shadow-soft">
+            <div class="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-[#f2f5f4] text-accent">
+                <i class="fas fa-shopping-cart text-xl"></i>
             </div>
-            <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">لا توجد طلبات</h3>
-            <p class="text-slate-600 dark:text-slate-400 mb-6">لم يتم تقديم أي طلبات تسجيل لهذا الكورس بعد</p>
+            <h3 class="mt-4 text-lg font-semibold text-ink">لا توجد طلبات</h3>
+            <p class="mt-1 text-sm text-muted">لم يتم تقديم أي طلبات تسجيل لهذا البرنامج بعد</p>
             <a href="{{ route('admin.orders.index') }}"
-               class="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors">
-                <i class="fas fa-list"></i>
+               class="btn-press mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-list text-xs"></i>
                 عرض جميع الطلبات
             </a>
-        </div>
+        </article>
     @endif
 </div>
 @endsection

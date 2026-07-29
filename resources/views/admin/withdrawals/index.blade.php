@@ -1,245 +1,219 @@
 @extends('layouts.admin')
 
 @section('title', 'طلبات السحب - ' . config('app.name'))
-@section('header', 'طلبات السحب')
+@section('page_title', 'طلبات السحب')
 
 @section('content')
-<div class="space-y-6">
-    <!-- الهيدر -->
-    <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-6 py-5 bg-slate-50 border-b border-slate-200">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md">
-                    <i class="fas fa-money-bill-wave text-lg"></i>
-                </div>
-                <div>
-                    <h2 class="text-2xl font-black text-slate-900">إدارة طلبات السحب</h2>
-                    <p class="text-sm text-slate-600 mt-1">إدارة طلبات سحب الماديات من المدربين</p>
-                </div>
-            </div>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $statCards = [
+        [
+            'label' => 'إجمالي الطلبات',
+            'value' => number_format($stats['total']),
+            'icon' => 'fas fa-money-bill-wave',
+            'description' => 'جميع طلبات السحب المسجلة',
+        ],
+        [
+            'label' => 'قيد الانتظار',
+            'value' => number_format($stats['pending']),
+            'icon' => 'fas fa-clock',
+            'description' => 'بانتظار مراجعة الإدارة',
+        ],
+        [
+            'label' => 'موافق عليها',
+            'value' => number_format($stats['approved']),
+            'icon' => 'fas fa-check-circle',
+            'description' => 'تمت الموافقة ولم تُكمل بعد',
+        ],
+        [
+            'label' => 'إجمالي المكتملة',
+            'value' => number_format($stats['completed'], 2) . ' ج.م',
+            'icon' => 'fas fa-check-double',
+            'description' => 'مجموع المبالغ المكتملة',
+        ],
+    ];
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">المالية · طلبات السحب</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إدارة طلبات السحب</h2>
+            <p class="mt-1 text-sm text-muted">إدارة طلبات سحب الماديات من المدربين</p>
         </div>
     </section>
 
-    <!-- إحصائيات -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="rounded-xl bg-white border border-slate-200 shadow-md p-5">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
-                    <i class="fas fa-money-bill-wave text-base"></i>
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach ($statCards as $card)
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                    <i class="{{ $card['icon'] }} text-sm"></i>
                 </div>
-                <div class="text-right">
-                    <p class="text-xs font-semibold text-slate-600">إجمالي الطلبات</p>
-                    <p class="text-xl font-black text-slate-900">{{ number_format($stats['total']) }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="rounded-xl bg-white border border-slate-200 shadow-md p-5">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
-                    <i class="fas fa-clock text-base"></i>
-                </div>
-                <div class="text-right">
-                    <p class="text-xs font-semibold text-slate-600">قيد الانتظار</p>
-                    <p class="text-xl font-black text-slate-900">{{ number_format($stats['pending']) }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="rounded-xl bg-white border border-slate-200 shadow-md p-5">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
-                    <i class="fas fa-check-circle text-base"></i>
-                </div>
-                <div class="text-right">
-                    <p class="text-xs font-semibold text-slate-600">موافق عليها</p>
-                    <p class="text-xl font-black text-slate-900">{{ number_format($stats['approved']) }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="rounded-xl bg-white border border-slate-200 shadow-md p-5">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
-                    <i class="fas fa-check-double text-base"></i>
-                </div>
-                <div class="text-right">
-                    <p class="text-xs font-semibold text-slate-600">إجمالي المكتملة</p>
-                    <p class="text-xl font-black text-slate-900">{{ number_format($stats['completed'], 2) }} ج.م</p>
-                </div>
-            </div>
-        </div>
+                <p class="mt-3 text-xs text-muted">{{ $card['label'] }}</p>
+                <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ $card['value'] }}</p>
+                <p class="mt-1 text-[11px] text-muted">{{ $card['description'] }}</p>
+            </article>
+        @endforeach
     </section>
 
-    <!-- البحث والفلترة -->
-    <section class="rounded-xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-6 py-5 border-b border-slate-200 bg-slate-50">
-            <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
-                <i class="fas fa-filter text-blue-600"></i>
-                البحث والفلترة
-            </h3>
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-4 py-4 sm:px-5">
+            <h3 class="text-base font-semibold text-ink">البحث والفلترة</h3>
+            <p class="mt-0.5 text-xs text-muted">ابحث برقم الطلب أو المدرب أو فلتر حسب الحالة</p>
         </div>
-        <div class="p-6">
-            <form method="GET" action="{{ route('admin.withdrawals.index') }}" id="filterForm" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-2">البحث</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-3 flex items-center text-slate-400">
-                            <i class="fas fa-search"></i>
-                        </span>
-                        <input type="text" name="search" value="{{ htmlspecialchars(request('search') ?? '', ENT_QUOTES, 'UTF-8') }}" maxlength="255" placeholder="رقم الطلب، اسم المدرب" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 pr-10 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-2">المدرب</label>
-                    <select name="instructor_id" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <option value="">جميع المدربين</option>
-                        @foreach($instructors as $instructor)
-                            <option value="{{ $instructor->id }}" {{ request('instructor_id') == $instructor->id ? 'selected' : '' }}>{{ htmlspecialchars($instructor->name, ENT_QUOTES, 'UTF-8') }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-2">الحالة</label>
-                    <select name="status" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <option value="">جميع الحالات</option>
-                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>قيد الانتظار</option>
-                        <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>موافق عليه</option>
-                        <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>قيد المعالجة</option>
-                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>مكتمل</option>
-                        <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>مرفوض</option>
-                        <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ملغي</option>
-                    </select>
-                </div>
-                <div class="flex items-end gap-2 md:col-span-3">
-                    <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200">
-                        <i class="fas fa-search"></i>
-                        بحث
-                    </button>
-                    @if(request()->anyFilled(['search', 'instructor_id', 'status']))
-                    <a href="{{ route('admin.withdrawals.index') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors" title="مسح الفلتر">
-                        <i class="fas fa-times"></i>
-                    </a>
-                    @endif
-                </div>
-            </form>
-        </div>
-    </section>
-
-    <!-- قائمة طلبات السحب -->
-    <section class="rounded-xl bg-white border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-6 py-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+        <form method="GET" action="{{ route('admin.withdrawals.index') }}" id="filterForm" class="grid grid-cols-1 gap-4 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-3 xl:items-end">
             <div>
-                <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
-                    <i class="fas fa-list text-blue-600"></i>
-                    قائمة طلبات السحب
-                </h3>
-                <p class="text-sm text-slate-600 mt-1">
-                    <span class="font-semibold text-blue-600">{{ $withdrawals->total() }}</span> طلب
+                <label class="{{ $labelClass }}" for="search">البحث</label>
+                <div class="relative">
+                    <span class="pointer-events-none absolute inset-y-0 start-3 flex items-center text-muted">
+                        <i class="fas fa-search text-xs"></i>
+                    </span>
+                    <input id="search" type="text" name="search" value="{{ htmlspecialchars(request('search') ?? '', ENT_QUOTES, 'UTF-8') }}" maxlength="255" placeholder="رقم الطلب، اسم المدرب" class="{{ $fieldClass }} ps-9" />
+                </div>
+            </div>
+            <div>
+                <label class="{{ $labelClass }}" for="instructor_id">المدرب</label>
+                <select id="instructor_id" name="instructor_id" class="{{ $fieldClass }}">
+                    <option value="">جميع المدربين</option>
+                    @foreach($instructors as $instructor)
+                        <option value="{{ $instructor->id }}" {{ request('instructor_id') == $instructor->id ? 'selected' : '' }}>{{ htmlspecialchars($instructor->name, ENT_QUOTES, 'UTF-8') }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="{{ $labelClass }}" for="status">الحالة</label>
+                <select id="status" name="status" class="{{ $fieldClass }}">
+                    <option value="">جميع الحالات</option>
+                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>قيد الانتظار</option>
+                    <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>موافق عليه</option>
+                    <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>قيد المعالجة</option>
+                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>مكتمل</option>
+                    <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>مرفوض</option>
+                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ملغي</option>
+                </select>
+            </div>
+            <div class="flex flex-wrap gap-2 md:col-span-3">
+                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                    <i class="fas fa-search text-xs"></i>
+                    بحث
+                </button>
+                @if(request()->anyFilled(['search', 'instructor_id', 'status']))
+                <a href="{{ route('admin.withdrawals.index') }}" class="btn-press inline-flex h-11 items-center justify-center rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent" title="مسح الفلتر">
+                    <i class="fas fa-times"></i>
+                </a>
+                @endif
+            </div>
+        </form>
+    </article>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+            <div class="min-w-0">
+                <h3 class="text-base font-semibold text-ink">قائمة طلبات السحب</h3>
+                <p class="mt-0.5 text-xs text-muted">
+                    <span class="font-semibold text-accent">{{ $withdrawals->total() }}</span> طلب
                 </p>
             </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200">
-                <thead class="bg-slate-50">
-                    <tr>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">رقم الطلب</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">المدرب</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">المبلغ</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">طريقة الدفع</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">الحالة</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">تاريخ الطلب</th>
-                        <th class="px-6 py-3 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-slate-200">
-                    @forelse ($withdrawals as $withdrawal)
-                        <tr class="hover:bg-slate-50 transition-colors duration-200">
-                            <td class="px-6 py-4">
-                                <div class="font-semibold text-slate-900">{{ htmlspecialchars($withdrawal->request_number ?? '#' . $withdrawal->id, ENT_QUOTES, 'UTF-8') }}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md">
-                                        {{ mb_substr($withdrawal->instructor->name ?? '', 0, 1, 'UTF-8') }}
+        @if ($withdrawals->count() > 0)
+            <div class="admin-table-wrap overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="border-b border-line bg-canvas text-xs text-muted">
+                        <tr>
+                            <th class="px-4 py-3 text-start font-medium">رقم الطلب</th>
+                            <th class="px-4 py-3 text-start font-medium">المدرب</th>
+                            <th class="px-4 py-3 text-start font-medium">المبلغ</th>
+                            <th class="px-4 py-3 text-start font-medium">طريقة الدفع</th>
+                            <th class="px-4 py-3 text-start font-medium">الحالة</th>
+                            <th class="px-4 py-3 text-start font-medium">تاريخ الطلب</th>
+                            <th class="px-4 py-3 text-center font-medium">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-line">
+                        @foreach ($withdrawals as $withdrawal)
+                            <tr class="hover:bg-canvas/40">
+                                <td class="px-4 py-3">
+                                    <div class="font-semibold text-ink">{{ htmlspecialchars($withdrawal->request_number ?? '#' . $withdrawal->id, ENT_QUOTES, 'UTF-8') }}</div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-sm font-bold text-accent">
+                                            {{ mb_substr($withdrawal->instructor->name ?? '', 0, 1, 'UTF-8') }}
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p class="font-semibold text-ink">{{ htmlspecialchars($withdrawal->instructor->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</p>
+                                            <p class="text-[11px] text-muted">{{ htmlspecialchars($withdrawal->instructor->phone ?? '-', ENT_QUOTES, 'UTF-8') }}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p class="font-semibold text-slate-900">{{ htmlspecialchars($withdrawal->instructor->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</p>
-                                        <p class="text-xs text-slate-500">{{ htmlspecialchars($withdrawal->instructor->phone ?? '-', ENT_QUOTES, 'UTF-8') }}</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="font-bold text-slate-900 text-lg">{{ number_format($withdrawal->amount ?? 0, 2) }} ج.م</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                @php
-                                    $paymentMethodBadges = [
-                                        'bank_transfer' => ['label' => 'تحويل بنكي', 'classes' => 'bg-blue-100 text-blue-700 border-blue-200', 'icon' => 'fas fa-university'],
-                                        'wallet' => ['label' => 'محفظة', 'classes' => 'bg-purple-100 text-purple-700 border-purple-200', 'icon' => 'fas fa-wallet'],
-                                        'cash' => ['label' => 'نقدي', 'classes' => 'bg-emerald-100 text-emerald-700 border-emerald-200', 'icon' => 'fas fa-money-bill'],
-                                    ];
-                                    $method = $paymentMethodBadges[$withdrawal->payment_method] ?? ['label' => 'أخرى', 'classes' => 'bg-slate-100 text-slate-700 border-slate-200', 'icon' => 'fas fa-ellipsis-h'];
-                                @endphp
-                                <span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold border {{ $method['classes'] }}">
-                                    <i class="{{ $method['icon'] }} text-xs"></i>
-                                    {{ $method['label'] }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                @php
-                                    $statusBadges = [
-                                        'pending' => ['label' => 'قيد الانتظار', 'classes' => 'bg-slate-100 text-slate-700 border-slate-200'],
-                                        'approved' => ['label' => 'موافق عليه', 'classes' => 'bg-blue-100 text-blue-700 border-blue-200'],
-                                        'processing' => ['label' => 'قيد المعالجة', 'classes' => 'bg-amber-100 text-amber-700 border-amber-200'],
-                                        'completed' => ['label' => 'مكتمل', 'classes' => 'bg-emerald-100 text-emerald-700 border-emerald-200'],
-                                        'rejected' => ['label' => 'مرفوض', 'classes' => 'bg-rose-100 text-rose-700 border-rose-200'],
-                                        'cancelled' => ['label' => 'ملغي', 'classes' => 'bg-slate-100 text-slate-700 border-slate-200'],
-                                    ];
-                                    $status = $statusBadges[$withdrawal->status] ?? ['label' => $withdrawal->status, 'classes' => 'bg-slate-100 text-slate-700 border-slate-200'];
-                                @endphp
-                                <span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold border {{ $status['classes'] }}">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
-                                    {{ $status['label'] }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-xs text-slate-700">
-                                <div class="font-medium">{{ $withdrawal->created_at->format('Y-m-d') }}</div>
-                                <div class="text-slate-500">{{ $withdrawal->created_at->format('H:i') }}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center justify-center gap-2">
-                                    <a href="{{ route('admin.withdrawals.show', $withdrawal) }}" 
-                                       class="w-9 h-9 flex items-center justify-center bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors duration-200"
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="text-lg font-semibold tabular-nums text-ink">{{ number_format($withdrawal->amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    @php
+                                        $paymentMethodBadges = [
+                                            'bank_transfer' => ['label' => 'تحويل بنكي', 'classes' => 'bg-accent-soft text-accent', 'icon' => 'fas fa-university'],
+                                            'wallet' => ['label' => 'محفظة', 'classes' => 'bg-canvas-muted text-ink', 'icon' => 'fas fa-wallet'],
+                                            'cash' => ['label' => 'نقدي', 'classes' => 'bg-emerald-50 text-emerald-700', 'icon' => 'fas fa-money-bill'],
+                                        ];
+                                        $method = $paymentMethodBadges[$withdrawal->payment_method] ?? ['label' => 'أخرى', 'classes' => 'bg-canvas-muted text-muted', 'icon' => 'fas fa-ellipsis-h'];
+                                    @endphp
+                                    <span class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium {{ $method['classes'] }}">
+                                        <i class="{{ $method['icon'] }} text-[10px]"></i>
+                                        {{ $method['label'] }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    @php
+                                        $statusBadges = [
+                                            'pending' => ['label' => 'قيد الانتظار', 'classes' => 'bg-canvas-muted text-muted'],
+                                            'approved' => ['label' => 'موافق عليه', 'classes' => 'bg-amber-50 text-amber-700'],
+                                            'processing' => ['label' => 'قيد المعالجة', 'classes' => 'bg-amber-50 text-amber-700'],
+                                            'completed' => ['label' => 'مكتمل', 'classes' => 'bg-emerald-50 text-emerald-700'],
+                                            'rejected' => ['label' => 'مرفوض', 'classes' => 'bg-rose-50 text-rose-700'],
+                                            'cancelled' => ['label' => 'ملغي', 'classes' => 'bg-canvas-muted text-muted'],
+                                        ];
+                                        $status = $statusBadges[$withdrawal->status] ?? ['label' => $withdrawal->status, 'classes' => 'bg-canvas-muted text-muted'];
+                                    @endphp
+                                    <span class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium {{ $status['classes'] }}">
+                                        <span class="size-1.5 rounded-full bg-current"></span>
+                                        {{ $status['label'] }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-xs text-muted">
+                                    <p class="font-medium text-ink">{{ $withdrawal->created_at->format('Y-m-d') }}</p>
+                                    <p>{{ $withdrawal->created_at->format('H:i') }}</p>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <a href="{{ route('admin.withdrawals.show', $withdrawal) }}"
+                                       class="btn-press inline-flex size-9 items-center justify-center rounded-xl border border-line text-ink hover:bg-accent-soft hover:text-accent"
                                        title="عرض">
                                         <i class="fas fa-eye text-sm"></i>
                                     </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-6 py-12 text-center">
-                                <div class="flex flex-col items-center gap-4">
-                                    <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center">
-                                        <i class="fas fa-money-bill-wave text-slate-400 text-2xl"></i>
-                                    </div>
-                                    <div>
-                                        <p class="font-bold text-slate-900">لا توجد طلبات سحب</p>
-                                        <p class="text-sm text-slate-600 mt-1">لم يتم تقديم أي طلبات سحب بعد</p>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
 
-        @if ($withdrawals->hasPages())
-            <div class="px-6 py-4 border-t border-slate-200 bg-slate-50">
-                {{ $withdrawals->appends(request()->query())->links() }}
+            @if ($withdrawals->hasPages())
+                <div class="border-t border-line px-4 py-3 sm:px-5">
+                    {{ $withdrawals->appends(request()->query())->links() }}
+                </div>
+            @endif
+        @else
+            <div class="px-4 py-12 text-center sm:px-5">
+                <div class="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-[#f2f5f4] text-accent">
+                    <i class="fas fa-money-bill-wave text-2xl"></i>
+                </div>
+                <h3 class="text-base font-semibold text-ink">لا توجد طلبات سحب</h3>
+                <p class="mx-auto mt-1 max-w-md text-sm text-muted">لم يتم تقديم أي طلبات سحب بعد</p>
             </div>
         @endif
-    </section>
+    </article>
 </div>
 
 @push('scripts')

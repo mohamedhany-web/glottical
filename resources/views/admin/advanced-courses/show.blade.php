@@ -1,234 +1,244 @@
 @extends('layouts.admin')
 
-@section('title', 'تفاصيل الكورس')
-@section('header', __('admin.courses_management'))
+@section('title', 'تفاصيل البرنامج - ' . config('app.name'))
+@section('page_title', 'تفاصيل البرنامج')
 
 @section('content')
-<div class="w-full max-w-full px-4 py-6 space-y-6">
-    <div class="section-card">
-        <div class="section-card-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="min-w-0">
-                <nav class="text-sm text-slate-500 dark:text-slate-400 mb-2">
-                    <a href="{{ route('admin.dashboard') }}" class="hover:text-sky-600 dark:hover:text-sky-400">{{ __('admin.dashboard') }}</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.advanced-courses.index') }}" class="hover:text-sky-600 dark:hover:text-sky-400">{{ __('admin.courses_management') }}</a>
-                    <span class="mx-2">/</span>
-                    <span class="text-slate-700 dark:text-slate-300 truncate">{{ Str::limit($advancedCourse->title, 40) }}</span>
-                </nav>
-                <h1 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1 truncate">{{ $advancedCourse->title }}</h1>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                    {{ $advancedCourse->category ?: '—' }} · {{ $advancedCourse->instructor?->name ?? '—' }}
-                </p>
-            </div>
-            <div class="flex flex-wrap gap-2 flex-shrink-0">
-                <a href="{{ route('admin.advanced-courses.edit', $advancedCourse) }}"
-                   class="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-edit"></i>
-                    تعديل الكورس
-                </a>
-                <a href="{{ route('admin.advanced-courses.index') }}"
-                   class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 px-4 py-2.5 font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
-                    <i class="fas fa-arrow-right"></i>
-                    العودة للكورسات
-                </a>
-            </div>
+@php
+    $levelLabel = match($advancedCourse->level) {
+        'beginner' => 'مبتدئ',
+        'intermediate' => 'متوسط',
+        'advanced' => 'متقدم',
+        default => '—',
+    };
+@endphp
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">
+                <a href="{{ route('admin.dashboard') }}" class="hover:text-accent">{{ __('admin.dashboard') }}</a>
+                <span class="mx-1">·</span>
+                <a href="{{ route('admin.advanced-courses.index') }}" class="hover:text-accent">{{ __('admin.courses_management') }}</a>
+                <span class="mx-1">·</span>
+                <span class="text-ink">{{ Str::limit($advancedCourse->title, 40) }}</span>
+            </p>
+            <h2 class="mt-1 truncate text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ $advancedCourse->title }}</h2>
+            <p class="mt-1 text-sm text-muted">
+                {{ $advancedCourse->category ?: '—' }} · {{ $advancedCourse->instructor?->name ?? '—' }}
+            </p>
         </div>
-    </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('admin.advanced-courses.edit', $advancedCourse) }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-edit text-xs"></i>
+                تعديل البرنامج
+            </a>
+            <a href="{{ route('admin.advanced-courses.index') }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm text-ink-soft hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                العودة للبرامج
+            </a>
+        </div>
+    </section>
 
-    <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+    <div class="grid gap-5 xl:grid-cols-4">
         <div class="xl:col-span-3">
-            <div class="section-card">
-                <div class="section-card-header flex flex-wrap items-center justify-between gap-3">
-                    <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">معلومات الكورس</h3>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $advancedCourse->is_active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-600 dark:text-slate-300' }}">
-                            {{ $advancedCourse->is_active ? 'نشط' : 'معطل' }}
+            <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h3 class="text-sm font-semibold text-ink">معلومات البرنامج</h3>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-medium {{ $advancedCourse->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-[#f2f5f4] text-muted' }}">
+                            {{ $advancedCourse->is_active ? 'نشط' : 'معطّل' }}
                         </span>
                         @if($advancedCourse->is_featured)
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
-                                <i class="fas fa-star ml-1"></i>
-                                مميز
+                            <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
+                                <i class="fas fa-star text-[10px]"></i>
+                                مميّز
                             </span>
                         @endif
                     </div>
                 </div>
-                <div class="p-6 sm:p-8">
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                        <div class="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                            <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">العنوان</div>
-                            <div class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate" title="{{ $advancedCourse->title }}">{{ Str::limit($advancedCourse->title, 25) }}</div>
-                        </div>
-                        <div class="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                            <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">المسار / المدرّس</div>
-                            <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ $advancedCourse->category ?? '—' }} · {{ $advancedCourse->instructor?->name ?? '—' }}</div>
-                        </div>
-                        <div class="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                            <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">المستوى</div>
-                            <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                                @if($advancedCourse->level == 'beginner') مبتدئ
-                                @elseif($advancedCourse->level == 'intermediate') متوسط
-                                @elseif($advancedCourse->level == 'advanced') متقدم
-                                @else —
-                                @endif
-                            </div>
-                        </div>
-                        <div class="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                            <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">السعر / المدة</div>
-                            <div class="text-sm font-semibold text-slate-800 dark:text-slate-100 tabular-nums">
-                                @if($advancedCourse->hasPromotionalPrice())
-                                    <span class="text-slate-400 line-through">{{ number_format($advancedCourse->listPriceAmount(), 0) }}</span>
-                                    <span class="mx-1">←</span>
-                                @endif
-                                {{ number_format($advancedCourse->effectivePurchasePrice(), 0) }} ج.م · {{ $advancedCourse->duration_hours ?? 0 }} س
-                            </div>
-                        </div>
-                    </div>
 
-                    @if($advancedCourse->description)
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">الوصف</label>
-                            <div class="text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border border-slate-100 dark:border-slate-600">{{ $advancedCourse->description }}</div>
-                        </div>
-                    @endif
+                <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <div class="rounded-xl border border-line px-3 py-3">
+                        <p class="text-xs font-medium text-muted">العنوان</p>
+                        <p class="mt-1 truncate text-sm font-semibold text-ink" title="{{ $advancedCourse->title }}">{{ Str::limit($advancedCourse->title, 25) }}</p>
+                    </div>
+                    <div class="rounded-xl border border-line px-3 py-3">
+                        <p class="text-xs font-medium text-muted">المسار / المدرّس</p>
+                        <p class="mt-1 text-sm font-semibold text-ink">{{ $advancedCourse->category ?? '—' }} · {{ $advancedCourse->instructor?->name ?? '—' }}</p>
+                    </div>
+                    <div class="rounded-xl border border-line px-3 py-3">
+                        <p class="text-xs font-medium text-muted">المستوى</p>
+                        <p class="mt-1 text-sm font-semibold text-ink">{{ $levelLabel }}</p>
+                    </div>
+                    <div class="rounded-xl border border-line px-3 py-3">
+                        <p class="text-xs font-medium text-muted">السعر / المدة</p>
+                        <p class="mt-1 text-sm font-semibold tabular-nums text-ink">
+                            @if($advancedCourse->hasPromotionalPrice())
+                                <span class="text-muted line-through">{{ number_format($advancedCourse->listPriceAmount(), 0) }}</span>
+                                <span class="mx-1 text-muted">←</span>
+                            @endif
+                            {{ number_format($advancedCourse->effectivePurchasePrice(), 0) }} USD · {{ $advancedCourse->duration_hours ?? 0 }} س
+                        </p>
+                    </div>
                 </div>
-            </div>
+
+                @if($advancedCourse->description)
+                    <div class="mt-5">
+                        <p class="text-xs font-medium text-muted">الوصف</p>
+                        <div class="mt-2 rounded-xl border border-line bg-[#f8faf9] px-4 py-3 text-sm text-ink">{{ $advancedCourse->description }}</div>
+                    </div>
+                @endif
+            </article>
         </div>
 
-        <div class="space-y-4">
-            <div class="stat-card p-5">
-                <div class="flex items-center gap-4">
-                    <div class="stat-icon bg-sky-500 rounded-xl flex items-center justify-center flex-shrink-0 w-14 h-14">
-                        <i class="fas fa-play-circle text-2xl text-white"></i>
+        <div class="space-y-3">
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="flex items-center gap-3">
+                    <div class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                        <i class="fas fa-play-circle text-sm"></i>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['total_lessons'] }}</p>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">دروس</p>
+                        <p class="text-2xl font-semibold tabular-nums text-ink">{{ $stats['total_lessons'] }}</p>
+                        <p class="text-xs text-muted">دروس</p>
                     </div>
                 </div>
-            </div>
-            <div class="stat-card p-5">
-                <div class="flex items-center gap-4">
-                    <div class="stat-icon bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0 w-14 h-14">
-                        <i class="fas fa-users text-2xl text-white"></i>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="flex items-center gap-3">
+                    <div class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                        <i class="fas fa-users text-sm"></i>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['active_students'] }}</p>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">معلم نشط</p>
+                        <p class="text-2xl font-semibold tabular-nums text-ink">{{ $stats['active_students'] }}</p>
+                        <p class="text-xs text-muted">طالب نشط</p>
                     </div>
                 </div>
-            </div>
-            <div class="stat-card p-5">
-                <div class="flex items-center gap-4">
-                    <div class="stat-icon bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0 w-14 h-14">
-                        <i class="fas fa-clock text-2xl text-white"></i>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="flex items-center gap-3">
+                    <div class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                        <i class="fas fa-clock text-sm"></i>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['pending_orders'] }}</p>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">طلب معلق</p>
+                        <p class="text-2xl font-semibold tabular-nums text-ink">{{ $stats['pending_orders'] }}</p>
+                        <p class="text-xs text-muted">طلب معلّق</p>
                     </div>
                 </div>
-            </div>
-            <div class="stat-card p-5">
-                <div class="flex items-center gap-4">
-                    <div class="stat-icon bg-violet-500 rounded-xl flex items-center justify-center flex-shrink-0 w-14 h-14">
-                        <i class="fas fa-film text-2xl text-white"></i>
+            </article>
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="flex items-center gap-3">
+                    <div class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                        <i class="fas fa-film text-sm"></i>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ floor($stats['total_duration'] / 60) }}</p>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">ساعة محتوى</p>
+                        <p class="text-2xl font-semibold tabular-nums text-ink">{{ floor($stats['total_duration'] / 60) }}</p>
+                        <p class="text-xs text-muted">ساعة محتوى</p>
                     </div>
                 </div>
-            </div>
+            </article>
         </div>
     </div>
 
-    <div class="section-card overflow-hidden" x-data="{ activeTab: 'lessons' }">
-        <div class="section-card-header border-b border-slate-200 dark:border-slate-600">
-            <nav class="flex flex-wrap gap-1 sm:gap-0 sm:space-x-8 sm:space-x-reverse px-4 sm:px-6 -mb-px">
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft" x-data="{ activeTab: 'lessons' }">
+        <div class="border-b border-line px-4 sm:px-5">
+            <nav class="flex flex-wrap gap-1">
                 <button type="button" @click="activeTab = 'lessons'"
-                        :class="activeTab === 'lessons' ? 'border-sky-500 text-sky-600 dark:text-sky-400 bg-white dark:bg-slate-700/50 shadow-sm' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'"
-                        class="whitespace-nowrap py-4 px-3 sm:px-1 border-b-2 font-medium text-sm transition-colors rounded-t-lg">
-                    <i class="fas fa-play-circle ml-2"></i>
+                        :class="activeTab === 'lessons' ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-ink'"
+                        class="whitespace-nowrap border-b-2 px-3 py-3.5 text-sm font-medium transition-colors">
+                    <i class="fas fa-play-circle ml-1.5 text-xs"></i>
                     الدروس ({{ $stats['total_lessons'] }})
                 </button>
                 <button type="button" @click="activeTab = 'students'"
-                        :class="activeTab === 'students' ? 'border-sky-500 text-sky-600 dark:text-sky-400 bg-white dark:bg-slate-700/50 shadow-sm' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500'"
-                        class="whitespace-nowrap py-4 px-3 sm:px-1 border-b-2 font-medium text-sm transition-colors rounded-t-lg">
-                    <i class="fas fa-users ml-2"></i>
+                        :class="activeTab === 'students' ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-ink'"
+                        class="whitespace-nowrap border-b-2 px-3 py-3.5 text-sm font-medium transition-colors">
+                    <i class="fas fa-users ml-1.5 text-xs"></i>
                     الطلاب ({{ $stats['total_students'] }})
                 </button>
                 <button type="button" @click="activeTab = 'orders'"
-                        :class="activeTab === 'orders' ? 'border-sky-500 text-sky-600 dark:text-sky-400 bg-white dark:bg-slate-700/50 shadow-sm' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500'"
-                        class="whitespace-nowrap py-4 px-3 sm:px-1 border-b-2 font-medium text-sm transition-colors rounded-t-lg">
-                    <i class="fas fa-shopping-cart ml-2"></i>
+                        :class="activeTab === 'orders' ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-ink'"
+                        class="whitespace-nowrap border-b-2 px-3 py-3.5 text-sm font-medium transition-colors">
+                    <i class="fas fa-shopping-cart ml-1.5 text-xs"></i>
                     الطلبات ({{ $advancedCourse->orders->count() }})
                 </button>
                 <button type="button" @click="activeTab = 'actions'"
-                        :class="activeTab === 'actions' ? 'border-sky-500 text-sky-600 dark:text-sky-400 bg-white dark:bg-slate-700/50 shadow-sm' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500'"
-                        class="whitespace-nowrap py-4 px-3 sm:px-1 border-b-2 font-medium text-sm transition-colors rounded-t-lg">
-                    <i class="fas fa-cogs ml-2"></i>
+                        :class="activeTab === 'actions' ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-ink'"
+                        class="whitespace-nowrap border-b-2 px-3 py-3.5 text-sm font-medium transition-colors">
+                    <i class="fas fa-cogs ml-1.5 text-xs"></i>
                     الإجراءات
                 </button>
             </nav>
         </div>
 
-        <div class="p-6 sm:p-8">
+        <div class="p-5">
             <!-- تبويب الدروس -->
             <div x-show="activeTab === 'lessons'">
-                <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
-                    <h4 class="text-lg font-bold text-gray-900">دروس الكورس</h4>
-                    <a href="{{ route('admin.courses.lessons.create', $advancedCourse) }}" 
-                       class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors">
-                        <i class="fas fa-plus"></i>
+                <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <h4 class="text-sm font-semibold text-ink">دروس البرنامج</h4>
+                    <a href="{{ route('admin.courses.lessons.create', $advancedCourse) }}"
+                       class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                        <i class="fas fa-plus text-xs"></i>
                         إضافة درس
                     </a>
                 </div>
 
                 @if($advancedCourse->lessons->count() > 0)
-                    <div class="space-y-3">
+                    <div class="space-y-2">
                         @foreach($advancedCourse->lessons as $lesson)
                             @php
-                                $lessonIconBg = $lesson->type == 'video' ? 'bg-blue-100' : ($lesson->type == 'document' ? 'bg-green-100' : ($lesson->type == 'quiz' ? 'bg-yellow-100' : 'bg-purple-100'));
-                                $lessonIconFa = $lesson->type == 'video' ? 'fa-play text-blue-600' : ($lesson->type == 'document' ? 'fa-file-alt text-green-600' : ($lesson->type == 'quiz' ? 'fa-question-circle text-yellow-600' : 'fa-tasks text-purple-600'));
+                                $lessonIcon = match($lesson->type) {
+                                    'video' => 'fa-play',
+                                    'document' => 'fa-file-alt',
+                                    'quiz' => 'fa-question-circle',
+                                    default => 'fa-tasks',
+                                };
+                                $lessonTypeLabel = match($lesson->type) {
+                                    'video' => 'فيديو',
+                                    'document' => 'مستند',
+                                    'quiz' => 'كويز',
+                                    default => 'واجب',
+                                };
                             @endphp
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-50/80 transition-colors">
-                                <div class="flex items-center gap-4 min-w-0">
-                                    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 {{ $lessonIconBg }}">
-                                        <i class="fas {{ $lessonIconFa }}"></i>
+                            <div class="flex items-center justify-between gap-3 rounded-xl border border-line px-4 py-3 transition hover:bg-[#f8faf9]">
+                                <div class="flex min-w-0 items-center gap-3">
+                                    <div class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                                        <i class="fas {{ $lessonIcon }} text-sm"></i>
                                     </div>
                                     <div class="min-w-0 flex-1">
-                                        <p class="font-medium text-gray-900 truncate">{{ $lesson->title }}</p>
-                                        <p class="text-sm text-gray-500">
-                                            {{ $lesson->duration_minutes ?? 0 }} دقيقة ·
-                                            @if($lesson->type == 'video') فيديو
-                                            @elseif($lesson->type == 'document') مستند
-                                            @elseif($lesson->type == 'quiz') كويز
-                                            @else واجب
-                                            @endif
+                                        <p class="truncate text-sm font-medium text-ink">{{ $lesson->title }}</p>
+                                        <p class="text-xs text-muted">
+                                            {{ $lesson->duration_minutes ?? 0 }} دقيقة · {{ $lessonTypeLabel }}
                                         </p>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-3 flex-shrink-0">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $lesson->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                <div class="flex shrink-0 items-center gap-1.5">
+                                    <span class="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium {{ $lesson->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }}">
                                         {{ $lesson->is_active ? 'نشط' : 'غير نشط' }}
                                     </span>
-                                    <a href="{{ route('admin.courses.lessons.show', [$advancedCourse, $lesson]) }}" class="p-2 text-gray-400 hover:text-indigo-600 rounded-lg transition-colors" title="عرض"><i class="fas fa-eye"></i></a>
-                                    <button type="button" onclick="toggleLessonStatus({{ $lesson->id }})" class="p-2 text-gray-400 hover:text-amber-600 rounded-lg transition-colors" title="{{ $lesson->is_active ? 'إيقاف' : 'تفعيل' }}"><i class="fas fa-power-off"></i></button>
-                                    <a href="{{ route('admin.courses.lessons.edit', [$advancedCourse, $lesson]) }}" class="p-2 text-gray-400 hover:text-indigo-600 rounded-lg transition-colors" title="تعديل"><i class="fas fa-edit"></i></a>
+                                    <a href="{{ route('admin.courses.lessons.show', [$advancedCourse, $lesson]) }}"
+                                       class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent transition hover:bg-accent-soft"
+                                       title="عرض"><i class="fas fa-eye text-xs"></i></a>
+                                    <button type="button" onclick="toggleLessonStatus({{ $lesson->id }})"
+                                            class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-amber-700 transition hover:bg-amber-50"
+                                            title="{{ $lesson->is_active ? 'إيقاف' : 'تفعيل' }}"><i class="fas fa-power-off text-xs"></i></button>
+                                    <a href="{{ route('admin.courses.lessons.edit', [$advancedCourse, $lesson]) }}"
+                                       class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent transition hover:bg-accent-soft"
+                                       title="تعديل"><i class="fas fa-edit text-xs"></i></a>
                                 </div>
                             </div>
                         @endforeach
                     </div>
                 @else
-                    <div class="text-center py-12 px-4">
-                        <div class="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-play-circle text-4xl text-gray-400"></i>
+                    <div class="rounded-xl border border-dashed border-line px-6 py-12 text-center">
+                        <div class="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-[#f2f5f4] text-accent">
+                            <i class="fas fa-play-circle text-xl"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">لا توجد دروس</h3>
-                        <p class="text-gray-500 mb-6">ابدأ بإضافة الدروس لهذا الكورس</p>
-                        <a href="{{ route('admin.courses.lessons.create', $advancedCourse) }}" 
-                           class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors">
-                            <i class="fas fa-plus"></i>
+                        <h3 class="mt-4 text-base font-semibold text-ink">لا توجد دروس</h3>
+                        <p class="mt-1 text-sm text-muted">ابدأ بإضافة الدروس لهذا البرنامج</p>
+                        <a href="{{ route('admin.courses.lessons.create', $advancedCourse) }}"
+                           class="btn-press mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                            <i class="fas fa-plus text-xs"></i>
                             إضافة أول درس
                         </a>
                     </div>
@@ -237,65 +247,68 @@
 
             <!-- تبويب الطلاب -->
             <div x-show="activeTab === 'students'" style="display: none;">
-                <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
-                    <h4 class="text-lg font-bold text-gray-900">الطلاب المسجلين</h4>
-                    <a href="{{ route('admin.advanced-courses.students', $advancedCourse) }}" 
-                       class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors">
-                        <i class="fas fa-user-plus"></i>
-                        إضافة معلم
+                <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <h4 class="text-sm font-semibold text-ink">الطلاب المسجّلون</h4>
+                    <a href="{{ route('admin.advanced-courses.students', $advancedCourse) }}"
+                       class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                        <i class="fas fa-user-plus text-xs"></i>
+                        إضافة طالب
                     </a>
                 </div>
 
                 @if($advancedCourse->enrollments->count() > 0)
-                    <div class="overflow-x-auto rounded-xl border border-gray-200">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                    <div class="overflow-x-auto rounded-xl border border-line">
+                        <table class="min-w-full divide-y divide-line">
+                            <thead class="bg-[#f8faf9]">
                                 <tr>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المعلم</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التقدم</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تاريخ التسجيل</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-muted">الطالب</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-muted">الحالة</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-muted">التقدم</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-muted">تاريخ التسجيل</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-muted">الإجراءات</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="divide-y divide-line bg-surface">
                                 @foreach($advancedCourse->enrollments as $enrollment)
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="flex items-center">
-                                                <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                                                    <span class="text-indigo-600 font-semibold">
-                                                        {{ substr($enrollment->student->name, 0, 1) }}
-                                                    </span>
+                                    @php
+                                        $enrClass = match($enrollment->status) {
+                                            'active' => 'bg-emerald-50 text-emerald-700',
+                                            'pending' => 'bg-amber-50 text-amber-800',
+                                            'completed' => 'bg-accent-soft text-accent',
+                                            default => 'bg-rose-50 text-rose-700',
+                                        };
+                                    @endphp
+                                    <tr class="transition hover:bg-[#f8faf9]">
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <div class="flex items-center gap-3">
+                                                <div class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-sm font-semibold text-accent">
+                                                    {{ substr($enrollment->student->name, 0, 1) }}
                                                 </div>
-                                                <div class="mr-4">
-                                                    <div class="text-sm font-medium text-gray-900">{{ $enrollment->student->name }}</div>
-                                                    <div class="text-sm text-gray-500">{{ $enrollment->student->email }}</div>
+                                                <div class="min-w-0">
+                                                    <div class="text-sm font-medium text-ink">{{ $enrollment->student->name }}</div>
+                                                    <div class="truncate text-xs text-muted" dir="ltr">{{ $enrollment->student->email }}</div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            @php
-                                                $enrClass = $enrollment->status == 'active' ? 'bg-green-100 text-green-800' : ($enrollment->status == 'pending' ? 'bg-yellow-100 text-yellow-800' : ($enrollment->status == 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'));
-                                            @endphp
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $enrClass }}">
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <span class="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium {{ $enrClass }}">
                                                 {{ $enrollment->status_text }}
                                             </span>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="flex items-center">
-                                                <div class="w-full bg-gray-200 rounded-full h-2 mr-2">
-                                                    <div class="bg-indigo-600 h-2 rounded-full transition-all" style="width: {{ $enrollment->progress }}%"></div>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <div class="flex items-center gap-2">
+                                                <div class="h-2 w-24 rounded-full bg-[#e8eeec]">
+                                                    <div class="h-2 rounded-full bg-accent transition-all" style="width: {{ $enrollment->progress }}%"></div>
                                                 </div>
-                                                <span class="text-sm text-gray-900">{{ $enrollment->progress }}%</span>
+                                                <span class="text-xs tabular-nums text-ink">{{ $enrollment->progress }}%</span>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm tabular-nums text-muted">
                                             {{ $enrollment->enrolled_at ? $enrollment->enrolled_at->format('Y-m-d') : 'غير محدد' }}
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <a href="{{ route('admin.online-enrollments.show', $enrollment) }}" 
-                                               class="text-indigo-600 hover:text-indigo-800 font-semibold">عرض</a>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                            <a href="{{ route('admin.online-enrollments.show', $enrollment) }}"
+                                               class="font-medium text-accent hover:underline">عرض</a>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -303,14 +316,15 @@
                         </table>
                     </div>
                 @else
-                    <div class="text-center py-12 px-4">
-                        <div class="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-users text-4xl text-gray-400"></i>
+                    <div class="rounded-xl border border-dashed border-line px-6 py-12 text-center">
+                        <div class="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-[#f2f5f4] text-accent">
+                            <i class="fas fa-users text-xl"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">لا يوجد طلاب</h3>
-                        <p class="text-gray-500 mb-4">لم يتم تسجيل أي معلم في هذا الكورس بعد</p>
-                        <a href="{{ route('admin.advanced-courses.students', $advancedCourse) }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors">
-                            <i class="fas fa-user-plus"></i> إضافة معلم
+                        <h3 class="mt-4 text-base font-semibold text-ink">لا يوجد طلاب</h3>
+                        <p class="mt-1 text-sm text-muted">لم يتم تسجيل أي طالب في هذا البرنامج بعد</p>
+                        <a href="{{ route('admin.advanced-courses.students', $advancedCourse) }}"
+                           class="btn-press mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                            <i class="fas fa-user-plus text-xs"></i> إضافة طالب
                         </a>
                     </div>
                 @endif
@@ -318,135 +332,133 @@
 
             <!-- تبويب الطلبات -->
             <div x-show="activeTab === 'orders'" style="display: none;">
-                <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
-                    <h4 class="text-lg font-bold text-gray-900">طلبات التسجيل</h4>
-                    <a href="{{ route('admin.orders.index') }}?course_id={{ $advancedCourse->id }}" 
-                       class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors">
-                        <i class="fas fa-external-link-alt"></i>
+                <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <h4 class="text-sm font-semibold text-ink">طلبات التسجيل</h4>
+                    <a href="{{ route('admin.orders.index') }}?course_id={{ $advancedCourse->id }}"
+                       class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                        <i class="fas fa-external-link-alt text-xs"></i>
                         عرض جميع الطلبات
                     </a>
                 </div>
 
                 @if($advancedCourse->orders->count() > 0)
-                    <div class="space-y-3">
+                    <div class="space-y-2">
                         @foreach($advancedCourse->orders->take(10) as $order)
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                <div class="flex items-center gap-4 min-w-0">
-                                    <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <span class="text-indigo-600 font-semibold">
-                                            {{ substr($order->user->name, 0, 1) }}
-                                        </span>
+                            @php
+                                $orderClass = match($order->status) {
+                                    'pending' => 'bg-amber-50 text-amber-800',
+                                    'approved' => 'bg-emerald-50 text-emerald-700',
+                                    default => 'bg-rose-50 text-rose-700',
+                                };
+                            @endphp
+                            <div class="flex items-center justify-between gap-3 rounded-xl border border-line px-4 py-3">
+                                <div class="flex min-w-0 items-center gap-3">
+                                    <div class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-sm font-semibold text-accent">
+                                        {{ substr($order->user->name, 0, 1) }}
                                     </div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-900">{{ $order->user->name }}</p>
-                                        <p class="text-sm text-gray-500">{{ $order->created_at->diffForHumans() }}</p>
+                                    <div class="min-w-0">
+                                        <p class="truncate text-sm font-medium text-ink">{{ $order->user->name }}</p>
+                                        <p class="text-xs text-muted">{{ $order->created_at->diffForHumans() }}</p>
                                     </div>
                                 </div>
-                                <div class="flex items-center space-x-2 space-x-reverse">
-                                    @php $orderClass = $order->status == 'pending' ? 'bg-yellow-100 text-yellow-800' : ($order->status == 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'); @endphp
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $orderClass }}">
+                                <div class="flex shrink-0 items-center gap-2">
+                                    <span class="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium {{ $orderClass }}">
                                         {{ $order->status_text }}
                                     </span>
-                                    <a href="{{ route('admin.orders.show', $order) }}" 
-                                       class="text-indigo-600 hover:text-indigo-800 font-semibold">
-                                        <i class="fas fa-eye ml-1"></i> عرض
+                                    <a href="{{ route('admin.orders.show', $order) }}"
+                                       class="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">
+                                        <i class="fas fa-eye text-xs"></i> عرض
                                     </a>
                                 </div>
                             </div>
                         @endforeach
                     </div>
                 @else
-                    <div class="text-center py-12 px-4">
-                        <div class="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-shopping-cart text-4xl text-gray-400"></i>
+                    <div class="rounded-xl border border-dashed border-line px-6 py-12 text-center">
+                        <div class="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-[#f2f5f4] text-accent">
+                            <i class="fas fa-shopping-cart text-xl"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">لا توجد طلبات</h3>
-                        <p class="text-gray-500">لا توجد طلبات تسجيل لهذا الكورس</p>
+                        <h3 class="mt-4 text-base font-semibold text-ink">لا توجد طلبات</h3>
+                        <p class="mt-1 text-sm text-muted">لا توجد طلبات تسجيل لهذا البرنامج</p>
                     </div>
                 @endif
             </div>
 
             <!-- تبويب الإجراءات -->
             <div x-show="activeTab === 'actions'" style="display: none;">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    <!-- تفعيل/إيقاف الكورس -->
-                    <div class="p-5 border border-gray-200 rounded-2xl bg-white shadow-sm">
-                        <h5 class="font-bold text-gray-900 mb-2">حالة الكورس</h5>
-                        <p class="text-sm text-gray-500 mb-4">تفعيل أو إيقاف الكورس للطلاب</p>
-                        <button type="button" onclick="toggleCourseStatus({{ $advancedCourse->id }})" 
-                                class="w-full {{ $advancedCourse->is_active ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700' }} text-white px-4 py-3 rounded-xl font-semibold transition-colors">
-                            {{ $advancedCourse->is_active ? 'إيقاف الكورس' : 'تفعيل الكورس' }}
+                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                        <h5 class="text-sm font-semibold text-ink">حالة البرنامج</h5>
+                        <p class="mt-1 text-xs text-muted">تفعيل أو إيقاف البرنامج للطلاب</p>
+                        <button type="button" onclick="toggleCourseStatus({{ $advancedCourse->id }})"
+                                class="btn-press mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-medium text-white {{ $advancedCourse->is_active ? 'bg-rose-600 hover:bg-rose-700' : 'bg-accent hover:bg-[#0d4f4a]' }}">
+                            {{ $advancedCourse->is_active ? 'إيقاف البرنامج' : 'تفعيل البرنامج' }}
                         </button>
                     </div>
 
-                    <!-- ترشيح الكورس -->
-                    <div class="p-5 border border-gray-200 rounded-2xl bg-white shadow-sm">
-                        <h5 class="font-bold text-gray-900 mb-2">ترشيح الكورس</h5>
-                        <p class="text-sm text-gray-500 mb-4">عرض الكورس في القائمة المرشحة</p>
-                        <button type="button" onclick="toggleCourseFeatured({{ $advancedCourse->id }})" 
-                                class="w-full {{ $advancedCourse->is_featured ? 'bg-amber-600 hover:bg-amber-700' : 'bg-blue-600 hover:bg-blue-700' }} text-white px-4 py-3 rounded-xl font-semibold transition-colors">
-                            {{ $advancedCourse->is_featured ? 'إلغاء الترشيح' : 'ترشيح الكورس' }}
+                    <div class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                        <h5 class="text-sm font-semibold text-ink">ترشيح البرنامج</h5>
+                        <p class="mt-1 text-xs text-muted">عرض البرنامج في القائمة المرشّحة</p>
+                        <button type="button" onclick="toggleCourseFeatured({{ $advancedCourse->id }})"
+                                class="btn-press mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-medium {{ $advancedCourse->is_featured ? 'border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100' : 'bg-accent text-white hover:bg-[#0d4f4a]' }}">
+                            {{ $advancedCourse->is_featured ? 'إلغاء الترشيح' : 'ترشيح البرنامج' }}
                         </button>
                     </div>
 
-                    <!-- نسخ الكورس -->
-                    <div class="p-5 border border-gray-200 rounded-2xl bg-white shadow-sm">
-                        <h5 class="font-bold text-gray-900 mb-2">نسخ الكورس</h5>
-                        <p class="text-sm text-gray-500 mb-4">إنشاء نسخة من الكورس والدروس</p>
-                        <form action="{{ route('admin.advanced-courses.duplicate', $advancedCourse) }}" method="POST">
+                    <div class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                        <h5 class="text-sm font-semibold text-ink">نسخ البرنامج</h5>
+                        <p class="mt-1 text-xs text-muted">إنشاء نسخة من البرنامج والدروس</p>
+                        <form action="{{ route('admin.advanced-courses.duplicate', $advancedCourse) }}" method="POST" class="mt-4">
                             @csrf
-                            <button type="submit" 
-                                    onclick="return confirm('هل تريد إنشاء نسخة من هذا الكورس؟')"
-                                    class="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-xl font-semibold transition-colors">
-                                نسخ الكورس
+                            <button type="submit"
+                                    onclick="return confirm('هل تريد إنشاء نسخة من هذا البرنامج؟')"
+                                    class="btn-press inline-flex h-11 w-full items-center justify-center rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                                نسخ البرنامج
                             </button>
                         </form>
                     </div>
 
-                    <!-- إحصائيات متقدمة -->
-                    <div class="p-5 border border-gray-200 rounded-2xl bg-white shadow-sm">
-                        <h5 class="font-bold text-gray-900 mb-2">الإحصائيات</h5>
-                        <p class="text-sm text-gray-500 mb-4">عرض إحصائيات مفصلة للكورس</p>
-                        <a href="{{ route('admin.advanced-courses.statistics', $advancedCourse) }}" 
-                           class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl font-semibold transition-colors block text-center">
+                    <div class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                        <h5 class="text-sm font-semibold text-ink">الإحصائيات</h5>
+                        <p class="mt-1 text-xs text-muted">عرض إحصائيات مفصّلة للبرنامج</p>
+                        <a href="{{ route('admin.advanced-courses.statistics', $advancedCourse) }}"
+                           class="btn-press mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
                             عرض الإحصائيات
                         </a>
                     </div>
 
-                    <!-- إدارة الدروس -->
-                    <div class="p-5 border border-gray-200 rounded-2xl bg-white shadow-sm">
-                        <h5 class="font-bold text-gray-900 mb-2">إدارة الدروس</h5>
-                        <p class="text-sm text-gray-500 mb-4">إضافة وتعديل دروس الكورس</p>
-                        <a href="{{ route('admin.courses.lessons.index', $advancedCourse) }}" 
-                           class="w-full bg-teal-600 hover:bg-teal-700 text-white px-4 py-3 rounded-xl font-semibold transition-colors block text-center">
+                    <div class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                        <h5 class="text-sm font-semibold text-ink">إدارة الدروس</h5>
+                        <p class="mt-1 text-xs text-muted">إضافة وتعديل دروس البرنامج</p>
+                        <a href="{{ route('admin.courses.lessons.index', $advancedCourse) }}"
+                           class="btn-press mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
                             إدارة الدروس
                         </a>
                     </div>
 
-                    <!-- حذف الكورس -->
-                    <div class="p-5 border border-red-200 rounded-2xl bg-red-50 shadow-sm">
-                        <h5 class="font-bold text-red-900 mb-2">حذف الكورس</h5>
-                        <p class="text-sm text-red-700 mb-4">حذف الكورس نهائياً (لا يمكن التراجع)</p>
-                        <form action="{{ route('admin.advanced-courses.destroy', $advancedCourse) }}" method="POST">
+                    <div class="rounded-2xl border border-rose-200 bg-rose-50 p-5 shadow-soft">
+                        <h5 class="text-sm font-semibold text-rose-900">حذف البرنامج</h5>
+                        <p class="mt-1 text-xs text-rose-700">حذف البرنامج نهائياً (لا يمكن التراجع)</p>
+                        <form action="{{ route('admin.advanced-courses.destroy', $advancedCourse) }}" method="POST" class="mt-4">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" 
-                                    onclick="return confirm('هل أنت متأكد من حذف هذا الكورس؟ هذا الإجراء لا يمكن التراجع عنه!')"
-                                    class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl font-semibold transition-colors">
-                                حذف الكورس
+                            <button type="submit"
+                                    onclick="return confirm('هل أنت متأكد من حذف هذا البرنامج؟ هذا الإجراء لا يمكن التراجع عنه!')"
+                                    class="btn-press inline-flex h-11 w-full items-center justify-center rounded-xl bg-rose-600 px-4 text-sm font-medium text-white hover:bg-rose-700">
+                                حذف البرنامج
                             </button>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </article>
 </div>
 
 @push('scripts')
 <script>
 function toggleCourseStatus(courseId) {
-    if (confirm('هل تريد تغيير حالة هذا الكورس؟')) {
+    if (confirm('هل تريد تغيير حالة هذا البرنامج؟')) {
         fetch(`/admin/advanced-courses/${courseId}/toggle-status`, {
             method: 'POST',
             headers: {
@@ -459,18 +471,18 @@ function toggleCourseStatus(courseId) {
             if (data.success) {
                 location.reload();
             } else {
-                alert('حدث خطأ في تغيير حالة الكورس');
+                alert('حدث خطأ في تغيير حالة البرنامج');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('حدث خطأ في تغيير حالة الكورس');
+            alert('حدث خطأ في تغيير حالة البرنامج');
         });
     }
 }
 
 function toggleCourseFeatured(courseId) {
-    if (confirm('هل تريد تغيير حالة ترشيح هذا الكورس؟')) {
+    if (confirm('هل تريد تغيير حالة ترشيح هذا البرنامج؟')) {
         fetch(`/admin/advanced-courses/${courseId}/toggle-featured`, {
             method: 'POST',
             headers: {

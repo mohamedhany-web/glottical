@@ -17,6 +17,7 @@ return [
         [
             'title' => 'روابط علوية',
             'items' => [
+                ['label' => 'تحليلات وتوجهات الأكاديمية', 'permissions' => ['view.dashboard', 'admin.access', 'view.reports'], 'note' => 'قسم قرار لحظي في أعلى السايدبار'],
                 ['label' => 'لوحة التحكم', 'permissions' => ['view.dashboard', 'admin.access']],
                 ['label' => 'الملف الشخصي', 'permissions' => ['view.dashboard', 'admin.access']],
                 ['label' => 'وارد الإشعارات', 'permissions' => ['manage.notifications'], 'note' => 'للموظف RBAC: يظهر إن وُجدت الصلاحية'],
@@ -129,7 +130,6 @@ return [
                 ['label' => 'عمولات كوبونات التسويق', 'permissions' => ['manage.coupons']],
                 ['label' => 'برامج الإحالة', 'permissions' => ['manage.referrals']],
                 ['label' => 'الإحالات', 'permissions' => ['manage.referrals']],
-                ['label' => 'برامج الولاء', 'permissions' => ['manage.loyalty']],
             ],
         ],
         [

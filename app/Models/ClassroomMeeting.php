@@ -14,6 +14,7 @@ class ClassroomMeeting extends Model
         'user_id',
         'consultation_request_id',
         'one_to_one_session_id',
+        'tutoring_group_booking_id',
         'code',
         'room_name',
         'title',
@@ -64,6 +65,11 @@ class ClassroomMeeting extends Model
     public function oneToOneSession(): BelongsTo
     {
         return $this->belongsTo(OneToOneSession::class, 'one_to_one_session_id');
+    }
+
+    public function tutoringGroupBooking(): BelongsTo
+    {
+        return $this->belongsTo(TutoringGroupBooking::class, 'tutoring_group_booking_id');
     }
 
     public function participants()

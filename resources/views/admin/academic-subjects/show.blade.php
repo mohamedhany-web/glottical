@@ -1,206 +1,158 @@
 ﻿@extends('layouts.admin')
 
-@section('title', 'عرض المجموعة المهارية')
-@section('header', 'عرض المجموعة المهارية')
+@section('title', $academicSubject->name.' - مادة')
+@section('page_title', $academicSubject->name)
 
 @section('content')
-<div class="space-y-6">
-    <!-- معلومات المادة -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200">
-        <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-lg flex items-center justify-center text-white" 
-                         style="background-color: {{ $academicSubject->color ?? '#3B82F6' }}">
-                        <i class="{{ $academicSubject->icon ?? 'fas fa-book' }} text-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900">{{ $academicSubject->name }}</h3>
-                        <p class="text-sm text-gray-600">{{ $academicSubject->academicYear->name ?? 'غير محدد' }}</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                        {{ $academicSubject->is_active 
-                            ? 'bg-green-100 text-green-800 ']
-                            ': ''bg-red-100 text-red-800 }}">']
-                        {{ $academicSubject->is_active ? 'نشط' : 'غير نشط' }}
-                    </span>
-                    <a href="{{ route('admin.academic-subjects.edit', $academicSubject) }}" 
-                       class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                        <i class="fas fa-edit mr-2"></i>
-                        تعديل
-                    </a>
-                    <a href="{{ route('admin.academic-subjects.index') }}" 
-                       class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200">
-                        <i class="fas fa-arrow-right mr-2"></i>
-                        العودة للقائمة
-                    </a>
-                </div>
-            </div>
-        </div>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+@endphp
 
-        <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- معلومات أساسية -->
-                <div class="space-y-4">
-                    <h4 class="text-lg font-semibold text-gray-900">المعلومات الأساسية</h4>
-                    
-                    <div class="bg-gray-50 rounded-lg p-4 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm font-medium text-gray-600">اسم المجموعة:</span>
-                            <span class="text-sm text-gray-900">{{ $academicSubject->name }}</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm font-medium text-gray-600">رمز المجموعة:</span>
-                            <span class="text-sm text-gray-900 font-mono">{{ $academicSubject->code }}</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm font-medium text-gray-600">المسار التعليمي:</span>
-                            <span class="text-sm text-gray-900">{{ $academicSubject->academicYear->name ?? 'غير محدد' }}</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm font-medium text-gray-600">ترتيب العرض:</span>
-                            <span class="text-sm text-gray-900">{{ $academicSubject->order ?? '-' }}</span>
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm font-medium text-gray-600">الحالة:</span>
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                                {{ $academicSubject->is_active 
-                                    ? 'bg-green-100 text-green-800 ']
-                                    ': ''bg-red-100 text-red-800 }}">']
-                                {{ $academicSubject->is_active ? 'نشط' : 'غير نشط' }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">
+                <a href="{{ route('admin.academic-subjects.index', ['track' => $academicSubject->academic_year_id]) }}" class="hover:text-accent">المواد</a>
+                · {{ $academicSubject->academicYear?->name ?? 'السنة' }}
+            </p>
+            <h2 class="mt-1 flex flex-wrap items-center gap-2 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">
+                <span class="inline-flex size-9 items-center justify-center rounded-xl text-sm text-white" style="background: {{ $academicSubject->color ?: '#0B3D91' }}">
+                    <i class="{{ $academicSubject->icon ?: 'fas fa-book' }}"></i>
+                </span>
+                {{ $academicSubject->name }}
+            </h2>
+            <p class="mt-1 font-mono text-sm text-muted">{{ $academicSubject->code }}
+                ·
+                <span class="{{ $academicSubject->is_active ? 'text-success' : 'text-danger' }}">
+                    {{ $academicSubject->is_active ? 'نشطة' : 'موقوفة' }}
+                </span>
+            </p>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.academic-subjects.edit', $academicSubject) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-pen text-xs"></i>
+                تعديل المادة
+            </a>
+            <a href="{{ route('admin.academic-subjects.index', ['track' => $academicSubject->academic_year_id]) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                رجوع للقائمة
+            </a>
+        </div>
+    </section>
 
-                <!-- الوصف والتصميم -->
-                <div class="space-y-4">
-                    <h4 class="text-lg font-semibold text-gray-900">التصميم والوصف</h4>
-                    
-                    <div class="bg-gray-50 rounded-lg p-4 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm font-medium text-gray-600">اللون:</span>
-                            <div class="flex items-center gap-2">
-                                <div class="w-6 h-6 rounded-full border border-gray-300" 
-                                     style="background-color: {{ $academicSubject->color ?? '#3B82F6' }}"></div>
-                                <span class="text-sm text-gray-900 font-mono">{{ $academicSubject->color ?? '#3B82F6' }}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm font-medium text-gray-600">الأيقونة:</span>
-                            <div class="flex items-center gap-2">
-                                <i class="{{ $academicSubject->icon ?? 'fas fa-book' }} text-lg" 
-                                   style="color: {{ $academicSubject->color ?? '#3B82F6' }}"></i>
-                                <span class="text-sm text-gray-900 font-mono">{{ $academicSubject->icon ?? 'fas fa-book' }}</span>
-                            </div>
-                        </div>
-                        
-                        @if($academicSubject->description)
-                        <div>
-                            <span class="text-sm font-medium text-gray-600">الوصف:</span>
-                            <p class="text-sm text-gray-900 mt-2 leading-relaxed">{{ $academicSubject->description }}</p>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
+    @if(session('success'))
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
         </div>
-    </div>
-
-    <!-- إحصائيات المادة -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- الكورسات -->
-        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">الكورسات</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ $academicSubject->advancedCourses->count() }}</p>
-                </div>
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-graduation-cap text-blue-600 text-xl"></i>
-                </div>
-            </div>
-            <div class="mt-4">
-                <span class="text-sm text-blue-600">كورسات متاحة</span>
-            </div>
-        </div>
-
-        <!-- الكورسات النشطة -->
-        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">كورسات نشطة</p>
-                    <p class="text-3xl font-bold text-gray-900">{{ $academicSubject->advancedCourses->where('is_active', true)->count() }}</p>
-                </div>
-                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
-                </div>
-            </div>
-            <div class="mt-4">
-                <span class="text-sm text-green-600">جاهزة للتسجيل</span>
-            </div>
-        </div>
-
-        <!-- تاريخ الإنشاء -->
-        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">تاريخ الإنشاء</p>
-                    <p class="text-lg font-bold text-gray-900">{{ $academicSubject->created_at->format('d/m/Y') }}</p>
-                </div>
-                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-calendar text-purple-600 text-xl"></i>
-                </div>
-            </div>
-            <div class="mt-4">
-                <span class="text-sm text-purple-600">{{ $academicSubject->created_at->diffForHumans() }}</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- الكورسات المرتبطة -->
-    @if($academicSubject->advancedCourses->count() > 0)
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200">
-        <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">الكورسات المرتبطة</h3>
-        </div>
-        <div class="p-6">
-            <div class="space-y-4">
-                @foreach($academicSubject->advancedCourses as $course)
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-graduation-cap text-blue-600"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-900">{{ $course->title }}</h4>
-                            <p class="text-xs text-gray-500">{{ $course->description }}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                            {{ $course->is_active 
-                                ? 'bg-green-100 text-green-800 ']
-                                ': ''bg-red-100 text-red-800 }}">']
-                            {{ $course->is_active ? 'نشط' : 'غير نشط' }}
-                        </span>
-                        <a href="{{ route('admin.advanced-courses.show', $course) }}" 
-                           class="text-blue-600 hover:text-blue-800">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                    </div>
-                </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
     @endif
+    @if(session('error'))
+        <div class="flex items-center gap-3 rounded-2xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm font-medium text-danger shadow-soft" role="alert">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-danger/10 text-danger"><i class="fas fa-exclamation text-sm"></i></span>
+            <p>{{ session('error') }}</p>
+        </div>
+    @endif
+
+    <section class="grid gap-3 sm:grid-cols-3">
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <p class="text-xs text-muted">كورسات مربوطة</p>
+            <p class="mt-1 text-xl font-semibold tabular-nums text-ink">{{ $academicSubject->advancedCourses->count() }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <p class="text-xs text-muted">السنة</p>
+            <p class="mt-1 text-sm font-semibold text-ink">{{ $academicSubject->academicYear?->name ?? '—' }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <p class="text-xs text-muted">الترتيب</p>
+            <p class="mt-1 text-xl font-semibold tabular-nums text-ink">{{ $academicSubject->order }}</p>
+        </article>
+    </section>
+
+    <div class="grid grid-cols-1 gap-5 xl:grid-cols-3">
+        <article class="xl:col-span-2 overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">الكورسات داخل المادة</h3>
+                <p class="mt-0.5 text-xs text-muted">كل كورس مرتبط بهذه المادة يظهر للطالب ضمن مسارها</p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="border-b border-line bg-canvas text-xs text-muted">
+                        <tr>
+                            <th class="px-4 py-3 text-start font-medium">الكورس</th>
+                            <th class="px-4 py-3 text-start font-medium">المدرّب</th>
+                            <th class="px-4 py-3 text-start font-medium">الحالة</th>
+                            <th class="px-4 py-3 text-start font-medium">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-line">
+                        @forelse($academicSubject->advancedCourses as $course)
+                            <tr class="hover:bg-canvas/70">
+                                <td class="px-4 py-3.5 font-medium text-ink">{{ $course->title }}</td>
+                                <td class="px-4 py-3.5 text-ink-soft">{{ $course->instructor?->name ?? '—' }}</td>
+                                <td class="px-4 py-3.5">
+                                    <span class="rounded-full px-2.5 py-0.5 text-[11px] font-medium {{ $course->is_active ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger' }}">
+                                        {{ $course->is_active ? 'نشط' : 'موقوف' }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3.5">
+                                    <div class="flex flex-wrap gap-2">
+                                        @if(Route::has('admin.advanced-courses.edit'))
+                                            <a href="{{ route('admin.advanced-courses.edit', $course) }}" class="btn-press inline-flex h-8 items-center rounded-lg border border-line px-3 text-[11px] font-medium text-ink hover:bg-canvas">تعديل</a>
+                                        @endif
+                                        <form method="POST" action="{{ route('admin.academic-subjects.detach-course', [$academicSubject, $course]) }}" onsubmit="return confirm('فك ربط هذا الكورس من المادة؟');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-press inline-flex h-8 items-center rounded-lg border border-danger/20 bg-danger/5 px-3 text-[11px] font-medium text-danger">فك الربط</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="px-4 py-12 text-center text-sm text-muted">لا كورسات داخل هذه المادة بعد. استخدم النموذج الجانبي للربط.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </article>
+
+        <aside class="space-y-5">
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="border-b border-line px-4 py-4 sm:px-5">
+                    <h3 class="text-base font-semibold text-ink">ربط كورس</h3>
+                    <p class="mt-0.5 text-xs text-muted">انسب كورساً موجوداً لهذه المادة</p>
+                </div>
+                <form method="POST" action="{{ route('admin.academic-subjects.attach-course', $academicSubject) }}" class="space-y-4 p-4 sm:p-5">
+                    @csrf
+                    <div>
+                        <label class="{{ $labelClass }}" for="course_id">الكورس <span class="text-danger">*</span></label>
+                        <select id="course_id" name="course_id" required class="{{ $fieldClass }}">
+                            <option value="">اختر كورساً…</option>
+                            @foreach($availableCourses as $course)
+                                <option value="{{ $course->id }}">
+                                    {{ $course->title }}
+                                    @if($course->academic_subject_id) (من مادة أخرى)@endif
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('course_id')<p class="mt-1 text-xs text-danger">{{ $message }}</p>@enderror
+                    </div>
+                    <button type="submit" class="btn-press inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent text-sm font-medium text-white">
+                        <i class="fas fa-link text-xs"></i>
+                        ربط بالمادة
+                    </button>
+                </form>
+            </article>
+
+            @if($academicSubject->description)
+                <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft sm:p-5">
+                    <h3 class="text-sm font-semibold text-ink">وصف المادة</h3>
+                    <p class="mt-2 text-sm leading-relaxed text-muted">{{ $academicSubject->description }}</p>
+                </article>
+            @endif
+        </aside>
+    </div>
 </div>
 @endsection

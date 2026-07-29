@@ -23,6 +23,7 @@ return [
         'services' => 'الخدمات',
         'login' => 'تسجيل دخول',
         'register' => 'انشاء حساب',
+        'free_trial' => 'تقييم مجاني',
         'dashboard' => 'لوحة التحكم',
         'mobile_menu' => 'قائمة الهاتف',
         'close_menu' => 'إغلاق القائمة',

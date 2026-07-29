@@ -1,173 +1,154 @@
 ﻿@extends('layouts.admin')
 
-@section('title', 'تعديل المجموعة المهارية')
-@section('header', 'تعديل المجموعة المهارية')
+@section('title', 'تعديل مادة - Glottical')
+@section('page_title', 'تعديل المادة')
 
 @section('content')
-<div class="space-y-6">
-    <!-- معلومات المادة -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200">
-        <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900">تعديل المجموعة المهارية</h3>
-                <a href="{{ route('admin.academic-subjects.index') }}" 
-                   class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200">
-                    <i class="fas fa-arrow-right mr-2"></i>
-                    العودة للقائمة
-                </a>
-            </div>
-        </div>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $areaClass = 'w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $icons = [
+        'fas fa-book' => 'كتاب',
+        'fas fa-book-open' => 'كتاب مفتوح',
+        'fas fa-language' => 'لغة',
+        'fas fa-graduation-cap' => 'تخرج',
+        'fas fa-globe' => 'عالمي',
+        'fas fa-calculator' => 'رياضيات',
+        'fas fa-atom' => 'علوم',
+        'fas fa-history' => 'تاريخ',
+        'fas fa-palette' => 'فنون',
+        'fas fa-laptop-code' => 'حاسوب',
+    ];
+@endphp
 
-        <form method="POST" action="{{ route('admin.academic-subjects.update', $academicSubject) }}" class="p-6">
-            @csrf
-            @method('PUT')
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- المسار التعليمي -->
-                <div>
-                    <label for="academic_year_id" class="block text-sm font-medium text-gray-700 mb-2">
-                        المسار التعليمي <span class="text-red-500">*</span>
-                    </label>
-                    <select name="academic_year_id" id="academic_year_id" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="">اختر المسار التعليمي</option>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">
+                <a href="{{ route('admin.academic-subjects.index', ['track' => $academicSubject->academic_year_id]) }}" class="hover:text-accent">المواد</a>
+                · تعديل
+            </p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">تعديل المادة</h2>
+            <p class="mt-1 text-sm text-muted">{{ $academicSubject->name }} · {{ $academicSubject->code }}</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('admin.academic-subjects.show', $academicSubject) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                عرض الكورسات
+            </a>
+            <a href="{{ route('admin.academic-subjects.index', ['track' => $academicSubject->academic_year_id]) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                رجوع للقائمة
+            </a>
+        </div>
+    </section>
+
+    @if($errors->any())
+        <div class="rounded-2xl border border-danger/20 bg-danger/5 p-4 text-sm text-danger shadow-soft">
+            <p class="mb-2 font-semibold">يرجى تصحيح ما يلي:</p>
+            <ul class="list-inside list-disc space-y-1">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    @if(session('success'))
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('admin.academic-subjects.update', $academicSubject) }}" class="space-y-5">
+        @csrf
+        @method('PUT')
+
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">بيانات المادة</h3>
+                <p class="mt-0.5 text-xs text-muted">الاسم والرمز والسنة والترتيب</p>
+            </div>
+            <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
+                <div class="sm:col-span-2">
+                    <label class="{{ $labelClass }}" for="academic_year_id">السنة الأكاديمية <span class="text-danger">*</span></label>
+                    <select name="academic_year_id" id="academic_year_id" required class="{{ $fieldClass }}">
                         @foreach($academicYears as $year)
-                            <option value="{{ $year->id }}" {{ old('academic_year_id', $academicSubject->academic_year_id) == $year->id ? 'selected' : '' }}>
-                                {{ $year->name }}
-                            </option>
+                            <option value="{{ $year->id }}" @selected((string) old('academic_year_id', $academicSubject->academic_year_id) === (string) $year->id)>{{ $year->name }}</option>
                         @endforeach
                     </select>
-                    @error('academic_year_id')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
                 </div>
-
-                <!-- اسم المجموعة -->
                 <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-                        اسم المجموعة المهارية <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" name="name" id="name" value="{{ old('name', $academicSubject->name) }}" required
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="مثال: Frontend Development">
-                    @error('name')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <label class="{{ $labelClass }}" for="name">اسم المادة <span class="text-danger">*</span></label>
+                    <input id="name" type="text" name="name" value="{{ old('name', $academicSubject->name) }}" required maxlength="255" class="{{ $fieldClass }}">
                 </div>
-
-                <!-- رمز المجموعة -->
                 <div>
-                    <label for="code" class="block text-sm font-medium text-gray-700 mb-2">
-                        رمز المجموعة <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" name="code" id="code" value="{{ old('code', $academicSubject->code) }}" required
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="مثال: FE-FOUND أو BACKEND-101">
-                    @error('code')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <label class="{{ $labelClass }}" for="code">الرمز <span class="text-danger">*</span></label>
+                    <input id="code" type="text" name="code" value="{{ old('code', $academicSubject->code) }}" required maxlength="100" dir="ltr" class="{{ $fieldClass }} font-mono">
                 </div>
-
-                <!-- اللون -->
-                <div>
-                    <label for="color" class="block text-sm font-medium text-gray-700 mb-2">
-                        اللون <span class="text-red-500">*</span>
-                    </label>
-                    <input type="color" name="color" id="color" value="{{ old('color', $academicSubject->color ?? '#3B82F6') }}" required
-                           class="w-full h-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    @error('color')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                <div class="sm:col-span-2">
+                    <label class="{{ $labelClass }}" for="description">الوصف</label>
+                    <textarea id="description" name="description" rows="4" class="{{ $areaClass }}">{{ old('description', $academicSubject->description) }}</textarea>
                 </div>
+            </div>
+        </article>
 
-                <!-- الأيقونة -->
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">المظهر والنشر</h3>
+                <p class="mt-0.5 text-xs text-muted">أيقونة ولون وترتيب وحالة التفعيل</p>
+            </div>
+            <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
                 <div>
-                    <label for="icon" class="block text-sm font-medium text-gray-700 mb-2">
-                        الأيقونة <span class="text-red-500">*</span>
-                    </label>
-                    <select name="icon" id="icon" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="fas fa-calculator" {{ old('icon', $academicSubject->icon) == 'fas fa-calculator' ? 'selected' : '' }}>🧮 آلة حاسبة (رياضيات)</option>
-                        <option value="fas fa-atom" {{ old('icon', $academicSubject->icon) == 'fas fa-atom' ? 'selected' : '' }}>⚛️ ذرة (علوم)</option>
-                        <option value="fas fa-book-open" {{ old('icon', $academicSubject->icon) == 'fas fa-book-open' ? 'selected' : '' }}>📖 كتاب مفتوح</option>
-                        <option value="fas fa-language" {{ old('icon', $academicSubject->icon) == 'fas fa-language' ? 'selected' : '' }}>🌐 لغات</option>
-                        <option value="fas fa-history" {{ old('icon', $academicSubject->icon) == 'fas fa-history' ? 'selected' : '' }}>📜 تاريخ</option>
-                        <option value="fas fa-globe" {{ old('icon', $academicSubject->icon) == 'fas fa-globe' ? 'selected' : '' }}>🌍 جغرافيا</option>
-                        <option value="fas fa-palette" {{ old('icon', $academicSubject->icon) == 'fas fa-palette' ? 'selected' : '' }}>🎨 فنون</option>
-                        <option value="fas fa-music" {{ old('icon', $academicSubject->icon) == 'fas fa-music' ? 'selected' : '' }}>🎵 موسيقى</option>
-                        <option value="fas fa-running" {{ old('icon', $academicSubject->icon) == 'fas fa-running' ? 'selected' : '' }}>🏃 رياضة</option>
-                        <option value="fas fa-laptop-code" {{ old('icon', $academicSubject->icon) == 'fas fa-laptop-code' ? 'selected' : '' }}>💻 حاسوب</option>
+                    <label class="{{ $labelClass }}" for="icon">الأيقونة</label>
+                    <select name="icon" id="icon" class="{{ $fieldClass }}">
+                        @foreach($icons as $value => $label)
+                            <option value="{{ $value }}" @selected(old('icon', $academicSubject->icon ?: 'fas fa-book') === $value)>{{ $label }}</option>
+                        @endforeach
                     </select>
-                    @error('icon')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
                 </div>
-
-                <!-- ترتيب العرض -->
                 <div>
-                    <label for="order" class="block text-sm font-medium text-gray-700 mb-2">
-                        ترتيب العرض
-                    </label>
-                    <input type="number" name="order" id="order" value="{{ old('order', $academicSubject->order ?? 1) }}" min="1"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="1">
-                    @error('order')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <label class="{{ $labelClass }}" for="color">اللون</label>
+                    <input id="color" type="color" name="color" value="{{ old('color', $academicSubject->color ?? '#0B3D91') }}" class="h-11 w-full cursor-pointer rounded-xl border border-line bg-surface p-1">
                 </div>
-            </div>
-
-            <!-- الوصف -->
-            <div class="mt-6">
-                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
-                    الوصف
-                </label>
-                <textarea name="description" id="description" rows="3"
-                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="وصف مختصر للمجموعة المهارية (اختياري)">{{ old('description', $academicSubject->description) }}</textarea>
-                @error('description')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- حالة النشاط -->
-            <div class="mt-6">
-                <div class="flex items-center">
-                    <input type="checkbox" name="is_active" id="is_active" value="1" 
-                           {{ old('is_active', $academicSubject->is_active) ? 'checked' : '' }}
-                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                    <label for="is_active" class="mr-2 block text-sm text-gray-700">
-                        المجموعة نشطة
+                <div>
+                    <label class="{{ $labelClass }}" for="order">ترتيب العرض</label>
+                    <input id="order" type="number" name="order" min="0" value="{{ old('order', $academicSubject->order ?? 0) }}" class="{{ $fieldClass }}">
+                </div>
+                <div class="flex items-end">
+                    <input type="hidden" name="is_active" value="0">
+                    <label class="inline-flex h-11 w-full cursor-pointer items-center gap-2 rounded-xl border border-line bg-canvas px-4">
+                        <input type="checkbox" name="is_active" value="1" @checked((string) old('is_active', $academicSubject->is_active ? '1' : '0') === '1') class="size-4 rounded border-line text-accent focus:ring-accent/20">
+                        <span class="text-sm font-medium text-ink">مادة نشطة</span>
                     </label>
                 </div>
-                <p class="mt-1 text-xs text-gray-500">
-                    يمكن إضافة كورسات للمجموعات النشطة فقط
-                </p>
             </div>
+            <div class="flex flex-wrap gap-3 border-t border-line px-4 py-4 sm:px-5">
+                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-white">
+                    <i class="fas fa-save text-xs"></i>
+                    حفظ التعديلات
+                </button>
+                <a href="{{ route('admin.academic-subjects.show', $academicSubject) }}" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line px-6 text-sm font-medium text-ink hover:bg-canvas">إلغاء</a>
+            </div>
+        </article>
+    </form>
 
-            <!-- أزرار الإجراءات -->
-            <div class="mt-8 pt-6 border-t border-gray-200">
-                <div class="flex flex-wrap items-center justify-between gap-4">
-                    <form action="{{ route('admin.academic-subjects.destroy', $academicSubject) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذه المجموعة؟ سيتم فقد أي ربط يدوي للكورسات المرتبطة.');" class="inline-flex">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">
-                            <i class="fas fa-trash"></i>
-                            حذف المجموعة
-                        </button>
-                    </form>
-                    <a href="{{ route('admin.academic-subjects.index') }}" 
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200">
-                        إلغاء
-                    </a>
-                    <button type="submit" 
-                            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                        <i class="fas fa-save"></i>
-                        حفظ التعديلات
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
+    <article class="overflow-hidden rounded-2xl border border-danger/20 bg-surface shadow-soft">
+        <div class="border-b border-danger/15 px-4 py-4 sm:px-5">
+            <h3 class="text-base font-semibold text-danger">منطقة خطرة</h3>
+            <p class="mt-0.5 text-xs text-muted">لا يمكن الحذف إن وُجدت كورسات مربوطة بالمادة</p>
+        </div>
+        <div class="p-4 sm:p-5">
+            <form method="POST" action="{{ route('admin.academic-subjects.destroy', $academicSubject) }}" onsubmit="return confirm('حذف هذه المادة؟');">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-danger/20 bg-danger/5 px-5 text-sm font-medium text-danger hover:bg-danger/10">
+                    <i class="fas fa-trash text-xs"></i>
+                    حذف المادة
+                </button>
+            </form>
+        </div>
+    </article>
 </div>
 @endsection

@@ -231,6 +231,7 @@ return [
     'path_courses_count' => ':count course',
     'path_description_fallback' => 'A comprehensive learning path with a set of courses and skills',
     'currency_egp' => 'EGP',
+    'currency_usd' => 'USD',
     'per_month' => 'month',
     'one_to_one_with' => 'with instructor',
     'course_badge_monthly' => 'Monthly',
@@ -334,7 +335,7 @@ return [
 
     // About page
     'about_hero' => 'About Us',
-    'about_hero_sub' => 'Language isn’t memorized — it’s lived',
+    'about_hero_sub' => 'Learn a language. Get a job. Start your future.',
     'about_intro' => 'A language academy with live 1:1 and group sessions, clear Arabic/Islamic and English paths, and parent follow-up — from free assessment to certificate.',
     'about_heading' => 'Our story',
     'about_para1' => ':brand is a language academy focused on lived practice, not dry memorization. We combine selected tutors, live sessions, and clear Arabic and English paths — with a parent dashboard that brings peace of mind.',

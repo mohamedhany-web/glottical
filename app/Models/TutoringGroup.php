@@ -15,6 +15,10 @@ class TutoringGroup extends Model
 
     public const TYPE_COLLECTIVE = 'collective';
 
+    public const PATH_ARABIC = 'arabic';
+
+    public const PATH_ENGLISH = 'english';
+
     protected $fillable = [
         'type',
         'title',
@@ -23,6 +27,10 @@ class TutoringGroup extends Model
         'image_path',
         'instructor_id',
         'price',
+        'hourly_rate',
+        'sessions_per_month',
+        'whatsapp_group_url',
+        'learning_path',
         'currency',
         'capacity',
         'duration_minutes',
@@ -35,6 +43,8 @@ class TutoringGroup extends Model
     {
         return [
             'price' => 'decimal:2',
+            'hourly_rate' => 'decimal:2',
+            'sessions_per_month' => 'integer',
             'capacity' => 'integer',
             'duration_minutes' => 'integer',
             'is_active' => 'boolean',
@@ -51,6 +61,21 @@ class TutoringGroup extends Model
     public function bookings(): HasMany
     {
         return $this->hasMany(TutoringGroupBooking::class);
+    }
+
+    public function cohorts(): HasMany
+    {
+        return $this->hasMany(TutoringGroupCohort::class)->orderBy('sort_order')->orderByDesc('starts_at');
+    }
+
+    public function packages(): HasMany
+    {
+        return $this->hasMany(TutoringGroupPackage::class)->orderBy('sort_order')->orderBy('duration_months');
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(StudentTutoringSubscription::class);
     }
 
     public function scopeActive(Builder $query): Builder
@@ -81,6 +106,15 @@ class TutoringGroup extends Model
     public function typeLabel(): string
     {
         return $this->isIndividual() ? 'مجموعة فردية' : 'مجموعة جماعية';
+    }
+
+    public function learningPathLabel(): string
+    {
+        return match ($this->learning_path) {
+            self::PATH_ARABIC => 'عربي / إسلامي',
+            self::PATH_ENGLISH => 'إنجليزي',
+            default => '—',
+        };
     }
 
     public function imageUrl(): ?string

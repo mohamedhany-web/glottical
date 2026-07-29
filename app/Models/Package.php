@@ -10,6 +10,10 @@ class Package extends Model
 {
     use HasFactory;
 
+    public const TRACK_ISLAMIC = 'islamic';
+
+    public const TRACK_ENGLISH = 'english';
+
     protected $fillable = [
         'name',
         'slug',
@@ -18,6 +22,8 @@ class Package extends Model
         'features',
         'price',
         'original_price',
+        'currency',
+        'track',
         'thumbnail',
         'duration_days',
         'courses_count',
@@ -39,6 +45,56 @@ class Package extends Model
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    public static function trackLabels(): array
+    {
+        return [
+            self::TRACK_ISLAMIC => 'القرآن والعربية والإسلاميات',
+            self::TRACK_ENGLISH => 'اللغة الإنجليزية',
+        ];
+    }
+
+    public function currencyCode(): string
+    {
+        return strtoupper((string) ($this->currency ?: 'USD'));
+    }
+
+    public function trackLabel(): ?string
+    {
+        if (! $this->track) {
+            return null;
+        }
+
+        return self::trackLabels()[$this->track] ?? $this->track;
+    }
+
+    public function formattedPrice(?int $decimals = 0): string
+    {
+        return number_format((float) $this->price, $decimals).' '.$this->currencyCode();
+    }
+
+    public function formattedOriginalPrice(?int $decimals = 0): ?string
+    {
+        if ($this->original_price === null || (float) $this->original_price <= (float) $this->price) {
+            return null;
+        }
+
+        return number_format((float) $this->original_price, $decimals).' '.$this->currencyCode();
+    }
+
+    /**
+     * Savings vs sum of included course prices (display helper).
+     */
+    public function coursesBundleSavings(): float
+    {
+        $coursesTotal = (float) $this->total_courses_price;
+        $price = (float) $this->price;
+
+        return max(0, $coursesTotal - $price);
+    }
 
     /**
      * Boot the model.

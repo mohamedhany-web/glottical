@@ -208,12 +208,13 @@
                 </div>
 
                 <div>
+                  @php $pkgCurrency = $package->currencyCode(); @endphp
                   @if($package->original_price && $package->original_price > $package->price)
-                    <p class="gl-prx-card__old">{{ number_format($package->original_price, 0) }} {{ __('public.currency_egp') }}</p>
+                    <p class="gl-prx-card__old">{{ number_format($package->original_price, 0) }} {{ $pkgCurrency }}</p>
                   @endif
                   <p class="gl-prx-card__price">
                     @if($package->price > 0)
-                      {{ number_format($package->price, 0) }} <span>{{ __('public.currency_egp') }}</span>
+                      {{ number_format($package->price, 0) }} <span>{{ $pkgCurrency }}</span>
                     @else
                       {{ __('public.free_price') }}
                     @endif

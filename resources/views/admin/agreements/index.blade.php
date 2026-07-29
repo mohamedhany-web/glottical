@@ -1,276 +1,232 @@
 @extends('layouts.admin')
 
 @section('title', 'نظام الاتفاقيات - ' . config('app.name'))
-@section('header', 'نظام الاتفاقيات')
+@section('page_title', 'نظام الاتفاقيات')
 
 @section('content')
-<div class="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 bg-slate-50 dark:bg-slate-900 min-h-screen">
-    <!-- الهيدر -->
-    <section class="rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur border-2 border-slate-200/50 dark:border-slate-700 shadow-xl overflow-hidden">
-        <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg">
-                    <i class="fas fa-handshake text-xl"></i>
-                </div>
-                <div>
-                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100">إدارة اتفاقيات المدربين</h2>
-                    <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">إدارة عقود العمل وأنظمة الدفع للمدربين</p>
-                </div>
-            </div>
-            <a href="{{ route('admin.agreements.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-                <i class="fas fa-plus"></i>
-                إضافة اتفاقية جديدة
-            </a>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+
+    $kpiCards = [
+        ['label' => 'إجمالي الاتفاقيات', 'value' => number_format($stats['total']), 'icon' => 'fa-handshake', 'note' => 'كل العقود المسجّلة'],
+        ['label' => 'اتفاقيات نشطة', 'value' => number_format($stats['active']), 'icon' => 'fa-check-circle', 'note' => 'سارية المفعول'],
+        ['label' => 'مسودات', 'value' => number_format($stats['draft']), 'icon' => 'fa-file-alt', 'note' => 'قيد الإعداد'],
+        ['label' => 'إجمالي المدفوعات', 'value' => number_format($stats['total_earned'], 2), 'icon' => 'fa-money-bill-wave', 'note' => 'ج.م — مدفوعات المدربين'],
+    ];
+
+    $typeBadges = [
+        'course_price' => ['label' => 'سعر للكورس', 'badge' => 'bg-[#f2f5f4] text-accent border-line'],
+        'hourly_rate' => ['label' => 'سعر للساعة', 'badge' => 'bg-canvas text-ink border-line'],
+        'monthly_salary' => ['label' => 'راتب شهري', 'badge' => 'bg-accent-soft text-accent border-line'],
+        'consultation_session' => ['label' => 'استشارات', 'badge' => 'bg-canvas text-ink border-line'],
+    ];
+
+    $statusBadges = [
+        'draft' => ['label' => 'مسودة', 'badge' => 'border-line bg-canvas text-muted'],
+        'active' => ['label' => 'نشط', 'badge' => 'border-emerald-100 bg-emerald-50 text-emerald-700'],
+        'suspended' => ['label' => 'معلق', 'badge' => 'border-amber-100 bg-amber-50 text-amber-800'],
+        'terminated' => ['label' => 'منتهي', 'badge' => 'border-rose-100 bg-rose-50 text-rose-700'],
+        'completed' => ['label' => 'مكتمل', 'badge' => 'border-line bg-accent-soft text-accent'],
+    ];
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">الماليات · عقود المدربين</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إدارة اتفاقيات المدربين</h2>
+            <p class="mt-1 max-w-2xl text-sm text-muted">إدارة عقود العمل وأنظمة الدفع للمدربين</p>
         </div>
+        <a href="{{ route('admin.agreements.create') }}"
+           class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+            <i class="fas fa-plus text-xs"></i>
+            إضافة اتفاقية جديدة
+        </a>
     </section>
 
-    <!-- إحصائيات -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div class="dashboard-card rounded-2xl p-5 sm:p-6 card-hover-effect relative overflow-hidden group border-2 border-blue-200/50 dark:border-blue-800/40 hover:border-blue-300/70 dark:hover:border-blue-700/70 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-white/95 via-blue-50/90 to-sky-100/80 dark:from-slate-800 dark:via-blue-900/20 dark:to-slate-800">
-            <div class="absolute inset-0 bg-gradient-to-br from-blue-100/60 via-sky-100/40 to-blue-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-transparent rounded-full blur-2xl"></div>
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <p class="text-sm font-bold text-blue-800/80 dark:text-blue-300 mb-1">إجمالي الاتفاقيات</p>
-                        <p class="text-4xl font-black bg-gradient-to-r from-blue-700 via-blue-600 to-sky-600 bg-clip-text text-transparent drop-shadow-sm">{{ number_format($stats['total']) }}</p>
-                    </div>
-                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300" style="box-shadow: 0 8px 20px 0 rgba(59, 130, 246, 0.4);">
-                        <i class="fas fa-handshake text-white text-xl"></i>
-                    </div>
+    <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach($kpiCards as $card)
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                    <i class="fas {{ $card['icon'] }} text-sm"></i>
                 </div>
-            </div>
-        </div>
-        
-        <div class="dashboard-card rounded-2xl p-6 card-hover-effect relative overflow-hidden group border-2 border-emerald-200/50 dark:border-emerald-800/40 hover:border-emerald-300/70 dark:hover:border-emerald-700/70 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-white/95 via-emerald-50/90 to-green-100/80 dark:from-slate-800 dark:via-emerald-900/20 dark:to-slate-800">
-            <div class="absolute inset-0 bg-gradient-to-br from-emerald-100/60 via-green-100/40 to-teal-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-400/20 to-transparent rounded-full blur-2xl"></div>
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <p class="text-sm font-bold text-emerald-800/80 dark:text-emerald-300 mb-1">اتفاقيات نشطة</p>
-                        <p class="text-4xl font-black bg-gradient-to-r from-emerald-700 via-green-600 to-teal-600 bg-clip-text text-transparent drop-shadow-sm">{{ number_format($stats['active']) }}</p>
-                    </div>
-                    <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300" style="box-shadow: 0 8px 20px 0 rgba(16, 185, 129, 0.4);">
-                        <i class="fas fa-check-circle text-white text-xl"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="dashboard-card rounded-2xl p-6 card-hover-effect relative overflow-hidden group border-2 border-amber-200/50 dark:border-amber-800/40 hover:border-amber-300/70 dark:hover:border-amber-700/70 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-white/95 via-amber-50/90 to-yellow-100/80 dark:from-slate-800 dark:via-amber-900/20 dark:to-slate-800">
-            <div class="absolute inset-0 bg-gradient-to-br from-amber-100/60 via-yellow-100/40 to-orange-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-400/20 to-transparent rounded-full blur-2xl"></div>
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <p class="text-sm font-bold text-amber-800/80 dark:text-amber-300 mb-1">مسودات</p>
-                        <p class="text-4xl font-black bg-gradient-to-r from-amber-700 via-yellow-600 to-orange-600 bg-clip-text text-transparent drop-shadow-sm">{{ number_format($stats['draft']) }}</p>
-                    </div>
-                    <div class="w-16 h-16 bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300" style="box-shadow: 0 8px 20px 0 rgba(245, 158, 11, 0.4);">
-                        <i class="fas fa-file-alt text-white text-xl"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="dashboard-card rounded-2xl p-6 card-hover-effect relative overflow-hidden group border-2 border-purple-200/50 dark:border-purple-800/40 hover:border-purple-300/70 dark:hover:border-purple-700/70 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-white/95 via-purple-50/90 to-fuchsia-100/80 dark:from-slate-800 dark:via-purple-900/20 dark:to-slate-800">
-            <div class="absolute inset-0 bg-gradient-to-br from-purple-100/60 via-violet-100/40 to-fuchsia-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-transparent rounded-full blur-2xl"></div>
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <p class="text-sm font-bold text-purple-800/80 dark:text-purple-300 mb-1">إجمالي المدفوعات</p>
-                        <p class="text-4xl font-black bg-gradient-to-r from-purple-700 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent drop-shadow-sm">{{ number_format($stats['total_earned'], 2) }}</p>
-                        <p class="text-xs font-medium text-purple-700/70 dark:text-purple-300/80 mt-1">ج.م</p>
-                    </div>
-                    <div class="w-16 h-16 bg-gradient-to-br from-purple-500 via-violet-500 to-fuchsia-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300" style="box-shadow: 0 8px 20px 0 rgba(168, 85, 247, 0.4);">
-                        <i class="fas fa-money-bill-wave text-white text-xl"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- البحث والفلترة -->
-    <section class="rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur border-2 border-slate-200/50 dark:border-slate-700 shadow-xl overflow-hidden">
-        <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800">
-            <h3 class="text-lg font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <i class="fas fa-filter text-blue-600"></i>
-                البحث والفلترة
-            </h3>
-        </div>
-        <div class="p-6">
-            <form method="GET" action="{{ route('admin.agreements.index') }}" id="filterForm" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">البحث</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 dark:text-slate-500">
-                            <i class="fas fa-search"></i>
-                        </span>
-                        <input type="text" name="search" value="{{ htmlspecialchars(request('search') ?? '', ENT_QUOTES, 'UTF-8') }}" maxlength="255" placeholder="رقم الاتفاقية، اسم المدرب" class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">المدرب</label>
-                    <select name="instructor_id" class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <option value="">جميع المدربين</option>
-                        @foreach($instructors as $instructor)
-                            <option value="{{ $instructor->id }}" {{ request('instructor_id') == $instructor->id ? 'selected' : '' }}>{{ htmlspecialchars($instructor->name, ENT_QUOTES, 'UTF-8') }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">النوع</label>
-                    <select name="type" class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <option value="">جميع الأنواع</option>
-                        <option value="course_price" {{ request('type') == 'course_price' ? 'selected' : '' }}>سعر للكورس</option>
-                        <option value="hourly_rate" {{ request('type') == 'hourly_rate' ? 'selected' : '' }}>سعر للساعة</option>
-                        <option value="monthly_salary" {{ request('type') == 'monthly_salary' ? 'selected' : '' }}>راتب شهري</option>
-                        <option value="consultation_session" {{ request('type') == 'consultation_session' ? 'selected' : '' }}>استشارات</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">الحالة</label>
-                    <select name="status" class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <option value="">جميع الحالات</option>
-                        <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>مسودة</option>
-                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
-                        <option value="suspended" {{ request('status') == 'suspended' ? 'selected' : '' }}>معلق</option>
-                        <option value="terminated" {{ request('status') == 'terminated' ? 'selected' : '' }}>منتهي</option>
-                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>مكتمل</option>
-                    </select>
-                </div>
-                <div class="flex items-end gap-2 md:col-span-4">
-                    <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200">
-                        <i class="fas fa-search"></i>
-                        بحث
-                    </button>
-                    @if(request()->anyFilled(['search', 'instructor_id', 'type', 'status']))
-                    <a href="{{ route('admin.agreements.index') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 dark:border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors" title="مسح الفلتر">
-                        <i class="fas fa-times"></i>
-                    </a>
-                    @endif
-                </div>
-            </form>
-        </div>
+                <p class="mt-3 text-xs font-medium text-muted">{{ $card['label'] }}</p>
+                <p class="mt-1 text-2xl font-semibold tabular-nums tracking-tight text-ink">{{ $card['value'] }}</p>
+                <p class="mt-1 text-[11px] text-muted">{{ $card['note'] }}</p>
+            </article>
+        @endforeach
     </section>
 
-    <!-- قائمة الاتفاقيات -->
-    <section class="rounded-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur border-2 border-slate-200/50 dark:border-slate-700 shadow-xl overflow-hidden">
-        <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800 flex items-center justify-between">
+    <form method="GET" action="{{ route('admin.agreements.index') }}" id="filterForm"
+          class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+        <div class="mb-3 flex items-center gap-2">
+            <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                <i class="fas fa-filter text-sm"></i>
+            </span>
             <div>
-                <h3 class="text-lg font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    <i class="fas fa-file-contract text-blue-600"></i>
-                    قائمة الاتفاقيات
-                </h3>
-                <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                    <span class="font-semibold text-blue-600">{{ $agreements->total() }}</span> اتفاقية
+                <h3 class="text-sm font-semibold text-ink">البحث والفلترة</h3>
+                <p class="text-xs text-muted">تصفية حسب المدرب، النوع، أو الحالة</p>
+            </div>
+        </div>
+        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div>
+                <label class="{{ $labelClass }}">البحث</label>
+                <div class="relative">
+                    <span class="pointer-events-none absolute inset-y-0 start-3 flex items-center text-muted">
+                        <i class="fas fa-search text-xs"></i>
+                    </span>
+                    <input type="text" name="search"
+                           value="{{ htmlspecialchars(request('search') ?? '', ENT_QUOTES, 'UTF-8') }}"
+                           maxlength="255" placeholder="رقم الاتفاقية، اسم المدرب"
+                           class="{{ $fieldClass }} ps-9" />
+                </div>
+            </div>
+            <div>
+                <label class="{{ $labelClass }}">المدرب</label>
+                <select name="instructor_id" class="{{ $fieldClass }}">
+                    <option value="">جميع المدربين</option>
+                    @foreach($instructors as $instructor)
+                        <option value="{{ $instructor->id }}" {{ request('instructor_id') == $instructor->id ? 'selected' : '' }}>
+                            {{ htmlspecialchars($instructor->name, ENT_QUOTES, 'UTF-8') }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="{{ $labelClass }}">النوع</label>
+                <select name="type" class="{{ $fieldClass }}">
+                    <option value="">جميع الأنواع</option>
+                    <option value="course_price" {{ request('type') == 'course_price' ? 'selected' : '' }}>سعر للكورس</option>
+                    <option value="hourly_rate" {{ request('type') == 'hourly_rate' ? 'selected' : '' }}>سعر للساعة</option>
+                    <option value="monthly_salary" {{ request('type') == 'monthly_salary' ? 'selected' : '' }}>راتب شهري</option>
+                    <option value="consultation_session" {{ request('type') == 'consultation_session' ? 'selected' : '' }}>استشارات</option>
+                </select>
+            </div>
+            <div>
+                <label class="{{ $labelClass }}">الحالة</label>
+                <select name="status" class="{{ $fieldClass }}">
+                    <option value="">جميع الحالات</option>
+                    <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>مسودة</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
+                    <option value="suspended" {{ request('status') == 'suspended' ? 'selected' : '' }}>معلق</option>
+                    <option value="terminated" {{ request('status') == 'terminated' ? 'selected' : '' }}>منتهي</option>
+                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>مكتمل</option>
+                </select>
+            </div>
+            <div class="flex items-end gap-2 md:col-span-2 xl:col-span-4">
+                <button type="submit"
+                        class="btn-press inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a] sm:flex-none sm:px-6">
+                    <i class="fas fa-search text-xs"></i>
+                    بحث
+                </button>
+                @if(request()->anyFilled(['search', 'instructor_id', 'type', 'status']))
+                    <a href="{{ route('admin.agreements.index') }}"
+                       class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-line text-muted hover:bg-accent-soft hover:text-accent"
+                       title="مسح الفلتر">
+                        <i class="fas fa-times text-xs"></i>
+                    </a>
+                @endif
+            </div>
+        </div>
+    </form>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
+            <div>
+                <h3 class="text-sm font-semibold text-ink">قائمة الاتفاقيات</h3>
+                <p class="text-xs text-muted">
+                    <span class="font-semibold tabular-nums text-accent">{{ $agreements->total() }}</span> اتفاقية
                 </p>
             </div>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                <thead class="bg-slate-50 dark:bg-slate-900/40">
+            <table class="min-w-full text-sm">
+                <thead class="border-b border-line bg-canvas text-xs text-muted">
                     <tr>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">رقم الاتفاقية</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">المدرب</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">النوع</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">السعر/المعدل</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">الحالة</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">تاريخ البدء</th>
-                        <th class="px-6 py-3 text-center text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">الإجراءات</th>
+                        <th class="px-4 py-3 text-start font-medium">رقم الاتفاقية</th>
+                        <th class="px-4 py-3 text-start font-medium">المدرب</th>
+                        <th class="px-4 py-3 text-start font-medium">النوع</th>
+                        <th class="px-4 py-3 text-start font-medium">السعر/المعدل</th>
+                        <th class="px-4 py-3 text-start font-medium">الحالة</th>
+                        <th class="px-4 py-3 text-start font-medium">تاريخ البدء</th>
+                        <th class="px-4 py-3 text-end font-medium">الإجراءات</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+                <tbody class="divide-y divide-line">
                     @forelse ($agreements as $agreement)
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors duration-200">
-                            <td class="px-6 py-4">
-                                <div class="font-semibold text-slate-900 dark:text-slate-100">{{ htmlspecialchars($agreement->agreement_number ?? 'N/A', ENT_QUOTES, 'UTF-8') }}</div>
-                                <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ htmlspecialchars($agreement->title ?? '', ENT_QUOTES, 'UTF-8') }}</div>
+                        @php
+                            $type = $typeBadges[$agreement->type] ?? ['label' => $agreement->type, 'badge' => 'bg-canvas text-ink border-line'];
+                            $status = $statusBadges[$agreement->status] ?? ['label' => $agreement->status, 'badge' => 'border-line bg-canvas text-muted'];
+                        @endphp
+                        <tr class="hover:bg-canvas/60">
+                            <td class="px-4 py-3">
+                                <p class="font-semibold text-ink">{{ htmlspecialchars($agreement->agreement_number ?? 'N/A', ENT_QUOTES, 'UTF-8') }}</p>
+                                <p class="mt-0.5 truncate text-xs text-muted">{{ htmlspecialchars($agreement->title ?? '', ENT_QUOTES, 'UTF-8') }}</p>
                             </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md">
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#f2f5f4] text-sm font-bold text-accent">
                                         {{ mb_substr($agreement->instructor->name ?? '', 0, 1, 'UTF-8') }}
                                     </div>
-                                    <div>
-                                        <p class="font-semibold text-slate-900 dark:text-slate-100">{{ htmlspecialchars($agreement->instructor->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</p>
-                                        <p class="text-xs text-slate-500 dark:text-slate-400">{{ htmlspecialchars($agreement->instructor->phone ?? '-', ENT_QUOTES, 'UTF-8') }}</p>
+                                    <div class="min-w-0">
+                                        <p class="truncate font-semibold text-ink">{{ htmlspecialchars($agreement->instructor->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</p>
+                                        <p class="truncate text-xs text-muted tabular-nums">{{ htmlspecialchars($agreement->instructor->phone ?? '-', ENT_QUOTES, 'UTF-8') }}</p>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
-                                @php
-                                    $typeBadges = [
-                                        'course_price' => ['label' => 'سعر للكورس', 'classes' => 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'],
-                                        'hourly_rate' => ['label' => 'سعر للساعة', 'classes' => 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'],
-                                        'monthly_salary' => ['label' => 'راتب شهري', 'classes' => 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'],
-                                        'consultation_session' => ['label' => 'استشارات', 'classes' => 'bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-200 dark:border-fuchsia-800'],
-                                    ];
-                                    $type = $typeBadges[$agreement->type] ?? ['label' => $agreement->type, 'classes' => 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-600'];
-                                @endphp
-                                <span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold border {{ $type['classes'] }}">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold {{ $type['badge'] }}">
+                                    <span class="size-1.5 rounded-full bg-current"></span>
                                     {{ $type['label'] }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">
-                                <div class="font-bold text-slate-900 dark:text-slate-100">{{ number_format($agreement->rate ?? 0, 2) }} ج.م</div>
+                            <td class="px-4 py-3">
+                                <p class="font-semibold tabular-nums text-ink">{{ number_format($agreement->rate ?? 0, 2) }} ج.م</p>
                                 @if($agreement->type == 'hourly_rate')
-                                    <div class="text-xs text-slate-500 dark:text-slate-400">للساعة</div>
+                                    <p class="text-xs text-muted">للساعة</p>
                                 @elseif($agreement->type == 'monthly_salary')
-                                    <div class="text-xs text-slate-500 dark:text-slate-400">شهرياً</div>
+                                    <p class="text-xs text-muted">شهرياً</p>
                                 @endif
                             </td>
-                            <td class="px-6 py-4">
-                                @php
-                                    $statusBadges = [
-                                        'draft' => ['label' => 'مسودة', 'classes' => 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-600'],
-                                        'active' => ['label' => 'نشط', 'classes' => 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'],
-                                        'suspended' => ['label' => 'معلق', 'classes' => 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'],
-                                        'terminated' => ['label' => 'منتهي', 'classes' => 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'],
-                                        'completed' => ['label' => 'مكتمل', 'classes' => 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'],
-                                    ];
-                                    $status = $statusBadges[$agreement->status] ?? ['label' => $agreement->status, 'classes' => 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-600'];
-                                @endphp
-                                <span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold border {{ $status['classes'] }}">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold {{ $status['badge'] }}">
+                                    <span class="size-1.5 rounded-full bg-current"></span>
                                     {{ $status['label'] }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-xs text-slate-700 dark:text-slate-300">
-                                <div class="font-medium">{{ $agreement->start_date ? $agreement->start_date->format('Y-m-d') : '-' }}</div>
+                            <td class="px-4 py-3">
+                                <p class="font-medium tabular-nums text-ink">{{ $agreement->start_date ? $agreement->start_date->format('Y-m-d') : '-' }}</p>
                                 @if($agreement->end_date)
-                                    <div class="text-slate-500 dark:text-slate-400">حتى {{ $agreement->end_date->format('Y-m-d') }}</div>
+                                    <p class="text-xs text-muted tabular-nums">حتى {{ $agreement->end_date->format('Y-m-d') }}</p>
                                 @endif
                             </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center justify-center gap-2">
-                                    <a href="{{ route('admin.agreements.show', $agreement) }}" 
-                                       class="w-9 h-9 flex items-center justify-center bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-300 rounded-lg transition-colors duration-200"
+                            <td class="px-4 py-3">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <a href="{{ route('admin.agreements.show', $agreement) }}"
+                                       class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-muted hover:bg-canvas hover:text-accent"
                                        title="عرض">
-                                        <i class="fas fa-eye text-sm"></i>
+                                        <i class="fas fa-eye text-xs"></i>
                                     </a>
-                                    <a href="{{ route('admin.agreements.edit', $agreement) }}" 
-                                       class="w-9 h-9 flex items-center justify-center bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-600 dark:text-amber-300 rounded-lg transition-colors duration-200"
+                                    <a href="{{ route('admin.agreements.edit', $agreement) }}"
+                                       class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-muted hover:bg-accent-soft hover:text-accent"
                                        title="تعديل">
-                                        <i class="fas fa-edit text-sm"></i>
+                                        <i class="fas fa-pen text-xs"></i>
                                     </a>
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-12 text-center">
-                                <div class="flex flex-col items-center gap-4">
-                                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center">
-                                        <i class="fas fa-handshake text-slate-400 dark:text-slate-500 text-2xl"></i>
-                                    </div>
+                            <td colspan="7" class="px-4 py-12 text-center">
+                                <div class="flex flex-col items-center gap-3">
+                                    <span class="inline-flex size-12 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                                        <i class="fas fa-handshake text-lg"></i>
+                                    </span>
                                     <div>
-                                        <p class="font-bold text-slate-900 dark:text-slate-100">لا توجد اتفاقيات</p>
-                                        <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">ابدأ بإنشاء اتفاقية جديدة</p>
+                                        <p class="font-semibold text-ink">لا توجد اتفاقيات</p>
+                                        <p class="mt-1 text-sm text-muted">ابدأ بإنشاء اتفاقية جديدة</p>
                                     </div>
                                 </div>
                             </td>
@@ -281,16 +237,15 @@
         </div>
 
         @if ($agreements->hasPages())
-            <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40">
+            <div class="border-t border-line px-4 py-3">
                 {{ $agreements->appends(request()->query())->links() }}
             </div>
         @endif
-    </section>
+    </article>
 </div>
 
 @push('scripts')
 <script>
-// حماية من XSS في البحث
 const filterForm = document.getElementById('filterForm');
 if (filterForm) {
     filterForm.addEventListener('submit', function(e) {
@@ -298,7 +253,6 @@ if (filterForm) {
     });
 }
 
-// Sanitization للبحث
 function sanitizeInput(input) {
     return input.replace(/[<>]/g, '');
 }

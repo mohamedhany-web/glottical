@@ -151,12 +151,31 @@ class DashboardController extends Controller
                 ->take(5)
                 ->get();
 
+            $upcomingTutoringBooking = null;
+            $upcomingTutoringCount = 0;
+            if (\Illuminate\Support\Facades\Schema::hasTable('tutoring_group_bookings')) {
+                $upcomingTutoringBooking = \App\Models\TutoringGroupBooking::query()
+                    ->where('instructor_id', $user->id)
+                    ->where('status', \App\Models\TutoringGroupBooking::STATUS_CONFIRMED)
+                    ->where('starts_at', '>=', now())
+                    ->with(['tutoringGroup', 'classroomMeeting', 'user'])
+                    ->orderBy('starts_at')
+                    ->first();
+                $upcomingTutoringCount = \App\Models\TutoringGroupBooking::query()
+                    ->where('instructor_id', $user->id)
+                    ->where('status', \App\Models\TutoringGroupBooking::STATUS_CONFIRMED)
+                    ->where('starts_at', '>=', now())
+                    ->count();
+            }
+            $stats['upcoming_tutoring'] = $upcomingTutoringCount;
+
             return view('dashboard.instructor', compact(
-                'stats', 
-                'my_courses', 
+                'stats',
+                'my_courses',
                 'my_classrooms',
                 'upcoming_lectures',
-                'pending_assignments'
+                'pending_assignments',
+                'upcomingTutoringBooking'
             ));
         } catch (\Exception $e) {
             // في حالة وجود خطأ، نعيد لوحة تحكم بسيطة
@@ -170,18 +189,21 @@ class DashboardController extends Controller
                 'total_assignments' => 0,
                 'pending_submissions' => 0,
                 'total_exams' => 0,
+                'upcoming_tutoring' => 0,
             ];
             $my_courses = collect();
             $my_classrooms = collect();
             $upcoming_lectures = collect();
             $pending_assignments = collect();
-            
+            $upcomingTutoringBooking = null;
+
             return view('dashboard.instructor', compact(
-                'stats', 
-                'my_courses', 
+                'stats',
+                'my_courses',
                 'my_classrooms',
                 'upcoming_lectures',
-                'pending_assignments'
+                'pending_assignments',
+                'upcomingTutoringBooking'
             ));
         }
     }
@@ -285,6 +307,17 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        $upcomingTutoringBooking = null;
+        if (\Illuminate\Support\Facades\Schema::hasTable('tutoring_group_bookings')) {
+            $upcomingTutoringBooking = \App\Models\TutoringGroupBooking::query()
+                ->where('user_id', $user->id)
+                ->where('status', \App\Models\TutoringGroupBooking::STATUS_CONFIRMED)
+                ->where('starts_at', '>=', now())
+                ->with(['tutoringGroup:id,title', 'classroomMeeting:id,code'])
+                ->orderBy('starts_at')
+                ->first();
+        }
+
         return view(
             'dashboard.student',
             compact(
@@ -294,7 +327,8 @@ class DashboardController extends Controller
                 'upcomingAssignments',
                 'upcomingExams',
                 'recentExamAttempts',
-                'recentCertificates'
+                'recentCertificates',
+                'upcomingTutoringBooking'
             )
         );
     }

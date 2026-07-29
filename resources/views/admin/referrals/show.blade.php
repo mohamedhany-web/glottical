@@ -1,174 +1,190 @@
 @extends('layouts.admin')
 
 @section('title', 'تفاصيل الإحالة - ' . config('app.name'))
+@section('page_title', 'تفاصيل الإحالة')
 
 @section('content')
-<div class="p-6 bg-gray-50 min-h-screen">
-    <div class="max-w-4xl mx-auto">
-        <!-- Header -->
-        <div class="mb-6">
-            <div class="flex items-center justify-between mb-4">
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">التسويق · الإحالات</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">تفاصيل الإحالة</h2>
+            <p class="mt-1 text-sm text-muted">معلومات تفصيلية عن الإحالة</p>
+        </div>
+        <a href="{{ route('admin.referrals.index') }}"
+           class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+            <i class="fas fa-arrow-right text-xs"></i>
+            العودة
+        </a>
+    </section>
+
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                        <i class="fas fa-user-check text-sm"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-base font-semibold text-ink">معلومات المحيل</h3>
+                        <p class="mt-0.5 text-xs text-muted">بيانات المستخدم المُحيل</p>
+                    </div>
+                </div>
+            </div>
+            <dl class="divide-y divide-line">
+                <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+                    <dt class="text-sm text-muted">الاسم</dt>
+                    <dd class="text-sm font-semibold text-ink">{{ $referral->referrer->name ?? 'غير معروف' }}</dd>
+                </div>
+                <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+                    <dt class="text-sm text-muted">رقم الهاتف</dt>
+                    <dd class="text-sm font-semibold tabular-nums text-ink">{{ $referral->referrer->phone ?? 'N/A' }}</dd>
+                </div>
+                <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+                    <dt class="text-sm text-muted">البريد الإلكتروني</dt>
+                    <dd class="text-sm font-semibold text-ink">{{ $referral->referrer->email ?? 'N/A' }}</dd>
+                </div>
+                <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+                    <dt class="text-sm text-muted">كود الإحالة</dt>
+                    <dd class="font-mono text-sm font-bold text-accent">{{ $referral->referrer->referral_code ?? '-' }}</dd>
+                </div>
+            </dl>
+        </article>
+
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex size-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                        <i class="fas fa-user-plus text-sm"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-base font-semibold text-ink">معلومات المحال</h3>
+                        <p class="mt-0.5 text-xs text-muted">بيانات المستخدم المحال</p>
+                    </div>
+                </div>
+            </div>
+            <dl class="divide-y divide-line">
+                <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+                    <dt class="text-sm text-muted">الاسم</dt>
+                    <dd class="text-sm font-semibold text-ink">{{ $referral->referred->name ?? 'غير معروف' }}</dd>
+                </div>
+                <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+                    <dt class="text-sm text-muted">رقم الهاتف</dt>
+                    <dd class="text-sm font-semibold tabular-nums text-ink">{{ $referral->referred->phone ?? 'N/A' }}</dd>
+                </div>
+                <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+                    <dt class="text-sm text-muted">البريد الإلكتروني</dt>
+                    <dd class="text-sm font-semibold text-ink">{{ $referral->referred->email ?? 'N/A' }}</dd>
+                </div>
+                <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+                    <dt class="text-sm text-muted">تاريخ التسجيل</dt>
+                    <dd class="text-sm font-semibold text-ink">{{ $referral->referred->created_at->format('d/m/Y') }}</dd>
+                </div>
+            </dl>
+        </article>
+    </div>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-4 py-4 sm:px-5">
+            <div class="flex items-center gap-3">
+                <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                    <i class="fas fa-info-circle text-sm"></i>
+                </span>
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                        <i class="fas fa-user-friends text-sky-600 ml-3"></i>
-                        تفاصيل الإحالة
-                    </h1>
-                    <p class="text-gray-600">معلومات تفصيلية عن الإحالة</p>
-                </div>
-                <a href="{{ route('admin.referrals.index') }}" 
-                   class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-2.5 rounded-lg font-medium transition-colors">
-                    <i class="fas fa-arrow-right ml-2"></i>
-                    العودة
-                </a>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Referrer Info -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
-                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <i class="fas fa-user-check text-sky-600"></i>
-                    معلومات المحيل
-                </h2>
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                        <span class="text-gray-600">الاسم</span>
-                        <span class="font-medium text-gray-900">{{ $referral->referrer->name ?? 'غير معروف' }}</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                        <span class="text-gray-600">رقم الهاتف</span>
-                        <span class="font-medium text-gray-900">{{ $referral->referrer->phone ?? 'N/A' }}</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                        <span class="text-gray-600">البريد الإلكتروني</span>
-                        <span class="font-medium text-gray-900">{{ $referral->referrer->email ?? 'N/A' }}</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2">
-                        <span class="text-gray-600">كود الإحالة</span>
-                        <span class="font-mono font-bold text-sky-600">{{ $referral->referrer->referral_code ?? '-' }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Referred Info -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
-                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <i class="fas fa-user-plus text-emerald-600"></i>
-                    معلومات المحال
-                </h2>
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                        <span class="text-gray-600">الاسم</span>
-                        <span class="font-medium text-gray-900">{{ $referral->referred->name ?? 'غير معروف' }}</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                        <span class="text-gray-600">رقم الهاتف</span>
-                        <span class="font-medium text-gray-900">{{ $referral->referred->phone ?? 'N/A' }}</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                        <span class="text-gray-600">البريد الإلكتروني</span>
-                        <span class="font-medium text-gray-900">{{ $referral->referred->email ?? 'N/A' }}</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2">
-                        <span class="text-gray-600">تاريخ التسجيل</span>
-                        <span class="font-medium text-gray-900">{{ $referral->referred->created_at->format('d/m/Y') }}</span>
-                    </div>
+                    <h3 class="text-base font-semibold text-ink">تفاصيل الإحالة</h3>
+                    <p class="mt-0.5 text-xs text-muted">البرنامج، الحالة، والمبالغ</p>
                 </div>
             </div>
         </div>
-
-        <!-- Referral Details -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 mt-6">
-            <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <i class="fas fa-info-circle text-purple-600"></i>
-                تفاصيل الإحالة
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span class="text-gray-600">البرنامج</span>
-                    <span class="font-medium text-gray-900">{{ $referral->referralProgram->name ?? '-' }}</span>
-                </div>
-                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span class="text-gray-600">كود الإحالة</span>
-                    <span class="font-mono font-bold text-gray-900">{{ $referral->referral_code ?? $referral->code ?? '-' }}</span>
-                </div>
-                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span class="text-gray-600">الحالة</span>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                        @if($referral->status == 'completed') bg-emerald-100 text-emerald-800
-                        @elseif($referral->status == 'pending') bg-amber-100 text-amber-800
-                        @else bg-red-100 text-red-800
+        <dl class="grid grid-cols-1 gap-0 sm:grid-cols-2">
+            <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3 sm:px-5">
+                <dt class="text-sm text-muted">البرنامج</dt>
+                <dd class="text-sm font-semibold text-ink">{{ $referral->referralProgram->name ?? '-' }}</dd>
+            </div>
+            <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3 sm:px-5">
+                <dt class="text-sm text-muted">كود الإحالة</dt>
+                <dd class="font-mono text-sm font-bold text-ink">{{ $referral->referral_code ?? $referral->code ?? '-' }}</dd>
+            </div>
+            <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3 sm:px-5">
+                <dt class="text-sm text-muted">الحالة</dt>
+                <dd>
+                    <span class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold
+                        @if($referral->status == 'completed') border-emerald-100 bg-emerald-50 text-emerald-700
+                        @elseif($referral->status == 'pending') border-amber-100 bg-amber-50 text-amber-800
+                        @else border-rose-100 bg-rose-50 text-rose-700
                         @endif">
+                        <span class="size-1.5 rounded-full bg-current"></span>
                         @if($referral->status == 'completed') مكتملة
                         @elseif($referral->status == 'pending') قيد الانتظار
                         @else ملغاة
                         @endif
                     </span>
-                </div>
-                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span class="text-gray-600">تاريخ الإحالة</span>
-                    <span class="font-medium text-gray-900">{{ $referral->created_at->format('d/m/Y H:i') }}</span>
-                </div>
-                @if($referral->completed_at)
-                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span class="text-gray-600">تاريخ الإكمال</span>
-                    <span class="font-medium text-gray-900">{{ $referral->completed_at->format('d/m/Y H:i') }}</span>
-                </div>
-                @endif
-                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span class="text-gray-600">الخصم المطبق</span>
-                    <span class="font-bold text-purple-600">{{ number_format($referral->discount_amount ?? 0, 2) }} ج.م</span>
-                </div>
-                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span class="text-gray-600">عدد مرات استخدام الخصم</span>
-                    <span class="font-medium text-gray-900">{{ $referral->discount_used_count ?? 0 }} / {{ $referral->referralProgram->max_discount_uses_per_referred ?? 1 }}</span>
-                </div>
-                @if($referral->discount_expires_at)
-                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span class="text-gray-600">انتهاء صلاحية الخصم</span>
-                    <span class="font-medium text-gray-900 {{ $referral->discount_expires_at < now() ? 'text-red-600' : '' }}">
-                        {{ $referral->discount_expires_at->format('d/m/Y H:i') }}
-                    </span>
-                </div>
-                @endif
-                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span class="text-gray-600">المكافأة (مالية)</span>
-                    <span class="font-bold text-emerald-600">{{ number_format($referral->reward_amount ?? 0, 2) }} ج.م</span>
-                </div>
-                @if(($referral->reward_points ?? 0) > 0)
-                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span class="text-gray-600">نقاط المكافأة</span>
-                    <span class="font-bold text-amber-600">{{ number_format($referral->reward_points) }}</span>
-                </div>
-                @endif
-                @if($referral->autoCoupon)
-                <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span class="text-gray-600">الكوبون التلقائي</span>
-                    <span class="font-mono font-bold text-gray-900">{{ $referral->autoCoupon->code }}</span>
-                </div>
-                @endif
+                </dd>
             </div>
-        </div>
-
-        @if($referral->invoice)
-        <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-200 mt-6">
-            <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <i class="fas fa-file-invoice text-sky-600"></i>
-                الفاتورة المرتبطة
-            </h2>
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600">رقم الفاتورة</p>
-                    <p class="text-lg font-bold text-gray-900">{{ $referral->invoice->invoice_number }}</p>
+            <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3 sm:px-5">
+                <dt class="text-sm text-muted">تاريخ الإحالة</dt>
+                <dd class="text-sm font-semibold text-ink">{{ $referral->created_at->format('d/m/Y H:i') }}</dd>
+            </div>
+            @if($referral->completed_at)
+                <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3 sm:px-5">
+                    <dt class="text-sm text-muted">تاريخ الإكمال</dt>
+                    <dd class="text-sm font-semibold text-ink">{{ $referral->completed_at->format('d/m/Y H:i') }}</dd>
                 </div>
-                <a href="{{ route('admin.invoices.show', $referral->invoice) }}" 
-                   class="bg-gradient-to-l from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2">
-                    <i class="fas fa-eye"></i>
+            @endif
+            <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3 sm:px-5">
+                <dt class="text-sm text-muted">الخصم المطبق</dt>
+                <dd class="text-sm font-bold tabular-nums text-ink">{{ number_format($referral->discount_amount ?? 0, 2) }} ج.م</dd>
+            </div>
+            <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3 sm:px-5">
+                <dt class="text-sm text-muted">عدد مرات استخدام الخصم</dt>
+                <dd class="text-sm font-semibold text-ink">{{ $referral->discount_used_count ?? 0 }} / {{ $referral->referralProgram->max_discount_uses_per_referred ?? 1 }}</dd>
+            </div>
+            @if($referral->discount_expires_at)
+                <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3 sm:px-5">
+                    <dt class="text-sm text-muted">انتهاء صلاحية الخصم</dt>
+                    <dd class="text-sm font-semibold {{ $referral->discount_expires_at < now() ? 'text-rose-600' : 'text-ink' }}">
+                        {{ $referral->discount_expires_at->format('d/m/Y H:i') }}
+                    </dd>
+                </div>
+            @endif
+            <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3 sm:px-5">
+                <dt class="text-sm text-muted">المكافأة (مالية)</dt>
+                <dd class="text-sm font-bold tabular-nums text-emerald-700">{{ number_format($referral->reward_amount ?? 0, 2) }} ج.م</dd>
+            </div>
+            @if(($referral->reward_points ?? 0) > 0)
+                <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3 sm:px-5">
+                    <dt class="text-sm text-muted">نقاط المكافأة</dt>
+                    <dd class="text-sm font-bold tabular-nums text-amber-700">{{ number_format($referral->reward_points) }}</dd>
+                </div>
+            @endif
+            @if($referral->autoCoupon)
+                <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3 sm:px-5 sm:col-span-2">
+                    <dt class="text-sm text-muted">الكوبون التلقائي</dt>
+                    <dd class="font-mono text-sm font-bold text-ink">{{ $referral->autoCoupon->code }}</dd>
+                </div>
+            @endif
+        </dl>
+    </article>
+
+    @if($referral->invoice)
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="flex flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-5">
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent">
+                        <i class="fas fa-file-invoice text-sm"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-base font-semibold text-ink">الفاتورة المرتبطة</h3>
+                        <p class="mt-0.5 font-mono text-xs text-muted">{{ $referral->invoice->invoice_number }}</p>
+                    </div>
+                </div>
+                <a href="{{ route('admin.invoices.show', $referral->invoice) }}"
+                   class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                    <i class="fas fa-eye text-xs"></i>
                     عرض الفاتورة
                 </a>
             </div>
-        </div>
-        @endif
-    </div>
+        </article>
+    @endif
 </div>
 @endsection

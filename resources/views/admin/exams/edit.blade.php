@@ -1,294 +1,268 @@
 @extends('layouts.admin')
 
 @section('title', 'تحرير الامتحان')
-@section('header', 'تحرير الامتحان')
+@section('page_title', 'تحرير الامتحان')
 
 @php
     $startTime = old('start_time');
     if ($startTime === null && $exam->start_time) $startTime = $exam->start_time->format('Y-m-d\TH:i');
     $endTime = old('end_time');
     if ($endTime === null && $exam->end_time) $endTime = $exam->end_time->format('Y-m-d\TH:i');
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $textareaClass = 'w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 resize-none';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $checkboxClass = 'size-4 rounded border-line text-accent focus:ring-accent/20';
 @endphp
 
 @section('content')
-<div class="w-full max-w-full px-4 py-6 space-y-6">
-    <!-- الهيدر -->
-    <div class="bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 rounded-2xl p-6 text-white shadow-lg">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="min-w-0">
-                <nav class="text-sm text-white/80 mb-2">
-                    <a href="{{ route('admin.dashboard') }}" class="hover:text-white">لوحة التحكم</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.exams.index') }}" class="hover:text-white">الامتحانات</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.exams.by-course', $exam->advanced_course_id) }}" class="hover:text-white">{{ Str::limit($exam->course->title ?? '', 30) }}</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.exams.show', $exam) }}" class="hover:text-white">{{ Str::limit($exam->title, 25) }}</a>
-                    <span class="mx-2">/</span>
-                    <span class="text-white">تحرير</span>
-                </nav>
-                <h1 class="text-xl sm:text-2xl font-bold mt-1">تحرير الامتحان</h1>
-                <p class="text-sm text-white/90 mt-1">{{ Str::limit($exam->title, 50) }}</p>
-            </div>
-            <div class="flex flex-wrap gap-2 flex-shrink-0">
-                <a href="{{ route('admin.exams.show', $exam) }}" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
-                    <i class="fas fa-eye"></i>
-                    عرض
-                </a>
-                <a href="{{ route('admin.exams.by-course', $exam->advanced_course_id) }}" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
-                    <i class="fas fa-arrow-right"></i>
-                    رجوع لامتحانات الكورس
-                </a>
-            </div>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">
+                <a href="{{ route('admin.dashboard') }}" class="hover:text-accent">لوحة التحكم</a>
+                <span class="mx-1">·</span>
+                <a href="{{ route('admin.exams.index') }}" class="hover:text-accent">الامتحانات</a>
+                <span class="mx-1">·</span>
+                <a href="{{ route('admin.exams.by-course', $exam->advanced_course_id) }}" class="hover:text-accent">{{ Str::limit($exam->course->title ?? '', 30) }}</a>
+                <span class="mx-1">·</span>
+                <a href="{{ route('admin.exams.show', $exam) }}" class="hover:text-accent">{{ Str::limit($exam->title, 25) }}</a>
+                <span class="mx-1">·</span>
+                <span class="text-ink">تحرير</span>
+            </p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">تحرير الامتحان</h2>
+            <p class="mt-1 text-sm text-muted">{{ Str::limit($exam->title, 50) }}</p>
         </div>
-    </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('admin.exams.show', $exam) }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink transition hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-eye text-xs"></i>
+                عرض
+            </a>
+            <a href="{{ route('admin.exams.by-course', $exam->advanced_course_id) }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink transition hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                رجوع لامتحانات البرنامج
+            </a>
+        </div>
+    </section>
 
-    <form action="{{ route('admin.exams.update', $exam) }}" method="POST" class="space-y-6">
+    <form action="{{ route('admin.exams.update', $exam) }}" method="POST">
         @csrf
         @method('PUT')
 
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <!-- المحتوى الرئيسي -->
-            <div class="xl:col-span-2 space-y-6">
-                <!-- معلومات أساسية -->
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                        <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                            <i class="fas fa-info-circle text-indigo-600"></i>
-                            معلومات الامتحان
-                        </h2>
+        <div class="grid grid-cols-1 gap-5 xl:grid-cols-3">
+            <div class="space-y-5 xl:col-span-2">
+                <article class="rounded-2xl border border-line bg-surface shadow-soft">
+                    <div class="border-b border-line px-5 py-4">
+                        <h3 class="text-sm font-semibold text-ink">معلومات الامتحان</h3>
                     </div>
-                    <div class="p-6 space-y-6">
+                    <div class="space-y-5 p-5">
                         <div>
-                            <label for="title" class="block text-sm font-semibold text-gray-700 mb-2">عنوان الامتحان <span class="text-red-500">*</span></label>
+                            <label for="title" class="{{ $labelClass }}">عنوان الامتحان <span class="text-rose-600">*</span></label>
                             <input type="text" name="title" id="title" value="{{ old('title', $exam->title) }}" required
-                                   class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                   placeholder="مثال: امتحان الوحدة الأولى">
-                            @error('title')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                   class="{{ $fieldClass }}" placeholder="مثال: امتحان الوحدة الأولى">
+                            @error('title')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                         </div>
                         <div>
-                            <label for="advanced_course_id" class="block text-sm font-semibold text-gray-700 mb-2">الكورس <span class="text-red-500">*</span></label>
-                            <select name="advanced_course_id" id="advanced_course_id" required
-                                    class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">اختر الكورس</option>
+                            <label for="advanced_course_id" class="{{ $labelClass }}">البرنامج <span class="text-rose-600">*</span></label>
+                            <select name="advanced_course_id" id="advanced_course_id" required class="{{ $fieldClass }}">
+                                <option value="">اختر البرنامج</option>
                                 @foreach($courses as $course)
                                     <option value="{{ $course->id }}" {{ old('advanced_course_id', $exam->advanced_course_id) == $course->id ? 'selected' : '' }}>
                                         {{ $course->title }}{{ $course->academicSubject ? ' — ' . $course->academicSubject->name : '' }}
                                     </option>
                                 @endforeach
                             </select>
-                            @error('advanced_course_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            @error('advanced_course_id')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                         </div>
                         <div>
-                            <label for="course_lesson_id" class="block text-sm font-semibold text-gray-700 mb-2">الدرس (اختياري)</label>
-                            <select name="course_lesson_id" id="course_lesson_id"
-                                    class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <label for="course_lesson_id" class="{{ $labelClass }}">الدرس (اختياري)</label>
+                            <select name="course_lesson_id" id="course_lesson_id" class="{{ $fieldClass }}">
                                 <option value="">لا يوجد</option>
                                 @foreach($lessons as $lesson)
                                     <option value="{{ $lesson->id }}" {{ old('course_lesson_id', $exam->course_lesson_id) == $lesson->id ? 'selected' : '' }}>{{ $lesson->title }}</option>
                                 @endforeach
                             </select>
-                            @error('course_lesson_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            @error('course_lesson_id')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                         </div>
                         <div>
-                            <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">الوصف</label>
-                            <textarea name="description" id="description" rows="3" placeholder="وصف مختصر"
-                                      class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none">{{ old('description', $exam->description) }}</textarea>
-                            @error('description')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            <label for="description" class="{{ $labelClass }}">الوصف</label>
+                            <textarea name="description" id="description" rows="3" placeholder="وصف مختصر" class="{{ $textareaClass }}">{{ old('description', $exam->description) }}</textarea>
+                            @error('description')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                         </div>
                         <div>
-                            <label for="instructions" class="block text-sm font-semibold text-gray-700 mb-2">تعليمات الامتحان</label>
-                            <textarea name="instructions" id="instructions" rows="4" placeholder="تعليمات للطلاب قبل البدء"
-                                      class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none">{{ old('instructions', $exam->instructions) }}</textarea>
-                            @error('instructions')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            <label for="instructions" class="{{ $labelClass }}">تعليمات الامتحان</label>
+                            <textarea name="instructions" id="instructions" rows="4" placeholder="تعليمات للطلاب قبل البدء" class="{{ $textareaClass }}">{{ old('instructions', $exam->instructions) }}</textarea>
+                            @error('instructions')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                         </div>
                     </div>
-                </div>
+                </article>
 
-                <!-- إعدادات الامتحان -->
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                        <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                            <i class="fas fa-cog text-indigo-600"></i>
-                            إعدادات الامتحان
-                        </h2>
+                <article class="rounded-2xl border border-line bg-surface shadow-soft">
+                    <div class="border-b border-line px-5 py-4">
+                        <h3 class="text-sm font-semibold text-ink">إعدادات الامتحان</h3>
                     </div>
-                    <div class="p-6 space-y-6">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="space-y-5 p-5">
+                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                             <div>
-                                <label for="duration_minutes" class="block text-sm font-semibold text-gray-700 mb-2">مدة الامتحان (دقيقة) <span class="text-red-500">*</span></label>
+                                <label for="duration_minutes" class="{{ $labelClass }}">مدة الامتحان (دقيقة) <span class="text-rose-600">*</span></label>
                                 <input type="number" name="duration_minutes" id="duration_minutes" value="{{ old('duration_minutes', $exam->duration_minutes) }}" required min="5" max="480"
-                                       class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="60">
-                                @error('duration_minutes')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                       class="{{ $fieldClass }}" placeholder="60">
+                                @error('duration_minutes')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                             </div>
                             <div>
-                                <label for="attempts_allowed" class="block text-sm font-semibold text-gray-700 mb-2">المحاولات المسموحة <span class="text-red-500">*</span></label>
+                                <label for="attempts_allowed" class="{{ $labelClass }}">المحاولات المسموحة <span class="text-rose-600">*</span></label>
                                 <input type="number" name="attempts_allowed" id="attempts_allowed" value="{{ old('attempts_allowed', $exam->attempts_allowed) }}" required min="0" max="10"
-                                       class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="1">
-                                <p class="mt-1 text-xs text-gray-500">0 = غير محدود</p>
-                                @error('attempts_allowed')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                       class="{{ $fieldClass }}" placeholder="1">
+                                <p class="mt-1 text-xs text-muted">0 = غير محدود</p>
+                                @error('attempts_allowed')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                             </div>
                             <div>
-                                <label for="passing_marks" class="block text-sm font-semibold text-gray-700 mb-2">درجة النجاح (%) <span class="text-red-500">*</span></label>
+                                <label for="passing_marks" class="{{ $labelClass }}">درجة النجاح (%) <span class="text-rose-600">*</span></label>
                                 <input type="number" name="passing_marks" id="passing_marks" value="{{ old('passing_marks', $exam->passing_marks) }}" required min="0" max="100" step="0.1"
-                                       class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="50">
-                                @error('passing_marks')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                       class="{{ $fieldClass }}" placeholder="50">
+                                @error('passing_marks')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                             </div>
                             <div>
-                                <label for="total_marks" class="block text-sm font-semibold text-gray-700 mb-2">إجمالي الدرجات</label>
+                                <label for="total_marks" class="{{ $labelClass }}">إجمالي الدرجات</label>
                                 <input type="number" name="total_marks" id="total_marks" value="{{ old('total_marks', $exam->total_marks) }}" min="0" step="0.1"
-                                       class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="يُحسب من الأسئلة">
-                                @error('total_marks')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                       class="{{ $fieldClass }}" placeholder="يُحسب من الأسئلة">
+                                @error('total_marks')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                             </div>
                         </div>
                     </div>
-                </div>
+                </article>
 
-                <!-- توقيتات الامتحان -->
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                        <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                            <i class="fas fa-calendar-alt text-indigo-600"></i>
-                            توقيتات الامتحان
-                        </h2>
+                <article class="rounded-2xl border border-line bg-surface shadow-soft">
+                    <div class="border-b border-line px-5 py-4">
+                        <h3 class="text-sm font-semibold text-ink">توقيتات الامتحان</h3>
                     </div>
-                    <div class="p-6">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="p-5">
+                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                             <div>
-                                <label for="start_time" class="block text-sm font-semibold text-gray-700 mb-2">وقت البداية</label>
-                                <input type="datetime-local" name="start_time" id="start_time" value="{{ $startTime }}"
-                                       class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <p class="mt-1 text-xs text-gray-500">فارغ = متاح فوراً</p>
-                                @error('start_time')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                <label for="start_time" class="{{ $labelClass }}">وقت البداية</label>
+                                <input type="datetime-local" name="start_time" id="start_time" value="{{ $startTime }}" class="{{ $fieldClass }}">
+                                <p class="mt-1 text-xs text-muted">فارغ = متاح فوراً</p>
+                                @error('start_time')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                             </div>
                             <div>
-                                <label for="end_time" class="block text-sm font-semibold text-gray-700 mb-2">وقت النهاية</label>
-                                <input type="datetime-local" name="end_time" id="end_time" value="{{ $endTime }}"
-                                       class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <p class="mt-1 text-xs text-gray-500">فارغ = متاح باستمرار</p>
-                                @error('end_time')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                <label for="end_time" class="{{ $labelClass }}">وقت النهاية</label>
+                                <input type="datetime-local" name="end_time" id="end_time" value="{{ $endTime }}" class="{{ $fieldClass }}">
+                                <p class="mt-1 text-xs text-muted">فارغ = متاح باستمرار</p>
+                                @error('end_time')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                             </div>
                         </div>
                     </div>
-                </div>
+                </article>
 
-                <!-- إعدادات العرض والمراجعة -->
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                        <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                            <i class="fas fa-eye text-indigo-600"></i>
-                            إعدادات العرض والمراجعة
-                        </h2>
+                <article class="rounded-2xl border border-line bg-surface shadow-soft">
+                    <div class="border-b border-line px-5 py-4">
+                        <h3 class="text-sm font-semibold text-ink">إعدادات العرض والمراجعة</h3>
                     </div>
-                    <div class="p-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-5">
+                        <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                             <div class="space-y-3">
-                                <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                                <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-3 transition hover:bg-accent-soft/30">
                                     <input type="hidden" name="randomize_questions" value="0">
-                                    <input type="checkbox" name="randomize_questions" value="1" {{ old('randomize_questions', $exam->randomize_questions) ? 'checked' : '' }} class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                                    <span class="text-sm font-medium text-gray-800">خلط ترتيب الأسئلة</span>
+                                    <input type="checkbox" name="randomize_questions" value="1" {{ old('randomize_questions', $exam->randomize_questions) ? 'checked' : '' }} class="{{ $checkboxClass }}">
+                                    <span class="text-sm font-medium text-ink">خلط ترتيب الأسئلة</span>
                                 </label>
-                                <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                                <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-3 transition hover:bg-accent-soft/30">
                                     <input type="hidden" name="randomize_options" value="0">
-                                    <input type="checkbox" name="randomize_options" value="1" {{ old('randomize_options', $exam->randomize_options) ? 'checked' : '' }} class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                                    <span class="text-sm font-medium text-gray-800">خلط خيارات الإجابة</span>
+                                    <input type="checkbox" name="randomize_options" value="1" {{ old('randomize_options', $exam->randomize_options) ? 'checked' : '' }} class="{{ $checkboxClass }}">
+                                    <span class="text-sm font-medium text-ink">خلط خيارات الإجابة</span>
                                 </label>
-                                <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                                <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-3 transition hover:bg-accent-soft/30">
                                     <input type="hidden" name="show_results_immediately" value="0">
-                                    <input type="checkbox" name="show_results_immediately" value="1" {{ old('show_results_immediately', $exam->show_results_immediately) ? 'checked' : '' }} class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                                    <span class="text-sm font-medium text-gray-800">عرض النتائج فور الانتهاء</span>
+                                    <input type="checkbox" name="show_results_immediately" value="1" {{ old('show_results_immediately', $exam->show_results_immediately) ? 'checked' : '' }} class="{{ $checkboxClass }}">
+                                    <span class="text-sm font-medium text-ink">عرض النتائج فور الانتهاء</span>
                                 </label>
-                                <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                                <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-3 transition hover:bg-accent-soft/30">
                                     <input type="hidden" name="allow_review" value="0">
-                                    <input type="checkbox" name="allow_review" value="1" {{ old('allow_review', $exam->allow_review) ? 'checked' : '' }} class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                                    <span class="text-sm font-medium text-gray-800">السماح بمراجعة الأسئلة والإجابات</span>
+                                    <input type="checkbox" name="allow_review" value="1" {{ old('allow_review', $exam->allow_review) ? 'checked' : '' }} class="{{ $checkboxClass }}">
+                                    <span class="text-sm font-medium text-ink">السماح بمراجعة الأسئلة والإجابات</span>
                                 </label>
                             </div>
                             <div class="space-y-3">
-                                <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                                <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-3 transition hover:bg-accent-soft/30">
                                     <input type="hidden" name="show_correct_answers" value="0">
-                                    <input type="checkbox" name="show_correct_answers" value="1" {{ old('show_correct_answers', $exam->show_correct_answers) ? 'checked' : '' }} class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                                    <span class="text-sm font-medium text-gray-800">عرض الإجابات الصحيحة</span>
+                                    <input type="checkbox" name="show_correct_answers" value="1" {{ old('show_correct_answers', $exam->show_correct_answers) ? 'checked' : '' }} class="{{ $checkboxClass }}">
+                                    <span class="text-sm font-medium text-ink">عرض الإجابات الصحيحة</span>
                                 </label>
-                                <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                                <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-3 transition hover:bg-accent-soft/30">
                                     <input type="hidden" name="show_explanations" value="0">
-                                    <input type="checkbox" name="show_explanations" value="1" {{ old('show_explanations', $exam->show_explanations) ? 'checked' : '' }} class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                                    <span class="text-sm font-medium text-gray-800">عرض تفسيرات الإجابات</span>
+                                    <input type="checkbox" name="show_explanations" value="1" {{ old('show_explanations', $exam->show_explanations) ? 'checked' : '' }} class="{{ $checkboxClass }}">
+                                    <span class="text-sm font-medium text-ink">عرض تفسيرات الإجابات</span>
                                 </label>
-                                <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                                <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-3 transition hover:bg-accent-soft/30">
                                     <input type="hidden" name="prevent_tab_switch" value="0">
-                                    <input type="checkbox" name="prevent_tab_switch" value="1" {{ old('prevent_tab_switch', $exam->prevent_tab_switch) ? 'checked' : '' }} class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                                    <span class="text-sm font-medium text-gray-800">منع تبديل التبويبات أثناء الامتحان</span>
+                                    <input type="checkbox" name="prevent_tab_switch" value="1" {{ old('prevent_tab_switch', $exam->prevent_tab_switch) ? 'checked' : '' }} class="{{ $checkboxClass }}">
+                                    <span class="text-sm font-medium text-ink">منع تبديل التبويبات أثناء الامتحان</span>
                                 </label>
-                                <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                                <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-3 transition hover:bg-accent-soft/30">
                                     <input type="hidden" name="auto_submit" value="0">
-                                    <input type="checkbox" name="auto_submit" value="1" {{ old('auto_submit', $exam->auto_submit) ? 'checked' : '' }} class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                                    <span class="text-sm font-medium text-gray-800">تسليم تلقائي عند انتهاء الوقت</span>
+                                    <input type="checkbox" name="auto_submit" value="1" {{ old('auto_submit', $exam->auto_submit) ? 'checked' : '' }} class="{{ $checkboxClass }}">
+                                    <span class="text-sm font-medium text-ink">تسليم تلقائي عند انتهاء الوقت</span>
                                 </label>
                             </div>
                         </div>
                     </div>
-                </div>
+                </article>
 
-                <!-- إعدادات الأمان -->
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                        <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                            <i class="fas fa-shield-alt text-indigo-600"></i>
-                            إعدادات الأمان
-                        </h2>
+                <article class="rounded-2xl border border-line bg-surface shadow-soft">
+                    <div class="border-b border-line px-5 py-4">
+                        <h3 class="text-sm font-semibold text-ink">إعدادات الأمان</h3>
                     </div>
-                    <div class="p-6">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                    <div class="p-5">
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-3 transition hover:bg-accent-soft/30">
                                 <input type="hidden" name="require_camera" value="0">
-                                <input type="checkbox" name="require_camera" value="1" {{ old('require_camera', $exam->require_camera) ? 'checked' : '' }} class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                                <span class="text-sm font-medium text-gray-800">تتطلب تفعيل الكاميرا</span>
+                                <input type="checkbox" name="require_camera" value="1" {{ old('require_camera', $exam->require_camera) ? 'checked' : '' }} class="{{ $checkboxClass }}">
+                                <span class="text-sm font-medium text-ink">تتطلب تفعيل الكاميرا</span>
                             </label>
-                            <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                            <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-3 transition hover:bg-accent-soft/30">
                                 <input type="hidden" name="require_microphone" value="0">
-                                <input type="checkbox" name="require_microphone" value="1" {{ old('require_microphone', $exam->require_microphone) ? 'checked' : '' }} class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                                <span class="text-sm font-medium text-gray-800">تتطلب تفعيل الميكروفون</span>
+                                <input type="checkbox" name="require_microphone" value="1" {{ old('require_microphone', $exam->require_microphone) ? 'checked' : '' }} class="{{ $checkboxClass }}">
+                                <span class="text-sm font-medium text-ink">تتطلب تفعيل الميكروفون</span>
                             </label>
                         </div>
                     </div>
-                </div>
+                </article>
             </div>
 
-            <!-- الشريط الجانبي -->
-            <div class="space-y-6">
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                        <h2 class="text-lg font-bold text-gray-900">حالة الامتحان</h2>
+            <div class="space-y-5">
+                <article class="rounded-2xl border border-line bg-surface shadow-soft">
+                    <div class="border-b border-line px-5 py-4">
+                        <h3 class="text-sm font-semibold text-ink">حالة الامتحان</h3>
                     </div>
-                    <div class="p-6">
-                        <label class="flex items-center gap-3 p-4 rounded-xl border-2 border-gray-200 hover:border-indigo-200 cursor-pointer">
+                    <div class="p-5">
+                        <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-4 transition hover:bg-accent-soft/30">
                             <input type="hidden" name="is_active" value="0">
-                            <input type="checkbox" name="is_active" value="1" {{ old('is_active', $exam->is_active) ? 'checked' : '' }} class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                            <span class="font-semibold text-gray-800">امتحان نشط</span>
+                            <input type="checkbox" name="is_active" value="1" {{ old('is_active', $exam->is_active) ? 'checked' : '' }} class="{{ $checkboxClass }}">
+                            <span class="font-semibold text-ink">امتحان نشط</span>
                         </label>
-                        <p class="text-xs text-gray-500 mt-2">غير النشط لا يظهر للطلاب</p>
+                        <p class="mt-2 text-xs text-muted">غير النشط لا يظهر للطلاب</p>
                     </div>
-                </div>
+                </article>
 
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                        <h2 class="text-lg font-bold text-gray-900">معلومات</h2>
+                <article class="rounded-2xl border border-line bg-surface shadow-soft">
+                    <div class="border-b border-line px-5 py-4">
+                        <h3 class="text-sm font-semibold text-ink">معلومات</h3>
                     </div>
-                    <div class="p-6 space-y-3 text-sm">
-                        <div class="flex justify-between"><span class="text-gray-500">تاريخ الإنشاء</span><span class="font-medium text-gray-800">{{ $exam->created_at->format('Y-m-d H:i') }}</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">آخر تحديث</span><span class="font-medium text-gray-800">{{ $exam->updated_at->format('Y-m-d H:i') }}</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">الأسئلة</span><span class="font-medium text-gray-800">{{ $exam->examQuestions->count() }}</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">المحاولات</span><span class="font-medium text-gray-800">{{ $exam->attempts->count() }}</span></div>
+                    <div class="space-y-3 p-5 text-sm">
+                        <div class="flex justify-between"><span class="text-muted">تاريخ الإنشاء</span><span class="font-medium tabular-nums text-ink">{{ $exam->created_at->format('Y-m-d H:i') }}</span></div>
+                        <div class="flex justify-between"><span class="text-muted">آخر تحديث</span><span class="font-medium tabular-nums text-ink">{{ $exam->updated_at->format('Y-m-d H:i') }}</span></div>
+                        <div class="flex justify-between"><span class="text-muted">الأسئلة</span><span class="font-medium tabular-nums text-ink">{{ $exam->examQuestions->count() }}</span></div>
+                        <div class="flex justify-between"><span class="text-muted">المحاولات</span><span class="font-medium tabular-nums text-ink">{{ $exam->attempts->count() }}</span></div>
                     </div>
-                </div>
+                </article>
 
                 <div class="flex flex-col gap-3">
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors shadow-lg hover:shadow-xl inline-flex items-center justify-center gap-2">
-                        <i class="fas fa-save"></i>
+                    <button type="submit" class="btn-press inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                        <i class="fas fa-save text-xs"></i>
                         حفظ التغييرات
                     </button>
-                    <a href="{{ route('admin.exams.by-course', $exam->advanced_course_id) }}" class="w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-colors">
+                    <a href="{{ route('admin.exams.by-course', $exam->advanced_course_id) }}" class="btn-press inline-flex h-11 w-full items-center justify-center rounded-xl border border-line text-sm font-medium text-ink transition hover:bg-accent-soft hover:text-accent">
                         إلغاء
                     </a>
                 </div>

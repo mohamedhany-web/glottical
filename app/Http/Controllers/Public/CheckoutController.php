@@ -1004,6 +1004,14 @@ class CheckoutController extends Controller
             );
         }
 
+        if ($order->isTutoringOrder()) {
+            try {
+                \App\Services\TutoringGroupCheckoutService::fulfillApprovedOrder($order->fresh());
+            } catch (\Throwable $e) {
+                Log::warning('Tutoring fulfill failed after online payment: '.$e->getMessage(), ['order_id' => $order->id]);
+            }
+        }
+
         OrderWalletAndCouponFinalizer::run($order->fresh());
 
         return $invoice;

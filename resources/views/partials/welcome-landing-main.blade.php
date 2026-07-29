@@ -1,14 +1,24 @@
 @php
     $a = $a ?? 'landing.academy';
+    $g = 'landing.groups_page';
     $isRtl = $isRtl ?? (app()->getLocale() === 'ar');
     $brand = config('app.name', 'Glottical');
     $footer = \App\Services\PublicFooterSettings::payload();
     $waUrl = $footer['whatsapp_url'] ?? 'https://wa.me/201044610507';
     $featuredList = ($featuredCourses ?? collect())->take(8);
-    $instructorsSample = ($topInstructors ?? $featuredInstructors ?? collect())->take(4);
-    if ($instructorsSample->isEmpty() && isset($featuredList)) {
-        $instructorsSample = $featuredList->map(fn ($c) => $c->instructor)->filter()->unique('id')->take(4);
-    }
+    $homeGroupCourses = ($homeGroupCourses ?? collect())->take(4);
+    $homeOneToOneGroups = ($homeOneToOneGroups ?? collect())->take(4);
+    $homeGroupCount = (int) ($homeGroupCount ?? 0);
+    $homeOneToOneCount = (int) ($homeOneToOneCount ?? 0);
+    $featuredGroups = $homeGroupCourses->concat($homeOneToOneGroups)->take(8);
+    $groupCountLabel = $homeGroupCount === 1
+        ? __($g.'.courses_count_one')
+        : __($g.'.courses_count', ['count' => $homeGroupCount]);
+    $soloCountLabel = $homeOneToOneCount === 1
+        ? __($g.'.courses_count_one')
+        : __($g.'.courses_count', ['count' => $homeOneToOneCount]);
+    $groupImg = 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80';
+    $soloImg = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=80';
     $heroPath = public_path('img/glottical/hero-Photoroom.png');
     $heroImg = file_exists($heroPath)
         ? asset('img/glottical/hero-Photoroom.png').'?v='.filemtime($heroPath)
@@ -17,8 +27,9 @@
     $faqBoyImg = asset('img/sanua/landing-hero-boy.png');
     $coursesUrl = route('public.courses');
     $groupsUrl = route('public.groups');
+    $groupsCollectiveUrl = route('public.groups.courses');
+    $groupsOneToOneUrl = route('public.groups.one-to-one');
     $aboutUrl = route('public.about');
-    $instructorsUrl = route('public.instructors.index');
 @endphp
 
 <main>
@@ -61,7 +72,7 @@
           </p>
           <h1 class="sana-hero__title">
             {{ $brand }}
-            <span class="hl">{{ $isRtl ? 'اللغة لا تُحفظ… اللغة تُعاش' : 'Language isn’t memorized — it’s lived' }}</span>
+            <span class="hl">{{ $isRtl ? 'تعلّم لغة. احصل على وظيفة. ابدأ مستقبلك.' : 'Learn a language. Get a job. Start your future.' }}</span>
           </h1>
           <p class="sana-hero__desc">{{ $isRtl
             ? 'تعلّم العربية والإنجليزية عبر حصص مباشرة (فردية وجماعية)، ومتابعة لولي الأمر — من التقييم المجاني حتى الشهادة.'
@@ -71,6 +82,9 @@
               <button type="button" data-open-free-trial class="sana-btn sana-btn--yellow sana-btn--lg">
                 <i class="fas fa-clipboard-check"></i> {{ __($a.'.free_trial_cta') }}
               </button>
+              <a href="{{ $groupsUrl }}" class="sana-btn sana-btn--white-outline sana-btn--lg">
+                <i class="fas fa-users"></i> {{ $isRtl ? 'تصفّح المجموعات' : 'Browse groups' }}
+              </a>
               <a href="{{ $waUrl }}" class="sana-btn sana-btn--wa sana-btn--lg" target="_blank" rel="noopener">
                 <i class="fab fa-whatsapp"></i> {{ $isRtl ? 'تواصل عبر واتساب' : 'WhatsApp' }}
               </a>
@@ -83,7 +97,7 @@
           </ul>
           <div class="sana-hero__badges">
             <span class="sana-hero__badge"><i class="fas fa-shield-halved"></i> {{ $isRtl ? 'بيئة آمنة ومنظّمة' : 'Safe & structured' }}</span>
-            <span class="sana-hero__badge"><i class="fas fa-chalkboard-user"></i> {{ $isRtl ? 'معلّمون متخصصون' : 'Specialist tutors' }}</span>
+            <span class="sana-hero__badge"><i class="fas fa-users"></i> {{ $isRtl ? 'مجموعات فردية وجماعية' : '1:1 & group cohorts' }}</span>
           </div>
         </div>
         <div class="sana-hero__visual sana-reveal" aria-hidden="true">
@@ -129,6 +143,91 @@
         <div>
           <strong>{{ $isRtl ? 'متابعة لولي الأمر' : 'Parent visibility' }}</strong>
           <span>{{ $isRtl ? 'حضور، تقدّم، وتقارير مفهومة بعد الحصص' : 'Attendance, progress, and clear session reports' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{{-- ===== groups — أولوية الظهور ===== --}}
+<section class="sana-section gl-home-groups" id="groups">
+  <div class="sana-container">
+    <div class="gl-home-groups__head sana-reveal">
+      <span class="gl-home-groups__eyebrow"><i class="fas fa-bolt"></i> {{ __($g.'.kicker') }}</span>
+      <h2 class="gl-home-groups__title">{{ __($g.'.title') }} <span class="hl">{{ $isRtl ? 'جماعي أو فردي' : 'group or 1:1' }}</span></h2>
+      <p class="gl-home-groups__sub">{{ __($g.'.intro') }}</p>
+    </div>
+
+    <div class="gl-home-groups__modes sana-reveal">
+      <a href="{{ $groupsCollectiveUrl }}" class="gl-home-groups__mode">
+        <div class="gl-home-groups__mode-media">
+          <img src="{{ $groupImg }}" alt="{{ __($g.'.group_tile_title') }}" width="900" height="560" loading="lazy">
+          <span class="gl-home-groups__mode-shade" aria-hidden="true"></span>
+        </div>
+        <div class="gl-home-groups__mode-body">
+          @if ($homeGroupCount > 0)
+            <span class="gl-home-groups__mode-count"><i class="fas fa-users"></i> {{ $groupCountLabel }}</span>
+          @endif
+          <h3>{{ __($g.'.group_tile_title') }}</h3>
+          <p>{{ __($g.'.group_tile_sub') }}</p>
+          <span class="gl-home-groups__mode-cta">{{ __($g.'.group_tile_cta') }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></span>
+        </div>
+      </a>
+      <a href="{{ $groupsOneToOneUrl }}" class="gl-home-groups__mode gl-home-groups__mode--solo">
+        <div class="gl-home-groups__mode-media">
+          <img src="{{ $soloImg }}" alt="{{ __($g.'.solo_tile_title') }}" width="900" height="560" loading="lazy">
+          <span class="gl-home-groups__mode-shade" aria-hidden="true"></span>
+        </div>
+        <div class="gl-home-groups__mode-body">
+          @if ($homeOneToOneCount > 0)
+            <span class="gl-home-groups__mode-count"><i class="fas fa-user"></i> {{ $soloCountLabel }}</span>
+          @endif
+          <h3>{{ __($g.'.solo_tile_title') }}</h3>
+          <p>{{ __($g.'.solo_tile_sub') }}</p>
+          <span class="gl-home-groups__mode-cta">{{ __($g.'.solo_tile_cta') }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></span>
+        </div>
+      </a>
+    </div>
+
+    @if ($featuredGroups->isNotEmpty())
+      <div class="sana-head-row sana-reveal" style="margin-top:clamp(28px,4vw,40px)">
+        <div class="sana-head">
+          <h2 class="sana-head__title">{{ $isRtl ? 'مجموعات' : 'Featured' }} <span class="hl">{{ $isRtl ? 'متاحة للحجز' : 'groups' }}</span></h2>
+          <span class="sana-head__line"></span>
+        </div>
+        <a href="{{ $groupsUrl }}" class="sana-link-more">{{ $isRtl ? 'كل المجموعات' : 'All groups' }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></a>
+      </div>
+      <div class="gl-home-groups__grid sana-reveal">
+        @foreach ($featuredGroups as $item)
+          @php
+            $thumb = $item->imageUrl() ?: ($item->isCollective() ? $groupImg : $soloImg);
+            $badge = $item->isCollective()
+              ? ($isRtl ? 'جماعي' : 'Group')
+              : ($isRtl ? 'فردي' : '1:1');
+          @endphp
+          <a href="{{ route('public.groups.show', $item->slug) }}" class="gl-home-groups__card">
+            <div class="gl-home-groups__card-media">
+              <img src="{{ $thumb }}" alt="{{ $item->title }}" loading="lazy">
+              <span class="gl-home-groups__card-badge {{ $item->isIndividual() ? 'is-solo' : '' }}">{{ $badge }}</span>
+            </div>
+            <div class="gl-home-groups__card-body">
+              <h3>{{ $item->title }}</h3>
+              <p>{{ $isRtl ? 'احجز موعداً من جدول المدرب' : 'Book a slot from the tutor schedule' }}</p>
+            </div>
+          </a>
+        @endforeach
+      </div>
+    @endif
+
+    <div class="gl-home-groups__band sana-reveal">
+      <div class="gl-home-groups__band-inner">
+        <div>
+          <h3>{{ __($g.'.cta_title') }}</h3>
+          <p>{{ __($g.'.cta_sub') }}</p>
+        </div>
+        <div class="gl-home-groups__band-actions">
+          <a href="{{ $groupsUrl }}" class="sana-btn sana-btn--yellow">{{ $isRtl ? 'تصفّح المجموعات' : 'Browse groups' }}</a>
+          <button type="button" data-open-free-trial class="sana-btn sana-btn--purple">{{ __($g.'.cta_trial') }}</button>
         </div>
       </div>
     </div>
@@ -183,7 +282,7 @@
       <article class="gl-start__step">
         <span class="gl-start__step-num">02</span>
         <div class="gl-start__step-icon"><i class="fas fa-user-check"></i></div>
-        <h3>{{ $isRtl ? 'نرشّح المسار والمعلّم' : 'We match path & tutor' }}</h3>
+        <h3>{{ $isRtl ? 'نرشّح المسار والمجموعة' : 'We match path & group' }}</h3>
         <p>{{ $isRtl ? 'فردي أو مجموعة، ومسار عربي/إسلامي أو إنجليزي — حسب احتياجك.' : '1:1 or group, Arabic/Islamic or English — based on your needs.' }}</p>
       </article>
       <article class="gl-start__step">
@@ -212,7 +311,7 @@
 <section class="sana-section sana-section--white" id="features">
   <div class="sana-container">
     <div class="sana-head sana-reveal">
-      <h2 class="sana-head__title">{{ $isRtl ? 'لماذا' : 'Why' }} <span class="hl">{{ $brand }}؟</span></h2>
+      <h2 class="sana-head__title">{{ $isRtl ? 'لماذا' : 'Why' }} <span class="hl">{{ $brand }}</span>{{ $isRtl ? '؟' : '?' }}</h2>
       <span class="sana-head__line"></span>
       <p class="sana-head__sub" style="margin-top:12px;color:var(--muted);max-width:42rem">{{ $isRtl
         ? 'منصة لغات مبنية على الممارسة الحية — مش الحفظ فقط.'
@@ -222,12 +321,12 @@
       <article class="sana-feature-m sana-reveal">
         <div class="sana-feature-m__icon" style="background:#E8EEF8">🎥</div>
         <h3>{{ $isRtl ? 'تعليم مباشر' : 'Live teaching' }}</h3>
-        <p>{{ $isRtl ? 'حصص حية مع معلّم — فردية أو مجموعات منظّمة داخل دفعات.' : 'Live sessions with a tutor — 1:1 or structured group cohorts.' }}</p>
+        <p>{{ $isRtl ? 'حصص حية — فردية أو مجموعات منظّمة داخل دفعات.' : 'Live sessions — 1:1 or structured group cohorts.' }}</p>
       </article>
       <article class="sana-feature-m sana-reveal">
         <div class="sana-feature-m__icon" style="background:#DBEAFE">🗣️</div>
         <h3>{{ $isRtl ? 'تعلّم بالغمر' : 'Immersive practice' }}</h3>
-        <p>{{ $isRtl ? 'محادثة وممارسة يومية بدل الحفظ التقليدي — اللغة تُعاش.' : 'Conversation and daily practice instead of rote memorization.' }}</p>
+        <p>{{ $isRtl ? 'محادثة وممارسة يومية بدل الحفظ التقليدي — مسار واضح حتى الوظيفة.' : 'Daily conversation and practice — a clear path toward real career outcomes.' }}</p>
       </article>
       <article class="sana-feature-m sana-reveal">
         <div class="sana-feature-m__icon" style="background:#FFF6D6">👨‍👩‍👧</div>
@@ -288,8 +387,6 @@
         @php
           $thumb = $course->thumbnail_url ?: $booksImg;
           $url = route('public.course.show', $course->id);
-          $instName = $course->instructor->name ?? ($isRtl ? 'معلّم' : 'Tutor');
-          $initial = mb_substr($instName, 0, 1) ?: 'م';
           $catName = $course->courseCategory->name ?? ($course->category->name ?? ($isRtl ? 'برنامج' : 'Program'));
         @endphp
         <article class="sana-course-card sana-course-card--featured sana-reveal">
@@ -308,13 +405,6 @@
           <div class="sana-course-card__body">
             <h3 class="sana-course-card__title"><a href="{{ $url }}">{{ $course->title }}</a></h3>
             <p class="sana-course-card__desc">{{ \Illuminate\Support\Str::limit(strip_tags($course->description ?? ($isRtl ? 'برنامج لغوي مباشر.' : 'Live language program.')), 90) }}</p>
-            <div class="sana-course-card__instructor">
-              <span class="sana-course-card__avatar sana-course-card__avatar--initial">{{ $initial }}</span>
-              <div class="sana-course-card__instructor-info">
-                <span class="sana-course-card__instructor-label">{{ $isRtl ? 'المعلّم' : 'Tutor' }}</span>
-                <span class="sana-course-card__instructor-name">{{ $instName }}</span>
-              </div>
-            </div>
           </div>
         </article>
       @empty
@@ -331,51 +421,8 @@
           <div class="sana-course-card__body">
             <h3 class="sana-course-card__title"><a href="{{ $coursesUrl }}">{{ $isRtl ? 'البرامج قريباً' : 'Programs coming soon' }}</a></h3>
             <p class="sana-course-card__desc">{{ $isRtl ? 'احجز تقييم مستوى مجاني لنرشّح لك المسار المناسب.' : 'Book a free assessment so we can recommend the right path.' }}</p>
-            <div class="sana-course-card__instructor">
-              <span class="sana-course-card__avatar sana-course-card__avatar--initial">G</span>
-              <div class="sana-course-card__instructor-info">
-                <span class="sana-course-card__instructor-label">{{ $brand }}</span>
-                <span class="sana-course-card__instructor-name">{{ $isRtl ? 'المنصة' : 'Platform' }}</span>
-              </div>
-            </div>
           </div>
         </article>
-      @endforelse
-    </div>
-  </div>
-</section>
-
-{{-- ===== teachers ===== --}}
-<section class="sana-section" id="instructors">
-  <div class="sana-container">
-    <div class="sana-head-row sana-reveal">
-      <div class="sana-head">
-        <h2 class="sana-head__title">{{ $isRtl ? 'معلّمو' : 'Meet our' }} <span class="hl">{{ $brand }}</span></h2>
-        <span class="sana-head__line"></span>
-      </div>
-      <a href="{{ $instructorsUrl }}" class="sana-link-more">{{ $isRtl ? 'عرض الكل' : 'View all' }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></a>
-    </div>
-    <div class="sana-teachers-m">
-      @forelse($instructorsSample as $inst)
-        @php
-          $name = is_object($inst) ? ($inst->name ?? '') : '';
-          $id = is_object($inst) ? ($inst->id ?? null) : null;
-          $href = $id ? route('public.instructors.show', $id) : $instructorsUrl;
-          $initial = mb_substr($name, 0, 1) ?: 'م';
-        @endphp
-        <a href="{{ $href }}" class="sana-teacher-m sana-reveal" style="text-decoration:none;color:inherit">
-          <div class="sana-teacher-m__ring"><span class="av">{{ $initial }}</span></div>
-          <h3>{{ $name !== '' ? $name : ($isRtl ? 'معلّم على المنصة' : 'Platform tutor') }}</h3>
-          <p class="role">{{ $isRtl ? 'حصص مباشرة · متابعة منتظمة' : 'Live sessions · steady coaching' }}</p>
-          <span class="sana-teacher-m__book"><i class="fas fa-calendar-check"></i> {{ $isRtl ? 'عرض الملف' : 'View profile' }}</span>
-        </a>
-      @empty
-        <a href="{{ $instructorsUrl }}" class="sana-teacher-m sana-reveal" style="text-decoration:none;color:inherit">
-          <div class="sana-teacher-m__ring"><span class="av">G</span></div>
-          <h3>{{ $brand }}</h3>
-          <p class="role">{{ $isRtl ? 'المعلّمون قريباً' : 'Tutors coming soon' }}</p>
-          <span class="sana-teacher-m__book"><i class="fas fa-calendar-check"></i> {{ $isRtl ? 'تصفّح القائمة' : 'Browse list' }}</span>
-        </a>
       @endforelse
     </div>
   </div>
@@ -428,7 +475,7 @@
 <section class="sana-section" id="faq">
   <div class="sana-container">
     <div class="sana-head sana-reveal">
-      <h2 class="sana-head__title">{{ $isRtl ? 'الأسئلة' : 'FAQ' }} <span class="hl">{{ $isRtl ? 'الشائعة' : '' }}</span></h2>
+      <h2 class="sana-head__title">{{ $isRtl ? 'الأسئلة' : 'Frequently asked' }} <span class="hl">{{ $isRtl ? 'الشائعة' : 'questions' }}</span></h2>
       <span class="sana-head__line"></span>
     </div>
     <div class="sana-faq-m sana-reveal">
@@ -440,11 +487,11 @@
       <div class="sana-faq" id="sana-faq">
         <div class="sana-faq-item is-open">
           <button type="button" class="sana-faq-q">{{ $isRtl ? 'ما فكرة Glottical؟' : 'What is Glottical about?' }} <i class="fas fa-chevron-down"></i></button>
-          <div class="sana-faq-a">{{ $isRtl ? 'منصة لغات تعتمد على الحصص المباشرة والممارسة الحية: «اللغة لا تُحفظ… اللغة تُعاش» — مع مسارات عربي/إسلامي وإنجليزي.' : 'A language platform built on live sessions and real practice: language isn’t memorized — it’s lived. Arabic/Islamic and English tracks.' }}</div>
+          <div class="sana-faq-a">{{ $isRtl ? 'منصة لغات تعتمد على الحصص المباشرة والممارسة الحية — هوكنا: «تعلّم لغة. احصل على وظيفة. ابدأ مستقبلك.» مع مسارات عربي/إسلامي وإنجليزي.' : 'A live language platform — our hook: “Learn a language. Get a job. Start your future.” Arabic/Islamic and English tracks.' }}</div>
         </div>
         <div class="sana-faq-item">
           <button type="button" class="sana-faq-q">{{ $isRtl ? 'كيف أبدأ؟' : 'How do I start?' }} <i class="fas fa-chevron-down"></i></button>
-          <div class="sana-faq-a">{{ $isRtl ? 'احجز تقييم مستوى مجاني — نحدد مستواك ونرشّح المسار والمعلّم أو المجموعة المناسبة قبل أي التزام.' : 'Book a free level assessment — we place you and recommend the right path, tutor, or group before any commitment.' }}</div>
+          <div class="sana-faq-a">{{ $isRtl ? 'احجز تقييم مستوى مجاني — نحدد مستواك ونرشّح المسار والمجموعة المناسبة قبل أي التزام.' : 'Book a free level assessment — we place you and recommend the right path or group before any commitment.' }}</div>
         </div>
         <div class="sana-faq-item">
           <button type="button" class="sana-faq-q">{{ $isRtl ? 'هل الحصص فردية أم مجموعات؟' : 'Are sessions 1:1 or groups?' }} <i class="fas fa-chevron-down"></i></button>

@@ -1,103 +1,102 @@
 @extends('layouts.admin')
 
 @section('title', 'امتحانات: ' . $course->title)
-@section('header', 'امتحانات الكورس')
+@section('page_title', 'امتحانات البرنامج')
 
 @section('content')
-<div class="w-full max-w-full px-4 py-6 space-y-6">
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">
+                <a href="{{ route('admin.dashboard') }}" class="hover:text-accent">لوحة التحكم</a>
+                <span class="mx-1">·</span>
+                <a href="{{ route('admin.exams.index') }}" class="hover:text-accent">الامتحانات</a>
+                <span class="mx-1">·</span>
+                <span class="text-ink">{{ Str::limit($course->title, 40) }}</span>
+            </p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ $course->title }}</h2>
+            <p class="mt-1 max-w-2xl text-sm text-muted">إدارة امتحانات هذا البرنامج — عرض، إضافة، تعديل، حذف، أسئلة، إحصائيات.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('admin.exams.index') }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink transition hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-arrow-right text-xs"></i>
+                كل البرامج
+            </a>
+            <a href="{{ route('admin.exams.create', ['course_id' => $course->id]) }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-plus text-xs"></i>
+                إضافة امتحان
+            </a>
+        </div>
+    </section>
+
     @if(session('success'))
-        <div class="rounded-xl bg-green-50 border border-green-200 text-green-800 px-4 py-3 flex items-center gap-2">
-            <i class="fas fa-check-circle text-green-600"></i>
-            <span>{{ session('success') }}</span>
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-soft">
+            <i class="fas fa-check-circle ml-1"></i> {{ session('success') }}
         </div>
     @endif
     @if(session('error'))
-        <div class="rounded-xl bg-red-50 border border-red-200 text-red-800 px-4 py-3 flex items-center gap-2">
-            <i class="fas fa-exclamation-circle text-red-600"></i>
-            <span>{{ session('error') }}</span>
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800 shadow-soft">
+            <i class="fas fa-exclamation-circle ml-1"></i> {{ session('error') }}
         </div>
     @endif
 
-    <!-- الهيدر -->
-    <div class="bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 rounded-2xl p-6 text-white shadow-lg">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="min-w-0">
-                <nav class="text-sm text-white/80 mb-2">
-                    <a href="{{ route('admin.dashboard') }}" class="hover:text-white">لوحة التحكم</a>
-                    <span class="mx-2">/</span>
-                    <a href="{{ route('admin.exams.index') }}" class="hover:text-white">الامتحانات</a>
-                    <span class="mx-2">/</span>
-                    <span class="text-white">{{ Str::limit($course->title, 40) }}</span>
-                </nav>
-                <h1 class="text-xl sm:text-2xl font-bold mt-1">{{ $course->title }}</h1>
-                <p class="text-sm text-white/90 mt-1">إدارة امتحانات هذا الكورس — عرض، إضافة، تعديل، حذف، أسئلة، إحصائيات</p>
-            </div>
-            <div class="flex flex-wrap gap-2 flex-shrink-0">
-                <a href="{{ route('admin.exams.index') }}"
-                   class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
-                    <i class="fas fa-arrow-right"></i>
-                    كل الكورسات
-                </a>
-                <a href="{{ route('admin.exams.create', ['course_id' => $course->id]) }}"
-                   class="inline-flex items-center gap-2 bg-white text-indigo-600 hover:bg-gray-100 px-4 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-plus"></i>
-                    إضافة امتحان
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- قائمة الامتحانات -->
     @if($exams->count() > 0)
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex flex-wrap items-center justify-between gap-4">
-                <h4 class="text-lg font-bold text-gray-900">الامتحانات ({{ $exams->total() }})</h4>
+        <p class="text-xs text-muted">
+            عرض <span class="font-semibold tabular-nums text-ink">{{ $exams->firstItem() }}</span>–<span class="font-semibold tabular-nums text-ink">{{ $exams->lastItem() }}</span>
+            من <span class="font-semibold tabular-nums text-ink">{{ $exams->total() }}</span> امتحان
+        </p>
+
+        <div class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-line px-5 py-4">
+                <h3 class="text-sm font-semibold text-ink">الامتحانات ({{ $exams->total() }})</h3>
             </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full divide-y divide-line">
+                    <thead class="bg-[#f2f5f4]/50">
                         <tr>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">العنوان</th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">المدة</th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">الأسئلة</th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">المحاولات</th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">الحالة</th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                            <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">العنوان</th>
+                            <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">المدة</th>
+                            <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">الأسئلة</th>
+                            <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">المحاولات</th>
+                            <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">الحالة</th>
+                            <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted">الإجراءات</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="divide-y divide-line bg-surface">
                         @foreach($exams as $exam)
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4">
-                                    <div class="text-sm font-semibold text-gray-900">{{ $exam->title }}</div>
+                            <tr class="transition-colors hover:bg-accent-soft/20">
+                                <td class="px-5 py-4">
+                                    <div class="text-sm font-semibold text-ink">{{ $exam->title }}</div>
                                     @if($exam->description)
-                                        <div class="text-xs text-gray-500 mt-0.5 line-clamp-1">{{ Str::limit($exam->description, 50) }}</div>
+                                        <div class="mt-0.5 line-clamp-1 text-xs text-muted">{{ Str::limit($exam->description, 50) }}</div>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $exam->duration_minutes }} د</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $exam->questions_count ?? 0 }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $exam->attempts_count ?? 0 }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $exam->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                <td class="whitespace-nowrap px-5 py-4 text-sm tabular-nums text-ink-soft">{{ $exam->duration_minutes }} د</td>
+                                <td class="whitespace-nowrap px-5 py-4 text-sm tabular-nums text-ink-soft">{{ $exam->questions_count ?? 0 }}</td>
+                                <td class="whitespace-nowrap px-5 py-4 text-sm tabular-nums text-ink-soft">{{ $exam->attempts_count ?? 0 }}</td>
+                                <td class="whitespace-nowrap px-5 py-4">
+                                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium {{ $exam->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }}">
                                         {{ $exam->is_active ? 'نشط' : 'معطل' }}
                                     </span>
                                     @if($exam->is_published)
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 mr-1">منشور</span>
+                                        <span class="mr-1 inline-flex items-center rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">منشور</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <a href="{{ route('admin.exams.show', $exam) }}" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors" title="عرض"><i class="fas fa-eye"></i></a>
-                                        <a href="{{ route('admin.exams.questions.manage', $exam) }}" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-colors" title="الأسئلة"><i class="fas fa-question-circle"></i></a>
-                                        <a href="{{ route('admin.exams.statistics', $exam) }}" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600 hover:bg-cyan-100 transition-colors" title="إحصائيات"><i class="fas fa-chart-bar"></i></a>
-                                        <a href="{{ route('admin.exams.preview', $exam) }}" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors" title="معاينة"><i class="fas fa-external-link-alt"></i></a>
-                                        <a href="{{ route('admin.exams.edit', $exam) }}" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors" title="تعديل"><i class="fas fa-edit"></i></a>
-                                        <button type="button" onclick="toggleExamStatus({{ $exam->id }})" class="inline-flex items-center justify-center w-9 h-9 rounded-xl {{ $exam->is_active ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-green-50 text-green-600 hover:bg-green-100' }} transition-colors" title="{{ $exam->is_active ? 'إيقاف' : 'تفعيل' }}"><i class="fas {{ $exam->is_active ? 'fa-pause' : 'fa-play' }}"></i></button>
-                                        <button type="button" onclick="toggleExamPublish({{ $exam->id }})" class="inline-flex items-center justify-center w-9 h-9 rounded-xl {{ $exam->is_published ? 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100' : 'bg-purple-50 text-purple-600 hover:bg-purple-100' }} transition-colors" title="{{ $exam->is_published ? 'إلغاء النشر' : 'نشر' }}"><i class="fas fa-globe"></i></button>
+                                <td class="whitespace-nowrap px-5 py-4">
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                        <a href="{{ route('admin.exams.show', $exam) }}" class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent transition hover:bg-accent hover:text-white" title="عرض"><i class="fas fa-eye text-sm"></i></a>
+                                        <a href="{{ route('admin.exams.questions.manage', $exam) }}" class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent transition hover:bg-accent hover:text-white" title="الأسئلة"><i class="fas fa-question-circle text-sm"></i></a>
+                                        <a href="{{ route('admin.exams.statistics', $exam) }}" class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent transition hover:bg-accent hover:text-white" title="إحصائيات"><i class="fas fa-chart-bar text-sm"></i></a>
+                                        <a href="{{ route('admin.exams.preview', $exam) }}" class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent transition hover:bg-accent hover:text-white" title="معاينة"><i class="fas fa-external-link-alt text-sm"></i></a>
+                                        <a href="{{ route('admin.exams.edit', $exam) }}" class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent transition hover:bg-accent hover:text-white" title="تعديل"><i class="fas fa-edit text-sm"></i></a>
+                                        <button type="button" onclick="toggleExamStatus({{ $exam->id }})" class="inline-flex size-9 items-center justify-center rounded-xl border border-line transition {{ $exam->is_active ? 'text-rose-700 hover:bg-rose-50' : 'text-emerald-700 hover:bg-emerald-50' }}" title="{{ $exam->is_active ? 'إيقاف' : 'تفعيل' }}"><i class="fas {{ $exam->is_active ? 'fa-pause' : 'fa-play' }} text-sm"></i></button>
+                                        <button type="button" onclick="toggleExamPublish({{ $exam->id }})" class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-amber-800 transition hover:bg-amber-50" title="{{ $exam->is_published ? 'إلغاء النشر' : 'نشر' }}"><i class="fas fa-globe text-sm"></i></button>
                                         <form action="{{ route('admin.exams.destroy', $exam) }}" method="POST" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا الامتحان؟');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors" title="حذف"><i class="fas fa-trash"></i></button>
+                                            <button type="submit" class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-rose-700 transition hover:bg-rose-50" title="حذف"><i class="fas fa-trash text-sm"></i></button>
                                         </form>
                                     </div>
                                 </td>
@@ -106,23 +105,23 @@
                     </tbody>
                 </table>
             </div>
-            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50/50">
+            <div class="border-t border-line px-5 py-4">
                 {{ $exams->links() }}
             </div>
         </div>
     @else
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-lg p-12 text-center">
-            <div class="w-20 h-20 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-4xl mx-auto mb-4">
-                <i class="fas fa-clipboard-list"></i>
+        <article class="rounded-2xl border border-dashed border-line bg-surface px-6 py-14 text-center shadow-soft">
+            <div class="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-[#f2f5f4] text-accent">
+                <i class="fas fa-clipboard-list text-xl"></i>
             </div>
-            <h3 class="text-xl font-bold text-gray-900 mb-2">لا توجد امتحانات في هذا الكورس</h3>
-            <p class="text-gray-500 mb-6">يمكنك إضافة أول امتحان لهذا الكورس</p>
+            <h3 class="mt-4 text-lg font-semibold text-ink">لا توجد امتحانات في هذا البرنامج</h3>
+            <p class="mt-1 text-sm text-muted">يمكنك إضافة أول امتحان لهذا البرنامج.</p>
             <a href="{{ route('admin.exams.create', ['course_id' => $course->id]) }}"
-               class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors">
-                <i class="fas fa-plus"></i>
+               class="btn-press mt-5 inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-plus text-xs"></i>
                 إضافة امتحان
             </a>
-        </div>
+        </article>
     @endif
 </div>
 

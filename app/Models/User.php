@@ -1078,4 +1078,28 @@ class User extends Authenticatable
             ->withPivot('assigned_courses', 'notes')
             ->withTimestamps();
     }
+
+    /**
+     * معرفات الكورسات العادية المعيَّنة للمدرب (مباشرة أو عبر المسار).
+     */
+    public function teachingAdvancedCourseIds(): \Illuminate\Support\Collection
+    {
+        $direct = AdvancedCourse::where('instructor_id', $this->id)->pluck('id');
+
+        $fromPaths = $this->teachingLearningPaths()->get()->flatMap(function ($ay) {
+            $ids = json_decode($ay->pivot->assigned_courses ?? '[]', true);
+
+            return is_array($ids) ? $ids : [];
+        });
+
+        return $direct->merge($fromPaths)->unique()->filter()->values();
+    }
+
+    /**
+     * هل لدى المدرب كورس عادي مُسند فعلياً (يظهر قسم الكورسات في السايدبار).
+     */
+    public function hasTeachingCourses(): bool
+    {
+        return $this->teachingAdvancedCourseIds()->isNotEmpty();
+    }
 }

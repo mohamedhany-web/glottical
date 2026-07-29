@@ -1,208 +1,122 @@
 ﻿@extends('layouts.admin')
 
+@section('title', 'مادة جديدة - Glottical')
+@section('page_title', 'مادة جديدة')
+
 @section('content')
-<div class="px-4 py-8">
-    <div class="max-w-5xl mx-auto space-y-8">
-        <div class="bg-gradient-to-br from-emerald-500 via-sky-500 to-indigo-600 rounded-3xl p-6 sm:p-8 shadow-xl text-white relative overflow-hidden">
-            <div class="absolute inset-y-0 left-0 w-40 bg-white/10 blur-3xl pointer-events-none"></div>
-            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div class="space-y-4">
-                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 text-sm font-semibold">
-                        <i class="fas fa-layer-group"></i>
-                        إضافة مجموعة مهارية
-                    </div>
-                    <h1 class="text-3xl sm:text-4xl font-bold">إنشاء مجموعة مهارات جديدة</h1>
-                    <p class="text-sm text-white/80 max-w-2xl">
-                        قم بإنشاء مجموعة مهارية داخل مسار تعلّم محدد، وحدد اسم المجموعة، رمزها، لونها، والأيقونة الخاصة بها.
-                        يمكنك لاحقًا ربط الكورسات والمهارات لهذه المجموعة لإكمال رحلة التعلم.
-                    </p>
-                </div>
-                <a href="{{ route('admin.academic-subjects.index', ['track' => $selectedTrack]) }}" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/40 px-5 py-2 text-sm font-semibold hover:bg-white/10 transition">
-                    <i class="fas fa-arrow-right"></i>
-                    العودة للمجموعات
-                </a>
-            </div>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $areaClass = 'w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $icons = [
+        'fas fa-book' => 'كتاب',
+        'fas fa-book-open' => 'كتاب مفتوح',
+        'fas fa-language' => 'لغة',
+        'fas fa-graduation-cap' => 'تخرج',
+        'fas fa-globe' => 'عالمي',
+        'fas fa-calculator' => 'رياضيات',
+        'fas fa-atom' => 'علوم',
+        'fas fa-history' => 'تاريخ',
+        'fas fa-palette' => 'فنون',
+        'fas fa-laptop-code' => 'حاسوب',
+    ];
+@endphp
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">إدارة المحتوى · المواد</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">مادة دراسية جديدة</h2>
+            <p class="mt-1 text-sm text-muted">بعد الحفظ اربط الكورسات من صفحة المادة.</p>
         </div>
+        <a href="{{ route('admin.academic-subjects.index', array_filter(['track' => $selectedTrack])) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+            <i class="fas fa-arrow-right text-xs"></i>
+            رجوع للقائمة
+        </a>
+    </section>
 
-        <div class="bg-white rounded-3xl shadow-xl border border-gray-100/60 overflow-hidden" x-data="{
-            selectedTrack: '{{ old('academic_year_id', $selectedTrack) }}',
-            selectedSkills: {{ json_encode(old('skills', [])) }},
-            addSkill(value) {
-                if (!value) return;
-                if (!this.selectedSkills.includes(value)) {
-                    this.selectedSkills.push(value);
-                }
-            },
-            removeSkill(index) {
-                this.selectedSkills.splice(index, 1);
-            }
-        }">
-            <div class="border-b border-gray-100 px-6 sm:px-8 py-5">
-                <h2 class="text-xl font-semibold text-gray-900">بيانات مجموعة المهارات</h2>
-                <p class="text-sm text-gray-500 mt-1">
-                    حدّد المسار، الاسم، الرمز، اللون والأيقونة. يمكنك إضافة روابط مهارات ليستفيد منها الفريق عند تخطيط المحتوى.
-                </p>
-            </div>
-            <form method="POST" action="{{ route('admin.academic-subjects.store') }}" class="p-6 sm:p-8 space-y-8">
-                @csrf
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-gray-700">المسار التعليمي *</label>
-                        <select name="academic_year_id" x-model="selectedTrack" required
-                                class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition">
-                            <option value="">اختر المسار</option>
-                            @foreach($academicYears as $year)
-                                <option value="{{ $year->id }}">{{ $year->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('academic_year_id') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
-                    </div>
-                    <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-gray-700">رمز المجموعة *</label>
-                        <input type="text" name="code" value="{{ old('code') }}" required
-                               class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition"
-                               placeholder="مثال: FE-FOUND أو AI-JUNIOR">
-                        @error('code') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
-                    </div>
-                    <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-gray-700">اسم المجموعة *</label>
-                        <input type="text" name="name" value="{{ old('name') }}" required
-                               class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition"
-                               placeholder="مثال: أساسيات الواجهة الأمامية">
-                        @error('name') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
-                    </div>
-                    <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-gray-700">الأيقونة</label>
-                        <select name="icon"
-                                class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition">
-                            @php
-                                $icons = [
-                                    'fas fa-layer-group' => '🌐 مجموعة مهارات',
-                                    'fas fa-chalkboard-teacher' => '👩‍🏫 تأهيل معلمين',
-                                    'fas fa-laptop-house' => '💻 تدريس رقمي',
-                                    'fas fa-book-open' => '📖 تخطيط ومناهج',
-                                    'fas fa-users' => '👥 إدارة صفية',
-                                    'fas fa-certificate' => '🎓 تطوير مهني',
-                                    'fas fa-heart' => '❤️ تربية ودعم متعلم',
-                                ];
-                            @endphp
-                            @foreach($icons as $value => $label)
-                                <option value="{{ $value }}" {{ old('icon') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                        @error('icon') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
-                    </div>
-                    <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-gray-700">اللون</label>
-                        <input type="color" name="color" value="{{ old('color', '#0ea5e9') }}"
-                               class="w-full h-12 rounded-2xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
-                        @error('color') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
-                    </div>
-                    <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-gray-700">ترتيب العرض</label>
-                        <input type="number" name="order" value="{{ old('order', 0) }}" min="0"
-                               class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition"
-                               placeholder="0">
-                        <p class="text-xs text-gray-500 mt-1">0 = تظهر أولاً ضمن المسار</p>
-                        @error('order') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
-                    </div>
-                    <div class="md:col-span-2 space-y-2">
-                        <label class="block text-sm font-semibold text-gray-700">الوصف</label>
-                        <textarea name="description" rows="4"
-                                  class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition"
-                                  placeholder="ڤصف مختصر يوضح الهدف من المجموعة والمهارات التي تغطيها.">{{ old('description') }}</textarea>
-                        @error('description') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <label class="block text-sm font-semibold text-gray-700">المهارات الرئيسية</label>
-                    <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-3">
-                        <p class="text-xs text-gray-500">
-                            اختر مهارات موجودة أو أضف مهارات جديدة لدعم الفريق أثناء تخطيط الكورسات المرتبطة.
-                        </p>
-                        <div class="flex flex-wrap items-center gap-2">
-                            @foreach($skills as $skill)
-                                <button type="button" @click="addSkill('{{ $skill }}')" class="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-slate-200 text-slate-600 hover:border-emerald-400 transition">
-                                    {{ $skill }}
-                                </button>
-                            @endforeach
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <input type="text" id="customSkill" class="flex-1 rounded-2xl border border-gray-200 bg-white/70 px-4 py-2 text-sm text-gray-900 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition" placeholder="أضف مهارة جديدة">
-                            <button type="button" @click="
-                                const value = document.getElementById('customSkill').value.trim();
-                                addSkill(value);
-                                document.getElementById('customSkill').value = '';
-                            " class="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-sm font-semibold transition">
-                                <i class="fas fa-plus"></i>
-                                إضافة مهارة
-                            </button>
-                        </div>
-                        <div class="flex flex-wrap items-center gap-2" x-show="selectedSkills.length">
-                            <template x-for="(skill, index) in selectedSkills" :key="skill">
-                                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
-                                    <span x-text="skill"></span>
-                                    <button type="button" @click="removeSkill(index)" class="text-emerald-600 hover:text-emerald-800">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                    <input type="hidden" name="skills[]" :value="skill">
-                                </span>
-                            </template>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">تخصصات مستخرجة من الكورسات</label>
-                            <div class="flex flex-wrap gap-2">
-                                @foreach($languages as $language)
-                                    <span class="px-3 py-1 rounded-full bg-slate-100 text-xs text-slate-600">{{ $language }}</span>
-                                @endforeach
-                                @if($languages->isEmpty())
-                                    <span class="text-xs text-gray-400">لم يتم ربط كورسات بعد.</span>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">وسوم ذات صلة من الكورسات</label>
-                            <div class="flex flex-wrap gap-2">
-                                @foreach($frameworks as $framework)
-                                    <span class="px-3 py-1 rounded-full bg-slate-100 text-xs text-slate-600">{{ $framework }}</span>
-                                @endforeach
-                                @if($frameworks->isEmpty())
-                                    <span class="text-xs text-gray-400">لا توجد بيانات أطر عمل حالياً.</span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-100 border border-slate-200">
-                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}
-                           class="w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
-                    <div>
-                        <p class="text-sm font-semibold text-gray-800">المجموعة نشطة</p>
-                        <p class="text-xs text-gray-500">
-                            يمكن للطلاب رؤية المحتوى المرتبط بالمجموعة عندما تكون نشطة.
-                        </p>
-                    </div>
-                </div>
-
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-gray-100">
-                    <span class="text-xs text-gray-500">
-                        تأكد من اكتمال البيانات قبل الحفظ. يمكنك تعديل المجموعة لاحقاً.
-                    </span>
-                    <div class="flex flex-col md:flex-row md:items-center gap-3">
-                        <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 text-sm font-semibold shadow-lg shadow-emerald-500/20 transition">
-                            <i class="fas fa-save"></i>
-                            حفظ المجموعة
-                        </button>
-                    </div>
-                </div>
-            </form>
+    @if($errors->any())
+        <div class="rounded-2xl border border-danger/20 bg-danger/5 p-4 text-sm text-danger shadow-soft">
+            <p class="mb-2 font-semibold">يرجى تصحيح ما يلي:</p>
+            <ul class="list-inside list-disc space-y-1">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
         </div>
-    </div>
+    @endif
+
+    <form method="POST" action="{{ route('admin.academic-subjects.store') }}" class="space-y-5">
+        @csrf
+
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">بيانات المادة</h3>
+                <p class="mt-0.5 text-xs text-muted">السنة والاسم والرمز</p>
+            </div>
+            <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
+                <div class="sm:col-span-2">
+                    <label class="{{ $labelClass }}" for="academic_year_id">السنة الأكاديمية <span class="text-danger">*</span></label>
+                    <select name="academic_year_id" id="academic_year_id" required class="{{ $fieldClass }}">
+                        <option value="">اختر السنة…</option>
+                        @foreach($academicYears as $year)
+                            <option value="{{ $year->id }}" @selected((string) old('academic_year_id', $selectedTrack) === (string) $year->id)>{{ $year->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="name">اسم المادة <span class="text-danger">*</span></label>
+                    <input id="name" type="text" name="name" value="{{ old('name') }}" required maxlength="255" class="{{ $fieldClass }}" placeholder="مثال: اللغة الإنجليزية">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="code">الرمز <span class="text-danger">*</span></label>
+                    <input id="code" type="text" name="code" value="{{ old('code') }}" required maxlength="100" dir="ltr" class="{{ $fieldClass }} font-mono" placeholder="ENG">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="{{ $labelClass }}" for="description">الوصف</label>
+                    <textarea id="description" name="description" rows="4" class="{{ $areaClass }}" placeholder="وصف مختصر للمادة (اختياري)">{{ old('description') }}</textarea>
+                </div>
+            </div>
+        </article>
+
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">المظهر والنشر</h3>
+                <p class="mt-0.5 text-xs text-muted">أيقونة ولون وترتيب وحالة التفعيل</p>
+            </div>
+            <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
+                <div>
+                    <label class="{{ $labelClass }}" for="icon">الأيقونة</label>
+                    <select name="icon" id="icon" class="{{ $fieldClass }}">
+                        @foreach($icons as $value => $label)
+                            <option value="{{ $value }}" @selected(old('icon', 'fas fa-book') === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="color">اللون</label>
+                    <input id="color" type="color" name="color" value="{{ old('color', '#0B3D91') }}" class="h-11 w-full cursor-pointer rounded-xl border border-line bg-surface p-1">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="order">ترتيب العرض</label>
+                    <input id="order" type="number" name="order" min="0" value="{{ old('order', 0) }}" class="{{ $fieldClass }}">
+                </div>
+                <div class="flex items-end">
+                    <input type="hidden" name="is_active" value="0">
+                    <label class="inline-flex h-11 w-full cursor-pointer items-center gap-2 rounded-xl border border-line bg-canvas px-4">
+                        <input type="checkbox" name="is_active" value="1" @checked((string) old('is_active', '1') !== '0') class="size-4 rounded border-line text-accent focus:ring-accent/20">
+                        <span class="text-sm font-medium text-ink">مادة نشطة</span>
+                    </label>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-3 border-t border-line px-4 py-4 sm:px-5">
+                <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-white">
+                    <i class="fas fa-save text-xs"></i>
+                    حفظ المادة
+                </button>
+                <a href="{{ route('admin.academic-subjects.index', array_filter(['track' => $selectedTrack])) }}" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl border border-line px-6 text-sm font-medium text-ink hover:bg-canvas">إلغاء</a>
+            </div>
+        </article>
+    </form>
 </div>
 @endsection

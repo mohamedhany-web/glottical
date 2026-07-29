@@ -1,90 +1,79 @@
 @extends('layouts.admin')
 
-@section('title', 'بنك الأسئلة')
-@section('header', 'بنك الأسئلة')
+@section('title', 'بنك الأسئلة - ' . config('app.name'))
+@section('page_title', 'بنك الأسئلة')
 
 @section('content')
-<div class="w-full max-w-full px-4 py-6 space-y-6">
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+@endphp
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">المحتوى · الامتحانات</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">بنك الأسئلة</h2>
+            <p class="mt-1 max-w-2xl text-sm text-muted">إدارة وتنظيم الأسئلة للامتحانات.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('admin.question-categories.index') }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                <i class="fas fa-tags text-xs"></i>
+                إدارة التصنيفات
+            </a>
+            <a href="{{ route('admin.question-bank.create') }}"
+               class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                <i class="fas fa-plus text-xs"></i>
+                إضافة سؤال جديد
+            </a>
+        </div>
+    </section>
+
     @if(session('success'))
-        <div class="rounded-xl bg-green-100 text-green-800 px-4 py-3 font-medium">{{ session('success') }}</div>
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-soft">
+            <i class="fas fa-check-circle ml-1"></i> {{ session('success') }}
+        </div>
     @endif
     @if(session('error'))
-        <div class="rounded-xl bg-red-100 text-red-800 px-4 py-3 font-medium">{{ session('error') }}</div>
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800 shadow-soft">
+            <i class="fas fa-exclamation-circle ml-1"></i> {{ session('error') }}
+        </div>
     @endif
 
-    <!-- الهيدر -->
-    <div class="bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 rounded-2xl p-6 text-white shadow-lg">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="min-w-0">
-                <nav class="text-sm text-white/80 mb-2">
-                    <a href="{{ route('admin.dashboard') }}" class="hover:text-white">لوحة التحكم</a>
-                    <span class="mx-2">/</span>
-                    <span class="text-white">بنك الأسئلة</span>
-                </nav>
-                <h1 class="text-xl sm:text-2xl font-bold mt-1">بنك الأسئلة</h1>
-                <p class="text-sm text-white/90 mt-1">إدارة وتنظيم الأسئلة للامتحانات</p>
-            </div>
-            <div class="flex flex-wrap gap-2 flex-shrink-0">
-                <a href="{{ route('admin.question-categories.index') }}" class="inline-flex items-center gap-2 bg-white text-indigo-600 hover:bg-gray-100 px-4 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-tags"></i>
-                    إدارة التصنيفات
-                </a>
-                <a href="{{ route('admin.question-bank.create') }}" class="inline-flex items-center gap-2 bg-white text-indigo-600 hover:bg-gray-100 px-4 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-plus"></i>
-                    إضافة سؤال جديد
-                </a>
-            </div>
-        </div>
-    </div>
+    <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-question-circle text-sm"></i></div>
+            <p class="mt-3 text-xs font-medium text-muted">إجمالي الأسئلة</p>
+            <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $stats['total_questions'] }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-check text-sm"></i></div>
+            <p class="mt-3 text-xs font-medium text-muted">أسئلة نشطة</p>
+            <p class="mt-1 text-2xl font-semibold tabular-nums text-emerald-700">{{ $stats['active_questions'] }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-folder text-sm"></i></div>
+            <p class="mt-3 text-xs font-medium text-muted">تصنيفات</p>
+            <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ $stats['categories_count'] }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent"><i class="fas fa-layer-group text-sm"></i></div>
+            <p class="mt-3 text-xs font-medium text-muted">أنواع أسئلة</p>
+            <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ count($stats['by_type']) }}</p>
+        </article>
+    </section>
 
-    <!-- إحصائيات -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-lg p-5">
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-question-circle text-xl text-indigo-600"></i>
-                </div>
-                <div><p class="text-2xl font-bold text-gray-900">{{ $stats['total_questions'] }}</p><p class="text-sm text-gray-500">إجمالي الأسئلة</p></div>
-            </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-lg p-5">
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-check text-xl text-green-600"></i>
-                </div>
-                <div><p class="text-2xl font-bold text-gray-900">{{ $stats['active_questions'] }}</p><p class="text-sm text-gray-500">أسئلة نشطة</p></div>
-            </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-lg p-5">
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-folder text-xl text-purple-600"></i>
-                </div>
-                <div><p class="text-2xl font-bold text-gray-900">{{ $stats['categories_count'] }}</p><p class="text-sm text-gray-500">تصنيفات</p></div>
-            </div>
-        </div>
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-lg p-5">
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-xl bg-cyan-100 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-layer-group text-xl text-cyan-600"></i>
-                </div>
-                <div><p class="text-2xl font-bold text-gray-900">{{ count($stats['by_type']) }}</p><p class="text-sm text-gray-500">أنواع أسئلة</p></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- الفلاتر -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
-        <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <form method="GET" class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <div>
-                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">البحث</label>
+                <label for="search" class="{{ $labelClass }}">البحث</label>
                 <input type="text" name="search" id="search" value="{{ request('search') }}"
                        placeholder="نص السؤال..."
-                       class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                       class="{{ $fieldClass }}">
             </div>
             <div>
-                <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">التصنيف</label>
-                <select name="category_id" id="category_id" class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                <label for="category_id" class="{{ $labelClass }}">التصنيف</label>
+                <select name="category_id" id="category_id" class="{{ $fieldClass }}">
                     <option value="">جميع التصنيفات</option>
                     @foreach($categories as $category)
                         <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
@@ -94,8 +83,8 @@
                 </select>
             </div>
             <div>
-                <label for="type" class="block text-sm font-medium text-gray-700 mb-1">نوع السؤال</label>
-                <select name="type" id="type" class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                <label for="type" class="{{ $labelClass }}">نوع السؤال</label>
+                <select name="type" id="type" class="{{ $fieldClass }}">
                     <option value="">جميع الأنواع</option>
                     @foreach($questionTypes as $key => $type)
                         <option value="{{ $key }}" {{ request('type') == $key ? 'selected' : '' }}>{{ $type }}</option>
@@ -103,76 +92,73 @@
                 </select>
             </div>
             <div>
-                <label for="difficulty" class="block text-sm font-medium text-gray-700 mb-1">مستوى الصعوبة</label>
-                <select name="difficulty" id="difficulty" class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                <label for="difficulty" class="{{ $labelClass }}">مستوى الصعوبة</label>
+                <select name="difficulty" id="difficulty" class="{{ $fieldClass }}">
                     <option value="">جميع المستويات</option>
                     @foreach($difficultyLevels as $key => $level)
                         <option value="{{ $key }}" {{ request('difficulty') == $key ? 'selected' : '' }}>{{ $level }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="flex items-end">
-                <button type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-search"></i>
-                    بحث
+            <div class="flex items-end gap-2">
+                <button type="submit" class="btn-press inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                    <i class="fas fa-search text-xs"></i> بحث
                 </button>
-            </div>
-        </form>
-    </div>
-
-    <!-- قائمة الأسئلة -->
-    @if($questions->count() > 0)
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
-                <h4 class="text-lg font-bold text-gray-900">الأسئلة ({{ $questions->total() }})</h4>
-                <div class="flex items-center gap-2">
-                    <a href="{{ route('admin.question-bank.create') }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl text-sm font-medium transition-colors">
-                        <i class="fas fa-plus"></i>
-                        إضافة سؤال
+                @if(request()->hasAny(['search', 'category_id', 'type', 'difficulty']))
+                    <a href="{{ route('admin.question-bank.index') }}"
+                       class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-line text-muted transition hover:bg-accent-soft hover:text-accent"
+                       title="إعادة تعيين">
+                        <i class="fas fa-times text-xs"></i>
                     </a>
-                </div>
+                @endif
             </div>
+        </div>
+    </form>
 
-            <div class="divide-y divide-gray-200">
+    @if($questions->count() > 0)
+        <p class="text-xs text-muted">
+            عرض <span class="font-semibold tabular-nums text-ink">{{ $questions->firstItem() }}</span>–<span class="font-semibold tabular-nums text-ink">{{ $questions->lastItem() }}</span>
+            من <span class="font-semibold tabular-nums text-ink">{{ $questions->total() }}</span>
+        </p>
+
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-3">
+                <h3 class="text-sm font-semibold text-ink">الأسئلة ({{ $questions->total() }})</h3>
+            </div>
+            <div class="divide-y divide-line">
                 @foreach($questions as $question)
                     @php
-                        $typeClass = 'bg-gray-100 text-gray-800';
-                        if ($question->type == 'multiple_choice') $typeClass = 'bg-blue-100 text-blue-800';
-                        elseif ($question->type == 'true_false') $typeClass = 'bg-green-100 text-green-800';
-                        elseif ($question->type == 'fill_blank') $typeClass = 'bg-yellow-100 text-yellow-800';
-                        elseif ($question->type == 'essay') $typeClass = 'bg-purple-100 text-purple-800';
-
-                        $difficultyClass = 'bg-red-100 text-red-800';
-                        if ($question->difficulty_level == 'easy') $difficultyClass = 'bg-green-100 text-green-800';
-                        elseif ($question->difficulty_level == 'medium') $difficultyClass = 'bg-yellow-100 text-yellow-800';
+                        $typeClass = match($question->type) {
+                            'multiple_choice' => 'bg-accent-soft text-accent',
+                            'true_false' => 'bg-emerald-50 text-emerald-700',
+                            'fill_blank' => 'bg-amber-50 text-amber-800',
+                            'essay' => 'bg-[#f2f5f4] text-muted',
+                            default => 'bg-[#f2f5f4] text-muted',
+                        };
+                        $difficultyClass = match($question->difficulty_level) {
+                            'easy' => 'bg-emerald-50 text-emerald-700',
+                            'medium' => 'bg-amber-50 text-amber-800',
+                            default => 'bg-rose-50 text-rose-700',
+                        };
                     @endphp
-                    <div class="p-6 hover:bg-gray-50 transition-colors">
-                        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex flex-wrap items-center gap-2 mb-2">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $typeClass }}">
-                                        {{ $question->type_text }}
-                                    </span>
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $difficultyClass }}">
-                                        {{ $question->difficulty_text }}
-                                    </span>
-                                    <span class="text-sm text-gray-500">{{ $question->points }} نقطة</span>
+                    <div class="p-4 hover:bg-[#f8faf9] sm:p-5">
+                        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div class="min-w-0 flex-1">
+                                <div class="mb-2 flex flex-wrap items-center gap-2">
+                                    <span class="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium {{ $typeClass }}">{{ $question->type_text }}</span>
+                                    <span class="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium {{ $difficultyClass }}">{{ $question->difficulty_text }}</span>
+                                    <span class="text-xs text-muted">{{ $question->points }} نقطة</span>
                                     @if($question->hasMedia())
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                                            <i class="fas fa-paperclip ml-1"></i>
-                                            وسائط
+                                        <span class="inline-flex items-center rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent">
+                                            <i class="fas fa-paperclip ml-1 text-[9px]"></i> وسائط
                                         </span>
                                     @endif
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $question->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    <span class="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium {{ $question->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }}">
                                         {{ $question->is_active ? 'نشط' : 'غير نشط' }}
                                     </span>
                                 </div>
-
-                                <h4 class="text-base font-semibold text-gray-900 mb-2">
-                                    {{ Str::limit(strip_tags($question->question), 120) }}
-                                </h4>
-
-                                <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                                <h4 class="mb-2 text-sm font-semibold text-ink">{{ Str::limit(strip_tags($question->question), 120) }}</h4>
+                                <div class="flex flex-wrap items-center gap-4 text-xs text-muted">
                                     @if($question->category)
                                         <span class="flex items-center gap-1">
                                             <i class="fas fa-tag"></i>
@@ -184,74 +170,69 @@
                                         {{ $question->created_at->diffForHumans() }}
                                     </span>
                                     @if($question->tags && is_array($question->tags))
-                                        <div class="flex items-center gap-1 flex-wrap">
+                                        <div class="flex flex-wrap items-center gap-1">
                                             @foreach(array_slice($question->tags, 0, 3) as $tag)
-                                                <span class="bg-gray-100 px-2 py-0.5 rounded text-xs">{{ is_string($tag) ? $tag : '' }}</span>
+                                                <span class="rounded bg-[#f2f5f4] px-2 py-0.5 text-[11px]">{{ is_string($tag) ? $tag : '' }}</span>
                                             @endforeach
                                         </div>
                                     @endif
                                 </div>
                             </div>
-
-                            <div class="flex items-center gap-2 flex-shrink-0">
-                                <a href="{{ route('admin.question-bank.show', $question) }}" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors" title="عرض"><i class="fas fa-eye"></i></a>
-                                <a href="{{ route('admin.question-bank.edit', $question) }}" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors" title="تعديل"><i class="fas fa-edit"></i></a>
+                            <div class="flex shrink-0 items-center gap-1.5">
+                                <a href="{{ route('admin.question-bank.show', $question) }}" class="inline-flex size-9 items-center justify-center rounded-xl bg-[#f2f5f4] text-accent hover:bg-accent-soft" title="عرض"><i class="fas fa-eye text-xs"></i></a>
+                                <a href="{{ route('admin.question-bank.edit', $question) }}" class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-muted hover:bg-accent-soft hover:text-accent" title="تعديل"><i class="fas fa-edit text-xs"></i></a>
                                 <form action="{{ route('admin.question-bank.duplicate', $question) }}" method="POST" class="inline">
                                     @csrf
-                                    <button type="submit" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-colors" title="نسخ"><i class="fas fa-copy"></i></button>
+                                    <button type="submit" class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-emerald-700 hover:bg-emerald-50" title="نسخ"><i class="fas fa-copy text-xs"></i></button>
                                 </form>
                                 <form action="{{ route('admin.question-bank.destroy', $question) }}" method="POST" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا السؤال؟');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors" title="حذف"><i class="fas fa-trash"></i></button>
+                                    <button type="submit" class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-rose-600 hover:bg-rose-50" title="حذف"><i class="fas fa-trash text-xs"></i></button>
                                 </form>
                             </div>
                         </div>
                     </div>
                 @endforeach
             </div>
-
-            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50/50">
+            <div class="border-t border-line px-4 py-3">
                 {{ $questions->links() }}
             </div>
-        </div>
+        </article>
     @else
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-lg p-12 text-center">
-            <div class="w-20 h-20 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-4xl mx-auto mb-4">
-                <i class="fas fa-question-circle"></i>
+        <article class="rounded-2xl border border-dashed border-line bg-surface px-6 py-14 text-center shadow-soft">
+            <div class="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-[#f2f5f4] text-accent">
+                <i class="fas fa-question-circle text-xl"></i>
             </div>
-            <h3 class="text-xl font-bold text-gray-900 mb-2">لا توجد أسئلة</h3>
-            <p class="text-gray-500 mb-6">ابدأ ببناء بنك الأسئلة أو أنشئ تصنيفات أولاً</p>
-            <div class="flex flex-wrap items-center justify-center gap-4">
-                <a href="{{ route('admin.question-categories.index') }}" class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-tags"></i>
-                    التصنيفات
+            <h3 class="mt-4 text-lg font-semibold text-ink">لا توجد أسئلة</h3>
+            <p class="mt-1 text-sm text-muted">ابدأ ببناء بنك الأسئلة أو أنشئ تصنيفات أولاً.</p>
+            <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
+                <a href="{{ route('admin.question-categories.index') }}"
+                   class="btn-press inline-flex h-10 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                    <i class="fas fa-tags text-xs"></i> التصنيفات
                 </a>
-                <a href="{{ route('admin.question-bank.create') }}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-plus"></i>
-                    إضافة أول سؤال
+                <a href="{{ route('admin.question-bank.create') }}"
+                   class="btn-press inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
+                    <i class="fas fa-plus text-xs"></i> إضافة أول سؤال
                 </a>
             </div>
-        </div>
+        </article>
     @endif
 
-    <!-- توزيع الأسئلة حسب النوع -->
     @if(!empty($stats['by_type']))
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
-            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                <h4 class="text-lg font-bold text-gray-900">توزيع الأسئلة حسب النوع</h4>
+        <article class="rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-3">
+                <h3 class="text-sm font-semibold text-ink">توزيع الأسئلة حسب النوع</h3>
             </div>
-            <div class="p-6">
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    @foreach($stats['by_type'] as $type => $count)
-                        <div class="bg-gray-50 rounded-xl p-4 text-center border border-gray-100">
-                            <div class="text-2xl font-bold text-gray-900">{{ $count }}</div>
-                            <div class="text-sm text-gray-500 mt-0.5">{{ $questionTypes[$type] ?? $type }}</div>
-                        </div>
-                    @endforeach
-                </div>
+            <div class="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                @foreach($stats['by_type'] as $type => $count)
+                    <div class="rounded-xl border border-line bg-[#f8faf9] p-4 text-center">
+                        <div class="text-2xl font-semibold tabular-nums text-ink">{{ $count }}</div>
+                        <div class="mt-0.5 text-xs text-muted">{{ $questionTypes[$type] ?? $type }}</div>
+                    </div>
+                @endforeach
             </div>
-        </div>
+        </article>
     @endif
 </div>
 @endsection

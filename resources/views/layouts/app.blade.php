@@ -25,8 +25,9 @@
                 extend: {
                     colors: {
                         navy: { 50:'#f0f4ff',100:'#dbe4ff',200:'#bac8ff',300:'#91a7ff',400:'#748ffc',500:'#5c7cfa',600:'#4c6ef5',700:'#4263eb',800:'#3b5bdb',900:'#364fc7',950:'#0c1222' },
-                        brand: { 50:'#FFF3E0',100:'#FFE0B2',200:'#FFCC80',300:'#FFB74D',400:'#FFA726',500:'#FB5607',600:'#E04D00',700:'#BF360C',800:'#8D2600',900:'#5D1A00' },
-                        mx: { navy:'#283593', indigo:'#1F2A7A', orange:'#FB5607', rose:'#FFE5F7', gold:'#FFE569', soft:'#F7F8FF' },
+                        brand: { 50:'#FFF8E6',100:'#FFE9A8',200:'#FFD866',300:'#F5B800',400:'#E5AB00',500:'#F5B800',600:'#C99400',700:'#0B3D91',800:'#072A66',900:'#051E4A' },
+                        mx: { navy:'#0B3D91', indigo:'#072A66', orange:'#F5B800', rose:'#EEF3FB', gold:'#F5B800', soft:'#F4F7FC' },
+                        acad: { blue:'#0B3D91', dark:'#072A66', gold:'#F5B800', canvas:'#F4F7FC', ink:'#0B1220' },
                         surface: { 50:'#fafbfc', 100:'#f4f5f7', 200:'#e8eaed', 300:'#dadce0' }
                     }
                 }
@@ -67,21 +68,21 @@
         html { scroll-behavior: smooth; }
         html.light { color-scheme: light; }
         html.dark { color-scheme: dark; }
-        body { background: #f7f8ff; overflow-x: hidden; }
-        .dark body { background: #0c1222; }
+        body { background: #F4F7FC; overflow-x: hidden; }
+        .dark body { background: #0B1220; }
 
         /* ── Sidebar ── */
         .app-sidebar {
-            width: 260px;
+            width: 272px;
             background: #fff;
-            border-left: 1px solid #e8eaf6;
+            border-left: 1px solid #E8EEF8;
         }
         .dark .app-sidebar {
             background: #111827;
             border-left-color: #1f2937;
         }
         @media (max-width: 1023px) {
-            .app-sidebar { width: 280px; }
+            .app-sidebar { width: 288px; }
         }
 
         .app-sidebar::-webkit-scrollbar,
@@ -94,16 +95,16 @@
         /* Sidebar nav items */
         .s-nav {
             display: flex; align-items: center; gap: 10px;
-            padding: 8px 12px; border-radius: 8px;
+            padding: 8px 12px; border-radius: 10px;
             font-size: 13px; font-weight: 500;
             color: #4b5563; transition: all .15s;
             border: 1px solid transparent;
         }
-        .s-nav:hover { background: #f3f4f6; color: #111827; }
-        .s-nav.active { background: #f2f4ff; color: #1F2A7A; border-color: #d6dcff; }
+        .s-nav:hover { background: #F4F7FC; color: #0B1220; }
+        .s-nav.active { background: #EEF3FB; color: #072A66; border-color: #D6E2F5; }
         .dark .s-nav { color: #9ca3af; }
         .dark .s-nav:hover { background: #1f2937; color: #e5e7eb; }
-        .dark .s-nav.active { background: #172554; color: #60a5fa; border-color: #1e3a5f; }
+        .dark .s-nav.active { background: #172554; color: #93c5fd; border-color: #1e3a5f; }
 
         .s-nav .s-icon {
             width: 32px; height: 32px; border-radius: 8px;
@@ -113,55 +114,56 @@
 
         /* ── Header ── */
         .app-header {
-            height: 56px; background: #fff;
-            border-bottom: 1px solid #e8eaf6;
-            backdrop-filter: blur(10px);
+            height: 60px; background: rgba(255,255,255,0.92);
+            border-bottom: 1px solid #E8EEF8;
+            backdrop-filter: blur(12px);
         }
         .dark .app-header {
-            background: #111827; border-bottom-color: #1f2937;
+            background: rgba(17,24,39,0.92); border-bottom-color: #1f2937;
         }
 
         /* Header buttons */
         .h-btn {
-            width: 36px; height: 36px; border-radius: 8px;
+            width: 38px; height: 38px; border-radius: 11px;
             display: inline-flex; align-items: center; justify-content: center;
-            color: #6b7280; border: 1px solid #e5e7eb;
-            transition: all .15s; background: transparent;
+            color: #5B6577; border: 1px solid #E8EEF8;
+            transition: all .15s; background: #fff;
         }
-        .h-btn:hover { background: #f3f4f6; color: #111827; border-color: #d1d5db; }
-        .dark .h-btn { color: #9ca3af; border-color: #374151; }
+        .h-btn:hover { background: #F4F7FC; color: #0B3D91; border-color: #D6E2F5; }
+        .dark .h-btn { color: #9ca3af; border-color: #374151; background: transparent; }
         .dark .h-btn:hover { background: #1f2937; color: #e5e7eb; border-color: #4b5563; }
 
         /* Search input */
         .search-box {
-            background: #f3f4f6; border: 1px solid transparent;
-            border-radius: 8px; padding: 7px 12px;
+            background: #F4F7FC; border: 1px solid #E8EEF8;
+            border-radius: 12px; padding: 8px 14px;
             transition: all .2s;
         }
-        .search-box:focus-within { background: #fff; border-color: #283593; box-shadow: 0 0 0 3px rgba(40,53,147,.1); }
-        .dark .search-box { background: #1f2937; }
+        .search-box:focus-within { background: #fff; border-color: #0B3D91; box-shadow: 0 0 0 3px rgba(11,61,145,.12); }
+        .dark .search-box { background: #1f2937; border-color: #374151; }
         .dark .search-box:focus-within { background: #111827; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
         .dark .search-box input { color: #e5e7eb; }
 
         /* Dropdown */
         .dd-menu {
-            background: #fff; border: 1px solid #e5e7eb;
-            border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.08);
+            background: #fff; border: 1px solid #E8EEF8;
+            border-radius: 14px; box-shadow: 0 16px 40px rgba(11,61,145,.12);
             overflow: hidden;
         }
         .dark .dd-menu { background: #1f2937; border-color: #374151; box-shadow: 0 10px 40px rgba(0,0,0,.3); }
         .dd-item { display: flex; align-items: center; transition: background .1s; }
-        .dd-item:hover { background: #f3f4f6; }
+        .dd-item:hover { background: #F4F7FC; }
         .dark .dd-item:hover { background: #374151; }
 
         /* User avatar */
         .u-avatar {
-            width: 32px; height: 32px; border-radius: 8px;
-            background: linear-gradient(135deg, #283593, #FB5607);
+            width: 34px; height: 34px; border-radius: 10px;
+            background: linear-gradient(145deg, #0B3D91, #072A66);
             display: flex; align-items: center; justify-content: center;
-            color: #fff; font-weight: 600; font-size: 13px;
+            color: #fff; font-weight: 700; font-size: 13px;
+            box-shadow: 0 0 0 2px #F5B80033;
         }
-        .u-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+        .u-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
 
         /* Logo fix */
         .logo-section img,
@@ -174,12 +176,12 @@
         .n-badge {
             position: absolute; top: -3px; right: -3px;
             min-width: 16px; height: 16px; padding: 0 4px;
-            background: #ef4444; border-radius: 99px;
-            font-size: 9px; color: #fff; font-weight: 700;
+            background: #F5B800; color: #072A66; border-radius: 99px;
+            font-size: 9px; font-weight: 800;
             display: flex; align-items: center; justify-content: center;
             border: 2px solid #fff;
         }
-        .dark .n-badge { border-color: #111827; }
+        .dark .n-badge { border-color: #111827; color: #0B1220; }
 
         /* Stat mini cards (student sidebar) */
         .stat-mini { border-radius: 8px; padding: 8px 10px; }
@@ -191,8 +193,8 @@
             font-size: 13px; font-weight: 500;
             color: #4b5563; transition: all .15s;
         }
-        .nav-item:hover { background: #f3f4f6; color: #111827; }
-        .nav-item.active { background: #eff6ff; color: #1d4ed8; }
+        .nav-item:hover { background: #F4F7FC; color: #0B1220; }
+        .nav-item.active { background: #EEF3FB; color: #0B3D91; }
         .dark .nav-item { color: #9ca3af; }
         .dark .nav-item:hover { background: #1f2937; color: #e5e7eb; }
         .dark .nav-item.active { background: #172554; color: #60a5fa; }
@@ -203,76 +205,101 @@
         }
 
         /* Student sidebar bottom card */
-        .user-card-bottom { border-top: 1px solid #e5e7eb; }
+        .user-card-bottom { border-top: 1px solid #E8EEF8; }
         .dark .user-card-bottom { border-top-color: #1f2937; }
-        .logo-area { border-bottom: 1px solid #e5e7eb; }
+        .logo-area { border-bottom: 1px solid #E8EEF8; }
         .dark .logo-area { border-bottom-color: #1f2937; }
 
-        /* ── Instructor sidebar: clean light header ── */
+        /* ── Student / instructor sidebar (Glottical academy) ── */
         .ins-sidebar-brand {
-            background: #f8fafc;
-            border-bottom: 1px solid #e2e8f0;
+            background: linear-gradient(160deg, #0B3D91 0%, #072A66 100%);
+            border-bottom: 0;
             position: relative;
+            color: #fff;
         }
         .dark .ins-sidebar-brand {
-            background: #1e293b;
-            border-bottom-color: #334155;
+            background: linear-gradient(160deg, #0B3D91 0%, #051E4A 100%);
+            border-bottom: 0;
         }
         .ins-stat-card {
-            border-radius: 12px; padding: 12px 14px;
+            border-radius: 14px; padding: 12px 14px;
             transition: transform .2s, box-shadow .2s, border-color .2s;
+            background: #fff;
+            border: 1px solid #E8EEF8;
         }
-        .ins-stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -8px rgba(0,0,0,.12); border-color: #c7d2fe !important; }
+        .ins-stat-card:hover { transform: translateY(-1px); box-shadow: 0 10px 24px -12px rgba(11,61,145,.18); border-color: #C5D4EF !important; }
+        .dark .ins-stat-card { background: #1f2937; border-color: #374151; }
         .dark .ins-stat-card:hover { box-shadow: 0 8px 20px -8px rgba(0,0,0,.35); border-color: #475569 !important; }
         .ins-nav-group {
-            font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-            color: #6b7280; padding: 14px 16px 6px;
+            font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+            color: #8A94A6; padding: 16px 16px 6px;
             display: flex; align-items: center;
         }
         .ins-nav-group > span { display: inline-flex; align-items: center; gap: 5px; }
         .dark .ins-nav-group { color: #64748b; }
         .ins-nav {
             display: flex; align-items: center; gap: 11px;
-            padding: 8px 12px; border-radius: 10px; margin: 1px 8px;
-            font-size: 13px; font-weight: 500; color: #374151;
-            transition: all .2s cubic-bezier(0.4,0,0.2,1);
+            padding: 9px 12px; border-radius: 12px; margin: 2px 10px;
+            font-size: 13px; font-weight: 600; color: #3D4656;
+            transition: all .18s ease;
             border: 1px solid transparent;
             position: relative;
+            text-decoration: none !important;
         }
         .ins-nav::before {
             content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%);
             width: 3px; height: 0; border-radius: 3px 0 0 3px;
-            background: linear-gradient(180deg, #283593, #FB5607);
+            background: #F5B800;
             transition: height .2s ease;
         }
-        .ins-nav:hover { background: #f8fafc; color: #0f172a; }
-        .ins-nav.active { background: #f2f4ff; color: #1F2A7A; border-color: #d6dcff; font-weight: 600; }
+        .ins-nav:hover { background: #F4F7FC; color: #0B1220; }
+        .ins-nav.active { background: #EEF3FB; color: #072A66; border-color: #D6E2F5; font-weight: 700; }
         .ins-nav.active::before { height: 22px; }
         .dark .ins-nav { color: #9ca3af; }
         .dark .ins-nav:hover { background: #1f2937; color: #f1f5f9; }
-        .dark .ins-nav.active { background: #1e2b5a; color: #c7d2fe; border-color: #33407a; font-weight: 600; }
-        .dark .ins-nav.active::before { background: linear-gradient(180deg, #818cf8, #fb7185); }
+        .dark .ins-nav.active { background: #132445; color: #bfdbfe; border-color: #1e3a5f; font-weight: 700; }
+        .dark .ins-nav.active::before { background: #F5B800; }
         .ins-nav .ins-icon {
-            width: 34px; height: 34px; border-radius: 9px;
+            width: 34px; height: 34px; border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 14px; flex-shrink: 0;
-            transition: transform .2s, box-shadow .2s;
+            font-size: 13px; flex-shrink: 0;
+            background: #EEF3FB; color: #0B3D91;
+            transition: transform .2s, box-shadow .2s, background .2s;
         }
-        .ins-nav:hover .ins-icon { transform: scale(1.08); }
-        .ins-nav.active .ins-icon { box-shadow: 0 2px 8px -2px rgba(40, 53, 147, 0.3); }
+        .ins-nav:hover .ins-icon { transform: scale(1.04); }
+        .ins-nav.active .ins-icon { background: #0B3D91; color: #fff; box-shadow: 0 4px 12px -4px rgba(11,61,145,.45); }
         .ins-nav-badge {
             min-width: 20px; height: 20px; padding: 0 6px;
-            border-radius: 10px; font-size: 11px; font-weight: 700;
+            border-radius: 10px; font-size: 11px; font-weight: 800;
             display: inline-flex; align-items: center; justify-content: center;
+            background: #FFF3CC; color: #8A6A00;
         }
         .ins-user-card {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border: 1px solid #e2e8f0; border-radius: 12px;
+            background: #F4F7FC;
+            border: 1px solid #E8EEF8; border-radius: 14px;
             padding: 12px 14px; transition: all .2s;
         }
-        .ins-user-card:hover { border-color: #cbd5e1; box-shadow: 0 4px 12px -4px rgba(0,0,0,.08); }
+        .ins-user-card:hover { border-color: #C5D4EF; box-shadow: 0 4px 12px -4px rgba(11,61,145,.1); }
         .dark .ins-user-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-color: #334155; }
         .dark .ins-user-card:hover { border-color: #475569; box-shadow: 0 4px 12px -4px rgba(0,0,0,.25); }
+
+        .app-quick-link {
+            display: none;
+            align-items: center; gap: 6px;
+            height: 34px; padding: 0 12px; border-radius: 999px;
+            font-size: 12px; font-weight: 700;
+            color: #0B3D91; background: #EEF3FB; border: 1px solid #D6E2F5;
+            text-decoration: none !important; white-space: nowrap;
+            transition: background .15s, border-color .15s;
+        }
+        .app-quick-link:hover { background: #E0EAF8; border-color: #0B3D91; }
+        .app-quick-link--gold {
+            color: #072A66; background: #FFF6D6; border-color: #F5B800;
+        }
+        .app-quick-link--gold:hover { background: #FFEEC2; }
+        @media (min-width: 1100px) {
+            .app-quick-link { display: inline-flex; }
+        }
 
         /* ========== DARK MODE — نفس منطق admin.blade.php (بطاقات/نصوص/حقول داخل المحتوى فقط) ========== */
         .dark .stat-card,
@@ -407,15 +434,61 @@ function themeManager() {
                 <header class="app-header flex items-center justify-between px-4 md:px-6 flex-shrink-0 sticky top-0 z-30">
                     <div class="flex items-center gap-3 flex-1 min-w-0">
                         <button @click="sidebarOpen = !sidebarOpen"
-                                class="lg:hidden h-btn flex-shrink-0">
+                                class="lg:hidden h-btn flex-shrink-0" type="button" aria-label="{{ $appRtl ? 'القائمة' : 'Menu' }}">
                             <i class="fas fa-bars text-sm"></i>
                         </button>
 
-                        <div class="hidden md:flex items-center flex-1 max-w-md">
+                        <div class="hidden md:flex items-center flex-1 max-w-sm">
                             <div class="search-box flex items-center gap-2 w-full">
                                 <i class="fas fa-search text-gray-400 dark:text-gray-500 text-xs"></i>
                                 <input type="text" placeholder="{{ __('common.nav_search_placeholder_long') }}" class="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500 min-w-0">
                             </div>
+                        </div>
+
+                        <div class="hidden lg:flex items-center gap-2 ms-2">
+                            @php
+                                $headerIsInstructor = auth()->user()->isInstructor() || auth()->user()->isTeacher();
+                            @endphp
+                            @if($headerIsInstructor)
+                                @php $headerHasCourses = auth()->user()->hasTeachingCourses(); @endphp
+                                @if(Route::has('instructor.tutoring-bookings.index'))
+                                    <a href="{{ route('instructor.tutoring-bookings.index') }}" class="app-quick-link app-quick-link--gold">
+                                        <i class="fas fa-users text-[10px]"></i>
+                                        {{ $appRtl ? 'الحجوزات' : 'Bookings' }}
+                                    </a>
+                                @endif
+                                @if(Route::has('instructor.live-sessions.index'))
+                                    <a href="{{ route('instructor.live-sessions.index') }}" class="app-quick-link">
+                                        <i class="fas fa-broadcast-tower text-[10px]"></i>
+                                        {{ $appRtl ? 'بث مباشر' : 'Live' }}
+                                    </a>
+                                @endif
+                                @if($headerHasCourses)
+                                <a href="{{ route('instructor.courses.index') }}" class="app-quick-link">
+                                    <i class="fas fa-book-open text-[10px]"></i>
+                                    {{ $appRtl ? 'كورساتي' : 'Courses' }}
+                                </a>
+                                @endif
+                            @else
+                                @if(Route::has('public.groups'))
+                                    <a href="{{ route('public.groups') }}" class="app-quick-link app-quick-link--gold">
+                                        <i class="fas fa-users text-[10px]"></i>
+                                        {{ $appRtl ? 'المجموعات' : 'Groups' }}
+                                    </a>
+                                @endif
+                                @if(Route::has('student.live-sessions.index'))
+                                    <a href="{{ route('student.live-sessions.index') }}" class="app-quick-link">
+                                        <i class="fas fa-broadcast-tower text-[10px]"></i>
+                                        {{ $appRtl ? 'بث مباشر' : 'Live' }}
+                                    </a>
+                                @endif
+                                @if(Route::has('public.courses'))
+                                    <a href="{{ route('public.courses') }}" class="app-quick-link">
+                                        <i class="fas fa-book-open text-[10px]"></i>
+                                        {{ $appRtl ? 'الكورسات' : 'Courses' }}
+                                    </a>
+                                @endif
+                            @endif
                         </div>
                     </div>
 
