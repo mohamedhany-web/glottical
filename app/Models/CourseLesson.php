@@ -127,4 +127,19 @@ class CourseLesson extends Model
         $attachments = json_decode($this->attachments, true);
         return is_array($attachments) ? $attachments : [];
     }
+
+    /**
+     * رابط تشغيل الفيديو (Bunny/خارجي كما هو، أو ملف مرفوع على R2/local).
+     */
+    public function getPlaybackVideoUrlAttribute(): ?string
+    {
+        $raw = $this->video_url;
+        if (! is_string($raw) || trim($raw) === '') {
+            return null;
+        }
+
+        return \App\Helpers\VideoHelper::getEmbedUrl($raw)
+            ?? \App\Helpers\VideoHelper::getDirectVideoUrl($raw)
+            ?? $raw;
+    }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use App\Services\CourseVideoStorage;
+
 class VideoHelper
 {
     /**
@@ -39,7 +41,7 @@ class VideoHelper
     }
 
     /**
-     * رابط فيديو مباشر (mp4/webm) للتشغيل عبر <video>.
+     * رابط فيديو مباشر (mp4/webm) للتشغيل عبر <video> — يدعم المسارات على R2/local.
      */
     public static function getDirectVideoUrl($url): ?string
     {
@@ -48,11 +50,25 @@ class VideoHelper
         }
 
         $url = trim((string) $url);
+
+        // مسار نسبي أو /storage/... أو رابط R2 لملف course-videos
+        if (CourseVideoStorage::looksLikeStoredMediaUrl($url) || str_starts_with($url, CourseVideoStorage::DIRECTORY.'/')) {
+            $resolved = CourseVideoStorage::publicUrl($url);
+
+            return is_string($resolved) && $resolved !== '' ? $resolved : null;
+        }
+
         if (! filter_var($url, FILTER_VALIDATE_URL)) {
+            if (preg_match('/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i', $url)) {
+                $resolved = CourseVideoStorage::publicUrl($url);
+
+                return is_string($resolved) && $resolved !== '' ? $resolved : null;
+            }
+
             return null;
         }
 
-        if (preg_match('/\.(mp4|webm|ogg)(\?.*)?$/i', $url)) {
+        if (preg_match('/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i', $url)) {
             return $url;
         }
 
@@ -120,7 +136,6 @@ class VideoHelper
     public static function generateEmbedHtml($url, $width = '100%', $height = '400px')
     {
         $embedUrl = self::getEmbedUrl($url);
-        $source = self::getVideoSource($url);
         $direct = self::getDirectVideoUrl($url);
 
         if ($embedUrl) {
@@ -128,7 +143,9 @@ class VideoHelper
         }
 
         if ($direct) {
-            return "<video width='{$width}' height='{$height}' class='w-full h-full' controls playsinline preload='metadata'><source src='{$direct}' type='video/mp4'>متصفحك لا يدعم تشغيل الفيديو.</video>";
+            $safe = e($direct);
+
+            return "<video width='{$width}' height='{$height}' class='w-full h-full' controls playsinline preload='metadata'><source src='{$safe}' type='video/mp4'>متصفحك لا يدعم تشغيل الفيديو.</video>";
         }
 
         return '<div class="bg-red-100 text-red-700 p-4 rounded-lg">رابط الفيديو غير صحيح أو غير مدعوم</div>';

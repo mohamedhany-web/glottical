@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Instructor;
 use App\Http\Controllers\Controller;
 use App\Models\AdvancedCourse;
 use App\Models\CourseLesson;
+use App\Services\CourseVideoStorage;
+use App\Services\PublicMediaStorage;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -80,20 +83,19 @@ class LessonController extends Controller
             'video_file.max' => 'حجم الفيديو يجب ألا يتجاوز 500 ميجابايت',
         ]);
         
-        // معالجة رفع الفيديو
+        // معالجة رفع الفيديو → Cloudflare R2 (أو public حسب PUBLIC_MEDIA_DISK)
         if ($request->hasFile('video_file')) {
-            $videoPath = $request->file('video_file')->store('course-videos', 'public');
-            $validated['video_url'] = Storage::url($videoPath);
+            $validated['video_url'] = CourseVideoStorage::store($request->file('video_file'));
         }
         
         // معالجة المرفقات
         if ($request->hasFile('attachments')) {
             $attachments = [];
             foreach ($request->file('attachments') as $file) {
-                $path = $file->store('lesson-attachments', 'public');
+                $path = $this->storeLessonAttachment($file);
                 $attachments[] = [
                     'name' => $file->getClientOriginalName(),
-                    'path' => Storage::url($path),
+                    'path' => $path,
                     'size' => $file->getSize(),
                     'type' => $file->getMimeType(),
                 ];
@@ -175,20 +177,25 @@ class LessonController extends Controller
             'attachments.*' => 'file|max:'.config('upload_limits.max_upload_kb'),
         ]);
         
-        // معالجة رفع الفيديو
+        // معالجة رفع الفيديو → Cloudflare R2 (أو public حسب PUBLIC_MEDIA_DISK)
         if ($request->hasFile('video_file')) {
-            $videoPath = $request->file('video_file')->store('course-videos', 'public');
-            $validated['video_url'] = Storage::url($videoPath);
+            $validated['video_url'] = CourseVideoStorage::store(
+                $request->file('video_file'),
+                $lesson->video_url
+            );
         }
         
         // معالجة المرفقات
         if ($request->hasFile('attachments')) {
             $attachments = json_decode($lesson->attachments ?? '[]', true);
+            if (! is_array($attachments)) {
+                $attachments = [];
+            }
             foreach ($request->file('attachments') as $file) {
-                $path = $file->store('lesson-attachments', 'public');
+                $path = $this->storeLessonAttachment($file);
                 $attachments[] = [
                     'name' => $file->getClientOriginalName(),
-                    'path' => Storage::url($path),
+                    'path' => $path,
                     'size' => $file->getSize(),
                     'type' => $file->getMimeType(),
                 ];
@@ -277,5 +284,27 @@ class LessonController extends Controller
             'success' => true,
             'message' => 'تم إعادة ترتيب الدروس بنجاح',
         ]);
+    }
+
+    private function storeLessonAttachment(UploadedFile $file): string
+    {
+        $disk = PublicMediaStorage::resolvedDisk();
+        $dir = 'lesson-attachments';
+        $ext = strtolower((string) ($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'bin'));
+        $ext = preg_replace('/[^a-z0-9]/', '', $ext) ?: 'bin';
+        $name = Str::uuid()->toString().'.'.$ext;
+
+        if ($disk === 'public') {
+            Storage::disk('public')->makeDirectory($dir);
+            $stored = $file->storeAs($dir, $name, 'public');
+        } else {
+            $stored = Storage::disk($disk)->putFileAs($dir, $file, $name, ['visibility' => 'public']);
+        }
+
+        if (! is_string($stored) || $stored === '') {
+            throw new \RuntimeException('فشل رفع مرفق الدرس.');
+        }
+
+        return str_replace('\\', '/', $stored);
     }
 }

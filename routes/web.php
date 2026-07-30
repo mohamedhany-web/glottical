@@ -607,15 +607,37 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         $progress = $lesson->progress()->where('user_id', $user->id)->first();
 
+        $rawVideo = $lesson->video_url ? trim($lesson->video_url) : null;
+        $playbackVideo = $rawVideo
+            ? (\App\Helpers\VideoHelper::getEmbedUrl($rawVideo)
+                ?? \App\Helpers\VideoHelper::getDirectVideoUrl($rawVideo)
+                ?? $rawVideo)
+            : null;
+
+        $attachments = $lesson->attachments ? json_decode($lesson->attachments, true) : null;
+        if (is_array($attachments)) {
+            $attachments = array_map(function ($item) {
+                if (! is_array($item)) {
+                    return $item;
+                }
+                $path = $item['path'] ?? null;
+                if (is_string($path) && $path !== '' && ! str_starts_with($path, 'http://') && ! str_starts_with($path, 'https://')) {
+                    $item['path'] = \App\Services\PublicStorageUrl::fromPath($path) ?? $path;
+                }
+
+                return $item;
+            }, $attachments);
+        }
+
         return response()->json([
             'id' => $lesson->id,
             'title' => $lesson->title,
             'description' => $lesson->description,
             'content' => $lesson->content,
             'type' => $lesson->type,
-            'video_url' => $lesson->video_url ? trim($lesson->video_url) : null,
+            'video_url' => $playbackVideo,
             'duration_minutes' => $lesson->duration_minutes,
-            'attachments' => $lesson->attachments ? json_decode($lesson->attachments, true) : null,
+            'attachments' => $attachments,
             'progress' => $progress ? [
                 'is_completed' => (bool) $progress->is_completed,
                 'progress_percent' => (int) ($progress->progress_percent ?? 0),
