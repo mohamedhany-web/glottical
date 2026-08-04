@@ -50,7 +50,7 @@ class OneToOneSessionService
                 'instructor_id' => $course->instructor_id,
                 'student_id' => $enrollment->user_id,
                 'session_number' => $maxNumber + $i,
-                'duration_minutes' => 60,
+                'duration_minutes' => OneToOneSession::defaultDurationMinutes(),
                 'status' => OneToOneSession::STATUS_PENDING,
             ]);
         }
@@ -70,13 +70,13 @@ class OneToOneSessionService
         Notification::create([
             'user_id' => $course->instructor_id,
             'sender_id' => null,
-            'title' => 'طالب جديد في كورس فردي 1:1',
-            'message' => 'طالب مشترك في «'.$course->title.'» — يمكنه الحجز من جدولك أو جدولة الحصص يدوياً.',
+            'title' => '🎉 New Student Assigned',
+            'message' => ($enrollment->student->name ?? 'Student').' has been assigned to you for private lessons — «'.$course->title.'».',
             'type' => 'general',
             'priority' => 'high',
             'audience' => 'instructor',
             'action_url' => route('instructor.one-to-one-sessions.index'),
-            'action_text' => 'جدولة الحصص',
+            'action_text' => 'View schedule',
         ]);
     }
 

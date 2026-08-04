@@ -141,8 +141,23 @@
                         </select>
                     </div>
                     <div>
-                        <label class="{{ $labelClass }}" for="notes">ملاحظات داخلية</label>
-                        <textarea id="notes" name="notes" rows="5" class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" placeholder="ملاحظات للمتابعة…">{{ old('notes', $booking->notes) }}</textarea>
+                        <label class="{{ $labelClass }}" for="recommended_school_year_id">السنة المقترحة بعد التقييم</label>
+                        <select id="recommended_school_year_id" name="recommended_school_year_id" class="{{ $fieldClass }}">
+                            <option value="">— بدون توصية —</option>
+                            @foreach(($schoolYears ?? []) as $sy)
+                                <option value="{{ $sy->id }}" @selected((string) old('recommended_school_year_id', $booking->recommended_school_year_id) === (string) $sy->id)>
+                                    {{ $sy->level_number }}. {{ $sy->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="{{ $labelClass }}" for="notes">ملاحظات الحجز</label>
+                        <textarea id="notes" name="notes" rows="3" class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" placeholder="ملاحظات عامة…">{{ old('notes', $booking->notes) }}</textarea>
+                    </div>
+                    <div>
+                        <label class="{{ $labelClass }}" for="admin_notes">ملاحظات الإدارة (توصية المستوى)</label>
+                        <textarea id="admin_notes" name="admin_notes" rows="4" class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20" placeholder="سبب التوصية / ملاحظات للمتابعة…">{{ old('admin_notes', $booking->admin_notes) }}</textarea>
                     </div>
                     <button type="submit" class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
                         <i class="fas fa-save text-xs"></i>

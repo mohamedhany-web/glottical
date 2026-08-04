@@ -15,7 +15,7 @@ class TutoringBookingController extends Controller
     {
         $bookings = TutoringGroupBooking::query()
             ->where('instructor_id', $request->user()->id)
-            ->with(['tutoringGroup:id,title,type', 'user:id,name', 'classroomMeeting:id,code', 'cohort:id,title'])
+            ->with(['tutoringGroup:id,title,type,school_year_id', 'tutoringGroup.schoolYear:id,name', 'user:id,name', 'classroomMeeting:id,code', 'cohort:id,title'])
             ->orderByDesc('starts_at')
             ->paginate(20);
 
@@ -37,7 +37,7 @@ class TutoringBookingController extends Controller
     public function show(Request $request, TutoringGroupBooking $booking): View
     {
         abort_unless((int) $booking->instructor_id === (int) $request->user()->id, 403);
-        $booking->load(['tutoringGroup', 'user', 'classroomMeeting', 'cohort', 'package']);
+        $booking->load(['tutoringGroup.schoolYear', 'tutoringGroup.schoolSubject', 'user', 'classroomMeeting', 'cohort', 'package']);
 
         return view('instructor.tutoring-bookings.show', compact('booking'));
     }

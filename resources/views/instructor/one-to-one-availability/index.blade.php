@@ -87,7 +87,7 @@
             'day_of_week' => (string) $r->day_of_week,
             'start_time' => substr((string) $r->start_time, 0, 5),
             'end_time' => substr((string) $r->end_time, 0, 5),
-            'slot_duration_minutes' => (string) ($r->slot_duration_minutes ?: 60),
+            'slot_duration_minutes' => (string) ($r->slot_duration_minutes ?: 50),
         ];
     })->values();
 @endphp
@@ -276,9 +276,9 @@
 function availabilityForm() {
     const existing = @json($existingSlots);
     return {
-        slots: existing.length ? existing : [{ day_of_week: '1', start_time: '09:00', end_time: '12:00', slot_duration_minutes: '60' }],
+        slots: existing.length ? existing : [{ day_of_week: '1', start_time: '09:00', end_time: '12:00', slot_duration_minutes: '50' }],
         addSlot() {
-            this.slots.push({ day_of_week: '1', start_time: '09:00', end_time: '12:00', slot_duration_minutes: '60' });
+            this.slots.push({ day_of_week: '1', start_time: '09:00', end_time: '12:00', slot_duration_minutes: '50' });
         },
         removeSlot(i) {
             this.slots.splice(i, 1);

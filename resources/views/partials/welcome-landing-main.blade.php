@@ -6,19 +6,6 @@
     $footer = \App\Services\PublicFooterSettings::payload();
     $waUrl = $footer['whatsapp_url'] ?? 'https://wa.me/201044610507';
     $featuredList = ($featuredCourses ?? collect())->take(8);
-    $homeGroupCourses = ($homeGroupCourses ?? collect())->take(4);
-    $homeOneToOneGroups = ($homeOneToOneGroups ?? collect())->take(4);
-    $homeGroupCount = (int) ($homeGroupCount ?? 0);
-    $homeOneToOneCount = (int) ($homeOneToOneCount ?? 0);
-    $featuredGroups = $homeGroupCourses->concat($homeOneToOneGroups)->take(8);
-    $groupCountLabel = $homeGroupCount === 1
-        ? __($g.'.courses_count_one')
-        : __($g.'.courses_count', ['count' => $homeGroupCount]);
-    $soloCountLabel = $homeOneToOneCount === 1
-        ? __($g.'.courses_count_one')
-        : __($g.'.courses_count', ['count' => $homeOneToOneCount]);
-    $groupImg = 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80';
-    $soloImg = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=80';
     $heroPath = public_path('img/glottical/hero-Photoroom.png');
     $heroImg = file_exists($heroPath)
         ? asset('img/glottical/hero-Photoroom.png').'?v='.filemtime($heroPath)
@@ -27,9 +14,8 @@
     $faqBoyImg = asset('img/sanua/landing-hero-boy.png');
     $coursesUrl = route('public.courses');
     $groupsUrl = route('public.groups');
-    $groupsCollectiveUrl = route('public.groups.courses');
-    $groupsOneToOneUrl = route('public.groups.one-to-one');
     $aboutUrl = route('public.about');
+    $schoolYears = collect($schoolYears ?? []);
 @endphp
 
 <main>
@@ -66,39 +52,40 @@
     <div class="sana-container sana-hero__container">
       <div class="sana-hero__grid">
         <div class="sana-hero__content sana-reveal">
-          <p class="sana-hero__eyebrow">
-            <span class="sana-hero__eyebrow-dot"></span>
-            {{ $isRtl ? 'أكاديمية لغات · حصص مباشرة' : 'Language academy · Live sessions' }}
-          </p>
-          <h1 class="sana-hero__title">
-            {{ $brand }}
-            <span class="hl">{{ $isRtl ? 'تعلّم لغة. احصل على وظيفة. ابدأ مستقبلك.' : 'Learn a language. Get a job. Start your future.' }}</span>
-          </h1>
-          <p class="sana-hero__desc">{{ $isRtl
-            ? 'تعلّم العربية والإنجليزية عبر حصص مباشرة (فردية وجماعية)، ومتابعة لولي الأمر — من التقييم المجاني حتى الشهادة.'
-            : 'Learn Arabic and English through live 1:1 and group sessions, with parent follow-up — from free assessment to certificate.' }}</p>
+          <div class="sana-hero__intro">
+            <p class="sana-hero__eyebrow">
+              <span class="sana-hero__eyebrow-dot"></span>
+              {{ __('landing.hero.badge') }}
+            </p>
+            <p class="sana-hero__brand">{{ $brand }}</p>
+            <h1 class="sana-hero__title">
+              <span class="hl">{{ __('landing.hero.title_line1') }}</span>
+              <span class="hl-sub">{{ __('landing.hero.title_line2') }}</span>
+            </h1>
+          </div>
+          <p class="sana-hero__desc">{{ __('landing.hero.desc') }}</p>
           <div class="sana-hero__actions">
             <div class="sana-site-cta sana-site-cta--hero">
-              <button type="button" data-open-free-trial class="sana-btn sana-btn--yellow sana-btn--lg">
-                <i class="fas fa-clipboard-check"></i> {{ __($a.'.free_trial_cta') }}
+              <button type="button" data-open-free-trial class="sana-btn sana-btn--yellow sana-btn--lg sana-site-cta__primary">
+                <i class="fas fa-clipboard-check"></i> {{ __('landing.hero.cta_primary') }}
               </button>
-              <a href="{{ $groupsUrl }}" class="sana-btn sana-btn--white-outline sana-btn--lg">
-                <i class="fas fa-users"></i> {{ $isRtl ? 'تصفّح المجموعات' : 'Browse groups' }}
-              </a>
-              <a href="{{ $waUrl }}" class="sana-btn sana-btn--wa sana-btn--lg" target="_blank" rel="noopener">
-                <i class="fab fa-whatsapp"></i> {{ $isRtl ? 'تواصل عبر واتساب' : 'WhatsApp' }}
-              </a>
+              <div class="sana-site-cta__row">
+                <a href="{{ $waUrl }}" class="sana-btn sana-btn--wa sana-btn--lg" target="_blank" rel="noopener">
+                  <i class="fab fa-whatsapp"></i> {{ __('landing.hero.cta_whatsapp') }}
+                </a>
+                <a href="{{ $aboutUrl }}" class="sana-btn sana-btn--white-outline sana-btn--lg">
+                  <i class="fas fa-school"></i> {{ __('landing.hero.cta_secondary') }}
+                </a>
+              </div>
             </div>
           </div>
-          <ul class="sana-hero__trust" aria-label="{{ $isRtl ? 'لماذا Glottical' : 'Why Glottical' }}">
-            <li><i class="fas fa-video"></i> {{ $isRtl ? 'تعليم مباشر هو الأساس' : 'Live learning first' }}</li>
-            <li><i class="fas fa-layer-group"></i> {{ $isRtl ? 'مجالان: عربي/إسلامي · إنجليزي' : 'Two areas: Arabic/Islamic · English' }}</li>
-            <li><i class="fas fa-user-group"></i> {{ $isRtl ? 'متابعة واضحة لولي الأمر' : 'Clear parent follow-up' }}</li>
+          <ul class="sana-hero__meta" aria-label="{{ $isRtl ? 'لماذا Glottical' : 'Why Glottical' }}">
+            <li><i class="fas fa-graduation-cap"></i> {{ __('landing.hero.trust_1') }}</li>
+            <li><i class="fas fa-chalkboard-user"></i> {{ __('landing.hero.trust_2') }}</li>
+            <li><i class="fas fa-globe"></i> {{ __('landing.hero.trust_3') }}</li>
+            <li><i class="fas fa-video"></i> {{ __('landing.hero.chip_1') }}</li>
+            <li><i class="fas fa-book-open"></i> {{ __('landing.hero.chip_2') }}</li>
           </ul>
-          <div class="sana-hero__badges">
-            <span class="sana-hero__badge"><i class="fas fa-shield-halved"></i> {{ $isRtl ? 'بيئة آمنة ومنظّمة' : 'Safe & structured' }}</span>
-            <span class="sana-hero__badge"><i class="fas fa-users"></i> {{ $isRtl ? 'مجموعات فردية وجماعية' : '1:1 & group cohorts' }}</span>
-          </div>
         </div>
         <div class="sana-hero__visual sana-reveal" aria-hidden="true">
           <div class="sana-hero-illus">
@@ -127,107 +114,59 @@
       <div class="sana-hero-stats__item">
         <span class="sana-hero-stats__icon"><i class="fas fa-video"></i></span>
         <div>
-          <strong>{{ $isRtl ? 'حصص مباشرة أولًا' : 'Live sessions first' }}</strong>
-          <span>{{ $isRtl ? 'التعلّم الحي هو العمود الفقري للمنصة' : 'Live teaching is the core of the platform' }}</span>
+          <strong>{{ __('landing.hero.stat_1_title') }}</strong>
+          <span>{{ __('landing.hero.stat_1_sub') }}</span>
         </div>
       </div>
       <div class="sana-hero-stats__item">
         <span class="sana-hero-stats__icon"><i class="fas fa-users"></i></span>
         <div>
-          <strong>{{ $isRtl ? 'فردي + مجموعات' : '1:1 + groups' }}</strong>
-          <span>{{ $isRtl ? 'اختر الأسلوب الأنسب لمستواك وهدفك' : 'Choose the format that fits your goal' }}</span>
+          <strong>{{ __('landing.hero.stat_2_title') }}</strong>
+          <span>{{ __('landing.hero.stat_2_sub') }}</span>
         </div>
       </div>
       <div class="sana-hero-stats__item">
         <span class="sana-hero-stats__icon"><i class="fas fa-chart-line"></i></span>
         <div>
-          <strong>{{ $isRtl ? 'متابعة لولي الأمر' : 'Parent visibility' }}</strong>
-          <span>{{ $isRtl ? 'حضور، تقدّم، وتقارير مفهومة بعد الحصص' : 'Attendance, progress, and clear session reports' }}</span>
+          <strong>{{ __('landing.hero.stat_3_title') }}</strong>
+          <span>{{ __('landing.hero.stat_3_sub') }}</span>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-{{-- ===== groups — أولوية الظهور ===== --}}
+{{-- ===== المدرسة ===== --}}
 <section class="sana-section gl-home-groups" id="groups">
   <div class="sana-container">
     <div class="gl-home-groups__head sana-reveal">
-      <span class="gl-home-groups__eyebrow"><i class="fas fa-bolt"></i> {{ __($g.'.kicker') }}</span>
-      <h2 class="gl-home-groups__title">{{ __($g.'.title') }} <span class="hl">{{ $isRtl ? 'جماعي أو فردي' : 'group or 1:1' }}</span></h2>
+      <span class="gl-home-groups__eyebrow">{{ __($g.'.kicker') }}</span>
+      <h2 class="gl-home-groups__title">{{ __($g.'.title') }}</h2>
       <p class="gl-home-groups__sub">{{ __($g.'.intro') }}</p>
     </div>
 
-    <div class="gl-home-groups__modes sana-reveal">
-      <a href="{{ $groupsCollectiveUrl }}" class="gl-home-groups__mode">
-        <div class="gl-home-groups__mode-media">
-          <img src="{{ $groupImg }}" alt="{{ __($g.'.group_tile_title') }}" width="900" height="560" loading="lazy">
-          <span class="gl-home-groups__mode-shade" aria-hidden="true"></span>
-        </div>
-        <div class="gl-home-groups__mode-body">
-          @if ($homeGroupCount > 0)
-            <span class="gl-home-groups__mode-count"><i class="fas fa-users"></i> {{ $groupCountLabel }}</span>
-          @endif
-          <h3>{{ __($g.'.group_tile_title') }}</h3>
-          <p>{{ __($g.'.group_tile_sub') }}</p>
-          <span class="gl-home-groups__mode-cta">{{ __($g.'.group_tile_cta') }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></span>
-        </div>
-      </a>
-      <a href="{{ $groupsOneToOneUrl }}" class="gl-home-groups__mode gl-home-groups__mode--solo">
-        <div class="gl-home-groups__mode-media">
-          <img src="{{ $soloImg }}" alt="{{ __($g.'.solo_tile_title') }}" width="900" height="560" loading="lazy">
-          <span class="gl-home-groups__mode-shade" aria-hidden="true"></span>
-        </div>
-        <div class="gl-home-groups__mode-body">
-          @if ($homeOneToOneCount > 0)
-            <span class="gl-home-groups__mode-count"><i class="fas fa-user"></i> {{ $soloCountLabel }}</span>
-          @endif
-          <h3>{{ __($g.'.solo_tile_title') }}</h3>
-          <p>{{ __($g.'.solo_tile_sub') }}</p>
-          <span class="gl-home-groups__mode-cta">{{ __($g.'.solo_tile_cta') }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></span>
-        </div>
-      </a>
+    <div class="gl-home-groups__years sana-reveal">
+      @forelse ($schoolYears as $year)
+        <a href="{{ route('public.school.year', $year->slug) }}" class="gl-home-groups__year">
+          <span class="gl-home-groups__year-num">{{ str_pad((string) $year->level_number, 2, '0', STR_PAD_LEFT) }}</span>
+          <strong>{{ $year->name }}</strong>
+        </a>
+      @empty
+        <a href="{{ $groupsUrl }}#years" class="gl-home-groups__year" style="grid-column:1/-1;text-align:center">
+          <strong>{{ $isRtl ? 'استكشف نظام المدرسة' : 'Explore the school system' }}</strong>
+        </a>
+      @endforelse
     </div>
-
-    @if ($featuredGroups->isNotEmpty())
-      <div class="sana-head-row sana-reveal" style="margin-top:clamp(28px,4vw,40px)">
-        <div class="sana-head">
-          <h2 class="sana-head__title">{{ $isRtl ? 'مجموعات' : 'Featured' }} <span class="hl">{{ $isRtl ? 'متاحة للحجز' : 'groups' }}</span></h2>
-          <span class="sana-head__line"></span>
-        </div>
-        <a href="{{ $groupsUrl }}" class="sana-link-more">{{ $isRtl ? 'كل المجموعات' : 'All groups' }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></a>
-      </div>
-      <div class="gl-home-groups__grid sana-reveal">
-        @foreach ($featuredGroups as $item)
-          @php
-            $thumb = $item->imageUrl() ?: ($item->isCollective() ? $groupImg : $soloImg);
-            $badge = $item->isCollective()
-              ? ($isRtl ? 'جماعي' : 'Group')
-              : ($isRtl ? 'فردي' : '1:1');
-          @endphp
-          <a href="{{ route('public.groups.show', $item->slug) }}" class="gl-home-groups__card">
-            <div class="gl-home-groups__card-media">
-              <img src="{{ $thumb }}" alt="{{ $item->title }}" loading="lazy">
-              <span class="gl-home-groups__card-badge {{ $item->isIndividual() ? 'is-solo' : '' }}">{{ $badge }}</span>
-            </div>
-            <div class="gl-home-groups__card-body">
-              <h3>{{ $item->title }}</h3>
-              <p>{{ $isRtl ? 'احجز موعداً من جدول المدرب' : 'Book a slot from the tutor schedule' }}</p>
-            </div>
-          </a>
-        @endforeach
-      </div>
-    @endif
 
     <div class="gl-home-groups__band sana-reveal">
       <div class="gl-home-groups__band-inner">
         <div>
-          <h3>{{ __($g.'.cta_title') }}</h3>
+          <h3>{{ $isRtl ? __($g.'.cta_title_ar') : __($g.'.cta_title') }}</h3>
           <p>{{ __($g.'.cta_sub') }}</p>
         </div>
         <div class="gl-home-groups__band-actions">
-          <a href="{{ $groupsUrl }}" class="sana-btn sana-btn--yellow">{{ $isRtl ? 'تصفّح المجموعات' : 'Browse groups' }}</a>
-          <button type="button" data-open-free-trial class="sana-btn sana-btn--purple">{{ __($g.'.cta_trial') }}</button>
+          <button type="button" data-open-free-trial class="sana-btn sana-btn--yellow">{{ __($g.'.cta_trial') }}</button>
+          <a href="{{ $groupsUrl }}" class="sana-btn sana-btn--white-outline">{{ __($g.'.cta_secondary') }}</a>
         </div>
       </div>
     </div>
@@ -276,33 +215,33 @@
       <article class="gl-start__step">
         <span class="gl-start__step-num">01</span>
         <div class="gl-start__step-icon"><i class="fas fa-clipboard-check"></i></div>
-        <h3>{{ $isRtl ? 'احجز تقييم مستوى مجاني' : 'Book a free level assessment' }}</h3>
-        <p>{{ $isRtl ? 'حصة قصيرة نحدد فيها مستواك الحقيقي وهدفك من التعلّم.' : 'A short session to place your real level and learning goal.' }}</p>
+        <h3>{{ __('landing.hero.cta_primary') }}</h3>
+        <p>{{ $isRtl ? 'حصة قصيرة نحدد فيها مستوى ابنك والمسار الإسلامي الأنسب له.' : 'A short session to place your child and recommend the right Islamic path.' }}</p>
       </article>
       <article class="gl-start__step">
         <span class="gl-start__step-num">02</span>
         <div class="gl-start__step-icon"><i class="fas fa-user-check"></i></div>
-        <h3>{{ $isRtl ? 'نرشّح المسار والمجموعة' : 'We match path & group' }}</h3>
-        <p>{{ $isRtl ? 'فردي أو مجموعة، ومسار عربي/إسلامي أو إنجليزي — حسب احتياجك.' : '1:1 or group, Arabic/Islamic or English — based on your needs.' }}</p>
+        <h3>{{ $isRtl ? 'نرشّح المنهج المناسب' : 'We match the right level' }}</h3>
+        <p>{{ $isRtl ? 'Islamic Foundations أو مسار متدرج — حسب عمر ابنك واحتياجه.' : 'Islamic Foundations or a graded path — based on your child’s age and needs.' }}</p>
       </article>
       <article class="gl-start__step">
         <span class="gl-start__step-num">03</span>
         <div class="gl-start__step-icon"><i class="fas fa-graduation-cap"></i></div>
         <h3>{{ $isRtl ? 'ابدأ الحصص وتابع التقدّم' : 'Start & track progress' }}</h3>
-        <p>{{ $isRtl ? 'حصص مباشرة داخل المنصة، مع متابعة لولي الأمر بعد كل مرحلة.' : 'Live sessions on the platform, with parent visibility after each stage.' }}</p>
+        <p>{{ $isRtl ? 'حصص مباشرة ممتعة، مع متابعة واضحة لولي الأمر.' : 'Engaging live classes, with clear parent follow-up.' }}</p>
       </article>
     </div>
 
     <div class="gl-start__cta sana-reveal">
       <div class="sana-site-cta">
         <button type="button" data-open-free-trial class="sana-btn sana-btn--yellow sana-btn--lg">
-          <i class="fas fa-clipboard-check"></i> {{ __($a.'.free_trial_cta') }}
+          <i class="fas fa-clipboard-check"></i> {{ __('landing.hero.cta_primary') }}
         </button>
         <a href="{{ $waUrl }}" class="sana-btn sana-btn--wa sana-btn--lg" target="_blank" rel="noopener">
-          <i class="fab fa-whatsapp"></i> {{ $isRtl ? 'تواصل عبر واتساب' : 'WhatsApp' }}
+          <i class="fab fa-whatsapp"></i> {{ __('landing.hero.cta_whatsapp') }}
         </a>
       </div>
-      <a href="{{ $aboutUrl }}" class="gl-start__link"><i class="fas fa-circle-info"></i> {{ $isRtl ? 'تعرّف على طريقة عمل المنصة' : 'See how the platform works' }}</a>
+      <a href="{{ $aboutUrl }}" class="gl-start__link"><i class="fas fa-circle-info"></i> {{ __('landing.hero.cta_secondary') }}</a>
     </div>
   </div>
 </section>
@@ -420,7 +359,7 @@
           </div>
           <div class="sana-course-card__body">
             <h3 class="sana-course-card__title"><a href="{{ $coursesUrl }}">{{ $isRtl ? 'البرامج قريباً' : 'Programs coming soon' }}</a></h3>
-            <p class="sana-course-card__desc">{{ $isRtl ? 'احجز تقييم مستوى مجاني لنرشّح لك المسار المناسب.' : 'Book a free assessment so we can recommend the right path.' }}</p>
+            <p class="sana-course-card__desc">{{ $isRtl ? 'احجز اختبار تحديد المستوى مجانًا لنرشّح لابنك المسار المناسب.' : 'Book a free placement test so we can recommend the right path for your child.' }}</p>
           </div>
         </article>
       @endforelse
@@ -487,11 +426,11 @@
       <div class="sana-faq" id="sana-faq">
         <div class="sana-faq-item is-open">
           <button type="button" class="sana-faq-q">{{ $isRtl ? 'ما فكرة Glottical؟' : 'What is Glottical about?' }} <i class="fas fa-chevron-down"></i></button>
-          <div class="sana-faq-a">{{ $isRtl ? 'منصة لغات تعتمد على الحصص المباشرة والممارسة الحية — هوكنا: «تعلّم لغة. احصل على وظيفة. ابدأ مستقبلك.» مع مسارات عربي/إسلامي وإنجليزي.' : 'A live language platform — our hook: “Learn a language. Get a job. Start your future.” Arabic/Islamic and English tracks.' }}</div>
+          <div class="sana-faq-a">{{ $isRtl ? 'مدرسة إسلامية أونلاين بحصص مباشرة وتفاعلية للأطفال — منهج متدرج (مثل Islamic Foundations 1–6) مصمم للعائلات المسلمة في المهجر، مع معلمين متخصصين وتجربة تعليمية ممتعة من البيت.' : 'An online Islamic school with live, interactive classes for children — a structured path (like Islamic Foundations 1–6) designed for Muslim families abroad, with qualified teachers and an engaging home learning experience.' }}</div>
         </div>
         <div class="sana-faq-item">
           <button type="button" class="sana-faq-q">{{ $isRtl ? 'كيف أبدأ؟' : 'How do I start?' }} <i class="fas fa-chevron-down"></i></button>
-          <div class="sana-faq-a">{{ $isRtl ? 'احجز تقييم مستوى مجاني — نحدد مستواك ونرشّح المسار والمجموعة المناسبة قبل أي التزام.' : 'Book a free level assessment — we place you and recommend the right path or group before any commitment.' }}</div>
+          <div class="sana-faq-a">{{ $isRtl ? 'احجز اختبار تحديد المستوى مجانًا — نحدد مستوى ابنك ونرشّح المسار المناسب قبل أي التزام.' : 'Book a free placement test — we place your child and recommend the right path before any commitment.' }}</div>
         </div>
         <div class="sana-faq-item">
           <button type="button" class="sana-faq-q">{{ $isRtl ? 'هل الحصص فردية أم مجموعات؟' : 'Are sessions 1:1 or groups?' }} <i class="fas fa-chevron-down"></i></button>

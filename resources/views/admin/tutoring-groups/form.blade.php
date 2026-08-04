@@ -130,6 +130,28 @@
                         <option value="english" @selected(old('learning_path', $group->learning_path) === 'english')>إنجليزي</option>
                     </select>
                 </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="school_year_id">سنة المدرسة</label>
+                    <select id="school_year_id" name="school_year_id" class="{{ $fieldClass }}">
+                        <option value="">— غير مرتبط —</option>
+                        @foreach(($schoolYears ?? []) as $sy)
+                            <option value="{{ $sy->id }}" @selected((string) old('school_year_id', $group->school_year_id) === (string) $sy->id)>
+                                {{ $sy->level_number }}. {{ $sy->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="school_subject_id">مادة المدرسة</label>
+                    <select id="school_subject_id" name="school_subject_id" class="{{ $fieldClass }}">
+                        <option value="">— غير مرتبط —</option>
+                        @foreach(($schoolSubjects ?? []) as $ss)
+                            <option value="{{ $ss->id }}" @selected((string) old('school_subject_id', $group->school_subject_id) === (string) $ss->id)>
+                                {{ $ss->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="sm:col-span-2 lg:col-span-2">
                     <label class="{{ $labelClass }}" for="whatsapp_group_url">رابط واتساب المجموعة</label>
                     <input id="whatsapp_group_url" type="url" name="whatsapp_group_url" value="{{ old('whatsapp_group_url', $group->whatsapp_group_url) }}" class="{{ $fieldClass }}" dir="ltr">

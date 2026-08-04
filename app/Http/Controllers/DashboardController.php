@@ -318,6 +318,17 @@ class DashboardController extends Controller
                 ->first();
         }
 
+        $upcomingPrivateLesson = null;
+        if (\Illuminate\Support\Facades\Schema::hasTable('one_to_one_sessions')) {
+            $upcomingPrivateLesson = \App\Models\OneToOneSession::query()
+                ->where('student_id', $user->id)
+                ->where('status', \App\Models\OneToOneSession::STATUS_SCHEDULED)
+                ->where('scheduled_at', '>=', now())
+                ->with(['course:id,title', 'instructor:id,name', 'classroomMeeting'])
+                ->orderBy('scheduled_at')
+                ->first();
+        }
+
         return view(
             'dashboard.student',
             compact(
@@ -328,7 +339,8 @@ class DashboardController extends Controller
                 'upcomingExams',
                 'recentExamAttempts',
                 'recentCertificates',
-                'upcomingTutoringBooking'
+                'upcomingTutoringBooking',
+                'upcomingPrivateLesson'
             )
         );
     }

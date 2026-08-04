@@ -34,8 +34,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AcademicYearSeeder::class,
             SubjectsSeeder::class,
+            SchoolProgramSeeder::class,
         ]);
-        $this->command->info('✅ تم إنشاء السنوات الأكاديمية والمواد');
+        $this->command->info('✅ تم إنشاء السنوات الأكاديمية والمواد + برنامج المدرسة');
         $this->command->newLine();
 
         // 3. الوظائف الثابتة للموظفين (محاسب، اشراف عام، HR، مشرفه، سيلز)

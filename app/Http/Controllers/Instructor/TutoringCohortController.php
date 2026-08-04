@@ -19,7 +19,7 @@ class TutoringCohortController extends Controller
 
         $cohorts = TutoringGroupCohort::query()
             ->whereIn('tutoring_group_id', $groupIds)
-            ->with(['tutoringGroup:id,title'])
+            ->with(['tutoringGroup:id,title,school_year_id', 'tutoringGroup.schoolYear:id,name,level_number'])
             ->withCount(['bookings as confirmed_bookings' => fn ($q) => $q->whereIn('status', ['pending', 'confirmed'])])
             ->orderByDesc('starts_at')
             ->paginate(20);
@@ -29,7 +29,11 @@ class TutoringCohortController extends Controller
 
     public function show(Request $request, TutoringGroupCohort $cohort): View
     {
-        $cohort->load(['tutoringGroup', 'bookings' => fn ($q) => $q->with('user:id,name,email,phone')->orderByDesc('starts_at')]);
+        $cohort->load([
+            'tutoringGroup.schoolYear:id,name,level_number',
+            'tutoringGroup.schoolSubject:id,name',
+            'bookings' => fn ($q) => $q->with('user:id,name,email,phone')->orderByDesc('starts_at'),
+        ]);
         abort_unless((int) $cohort->tutoringGroup?->instructor_id === (int) $request->user()->id, 403);
 
         return view('instructor.tutoring-cohorts.show', compact('cohort'));

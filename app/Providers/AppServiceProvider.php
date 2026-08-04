@@ -184,6 +184,7 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\Lecture::observe(\App\Observers\LectureObserver::class);
         \App\Models\Assignment::observe(\App\Observers\AssignmentObserver::class);
         \App\Models\LectureAssignment::observe(\App\Observers\LectureAssignmentObserver::class);
+        \App\Models\StudentInstructorAssignment::observe(\App\Observers\StudentInstructorAssignmentObserver::class);
 
         // تفعيل Event Listeners لتسجيل النشاطات
         \Illuminate\Support\Facades\Event::listen(

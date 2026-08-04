@@ -3,20 +3,9 @@
     $isRtl = $locale === 'ar';
     $g = 'landing.groups_page';
     $brand = config('app.name', 'Glottical');
-    $footer = \App\Services\PublicFooterSettings::payload();
-    $waUrl = $footer['whatsapp_url'] ?? '#';
-    $groupCount = (int) ($groupCount ?? 0);
-    $oneToOneCount = (int) ($oneToOneCount ?? 0);
-    $groupCourses = $groupCourses ?? collect();
-    $oneToOneCourses = $oneToOneCourses ?? collect();
-    $groupCountLabel = $groupCount === 1
-        ? __($g.'.courses_count_one')
-        : __($g.'.courses_count', ['count' => $groupCount]);
-    $soloCountLabel = $oneToOneCount === 1
-        ? __($g.'.courses_count_one')
-        : __($g.'.courses_count', ['count' => $oneToOneCount]);
-    $groupImg = 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80';
-    $soloImg = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=80';
+    $trialUrl = route('home').'?open_trial=1';
+    $schoolYears = $schoolYears ?? collect();
+    $schoolSubjects = $schoolSubjects ?? collect();
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -28,462 +17,182 @@
   <meta name="theme-color" content="#0B3D91">
   <link rel="canonical" href="{{ route('public.groups') }}">
   @include('partials.favicon-links')
-  @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog']])
+  @include('partials.landing.head', ['landingCss' => ['theme']])
   <style>
-    .gl-groups-page { background: var(--bg, #F4F7FC); }
-    .gl-groups-page .sana-cat-hero {
-      padding: clamp(28px, 4.5vw, 44px) 0 clamp(32px, 5vw, 48px);
+    .gl-sch{background:var(--bg,#F4F7FC)}
+    .gl-sch-hero{
+      padding:clamp(96px,12vw,120px) 0 clamp(36px,5vw,52px);
+      background:linear-gradient(175deg,#051F4D 0%,#072A66 42%,#0B3D91 100%);
+      color:#fff;
     }
-    .gl-groups-page .sana-cat-hero__desc { margin-bottom: 16px; }
-    .gl-groups-page .sana-cat-hero__stats { margin-bottom: 0; gap: 10px 14px; }
-    .gl-groups-body {
-      padding-top: clamp(24px, 3.5vw, 36px);
-      padding-bottom: clamp(40px, 6vw, 64px);
+    .gl-sch-hero__inner{max-width:40rem}
+    .gl-sch-kicker{
+      display:inline-flex;align-items:center;gap:8px;margin:0 0 14px;padding:7px 14px;border-radius:999px;
+      background:rgba(7,24,58,.55);border:1px solid rgba(255,255,255,.14);font:700 .78rem Tajawal,sans-serif;
     }
-    .gl-groups-modes {
-      display: grid;
-      gap: 1rem;
-      margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+    .gl-sch-kicker i{color:#F5B800}
+    .gl-sch-hero h1{
+      margin:0 0 12px;font:900 clamp(1.55rem,3.8vw,2.35rem)/1.28 Cairo,Tajawal,sans-serif;color:#F5B800;
     }
-    @media (min-width: 900px) {
-      .gl-groups-modes { grid-template-columns: 1fr 1fr; gap: 1.15rem; }
+    .gl-sch-hero p{margin:0 0 20px;font:600 .95rem/1.75 Tajawal,sans-serif;color:rgba(255,255,255,.9)}
+    .gl-sch-actions{display:flex;flex-wrap:wrap;gap:10px}
+    .gl-sch-sec{padding:clamp(36px,5vw,56px) 0}
+    .gl-sch-sec--white{background:#fff}
+    .gl-sch-head{margin:0 0 1.15rem}
+    .gl-sch-head h2{margin:0 0 .35rem;font:900 clamp(1.2rem,2.6vw,1.55rem)/1.3 Cairo,Tajawal,sans-serif;color:#0B1220}
+    .gl-sch-head p{margin:0;font:600 .88rem/1.6 Tajawal,sans-serif;color:#5B6577;max-width:36rem}
+    .gl-sch-flow{display:grid;gap:10px;margin-bottom:1.5rem}
+    @media(min-width:768px){.gl-sch-flow{grid-template-columns:repeat(3,1fr)}}
+    .gl-sch-flow__item{
+      background:#fff;border:1.5px solid #D7DDE6;border-radius:16px;padding:1rem 1.05rem;
+      box-shadow:0 10px 28px -22px rgba(11,61,145,.28);
     }
-    .gl-groups-mode {
-      position: relative;
-      overflow: hidden;
-      border-radius: 18px;
-      min-height: 260px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      text-decoration: none !important;
-      color: #fff;
-      box-shadow: 0 16px 40px -20px rgba(11,61,145,.4);
-      border: 1.5px solid rgba(11,61,145,.12);
-      transition: transform .22s ease, box-shadow .22s ease;
+    .gl-sch-flow__n{
+      display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 8px;
+      border-radius:999px;background:#0B3D91;color:#fff;font:900 .72rem Tajawal,sans-serif;margin-bottom:.55rem;
     }
-    .gl-groups-mode:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 22px 48px -18px rgba(11,61,145,.45);
+    .gl-sch-flow__item h3{margin:0 0 .25rem;font:900 .9rem Tajawal,sans-serif;color:#0B1220}
+    .gl-sch-flow__item p{margin:0;font:600 .78rem/1.55 Tajawal,sans-serif;color:#5B6577}
+    .gl-sch-years{display:grid;gap:12px;grid-template-columns:repeat(2,1fr)}
+    @media(min-width:768px){.gl-sch-years{grid-template-columns:repeat(3,1fr)}}
+    .gl-sch-year{
+      display:block;text-decoration:none!important;color:inherit;background:#fff;border:1.5px solid #D7DDE6;
+      border-radius:16px;padding:1.05rem 1rem 1.1rem;box-shadow:0 10px 28px -22px rgba(11,61,145,.3);
+      transition:transform .15s ease,border-color .15s ease;
     }
-    .gl-groups-mode__media {
-      position: absolute; inset: 0;
+    .gl-sch-year:hover{transform:translateY(-2px);border-color:rgba(11,61,145,.35)}
+    .gl-sch-year__num{
+      display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 10px;
+      margin-bottom:.55rem;border-radius:10px;background:#E8EEF8;color:#0B3D91;font:900 .78rem Tajawal,sans-serif;
     }
-    .gl-groups-mode__media img {
-      width: 100%; height: 100%; object-fit: cover; display: block;
-      transition: transform .45s ease;
+    .gl-sch-year h3{margin:0 0 .3rem;font:900 .92rem/1.35 Tajawal,sans-serif;color:#0B1220}
+    .gl-sch-year p{margin:0;font:600 .76rem/1.5 Tajawal,sans-serif;color:#5B6577}
+    .gl-sch-year__cta{margin-top:.65rem;font:800 .75rem Tajawal,sans-serif;color:#0B3D91}
+    .gl-sch-subjects{display:flex;flex-wrap:wrap;gap:.45rem}
+    .gl-sch-sub{
+      display:inline-flex;align-items:center;gap:8px;padding:.55rem .85rem;border-radius:999px;
+      background:#F4F7FC;border:1.5px solid #D7DDE6;font:800 .78rem Tajawal,sans-serif;color:#0B1220;
     }
-    .gl-groups-mode:hover .gl-groups-mode__media img { transform: scale(1.04); }
-    .gl-groups-mode__shade {
-      position: absolute; inset: 0;
-      background:
-        linear-gradient(180deg, rgba(5,31,77,.15) 0%, rgba(5,31,77,.55) 45%, rgba(5,31,77,.92) 100%);
+    .gl-sch-sub i{color:#0B3D91}
+    .gl-sch-band{
+      border-radius:18px;padding:clamp(1.25rem,3vw,1.85rem);text-align:center;color:#fff;
+      background:linear-gradient(145deg,#051F4D 0%,#0B3D91 55%,#1A56B0 100%);
+      box-shadow:0 18px 44px -18px rgba(11,61,145,.45);
     }
-    .gl-groups-mode__body {
-      position: relative; z-index: 1;
-      padding: 1.15rem 1.2rem 1.25rem;
-    }
-    .gl-groups-mode__count {
-      display: inline-flex; align-items: center; gap: 6px;
-      margin-bottom: .45rem; padding: 4px 10px; border-radius: 999px;
-      background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.2);
-      font-size: .7rem; font-weight: 800; color: #FFE9A8;
-    }
-    .gl-groups-mode h2 {
-      margin: 0 0 .4rem;
-      font-family: Cairo,Tajawal,sans-serif;
-      font-size: clamp(1.15rem, 2.2vw, 1.4rem);
-      font-weight: 900; line-height: 1.3;
-    }
-    .gl-groups-mode p {
-      margin: 0 0 .85rem;
-      font-size: .8rem; line-height: 1.6; font-weight: 600;
-      color: rgba(255,255,255,.85); max-width: 34ch;
-    }
-    .gl-groups-mode__cta {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: .55rem 1rem; border-radius: 999px;
-      background: linear-gradient(180deg, #FFD24D, #F5B800);
-      color: #0B1220; font-size: .78rem; font-weight: 900;
-    }
-    .gl-groups-compare {
-      display: grid; gap: 1rem;
-      margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
-    }
-    @media (min-width: 900px) {
-      .gl-groups-compare { grid-template-columns: 1fr 1fr; gap: 1.15rem; }
-    }
-    .gl-groups-compare__card {
-      background: #fff;
-      border: 1.5px solid #D7DDE6;
-      border-radius: 16px;
-      padding: 1.1rem 1.15rem 1.2rem;
-      box-shadow: 0 10px 28px -20px rgba(11,61,145,.28);
-    }
-    .gl-groups-compare__head {
-      display: flex; align-items: center; gap: .65rem;
-      margin-bottom: .85rem;
-    }
-    .gl-groups-compare__icon {
-      width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
-      display: grid; place-items: center;
-      background: #E8EEF8; color: #0B3D91; font-size: .95rem;
-    }
-    .gl-groups-compare__icon--gold {
-      background: #FFF6D6; color: #9A7200;
-    }
-    .gl-groups-compare__head h3 {
-      margin: 0;
-      font-size: 1rem; font-weight: 900; color: #0B1220;
-    }
-    .gl-groups-compare__list {
-      list-style: none; margin: 0; padding: 0;
-      display: grid; gap: .5rem;
-    }
-    .gl-groups-compare__list li {
-      display: flex; gap: 10px; align-items: flex-start;
-      font-size: .8rem; line-height: 1.55; font-weight: 600; color: #5B6577;
-    }
-    .gl-groups-compare__list li i {
-      color: #0B3D91; margin-top: 3px; flex-shrink: 0; font-size: .78rem;
-    }
-    .gl-groups-compare__card--solo .gl-groups-compare__list li i { color: #C99200; }
-    .gl-groups-steps {
-      display: grid; gap: .85rem;
-      margin-bottom: clamp(1.75rem, 3.5vw, 2.5rem);
-    }
-    @media (min-width: 768px) {
-      .gl-groups-steps { grid-template-columns: repeat(3, 1fr); }
-    }
-    .gl-groups-step {
-      background: #fff;
-      border: 1.5px solid #D7DDE6;
-      border-radius: 14px;
-      padding: 1rem 1.05rem;
-      box-shadow: 0 8px 22px -18px rgba(11,61,145,.25);
-    }
-    .gl-groups-step__num {
-      display: inline-flex; align-items: center; justify-content: center;
-      min-width: 28px; height: 28px; padding: 0 8px; border-radius: 999px;
-      background: #0B3D91; color: #fff;
-      font-size: .72rem; font-weight: 900; margin-bottom: .55rem;
-    }
-    .gl-groups-step h3 {
-      margin: 0 0 .35rem;
-      font-size: .9rem; font-weight: 900; color: #0B1220;
-    }
-    .gl-groups-step p {
-      margin: 0;
-      font-size: .76rem; line-height: 1.6; font-weight: 600; color: #5B6577;
-    }
-    .gl-groups-sec { margin-bottom: clamp(1.75rem, 3.5vw, 2.5rem); }
-    .gl-groups-sec__head {
-      display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
-      gap: .75rem; margin-bottom: 1rem;
-    }
-    .gl-groups-sec__head h2 {
-      margin: 0;
-      font-family: Cairo,Tajawal,sans-serif;
-      font-size: clamp(1.1rem, 2.2vw, 1.35rem);
-      font-weight: 900; color: #0B1220;
-    }
-    .gl-groups-sec__head p {
-      margin: .2rem 0 0;
-      font-size: .8rem; color: #5B6577; font-weight: 600;
-    }
-    .gl-groups-grid {
-      display: grid; gap: .85rem;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    }
-    .gl-groups-card {
-      background: #fff;
-      border: 1.5px solid #D7DDE6;
-      border-radius: 14px;
-      overflow: hidden;
-      text-decoration: none !important;
-      color: inherit;
-      transition: transform .2s ease, border-color .2s ease;
-      box-shadow: 0 8px 22px -18px rgba(11,61,145,.25);
-    }
-    .gl-groups-card:hover {
-      transform: translateY(-2px);
-      border-color: rgba(11,61,145,.28);
-    }
-    .gl-groups-card__media {
-      position: relative;
-      aspect-ratio: 16/10;
-      background: #E8EEF8;
-      overflow: hidden;
-    }
-    .gl-groups-card__media img {
-      width: 100%; height: 100%; object-fit: cover; display: block;
-    }
-    .gl-groups-card__badge {
-      position: absolute; top: 10px; inset-inline-start: 10px;
-      padding: 4px 9px; border-radius: 999px;
-      background: rgba(11,61,145,.92); color: #fff;
-      font-size: .66rem; font-weight: 800;
-    }
-    .gl-groups-card__badge--gold {
-      background: linear-gradient(180deg, #FFD24D, #F5B800);
-      color: #0B1220;
-    }
-    .gl-groups-card__body { padding: .7rem .8rem .85rem; }
-    .gl-groups-card__body h3 {
-      margin: 0 0 .25rem;
-      font-size: .84rem; font-weight: 900; color: #0B1220; line-height: 1.35;
-    }
-    .gl-groups-card__body p {
-      margin: 0;
-      font-size: .72rem; color: #5B6577; font-weight: 600;
-    }
-    .gl-groups-empty {
-      text-align: center;
-      padding: 1.5rem 1rem;
-      border-radius: 14px;
-      background: #fff;
-      border: 1.5px dashed #D7DDE6;
-      color: #5B6577;
-      font-size: .86rem;
-      font-weight: 700;
-    }
-    .gl-groups-band {
-      border-radius: 18px;
-      padding: clamp(1.25rem, 3vw, 1.75rem);
-      background:
-        radial-gradient(circle at 90% 0%, rgba(245,184,0,.18), transparent 42%),
-        linear-gradient(145deg, #051F4D 0%, #0B3D91 55%, #1A56B0 100%);
-      color: #fff;
-      box-shadow: 0 18px 44px -18px rgba(11,61,145,.45);
-    }
-    .gl-groups-band__inner {
-      display: flex; flex-wrap: wrap; gap: 1rem 1.35rem;
-      align-items: center; justify-content: space-between;
-    }
-    .gl-groups-band h2 {
-      margin: 0 0 .3rem;
-      font-family: Cairo,Tajawal,sans-serif;
-      font-size: clamp(1.1rem, 2.2vw, 1.35rem);
-      font-weight: 900;
-    }
-    .gl-groups-band p {
-      margin: 0;
-      font-size: .82rem; line-height: 1.6; font-weight: 600;
-      color: rgba(255,255,255,.82); max-width: 34rem;
-    }
-    .gl-groups-band__actions {
-      display: flex; flex-wrap: wrap; gap: .55rem;
-    }
-    .gl-groups-band__actions .sana-btn {
-      padding: .65rem 1.05rem; font-size: .82rem;
-    }
-    .gl-groups-sec-intro {
-      margin-bottom: 1rem;
-    }
-    .gl-groups-sec-intro .sana-head__eyebrow { margin-bottom: 4px; }
-    .gl-groups-sec-intro .sana-head__title {
-      font-size: clamp(1.15rem, 2.4vw, 1.45rem);
-      margin: 0 0 .35rem;
-    }
-    .gl-groups-sec-intro .sana-head__sub {
-      margin: 0; font-size: .82rem; max-width: 40rem;
-    }
+    .gl-sch-band h2{margin:0 0 .4rem;font:900 clamp(1.15rem,2.4vw,1.45rem)/1.35 Cairo,Tajawal,sans-serif}
+    .gl-sch-band p{margin:0 auto 1rem;max-width:32rem;font:600 .88rem/1.65 Tajawal,sans-serif;color:rgba(255,255,255,.88)}
   </style>
 </head>
-<body class="sana-home sana-courses-page gl-groups-page">
+<body class="sana-home gl-sch">
 <div id="sana-scroll-progress"></div>
-@include('partials.landing.navbar', ['navActive' => 'groups', 'navSolid' => true, 'navHero' => false])
+@include('partials.landing.navbar', ['navActive' => 'groups', 'navSolid' => false, 'navHero' => true])
 
-<main class="sana-cat-page">
-  <section class="sana-cat-hero">
-    <div class="sana-container sana-cat-hero__inner sana-reveal">
-      <div class="sana-cat-hero__breadcrumb">
-        <a href="{{ route('home') }}">{{ $isRtl ? 'الرئيسية' : 'Home' }}</a>
-        <span>/</span>
-        <span>{{ __($g.'.title') }}</span>
+<main>
+  <section class="gl-sch-hero">
+    <div class="sana-container">
+      <div class="gl-sch-hero__inner sana-reveal">
+        <p class="gl-sch-kicker"><i class="fas fa-school"></i> {{ __($g.'.kicker') }}</p>
+        <h1>{{ __($g.'.title') }}</h1>
+        <p>{{ __($g.'.intro') }}</p>
+        <div class="gl-sch-actions">
+          <a href="#years" class="sana-btn sana-btn--yellow sana-btn--lg">
+            <i class="fas fa-layer-group"></i> {{ $isRtl ? 'اختر السنة' : 'Choose a year' }}
+          </a>
+          <a href="{{ $trialUrl }}" class="sana-btn sana-btn--white-outline sana-btn--lg">
+            <i class="fas fa-clipboard-check"></i> {{ __($g.'.cta_primary') }}
+          </a>
+        </div>
       </div>
-      <h1 class="sana-cat-hero__title">
-        {{ __($g.'.title') }}
-        <span class="hl">{{ $isRtl ? 'جماعي أو فردي' : 'group or 1:1' }}</span>
-      </h1>
-      <p class="sana-cat-hero__desc">{{ __($g.'.intro') }}</p>
-      <p class="sana-cat-hero__stats">
-        <span class="sana-cat-hero__stat"><i class="fas fa-users"></i> {{ $groupCountLabel }} {{ $isRtl ? 'جماعي' : 'group' }}</span>
-        <span class="sana-cat-hero__stat"><i class="fas fa-user"></i> {{ $soloCountLabel }} {{ $isRtl ? 'فردي' : '1:1' }}</span>
-        <span class="sana-cat-hero__stat"><i class="fas fa-video"></i> {{ $isRtl ? 'حصص مباشرة' : 'Live sessions' }}</span>
-      </p>
     </div>
   </section>
 
-  <div class="sana-container gl-groups-body">
-
-    <div class="gl-groups-modes">
-      <a href="{{ route('public.groups.courses') }}" class="gl-groups-mode sana-reveal">
-        <div class="gl-groups-mode__media">
-          <img src="{{ $groupImg }}" alt="{{ __($g.'.group_tile_title') }}" width="900" height="560" loading="eager">
-          <span class="gl-groups-mode__shade" aria-hidden="true"></span>
-        </div>
-        <div class="gl-groups-mode__body">
-          @if ($groupCount > 0)
-            <span class="gl-groups-mode__count"><i class="fas fa-book-open"></i> {{ $groupCountLabel }}</span>
-          @endif
-          <h2>{{ __($g.'.group_tile_title') }}</h2>
-          <p>{{ __($g.'.group_tile_sub') }}</p>
-          <span class="gl-groups-mode__cta">{{ __($g.'.group_tile_cta') }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></span>
-        </div>
-      </a>
-
-      <a href="{{ route('public.groups.one-to-one') }}" class="gl-groups-mode sana-reveal">
-        <div class="gl-groups-mode__media">
-          <img src="{{ $soloImg }}" alt="{{ __($g.'.solo_tile_title') }}" width="900" height="560" loading="eager">
-          <span class="gl-groups-mode__shade" aria-hidden="true"></span>
-        </div>
-        <div class="gl-groups-mode__body">
-          @if ($oneToOneCount > 0)
-            <span class="gl-groups-mode__count"><i class="fas fa-book-open"></i> {{ $soloCountLabel }}</span>
-          @endif
-          <h2>{{ __($g.'.solo_tile_title') }}</h2>
-          <p>{{ __($g.'.solo_tile_sub') }}</p>
-          <span class="gl-groups-mode__cta">{{ __($g.'.solo_tile_cta') }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></span>
-        </div>
-      </a>
-    </div>
-
-    <div class="gl-groups-sec-intro sana-reveal">
-      <span class="sana-head__eyebrow">{{ __($g.'.compare_kicker') }}</span>
-      <h2 class="sana-head__title">{{ __($g.'.compare_title') }}</h2>
-      <p class="sana-head__sub">{{ __($g.'.compare_sub') }}</p>
-    </div>
-    <div class="gl-groups-compare">
-      <article class="gl-groups-compare__card sana-reveal">
-        <div class="gl-groups-compare__head">
-          <span class="gl-groups-compare__icon"><i class="fas fa-users"></i></span>
-          <h3>{{ __($g.'.group_label') }}</h3>
-        </div>
-        <ul class="gl-groups-compare__list">
-          @foreach (__($g.'.group_points') as $point)
-            <li><i class="fas fa-check-circle"></i><span>{{ $point }}</span></li>
-          @endforeach
-        </ul>
-      </article>
-      <article class="gl-groups-compare__card gl-groups-compare__card--solo sana-reveal">
-        <div class="gl-groups-compare__head">
-          <span class="gl-groups-compare__icon gl-groups-compare__icon--gold"><i class="fas fa-user"></i></span>
-          <h3>{{ __($g.'.solo_label') }}</h3>
-        </div>
-        <ul class="gl-groups-compare__list">
-          @foreach (__($g.'.solo_points') as $point)
-            <li><i class="fas fa-check-circle"></i><span>{{ $point }}</span></li>
-          @endforeach
-        </ul>
-      </article>
-    </div>
-
-    <div class="gl-groups-sec-intro sana-reveal">
-      <span class="sana-head__eyebrow">{{ __($g.'.join_kicker') }}</span>
-      <h2 class="sana-head__title">{{ __($g.'.join_title') }}</h2>
-      <p class="sana-head__sub">{{ __($g.'.join_sub') }}</p>
-    </div>
-    <div class="gl-groups-steps">
-      <div class="gl-groups-step sana-reveal">
-        <span class="gl-groups-step__num">01</span>
-        <h3>{{ __($g.'.step1_title') }}</h3>
-        <p>{{ __($g.'.step1_desc') }}</p>
+  <section class="gl-sch-sec" id="start">
+    <div class="sana-container">
+      <div class="gl-sch-head sana-reveal">
+        <h2>{{ $isRtl ? 'كيف تبدأ؟' : 'How it works' }}</h2>
+        <p>{{ $isRtl ? 'ثلاث خطوات واضحة — بدون تشتيت.' : 'Three clear steps — no clutter.' }}</p>
       </div>
-      <div class="gl-groups-step sana-reveal">
-        <span class="gl-groups-step__num">02</span>
-        <h3>{{ __($g.'.step2_title') }}</h3>
-        <p>{{ __($g.'.step2_desc') }}</p>
-      </div>
-      <div class="gl-groups-step sana-reveal">
-        <span class="gl-groups-step__num">03</span>
-        <h3>{{ __($g.'.step3_title') }}</h3>
-        <p>{{ __($g.'.step3_desc') }}</p>
+      <div class="gl-sch-flow sana-reveal">
+        <article class="gl-sch-flow__item">
+          <span class="gl-sch-flow__n">1</span>
+          <h3>{{ $isRtl ? 'اختبار تحديد المستوى' : 'Free level check' }}</h3>
+          <p>{{ $isRtl ? 'نحجز لك تجربة مجانية لنعرف أين يبدأ طفلك.' : 'Book a free trial so we place your child correctly.' }}</p>
+        </article>
+        <article class="gl-sch-flow__item">
+          <span class="gl-sch-flow__n">2</span>
+          <h3>{{ $isRtl ? 'اختر السنة المناسبة' : 'Pick the right year' }}</h3>
+          <p>{{ $isRtl ? 'Islamic Foundations 1–6 حسب العمر والمستوى.' : 'Islamic Foundations 1–6 by age and level.' }}</p>
+        </article>
+        <article class="gl-sch-flow__item">
+          <span class="gl-sch-flow__n">3</span>
+          <h3>{{ $isRtl ? 'انضم للفصل' : 'Join the class' }}</h3>
+          <p>{{ $isRtl ? 'حصص مباشرة مع معلم المدرسة ومتابعة واضحة.' : 'Live school sessions with clear follow-up.' }}</p>
+        </article>
       </div>
     </div>
+  </section>
 
-    <section class="gl-groups-sec">
-      <div class="gl-groups-sec__head sana-reveal">
-        <div>
-          <p class="sana-head__eyebrow" style="margin:0 0 4px">{{ __($g.'.from_groups_kicker') }}</p>
-          <h2>{{ __($g.'.from_groups_title') }}</h2>
-          <p>{{ __($g.'.from_groups_sub') }}</p>
-        </div>
-        <a href="{{ route('public.groups.courses') }}" class="sana-link-more">
-          {{ __($g.'.view_all_group') }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i>
-        </a>
+  <section class="gl-sch-sec gl-sch-sec--white" id="years">
+    <div class="sana-container">
+      <div class="gl-sch-head sana-reveal">
+        <h2>{{ __($g.'.years_title') }}</h2>
+        <p>{{ $isRtl ? 'اضغط على السنة لترى المواد والفصول المتاحة.' : 'Tap a year to see subjects and open classes.' }}</p>
       </div>
-      @if ($groupCourses->isNotEmpty())
-        <div class="gl-groups-grid sana-reveal">
-          @foreach ($groupCourses->take(8) as $i => $item)
-            @php
-              $thumb = $item->imageUrl() ?: $groupImg;
-            @endphp
-            <a href="{{ route('public.groups.show', $item->slug) }}" class="gl-groups-card">
-              <div class="gl-groups-card__media">
-                <img src="{{ $thumb }}" alt="{{ $item->title }}" loading="lazy">
-                <span class="gl-groups-card__badge">{{ $isRtl ? 'جماعي' : 'Group' }}</span>
-              </div>
-              <div class="gl-groups-card__body">
-                <h3>{{ $item->title }}</h3>
-                <p>{{ $item->instructor->name ?? ($isRtl ? 'معلّم على المنصة' : 'Platform tutor') }}</p>
-              </div>
-            </a>
-          @endforeach
-        </div>
-      @else
-        <div class="gl-groups-empty sana-reveal">{{ __($g.'.empty_group') }}</div>
-      @endif
-    </section>
-
-    <section class="gl-groups-sec">
-      <div class="gl-groups-sec__head sana-reveal">
-        <div>
-          <p class="sana-head__eyebrow" style="margin:0 0 4px">{{ __($g.'.from_solo_kicker') }}</p>
-          <h2>{{ __($g.'.from_solo_title') }}</h2>
-          <p>{{ __($g.'.from_solo_sub') }}</p>
-        </div>
-        <a href="{{ route('public.groups.one-to-one') }}" class="sana-link-more">
-          {{ __($g.'.view_all_solo') }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i>
-        </a>
+      <div class="gl-sch-years sana-reveal">
+        @forelse ($schoolYears as $year)
+          <a href="{{ route('public.school.year', $year->slug) }}" class="gl-sch-year">
+            <span class="gl-sch-year__num">{{ str_pad((string) $year->level_number, 2, '0', STR_PAD_LEFT) }}</span>
+            <h3>{{ $year->name }}</h3>
+            @if ($year->tagline)
+              <p>{{ $year->tagline }}</p>
+            @endif
+            <span class="gl-sch-year__cta">
+              @if (($year->open_classes_count ?? 0) > 0)
+                {{ $isRtl ? ($year->open_classes_count.' فصل متاح · عرض') : ($year->open_classes_count.' open · View') }}
+              @else
+                {{ $isRtl ? 'عرض السنة ←' : 'View year →' }}
+              @endif
+            </span>
+          </a>
+        @empty
+          <p style="grid-column:1/-1;font:700 .9rem Tajawal,sans-serif;color:#5B6577">{{ $isRtl ? 'السنوات ستظهر قريباً.' : 'Years will appear soon.' }}</p>
+        @endforelse
       </div>
-      @if ($oneToOneCourses->isNotEmpty())
-        <div class="gl-groups-grid sana-reveal">
-          @foreach ($oneToOneCourses->take(8) as $item)
-            @php
-              $thumb = $item->imageUrl() ?: $soloImg;
-            @endphp
-            <a href="{{ route('public.groups.show', $item->slug) }}" class="gl-groups-card">
-              <div class="gl-groups-card__media">
-                <img src="{{ $thumb }}" alt="{{ $item->title }}" loading="lazy">
-                <span class="gl-groups-card__badge gl-groups-card__badge--gold">1:1</span>
-              </div>
-              <div class="gl-groups-card__body">
-                <h3>{{ $item->title }}</h3>
-                <p>{{ $item->instructor->name ?? ($isRtl ? 'معلّم على المنصة' : 'Platform tutor') }}</p>
-              </div>
-            </a>
-          @endforeach
-        </div>
-      @else
-        <div class="gl-groups-empty sana-reveal">{{ __($g.'.empty_solo') }}</div>
-      @endif
-    </section>
+    </div>
+  </section>
 
-    <div class="gl-groups-band sana-reveal">
-      <div class="gl-groups-band__inner">
-        <div>
-          <h2>{{ __($g.'.cta_title') }}</h2>
-          <p>{{ __($g.'.cta_sub') }}</p>
-        </div>
-        <div class="gl-groups-band__actions">
-          <a href="{{ route('home') }}?open_trial=1" class="sana-btn sana-btn--yellow"><i class="fas fa-clipboard-check"></i> {{ __($g.'.cta_trial') }}</a>
-          <a href="{{ route('public.courses') }}" class="sana-btn sana-btn--wa"><i class="fas fa-book-open"></i> {{ __($g.'.cta_courses') }}</a>
-          <a href="{{ $waUrl }}" class="sana-btn sana-btn--ghost-light" target="_blank" rel="noopener" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.28)"><i class="fab fa-whatsapp"></i> {{ $isRtl ? 'واتساب' : 'WhatsApp' }}</a>
+  @if($schoolSubjects->isNotEmpty())
+  <section class="gl-sch-sec" id="subjects">
+    <div class="sana-container">
+      <div class="gl-sch-head sana-reveal">
+        <h2>{{ $isRtl ? 'ماذا يدرس الطالب؟' : 'What students learn' }}</h2>
+        <p>{{ __($g.'.subjects_sub') }}</p>
+      </div>
+      <div class="gl-sch-subjects sana-reveal">
+        @foreach ($schoolSubjects as $subject)
+          <span class="gl-sch-sub"><i class="fas {{ $subject->faIcon() }}"></i> {{ $subject->name }}</span>
+        @endforeach
+      </div>
+    </div>
+  </section>
+  @endif
+
+  <section class="gl-sch-sec" style="padding-top:0">
+    <div class="sana-container">
+      <div class="gl-sch-band sana-reveal">
+        <h2>{{ $isRtl ? 'جاهز لوضع طفلك في السنة المناسبة؟' : 'Ready to place your child?' }}</h2>
+        <p>{{ __($g.'.cta_sub') }}</p>
+        <div class="gl-sch-actions" style="justify-content:center">
+          <a href="{{ $trialUrl }}" class="sana-btn sana-btn--yellow sana-btn--lg">
+            <i class="fas fa-clipboard-check"></i> {{ __($g.'.cta_trial') }}
+          </a>
+          <a href="#years" class="sana-btn sana-btn--white-outline sana-btn--lg">
+            <i class="fas fa-layer-group"></i> {{ $isRtl ? 'تصفّح السنوات' : 'Browse years' }}
+          </a>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </main>
 
 @include('partials.landing.footer')

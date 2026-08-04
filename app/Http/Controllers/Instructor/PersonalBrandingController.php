@@ -41,6 +41,15 @@ class PersonalBrandingController extends Controller
             'consultation_price_egp' => 'nullable|numeric|min:0|max:999999.99',
             'consultation_duration_minutes' => 'nullable|integer|min:15|max:480',
             'photo' => 'nullable|image|max:'.config('upload_limits.max_upload_kb'),
+            'gender' => 'nullable|in:male,female',
+            'private_subjects' => 'nullable|array',
+            'private_subjects.*' => 'string|max:64',
+            'private_age_groups' => 'nullable|array',
+            'private_age_groups.*' => 'string|max:64',
+            'private_languages' => 'nullable|array',
+            'private_languages.*' => 'string|max:64',
+            'private_specializations' => 'nullable|array',
+            'private_specializations.*' => 'string|max:64',
         ], [
             'experience.max' => 'الخبرات في المجال يجب ألا تتجاوز 50 ألف حرف. إن احتجت مساحة أكبر تواصل مع الإدارة.',
             'skills.max' => 'المهارات يجب ألا تتجاوز 5 آلاف حرف.',
@@ -67,6 +76,29 @@ class PersonalBrandingController extends Controller
                 $data[$k] = null;
             }
         }
+
+        $allowedSubjects = array_keys(config('private_lessons.subjects', []));
+        $allowedAges = array_keys(config('private_lessons.age_groups', []));
+        $allowedLangs = array_keys(config('private_lessons.languages', []));
+        $allowedSpecs = array_keys(config('private_lessons.specializations', []));
+
+        $user->forceFill([
+            'gender' => $data['gender'] ?? $user->gender,
+            'private_teaching_meta' => [
+                'subjects' => array_values(array_intersect($data['private_subjects'] ?? [], $allowedSubjects)),
+                'age_groups' => array_values(array_intersect($data['private_age_groups'] ?? [], $allowedAges)),
+                'languages' => array_values(array_intersect($data['private_languages'] ?? [], $allowedLangs)),
+                'specializations' => array_values(array_intersect($data['private_specializations'] ?? [], $allowedSpecs)),
+            ],
+        ])->save();
+
+        unset(
+            $data['gender'],
+            $data['private_subjects'],
+            $data['private_age_groups'],
+            $data['private_languages'],
+            $data['private_specializations']
+        );
 
         $profile->update($data);
 

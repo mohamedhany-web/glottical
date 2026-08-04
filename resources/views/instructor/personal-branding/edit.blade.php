@@ -99,6 +99,54 @@
             @endif
         </div>
 
+        @php
+            $plLocale = app()->getLocale() === 'ar' ? 'ar' : 'en';
+            $plMeta = old('private_subjects') !== null
+                ? [
+                    'subjects' => old('private_subjects', []),
+                    'age_groups' => old('private_age_groups', []),
+                    'languages' => old('private_languages', []),
+                    'specializations' => old('private_specializations', []),
+                ]
+                : (auth()->user()->privateTeachingMeta());
+            $plGender = old('gender', auth()->user()->gender);
+        @endphp
+        <div class="rounded-2xl border border-[#0B3D91]/20 p-4 sm:p-5 bg-[#F4F7FC] dark:bg-slate-800/40">
+            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">{{ $plLocale === 'ar' ? 'ملف الحصص الخاصة' : 'Private Lessons profile' }}</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">{{ $plLocale === 'ar' ? 'تظهر في دليل المعلمين والفلاتر على صفحة الحصص الخاصة.' : 'Shown in the teacher directory filters on the Private Lessons page.' }}</p>
+
+            <div class="mb-4">
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ $plLocale === 'ar' ? 'المعلم' : 'Teacher' }}</label>
+                <div class="flex flex-wrap gap-3">
+                    @foreach(config('private_lessons.genders') as $gKey => $gLabels)
+                        <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                            <input type="radio" name="gender" value="{{ $gKey }}" @checked($plGender === $gKey)>
+                            {{ $gLabels[$plLocale] ?? $gKey }}
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            @foreach([
+                'private_subjects' => ['subjects', 'subjects'],
+                'private_age_groups' => ['age_groups', 'age_groups'],
+                'private_languages' => ['languages', 'languages'],
+                'private_specializations' => ['specializations', 'specializations'],
+            ] as $inputName => [$configKey, $metaKey])
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ __('public.private_filter_'.($configKey === 'age_groups' ? 'age' : ($configKey === 'specializations' ? 'specialty' : rtrim($configKey,'s')))) }}</label>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach(config('private_lessons.'.$configKey, []) as $optKey => $labels)
+                            <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-semibold">
+                                <input type="checkbox" name="{{ $inputName }}[]" value="{{ $optKey }}" @checked(in_array($optKey, $plMeta[$metaKey] ?? [], true))>
+                                {{ $labels[$plLocale] ?? $optKey }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
         <div class="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 sm:p-5 bg-slate-50/60 dark:bg-slate-800/40">
             <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">الاستشارات (اختياري)</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">يمكنك تحديد سعر ومدة الاستشارة للطلاب. إن تركتها فارغة سيُستخدم الافتراضي من إعدادات المنصة.</p>

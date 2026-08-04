@@ -20,7 +20,12 @@
                 @forelse($cohorts as $cohort)
                     <tr>
                         <td class="px-4 py-3 font-medium">{{ $cohort->title }}</td>
-                        <td class="px-4 py-3">{{ $cohort->tutoringGroup?->title }}</td>
+                        <td class="px-4 py-3">
+                            {{ $cohort->tutoringGroup?->title }}
+                            @if($cohort->tutoringGroup?->schoolYear)
+                                <div class="text-xs text-muted">{{ $cohort->tutoringGroup->schoolYear->name }}</div>
+                            @endif
+                        </td>
                         <td class="px-4 py-3 tabular-nums">{{ $cohort->starts_at?->format('Y-m-d') ?: '—' }}</td>
                         <td class="px-4 py-3">{{ $cohort->enrolled_count }}/{{ $cohort->capacity }}</td>
                         <td class="px-4 py-3 text-end"><a href="{{ route('instructor.tutoring-cohorts.show', $cohort) }}" class="text-accent">عرض</a></td>

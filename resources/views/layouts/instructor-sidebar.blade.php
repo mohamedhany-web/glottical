@@ -124,8 +124,8 @@
             @if(Route::has('instructor.one-to-one-sessions.index'))
             <a href="{{ route('instructor.one-to-one-sessions.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('instructor.one-to-one-sessions.*') ? 'active' : '' }}">
-                <span class="ins-icon"><i class="fas fa-user-graduate"></i></span>
-                <span class="flex-1 truncate">{{ __('student.one_to_one_sessions_instructor_nav') }}</span>
+                <span class="ins-icon"><i class="fas fa-chalkboard-teacher"></i></span>
+                <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'الحصص الخاصة' : 'Private Lessons' }}</span>
             </a>
             @endif
             @if(Route::has('instructor.one-to-one-availability.index'))

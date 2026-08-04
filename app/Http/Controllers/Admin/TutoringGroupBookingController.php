@@ -28,7 +28,8 @@ class TutoringGroupBookingController extends Controller
     {
         $query = TutoringGroupBooking::query()
             ->with([
-                'tutoringGroup:id,title,type,slug',
+                'tutoringGroup:id,title,type,slug,school_year_id',
+                'tutoringGroup.schoolYear:id,name,level_number',
                 'instructor:id,name',
                 'user:id,name,email,phone',
                 'cohort:id,title',

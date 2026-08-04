@@ -53,7 +53,8 @@ class OneToOneAvailabilityService
                 continue;
             }
 
-            $duration = max(30, min(180, (int) ($row['slot_duration_minutes'] ?? 60)));
+            $default = (int) config('private_lessons.lesson_duration_minutes', 50);
+            $duration = max(30, min(180, (int) ($row['slot_duration_minutes'] ?? $default)));
             if ($start >= $end) {
                 continue;
             }
@@ -76,9 +77,10 @@ class OneToOneAvailabilityService
         int $instructorId,
         Carbon $from,
         Carbon $to,
-        int $durationMinutes = 60,
+        ?int $durationMinutes = null,
         ?int $excludeSessionId = null
     ): Collection {
+        $durationMinutes = $durationMinutes ?? (int) config('private_lessons.lesson_duration_minutes', 50);
         $rules = self::rulesForInstructor($instructorId);
         if ($rules->isEmpty()) {
             return collect();

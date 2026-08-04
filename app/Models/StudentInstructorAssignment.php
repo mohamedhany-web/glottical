@@ -31,6 +31,8 @@ class StudentInstructorAssignment extends Model
         'assigned_by',
         'starts_at',
         'ends_at',
+        'instructor_notified_at',
+        'student_notified_at',
     ];
 
     protected function casts(): array
@@ -38,6 +40,8 @@ class StudentInstructorAssignment extends Model
         return [
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
+            'instructor_notified_at' => 'datetime',
+            'student_notified_at' => 'datetime',
         ];
     }
 
@@ -65,8 +69,8 @@ class StudentInstructorAssignment extends Model
     {
         return match ($this->scope) {
             self::SCOPE_COLLECTIVE => 'مجموعات جماعية',
-            self::SCOPE_INDIVIDUAL => 'مجموعات فردية',
-            self::SCOPE_COURSES => 'كورسات',
+            self::SCOPE_INDIVIDUAL => 'حصص فردية (بريفيت)',
+            self::SCOPE_COURSES => 'كورسات بريفيت',
             default => 'عام',
         };
     }

@@ -24,6 +24,8 @@ class OneToOneSession extends Model
         'session_number',
         'scheduled_at',
         'duration_minutes',
+        'is_private_lecture',
+        'system_channel',
         'status',
         'classroom_meeting_id',
         'booked_by_user_id',
@@ -36,7 +38,37 @@ class OneToOneSession extends Model
             'session_number' => 'integer',
             'scheduled_at' => 'datetime',
             'duration_minutes' => 'integer',
+            'is_private_lecture' => 'boolean',
         ];
+    }
+
+    public static function allowedDurations(): array
+    {
+        return [(int) config('private_lessons.lesson_duration_minutes', 50)];
+    }
+
+    public static function defaultDurationMinutes(): int
+    {
+        return (int) config('private_lessons.lesson_duration_minutes', 50);
+    }
+
+    public function isAwaitingTeacherStart(): bool
+    {
+        if ($this->status !== self::STATUS_SCHEDULED || ! $this->scheduled_at) {
+            return false;
+        }
+
+        $meeting = $this->classroomMeeting;
+        if ($meeting && method_exists($meeting, 'isLive') && $meeting->isLive()) {
+            return false;
+        }
+
+        return $this->scheduled_at->lte(now()->addMinutes(15));
+    }
+
+    public function privateLectureLabel(): string
+    {
+        return 'محاضرة خاصة';
     }
 
     public static function statusLabels(): array

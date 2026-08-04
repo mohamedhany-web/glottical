@@ -31,6 +31,8 @@ class TutoringGroup extends Model
         'sessions_per_month',
         'whatsapp_group_url',
         'learning_path',
+        'school_year_id',
+        'school_subject_id',
         'currency',
         'capacity',
         'duration_minutes',
@@ -56,6 +58,16 @@ class TutoringGroup extends Model
     public function instructor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'instructor_id');
+    }
+
+    public function schoolYear(): BelongsTo
+    {
+        return $this->belongsTo(SchoolYear::class);
+    }
+
+    public function schoolSubject(): BelongsTo
+    {
+        return $this->belongsTo(SchoolSubject::class);
     }
 
     public function bookings(): HasMany

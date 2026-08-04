@@ -38,7 +38,7 @@ class OneToOneSessionController extends Controller
                 (int) $oneToOneSession->instructor_id,
                 now(),
                 now()->addWeeks(4),
-                (int) ($oneToOneSession->duration_minutes ?? 60)
+                (int) ($oneToOneSession->duration_minutes ?? \App\Models\OneToOneSession::defaultDurationMinutes())
             );
         }
 
@@ -61,7 +61,7 @@ class OneToOneSessionController extends Controller
             OneToOneSessionService::scheduleSession(
                 $oneToOneSession,
                 Carbon::parse($data['scheduled_at']),
-                (int) ($oneToOneSession->duration_minutes ?? 60),
+                (int) ($oneToOneSession->duration_minutes ?? \App\Models\OneToOneSession::defaultDurationMinutes()),
                 $request->user(),
                 requireAvailability: true
             );

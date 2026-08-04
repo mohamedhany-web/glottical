@@ -379,8 +379,9 @@ Route::get('/media/{media}', [\App\Http\Controllers\Public\MediaController::clas
 // صفحة التصنيفات العامة (من course_categories في الموقع)
 Route::get('/categories', [\App\Http\Controllers\Public\CategoriesController::class, 'index'])->name('public.categories');
 
-// نظام المجموعات: جماعي مقابل فردي (1:1)
+// نظام المدرسة (سنوات + فصول حية)
 Route::get('/groups', [\App\Http\Controllers\Public\GroupsController::class, 'index'])->name('public.groups');
+Route::get('/school/{slug}', [\App\Http\Controllers\Public\GroupsController::class, 'year'])->name('public.school.year');
 Route::get('/groups/courses', [\App\Http\Controllers\Public\GroupsController::class, 'groupCourses'])->name('public.groups.courses');
 Route::get('/groups/one-to-one', [\App\Http\Controllers\Public\GroupsController::class, 'oneToOneCourses'])->name('public.groups.one-to-one');
 Route::get('/groups/{slug}', [\App\Http\Controllers\Public\GroupsController::class, 'show'])->name('public.groups.show');
@@ -742,9 +743,16 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'show'])->name('student.one-to-one-sessions.show');
         Route::post('/one-to-one-sessions/{oneToOneSession}/book', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'book'])->name('student.one-to-one-sessions.book');
 
+        // كورسات بريفيت — محاضرات خاصة + رسائل مع المعلم
+        Route::get('/private-lectures', [\App\Http\Controllers\Student\PrivateLecturesController::class, 'index'])->name('student.private-lectures.index');
+        Route::get('/private-messages', [\App\Http\Controllers\Student\PrivateLecturesController::class, 'messagesIndex'])->name('student.private-messages.index');
+        Route::get('/private-messages/{thread}', [\App\Http\Controllers\Student\PrivateLecturesController::class, 'messages'])->name('student.private-messages.show');
+        Route::post('/private-messages/{thread}', [\App\Http\Controllers\Student\PrivateLecturesController::class, 'sendMessage'])->name('student.private-messages.send');
+
         Route::get('/tutoring-bookings', [\App\Http\Controllers\Student\TutoringBookingController::class, 'index'])->name('student.tutoring-bookings.index');
         Route::get('/tutoring-bookings/{booking}', [\App\Http\Controllers\Student\TutoringBookingController::class, 'show'])->name('student.tutoring-bookings.show');
         Route::post('/tutoring-bookings/from-subscription', [\App\Http\Controllers\Student\TutoringBookingController::class, 'bookFromSubscription'])->name('student.tutoring-bookings.from-subscription');
+        Route::get('/my-school', [\App\Http\Controllers\Student\SchoolController::class, 'index'])->name('student.school.index');
         Route::get('/tutoring-subscriptions', [\App\Http\Controllers\Student\TutoringSubscriptionController::class, 'index'])->name('student.tutoring-subscriptions.index');
         Route::get('/tutoring-subscriptions/{subscription}', [\App\Http\Controllers\Student\TutoringSubscriptionController::class, 'show'])->name('student.tutoring-subscriptions.show');
 
@@ -998,6 +1006,12 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('tutoring-group-bookings/{tutoringGroupBooking}', [\App\Http\Controllers\Admin\TutoringGroupBookingController::class, 'show'])->name('tutoring-group-bookings.show');
         Route::patch('tutoring-group-bookings/{tutoringGroupBooking}/status', [\App\Http\Controllers\Admin\TutoringGroupBookingController::class, 'updateStatus'])->name('tutoring-group-bookings.update-status');
         Route::delete('tutoring-group-bookings/{tutoringGroupBooking}', [\App\Http\Controllers\Admin\TutoringGroupBookingController::class, 'destroy'])->name('tutoring-group-bookings.destroy');
+
+        // برنامج المدرسة (سنوات + مواد)
+        Route::resource('school-years', \App\Http\Controllers\Admin\SchoolYearController::class)->except(['show']);
+        Route::post('/school-years/{schoolYear}/toggle-status', [\App\Http\Controllers\Admin\SchoolYearController::class, 'toggleStatus'])->name('school-years.toggle-status');
+        Route::resource('school-subjects', \App\Http\Controllers\Admin\SchoolSubjectController::class)->except(['show']);
+        Route::post('/school-subjects/{schoolSubject}/toggle-status', [\App\Http\Controllers\Admin\SchoolSubjectController::class, 'toggleStatus'])->name('school-subjects.toggle-status');
 
         // إدارة الكورسات المتطورة
         Route::resource('advanced-courses', \App\Http\Controllers\Admin\AdvancedCourseController::class);
@@ -1402,6 +1416,13 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/support-tickets/{ticket}', [\App\Http\Controllers\Admin\SupportTicketController::class, 'show'])->name('support-tickets.show');
         Route::post('/support-tickets/{ticket}/status', [\App\Http\Controllers\Admin\SupportTicketController::class, 'updateStatus'])->name('support-tickets.status');
         Route::post('/support-tickets/{ticket}/reply', [\App\Http\Controllers\Admin\SupportTicketController::class, 'reply'])->name('support-tickets.reply');
+
+        // كورسات بريفيت — رسائل + استقبال
+        Route::get('/private-courses/threads', [\App\Http\Controllers\Admin\PrivateCoursesOpsController::class, 'threads'])->name('private-courses.threads');
+        Route::get('/private-courses/threads/{thread}', [\App\Http\Controllers\Admin\PrivateCoursesOpsController::class, 'showThread'])->name('private-courses.threads.show');
+        Route::post('/private-courses/threads/{thread}/reply', [\App\Http\Controllers\Admin\PrivateCoursesOpsController::class, 'reply'])->name('private-courses.threads.reply');
+        Route::get('/private-courses/receptions', [\App\Http\Controllers\Admin\PrivateCoursesOpsController::class, 'receptions'])->name('private-courses.receptions');
+        Route::put('/private-courses/receptions/{reception}', [\App\Http\Controllers\Admin\PrivateCoursesOpsController::class, 'updateReception'])->name('private-courses.receptions.update');
         Route::get('/support-inquiry-categories', [\App\Http\Controllers\Admin\SupportInquiryCategoryController::class, 'index'])->name('support-inquiry-categories.index');
         Route::post('/support-inquiry-categories', [\App\Http\Controllers\Admin\SupportInquiryCategoryController::class, 'store'])->name('support-inquiry-categories.store');
         Route::put('/support-inquiry-categories/{support_inquiry_category}', [\App\Http\Controllers\Admin\SupportInquiryCategoryController::class, 'update'])->name('support-inquiry-categories.update');

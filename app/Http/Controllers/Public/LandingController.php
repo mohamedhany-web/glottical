@@ -8,11 +8,12 @@ use App\Models\Certificate;
 use App\Models\PopupAd;
 use App\Models\SiteTestimonial;
 use App\Models\SiteService;
-use App\Models\TutoringGroup;
+use App\Models\SchoolYear;
 use App\Models\User;
 use App\Services\CourseSubscriptionService;
 use App\Services\SeoAssets;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 /**
@@ -57,29 +58,6 @@ class LandingController extends Controller
 
             $homeCategories = $this->buildHomeCategories();
 
-            $homeGroupCourses = TutoringGroup::query()
-                ->active()
-                ->collective()
-                ->with('instructor:id,name')
-                ->orderByDesc('is_featured')
-                ->orderBy('sort_order')
-                ->orderByDesc('created_at')
-                ->limit(4)
-                ->get();
-
-            $homeOneToOneGroups = TutoringGroup::query()
-                ->active()
-                ->individual()
-                ->with('instructor:id,name')
-                ->orderByDesc('is_featured')
-                ->orderBy('sort_order')
-                ->orderByDesc('created_at')
-                ->limit(4)
-                ->get();
-
-            $homeGroupCount = TutoringGroup::query()->active()->collective()->count();
-            $homeOneToOneCount = TutoringGroup::query()->active()->individual()->count();
-
             $homeTestimonials = SiteTestimonial::query()
                 ->active()
                 ->ordered()
@@ -111,24 +89,25 @@ class LandingController extends Controller
                 SeoAssets::optimizedRemoteImage('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1600&q=72', 1600, 72),
             ];
 
+            $schoolYears = Schema::hasTable('school_years')
+                ? SchoolYear::query()->active()->ordered()->get(['id', 'name', 'slug', 'level_number', 'tagline'])
+                : collect();
+
             return compact(
                 'featuredCourses',
                 'oneToOneCourses',
                 'homeCategories',
-                'homeGroupCourses',
-                'homeOneToOneGroups',
-                'homeGroupCount',
-                'homeOneToOneCount',
                 'homeTestimonials',
                 'homeStats',
-                'heroSlides'
+                'heroSlides',
+                'schoolYears'
             );
         };
 
         // في وضع التطوير: بدون كاش حتى تظهر تحديثات التصميم فوراً
         $payload = config('app.debug')
             ? $buildHomePayload()
-            : Cache::remember('landing.home.v11.'.$locale, 180, $buildHomePayload);
+            : Cache::remember('landing.home.v13.'.$locale, 180, $buildHomePayload);
 
         return view('welcome', array_merge($payload, compact('popupAd')));
     }

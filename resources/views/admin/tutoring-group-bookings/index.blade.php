@@ -12,8 +12,8 @@
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
-            <p class="text-xs font-medium text-muted">المجموعات · حجوزات فردية وجماعية</p>
-            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">حجوزات المجموعات</h2>
+            <p class="text-xs font-medium text-muted">المدرسة · حجوزات الفصول والكوهورتات</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">حجوزات فصول المدرسة</h2>
         </div>
         <div class="admin-hero-actions flex flex-wrap gap-2">
             <a href="{{ route('admin.tutoring-groups.index', 'individual') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft hover:border-accent/30 hover:text-accent">فردية</a>
@@ -89,7 +89,8 @@
             <table class="min-w-full text-sm">
                 <thead class="border-b border-line bg-canvas/60 text-xs text-muted">
                     <tr>
-                        <th class="px-4 py-3 text-start">المجموعة</th>
+                        <th class="px-4 py-3 text-start">الفصل</th>
+                        <th class="px-4 py-3 text-start">السنة</th>
                         <th class="px-4 py-3 text-start">الطالب</th>
                         <th class="px-4 py-3 text-start">المدرب</th>
                         <th class="px-4 py-3 text-start">الموعد</th>
@@ -102,8 +103,9 @@
                         <tr>
                             <td class="px-4 py-3">
                                 <p class="font-medium text-ink">{{ $booking->tutoringGroup?->title }}</p>
-                                <p class="text-[11px] text-muted">{{ $booking->tutoringGroup?->typeLabel() }}</p>
+                                <p class="text-[11px] text-muted">{{ $booking->tutoringGroup?->typeLabel() }}@if($booking->cohort) · {{ $booking->cohort->title }}@endif</p>
                             </td>
+                            <td class="px-4 py-3 text-ink-soft">{{ $booking->tutoringGroup?->schoolYear?->name ?: '—' }}</td>
                             <td class="px-4 py-3">
                                 <p class="text-ink">{{ $booking->contactName() }}</p>
                                 <p class="text-[11px] text-muted">{{ $booking->contactPhone() ?: $booking->contactEmail() }}</p>
@@ -119,7 +121,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-16 text-center text-sm text-muted">لا توجد حجوزات</td>
+                            <td colspan="7" class="px-4 py-16 text-center text-sm text-muted">لا توجد حجوزات</td>
                         </tr>
                     @endforelse
                 </tbody>

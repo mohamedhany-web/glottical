@@ -78,7 +78,9 @@
                         {{ __('student.welcome_name', ['name' => auth()->user()->name]) }}
                     </h1>
                     <p class="mt-1.5 text-sm text-[color:var(--stu-muted)] dark:text-gray-400 max-w-xl">
-                        {{ $isRtl ? 'منصتك للتعلّم المباشر أولاً — مجموعات وحصص فردية وبث، والكورسات المسجّلة داعمة لمسارك.' : 'Live learning first — groups, 1:1, and broadcasts; recorded courses support your path.' }}
+                        {{ $isRtl
+                            ? 'مدرستك (Islamic Foundations) منفصلة عن الحصص الخاصة — اختر المساحة المناسبة دون خلط.'
+                            : 'Your School (Islamic Foundations) stays separate from Private Lessons — no mix-ups.' }}
                     </p>
                 </div>
                 <div class="w-full lg:w-56 flex-shrink-0">
@@ -93,12 +95,83 @@
         </div>
     </section>
 
+    {{-- My School vs My Private Lessons --}}
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        @if(Route::has('student.school.index'))
+        <a href="{{ route('student.school.index') }}" class="stu-panel px-5 py-5 hover:border-[#0B3D91]/30 transition-colors block no-underline text-inherit">
+            <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#0B3D91]">🏫 {{ $isRtl ? 'مدرستي' : 'My School' }}</p>
+            <h2 class="mt-1 text-lg font-black text-[#0B1220] dark:text-white">Islamic Foundations</h2>
+            <p class="mt-1 text-sm text-[color:var(--stu-muted)]">{{ $isRtl ? 'السنوات والمواد وحصص المدرسة الجماعية.' : 'Years, subjects, and school group sessions.' }}</p>
+            @if(!empty($upcomingTutoringBooking))
+                <p class="mt-3 text-xs font-bold text-[#0B3D91]">
+                    {{ $isRtl ? 'القادمة:' : 'Next:' }}
+                    {{ $upcomingTutoringBooking->tutoringGroup?->title }}
+                    · {{ $upcomingTutoringBooking->starts_at?->timezone(config('app.timezone'))->format('D, M j · g:i A') }}
+                </p>
+            @endif
+        </a>
+        @endif
+        @php $privateHub = Route::has('student.private-lectures.index') ? route('student.private-lectures.index') : route('public.courses'); @endphp
+        <a href="{{ $privateHub }}" class="stu-panel px-5 py-5 hover:border-[#F5B800]/50 transition-colors block no-underline text-inherit">
+            <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#8A6A00]">👨‍🏫 {{ $isRtl ? 'حصصي الخاصة' : 'My Private Lessons' }}</p>
+            <h2 class="mt-1 text-lg font-black text-[#0B1220] dark:text-white">{{ $isRtl ? 'الحجز الخاص' : 'Private booking' }}</h2>
+            <p class="mt-1 text-sm text-[color:var(--stu-muted)]">{{ $isRtl ? 'معلمك، المواعيد، وخطط التعلّم الخاصة.' : 'Your teacher, schedule, and private learning plans.' }}</p>
+            @if(!empty($upcomingPrivateLesson))
+                @php
+                    $plDur = (int) ($upcomingPrivateLesson->duration_minutes ?: 50);
+                    $plEnd = $upcomingPrivateLesson->scheduled_at?->copy()->addMinutes($plDur);
+                @endphp
+                <p class="mt-3 text-xs font-bold text-[#8A6A00]">
+                    {{ $upcomingPrivateLesson->course->title ?? 'Private lesson' }}
+                    · {{ $upcomingPrivateLesson->scheduled_at?->timezone(config('app.timezone'))->format('D, M j') }}
+                    · {{ $upcomingPrivateLesson->scheduled_at?->format('g:i A') }}@if($plEnd)–{{ $plEnd->format('g:i A') }}@endif
+                </p>
+            @endif
+        </a>
+    </section>
+
     {{-- Next live / tutoring --}}
-    @if(!empty($upcomingTutoringBooking))
+    @if(!empty($upcomingPrivateLesson))
+        <section class="rounded-2xl overflow-hidden border border-[#F5B800]/40 bg-[#FFF8E6] shadow-[0_18px_40px_-20px_rgba(245,184,0,0.45)]">
+            <div class="px-5 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="min-w-0">
+                    <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#8A6A00]">{{ $isRtl ? 'حصة خاصة قادمة' : 'Upcoming Private Lesson' }}</p>
+                    <h2 class="mt-1 text-xl font-black text-[#0B1220] truncate">
+                        {{ $upcomingPrivateLesson->course->title ?? 'Private Lesson' }}
+                        @if($upcomingPrivateLesson->instructor)
+                            <span class="font-bold text-[#5B6577] text-base">· {{ $upcomingPrivateLesson->instructor->name }}</span>
+                        @endif
+                    </h2>
+                    @php
+                        $plDur = (int) ($upcomingPrivateLesson->duration_minutes ?: 50);
+                        $plEnd = $upcomingPrivateLesson->scheduled_at?->copy()->addMinutes($plDur);
+                    @endphp
+                    <p class="mt-1 text-sm text-[#5B6577]">
+                        <i class="far fa-clock ml-1"></i>
+                        {{ $upcomingPrivateLesson->scheduled_at?->timezone(config('app.timezone'))->format('l, M j') }}
+                        · {{ $upcomingPrivateLesson->scheduled_at?->format('g:i A') }}@if($plEnd) – {{ $plEnd->format('g:i A') }}@endif
+                        · {{ $plDur }} {{ $isRtl ? 'دقيقة' : 'min' }}
+                    </p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    @if($upcomingPrivateLesson->classroomMeeting)
+                        <a href="{{ route('student.classroom.room', $upcomingPrivateLesson->classroomMeeting) }}"
+                           class="inline-flex items-center gap-2 rounded-xl bg-[#F5B800] px-4 py-2.5 text-sm font-extrabold text-[#072A66] hover:brightness-105">
+                            <i class="fas fa-video"></i> {{ $isRtl ? 'دخول الحصة' : 'Join Class' }}
+                        </a>
+                    @endif
+                    <a href="{{ Route::has('student.private-lectures.index') ? route('student.private-lectures.index') : route('student.one-to-one-sessions.index') }}"
+                       class="inline-flex items-center rounded-xl border border-[#0B3D91]/20 px-4 py-2.5 text-sm font-bold text-[#0B3D91] hover:bg-white">
+                        {{ $isRtl ? 'كل الحصص الخاصة' : 'Private Lessons' }}
+                    </a>
+                </div>
+            </div>
+        </section>
+    @elseif(!empty($upcomingTutoringBooking))
         <section class="rounded-2xl overflow-hidden border border-[#0B3D91]/20 bg-[#0B3D91] text-white shadow-[0_18px_40px_-20px_rgba(11,61,145,0.55)]">
             <div class="px-5 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div class="min-w-0">
-                    <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#F5B800]">{{ $isRtl ? 'حصتك القادمة' : 'Next session' }}</p>
+                    <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#F5B800]">{{ $isRtl ? 'حصة مدرسة قادمة' : 'Upcoming school session' }}</p>
                     <h2 class="mt-1 text-xl font-black truncate">{{ $upcomingTutoringBooking->tutoringGroup?->title ?? ($isRtl ? 'حصة مجموعة' : 'Group session') }}</h2>
                     <p class="mt-1 text-sm text-white/75">
                         <i class="far fa-clock ml-1"></i>
@@ -122,39 +195,40 @@
     @else
         <section class="stu-panel px-5 py-4 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <p class="text-sm font-bold text-[#0B1220] dark:text-white">{{ $isRtl ? 'لا توجد حصة مباشرة قادمة' : 'No upcoming live session' }}</p>
-                <p class="text-xs text-[color:var(--stu-muted)] mt-0.5">{{ $isRtl ? 'احجز مجموعة أو باقة فردية للبدء.' : 'Book a group or individual package to start.' }}</p>
+                <p class="text-sm font-bold text-[#0B1220] dark:text-white">{{ $isRtl ? 'لا توجد حصة قادمة' : 'No upcoming session' }}</p>
+                <p class="text-xs text-[color:var(--stu-muted)] mt-0.5">{{ $isRtl ? 'تصفّح المدرسة أو احجز حصة خاصة.' : 'Browse School or book a Private Lesson.' }}</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 @if(Route::has('public.groups'))
                     <a href="{{ route('public.groups') }}" class="inline-flex h-10 items-center gap-2 rounded-xl bg-[#0B3D91] px-4 text-sm font-bold text-white">
-                        <i class="fas fa-users text-xs"></i> {{ $isRtl ? 'تصفح المجموعات' : 'Browse groups' }}
+                        <i class="fas fa-school text-xs"></i> {{ $isRtl ? 'المدرسة' : 'School' }}
                     </a>
                 @endif
+                <a href="{{ route('public.courses') }}" class="inline-flex h-10 items-center gap-2 rounded-xl bg-[#F5B800] px-4 text-sm font-bold text-[#072A66]">
+                    <i class="fas fa-chalkboard-teacher text-xs"></i> {{ $isRtl ? 'حصص خاصة' : 'Private Lessons' }}
+                </a>
             </div>
         </section>
     @endif
 
     {{-- Quick actions — business pillars --}}
     <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        @if(Route::has('public.groups'))
-        <a href="{{ route('public.groups') }}" class="stu-action stu-action--gold">
-            <span class="stu-action__icon"><i class="fas fa-users"></i></span>
+        @if(Route::has('student.school.index'))
+        <a href="{{ route('student.school.index') }}" class="stu-action stu-action--gold">
+            <span class="stu-action__icon"><i class="fas fa-school"></i></span>
             <div>
-                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'مجموعات حية' : 'Live groups' }}</p>
-                <p class="text-[11px] text-[color:var(--stu-muted)] mt-0.5">{{ $isRtl ? 'دفعات جماعية محدودة' : 'Capped cohorts' }}</p>
+                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'مدرستي' : 'My School' }}</p>
+                <p class="text-[11px] text-[color:var(--stu-muted)] mt-0.5">Islamic Foundations</p>
             </div>
         </a>
         @endif
-        @if(Route::has('student.tutoring-subscriptions.index'))
-        <a href="{{ route('student.tutoring-subscriptions.index') }}" class="stu-action">
-            <span class="stu-action__icon"><i class="fas fa-user-graduate"></i></span>
+        <a href="{{ Route::has('student.private-lectures.index') ? route('student.private-lectures.index') : route('public.courses') }}" class="stu-action">
+            <span class="stu-action__icon"><i class="fas fa-chalkboard-teacher"></i></span>
             <div>
-                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'باقات فردية' : '1:1 packages' }}</p>
-                <p class="text-[11px] text-[color:var(--stu-muted)] mt-0.5">{{ $isRtl ? 'حصصك المتبقية' : 'Sessions left' }}</p>
+                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'حصصي الخاصة' : 'My Private Lessons' }}</p>
+                <p class="text-[11px] text-[color:var(--stu-muted)] mt-0.5">{{ $isRtl ? '50 دقيقة · معلم خاص' : '50 min · private teacher' }}</p>
             </div>
         </a>
-        @endif
         @if(Route::has('student.live-sessions.index'))
         <a href="{{ route('student.live-sessions.index') }}" class="stu-action">
             <span class="stu-action__icon"><i class="fas fa-broadcast-tower"></i></span>

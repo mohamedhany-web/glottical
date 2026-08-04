@@ -50,7 +50,8 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">المدة (دقيقة)</label>
-                    <input type="number" name="duration_minutes" value="60" min="30" max="180" class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5">
+                    <input type="number" name="duration_minutes" value="50" min="50" max="50" readonly class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5">
+                    <p class="text-xs text-slate-500 mt-1">Private lessons are fixed at 50 minutes.</p>
                 </div>
                 <button type="submit" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold">{{ __('student.one_to_one_schedule_session') }}</button>
             </form>

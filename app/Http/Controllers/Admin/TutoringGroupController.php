@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\SchoolSubject;
+use App\Models\SchoolYear;
 use App\Models\TutoringGroup;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -87,6 +89,8 @@ class TutoringGroupController extends Controller
                 'sort_order' => 0,
             ]),
             'instructors' => $this->instructors(),
+            'schoolYears' => $this->schoolYears(),
+            'schoolSubjects' => $this->schoolSubjects(),
             'type' => $type,
             'typeLabel' => $this->typeLabel($type),
             'mode' => 'create',
@@ -111,6 +115,11 @@ class TutoringGroupController extends Controller
         $validated['type'] = $type;
         $validated['is_active'] = $request->boolean('is_active');
         $validated['is_featured'] = $request->boolean('is_featured');
+        foreach (['school_year_id', 'school_subject_id'] as $fk) {
+            if (empty($validated[$fk])) {
+                $validated[$fk] = null;
+            }
+        }
 
         if ($request->hasFile('image')) {
             $validated['image_path'] = $request->file('image')->store('tutoring-groups', 'public');
@@ -132,6 +141,8 @@ class TutoringGroupController extends Controller
         return view('admin.tutoring-groups.form', [
             'group' => $tutoringGroup,
             'instructors' => $this->instructors(),
+            'schoolYears' => $this->schoolYears(),
+            'schoolSubjects' => $this->schoolSubjects(),
             'type' => $type,
             'typeLabel' => $this->typeLabel($type),
             'mode' => 'edit',
@@ -156,6 +167,11 @@ class TutoringGroupController extends Controller
 
         $validated['is_active'] = $request->boolean('is_active');
         $validated['is_featured'] = $request->boolean('is_featured');
+        foreach (['school_year_id', 'school_subject_id'] as $fk) {
+            if (empty($validated[$fk])) {
+                $validated[$fk] = null;
+            }
+        }
 
         if ($request->hasFile('image')) {
             if ($tutoringGroup->image_path && ! str_starts_with($tutoringGroup->image_path, 'http')) {
@@ -214,6 +230,8 @@ class TutoringGroupController extends Controller
             'sessions_per_month' => ['nullable', 'integer', 'min:1', 'max:60'],
             'whatsapp_group_url' => ['nullable', 'url', 'max:500'],
             'learning_path' => ['nullable', 'in:arabic,english'],
+            'school_year_id' => ['nullable', 'exists:school_years,id'],
+            'school_subject_id' => ['nullable', 'exists:school_subjects,id'],
             'currency' => ['nullable', 'string', 'max:8'],
             'capacity' => [$type === TutoringGroup::TYPE_COLLECTIVE ? 'required' : 'nullable', 'integer', 'min:1', 'max:500'],
             'duration_minutes' => ['required', 'integer', 'min:30', 'max:240'],
@@ -249,5 +267,15 @@ class TutoringGroupController extends Controller
             ->whereIn('role', ['instructor', 'teacher', 'admin', 'super_admin'])
             ->orderBy('name')
             ->get(['id', 'name', 'role']);
+    }
+
+    protected function schoolYears()
+    {
+        return SchoolYear::query()->ordered()->get(['id', 'name', 'level_number']);
+    }
+
+    protected function schoolSubjects()
+    {
+        return SchoolSubject::query()->ordered()->get(['id', 'name']);
     }
 }

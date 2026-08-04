@@ -33,6 +33,7 @@ class User extends Authenticatable
         'birth_date',
         'address',
         'bio',
+        'gender',
         'portfolio_headline',
         'portfolio_about',
         'portfolio_skills',
@@ -44,6 +45,7 @@ class User extends Authenticatable
         'portfolio_profile_reviewed_by',
         'portfolio_profile_rejected_reason',
         'portfolio_marketing_published',
+        'private_teaching_meta',
         'academic_year_id',
         'last_login_at',
         'referral_code',
@@ -106,9 +108,27 @@ class User extends Authenticatable
             'two_factor_recovery_codes' => 'array',
             'portfolio_social_links' => 'array',
             'portfolio_marketing_published' => 'array',
+            'private_teaching_meta' => 'array',
             'portfolio_profile_submitted_at' => 'datetime',
             'portfolio_profile_reviewed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * @return array{subjects?: list<string>, age_groups?: list<string>, languages?: list<string>, specializations?: list<string>}
+     */
+    public function privateTeachingMeta(): array
+    {
+        $meta = $this->private_teaching_meta;
+
+        return is_array($meta) ? $meta : [];
+    }
+
+    public function privateTeachingHas(string $key, string $value): bool
+    {
+        $list = $this->privateTeachingMeta()[$key] ?? [];
+
+        return is_array($list) && in_array($value, $list, true);
     }
 
     /** ملف التسويق الشخصي (بورتفوليو): بانتظار مراجعة الأدمن */

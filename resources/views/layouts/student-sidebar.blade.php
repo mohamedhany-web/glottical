@@ -71,14 +71,22 @@
             </a>
 
             <div class="ins-nav-group mt-2">
-                <span><i class="fas fa-video text-[9px] opacity-50"></i> تعلّم مباشر</span>
+                <span><i class="fas fa-school text-[9px] opacity-50"></i> 🏫 {{ app()->getLocale() === 'ar' ? 'مدرستي' : 'My School' }}</span>
             </div>
+
+            @if(Route::has('student.school.index'))
+            <a href="{{ route('student.school.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('student.school.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-school"></i></span>
+                <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'مدرستي' : 'My School' }}</span>
+            </a>
+            @endif
 
             @if(Route::has('student.tutoring-bookings.index'))
             <a href="{{ route('student.tutoring-bookings.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('student.tutoring-bookings.*') ? 'active' : '' }}">
                 <span class="ins-icon"><i class="fas fa-users"></i></span>
-                <span class="flex-1 truncate">حجوزات المجموعات</span>
+                <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'حصص المدرسة' : 'School sessions' }}</span>
                 @if($tbUpcoming > 0)<span class="ins-nav-badge">{{ $tbUpcoming }}</span>@endif
             </a>
             @endif
@@ -87,7 +95,27 @@
             <a href="{{ route('student.tutoring-subscriptions.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('student.tutoring-subscriptions.*') ? 'active' : '' }}">
                 <span class="ins-icon"><i class="fas fa-box-open"></i></span>
-                <span class="flex-1 truncate">باقات الحصص</span>
+                <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'باقات المدرسة' : 'School packages' }}</span>
+            </a>
+            @endif
+
+            <div class="ins-nav-group mt-2">
+                <span><i class="fas fa-chalkboard-teacher text-[9px] opacity-50"></i> 👨‍🏫 {{ app()->getLocale() === 'ar' ? 'حصصي الخاصة' : 'My Private Lessons' }}</span>
+            </div>
+
+            @if(Route::has('student.private-lectures.index'))
+            <a href="{{ route('student.private-lectures.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('student.private-lectures.*') || request()->routeIs('student.private-messages.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-chalkboard-teacher"></i></span>
+                <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'الحصص الخاصة' : 'Private Lessons' }}</span>
+            </a>
+            @endif
+
+            @if(Route::has('student.private-messages.index'))
+            <a href="{{ route('student.private-messages.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('student.private-messages.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-comments"></i></span>
+                <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'رسائل المعلم' : 'Teacher messages' }}</span>
             </a>
             @endif
 

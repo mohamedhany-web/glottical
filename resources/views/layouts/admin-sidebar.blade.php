@@ -232,6 +232,18 @@
                         </a>
                     </li>
                     @endif
+                    @if($isFull && Route::has('admin.private-courses.threads'))
+                    <li>
+                        <a href="{{ route('admin.private-courses.threads') }}" class="sidebar-sub-link {{ request()->routeIs('admin.private-courses.threads*') ? 'active' : '' }}">
+                            <i class="fas fa-comments"></i><span>رسائل بريفيت</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.private-courses.receptions') }}" class="sidebar-sub-link {{ request()->routeIs('admin.private-courses.receptions*') ? 'active' : '' }}">
+                            <i class="fas fa-handshake"></i><span>استقبال الطلاب</span>
+                        </a>
+                    </li>
+                    @endif
                     @if(($isFull || $u->hasPermission('manage.support-tickets')) && Route::has('admin.support-inquiry-categories.index'))
                     <li>
                         <a href="{{ route('admin.support-inquiry-categories.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.support-inquiry-categories.*') ? 'active' : '' }}">
@@ -514,7 +526,7 @@
             {{-- إدارة المحتوى — الكورسات ومسارات التعلم --}}
             @if($isFull || $u->hasPermission('manage.courses') || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.academic-subjects') || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.assignments') || $u->hasPermission('manage.exams') || $u->hasPermission('manage.question-bank') || $u->hasPermission('manage.attendance') || $u->hasPermission('manage.achievements') || $u->hasPermission('manage.badges') || $u->hasPermission('manage.reviews'))
             @php
-                $contentManagementOpen = request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.academic-years.*') || request()->routeIs('admin.academic-subjects.*') || request()->routeIs('admin.academy-instructors.*') || request()->routeIs('admin.course-categories.*') || request()->routeIs('admin.exams.*') || request()->routeIs('admin.question-bank.*') || request()->routeIs('admin.question-categories.*') || request()->routeIs('admin.lectures.*') || request()->routeIs('admin.assignments.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.achievements.*') || request()->routeIs('admin.badges.*') || request()->routeIs('admin.reviews.*') || request()->routeIs('admin.tutoring-groups.*') || request()->routeIs('admin.tutor-work-schedules.*') || request()->routeIs('admin.tutoring-group-bookings.*');
+                $contentManagementOpen = request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.academic-years.*') || request()->routeIs('admin.academic-subjects.*') || request()->routeIs('admin.academy-instructors.*') || request()->routeIs('admin.course-categories.*') || request()->routeIs('admin.exams.*') || request()->routeIs('admin.question-bank.*') || request()->routeIs('admin.question-categories.*') || request()->routeIs('admin.lectures.*') || request()->routeIs('admin.assignments.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.achievements.*') || request()->routeIs('admin.badges.*') || request()->routeIs('admin.reviews.*') || request()->routeIs('admin.tutoring-groups.*') || request()->routeIs('admin.tutor-work-schedules.*') || request()->routeIs('admin.tutoring-group-bookings.*') || request()->routeIs('admin.school-years.*') || request()->routeIs('admin.school-subjects.*');
             @endphp
             <li x-data="{ open: {{ $contentManagementOpen ? 'true' : 'false' }} }">
                 <button type="button" @click="open = !open" class="sidebar-group-btn">
@@ -532,8 +544,10 @@
                     <li><a href="{{ route('admin.academy-instructors.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.academy-instructors.*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i><span>مدربو الأكاديمية</span></a></li>
                     @endif
                     @if($isFull || $u->hasPermission('manage.tutoring-groups'))
+                    <li><a href="{{ route('admin.school-years.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.school-years.*') ? 'active' : '' }}"><i class="fas fa-school"></i><span>سنوات المدرسة</span></a></li>
+                    <li><a href="{{ route('admin.school-subjects.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.school-subjects.*') ? 'active' : '' }}"><i class="fas fa-book"></i><span>مواد المدرسة</span></a></li>
                     <li><a href="{{ route('admin.tutoring-groups.index', 'individual') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutoring-groups.*') && request()->route('type') === 'individual' ? 'active' : '' }}"><i class="fas fa-user"></i><span>المجموعات الفردية</span></a></li>
-                    <li><a href="{{ route('admin.tutoring-groups.index', 'collective') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutoring-groups.*') && request()->route('type') === 'collective' ? 'active' : '' }}"><i class="fas fa-users"></i><span>المجموعات الجماعية</span></a></li>
+                    <li><a href="{{ route('admin.tutoring-groups.index', 'collective') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutoring-groups.*') && request()->route('type') === 'collective' ? 'active' : '' }}"><i class="fas fa-users"></i><span>فصول المدرسة</span></a></li>
                     <li><a href="{{ route('admin.tutor-work-schedules.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutor-work-schedules.*') ? 'active' : '' }}"><i class="fas fa-calendar-week"></i><span>جداول عمل المدربين</span></a></li>
                     <li><a href="{{ route('admin.tutoring-group-bookings.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutoring-group-bookings.*') ? 'active' : '' }}"><i class="fas fa-calendar-check"></i><span>حجوزات المجموعات</span></a></li>
                     @endif
