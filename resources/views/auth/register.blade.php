@@ -14,6 +14,18 @@
   $isRtl = app()->getLocale() === 'ar';
   $phoneCountries = $phoneCountries ?? config('phone_countries.countries', []);
   $defaultCountry = $defaultCountry ?? collect($phoneCountries)->firstWhere('code', config('phone_countries.default_country', 'SA'));
+  $oldDial = old('country_code', $defaultCountry['dial_code'] ?? '+966');
+  $oldIso = old('country_iso', $defaultCountry['code'] ?? 'SA');
+  $selectedCountry = collect($phoneCountries)->firstWhere('code', $oldIso)
+      ?? collect($phoneCountries)->firstWhere('dial_code', $oldDial)
+      ?? $defaultCountry;
+  $phoneCountriesUi = collect($phoneCountries)->map(fn ($c) => [
+      'code' => $c['code'] ?? '',
+      'dial_code' => $c['dial_code'] ?? '',
+      'name_ar' => $c['name_ar'] ?? '',
+      'name_en' => $c['name_en'] ?? ($c['name_ar'] ?? ''),
+      'placeholder' => $c['placeholder'] ?? '',
+  ])->values()->all();
 @endphp
 <div class="gl-auth-card gl-auth-card--wide">
   <div class="gl-auth-brand">{{ config('app.name', 'Glottical') }}</div>
@@ -57,20 +69,101 @@
 
     <div class="gl-auth-field">
       <label>{{ __('auth.phone_number') }}</label>
-      <div class="gl-auth-phone @error('phone') has-error @enderror">
-        <select name="country_code" required dir="ltr" aria-label="{{ __('auth.country_code_aria') }}">
-          @foreach ($phoneCountries as $c)
-            <option value="{{ $c['dial_code'] }}" {{ old('country_code', $defaultCountry['dial_code'] ?? '+966') === $c['dial_code'] ? 'selected' : '' }}>
-              {{ $c['dial_code'] }} {{ $isRtl ? ($c['name_ar'] ?? '') : ($c['name_en'] ?? $c['name_ar'] ?? '') }}
-            </option>
-          @endforeach
-        </select>
+      <div
+        class="gl-auth-phone @error('phone') has-error @enderror"
+        x-data="{
+          open: false,
+          q: '',
+          dial: @js($selectedCountry['dial_code'] ?? '+966'),
+          iso: @js($selectedCountry['code'] ?? 'SA'),
+          name: @js($isRtl ? ($selectedCountry['name_ar'] ?? '') : ($selectedCountry['name_en'] ?? $selectedCountry['name_ar'] ?? '')),
+          placeholder: @js($selectedCountry['placeholder'] ?? '5xxxxxxxx'),
+          countries: @js($phoneCountriesUi),
+          localeRtl: @js($isRtl),
+          get filtered() {
+            const term = (this.q || '').trim().toLowerCase();
+            if (!term) return this.countries;
+            return this.countries.filter((c) => {
+              const hay = [c.dial_code, c.code, c.name_ar, c.name_en].join(' ').toLowerCase();
+              return hay.includes(term);
+            });
+          },
+          labelOf(c) {
+            return this.localeRtl ? (c.name_ar || c.name_en) : (c.name_en || c.name_ar);
+          },
+          select(c) {
+            this.dial = c.dial_code;
+            this.iso = c.code;
+            this.name = this.labelOf(c);
+            this.placeholder = c.placeholder || '';
+            this.open = false;
+            this.q = '';
+          },
+          toggle() {
+            this.open = !this.open;
+            if (this.open) {
+              this.$nextTick(() => this.$refs.ccSearch && this.$refs.ccSearch.focus());
+            }
+          }
+        }"
+        @keydown.escape.window="open = false"
+      >
+        <input type="hidden" name="country_code" :value="dial" required>
+        <input type="hidden" name="country_iso" :value="iso">
+        <div class="gl-auth-cc" @click.outside="open = false">
+          <button
+            type="button"
+            class="gl-auth-cc-btn"
+            dir="ltr"
+            @click="toggle()"
+            :aria-expanded="open.toString()"
+            aria-haspopup="listbox"
+            aria-label="{{ __('auth.country_code_aria') }}"
+          >
+            <span class="gl-auth-cc-dial" x-text="dial"></span>
+            <span class="gl-auth-cc-name" x-text="name"></span>
+            <i class="fas fa-chevron-down" aria-hidden="true"></i>
+          </button>
+          <div class="gl-auth-cc-panel" x-show="open" x-cloak x-transition.opacity.duration.150ms role="listbox">
+            <div class="gl-auth-cc-search">
+              <i class="fas fa-search" aria-hidden="true"></i>
+              <input
+                type="search"
+                x-model="q"
+                x-ref="ccSearch"
+                @keydown.escape.stop="open = false"
+                placeholder="{{ __('auth.search_country') }}"
+                autocomplete="off"
+                dir="{{ $isRtl ? 'rtl' : 'ltr' }}"
+              >
+            </div>
+            <ul class="gl-auth-cc-list">
+              <template x-for="c in filtered" :key="c.code">
+                <li>
+                  <button
+                    type="button"
+                    class="gl-auth-cc-option"
+                    :class="{ 'is-active': c.code === iso }"
+                    @click="select(c)"
+                    dir="ltr"
+                  >
+                    <span class="gl-auth-cc-option-dial" x-text="c.dial_code"></span>
+                    <span class="gl-auth-cc-option-name" x-text="labelOf(c)" :dir="localeRtl ? 'rtl' : 'ltr'"></span>
+                  </button>
+                </li>
+              </template>
+              <li x-show="filtered.length === 0" class="gl-auth-cc-empty" x-cloak>
+                {{ __('auth.no_country_found') }}
+              </li>
+            </ul>
+          </div>
+        </div>
         <input
           type="tel"
           name="phone"
           value="{{ old('phone') }}"
           required
-          placeholder="5xxxxxxxx"
+          :placeholder="placeholder || '5xxxxxxxx'"
           dir="ltr"
           autocomplete="tel-national"
           aria-label="{{ __('auth.phone_aria') }}"

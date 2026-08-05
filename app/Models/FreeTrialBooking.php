@@ -16,7 +16,7 @@ class FreeTrialBooking extends Model
     protected $fillable = [
         'name', 'email', 'phone', 'goal', 'user_id',
         'starts_at', 'ends_at', 'duration_minutes', 'status', 'notes',
-        'recommended_school_year_id', 'admin_notes',
+        'recommended_academic_year_id', 'admin_notes',
     ];
 
     protected $casts = [
@@ -29,8 +29,14 @@ class FreeTrialBooking extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function recommendedAcademicYear(): BelongsTo
+    {
+        return $this->belongsTo(AcademicYear::class, 'recommended_academic_year_id');
+    }
+
+    /** Alias for school-program wording */
     public function recommendedSchoolYear(): BelongsTo
     {
-        return $this->belongsTo(SchoolYear::class, 'recommended_school_year_id');
+        return $this->recommendedAcademicYear();
     }
 }

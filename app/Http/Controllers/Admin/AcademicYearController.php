@@ -65,6 +65,9 @@ class AcademicYearController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:academic_years',
             'code' => 'required|string|max:10|unique:academic_years',
+            'slug' => 'nullable|string|max:255|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/|unique:academic_years,slug',
+            'tagline' => 'nullable|string|max:255',
+            'level_number' => 'nullable|integer|min:1|max:20|unique:academic_years,level_number',
             'description' => 'nullable|string',
             'video_url' => 'nullable|url|max:500',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg|max:'.config('upload_limits.max_upload_kb'),
@@ -74,23 +77,29 @@ class AcademicYearController extends Controller
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
         ], [
-            'name.required' => 'اسم السنة الدراسية مطلوب',
-            'name.unique' => 'اسم السنة الدراسية موجود مسبقاً',
-            'code.required' => 'رمز السنة الدراسية مطلوب',
-            'code.unique' => 'رمز السنة الدراسية موجود مسبقاً',
+            'name.required' => 'اسم سنة المدرسة مطلوب',
+            'name.unique' => 'اسم سنة المدرسة موجود مسبقاً',
+            'code.required' => 'رمز سنة المدرسة مطلوب',
+            'code.unique' => 'رمز سنة المدرسة موجود مسبقاً',
             'thumbnail.image' => 'يجب أن يكون الملف صورة',
             'thumbnail.mimes' => 'يجب أن تكون الصورة بصيغة jpeg, png أو jpg',
             'thumbnail.max' => 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت',
         ]);
 
         $data = $request->only([
-            'name', 'code', 'description', 'video_url', 'price', 'icon', 'color', 'order',
+            'name', 'code', 'slug', 'tagline', 'level_number', 'description', 'video_url', 'price', 'icon', 'color', 'order',
         ]);
         $data['is_active'] = $request->boolean('is_active');
         $data['order'] = (int) ($data['order'] ?? 0);
         $data['price'] = $request->input('price', 0) ?: 0;
         $data['icon'] = $data['icon'] ?? 'fas fa-graduation-cap';
         $data['color'] = $data['color'] ?? '#0B3D91';
+        $data['slug'] = ! empty($data['slug'])
+            ? AcademicYear::uniqueSlug($data['slug'])
+            : AcademicYear::uniqueSlug($data['name']);
+        if (empty($data['level_number'])) {
+            $data['level_number'] = null;
+        }
 
         if ($request->hasFile('thumbnail')) {
             $data['thumbnail'] = \App\Services\PublicMediaStorage::store(
@@ -103,7 +112,7 @@ class AcademicYearController extends Controller
         AcademicYear::create($data);
 
         return redirect()->route('admin.academic-years.index')
-            ->with('success', 'تم إضافة السنة الأكاديمية بنجاح');
+            ->with('success', 'تم إضافة سنة المدرسة بنجاح');
     }
 
     public function show(AcademicYear $academicYear)
@@ -199,6 +208,21 @@ class AcademicYearController extends Controller
                 'max:10',
                 Rule::unique('academic_years')->ignore($academicYear->id),
             ],
+            'slug' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
+                Rule::unique('academic_years', 'slug')->ignore($academicYear->id),
+            ],
+            'tagline' => 'nullable|string|max:255',
+            'level_number' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:20',
+                Rule::unique('academic_years', 'level_number')->ignore($academicYear->id),
+            ],
             'description' => 'nullable|string',
             'video_url' => 'nullable|url|max:500',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg|max:'.config('upload_limits.max_upload_kb'),
@@ -208,19 +232,27 @@ class AcademicYearController extends Controller
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
         ], [
-            'name.required' => 'اسم السنة الدراسية مطلوب',
-            'name.unique' => 'اسم السنة الدراسية موجود مسبقاً',
-            'code.required' => 'رمز السنة الدراسية مطلوب',
-            'code.unique' => 'رمز السنة الدراسية موجود مسبقاً',
+            'name.required' => 'اسم سنة المدرسة مطلوب',
+            'name.unique' => 'اسم سنة المدرسة موجود مسبقاً',
+            'code.required' => 'رمز سنة المدرسة مطلوب',
+            'code.unique' => 'رمز سنة المدرسة موجود مسبقاً',
             'thumbnail.image' => 'يجب أن يكون الملف صورة',
             'thumbnail.mimes' => 'يجب أن تكون الصورة بصيغة jpeg, png أو jpg',
             'thumbnail.max' => 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت',
         ]);
 
-        $data = $request->all();
+        $data = $request->only([
+            'name', 'code', 'slug', 'tagline', 'level_number', 'description', 'video_url', 'price', 'icon', 'color', 'order',
+        ]);
         $data['is_active'] = $request->has('is_active');
         $data['order'] = $data['order'] ?? 0;
         $data['price'] = $request->input('price', $academicYear->price ?? 0);
+        $data['slug'] = ! empty($data['slug'])
+            ? AcademicYear::uniqueSlug($data['slug'], $academicYear->id)
+            : AcademicYear::uniqueSlug($data['name'], $academicYear->id);
+        if (empty($data['level_number'])) {
+            $data['level_number'] = null;
+        }
 
         if ($request->hasFile('thumbnail')) {
             $data['thumbnail'] = \App\Services\PublicMediaStorage::store(
@@ -233,7 +265,7 @@ class AcademicYearController extends Controller
         $academicYear->update($data);
 
         return redirect()->route('admin.academic-years.edit', $academicYear)
-            ->with('success', 'تم تحديث السنة الأكاديمية بنجاح');
+            ->with('success', 'تم تحديث سنة المدرسة بنجاح');
     }
 
     public function destroy(AcademicYear $academicYear)

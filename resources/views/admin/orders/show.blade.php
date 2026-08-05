@@ -126,7 +126,7 @@
             <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
                 <div class="border-b border-line px-4 py-4 sm:px-5">
                     <h3 class="text-base font-semibold text-ink">
-                        {{ $order->academic_year_id && ! $order->advanced_course_id ? 'طلب قديم' : 'معلومات الكورس' }}
+                        {{ in_array($order->order_type, [\App\Models\Order::TYPE_SERVICE_PACKAGE, \App\Models\Order::TYPE_CUSTOM_SERVICE_PACKAGE], true) ? 'معلومات باقة الحصص' : ($order->academic_year_id && ! $order->advanced_course_id ? 'طلب قديم' : 'معلومات الكورس') }}
                     </h3>
                 </div>
                 <div class="p-4 sm:p-5">
@@ -135,13 +135,29 @@
                             @if($order->course && $order->course->thumbnail)
                                 <img src="{{ storage_asset($order->course->thumbnail) }}" alt="{{ htmlspecialchars($order->course->title ?? 'كورس', ENT_QUOTES, 'UTF-8') }}"
                                      class="h-full w-full rounded-xl object-cover" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'%3E%3Cpath fill=\'%230B3D91\' d=\'M8 5v14l11-7z\'/%3E%3C/svg%3E';">
+                            @elseif(in_array($order->order_type, [\App\Models\Order::TYPE_SERVICE_PACKAGE, \App\Models\Order::TYPE_CUSTOM_SERVICE_PACKAGE], true))
+                                <i class="fas fa-box-open text-2xl text-accent"></i>
                             @else
                                 <i class="fas fa-play-circle text-2xl text-accent"></i>
                             @endif
                         </div>
 
                         <div class="flex-1">
-                            @if($order->academic_year_id && ! $order->advanced_course_id)
+                            @if($order->order_type === \App\Models\Order::TYPE_CUSTOM_SERVICE_PACKAGE)
+                                @php $custom = $order->custom_package_data ?? []; @endphp
+                                <h4 class="mb-3 text-base font-semibold text-ink">{{ $custom['name'] ?? 'باقة مخصصة' }}</h4>
+                                <div class="grid gap-2 text-sm sm:grid-cols-3">
+                                    <div class="rounded-xl bg-canvas p-3"><span class="block text-xs text-muted">الحصص</span><strong>{{ $custom['sessions'] ?? '—' }}</strong></div>
+                                    <div class="rounded-xl bg-canvas p-3"><span class="block text-xs text-muted">مدة الحصة</span><strong>{{ $custom['session_minutes'] ?? '—' }} دقيقة</strong></div>
+                                    <div class="rounded-xl bg-canvas p-3"><span class="block text-xs text-muted">الصلاحية</span><strong>{{ $custom['duration_days'] ?? '—' }} يوم</strong></div>
+                                    <div class="rounded-xl bg-canvas p-3"><span class="block text-xs text-muted">سعر الحصة النهائي</span><strong>${{ number_format((float) ($custom['final_price_per_session'] ?? 0), 2) }}</strong></div>
+                                    <div class="rounded-xl bg-canvas p-3"><span class="block text-xs text-muted">خصم الكمية</span><strong>{{ $custom['discount_percent'] ?? 0 }}%</strong></div>
+                                    <div class="rounded-xl bg-canvas p-3"><span class="block text-xs text-muted">النطاق</span><strong>{{ $custom['scope_label'] ?? '—' }}</strong></div>
+                                </div>
+                            @elseif($order->servicePackage)
+                                <h4 class="mb-2 text-base font-semibold text-ink">{{ $order->servicePackage->name }}</h4>
+                                <p class="text-sm text-muted">{{ $order->servicePackage->units_count }} حصة × {{ $order->servicePackage->sessionMinutes() }} دقيقة · {{ $order->servicePackage->validityLabel() }}</p>
+                            @elseif($order->academic_year_id && ! $order->advanced_course_id)
                                 <h4 class="mb-2 text-base font-semibold text-ink">{{ htmlspecialchars($order->learningPath->name ?? 'طلب قديم', ENT_QUOTES, 'UTF-8') }}</h4>
                                 <div class="mb-3 flex flex-wrap items-center gap-2">
                                     <span class="inline-flex items-center gap-1.5 rounded-lg border border-line bg-canvas px-2.5 py-1 text-xs font-medium text-ink-soft">
@@ -151,7 +167,7 @@
                                     @if($order->amount)
                                     <span class="inline-flex items-center gap-1.5 rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">
                                         <i class="fas fa-money-bill-wave text-xs"></i>
-                                        {{ number_format($order->amount, 2) }} ج.م
+                                        {{ number_format($order->amount, 2) }} {{ $order->currencyCode() }}
                                     </span>
                                     @endif
                                 </div>
@@ -187,6 +203,56 @@
                 </div>
             </article>
 
+            @if($order->isTutoringOrder())
+            <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+                    <div>
+                        <h3 class="text-base font-semibold text-ink">التنفيذ والتسكين</h3>
+                        <p class="mt-1 text-xs text-muted">الرصيد والحجوزات الناتجة من هذا الطلب</p>
+                    </div>
+                    @if($order->serviceEntitlements->isNotEmpty())
+                        <a href="{{ route('admin.tutoring-group-bookings.create', ['entitlement_id' => $order->serviceEntitlements->first()->id]) }}" class="inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                            <i class="fas fa-user-plus"></i> تسكين حصة
+                        </a>
+                    @endif
+                </div>
+                <div class="space-y-4 p-4 sm:p-5">
+                    @forelse($order->serviceEntitlements as $entitlement)
+                        <div class="rounded-xl border border-line bg-canvas/50 p-4">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                    <p class="font-semibold text-ink">رصيد #{{ $entitlement->id }} — {{ \App\Models\ServicePackage::scopes()[$entitlement->scope] ?? $entitlement->scope }}</p>
+                                    <p class="mt-1 text-xs text-muted">{{ $entitlement->tutoringGroup?->title ?: 'غير مقيد بمجموعة' }} · ينتهي {{ $entitlement->expires_at?->format('Y-m-d') ?: 'بدون تاريخ' }}</p>
+                                </div>
+                                <div class="text-end">
+                                    <p class="font-semibold text-accent">{{ $entitlement->unitsLeft() }} / {{ $entitlement->units_total }} متبقٍ</p>
+                                    <p class="text-xs text-muted">{{ \App\Services\StudentEntitlementService::bookableUnitsLeft($entitlement) }} قابل للحجز</p>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="rounded-xl border border-dashed border-line p-4 text-sm text-muted">
+                            {{ $order->status === \App\Models\Order::STATUS_APPROVED ? 'لم يُعثر على رصيد مرتبط — راجع سجل التفعيل.' : 'سيُنشأ الرصيد تلقائياً بعد الموافقة.' }}
+                        </div>
+                    @endforelse
+
+                    @if($order->tutoringGroupBookings->isNotEmpty())
+                        <div>
+                            <h4 class="mb-2 text-sm font-semibold text-ink">الحجوزات المرتبطة</h4>
+                            <div class="space-y-2">
+                                @foreach($order->tutoringGroupBookings as $booking)
+                                    <a href="{{ route('admin.tutoring-group-bookings.show', $booking) }}" class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line px-4 py-3 text-sm hover:border-accent/30">
+                                        <span class="font-medium text-ink">{{ $booking->tutoringGroup?->title ?: 'حجز #'.$booking->id }}</span>
+                                        <span class="text-muted">{{ $booking->instructor?->name ?: 'بدون معلم' }} · {{ $booking->starts_at?->format('Y-m-d H:i') }} · {{ $booking->statusLabel() }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </article>
+            @endif
+
             {{-- تفاصيل الدفع --}}
             <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
                 <div class="border-b border-line px-4 py-4 sm:px-5">
@@ -197,7 +263,7 @@
                         <div>
                             <dt class="text-xs font-medium text-muted">المبلغ</dt>
                             <dd class="mt-1 text-xl font-semibold tabular-nums text-accent">
-                                {{ number_format($order->amount, 2) }} <span class="text-sm font-medium text-muted">ج.م</span>
+                                {{ number_format($order->amount, 2) }} <span class="text-sm font-medium text-muted">{{ $order->currencyCode() }}</span>
                             </dd>
                         </div>
 
@@ -395,7 +461,7 @@
                                         return;
                                     }
 
-                                    const confirmed = confirm('هل أنت متأكد من الموافقة على هذا الطلب؟\nسيتم تفعيل الكورس للعميل تلقائياً.');
+                                    const confirmed = confirm('هل أنت متأكد من الموافقة على هذا الطلب؟\nسيتم تفعيل الخدمة أو الرصيد المرتبط تلقائياً.');
                                     if (!confirmed) {
                                         console.log('User cancelled approval');
                                         return;
@@ -625,7 +691,7 @@
                         <div class="rounded-xl border border-line bg-canvas px-4 py-3">
                             <p class="flex items-start gap-2 text-sm text-ink">
                                 <i class="fas fa-check-circle mt-0.5 text-accent"></i>
-                                <span>تمت الموافقة على الطلب وتم تفعيل الكورس للعميل.</span>
+                                <span>تمت الموافقة على الطلب وتفعيل الخدمة أو الرصيد المرتبط للعميل.</span>
                             </p>
                         </div>
                     @else

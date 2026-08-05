@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'المواد الدراسية - Glottical')
-@section('page_title', 'المواد الدراسية')
+@section('title', 'مواد المدرسة - Glottical')
+@section('page_title', 'مواد المدرسة')
 
 @section('content')
 @php
@@ -21,16 +21,16 @@
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
-            <p class="text-xs font-medium text-muted">إدارة المحتوى · الأكاديمية</p>
+            <p class="text-xs font-medium text-muted">إدارة المحتوى · المدرسة</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">
                 @if($currentTrack)
                     مواد {{ $currentTrack->name }}
                 @else
-                    المواد الدراسية
+                    مواد المدرسة
                 @endif
             </h2>
             <p class="mt-1 max-w-2xl text-sm text-muted">
-                المادة طبقة داخل السنة الأكاديمية، وتحتوي الكورسات المرتبطة بها.
+                المادة طبقة تنظيمية داخل سنة المدرسة (أو عامة)، وتحتوي الكورسات والفصول المرتبطة بها.
             </p>
         </div>
         <div class="admin-hero-actions flex flex-wrap gap-2">
@@ -68,7 +68,7 @@
         </div>
         <form method="GET" action="{{ route('admin.academic-subjects.index') }}" class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-3 sm:items-end sm:p-5">
             <div class="sm:col-span-2">
-                <label class="mb-1.5 block text-xs font-medium text-muted" for="track">السنة الأكاديمية</label>
+                <label class="mb-1.5 block text-xs font-medium text-muted" for="track">سنة المدرسة</label>
                 <select id="track" name="track" class="{{ $fieldClass }}" onchange="this.form.submit()">
                     <option value="">كل السنوات</option>
                     @foreach($tracks as $track)

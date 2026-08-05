@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Support\SearchInput;
 use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Payment;
@@ -12,8 +11,8 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Services\CourseSubscriptionService;
-use App\Services\InstructorCoursePercentageService;
 use App\Services\OrderWalletAndCouponFinalizer;
+use App\Support\SearchInput;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +28,15 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Order::with(['user', 'course.academicSubject', 'course.academicYear', 'learningPath', 'salesOwner']);
+        $query = Order::with([
+            'user',
+            'course.academicSubject',
+            'course.academicYear',
+            'learningPath',
+            'salesOwner',
+            'servicePackage',
+            'tutoringGroup:id,title,type',
+        ])->withCount(['serviceEntitlements', 'tutoringGroupBookings']);
 
         // فلترة حسب مندوب المبيعات
         if ($request->filled('sales_owner_id')) {
@@ -70,7 +77,11 @@ class OrderController extends Controller
                         $cq->where('title', 'like', "%{$search}%");
                     })->orWhereHas('learningPath', function ($lq) use ($search) {
                         $lq->where('name', 'like', "%{$search}%");
-                    });
+                    })->orWhereHas('servicePackage', function ($packageQuery) use ($search) {
+                        $packageQuery->where('name', 'like', "%{$search}%");
+                    })->orWhereHas('tutoringGroup', function ($groupQuery) use ($search) {
+                        $groupQuery->where('title', 'like', "%{$search}%");
+                    })->orWhere('custom_package_data', 'like', "%{$search}%");
                 });
             }
         }
@@ -110,6 +121,13 @@ class OrderController extends Controller
             'wallet',
             'salesOwner',
             'salesNotes.user',
+            'servicePackage',
+            'tutoringGroup.instructor:id,name',
+            'serviceEntitlements.tutoringGroup:id,title',
+            'serviceEntitlements.bookings:id,student_service_entitlement_id,status,starts_at,instructor_id',
+            'tutoringGroupBookings.instructor:id,name',
+            'tutoringGroupBookings.tutoringGroup:id,title',
+            'tutoringGroupBookings.classroomMeeting:id,code',
         ]);
 
         $platformWallets = Wallet::where('is_active', true)
@@ -250,9 +268,13 @@ class OrderController extends Controller
                     return back()->with('error', $msg);
                 }
 
-                $order->loadMissing(['course', 'learningPath']);
+                $order->loadMissing(['course', 'learningPath', 'servicePackage']);
 
-                if ($order->course) {
+                if ($order->order_type === \App\Models\Order::TYPE_CUSTOM_SERVICE_PACKAGE) {
+                    $orderTitle = htmlspecialchars($order->custom_package_data['name'] ?? 'باقة مخصصة', ENT_QUOTES, 'UTF-8');
+                } elseif ($order->servicePackage) {
+                    $orderTitle = htmlspecialchars($order->servicePackage->name, ENT_QUOTES, 'UTF-8');
+                } elseif ($order->course) {
                     $orderTitle = htmlspecialchars($order->course->title ?? 'كورس', ENT_QUOTES, 'UTF-8');
                 } elseif ($order->academic_year_id) {
                     if (! $order->relationLoaded('learningPath')) {
@@ -279,7 +301,7 @@ class OrderController extends Controller
                     'type' => $orderType,
                     'description' => $order->advanced_course_id
                         ? 'فاتورة تسجيل في الكورس: '.$orderTitle
-                        : 'فاتورة طلب قديم: '.$orderTitle,
+                        : 'فاتورة طلب: '.$orderTitle,
                     'subtotal' => $invOrig,
                     'tax_amount' => 0,
                     'discount_amount' => $invDiscountTotal,
@@ -292,7 +314,7 @@ class OrderController extends Controller
                         [
                             'description' => $order->advanced_course_id
                                 ? 'تسجيل في الكورس: '.$orderTitle
-                                : 'طلب قديم: '.$orderTitle,
+                                : 'شراء: '.$orderTitle,
                             'quantity' => 1,
                             'price' => $invOrig,
                             'total' => $invOrig,
@@ -322,7 +344,7 @@ class OrderController extends Controller
                         'user_id' => $order->user_id,
                         'payment_method' => $paymentMethod,
                         'amount' => $order->amount,
-                        'currency' => 'EGP',
+                        'currency' => $order->currencyCode(),
                         'status' => 'completed',
                         'paid_at' => now(),
                         'processed_by' => auth()->id(),
@@ -383,7 +405,7 @@ class OrderController extends Controller
                     'type' => 'credit', // دائن (إيراد)
                     'category' => 'course_payment', // المسار والكورس يستخدمان نفس التصنيف (الجدول لا يدعم learning_path_payment)
                     'amount' => $order->amount,
-                    'currency' => 'EGP',
+                    'currency' => $order->currencyCode(),
                     'description' => $transactionDescription,
                     'status' => 'completed',
                     'metadata' => [
@@ -488,7 +510,8 @@ class OrderController extends Controller
                     try {
                         \App\Services\TutoringGroupCheckoutService::fulfillApprovedOrder($order->fresh());
                     } catch (\Throwable $e) {
-                        Log::warning('Tutoring fulfill failed during order approval: '.$e->getMessage(), ['order_id' => $order->id]);
+                        Log::error('Tutoring fulfill failed during order approval: '.$e->getMessage(), ['order_id' => $order->id]);
+                        throw new \RuntimeException('تعذر تفعيل رصيد الباقة أو إنشاء الحجز: '.$e->getMessage(), 0, $e);
                     }
                 }
 
@@ -537,9 +560,15 @@ class OrderController extends Controller
                     'payment_number' => $payment->payment_number ?? null,
                 ]);
 
-                $successMessage = $order->advanced_course_id
-                    ? 'تمت الموافقة على الطلب وتم تفعيل الكورس للطالب. تم إنشاء الفاتورة رقم: '.$invoice->invoice_number.' والمدفوعات رقم: '.$payment->payment_number
-                    : 'تمت الموافقة على الطلب القديم. تم إنشاء الفاتورة رقم: '.$invoice->invoice_number.' والمدفوعات رقم: '.$payment->payment_number;
+                if (in_array($order->order_type, [Order::TYPE_SERVICE_PACKAGE, Order::TYPE_CUSTOM_SERVICE_PACKAGE], true)) {
+                    $successMessage = 'تمت الموافقة وتفعيل رصيد حصص الطالب وربطه بالطلب. الفاتورة: '.$invoice->invoice_number.'، والمدفوعات: '.$payment->payment_number;
+                } elseif ($order->isTutoringOrder()) {
+                    $successMessage = 'تمت الموافقة وتفعيل الاشتراك والحجز المرتبط. الفاتورة: '.$invoice->invoice_number.'، والمدفوعات: '.$payment->payment_number;
+                } elseif ($order->advanced_course_id) {
+                    $successMessage = 'تمت الموافقة على الطلب وتم تفعيل الكورس للطالب. تم إنشاء الفاتورة رقم: '.$invoice->invoice_number.' والمدفوعات رقم: '.$payment->payment_number;
+                } else {
+                    $successMessage = 'تمت الموافقة على الطلب. تم إنشاء الفاتورة رقم: '.$invoice->invoice_number.' والمدفوعات رقم: '.$payment->payment_number;
+                }
 
                 // إذا كان الطلب AJAX، إرجاع JSON
                 if ($request->wantsJson() || $request->ajax()) {

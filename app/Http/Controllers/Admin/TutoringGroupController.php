@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\SchoolSubject;
-use App\Models\SchoolYear;
+use App\Models\AcademicSubject;
+use App\Models\AcademicYear;
 use App\Models\TutoringGroup;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -115,7 +115,7 @@ class TutoringGroupController extends Controller
         $validated['type'] = $type;
         $validated['is_active'] = $request->boolean('is_active');
         $validated['is_featured'] = $request->boolean('is_featured');
-        foreach (['school_year_id', 'school_subject_id'] as $fk) {
+        foreach (['academic_year_id', 'academic_subject_id'] as $fk) {
             if (empty($validated[$fk])) {
                 $validated[$fk] = null;
             }
@@ -167,7 +167,7 @@ class TutoringGroupController extends Controller
 
         $validated['is_active'] = $request->boolean('is_active');
         $validated['is_featured'] = $request->boolean('is_featured');
-        foreach (['school_year_id', 'school_subject_id'] as $fk) {
+        foreach (['academic_year_id', 'academic_subject_id'] as $fk) {
             if (empty($validated[$fk])) {
                 $validated[$fk] = null;
             }
@@ -230,8 +230,8 @@ class TutoringGroupController extends Controller
             'sessions_per_month' => ['nullable', 'integer', 'min:1', 'max:60'],
             'whatsapp_group_url' => ['nullable', 'url', 'max:500'],
             'learning_path' => ['nullable', 'in:arabic,english'],
-            'school_year_id' => ['nullable', 'exists:school_years,id'],
-            'school_subject_id' => ['nullable', 'exists:school_subjects,id'],
+            'academic_year_id' => ['nullable', 'exists:academic_years,id'],
+            'academic_subject_id' => ['nullable', 'exists:academic_subjects,id'],
             'currency' => ['nullable', 'string', 'max:8'],
             'capacity' => [$type === TutoringGroup::TYPE_COLLECTIVE ? 'required' : 'nullable', 'integer', 'min:1', 'max:500'],
             'duration_minutes' => ['required', 'integer', 'min:30', 'max:240'],
@@ -271,11 +271,11 @@ class TutoringGroupController extends Controller
 
     protected function schoolYears()
     {
-        return SchoolYear::query()->ordered()->get(['id', 'name', 'level_number']);
+        return AcademicYear::query()->ordered()->get(['id', 'name', 'level_number', 'code']);
     }
 
     protected function schoolSubjects()
     {
-        return SchoolSubject::query()->ordered()->get(['id', 'name']);
+        return AcademicSubject::query()->ordered()->get(['id', 'name', 'code', 'academic_year_id']);
     }
 }

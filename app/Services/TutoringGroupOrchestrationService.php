@@ -99,7 +99,7 @@ class TutoringGroupOrchestrationService
     {
         return DB::transaction(function () use ($booking) {
             $booking = TutoringGroupBooking::query()
-                ->with(['subscription'])
+                ->with(['subscription', 'classroomMeeting', 'tutoringGroup', 'user'])
                 ->lockForUpdate()
                 ->findOrFail($booking->id);
 
@@ -109,7 +109,22 @@ class TutoringGroupOrchestrationService
 
             $booking->update(['status' => TutoringGroupBooking::STATUS_COMPLETED]);
 
-            if ($booking->student_tutoring_subscription_id) {
+            if ($booking->classroomMeeting && ! $booking->classroomMeeting->ended_at) {
+                $booking->classroomMeeting->update(['ended_at' => now()]);
+            }
+
+            $entitlementId = $booking->student_service_entitlement_id;
+            if (! $entitlementId && $booking->student_tutoring_subscription_id) {
+                $sub = StudentTutoringSubscription::query()->find($booking->student_tutoring_subscription_id);
+                $entitlementId = $sub?->student_service_entitlement_id;
+            }
+
+            if ($entitlementId) {
+                $entitlement = \App\Models\StudentServiceEntitlement::query()->find($entitlementId);
+                if ($entitlement) {
+                    StudentEntitlementService::consume($entitlement, 1);
+                }
+            } elseif ($booking->student_tutoring_subscription_id) {
                 $sub = StudentTutoringSubscription::query()->lockForUpdate()->find($booking->student_tutoring_subscription_id);
                 if ($sub) {
                     $sub->sessions_used = min((int) $sub->sessions_total, (int) $sub->sessions_used + 1);
@@ -118,9 +133,40 @@ class TutoringGroupOrchestrationService
                     }
                     $sub->save();
                 }
+            } elseif ($booking->user_id && $booking->tutoring_group_id) {
+                // Collective/school: burn from available pool if any
+                $group = $booking->tutoringGroup;
+                if ($group) {
+                    $scope = StudentEntitlementService::scopeForTutoringGroup($group);
+                    $entitlement = StudentEntitlementService::availableFor(
+                        (int) $booking->user_id,
+                        $scope,
+                        (int) $group->id
+                    );
+                    if ($entitlement) {
+                        StudentEntitlementService::consume($entitlement, 1);
+                        $booking->update(['student_service_entitlement_id' => $entitlement->id]);
+                    }
+                }
             }
 
-            return $booking->fresh(['subscription']);
+            if ($booking->user_id) {
+                Notification::create([
+                    'user_id' => $booking->user_id,
+                    'sender_id' => $booking->instructor_id,
+                    'title' => 'اكتملت الحصة',
+                    'message' => 'تم إكمال حصة '.$booking->tutoringGroup?->title.' وخصم وحدة واحدة من رصيدك.',
+                    'type' => 'general',
+                    'priority' => 'normal',
+                    'audience' => 'student',
+                    'action_url' => Route::has('student.service-entitlements.index')
+                        ? route('student.service-entitlements.index')
+                        : null,
+                    'action_text' => 'عرض الرصيد',
+                ]);
+            }
+
+            return $booking->fresh(['subscription', 'entitlement', 'classroomMeeting']);
         });
     }
 

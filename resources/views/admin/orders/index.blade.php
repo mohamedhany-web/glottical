@@ -40,7 +40,7 @@
         <div class="min-w-0">
             <p class="text-xs font-medium text-muted">المبيعات · الطلبات</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إدارة الطلبات</h2>
-            <p class="mt-1 text-sm text-muted">متابعة تسجيلات شراء الكورسات والموافقة عليها</p>
+            <p class="mt-1 text-sm text-muted">متابعة الكورسات وباقات الحصص والتخصيص والتفعيل من شاشة واحدة</p>
         </div>
         <div class="admin-hero-actions flex flex-wrap gap-2">
             <a href="{{ route('admin.sales.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
@@ -77,12 +77,12 @@
     <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
         <div class="border-b border-line px-4 py-4 sm:px-5">
             <h3 class="text-base font-semibold text-ink">البحث والفلترة</h3>
-            <p class="mt-0.5 text-xs text-muted">حسب الحالة، طريقة الدفع، المندوب، أو بيانات العميل/الكورس</p>
+            <p class="mt-0.5 text-xs text-muted">حسب الحالة، طريقة الدفع، المندوب، أو بيانات العميل/الكورس/الباقة</p>
         </div>
         <form method="GET" id="filterForm" action="{{ route('admin.orders.index') }}" class="grid grid-cols-1 gap-4 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-5 xl:items-end">
             <div class="xl:col-span-2">
                 <label class="{{ $labelClass }}" for="search">البحث</label>
-                <input id="search" type="search" name="search" value="{{ old('search', request('search')) }}" maxlength="255" placeholder="اسم، بريد، هاتف، أو كورس…" class="{{ $fieldClass }}">
+                <input id="search" type="search" name="search" value="{{ old('search', request('search')) }}" maxlength="255" placeholder="اسم، بريد، هاتف، كورس، باقة، أو مجموعة…" class="{{ $fieldClass }}">
             </div>
             <div>
                 <label class="{{ $labelClass }}" for="status">الحالة</label>
@@ -143,7 +143,7 @@
                     <tr>
                         <th class="px-4 py-3 text-start font-medium">#</th>
                         <th class="px-4 py-3 text-start font-medium">العميل</th>
-                        <th class="px-4 py-3 text-start font-medium">الكورس / المسار</th>
+                        <th class="px-4 py-3 text-start font-medium">المنتج / الخدمة</th>
                         <th class="px-4 py-3 text-start font-medium">المبلغ</th>
                         <th class="px-4 py-3 text-start font-medium">الدفع</th>
                         <th class="px-4 py-3 text-start font-medium">المندوب</th>
@@ -162,7 +162,17 @@
                                 <p class="mt-0.5 text-[11px] text-muted">{{ $order->user->email ?? $order->user->phone ?? '—' }}</p>
                             </td>
                             <td class="px-4 py-3">
-                                @if($order->academic_year_id && ! $order->advanced_course_id)
+                                @if($order->order_type === \App\Models\Order::TYPE_CUSTOM_SERVICE_PACKAGE)
+                                    @php $custom = $order->custom_package_data ?? []; @endphp
+                                    <p class="font-medium text-ink">{{ $custom['name'] ?? 'باقة مخصصة' }}</p>
+                                    <p class="text-[11px] text-muted">{{ $custom['sessions'] ?? '—' }} حصة · {{ $custom['session_minutes'] ?? '—' }} دقيقة</p>
+                                @elseif($order->servicePackage)
+                                    <p class="font-medium text-ink">{{ $order->servicePackage->name }}</p>
+                                    <p class="text-[11px] text-muted">باقة حصص · {{ $order->servicePackage->units_count }} حصة</p>
+                                @elseif($order->tutoringGroup)
+                                    <p class="font-medium text-ink">{{ $order->tutoringGroup->title }}</p>
+                                    <p class="text-[11px] text-muted">اشتراك مجموعة</p>
+                                @elseif($order->academic_year_id && ! $order->advanced_course_id)
                                     <p class="font-medium text-ink">{{ $order->learningPath->name ?? 'طلب قديم' }}</p>
                                     <p class="text-[11px] text-muted">طلب قديم</p>
                                 @elseif($order->course)
@@ -175,8 +185,13 @@
                                 @else
                                     <span class="text-muted">—</span>
                                 @endif
+                                @if(($order->service_entitlements_count ?? 0) > 0 || ($order->tutoring_group_bookings_count ?? 0) > 0)
+                                    <p class="mt-1 text-[10px] font-medium text-accent">
+                                        {{ $order->service_entitlements_count }} رصيد · {{ $order->tutoring_group_bookings_count }} حجز
+                                    </p>
+                                @endif
                             </td>
-                            <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($order->amount, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></td>
+                            <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($order->amount, 2) }} <span class="text-xs font-normal text-muted">{{ $order->currencyCode() }}</span></td>
                             <td class="px-4 py-3 text-ink-soft">{{ $paymentMethodLabels[$order->payment_method] ?? $order->payment_method ?? '—' }}</td>
                             <td class="px-4 py-3 text-ink-soft">
                                 @if($order->salesOwner)
@@ -249,7 +264,7 @@
                 <i class="fas fa-coins text-sm"></i>
             </div>
             <p class="mt-3 text-xs text-muted">متوسط قيمة الطلب</p>
-            <p class="mt-1 text-xl font-semibold tabular-nums text-ink">{{ number_format($avgAmount, 2) }} <span class="text-sm font-normal text-muted">ج.م</span></p>
+            <p class="mt-1 text-xl font-semibold tabular-nums text-ink">{{ number_format($avgAmount, 2) }} <span class="text-sm font-normal text-muted">متعدد العملات</span></p>
         </article>
     </section>
 </div>

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Order;
+use App\Models\ServicePackage;
 use App\Models\StudentTutoringSubscription;
 use App\Models\TutoringGroup;
 use App\Models\TutoringGroupBooking;
@@ -83,18 +84,48 @@ class TutoringGroupCheckoutService
     }
 
     /**
-     * Fulfill approved tutoring order: subscription + optional first booking + live confirm.
+     * Fulfill approved tutoring / service-package order: entitlement + optional booking.
      */
     public static function fulfillApprovedOrder(Order $order, ?Carbon $preferredStartsAt = null): ?StudentTutoringSubscription
     {
+        if ($order->order_type === Order::TYPE_CUSTOM_SERVICE_PACKAGE) {
+            StudentEntitlementService::grantFromOrder($order);
+
+            return null;
+        }
+
+        // Pure service package without a tutoring group (global / private_lessons)
+        if ($order->order_type === Order::TYPE_SERVICE_PACKAGE && ! $order->tutoring_group_id) {
+            StudentEntitlementService::grantFromOrder($order->loadMissing('servicePackage'));
+
+            return null;
+        }
+
         if (! $order->isTutoringOrder()) {
             return null;
         }
 
         return DB::transaction(function () use ($order, $preferredStartsAt) {
-            $order->loadMissing(['tutoringGroup', 'tutoringPackage', 'tutoringCohort', 'user']);
+            $order->loadMissing(['tutoringGroup', 'tutoringPackage', 'tutoringCohort', 'servicePackage', 'user']);
+
+            // Service package tied to a group — grant then fall through for optional booking
+            if ($order->order_type === Order::TYPE_SERVICE_PACKAGE && $order->servicePackage && ! $order->tutoringGroup) {
+                StudentEntitlementService::grantFromOrder($order);
+
+                return null;
+            }
+
             $group = $order->tutoringGroup;
-            if (! $group) {
+            if (! $group && $order->servicePackage?->tutoring_group_id) {
+                $group = TutoringGroup::find($order->servicePackage->tutoring_group_id);
+            }
+            if (! $group && $order->order_type !== Order::TYPE_SERVICE_PACKAGE) {
+                return null;
+            }
+
+            if (! $group && $order->order_type === Order::TYPE_SERVICE_PACKAGE) {
+                StudentEntitlementService::grantFromOrder($order);
+
                 return null;
             }
 
@@ -102,17 +133,45 @@ class TutoringGroupCheckoutService
 
             if ($order->order_type === Order::TYPE_TUTORING_PACKAGE && $order->tutoringPackage) {
                 $package = $order->tutoringPackage;
+                $servicePackage = StudentEntitlementService::findOrCreatePackageForTutoringGroupPackage($package);
+                $entitlement = StudentEntitlementService::grant(
+                    userId: (int) $order->user_id,
+                    package: $servicePackage,
+                    orderId: (int) $order->id,
+                    unitsOverride: (int) $package->sessions_count,
+                    notes: 'from_tutoring_group_package:'.$package->id,
+                );
+
                 $subscription = StudentTutoringSubscription::create([
                     'user_id' => $order->user_id,
                     'tutoring_group_id' => $group->id,
                     'tutoring_group_package_id' => $package->id,
                     'sessions_total' => (int) $package->sessions_count,
                     'sessions_used' => 0,
-                    'starts_at' => now(),
-                    'expires_at' => now()->addMonths(max(1, (int) $package->duration_months)),
+                    'starts_at' => $entitlement->starts_at,
+                    'expires_at' => $entitlement->expires_at,
                     'status' => StudentTutoringSubscription::STATUS_ACTIVE,
                     'order_id' => $order->id,
+                    'student_service_entitlement_id' => $entitlement->id,
                 ]);
+            }
+
+            if ($order->order_type === Order::TYPE_SERVICE_PACKAGE && $order->servicePackage) {
+                $entitlement = StudentEntitlementService::grantFromOrder($order);
+                if ($entitlement && $entitlement->tutoring_group_id && $entitlement->scope === ServicePackage::SCOPE_TUTORING_INDIVIDUAL) {
+                    $subscription = StudentTutoringSubscription::create([
+                        'user_id' => $order->user_id,
+                        'tutoring_group_id' => $entitlement->tutoring_group_id,
+                        'tutoring_group_package_id' => null,
+                        'sessions_total' => $entitlement->units_total,
+                        'sessions_used' => 0,
+                        'starts_at' => $entitlement->starts_at,
+                        'expires_at' => $entitlement->expires_at,
+                        'status' => StudentTutoringSubscription::STATUS_ACTIVE,
+                        'order_id' => $order->id,
+                        'student_service_entitlement_id' => $entitlement->id,
+                    ]);
+                }
             }
 
             $startsAt = $preferredStartsAt;
@@ -129,10 +188,40 @@ class TutoringGroupCheckoutService
                 $startsAt = $startsAt ?: ($cohort->starts_at ?: now()->addDay()->setTime(18, 0));
                 $duration = max(30, (int) ($group->duration_minutes ?? 60));
 
+                // Grant collective session credit pool (default 8 or group sessions_per_month)
+                $units = max(1, (int) ($group->sessions_per_month ?: 8));
+                $collectivePackage = ServicePackage::query()
+                    ->where('scope', ServicePackage::SCOPE_TUTORING_COLLECTIVE)
+                    ->where('tutoring_group_id', $group->id)
+                    ->where('units_count', $units)
+                    ->first();
+                if (! $collectivePackage) {
+                    $collectivePackage = ServicePackage::create([
+                        'name' => 'دفعة: '.($cohort->title ?: $group->title),
+                        'slug' => ServicePackage::uniqueSlug('cohort-'.$cohort->id),
+                        'description' => 'رصيد حصص جماعية من اشتراك دفعة',
+                        'scope' => ServicePackage::SCOPE_TUTORING_COLLECTIVE,
+                        'tutoring_group_id' => $group->id,
+                        'units_count' => $units,
+                        'duration_days' => 90,
+                        'price' => $order->amount,
+                        'currency' => 'EGP',
+                        'is_active' => true,
+                        'sort_order' => 0,
+                    ]);
+                }
+                $collectiveEntitlement = StudentEntitlementService::grant(
+                    userId: (int) $order->user_id,
+                    package: $collectivePackage,
+                    orderId: (int) $order->id,
+                    notes: 'from_tutoring_cohort:'.$cohort->id,
+                );
+
                 $booking = TutoringGroupBooking::create([
                     'tutoring_group_id' => $group->id,
                     'cohort_id' => $cohort->id,
                     'order_id' => $order->id,
+                    'student_service_entitlement_id' => $collectiveEntitlement->id,
                     'payment_status' => TutoringGroupBooking::PAYMENT_PAID,
                     'instructor_id' => $group->instructor_id,
                     'user_id' => $order->user_id,
@@ -152,6 +241,7 @@ class TutoringGroupCheckoutService
                     'tutoring_group_id' => $group->id,
                     'tutoring_group_package_id' => $subscription->tutoring_group_package_id,
                     'student_tutoring_subscription_id' => $subscription->id,
+                    'student_service_entitlement_id' => $subscription->student_service_entitlement_id,
                     'order_id' => $order->id,
                     'payment_status' => TutoringGroupBooking::PAYMENT_PAID,
                     'instructor_id' => $group->instructor_id,
@@ -184,6 +274,18 @@ class TutoringGroupCheckoutService
             throw new InvalidArgumentException('الاشتراك غير صالح.');
         }
 
+        $entitlement = $subscription->entitlement;
+        if (! $entitlement) {
+            $entitlement = StudentEntitlementService::availableFor(
+                (int) $subscription->user_id,
+                ServicePackage::SCOPE_TUTORING_INDIVIDUAL,
+                (int) $group->id
+            );
+        }
+        if (! $entitlement || StudentEntitlementService::bookableUnitsLeft($entitlement) < 1) {
+            throw new InvalidArgumentException('لا يوجد رصيد حصص متاح. اشترِ باقة أو اشحن رصيدك.');
+        }
+
         $duration = max(30, (int) ($group->duration_minutes ?? 60));
         $endsAt = $startsAt->copy()->addMinutes($duration);
 
@@ -201,9 +303,50 @@ class TutoringGroupCheckoutService
             'tutoring_group_id' => $group->id,
             'tutoring_group_package_id' => $subscription->tutoring_group_package_id,
             'student_tutoring_subscription_id' => $subscription->id,
+            'student_service_entitlement_id' => $entitlement->id,
             'payment_status' => TutoringGroupBooking::PAYMENT_PAID,
             'instructor_id' => $group->instructor_id,
             'user_id' => $subscription->user_id,
+            'starts_at' => $startsAt,
+            'ends_at' => $endsAt,
+            'status' => TutoringGroupBooking::STATUS_PENDING,
+        ]);
+
+        TutoringCrmHookService::onBookingCreated($booking->fresh(['tutoringGroup', 'user']));
+
+        return TutoringGroupOrchestrationService::confirmBooking($booking);
+    }
+
+    /**
+     * Book using any available entitlement for a tutoring group (individual or collective).
+     */
+    public static function bookFromEntitlement(
+        User $user,
+        TutoringGroup $group,
+        Carbon $startsAt
+    ): TutoringGroupBooking {
+        $scope = StudentEntitlementService::scopeForTutoringGroup($group);
+        $entitlement = StudentEntitlementService::assertCanBook((int) $user->id, $scope, (int) $group->id);
+
+        $duration = max(30, (int) ($group->duration_minutes ?? 60));
+        $endsAt = $startsAt->copy()->addMinutes($duration);
+
+        $allowed = TutoringGroupAvailabilityService::availableSlots(
+            $group,
+            $startsAt->copy()->startOfDay(),
+            $startsAt->copy()->endOfDay()
+        )->first(fn ($s) => Carbon::parse($s['starts_at'])->equalTo($startsAt));
+
+        if (! $allowed) {
+            throw new InvalidArgumentException('هذا الموعد غير متاح.');
+        }
+
+        $booking = TutoringGroupBooking::create([
+            'tutoring_group_id' => $group->id,
+            'student_service_entitlement_id' => $entitlement->id,
+            'payment_status' => TutoringGroupBooking::PAYMENT_PAID,
+            'instructor_id' => $group->instructor_id,
+            'user_id' => $user->id,
             'starts_at' => $startsAt,
             'ends_at' => $endsAt,
             'status' => TutoringGroupBooking::STATUS_PENDING,

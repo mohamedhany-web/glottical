@@ -29,6 +29,7 @@ class TutoringGroupBooking extends Model
         'cohort_id',
         'tutoring_group_package_id',
         'student_tutoring_subscription_id',
+        'student_service_entitlement_id',
         'classroom_meeting_id',
         'order_id',
         'payment_status',
@@ -70,6 +71,11 @@ class TutoringGroupBooking extends Model
     public function subscription(): BelongsTo
     {
         return $this->belongsTo(StudentTutoringSubscription::class, 'student_tutoring_subscription_id');
+    }
+
+    public function entitlement(): BelongsTo
+    {
+        return $this->belongsTo(StudentServiceEntitlement::class, 'student_service_entitlement_id');
     }
 
     public function classroomMeeting(): BelongsTo

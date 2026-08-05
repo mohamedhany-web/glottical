@@ -292,13 +292,13 @@
                         @hasPermission('manage.academic-years')
                         <li><a href="{{ route('admin.academic-years.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800 transition-all duration-300 text-gray-600 dark:text-gray-400 hover:text-sky-700 dark:hover:text-sky-300 {{ request()->routeIs('admin.academic-years.*') ? 'bg-gradient-to-r from-sky-100 to-slate-100 dark:from-sky-900/30 dark:to-slate-900/30 text-sky-700 dark:text-sky-300 font-semibold' : '' }}">
                             <i class="fas fa-compass w-4"></i>
-                            <span>السنوات الأكاديمية</span>
+                            <span>سنوات المدرسة</span>
                         </a></li>
                         @endhasPermission
                         @hasPermission('manage.academic-subjects')
                         <li><a href="{{ route('admin.academic-subjects.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800 transition-all duration-300 text-gray-600 dark:text-gray-400 hover:text-sky-700 dark:hover:text-sky-300 {{ request()->routeIs('admin.academic-subjects.*') ? 'bg-gradient-to-r from-sky-100 to-slate-100 dark:from-sky-900/30 dark:to-slate-900/30 text-sky-700 dark:text-sky-300 font-semibold' : '' }}">
                             <i class="fas fa-layer-group w-4"></i>
-                            <span>مجموعات المهارات</span>
+                            <span>مواد المدرسة</span>
                         </a></li>
                         @endhasPermission
                         @hasPermission('manage.courses')

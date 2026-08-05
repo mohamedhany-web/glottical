@@ -31,8 +31,8 @@ class TutoringGroup extends Model
         'sessions_per_month',
         'whatsapp_group_url',
         'learning_path',
-        'school_year_id',
-        'school_subject_id',
+        'academic_year_id',
+        'academic_subject_id',
         'currency',
         'capacity',
         'duration_minutes',
@@ -60,14 +60,26 @@ class TutoringGroup extends Model
         return $this->belongsTo(User::class, 'instructor_id');
     }
 
-    public function schoolYear(): BelongsTo
+    public function academicYear(): BelongsTo
     {
-        return $this->belongsTo(SchoolYear::class);
+        return $this->belongsTo(AcademicYear::class, 'academic_year_id');
     }
 
+    /** Alias: سنوات المدرسة = السنوات الأكاديمية */
+    public function schoolYear(): BelongsTo
+    {
+        return $this->academicYear();
+    }
+
+    public function academicSubject(): BelongsTo
+    {
+        return $this->belongsTo(AcademicSubject::class, 'academic_subject_id');
+    }
+
+    /** Alias: مواد المدرسة = المواد الدراسية */
     public function schoolSubject(): BelongsTo
     {
-        return $this->belongsTo(SchoolSubject::class);
+        return $this->academicSubject();
     }
 
     public function bookings(): HasMany

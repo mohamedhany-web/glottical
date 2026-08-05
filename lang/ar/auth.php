@@ -76,6 +76,8 @@ return [
     'enter_strong_password' => 'أدخل كلمة مرور قوية',
     'reenter_password' => 'أعد إدخال كلمة المرور',
     'country_code_aria' => 'كود الدولة',
+    'search_country' => 'ابحث عن الدولة أو الكود...',
+    'no_country_found' => 'لا توجد نتائج',
     'phone_aria' => 'رقم الهاتف',
     'referral_invite_title' => 'أنت تسجّل عبر رابط دعوة',
     'referral_invite_body' => 'سيتم ربط حسابك بكود الإحالة :code بعد إتمام التسجيل (إن كان البرنامج مفعّلاً).',

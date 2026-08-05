@@ -131,23 +131,23 @@
                     </select>
                 </div>
                 <div>
-                    <label class="{{ $labelClass }}" for="school_year_id">سنة المدرسة</label>
-                    <select id="school_year_id" name="school_year_id" class="{{ $fieldClass }}">
+                    <label class="{{ $labelClass }}" for="academic_year_id">سنة المدرسة</label>
+                    <select id="academic_year_id" name="academic_year_id" class="{{ $fieldClass }}">
                         <option value="">— غير مرتبط —</option>
                         @foreach(($schoolYears ?? []) as $sy)
-                            <option value="{{ $sy->id }}" @selected((string) old('school_year_id', $group->school_year_id) === (string) $sy->id)>
-                                {{ $sy->level_number }}. {{ $sy->name }}
+                            <option value="{{ $sy->id }}" @selected((string) old('academic_year_id', $group->academic_year_id) === (string) $sy->id)>
+                                {{ $sy->level_number ? $sy->level_number.'. ' : '' }}{{ $sy->name }}{{ $sy->code ? ' ('.$sy->code.')' : '' }}
                             </option>
                         @endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="{{ $labelClass }}" for="school_subject_id">مادة المدرسة</label>
-                    <select id="school_subject_id" name="school_subject_id" class="{{ $fieldClass }}">
+                    <label class="{{ $labelClass }}" for="academic_subject_id">مادة المدرسة</label>
+                    <select id="academic_subject_id" name="academic_subject_id" class="{{ $fieldClass }}">
                         <option value="">— غير مرتبط —</option>
                         @foreach(($schoolSubjects ?? []) as $ss)
-                            <option value="{{ $ss->id }}" @selected((string) old('school_subject_id', $group->school_subject_id) === (string) $ss->id)>
-                                {{ $ss->name }}
+                            <option value="{{ $ss->id }}" @selected((string) old('academic_subject_id', $group->academic_subject_id) === (string) $ss->id)>
+                                {{ $ss->name }}{{ $ss->code ? ' ('.$ss->code.')' : '' }}
                             </option>
                         @endforeach
                     </select>

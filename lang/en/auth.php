@@ -76,6 +76,8 @@ return [
     'enter_strong_password' => 'Enter a strong password',
     'reenter_password' => 'Re-enter password',
     'country_code_aria' => 'Country code',
+    'search_country' => 'Search country or dial code...',
+    'no_country_found' => 'No countries found',
     'phone_aria' => 'Phone number',
     'referral_invite_title' => 'You are registering via an invite link',
     'referral_invite_body' => 'Your account will be linked to referral code :code after registration (if the program is enabled).',

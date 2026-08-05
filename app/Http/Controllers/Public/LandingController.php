@@ -8,7 +8,7 @@ use App\Models\Certificate;
 use App\Models\PopupAd;
 use App\Models\SiteTestimonial;
 use App\Models\SiteService;
-use App\Models\SchoolYear;
+use App\Models\AcademicYear;
 use App\Models\User;
 use App\Services\CourseSubscriptionService;
 use App\Services\SeoAssets;
@@ -89,8 +89,8 @@ class LandingController extends Controller
                 SeoAssets::optimizedRemoteImage('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1600&q=72', 1600, 72),
             ];
 
-            $schoolYears = Schema::hasTable('school_years')
-                ? SchoolYear::query()->active()->ordered()->get(['id', 'name', 'slug', 'level_number', 'tagline'])
+            $schoolYears = Schema::hasTable('academic_years')
+                ? AcademicYear::query()->active()->ordered()->get(['id', 'name', 'slug', 'level_number', 'tagline'])
                 : collect();
 
             return compact(

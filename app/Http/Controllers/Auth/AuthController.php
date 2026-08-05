@@ -283,7 +283,8 @@ class AuthController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'country_code' => 'required|string|max:10',
+            'country_code' => 'required|string|max:12',
+            'country_iso' => 'nullable|string|size:2',
             'phone' => 'required|string|max:20',
             'email' => 'required|email|unique:users',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
@@ -305,16 +306,30 @@ class AuthController extends Controller
             return back()->withErrors($validator)->withInput()->with(compact('phoneCountries', 'defaultCountry'));
         }
 
-        // التحقق من صحة رقم الهاتف حسب الدولة
-        $country = collect($countries)->firstWhere('dial_code', $request->country_code);
-        if (!$country || !isset($country['validation']['regex'])) {
+        // التحقق من صحة رقم الهاتف حسب الدولة (ISO أولاً ثم كود الاتصال)
+        $country = null;
+        if ($request->filled('country_iso')) {
+            $country = collect($countries)->firstWhere('code', strtoupper((string) $request->country_iso));
+            if ($country && ($country['dial_code'] ?? '') !== $request->country_code) {
+                $country = null;
+            }
+        }
+        if (! $country) {
+            $country = collect($countries)->firstWhere('dial_code', $request->country_code);
+        }
+        $phoneRegex = $country['validation']['regex'] ?? '/^\d{6,15}$/';
+        if (! $country) {
             return back()->withErrors(['phone' => 'كود الدولة غير مدعوم.'])->withInput()->with(compact('phoneCountries', 'defaultCountry'));
         }
         $nationalNumber = preg_replace('/\D/', '', $request->phone);
         $nationalNumber = ltrim($nationalNumber, '0');
-        if (!preg_match($country['validation']['regex'], $nationalNumber)) {
+        if (! preg_match($phoneRegex, $nationalNumber)) {
             $example = $country['example'] ?? $country['placeholder'] ?? '';
-            return back()->withErrors(['phone' => 'رقم الهاتف غير صحيح لهذه الدولة. مثال: ' . $example])->withInput()->with(compact('phoneCountries', 'defaultCountry'));
+            $message = $example !== ''
+                ? ('رقم الهاتف غير صحيح لهذه الدولة. مثال: ' . $example)
+                : 'رقم الهاتف غير صحيح لهذه الدولة.';
+
+            return back()->withErrors(['phone' => $message])->withInput()->with(compact('phoneCountries', 'defaultCountry'));
         }
         $dial = $country['dial_code'] ?? '';
         $fullPhone = ($dial === '' || $dial === 'OTHER') ? ('OTHER_' . $nationalNumber) : ($dial . $nationalNumber);

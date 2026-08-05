@@ -55,30 +55,38 @@ class AcademicSubjectController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'academic_year_id' => 'required|exists:academic_years,id',
+            'academic_year_id' => 'nullable|exists:academic_years,id',
             'name' => 'required|string|max:255',
             'code' => [
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('academic_subjects')->where(fn ($q) => $q->where('academic_year_id', $request->academic_year_id)),
+                Rule::unique('academic_subjects')->where(fn ($q) => $q->where('academic_year_id', $request->input('academic_year_id'))),
             ],
+            'slug' => 'nullable|string|max:255|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/|unique:academic_subjects,slug',
             'description' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
             'color' => 'nullable|string|max:7',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
         ], [
-            'academic_year_id.required' => 'السنة الأكاديمية مطلوبة',
             'name.required' => 'اسم المادة مطلوب',
             'code.required' => 'رمز المادة مطلوب',
             'code.unique' => 'رمز المادة موجود مسبقاً في هذه السنة',
         ]);
 
+        $yearId = $validated['academic_year_id'] ?? null;
+        if ($yearId === '' || $yearId === null) {
+            $yearId = null;
+        }
+
         AcademicSubject::create([
-            'academic_year_id' => $validated['academic_year_id'],
+            'academic_year_id' => $yearId,
             'name' => $validated['name'],
             'code' => $validated['code'],
+            'slug' => ! empty($validated['slug'])
+                ? AcademicSubject::uniqueSlug($validated['slug'])
+                : AcademicSubject::uniqueSlug($validated['name'].($yearId ? '-y'.$yearId : '')),
             'description' => $validated['description'] ?? null,
             'icon' => $validated['icon'] ?? 'fas fa-book',
             'color' => $validated['color'] ?? '#0B3D91',
@@ -87,8 +95,8 @@ class AcademicSubjectController extends Controller
         ]);
 
         return redirect()
-            ->route('admin.academic-subjects.index', ['track' => $validated['academic_year_id']])
-            ->with('success', 'تم إضافة المادة بنجاح');
+            ->route('admin.academic-subjects.index', array_filter(['track' => $yearId]))
+            ->with('success', 'تم إضافة مادة المدرسة بنجاح');
     }
 
     public function show(AcademicSubject $academicSubject): View
@@ -125,13 +133,20 @@ class AcademicSubjectController extends Controller
     public function update(Request $request, AcademicSubject $academicSubject): RedirectResponse
     {
         $validated = $request->validate([
-            'academic_year_id' => 'required|exists:academic_years,id',
+            'academic_year_id' => 'nullable|exists:academic_years,id',
             'name' => 'required|string|max:255',
             'code' => [
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('academic_subjects')->where(fn ($q) => $q->where('academic_year_id', $request->academic_year_id))->ignore($academicSubject->id),
+                Rule::unique('academic_subjects')->where(fn ($q) => $q->where('academic_year_id', $request->input('academic_year_id')))->ignore($academicSubject->id),
+            ],
+            'slug' => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
+                Rule::unique('academic_subjects', 'slug')->ignore($academicSubject->id),
             ],
             'description' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
@@ -144,10 +159,18 @@ class AcademicSubjectController extends Controller
             'code.unique' => 'رمز المادة موجود مسبقاً في هذه السنة',
         ]);
 
+        $yearId = $validated['academic_year_id'] ?? null;
+        if ($yearId === '' || $yearId === null) {
+            $yearId = null;
+        }
+
         $academicSubject->update([
-            'academic_year_id' => $validated['academic_year_id'],
+            'academic_year_id' => $yearId,
             'name' => $validated['name'],
             'code' => $validated['code'],
+            'slug' => ! empty($validated['slug'])
+                ? AcademicSubject::uniqueSlug($validated['slug'], $academicSubject->id)
+                : AcademicSubject::uniqueSlug($validated['name'].($yearId ? '-y'.$yearId : ''), $academicSubject->id),
             'description' => $validated['description'] ?? null,
             'icon' => $validated['icon'] ?? 'fas fa-book',
             'color' => $validated['color'] ?? '#0B3D91',
@@ -157,7 +180,7 @@ class AcademicSubjectController extends Controller
 
         return redirect()
             ->route('admin.academic-subjects.show', $academicSubject)
-            ->with('success', 'تم تحديث المادة بنجاح');
+            ->with('success', 'تم تحديث مادة المدرسة بنجاح');
     }
 
     public function destroy(AcademicSubject $academicSubject): RedirectResponse

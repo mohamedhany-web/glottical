@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class AcademicSubject extends Model
 {
@@ -13,6 +15,7 @@ class AcademicSubject extends Model
         'academic_year_id',
         'name',
         'code',
+        'slug',
         'description',
         'icon',
         'color',
@@ -22,6 +25,7 @@ class AcademicSubject extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'order' => 'integer',
     ];
 
     public function academicYear()
@@ -29,7 +33,11 @@ class AcademicSubject extends Model
         return $this->belongsTo(AcademicYear::class);
     }
 
-    // علاقة مع الكورسات المتقدمة
+    public function tutoringGroups(): HasMany
+    {
+        return $this->hasMany(TutoringGroup::class, 'academic_subject_id');
+    }
+
     public function courses()
     {
         return $this->hasMany(AdvancedCourse::class, 'academic_subject_id');
@@ -52,7 +60,52 @@ class AcademicSubject extends Model
 
     public function scopeOrdered($query)
     {
-        return $query->orderBy('order');
+        return $query->orderBy('order')->orderBy('name');
+    }
+
+    public function scopeGlobalCatalog($query)
+    {
+        return $query->whereNull('academic_year_id');
+    }
+
+    public function faIcon(): string
+    {
+        $icon = trim((string) $this->icon);
+        if ($icon === '') {
+            return 'fa-book-open';
+        }
+        if (str_starts_with($icon, 'fa-') && ! str_contains($icon, ' ')) {
+            return $icon;
+        }
+        if (str_contains($icon, ' ')) {
+            $parts = preg_split('/\s+/', $icon) ?: [];
+            foreach (array_reverse($parts) as $part) {
+                if (str_starts_with($part, 'fa-')) {
+                    return $part;
+                }
+            }
+        }
+        if (! str_starts_with($icon, 'fa')) {
+            return 'fa-'.$icon;
+        }
+
+        return 'fa-book-open';
+    }
+
+    public static function uniqueSlug(string $base, ?int $ignoreId = null): string
+    {
+        $slug = Str::slug($base) ?: 'subject';
+        $original = $slug;
+        $i = 2;
+        while (static::query()
+            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+            ->where('slug', $slug)
+            ->exists()) {
+            $slug = $original.'-'.$i;
+            $i++;
+        }
+
+        return $slug;
     }
 
     public function getActiveCoursesCountAttribute()
@@ -62,6 +115,8 @@ class AcademicSubject extends Model
 
     public function getFullNameAttribute()
     {
-        return $this->academicYear->name . ' - ' . $this->name;
+        $yearName = $this->academicYear?->name;
+
+        return $yearName ? ($yearName.' - '.$this->name) : $this->name;
     }
 }

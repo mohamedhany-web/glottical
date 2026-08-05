@@ -18,6 +18,7 @@ class OneToOneSession extends Model
 
     protected $fillable = [
         'student_course_enrollment_id',
+        'student_service_entitlement_id',
         'advanced_course_id',
         'instructor_id',
         'student_id',
@@ -84,6 +85,11 @@ class OneToOneSession extends Model
     public function enrollment(): BelongsTo
     {
         return $this->belongsTo(StudentCourseEnrollment::class, 'student_course_enrollment_id');
+    }
+
+    public function entitlement(): BelongsTo
+    {
+        return $this->belongsTo(StudentServiceEntitlement::class, 'student_service_entitlement_id');
     }
 
     public function course(): BelongsTo

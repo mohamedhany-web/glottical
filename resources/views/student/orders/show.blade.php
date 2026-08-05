@@ -43,7 +43,21 @@
                         </div>
                         
                         <div class="flex-1">
-                            @if($order->academic_year_id && ! $order->advanced_course_id)
+                            @if($order->order_type === \App\Models\Order::TYPE_CUSTOM_SERVICE_PACKAGE)
+                                @php $custom = $order->custom_package_data ?? []; @endphp
+                                <h3 class="mb-3 text-lg font-bold text-gray-900">{{ $custom['name'] ?? 'باقة مخصصة' }}</h3>
+                                <div class="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+                                    <div class="rounded-lg bg-sky-50 p-3"><span class="block text-xs text-gray-500">الحصص</span><strong>{{ $custom['sessions'] ?? '—' }} حصة</strong></div>
+                                    <div class="rounded-lg bg-sky-50 p-3"><span class="block text-xs text-gray-500">مدة الحصة</span><strong>{{ $custom['session_minutes'] ?? '—' }} دقيقة</strong></div>
+                                    <div class="rounded-lg bg-sky-50 p-3"><span class="block text-xs text-gray-500">الصلاحية</span><strong>{{ $custom['duration_days'] ?? '—' }} يوم</strong></div>
+                                    <div class="rounded-lg bg-sky-50 p-3"><span class="block text-xs text-gray-500">سعر الحصة</span><strong>${{ number_format((float) ($custom['final_price_per_session'] ?? 0), 2) }}</strong></div>
+                                    <div class="rounded-lg bg-sky-50 p-3"><span class="block text-xs text-gray-500">الخصم</span><strong>{{ $custom['discount_percent'] ?? 0 }}%</strong></div>
+                                    <div class="rounded-lg bg-sky-50 p-3"><span class="block text-xs text-gray-500">الاستخدام</span><strong>{{ $custom['scope_label'] ?? '—' }}</strong></div>
+                                </div>
+                            @elseif($order->servicePackage)
+                                <h3 class="mb-2 text-lg font-bold text-gray-900">{{ $order->servicePackage->name }}</h3>
+                                <p class="text-sm text-gray-600">{{ $order->servicePackage->units_count }} حصة × {{ $order->servicePackage->sessionMinutes() }} دقيقة · {{ $order->servicePackage->validityLabel() }}</p>
+                            @elseif($order->academic_year_id && ! $order->advanced_course_id)
                                 <h3 class="text-lg font-bold text-gray-900 mb-2">{{ $order->learningPath->name ?? 'طلب قديم' }}</h3>
                                 <div class="flex flex-wrap items-center gap-2 mb-3">
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
@@ -104,7 +118,7 @@
                                 المبلغ
                             </label>
                             <div class="text-2xl font-bold bg-gradient-to-r from-sky-600 to-sky-700 bg-clip-text text-transparent">
-                                {{ number_format($order->amount, 2) }} <span class="text-base text-gray-600">ج.م</span>
+                                {{ number_format($order->amount, 2) }} <span class="text-base text-gray-600">{{ $order->currencyCode() }}</span>
                             </div>
                         </div>
                         

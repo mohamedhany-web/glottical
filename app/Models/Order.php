@@ -15,6 +15,8 @@ class Order extends Model
         'tutoring_group_id',
         'tutoring_group_package_id',
         'tutoring_group_cohort_id',
+        'service_package_id',
+        'custom_package_data',
         'order_type',
         'academic_year_id',
         'coupon_id',
@@ -45,12 +47,17 @@ class Order extends Model
 
     public const TYPE_TUTORING_COHORT = 'tutoring_cohort';
 
+    public const TYPE_SERVICE_PACKAGE = 'service_package';
+
+    public const TYPE_CUSTOM_SERVICE_PACKAGE = 'custom_service_package';
+
     protected $casts = [
         'amount' => 'decimal:2',
         'original_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'wallet_credit_amount' => 'decimal:2',
         'auto_renew' => 'boolean',
+        'custom_package_data' => 'array',
         'approved_at' => 'datetime',
         'sales_contacted_at' => 'datetime',
     ];
@@ -86,10 +93,44 @@ class Order extends Model
         return $this->belongsTo(TutoringGroupCohort::class, 'tutoring_group_cohort_id');
     }
 
+    public function servicePackage()
+    {
+        return $this->belongsTo(ServicePackage::class, 'service_package_id');
+    }
+
+    public function serviceEntitlements()
+    {
+        return $this->hasMany(StudentServiceEntitlement::class);
+    }
+
+    public function tutoringGroupBookings()
+    {
+        return $this->hasMany(TutoringGroupBooking::class);
+    }
+
     public function isTutoringOrder(): bool
     {
-        return in_array($this->order_type, [self::TYPE_TUTORING_PACKAGE, self::TYPE_TUTORING_COHORT], true)
-            || $this->tutoring_group_id !== null;
+        return in_array($this->order_type, [
+            self::TYPE_TUTORING_PACKAGE,
+            self::TYPE_TUTORING_COHORT,
+            self::TYPE_SERVICE_PACKAGE,
+            self::TYPE_CUSTOM_SERVICE_PACKAGE,
+        ], true)
+            || $this->tutoring_group_id !== null
+            || $this->service_package_id !== null;
+    }
+
+    public function currencyCode(): string
+    {
+        if ($this->order_type === self::TYPE_CUSTOM_SERVICE_PACKAGE) {
+            return $this->custom_package_data['currency'] ?? 'USD';
+        }
+
+        if ($this->servicePackage) {
+            return $this->servicePackage->currencyCode();
+        }
+
+        return 'EGP';
     }
 
     public function learningPath()

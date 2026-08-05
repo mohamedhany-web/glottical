@@ -4,7 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AcademicYear extends Model
 {
@@ -13,6 +16,9 @@ class AcademicYear extends Model
     protected $fillable = [
         'name',
         'code',
+        'slug',
+        'tagline',
+        'level_number',
         'description',
         'video_url',
         'thumbnail',
@@ -26,11 +32,51 @@ class AcademicYear extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'price' => 'decimal:2',
+        'level_number' => 'integer',
+        'order' => 'integer',
     ];
 
     public function subjects()
     {
         return $this->hasMany(AcademicSubject::class);
+    }
+
+    public function tutoringGroups(): HasMany
+    {
+        return $this->hasMany(TutoringGroup::class, 'academic_year_id');
+    }
+
+    public function freeTrialBookings(): HasMany
+    {
+        return $this->hasMany(FreeTrialBooking::class, 'recommended_academic_year_id');
+    }
+
+    public function imageUrl(): ?string
+    {
+        if (! $this->thumbnail) {
+            return null;
+        }
+        if (str_starts_with($this->thumbnail, 'http')) {
+            return $this->thumbnail;
+        }
+
+        return Storage::disk('public')->url($this->thumbnail);
+    }
+
+    public static function uniqueSlug(string $base, ?int $ignoreId = null): string
+    {
+        $slug = Str::slug($base) ?: 'year';
+        $original = $slug;
+        $i = 2;
+        while (static::query()
+            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+            ->where('slug', $slug)
+            ->exists()) {
+            $slug = $original.'-'.$i;
+            $i++;
+        }
+
+        return $slug;
     }
 
     public function academicSubjects()
@@ -78,7 +124,7 @@ class AcademicYear extends Model
 
     public function scopeOrdered($query)
     {
-        return $query->orderBy('order');
+        return $query->orderBy('order')->orderBy('level_number')->orderBy('id');
     }
 
     public function getActiveSubjectsCountAttribute()

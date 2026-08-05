@@ -91,6 +91,13 @@
             </a>
             @endif
 
+            @if(Route::has('student.service-entitlements.index'))
+            <a href="{{ route('student.service-entitlements.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('student.service-entitlements.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-coins"></i></span>
+                <span class="flex-1 truncate">رصيد الحصص</span>
+            </a>
+            @endif
             @if(Route::has('student.tutoring-subscriptions.index'))
             <a href="{{ route('student.tutoring-subscriptions.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('student.tutoring-subscriptions.*') ? 'active' : '' }}">

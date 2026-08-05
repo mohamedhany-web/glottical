@@ -3,11 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ServicePackage;
+use App\Models\StudentServiceEntitlement;
 use App\Models\TutoringGroup;
 use App\Models\TutoringGroupBooking;
+use App\Models\User;
+use App\Services\StudentEntitlementService;
 use App\Services\TutoringGroupOrchestrationService;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class TutoringGroupBookingController extends Controller
@@ -28,12 +34,14 @@ class TutoringGroupBookingController extends Controller
     {
         $query = TutoringGroupBooking::query()
             ->with([
-                'tutoringGroup:id,title,type,slug,school_year_id',
+                'tutoringGroup:id,title,type,slug,academic_year_id',
                 'tutoringGroup.schoolYear:id,name,level_number',
                 'instructor:id,name',
                 'user:id,name,email,phone',
                 'cohort:id,title',
                 'classroomMeeting:id,code',
+                'entitlement:id,order_id,scope,units_total,units_used',
+                'order:id,order_type,status',
             ]);
 
         if ($request->filled('search')) {
@@ -78,6 +86,10 @@ class TutoringGroupBookingController extends Controller
             'confirmed' => TutoringGroupBooking::where('status', TutoringGroupBooking::STATUS_CONFIRMED)->count(),
             'upcoming' => TutoringGroupBooking::where('status', TutoringGroupBooking::STATUS_CONFIRMED)
                 ->where('starts_at', '>=', now())->count(),
+            'completed' => TutoringGroupBooking::where('status', TutoringGroupBooking::STATUS_COMPLETED)->count(),
+            'credits_active' => StudentServiceEntitlement::active()->count(),
+            'credits_bookable' => StudentServiceEntitlement::active()->get()
+                ->sum(fn (StudentServiceEntitlement $entitlement) => StudentEntitlementService::bookableUnitsLeft($entitlement)),
         ];
 
         return view('admin.tutoring-group-bookings.index', compact('bookings', 'stats'));
@@ -93,11 +105,146 @@ class TutoringGroupBookingController extends Controller
             'package',
             'classroomMeeting',
             'order',
+            'entitlement.servicePackage',
         ]);
 
         return view('admin.tutoring-group-bookings.show', [
             'booking' => $tutoringGroupBooking,
+            'groups' => TutoringGroup::query()->active()->orderBy('title')->get(['id', 'title', 'type', 'duration_minutes']),
+            'instructors' => User::query()->whereIn('role', ['instructor', 'teacher'])->where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
+    }
+
+    public function create(Request $request): View
+    {
+        $entitlements = StudentServiceEntitlement::query()
+            ->active()
+            ->whereColumn('units_used', '<', 'units_total')
+            ->with(['user:id,name,email,phone', 'tutoringGroup:id,title', 'servicePackage:id,name'])
+            ->orderBy('expires_at')
+            ->limit(1000)
+            ->get()
+            ->filter(fn (StudentServiceEntitlement $entitlement) => StudentEntitlementService::bookableUnitsLeft($entitlement) > 0);
+
+        return view('admin.tutoring-group-bookings.create', [
+            'entitlements' => $entitlements,
+            'groups' => TutoringGroup::query()->active()->with('instructor:id,name')->orderBy('title')->get(),
+            'instructors' => User::query()->whereIn('role', ['instructor', 'teacher'])->where('is_active', true)->orderBy('name')->get(['id', 'name', 'email']),
+            'selectedEntitlementId' => (int) $request->integer('entitlement_id'),
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'student_service_entitlement_id' => ['required', 'exists:student_service_entitlements,id'],
+            'tutoring_group_id' => ['required', 'exists:tutoring_groups,id'],
+            'instructor_id' => ['required', 'exists:users,id'],
+            'starts_at' => ['required', 'date', 'after:now'],
+            'admin_notes' => ['nullable', 'string', 'max:2000'],
+            'confirm_now' => ['nullable', 'boolean'],
+        ]);
+
+        try {
+            $booking = DB::transaction(function () use ($data) {
+                $entitlement = StudentServiceEntitlement::query()
+                    ->with('user')
+                    ->lockForUpdate()
+                    ->findOrFail($data['student_service_entitlement_id']);
+                $group = TutoringGroup::query()->findOrFail($data['tutoring_group_id']);
+                $instructor = User::query()->findOrFail($data['instructor_id']);
+
+                if (! $entitlement->isActive() || StudentEntitlementService::bookableUnitsLeft($entitlement) < 1) {
+                    throw new \InvalidArgumentException('الرصيد غير نشط أو لا يحتوي على حصة قابلة للحجز.');
+                }
+                if (! $instructor->isInstructor()) {
+                    throw new \InvalidArgumentException('المستخدم المحدد ليس معلماً.');
+                }
+
+                $requiredScope = StudentEntitlementService::scopeForTutoringGroup($group);
+                if (! in_array($entitlement->scope, [$requiredScope, ServicePackage::SCOPE_GLOBAL], true)) {
+                    throw new \InvalidArgumentException('نطاق الرصيد لا يسمح بالحجز في هذه المجموعة.');
+                }
+                if ($entitlement->tutoring_group_id && (int) $entitlement->tutoring_group_id !== (int) $group->id) {
+                    throw new \InvalidArgumentException('هذا الرصيد مخصص لمجموعة أخرى.');
+                }
+
+                $startsAt = Carbon::parse($data['starts_at']);
+                $endsAt = $startsAt->copy()->addMinutes(max(30, (int) ($group->duration_minutes ?: 60)));
+                $this->assertInstructorAvailable((int) $instructor->id, $startsAt, $endsAt);
+
+                $booking = TutoringGroupBooking::create([
+                    'tutoring_group_id' => $group->id,
+                    'student_service_entitlement_id' => $entitlement->id,
+                    'order_id' => $entitlement->order_id,
+                    'payment_status' => TutoringGroupBooking::PAYMENT_PAID,
+                    'instructor_id' => $instructor->id,
+                    'user_id' => $entitlement->user_id,
+                    'starts_at' => $startsAt,
+                    'ends_at' => $endsAt,
+                    'status' => TutoringGroupBooking::STATUS_PENDING,
+                    'admin_notes' => trim(($data['admin_notes'] ?? '')."\nتسكين يدوي من الإدارة"),
+                ]);
+
+                return (bool) ($data['confirm_now'] ?? true)
+                    ? TutoringGroupOrchestrationService::confirmBooking($booking)
+                    : $booking;
+            });
+        } catch (\InvalidArgumentException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        return redirect()
+            ->route('admin.tutoring-group-bookings.show', $booking)
+            ->with('success', 'تم تسكين الطالب وإنشاء الحجز'.($booking->status === TutoringGroupBooking::STATUS_CONFIRMED ? ' وغرفة Live بنجاح.' : '.'));
+    }
+
+    public function updateAssignment(Request $request, TutoringGroupBooking $tutoringGroupBooking): RedirectResponse
+    {
+        $data = $request->validate([
+            'tutoring_group_id' => ['required', 'exists:tutoring_groups,id'],
+            'instructor_id' => ['required', 'exists:users,id'],
+            'starts_at' => ['required', 'date'],
+            'admin_notes' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        if (in_array($tutoringGroupBooking->status, [TutoringGroupBooking::STATUS_COMPLETED, TutoringGroupBooking::STATUS_CANCELLED], true)) {
+            return back()->with('error', 'لا يمكن إعادة تسكين حجز مكتمل أو ملغي.');
+        }
+
+        try {
+            DB::transaction(function () use ($data, $tutoringGroupBooking) {
+                $group = TutoringGroup::query()->findOrFail($data['tutoring_group_id']);
+                $instructor = User::query()->findOrFail($data['instructor_id']);
+                if (! $instructor->isInstructor()) {
+                    throw new \InvalidArgumentException('المستخدم المحدد ليس معلماً.');
+                }
+
+                $startsAt = Carbon::parse($data['starts_at']);
+                $endsAt = $startsAt->copy()->addMinutes(max(30, (int) ($group->duration_minutes ?: 60)));
+                $this->assertInstructorAvailable((int) $instructor->id, $startsAt, $endsAt, (int) $tutoringGroupBooking->id);
+
+                $tutoringGroupBooking->update([
+                    'tutoring_group_id' => $group->id,
+                    'instructor_id' => $instructor->id,
+                    'starts_at' => $startsAt,
+                    'ends_at' => $endsAt,
+                    'admin_notes' => $data['admin_notes'] ?? $tutoringGroupBooking->admin_notes,
+                ]);
+
+                if ($tutoringGroupBooking->classroomMeeting) {
+                    $tutoringGroupBooking->classroomMeeting->update([
+                        'user_id' => $instructor->id,
+                        'scheduled_for' => $startsAt,
+                        'planned_duration_minutes' => $startsAt->diffInMinutes($endsAt),
+                    ]);
+                }
+            });
+        } catch (\InvalidArgumentException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'تم تحديث المعلم والمجموعة والموعد مع مزامنة غرفة Live.');
     }
 
     public function updateStatus(Request $request, TutoringGroupBooking $tutoringGroupBooking): RedirectResponse
@@ -134,5 +281,20 @@ class TutoringGroupBookingController extends Controller
         return redirect()
             ->route('admin.tutoring-group-bookings.index')
             ->with('success', 'تم حذف الحجز.');
+    }
+
+    private function assertInstructorAvailable(int $instructorId, Carbon $startsAt, Carbon $endsAt, ?int $ignoreBookingId = null): void
+    {
+        $conflict = TutoringGroupBooking::query()
+            ->where('instructor_id', $instructorId)
+            ->whereIn('status', [TutoringGroupBooking::STATUS_PENDING, TutoringGroupBooking::STATUS_CONFIRMED])
+            ->when($ignoreBookingId, fn ($query) => $query->where('id', '!=', $ignoreBookingId))
+            ->where('starts_at', '<', $endsAt)
+            ->where('ends_at', '>', $startsAt)
+            ->exists();
+
+        if ($conflict) {
+            throw new \InvalidArgumentException('المعلم لديه حجز متداخل في هذا الموعد.');
+        }
     }
 }

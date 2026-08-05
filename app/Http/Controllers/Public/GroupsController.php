@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
-use App\Models\SchoolSubject;
-use App\Models\SchoolYear;
+use App\Models\AcademicSubject;
+use App\Models\AcademicYear;
 use App\Models\TutoringGroup;
+use App\Services\StudentEntitlementService;
 use App\Services\TutoringGroupAvailabilityService;
+use App\Services\TutoringGroupCheckoutService;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -20,8 +23,8 @@ class GroupsController extends Controller
         $schoolYears = collect();
         $schoolSubjects = collect();
 
-        if (Schema::hasTable('school_years')) {
-            $schoolYears = SchoolYear::query()
+        if (Schema::hasTable('academic_years')) {
+            $schoolYears = AcademicYear::query()
                 ->active()
                 ->ordered()
                 ->withCount([
@@ -30,8 +33,15 @@ class GroupsController extends Controller
                 ->get();
         }
 
-        if (Schema::hasTable('school_subjects')) {
-            $schoolSubjects = SchoolSubject::query()->active()->ordered()->get();
+        if (Schema::hasTable('academic_subjects')) {
+            $schoolSubjects = AcademicSubject::query()
+                ->active()
+                ->ordered()
+                ->where(function ($q) {
+                    $q->whereNull('academic_year_id')
+                        ->orWhere('code', 'like', 'SCH-%');
+                })
+                ->get();
         }
 
         return view('public.groups', compact('schoolYears', 'schoolSubjects'));
@@ -39,9 +49,9 @@ class GroupsController extends Controller
 
     public function year(string $slug): View
     {
-        abort_unless(Schema::hasTable('school_years'), 404);
+        abort_unless(Schema::hasTable('academic_years'), 404);
 
-        $year = SchoolYear::query()
+        $year = AcademicYear::query()
             ->active()
             ->where('slug', $slug)
             ->firstOrFail();
@@ -49,7 +59,7 @@ class GroupsController extends Controller
         $classes = TutoringGroup::query()
             ->active()
             ->collective()
-            ->where('school_year_id', $year->id)
+            ->where('academic_year_id', $year->id)
             ->with([
                 'instructor:id,name',
                 'schoolSubject:id,name',
@@ -105,7 +115,17 @@ class GroupsController extends Controller
         $cohorts = $group->cohorts;
         $packages = $group->packages;
 
-        return view('public.groups-show', compact('group', 'slots', 'slotsByDate', 'cohorts', 'packages'));
+        $creditUnits = 0;
+        if (auth()->check()) {
+            $scope = StudentEntitlementService::scopeForTutoringGroup($group);
+            $creditUnits = StudentEntitlementService::unitsLeft(
+                (int) auth()->id(),
+                $scope,
+                (int) $group->id
+            );
+        }
+
+        return view('public.groups-show', compact('group', 'slots', 'slotsByDate', 'cohorts', 'packages', 'creditUnits'));
     }
 
     public function book(Request $request, string $slug): RedirectResponse
@@ -119,9 +139,28 @@ class GroupsController extends Controller
             'guest_phone' => ['nullable', 'string', 'max:40'],
             'guest_email' => ['nullable', 'email', 'max:255'],
             'student_notes' => ['nullable', 'string', 'max:2000'],
+            'use_credit' => ['nullable', 'boolean'],
         ]);
 
         $user = $request->user();
+
+        // Logged-in student with session credits: confirm booking + Live room immediately
+        if ($user && $request->boolean('use_credit')) {
+            try {
+                $booking = TutoringGroupCheckoutService::bookFromEntitlement(
+                    $user,
+                    $group,
+                    Carbon::parse($data['starts_at'])
+                );
+            } catch (InvalidArgumentException $e) {
+                return back()->withInput()->withErrors(['starts_at' => $e->getMessage()]);
+            }
+
+            return redirect()
+                ->route('student.tutoring-bookings.show', $booking)
+                ->with('success', 'تم تأكيد الحجز وحجز وحدة من رصيدك وإنشاء غرفة Live. تُخصم الوحدة نهائياً بعد إكمال الحصة.');
+        }
+
         if (! $user) {
             $data['guest_name'] = $data['guest_name'] ?? null;
             if (empty($data['guest_name'])) {

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تعديل السنة الأكاديمية')
+@section('title', 'تعديل سنة المدرسة')
 
 @section('content')
 <div class="w-full max-w-full px-4 py-6 space-y-6" style="background: #f8fafc; min-height: 100vh;">
@@ -10,8 +10,8 @@
             <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div class="space-y-4">
                     <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 text-sm font-semibold">
-                        <i class="fas fa-calendar-alt"></i>
-                        سنة أكاديمية
+                        <i class="fas fa-school"></i>
+                        سنة مدرسة
                     </div>
                     <h1 class="text-3xl sm:text-4xl font-bold">{{ $academicYear->name }}</h1>
                     <div class="flex flex-wrap items-center gap-3 text-sm text-white/80">
@@ -57,7 +57,7 @@
             <div class="border-b border-gray-100 px-6 sm:px-8 py-5" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 50%, rgba(2, 132, 199, 0.08) 100%); border-bottom: 2px solid rgba(59, 130, 246, 0.3);">
                 <h2 class="text-xl font-black bg-gradient-to-r from-sky-700 via-blue-600 to-sky-600 bg-clip-text text-transparent">
                     <i class="fas fa-edit text-sky-600 ml-2"></i>
-                    بيانات السنة الأكاديمية
+                    بيانات سنة المدرسة
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
                     حدّث بيانات السنة، اللون، الأيقونة وترتيب العرض. استخدم مربع الاختيار لتفعيل السنة أو إيقافها.
@@ -69,7 +69,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-gray-700">اسم السنة الأكاديمية *</label>
+                        <label class="block text-sm font-semibold text-gray-700">اسم سنة المدرسة *</label>
                         <input type="text" name="name" value="{{ old('name', $academicYear->name) }}" required
                                class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition">
                         @error('name') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
@@ -79,6 +79,24 @@
                         <input type="text" name="code" value="{{ old('code', $academicYear->code) }}" required
                                class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition">
                         @error('code') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-gray-700">رابط الصفحة العامة (slug)</label>
+                        <input type="text" name="slug" value="{{ old('slug', $academicYear->slug) }}" dir="ltr"
+                               class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition font-mono">
+                        @error('slug') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-gray-700">رقم المستوى</label>
+                        <input type="number" name="level_number" min="1" max="20" value="{{ old('level_number', $academicYear->level_number) }}"
+                               class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition">
+                        @error('level_number') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="block text-sm font-semibold text-gray-700">شعار مختصر</label>
+                        <input type="text" name="tagline" value="{{ old('tagline', $academicYear->tagline) }}"
+                               class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition">
+                        @error('tagline') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div class="md:col-span-2 space-y-2">
                         <label class="block text-sm font-semibold text-gray-700">الوصف</label>

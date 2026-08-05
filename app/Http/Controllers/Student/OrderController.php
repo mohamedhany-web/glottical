@@ -18,7 +18,7 @@ class OrderController extends Controller
     public function index()
     {
         $orders = Order::where('user_id', auth()->id())
-            ->with(['course.academicSubject', 'course.academicYear', 'learningPath'])
+            ->with(['course.academicSubject', 'course.academicYear', 'learningPath', 'servicePackage'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -177,6 +177,7 @@ class OrderController extends Controller
             'approver',
             'invoice',
             'payment',
+            'servicePackage',
         ]);
 
         return view('student.orders.show', compact('order'));

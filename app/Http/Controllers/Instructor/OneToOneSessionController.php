@@ -127,8 +127,12 @@ class OneToOneSessionController extends Controller
     {
         abort_unless($oneToOneSession->instructor_id === auth()->id(), 403);
 
-        OneToOneSessionService::markCompleted($oneToOneSession);
+        try {
+            OneToOneSessionService::markCompleted($oneToOneSession);
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
-        return back()->with('success', 'تم تسجيل الحصة كمكتملة.');
+        return back()->with('success', 'تم تسجيل الحصة كمكتملة وخصم وحدة الرصيد وإغلاق غرفة Live.');
     }
 }

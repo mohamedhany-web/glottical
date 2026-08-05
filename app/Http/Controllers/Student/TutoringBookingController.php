@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\TutoringGroup;
 use App\Models\TutoringGroupBooking;
 use App\Services\TutoringGroupCheckoutService;
 use Carbon\Carbon;
@@ -63,5 +64,29 @@ class TutoringBookingController extends Controller
         return redirect()
             ->route('student.tutoring-bookings.show', $booking)
             ->with('success', 'تم تأكيد الحجز وإنشاء غرفة Live.');
+    }
+
+    public function bookFromEntitlement(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'tutoring_group_id' => ['required', 'integer', 'exists:tutoring_groups,id'],
+            'starts_at' => ['required', 'date'],
+        ]);
+
+        $group = TutoringGroup::query()->active()->findOrFail($data['tutoring_group_id']);
+
+        try {
+            $booking = TutoringGroupCheckoutService::bookFromEntitlement(
+                $request->user(),
+                $group,
+                Carbon::parse($data['starts_at'])
+            );
+        } catch (InvalidArgumentException $e) {
+            return back()->withInput()->withErrors(['starts_at' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('student.tutoring-bookings.show', $booking)
+            ->with('success', 'تم تأكيد الحجز وحجز وحدة من رصيدك وإنشاء غرفة Live. تُخصم الوحدة نهائياً بعد إكمال الحصة.');
     }
 }

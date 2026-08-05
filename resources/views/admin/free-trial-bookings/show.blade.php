@@ -141,12 +141,12 @@
                         </select>
                     </div>
                     <div>
-                        <label class="{{ $labelClass }}" for="recommended_school_year_id">السنة المقترحة بعد التقييم</label>
-                        <select id="recommended_school_year_id" name="recommended_school_year_id" class="{{ $fieldClass }}">
+                        <label class="{{ $labelClass }}" for="recommended_academic_year_id">السنة المقترحة بعد التقييم</label>
+                        <select id="recommended_academic_year_id" name="recommended_academic_year_id" class="{{ $fieldClass }}">
                             <option value="">— بدون توصية —</option>
                             @foreach(($schoolYears ?? []) as $sy)
-                                <option value="{{ $sy->id }}" @selected((string) old('recommended_school_year_id', $booking->recommended_school_year_id) === (string) $sy->id)>
-                                    {{ $sy->level_number }}. {{ $sy->name }}
+                                <option value="{{ $sy->id }}" @selected((string) old('recommended_academic_year_id', $booking->recommended_academic_year_id) === (string) $sy->id)>
+                                    {{ $sy->level_number ? $sy->level_number.'. ' : '' }}{{ $sy->name }}
                                 </option>
                             @endforeach
                         </select>

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicYear;
 use App\Models\FreeTrialBooking;
 use App\Models\FreeTrialWeeklyAvailability;
-use App\Models\SchoolYear;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -75,7 +75,7 @@ class FreeTrialBookingController extends Controller
 
         return view('admin.free-trial-bookings.show', [
             'booking' => $freeTrialBooking,
-            'schoolYears' => SchoolYear::query()->ordered()->get(['id', 'name', 'level_number']),
+            'schoolYears' => AcademicYear::query()->ordered()->get(['id', 'name', 'level_number', 'code']),
         ]);
     }
 
@@ -85,14 +85,14 @@ class FreeTrialBookingController extends Controller
             'status' => ['required', 'in:confirmed,cancelled,completed'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'admin_notes' => ['nullable', 'string', 'max:5000'],
-            'recommended_school_year_id' => ['nullable', 'exists:school_years,id'],
+            'recommended_academic_year_id' => ['nullable', 'exists:academic_years,id'],
         ]);
 
         $freeTrialBooking->update([
             'status' => $data['status'],
             'notes' => $data['notes'] ?? $freeTrialBooking->notes,
             'admin_notes' => $data['admin_notes'] ?? $freeTrialBooking->admin_notes,
-            'recommended_school_year_id' => $data['recommended_school_year_id'] ?? null,
+            'recommended_academic_year_id' => $data['recommended_academic_year_id'] ?? null,
         ]);
 
         return redirect()

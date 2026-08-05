@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'إنشاء سنة أكاديمية - Glottical')
-@section('page_title', 'إنشاء سنة أكاديمية')
+@section('title', 'إنشاء سنة مدرسة - Glottical')
+@section('page_title', 'إنشاء سنة مدرسة')
 
 @section('content')
 @php
@@ -27,10 +27,10 @@
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
-            <p class="text-xs font-medium text-muted">إدارة المحتوى · السنوات الأكاديمية</p>
-            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إنشاء سنة أكاديمية</h2>
+            <p class="text-xs font-medium text-muted">إدارة المحتوى · سنوات المدرسة</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">إنشاء سنة مدرسة</h2>
             <p class="mt-1 max-w-2xl text-sm text-muted">
-                السنة الأكاديمية طبقة تنظيمية لتجميع المواد والكورسات (مثل مرحلة إعدادي أو ثانوي). بعد الحفظ يمكنك ربط المواد والكورسات والمدربين من صفحة التعديل.
+                سنة المدرسة طبقة تنظيمية لتجميع المواد والكورسات وفصول المدرسة (مثل Foundations 1 أو مرحلة إعدادي). بعد الحفظ يمكنك ربط المواد والكورسات والمدربين من صفحة التعديل.
             </p>
         </div>
         <a href="{{ route('admin.academic-years.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
@@ -62,7 +62,7 @@
                     </div>
                     <div class="grid grid-cols-1 gap-5 p-4 sm:grid-cols-2 sm:p-5">
                         <div class="sm:col-span-1">
-                            <label class="{{ $labelClass }}" for="name">اسم السنة الأكاديمية <span class="text-danger">*</span></label>
+                            <label class="{{ $labelClass }}" for="name">اسم سنة المدرسة <span class="text-danger">*</span></label>
                             <input id="name" type="text" name="name" value="{{ old('name') }}" required maxlength="255"
                                    placeholder="مثال: الصف الأول الثانوي"
                                    class="{{ $fieldClass }}" autocomplete="off">
@@ -74,6 +74,23 @@
                                    placeholder="G10 أو SEC-1"
                                    class="{{ $fieldClass }} font-mono uppercase" autocomplete="off">
                             <p class="mt-1.5 text-xs text-muted">رمز إنجليزي مختصر وفريد (حتى 10 أحرف) لربط الكورسات والمواد.</p>
+                        </div>
+                        <div class="sm:col-span-1">
+                            <label class="{{ $labelClass }}" for="slug">رابط الصفحة العامة</label>
+                            <input id="slug" type="text" name="slug" value="{{ old('slug') }}" maxlength="255" dir="ltr"
+                                   placeholder="islamic-foundations-1"
+                                   class="{{ $fieldClass }} font-mono" autocomplete="off">
+                            <p class="mt-1.5 text-xs text-muted">يُستخدم في /school/{slug}. يُولَّد تلقائياً إن تُرك فارغاً.</p>
+                        </div>
+                        <div class="sm:col-span-1">
+                            <label class="{{ $labelClass }}" for="level_number">رقم المستوى</label>
+                            <input id="level_number" type="number" name="level_number" value="{{ old('level_number') }}" min="1" max="20"
+                                   class="{{ $fieldClass }}" placeholder="1–20">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="{{ $labelClass }}" for="tagline">شعار مختصر</label>
+                            <input id="tagline" type="text" name="tagline" value="{{ old('tagline') }}" maxlength="255"
+                                   class="{{ $fieldClass }}" placeholder="مثال: Building the Basics">
                         </div>
                         <div class="sm:col-span-2">
                             <label class="{{ $labelClass }}" for="description">الوصف <span class="font-normal text-muted">(اختياري)</span></label>

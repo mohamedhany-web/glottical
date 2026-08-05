@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'السنوات الأكاديمية - Glottical')
-@section('page_title', 'السنوات الأكاديمية')
+@section('title', 'سنوات المدرسة - Glottical')
+@section('page_title', 'سنوات المدرسة')
 
 @section('content')
 @php
     $kpis = [
-        ['label' => 'إجمالي السنوات', 'value' => $summary['total_tracks'], 'icon' => 'fa-calendar-alt', 'tone' => 'accent', 'note' => 'كل السنوات المسجّلة'],
+        ['label' => 'إجمالي السنوات', 'value' => $summary['total_tracks'], 'icon' => 'fa-school', 'tone' => 'accent', 'note' => 'كل السنوات المسجّلة'],
         ['label' => 'سنوات نشطة', 'value' => $summary['active_tracks'], 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => 'متاحة لربط المحتوى'],
         ['label' => 'المواد / المجموعات', 'value' => $summary['skill_clusters'], 'icon' => 'fa-layer-group', 'tone' => 'metal', 'note' => 'مرتبطة بالسنوات'],
         ['label' => 'كورسات مرتبطة', 'value' => $summary['courses'], 'icon' => 'fa-graduation-cap', 'tone' => 'muted', 'note' => 'حسب التصنيف الداخلي'],
@@ -21,10 +21,10 @@
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div class="min-w-0">
-            <p class="text-xs font-medium text-muted">إدارة المحتوى · تنظيم المراحل الدراسية</p>
-            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">السنوات الأكاديمية</h2>
+            <p class="text-xs font-medium text-muted">إدارة المحتوى · تنظيم سنوات المدرسة</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">سنوات المدرسة</h2>
             <p class="mt-1 max-w-2xl text-sm text-muted">
-                كل سنة طبقة تنظيمية للمواد والكورسات (إعدادي، ثانوي، …). من هنا تدير التصنيف والحالة والترتيب.
+                كل سنة طبقة تنظيمية للمواد والكورسات وفصول المدرسة. من هنا تدير التصنيف والحالة والترتيب.
             </p>
         </div>
         <div class="admin-hero-actions flex flex-wrap gap-2">
@@ -167,7 +167,7 @@
             <span class="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-accent-soft text-accent">
                 <i class="fas fa-calendar-alt text-xl"></i>
             </span>
-            <h3 class="mt-4 text-lg font-semibold text-ink">لا توجد سنوات أكاديمية بعد</h3>
+            <h3 class="mt-4 text-lg font-semibold text-ink">لا توجد سنوات مدرسة بعد</h3>
             <p class="mx-auto mt-2 max-w-md text-sm text-muted">
                 أنشئ أول سنة لتنظيم المواد والكورسات حسب المرحلة الدراسية.
             </p>

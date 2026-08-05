@@ -131,21 +131,76 @@
     .gl-auth-pw-btn:hover { background: #E8EEF8; color: #0B3D91; }
     .gl-auth-error { margin: .3rem 0 0; font: 700 .72rem Tajawal, sans-serif; color: #DC2626; }
     .gl-auth-phone {
-      display: grid; grid-template-columns: minmax(7.2rem, 8.5rem) minmax(0, 1fr); gap: .5rem;
+      display: grid; grid-template-columns: minmax(8.5rem, 11.5rem) minmax(0, 1fr); gap: .5rem;
+      align-items: start;
     }
-    .gl-auth-phone select,
-    .gl-auth-phone input {
+    .gl-auth-phone > input[type="tel"] {
       width: 100%; height: 3rem; box-sizing: border-box;
       border: 1.5px solid #D7DDE6; border-radius: 12px; background: #F4F7FC;
       padding: 0 .85rem; font: 600 .88rem Tajawal, sans-serif; color: #0B1220; outline: none;
     }
-    .gl-auth-phone select:focus,
-    .gl-auth-phone input:focus {
+    .gl-auth-phone > input[type="tel"]:focus {
       border-color: #0B3D91; background: #fff;
       box-shadow: 0 0 0 3px rgba(11,61,145,.12);
     }
-    .gl-auth-phone.has-error select,
-    .gl-auth-phone.has-error input { border-color: #DC2626; }
+    .gl-auth-phone.has-error > input[type="tel"],
+    .gl-auth-phone.has-error .gl-auth-cc-btn { border-color: #DC2626; }
+    .gl-auth-cc { position: relative; min-width: 0; }
+    .gl-auth-cc-btn {
+      width: 100%; height: 3rem; box-sizing: border-box;
+      display: inline-flex; align-items: center; gap: .35rem;
+      border: 1.5px solid #D7DDE6; border-radius: 12px; background: #F4F7FC;
+      padding: 0 .55rem 0 .7rem; cursor: pointer;
+      font: 600 .82rem Tajawal, sans-serif; color: #0B1220; text-align: start;
+    }
+    .gl-auth-cc-btn:hover,
+    .gl-auth-cc-btn:focus-visible {
+      border-color: #0B3D91; background: #fff;
+      box-shadow: 0 0 0 3px rgba(11,61,145,.12); outline: none;
+    }
+    .gl-auth-cc-dial { flex: 0 0 auto; font-weight: 800; color: #0B3D91; white-space: nowrap; }
+    .gl-auth-cc-name {
+      flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      color: #5B6577; font-size: .74rem;
+    }
+    .gl-auth-cc-btn > i { margin-inline-start: auto; color: #94A3B8; font-size: .65rem; }
+    .gl-auth-cc-panel {
+      position: absolute; z-index: 40; top: calc(100% + .35rem); inset-inline: 0;
+      width: max(100%, 16.5rem); max-width: min(22rem, 92vw);
+      border: 1.5px solid #D7DDE6; border-radius: 14px; background: #fff;
+      box-shadow: 0 14px 36px rgba(11, 34, 64, .14);
+      overflow: hidden;
+    }
+    .gl-auth-cc-search {
+      display: flex; align-items: center; gap: .45rem;
+      padding: .55rem .7rem; border-bottom: 1px solid #E8EEF5; background: #F8FAFD;
+    }
+    .gl-auth-cc-search i { color: #94A3B8; font-size: .8rem; }
+    .gl-auth-cc-search input {
+      flex: 1; min-width: 0; border: 0; background: transparent; outline: none;
+      font: 600 .82rem Tajawal, sans-serif; color: #0B1220; height: 1.8rem;
+    }
+    .gl-auth-cc-list {
+      list-style: none; margin: 0; padding: .25rem; max-height: 14rem; overflow: auto;
+    }
+    .gl-auth-cc-option {
+      width: 100%; display: flex; align-items: center; gap: .55rem;
+      border: 0; background: transparent; border-radius: 10px;
+      padding: .55rem .6rem; cursor: pointer; text-align: start;
+      font: 600 .82rem Tajawal, sans-serif; color: #0B1220;
+    }
+    .gl-auth-cc-option:hover,
+    .gl-auth-cc-option.is-active { background: #EAF0FA; }
+    .gl-auth-cc-option-dial { flex: 0 0 3.4rem; font-weight: 800; color: #0B3D91; }
+    .gl-auth-cc-option-name { flex: 1; min-width: 0; color: #334155; }
+    .gl-auth-cc-empty {
+      padding: .85rem .7rem; text-align: center;
+      font: 600 .8rem Tajawal, sans-serif; color: #94A3B8;
+    }
+    @media (max-width: 520px) {
+      .gl-auth-phone { grid-template-columns: 1fr; }
+      .gl-auth-cc-panel { width: 100%; max-width: none; }
+    }
     .gl-auth-row {
       display: flex; align-items: center; justify-content: space-between; gap: .75rem;
       flex-wrap: wrap; margin: .15rem 0 1rem;

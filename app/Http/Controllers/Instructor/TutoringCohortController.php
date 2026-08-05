@@ -19,7 +19,7 @@ class TutoringCohortController extends Controller
 
         $cohorts = TutoringGroupCohort::query()
             ->whereIn('tutoring_group_id', $groupIds)
-            ->with(['tutoringGroup:id,title,school_year_id', 'tutoringGroup.schoolYear:id,name,level_number'])
+            ->with(['tutoringGroup:id,title,academic_year_id', 'tutoringGroup.schoolYear:id,name,level_number'])
             ->withCount(['bookings as confirmed_bookings' => fn ($q) => $q->whereIn('status', ['pending', 'confirmed'])])
             ->orderByDesc('starts_at')
             ->paginate(20);

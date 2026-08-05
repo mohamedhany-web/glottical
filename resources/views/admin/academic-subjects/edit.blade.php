@@ -72,8 +72,9 @@
             </div>
             <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
                 <div class="sm:col-span-2">
-                    <label class="{{ $labelClass }}" for="academic_year_id">السنة الأكاديمية <span class="text-danger">*</span></label>
-                    <select name="academic_year_id" id="academic_year_id" required class="{{ $fieldClass }}">
+                    <label class="{{ $labelClass }}" for="academic_year_id">سنة المدرسة <span class="font-normal text-muted">(اختياري)</span></label>
+                    <select name="academic_year_id" id="academic_year_id" class="{{ $fieldClass }}">
+                        <option value="">— مادة عامة (بدون سنة) —</option>
                         @foreach($academicYears as $year)
                             <option value="{{ $year->id }}" @selected((string) old('academic_year_id', $academicSubject->academic_year_id) === (string) $year->id)>{{ $year->name }}</option>
                         @endforeach
@@ -86,6 +87,10 @@
                 <div>
                     <label class="{{ $labelClass }}" for="code">الرمز <span class="text-danger">*</span></label>
                     <input id="code" type="text" name="code" value="{{ old('code', $academicSubject->code) }}" required maxlength="100" dir="ltr" class="{{ $fieldClass }} font-mono">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="{{ $labelClass }}" for="slug">الرابط (slug)</label>
+                    <input id="slug" type="text" name="slug" value="{{ old('slug', $academicSubject->slug) }}" maxlength="255" dir="ltr" class="{{ $fieldClass }} font-mono">
                 </div>
                 <div class="sm:col-span-2">
                     <label class="{{ $labelClass }}" for="description">الوصف</label>

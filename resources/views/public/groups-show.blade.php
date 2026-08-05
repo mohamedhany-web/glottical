@@ -189,11 +189,33 @@
       <article class="gl-gs-card sana-reveal">
         <form method="POST" action="{{ route('public.groups.book', $group->slug) }}" class="gl-gs-form">
           @csrf
-          <h2>{{ $isRtl ? 'حجز موعد للمراجعة' : 'Request a slot (review)' }}</h2>
+          @php $hasCredit = auth()->check() && (int) ($creditUnits ?? 0) > 0; @endphp
+          <h2>
+            @if($hasCredit)
+              {{ $isRtl ? 'احجز من رصيدك' : 'Book with your credits' }}
+            @else
+              {{ $isRtl ? 'حجز موعد للمراجعة' : 'Request a slot (review)' }}
+            @endif
+          </h2>
+
+          @if($hasCredit)
+            <div class="gl-gs-alert gl-gs-alert--ok" style="margin-bottom:.85rem">
+              {{ $isRtl ? 'رصيدك المتاح لهذه الخدمة:' : 'Available credits:' }}
+              <strong>{{ (int) $creditUnits }}</strong>
+              {{ $isRtl ? 'حصة — سيتم التأكيد فوراً وإنشاء غرفة Live.' : 'sessions — instant confirm + Live room.' }}
+            </div>
+            <input type="hidden" name="use_credit" value="1">
+          @elseif(auth()->check())
+            <p style="margin:0 0 .85rem;font-size:.82rem;font-weight:700;color:#5B6577">
+              {{ $isRtl ? 'لا يوجد رصيد حصص.' : 'No session credits.' }}
+              <a href="{{ route('public.service-packages.index') }}" style="color:#0B3D91;text-decoration:underline">{{ $isRtl ? 'اشترِ باقة' : 'Buy a package' }}</a>
+              {{ $isRtl ? 'أو أرسل طلب مراجعة أدناه.' : 'or send a review request below.' }}
+            </p>
+          @endif
 
           @if($group->isCollective() && ($cohorts ?? collect())->filter->isEnrollmentOpen()->isNotEmpty())
             <label class="gl-gs-label">{{ $isRtl ? 'الدفعة (اختياري)' : 'Cohort (optional)' }}</label>
-            <select name="cohort_id" class="gl-gs-select">
+            <select name="cohort_id" class="gl-gs-select" @disabled($hasCredit)>
               <option value="">—</option>
               @foreach($cohorts->filter->isEnrollmentOpen() as $cohort)
                 <option value="{{ $cohort->id }}" @selected((string)old('cohort_id') === (string)$cohort->id)>{{ $cohort->title }}</option>
@@ -236,11 +258,16 @@
               </p>
             @endguest
 
-            <label class="gl-gs-label" for="student_notes">{{ $isRtl ? 'ملاحظات (اختياري)' : 'Notes (optional)' }}</label>
-            <textarea id="student_notes" name="student_notes" rows="3" class="gl-gs-area">{{ old('student_notes') }}</textarea>
+            @unless($hasCredit)
+              <label class="gl-gs-label" for="student_notes">{{ $isRtl ? 'ملاحظات (اختياري)' : 'Notes (optional)' }}</label>
+              <textarea id="student_notes" name="student_notes" rows="3" class="gl-gs-area">{{ old('student_notes') }}</textarea>
+            @endunless
 
             <button type="submit" class="sana-btn sana-btn--yellow" style="width:100%;justify-content:center">
-              <i class="fas fa-calendar-check"></i> {{ __($g.'.book_cta') }}
+              <i class="fas fa-calendar-check"></i>
+              {{ $hasCredit
+                ? ($isRtl ? 'تأكيد الحجز من الرصيد + Live' : 'Confirm with credit + Live')
+                : __($g.'.book_cta') }}
             </button>
           @endif
         </form>

@@ -5,6 +5,16 @@
 
 @section('content')
 <div class="space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-900">تشغيل الحصص الخاصة 1:1</h2>
+            <p class="mt-1 text-sm text-slate-500">متابعة التسكين والجدولة والمعلم وغرفة Live والرصيد.</p>
+        </div>
+        <a href="{{ route('admin.one-to-one-sessions.create') }}" class="inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-white"><i class="fas fa-user-plus"></i> تسكين حصة خاصة</a>
+    </div>
+    @if(session('success'))
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+    @endif
     <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
         <div class="rounded-xl bg-white border border-amber-200 bg-amber-50/40 p-4">
             <p class="text-xs text-amber-700">{{ __('student.one_to_one_pending_schedule') }}</p>

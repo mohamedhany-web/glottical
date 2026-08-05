@@ -6,6 +6,9 @@
 @section('content')
 <div class="space-y-6 max-w-5xl">
     <a href="{{ route('admin.one-to-one-sessions.index') }}" class="text-sm text-sky-600 hover:underline">← {{ __('student.one_to_one_admin_title') }}</a>
+    @if(session('success'))
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+    @endif
 
     <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6 space-y-4">
         <div class="flex flex-wrap justify-between gap-2">
@@ -40,6 +43,17 @@
             <div>
                 <dt class="text-slate-500">{{ __('student.one_to_one_booked_by') }}</dt>
                 <dd class="font-semibold">{{ $session->bookedBy->name }}</dd>
+            </div>
+            @endif
+            @if($session->entitlement)
+            <div>
+                <dt class="text-slate-500">الرصيد المرتبط</dt>
+                <dd class="font-semibold">
+                    #{{ $session->entitlement->id }} · {{ $session->entitlement->unitsLeft() }} / {{ $session->entitlement->units_total }} متبقٍ
+                    @if($session->entitlement->order)
+                        · <a href="{{ route('admin.orders.show', $session->entitlement->order) }}" class="text-sky-600">الطلب #{{ $session->entitlement->order_id }}</a>
+                    @endif
+                </dd>
             </div>
             @endif
             @if($session->classroomMeeting)

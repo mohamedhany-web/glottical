@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicYear;
 use App\Models\FreeTrialBooking;
-use App\Models\SchoolYear;
 use App\Models\TutoringGroupBooking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -24,7 +24,7 @@ class SchoolController extends Controller
                 TutoringGroupBooking::STATUS_COMPLETED,
             ])
             ->with([
-                'tutoringGroup:id,title,slug,type,school_year_id,school_subject_id',
+                'tutoringGroup:id,title,slug,type,academic_year_id,academic_subject_id',
                 'tutoringGroup.schoolYear:id,name,slug,level_number,tagline',
                 'tutoringGroup.schoolSubject:id,name',
                 'instructor:id,name',
@@ -34,7 +34,7 @@ class SchoolController extends Controller
             ->orderByDesc('starts_at')
             ->get();
 
-        $schoolBookings = $bookings->filter(fn ($b) => $b->tutoringGroup && $b->tutoringGroup->school_year_id);
+        $schoolBookings = $bookings->filter(fn ($b) => $b->tutoringGroup && $b->tutoringGroup->academic_year_id);
 
         $years = $schoolBookings
             ->map(fn ($b) => $b->tutoringGroup?->schoolYear)
@@ -70,8 +70,8 @@ class SchoolController extends Controller
             $recommendedYear = $years->first();
         }
 
-        $allYears = Schema::hasTable('school_years')
-            ? SchoolYear::query()->active()->ordered()->get()
+        $allYears = Schema::hasTable('academic_years')
+            ? AcademicYear::query()->active()->ordered()->get()
             : collect();
 
         return view('student.school.index', [

@@ -68,11 +68,60 @@
                 <div class="flex justify-between gap-3"><dt class="text-muted">إلى</dt><dd class="font-medium tabular-nums text-ink">{{ $booking->ends_at?->format('Y-m-d H:i') }}</dd></div>
                 <div class="flex justify-between gap-3"><dt class="text-muted">الحالة</dt><dd class="font-medium text-accent">{{ $booking->statusLabel() }}</dd></div>
                 <div class="flex justify-between gap-3"><dt class="text-muted">الدفع</dt><dd class="font-medium text-ink">{{ $booking->paymentStatusLabel() }}</dd></div>
+                @if($booking->entitlement)
+                    <div class="rounded-xl border border-line bg-canvas/50 p-3">
+                        <div class="flex justify-between gap-3"><dt class="text-muted">مصدر الرصيد</dt><dd class="font-medium text-ink">رصيد #{{ $booking->entitlement->id }}</dd></div>
+                        <div class="mt-2 flex justify-between gap-3"><dt class="text-muted">المتبقي الكلي</dt><dd class="font-medium text-ink">{{ $booking->entitlement->unitsLeft() }} / {{ $booking->entitlement->units_total }}</dd></div>
+                        <div class="mt-2 flex justify-between gap-3"><dt class="text-muted">القابل للحجز الآن</dt><dd class="font-medium text-accent">{{ \App\Services\StudentEntitlementService::bookableUnitsLeft($booking->entitlement) }}</dd></div>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <a href="{{ route('admin.student-entitlements.index', ['search' => $booking->user?->email]) }}" class="text-xs font-semibold text-accent">عرض أرصدة الطالب</a>
+                            @if($booking->order)
+                                <a href="{{ route('admin.orders.show', $booking->order) }}" class="text-xs font-semibold text-accent">الطلب #{{ $booking->order_id }}</a>
+                            @endif
+                        </div>
+                    </div>
+                @endif
                 @if($booking->student_notes)
                     <div><dt class="mb-1 text-muted">ملاحظات الطالب</dt><dd class="text-ink">{{ $booking->student_notes }}</dd></div>
                 @endif
             </dl>
         </article>
+
+        <div class="space-y-5">
+        @if(! in_array($booking->status, [\App\Models\TutoringGroupBooking::STATUS_COMPLETED, \App\Models\TutoringGroupBooking::STATUS_CANCELLED], true))
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="border-b border-line px-4 py-4 sm:px-5">
+                <h3 class="text-base font-semibold text-ink">إعادة التسكين</h3>
+                <p class="mt-1 text-xs text-muted">تغيير المجموعة أو المعلم أو الموعد يحدّث غرفة Live الحالية أيضاً.</p>
+            </div>
+            <form method="POST" action="{{ route('admin.tutoring-group-bookings.update-assignment', $booking) }}" class="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
+                @csrf
+                @method('PATCH')
+                <div class="sm:col-span-2">
+                    <label class="{{ $labelClass }}">المجموعة</label>
+                    <select name="tutoring_group_id" class="{{ $fieldClass }}" required>
+                        @foreach($groups as $group)
+                            <option value="{{ $group->id }}" @selected((int) $booking->tutoring_group_id === (int) $group->id)>{{ $group->title }} — {{ $group->typeLabel() }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}">المعلم</label>
+                    <select name="instructor_id" class="{{ $fieldClass }}" required>
+                        @foreach($instructors as $instructor)
+                            <option value="{{ $instructor->id }}" @selected((int) $booking->instructor_id === (int) $instructor->id)>{{ $instructor->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}">الموعد</label>
+                    <input type="datetime-local" name="starts_at" value="{{ old('starts_at', $booking->starts_at?->format('Y-m-d\TH:i')) }}" class="{{ $fieldClass }}" required dir="ltr">
+                </div>
+                <input type="hidden" name="admin_notes" value="{{ $booking->admin_notes }}">
+                <button class="btn-press inline-flex h-10 items-center justify-center rounded-xl border border-accent/30 px-4 text-sm font-medium text-accent sm:col-span-2">حفظ التسكين الجديد</button>
+            </form>
+        </article>
+        @endif
 
         <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
             <div class="border-b border-line px-4 py-4 sm:px-5">
@@ -102,6 +151,7 @@
                 <button type="submit" class="btn-press inline-flex h-10 items-center rounded-xl border border-line px-4 text-sm font-medium text-danger hover:bg-danger/5">حذف الحجز</button>
             </form>
         </article>
+        </div>
     </div>
 </div>
 @endsection

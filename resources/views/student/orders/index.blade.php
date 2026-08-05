@@ -28,7 +28,11 @@
                         <div class="flex-1 min-w-0">
                             <div class="flex flex-wrap items-center gap-2 mb-3">
                                 <h3 class="text-base sm:text-lg font-bold text-gray-900">
-                                    @if($order->academic_year_id && ! $order->advanced_course_id)
+                                    @if($order->order_type === \App\Models\Order::TYPE_CUSTOM_SERVICE_PACKAGE)
+                                        {{ $order->custom_package_data['name'] ?? 'باقة مخصصة' }}
+                                    @elseif($order->servicePackage)
+                                        {{ $order->servicePackage->name }}
+                                    @elseif($order->academic_year_id && ! $order->advanced_course_id)
                                         {{ $order->learningPath->name ?? 'طلب قديم' }}
                                     @else
                                         {{ $order->course->title ?? __('student.course_undefined') }}
@@ -44,7 +48,13 @@
                             </div>
 
                             <div class="flex flex-wrap items-center gap-2 text-sm text-gray-500 mb-3">
-                                @if($order->academic_year_id && ! $order->advanced_course_id)
+                                @if($order->order_type === \App\Models\Order::TYPE_CUSTOM_SERVICE_PACKAGE)
+                                    <span class="inline-flex items-center gap-1 rounded-md bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">
+                                        {{ $order->custom_package_data['sessions'] ?? '—' }} حصة مخصصة
+                                    </span>
+                                @elseif($order->servicePackage)
+                                    <span>{{ $order->servicePackage->units_count }} حصة</span>
+                                @elseif($order->academic_year_id && ! $order->advanced_course_id)
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 text-xs font-medium">طلب قديم</span>
                                 @elseif($order->course && ($order->course->academicYear || $order->course->academicSubject))
                                     @if($order->course->academicYear)
@@ -60,7 +70,7 @@
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-3">
                                 <div class="py-2 px-3 bg-gray-50 rounded-lg border border-gray-100">
                                     <p class="text-xs font-medium text-gray-500">{{ __('student.amount_label') }}</p>
-                                    <p class="text-sm font-bold text-gray-900">{{ number_format($order->amount, 2) }} {{ __('public.currency_egp') }}</p>
+                                    <p class="text-sm font-bold text-gray-900">{{ number_format($order->amount, 2) }} {{ $order->currencyCode() }}</p>
                                 </div>
                                 <div class="py-2 px-3 bg-gray-50 rounded-lg border border-gray-100">
                                     <p class="text-xs font-medium text-gray-500">{{ __('student.payment_method_label') }}</p>

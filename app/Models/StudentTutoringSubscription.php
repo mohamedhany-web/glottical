@@ -25,6 +25,7 @@ class StudentTutoringSubscription extends Model
         'expires_at',
         'status',
         'order_id',
+        'student_service_entitlement_id',
     ];
 
     protected function casts(): array
@@ -55,6 +56,11 @@ class StudentTutoringSubscription extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function entitlement(): BelongsTo
+    {
+        return $this->belongsTo(StudentServiceEntitlement::class, 'student_service_entitlement_id');
     }
 
     public function bookings(): HasMany

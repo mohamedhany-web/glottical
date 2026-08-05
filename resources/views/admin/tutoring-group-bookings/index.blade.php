@@ -16,6 +16,7 @@
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">حجوزات فصول المدرسة</h2>
         </div>
         <div class="admin-hero-actions flex flex-wrap gap-2">
+            <a href="{{ route('admin.tutoring-group-bookings.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white"><i class="fas fa-user-plus"></i> تسكين طالب</a>
             <a href="{{ route('admin.tutoring-groups.index', 'individual') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft hover:border-accent/30 hover:text-accent">فردية</a>
             <a href="{{ route('admin.tutoring-groups.index', 'collective') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft hover:border-accent/30 hover:text-accent">جماعية</a>
         </div>
@@ -28,7 +29,7 @@
         </div>
     @endif
 
-    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
         <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
             <p class="text-xs text-muted">الإجمالي</p>
             <p class="mt-1 text-xl font-semibold text-ink">{{ number_format($stats['total']) }}</p>
@@ -44,6 +45,14 @@
         <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
             <p class="text-xs text-muted">قادم مؤكد</p>
             <p class="mt-1 text-xl font-semibold text-ink">{{ number_format($stats['upcoming']) }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <p class="text-xs text-muted">مكتمل</p>
+            <p class="mt-1 text-xl font-semibold text-ink">{{ number_format($stats['completed']) }}</p>
+        </article>
+        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <p class="text-xs text-muted">أرصدة نشطة / قابلة للحجز</p>
+            <p class="mt-1 text-xl font-semibold text-ink">{{ number_format($stats['credits_active']) }} / {{ number_format($stats['credits_bookable']) }}</p>
         </article>
     </section>
 
@@ -93,6 +102,7 @@
                         <th class="px-4 py-3 text-start">السنة</th>
                         <th class="px-4 py-3 text-start">الطالب</th>
                         <th class="px-4 py-3 text-start">المدرب</th>
+                        <th class="px-4 py-3 text-start">المصدر</th>
                         <th class="px-4 py-3 text-start">الموعد</th>
                         <th class="px-4 py-3 text-start">الحالة</th>
                         <th class="px-4 py-3 text-start">إجراء</th>
@@ -111,6 +121,16 @@
                                 <p class="text-[11px] text-muted">{{ $booking->contactPhone() ?: $booking->contactEmail() }}</p>
                             </td>
                             <td class="px-4 py-3 text-ink-soft">{{ $booking->instructor?->name }}</td>
+                            <td class="px-4 py-3">
+                                @if($booking->entitlement)
+                                    <p class="text-xs font-medium text-accent">رصيد #{{ $booking->entitlement->id }}</p>
+                                    <p class="text-[11px] text-muted">{{ $booking->order_id ? 'طلب #'.$booking->order_id : 'منح يدوي' }}</p>
+                                @elseif($booking->order_id)
+                                    <p class="text-xs text-ink">طلب #{{ $booking->order_id }}</p>
+                                @else
+                                    <span class="text-xs text-muted">اشتراك مباشر</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 tabular-nums text-ink">{{ $booking->starts_at?->format('Y-m-d H:i') }}</td>
                             <td class="px-4 py-3">
                                 <span class="rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">{{ $booking->statusLabel() }}</span>
@@ -121,7 +141,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-16 text-center text-sm text-muted">لا توجد حجوزات</td>
+                            <td colspan="8" class="px-4 py-16 text-center text-sm text-muted">لا توجد حجوزات</td>
                         </tr>
                     @endforelse
                 </tbody>
