@@ -124,6 +124,65 @@
       @endif
     </div>
   </section>
+
+  @php $servicePackages = $servicePackages ?? collect(); @endphp
+  @if($servicePackages->isNotEmpty())
+    <section class="gl-sy-body" style="padding-top:0">
+      <div class="sana-container">
+        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:end;margin-bottom:16px">
+          <div>
+            <h2 style="margin:0 0 6px;font-family:Cairo,Tajawal,sans-serif;font-weight:900;font-size:1.25rem;color:#0B1220">
+              {{ $isRtl ? 'باقات حصص هذه السنة' : 'Session packages for this year' }}
+            </h2>
+            <p style="margin:0;color:#5B6577;font-size:.85rem;font-weight:600">
+              {{ $isRtl ? 'اشترِ رصيداً ثم احجز أي فصل مناسب من هذه السنة.' : 'Buy credits, then book any matching class in this year.' }}
+            </p>
+          </div>
+          <a href="{{ route('public.service-packages.index', ['year' => $year->id, 'scope' => 'tutoring_collective']) }}" class="sana-btn sana-btn--white-outline" style="border-color:#0B3D91;color:#0B3D91;padding:.55rem 1rem;font-size:.82rem">
+            {{ $isRtl ? 'كل باقات السنة' : 'All year packages' }}
+          </a>
+        </div>
+        <div class="gl-sy-grid">
+          @foreach($servicePackages->take(6) as $package)
+            <article class="gl-sy-card">
+              <h2>{{ $package->name }}</h2>
+              <p class="meta">
+                @if($package->isCommercialPlan())
+                  {{ $package->planLabel() }} · {{ $package->termLabel() }}
+                  · {{ $package->weeklySessionsTotal() }} {{ $isRtl ? 'أسبوعيًا' : '/week' }}
+                @else
+                  {{ $package->units_count }} {{ $isRtl ? 'حصة' : 'sessions' }}
+                  · {{ $package->sessionMinutes() }} {{ $isRtl ? 'دقيقة' : 'min' }}
+                  · {{ $package->label() }}
+                @endif
+                @if($package->academicSubject)
+                  · {{ $package->academicSubject->name }}
+                @endif
+              </p>
+              @if($package->savingsVsMonthlyLabel())
+                <p style="margin:0 0 .5rem;font-size:.75rem;font-weight:800;color:#047857">{{ $package->savingsVsMonthlyLabel() }}</p>
+              @endif
+              <p style="margin:0 0 1rem;font-size:1.25rem;font-weight:900;color:#0B3D91">{{ $package->formattedPrice() }}</p>
+              <div class="actions">
+                <a href="{{ route('public.service-packages.checkout', $package) }}" class="sana-btn sana-btn--yellow" style="padding:.55rem 1rem;font-size:.82rem">
+                  {{ $isRtl ? 'اشترِ الباقة' : 'Buy package' }}
+                </a>
+              </div>
+            </article>
+          @endforeach
+        </div>
+      </div>
+    </section>
+  @else
+    <section class="gl-sy-body" style="padding-top:0">
+      <div class="sana-container">
+        <div class="gl-sy-empty">
+          <p style="margin:0 0 12px">{{ $isRtl ? 'لا توجد باقات مربوطة بهذه السنة بعد. يمكنك تصفح الباقات العامة أو تخصيص باقتك.' : 'No packages linked to this year yet. Browse general packages or build your own.' }}</p>
+          <a href="{{ route('public.service-packages.index', ['year' => $year->id]) }}" class="sana-btn sana-btn--yellow">{{ $isRtl ? 'باقات الحصص' : 'Session packages' }}</a>
+        </div>
+      </div>
+    </section>
+  @endif
 </main>
 @include('partials.landing.footer')
 </body>

@@ -35,6 +35,9 @@
           <tr class="border-t border-line">
             <td class="px-4 py-3">
               {{ $ent->servicePackage?->name ?: (\App\Models\ServicePackage::scopes()[$ent->scope] ?? $ent->scope) }}
+              @if($ent->academicYear || $ent->academicSubject)
+                <div class="text-xs text-muted">{{ collect([$ent->academicYear?->name, $ent->academicSubject?->name])->filter()->implode(' · ') }}</div>
+              @endif
               @if($ent->tutoringGroup)<div class="text-xs text-muted">{{ $ent->tutoringGroup->title }}</div>@endif
             </td>
             <td class="px-4 py-3 font-semibold">{{ $ent->unitsLeft() }} / {{ $ent->units_total }}</td>

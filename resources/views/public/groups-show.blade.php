@@ -186,6 +186,45 @@
         </article>
       @endif
 
+      @php $servicePackages = $servicePackages ?? collect(); @endphp
+      @if($servicePackages->isNotEmpty())
+        <article class="gl-gs-card sana-reveal" style="grid-column:1/-1">
+          <div class="gl-gs-form">
+            <h2>{{ $isRtl ? 'باقات مناسبة لهذا الفصل' : 'Packages for this class' }}</h2>
+            <p style="margin:0 0 1rem;font-size:.82rem;color:#5B6577;font-weight:600">
+              {{ $isRtl ? 'اشترِ رصيداً ثم احجز من الرصيد بالأسفل مباشرة.' : 'Buy credits, then book instantly from your balance below.' }}
+            </p>
+            <div style="display:grid;gap:.75rem;grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+              @foreach($servicePackages as $package)
+                <div style="border:1.5px solid {{ $package->is_featured ? '#F5B800' : '#D7DDE6' }};border-radius:14px;padding:1rem">
+                  <strong style="display:block;margin:.25rem 0;font-size:.95rem">{{ $package->name }}</strong>
+                  <div style="font-size:1.15rem;font-weight:900;color:#0B3D91">{{ $package->formattedPrice() }}</div>
+                  <p style="margin:.5rem 0 .85rem;font-size:.75rem;color:#5B6577;font-weight:600">
+                    {{ $package->units_count }} {{ $isRtl ? 'حصة' : 'sessions' }}
+                    · {{ $package->sessionMinutes() }} {{ $isRtl ? 'د' : 'min' }}
+                    @if($package->schoolProgramLabel())
+                      · {{ $package->schoolProgramLabel() }}
+                    @endif
+                  </p>
+                  <a href="{{ route('public.service-packages.checkout', $package) }}" class="sana-btn sana-btn--yellow" style="width:100%;justify-content:center;padding:.55rem 1rem;font-size:.78rem">
+                    {{ $isRtl ? 'اشترِ الباقة' : 'Buy package' }}
+                  </a>
+                </div>
+              @endforeach
+            </div>
+            <p style="margin:1rem 0 0;font-size:.8rem;color:#5B6577;font-weight:600">
+              <a href="{{ route('public.service-packages.index', array_filter([
+                'year' => $group->academic_year_id,
+                'subject' => $group->academic_subject_id,
+                'scope' => 'tutoring_collective',
+              ])) }}" style="color:#0B3D91;text-decoration:underline;font-weight:800">
+                {{ $isRtl ? 'عرض كل الباقات المناسبة' : 'See all matching packages' }}
+              </a>
+            </p>
+          </div>
+        </article>
+      @endif
+
       <article class="gl-gs-card sana-reveal">
         <form method="POST" action="{{ route('public.groups.book', $group->slug) }}" class="gl-gs-form">
           @csrf
@@ -208,7 +247,11 @@
           @elseif(auth()->check())
             <p style="margin:0 0 .85rem;font-size:.82rem;font-weight:700;color:#5B6577">
               {{ $isRtl ? 'لا يوجد رصيد حصص.' : 'No session credits.' }}
-              <a href="{{ route('public.service-packages.index') }}" style="color:#0B3D91;text-decoration:underline">{{ $isRtl ? 'اشترِ باقة' : 'Buy a package' }}</a>
+              <a href="{{ route('public.service-packages.index', array_filter([
+                'year' => $group->academic_year_id,
+                'subject' => $group->academic_subject_id,
+                'scope' => $group->isCollective() ? 'tutoring_collective' : 'tutoring_individual',
+              ])) }}" style="color:#0B3D91;text-decoration:underline">{{ $isRtl ? 'اشترِ باقة مناسبة' : 'Buy a matching package' }}</a>
               {{ $isRtl ? 'أو أرسل طلب مراجعة أدناه.' : 'or send a review request below.' }}
             </p>
           @endif

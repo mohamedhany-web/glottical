@@ -61,9 +61,19 @@
                         <td class="px-4 py-3">
                             <div class="font-semibold text-ink">{{ $package->name }}</div>
                             @if($package->badge)<span class="text-xs text-accent">{{ $package->badge }}</span>@endif
+                            @if($package->schoolProgramLabel())
+                                <div class="text-xs text-muted"><i class="fas fa-school"></i> {{ $package->schoolProgramLabel() }}</div>
+                            @endif
                             @if($package->tutoringGroup)<div class="text-xs text-muted">{{ $package->tutoringGroup->title }}</div>@endif
                         </td>
-                        <td class="px-4 py-3 text-ink-soft">{{ $package->label() }}</td>
+                        <td class="px-4 py-3 text-ink-soft">
+                            @if($package->plan_type)
+                                <div class="font-semibold text-ink">{{ $package->planLabel() }}</div>
+                                <div class="text-xs text-muted">{{ $package->termLabel() }} · {{ $package->weeklySessionsTotal() }}/أسبوع</div>
+                            @else
+                                {{ $package->label() }}
+                            @endif
+                        </td>
                         <td class="px-4 py-3">
                             {{ $package->units_count }} حصة
                             <span class="block text-xs text-muted">{{ $package->totalHoursLabel() }} إجمالاً</span>

@@ -44,10 +44,64 @@
                     <input id="badge" name="badge" value="{{ old('badge', $package->badge) }}" class="{{ $fieldClass }}" placeholder="الأكثر اختياراً">
                 </div>
                 <div>
+                    <label class="{{ $labelClass }}" for="plan_type">الخطة التجارية</label>
+                    <select id="plan_type" name="plan_type" class="{{ $fieldClass }}">
+                        <option value="">— ليست خطة تجارية —</option>
+                        @foreach(\App\Models\ServicePackage::planTypes() as $value => $label)
+                            <option value="{{ $value }}" @selected(old('plan_type', $package->plan_type) === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="term_months">مدة الاشتراك (شهور)</label>
+                    <select id="term_months" name="term_months" class="{{ $fieldClass }}">
+                        <option value="">—</option>
+                        @foreach(\App\Models\ServicePackage::termMonthsOptions() as $months)
+                            <option value="{{ $months }}" @selected((string) old('term_months', $package->term_months) === (string) $months)>{{ $months }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="weekly_group_sessions">حصص جماعية / أسبوع</label>
+                    <input id="weekly_group_sessions" type="number" min="0" max="14" name="weekly_group_sessions" value="{{ old('weekly_group_sessions', $package->weekly_group_sessions ?? 0) }}" class="{{ $fieldClass }}">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="weekly_private_sessions">حصص فردية / أسبوع</label>
+                    <input id="weekly_private_sessions" type="number" min="0" max="14" name="weekly_private_sessions" value="{{ old('weekly_private_sessions', $package->weekly_private_sessions ?? 0) }}" class="{{ $fieldClass }}">
+                </div>
+                <div>
                     <label class="{{ $labelClass }}" for="scope">النطاق *</label>
                     <select id="scope" name="scope" class="{{ $fieldClass }}">
                         @foreach(\App\Models\ServicePackage::scopes() as $value => $label)
                             <option value="{{ $value }}" @selected(old('scope', $package->scope) === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-[11px] text-muted">للخطط التجارية يُضبط تلقائياً حسب نوع الخطة.</p>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="academic_year_id">السنة الدراسية (اختياري)</label>
+                    <select id="academic_year_id" name="academic_year_id" class="{{ $fieldClass }}">
+                        <option value="">— كل السنوات / عامة —</option>
+                        @foreach($years as $year)
+                            <option value="{{ $year->id }}" @selected((string) old('academic_year_id', $package->academic_year_id) === (string) $year->id)>
+                                {{ $year->name }}@if($year->level_number) ({{ $year->level_number }})@endif
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-[11px] text-muted">اربط الباقة بسنة من نظام المدرسة ليظهر للطالب داخل تلك السنة فقط.</p>
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="academic_subject_id">المادة الدراسية (اختياري)</label>
+                    <select id="academic_subject_id" name="academic_subject_id" class="{{ $fieldClass }}">
+                        <option value="">— كل المواد / عامة —</option>
+                        @foreach($subjects as $subject)
+                            <option
+                                value="{{ $subject->id }}"
+                                data-year="{{ $subject->academic_year_id }}"
+                                @selected((string) old('academic_subject_id', $package->academic_subject_id) === (string) $subject->id)
+                            >
+                                {{ $subject->name }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -56,7 +110,12 @@
                     <select id="tutoring_group_id" name="tutoring_group_id" class="{{ $fieldClass }}">
                         <option value="">— عامة —</option>
                         @foreach($groups as $g)
-                            <option value="{{ $g->id }}" @selected((string) old('tutoring_group_id', $package->tutoring_group_id) === (string) $g->id)>{{ $g->title }} ({{ $g->type }})</option>
+                            <option
+                                value="{{ $g->id }}"
+                                data-year="{{ $g->academic_year_id }}"
+                                data-subject="{{ $g->academic_subject_id }}"
+                                @selected((string) old('tutoring_group_id', $package->tutoring_group_id) === (string) $g->id)
+                            >{{ $g->title }} ({{ $g->type }})</option>
                         @endforeach
                     </select>
                 </div>
@@ -93,9 +152,23 @@
                     <input id="sort_order" type="number" name="sort_order" value="{{ old('sort_order', $package->sort_order) }}" class="{{ $fieldClass }}">
                 </div>
                 <div class="sm:col-span-2">
+                    <label class="{{ $labelClass }}" for="tagline">نبذة قصيرة</label>
+                    <input id="tagline" name="tagline" value="{{ old('tagline', $package->tagline) }}" class="{{ $fieldClass }}">
+                </div>
+                <div class="sm:col-span-2">
                     <label class="{{ $labelClass }}" for="description">الوصف</label>
                     <textarea id="description" name="description" rows="3" class="{{ $areaClass }}">{{ old('description', $package->description) }}</textarea>
                 </div>
+                <div class="sm:col-span-2">
+                    <label class="{{ $labelClass }}" for="features_text">المزايا (سطر لكل ميزة)</label>
+                    <textarea id="features_text" name="features_text" rows="5" class="{{ $areaClass }}">{{ old('features_text', implode("\n", $package->featureList())) }}</textarea>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="{{ $labelClass }}" for="gifts_text">الهدايا مع الاشتراك (سطر لكل هدية)</label>
+                    <textarea id="gifts_text" name="gifts_text" rows="3" class="{{ $areaClass }}">{{ old('gifts_text', implode("\n", $package->giftList())) }}</textarea>
+                </div>
+                <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="includes_community" value="1" @checked(old('includes_community', $package->includes_community))> يشمل المجتمع الطلابي</label>
+                <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="includes_libraries" value="1" @checked(old('includes_libraries', $package->includes_libraries ?? true))> يشمل المكتبات التعليمية</label>
                 <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $package->is_active ?? true))> نشطة</label>
                 <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $package->is_featured))> مميزة</label>
             </div>
@@ -104,4 +177,46 @@
         <button type="submit" class="btn-press inline-flex h-10 items-center rounded-xl bg-accent px-5 text-sm font-medium text-white">حفظ</button>
     </form>
 </div>
+@push('scripts')
+<script>
+(() => {
+  const yearSelect = document.getElementById('academic_year_id');
+  const subjectSelect = document.getElementById('academic_subject_id');
+  const groupSelect = document.getElementById('tutoring_group_id');
+  if (!yearSelect || !subjectSelect) return;
+
+  const allSubjects = Array.from(subjectSelect.options).slice(1);
+
+  const filterSubjects = () => {
+    const yearId = yearSelect.value;
+    const current = subjectSelect.value;
+    subjectSelect.innerHTML = '<option value="">— كل المواد / عامة —</option>';
+    allSubjects.forEach((opt) => {
+      const optYear = opt.getAttribute('data-year') || '';
+      if (!yearId || !optYear || optYear === yearId) {
+        subjectSelect.appendChild(opt.cloneNode(true));
+      }
+    });
+    if ([...subjectSelect.options].some((o) => o.value === current)) {
+      subjectSelect.value = current;
+    }
+  };
+
+  yearSelect.addEventListener('change', filterSubjects);
+  filterSubjects();
+
+  if (groupSelect) {
+    groupSelect.addEventListener('change', () => {
+      const selected = groupSelect.options[groupSelect.selectedIndex];
+      if (!selected || !selected.value) return;
+      const yearId = selected.getAttribute('data-year') || '';
+      const subjectId = selected.getAttribute('data-subject') || '';
+      if (yearId) yearSelect.value = yearId;
+      filterSubjects();
+      if (subjectId) subjectSelect.value = subjectId;
+    });
+  }
+})();
+</script>
+@endpush
 @endsection

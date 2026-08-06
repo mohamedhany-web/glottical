@@ -69,7 +69,7 @@
   </section>
 
   <div class="sana-container gl-co">
-    @if($errors->any())
+    @if(isset($errors) && $errors->any())
       <div class="gl-co-alert gl-co-alert--err">{{ $errors->first() }}</div>
     @endif
 
@@ -77,13 +77,22 @@
       <article class="gl-co-card sana-reveal">
         <div class="gl-co-card__head">
           <h1>{{ $isRtl ? 'ماذا ستحصل عليه' : 'What you get' }}</h1>
+          @if($package->isCommercialPlan())
+            <p style="margin:.4rem 0 0;font-size:.82rem;color:#5B6577;font-weight:700">{{ $package->planLabel() }} · {{ $package->termLabel() }}</p>
+          @endif
         </div>
         <div class="gl-co-card__body">
-          @if($package->description)
-            <p class="gl-co-hint">{{ $package->description }}</p>
+          @if($package->tagline || $package->description)
+            <p class="gl-co-hint">{{ $package->tagline ?: $package->description }}</p>
           @endif
 
           <ul class="gl-co-specs">
+            @if($package->isCommercialPlan())
+              <li>
+                <span class="gl-co-specs__k"><i class="fas fa-calendar-week"></i> {{ $isRtl ? 'حصص أسبوعياً' : 'Weekly sessions' }}</span>
+                <span class="gl-co-specs__v">{{ $package->weeklySessionsTotal() }}</span>
+              </li>
+            @endif
             <li>
               <span class="gl-co-specs__k"><i class="fas fa-layer-group"></i> {{ $isRtl ? 'عدد الحصص' : 'Sessions' }}</span>
               <span class="gl-co-specs__v">{{ $package->units_count }} {{ $isRtl ? 'حصة' : 'sessions' }}</span>
@@ -116,7 +125,12 @@
                 <small>{{ $package->scopeUsageHint() }}</small>
               </span>
             </li>
-            @if($package->formattedOriginalPrice())
+            @if($package->savingsVsMonthlyLabel())
+              <li>
+                <span class="gl-co-specs__k"><i class="fas fa-piggy-bank"></i> {{ $isRtl ? 'التوفير' : 'You save' }}</span>
+                <span class="gl-co-specs__v" style="color:#047857">{{ $package->savingsVsMonthlyLabel() }}</span>
+              </li>
+            @elseif($package->formattedOriginalPrice())
               <li>
                 <span class="gl-co-specs__k"><i class="fas fa-tag"></i> {{ $isRtl ? 'السعر قبل الخصم' : 'Before discount' }}</span>
                 <span class="gl-co-specs__v" style="color:#94A3B8;text-decoration:line-through">{{ $package->formattedOriginalPrice() }}</span>

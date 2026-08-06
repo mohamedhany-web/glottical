@@ -37,7 +37,9 @@ class StudentEntitlementService
             'payment_method' => $paymentMethod,
             'wallet_id' => $walletId,
             'status' => Order::STATUS_PENDING,
-            'notes' => 'باقة خدمات: '.$package->name.' ('.$package->units_count.' حصة)',
+            'notes' => $package->isCommercialPlan()
+                ? $package->planLabel().' — '.$package->termLabel().' ('.$package->weeklySessionsTotal().' حصص/أسبوع)'
+                : 'باقة خدمات: '.$package->name.' ('.$package->units_count.' حصة)',
         ]);
     }
 
@@ -47,6 +49,8 @@ class StudentEntitlementService
         int $sessions,
         string $paymentMethod = 'online',
         ?int $walletId = null,
+        ?int $academicYearId = null,
+        ?int $academicSubjectId = null,
     ): Order {
         $allowed = ['bank_transfer', 'cash', 'other', 'online', 'wallet'];
         if (! in_array($paymentMethod, $allowed, true)) {
@@ -54,6 +58,12 @@ class StudentEntitlementService
         }
 
         $quote = CustomServicePackagePricingService::calculate($rule, $sessions);
+        if ($academicYearId) {
+            $quote['academic_year_id'] = $academicYearId;
+        }
+        if ($academicSubjectId) {
+            $quote['academic_subject_id'] = $academicSubjectId;
+        }
 
         return Order::create([
             'user_id' => $user->id,
@@ -89,6 +99,8 @@ class StudentEntitlementService
                 'order_id' => $order->id,
                 'scope' => $data['scope'] ?? ServicePackage::SCOPE_GLOBAL,
                 'tutoring_group_id' => null,
+                'academic_year_id' => $data['academic_year_id'] ?? null,
+                'academic_subject_id' => $data['academic_subject_id'] ?? null,
                 'units_total' => max(1, (int) ($data['sessions'] ?? 1)),
                 'units_used' => 0,
                 'starts_at' => $starts,
@@ -99,7 +111,7 @@ class StudentEntitlementService
         }
 
         if ($order->order_type === Order::TYPE_SERVICE_PACKAGE && $order->service_package_id) {
-            $existing = StudentServiceEntitlement::query()->where('order_id', $order->id)->first();
+            $existing = StudentServiceEntitlement::query()->where('order_id', $order->id)->orderBy('id')->first();
             if ($existing) {
                 return $existing;
             }
@@ -107,6 +119,10 @@ class StudentEntitlementService
             $package = $order->servicePackage ?: ServicePackage::find($order->service_package_id);
             if (! $package) {
                 return null;
+            }
+
+            if ($package->isPremier()) {
+                return self::grantPremierPlan((int) $order->user_id, $package, (int) $order->id);
             }
 
             return self::grant(
@@ -119,6 +135,50 @@ class StudentEntitlementService
         return null;
     }
 
+    /**
+     * Premier grants two ledgers: collective (school classes) + private lessons.
+     */
+    public static function grantPremierPlan(
+        int $userId,
+        ServicePackage $package,
+        ?int $orderId = null,
+    ): StudentServiceEntitlement {
+        if ($orderId) {
+            $existing = StudentServiceEntitlement::query()->where('order_id', $orderId)->orderBy('id')->first();
+            if ($existing) {
+                return $existing;
+            }
+        }
+
+        $months = max(1, (int) ($package->term_months ?: 1));
+        $groupUnits = max(1, (int) $package->weekly_group_sessions * 4 * $months);
+        $privateUnits = max(1, (int) $package->weekly_private_sessions * 4 * $months);
+
+        $groupEntitlement = self::createEntitlementFromPackage(
+            userId: $userId,
+            package: $package,
+            orderId: $orderId,
+            scope: ServicePackage::SCOPE_TUTORING_COLLECTIVE,
+            units: $groupUnits,
+            weeklyGroup: (int) $package->weekly_group_sessions,
+            weeklyPrivate: 0,
+            notes: 'premier:school',
+        );
+
+        self::createEntitlementFromPackage(
+            userId: $userId,
+            package: $package,
+            orderId: $orderId,
+            scope: ServicePackage::SCOPE_PRIVATE_LESSONS,
+            units: $privateUnits,
+            weeklyGroup: 0,
+            weeklyPrivate: (int) $package->weekly_private_sessions,
+            notes: 'premier:private',
+        );
+
+        return $groupEntitlement;
+    }
+
     public static function grant(
         int $userId,
         ServicePackage $package,
@@ -127,24 +187,69 @@ class StudentEntitlementService
         ?string $notes = null,
     ): StudentServiceEntitlement {
         if ($orderId) {
-            $existing = StudentServiceEntitlement::query()->where('order_id', $orderId)->first();
+            $existing = StudentServiceEntitlement::query()->where('order_id', $orderId)->orderBy('id')->first();
             if ($existing) {
                 return $existing;
             }
         }
 
-        $units = max(1, (int) ($unitsOverride ?? $package->units_count));
+        if ($package->isPremier() && $unitsOverride === null) {
+            return self::grantPremierPlan($userId, $package, $orderId);
+        }
+
+        $units = max(1, (int) ($unitsOverride ?? ($package->isCommercialPlan() ? $package->computedUnitsForTerm() : $package->units_count)));
+
+        return self::createEntitlementFromPackage(
+            userId: $userId,
+            package: $package,
+            orderId: $orderId,
+            scope: $package->scope ?: ServicePackage::SCOPE_GLOBAL,
+            units: $units,
+            weeklyGroup: (int) $package->weekly_group_sessions,
+            weeklyPrivate: (int) $package->weekly_private_sessions,
+            notes: $notes,
+        );
+    }
+
+    protected static function createEntitlementFromPackage(
+        int $userId,
+        ServicePackage $package,
+        ?int $orderId,
+        string $scope,
+        int $units,
+        int $weeklyGroup = 0,
+        int $weeklyPrivate = 0,
+        ?string $notes = null,
+    ): StudentServiceEntitlement {
         $starts = now();
         $expires = $package->duration_days
             ? $starts->copy()->addDays((int) $package->duration_days)
-            : null;
+            : ($package->term_months ? $starts->copy()->addDays((int) $package->term_months * 30) : null);
+
+        $yearId = $package->academic_year_id;
+        $subjectId = $package->academic_subject_id;
+        if ($package->tutoring_group_id && (! $yearId || ! $subjectId)) {
+            $group = $package->tutoringGroup ?: TutoringGroup::query()->find($package->tutoring_group_id);
+            if ($group) {
+                $yearId = $yearId ?: $group->academic_year_id;
+                $subjectId = $subjectId ?: $group->academic_subject_id;
+            }
+        }
 
         return StudentServiceEntitlement::create([
             'user_id' => $userId,
             'service_package_id' => $package->id,
             'order_id' => $orderId,
-            'scope' => $package->scope ?: ServicePackage::SCOPE_GLOBAL,
+            'scope' => $scope,
+            'plan_type' => $package->plan_type,
+            'term_months' => $package->term_months,
+            'weekly_group_sessions' => $weeklyGroup,
+            'weekly_private_sessions' => $weeklyPrivate,
+            'includes_community' => (bool) $package->includes_community,
+            'includes_libraries' => (bool) $package->includes_libraries,
             'tutoring_group_id' => $package->tutoring_group_id,
+            'academic_year_id' => $yearId,
+            'academic_subject_id' => $subjectId,
             'units_total' => $units,
             'units_used' => 0,
             'starts_at' => $starts,
@@ -161,8 +266,18 @@ class StudentEntitlementService
         ?int $tutoringGroupId = null,
         ?int $durationDays = null,
         ?string $notes = null,
+        ?int $academicYearId = null,
+        ?int $academicSubjectId = null,
     ): StudentServiceEntitlement {
         $starts = now();
+
+        if ($tutoringGroupId && (! $academicYearId || ! $academicSubjectId)) {
+            $group = TutoringGroup::query()->find($tutoringGroupId);
+            if ($group) {
+                $academicYearId = $academicYearId ?: $group->academic_year_id;
+                $academicSubjectId = $academicSubjectId ?: $group->academic_subject_id;
+            }
+        }
 
         return StudentServiceEntitlement::create([
             'user_id' => $userId,
@@ -170,6 +285,8 @@ class StudentEntitlementService
             'order_id' => null,
             'scope' => $scope,
             'tutoring_group_id' => $tutoringGroupId,
+            'academic_year_id' => $academicYearId,
+            'academic_subject_id' => $academicSubjectId,
             'units_total' => max(1, $units),
             'units_used' => 0,
             'starts_at' => $starts,
@@ -180,51 +297,115 @@ class StudentEntitlementService
     }
 
     /**
-     * Prefer group-specific, then matching scope, then global.
+     * Prefer group-specific, then year/subject-locked, then matching scope, then global.
      */
     public static function availableFor(
         int $userId,
         string $scope,
         ?int $tutoringGroupId = null,
+        ?int $academicYearId = null,
+        ?int $academicSubjectId = null,
     ): ?StudentServiceEntitlement {
         self::expireStaleForUser($userId);
 
-        $base = StudentServiceEntitlement::query()
+        if ($tutoringGroupId && (! $academicYearId || ! $academicSubjectId)) {
+            $group = TutoringGroup::query()->find($tutoringGroupId);
+            if ($group) {
+                $academicYearId = $academicYearId ?: ($group->academic_year_id ? (int) $group->academic_year_id : null);
+                $academicSubjectId = $academicSubjectId ?: ($group->academic_subject_id ? (int) $group->academic_subject_id : null);
+            }
+        }
+
+        $candidates = StudentServiceEntitlement::query()
             ->forUser($userId)
             ->active()
             ->whereColumn('units_used', '<', 'units_total')
+            ->whereIn('scope', [$scope, ServicePackage::SCOPE_GLOBAL])
             ->orderBy('expires_at')
-            ->orderBy('id');
+            ->orderBy('id')
+            ->get()
+            ->filter(function (StudentServiceEntitlement $e) use ($tutoringGroupId, $academicYearId, $academicSubjectId) {
+                if (! $tutoringGroupId && ! $academicYearId && ! $academicSubjectId) {
+                    return true;
+                }
 
-        $candidates = collect();
-        if ($tutoringGroupId) {
-            $candidates = $candidates->merge(
-                (clone $base)
-                    ->where('tutoring_group_id', $tutoringGroupId)
-                    ->whereIn('scope', [$scope, ServicePackage::SCOPE_GLOBAL])
-                    ->get()
-            );
-        }
-        $candidates = $candidates->merge(
-            (clone $base)
-                ->whereNull('tutoring_group_id')
-                ->where('scope', $scope)
-                ->get()
-        );
-        $candidates = $candidates->merge(
-            (clone $base)
-                ->whereNull('tutoring_group_id')
-                ->where('scope', ServicePackage::SCOPE_GLOBAL)
-                ->get()
-        );
+                return self::entitlementFitsContext(
+                    $e,
+                    $tutoringGroupId,
+                    $academicYearId,
+                    $academicSubjectId,
+                );
+            })
+            ->sortByDesc(fn (StudentServiceEntitlement $e) => self::entitlementSpecificityScore(
+                $e,
+                $scope,
+                $tutoringGroupId,
+                $academicYearId,
+                $academicSubjectId,
+            ))
+            ->values();
 
-        foreach ($candidates->unique('id') as $entitlement) {
+        foreach ($candidates as $entitlement) {
             if (self::bookableUnitsLeft($entitlement) > 0) {
                 return $entitlement;
             }
         }
 
         return null;
+    }
+
+    public static function entitlementFitsContext(
+        StudentServiceEntitlement $entitlement,
+        ?int $tutoringGroupId = null,
+        ?int $academicYearId = null,
+        ?int $academicSubjectId = null,
+    ): bool {
+        if ($entitlement->tutoring_group_id) {
+            if (! $tutoringGroupId || (int) $entitlement->tutoring_group_id !== (int) $tutoringGroupId) {
+                return false;
+            }
+        }
+
+        if ($entitlement->academic_year_id) {
+            if (! $academicYearId || (int) $entitlement->academic_year_id !== (int) $academicYearId) {
+                return false;
+            }
+        }
+
+        if ($entitlement->academic_subject_id) {
+            if (! $academicSubjectId || (int) $entitlement->academic_subject_id !== (int) $academicSubjectId) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static function entitlementSpecificityScore(
+        StudentServiceEntitlement $entitlement,
+        string $scope,
+        ?int $tutoringGroupId = null,
+        ?int $academicYearId = null,
+        ?int $academicSubjectId = null,
+    ): int {
+        $score = 0;
+        if ($entitlement->tutoring_group_id && $tutoringGroupId
+            && (int) $entitlement->tutoring_group_id === (int) $tutoringGroupId) {
+            $score += 100;
+        }
+        if ($entitlement->academic_subject_id && $academicSubjectId
+            && (int) $entitlement->academic_subject_id === (int) $academicSubjectId) {
+            $score += 20;
+        }
+        if ($entitlement->academic_year_id && $academicYearId
+            && (int) $entitlement->academic_year_id === (int) $academicYearId) {
+            $score += 10;
+        }
+        if ($entitlement->scope === $scope) {
+            $score += 5;
+        }
+
+        return $score;
     }
 
     /**
@@ -256,33 +437,52 @@ class StudentEntitlementService
         return max(0, $entitlement->unitsLeft() - $reserved - $otoReserved);
     }
 
-    public static function unitsLeft(int $userId, string $scope, ?int $tutoringGroupId = null): int
-    {
+    public static function unitsLeft(
+        int $userId,
+        string $scope,
+        ?int $tutoringGroupId = null,
+        ?int $academicYearId = null,
+        ?int $academicSubjectId = null,
+    ): int {
         self::expireStaleForUser($userId);
+
+        if ($tutoringGroupId && (! $academicYearId || ! $academicSubjectId)) {
+            $group = TutoringGroup::query()->find($tutoringGroupId);
+            if ($group) {
+                $academicYearId = $academicYearId ?: ($group->academic_year_id ? (int) $group->academic_year_id : null);
+                $academicSubjectId = $academicSubjectId ?: ($group->academic_subject_id ? (int) $group->academic_subject_id : null);
+            }
+        }
 
         return (int) StudentServiceEntitlement::query()
             ->forUser($userId)
             ->active()
-            ->where(function ($q) use ($scope, $tutoringGroupId) {
-                $q->where(function ($inner) use ($scope, $tutoringGroupId) {
-                    if ($tutoringGroupId) {
-                        $inner->where('tutoring_group_id', $tutoringGroupId)
-                            ->whereIn('scope', [$scope, ServicePackage::SCOPE_GLOBAL]);
-                    } else {
-                        $inner->whereRaw('1 = 0');
-                    }
-                })->orWhere(function ($inner) use ($scope) {
-                    $inner->whereNull('tutoring_group_id')
-                        ->whereIn('scope', [$scope, ServicePackage::SCOPE_GLOBAL]);
-                });
-            })
+            ->whereIn('scope', [$scope, ServicePackage::SCOPE_GLOBAL])
             ->get()
+            ->filter(function (StudentServiceEntitlement $e) use ($tutoringGroupId, $academicYearId, $academicSubjectId) {
+                // Dashboard / totals with no booking context: include all matching scopes.
+                if (! $tutoringGroupId && ! $academicYearId && ! $academicSubjectId) {
+                    return true;
+                }
+
+                return self::entitlementFitsContext(
+                    $e,
+                    $tutoringGroupId,
+                    $academicYearId,
+                    $academicSubjectId,
+                );
+            })
             ->sum(fn (StudentServiceEntitlement $e) => self::bookableUnitsLeft($e));
     }
 
-    public static function assertCanBook(int $userId, string $scope, ?int $tutoringGroupId = null): StudentServiceEntitlement
-    {
-        $entitlement = self::availableFor($userId, $scope, $tutoringGroupId);
+    public static function assertCanBook(
+        int $userId,
+        string $scope,
+        ?int $tutoringGroupId = null,
+        ?int $academicYearId = null,
+        ?int $academicSubjectId = null,
+    ): StudentServiceEntitlement {
+        $entitlement = self::availableFor($userId, $scope, $tutoringGroupId, $academicYearId, $academicSubjectId);
         if (! $entitlement) {
             throw new InvalidArgumentException('لا يوجد رصيد حصص متاح. اشترِ باقة أو اشحن رصيدك.');
         }

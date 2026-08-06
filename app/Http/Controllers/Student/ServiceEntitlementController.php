@@ -18,7 +18,12 @@ class ServiceEntitlementController extends Controller
 
         $entitlements = StudentServiceEntitlement::query()
             ->forUser((int) $user->id)
-            ->with(['servicePackage:id,name,slug', 'tutoringGroup:id,title,slug'])
+            ->with([
+                'servicePackage:id,name,slug',
+                'tutoringGroup:id,title,slug',
+                'academicYear:id,name',
+                'academicSubject:id,name',
+            ])
             ->orderByDesc('id')
             ->paginate(20);
 

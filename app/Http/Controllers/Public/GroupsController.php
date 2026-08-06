@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicSubject;
 use App\Models\AcademicYear;
+use App\Models\ServicePackage;
 use App\Models\TutoringGroup;
 use App\Services\StudentEntitlementService;
 use App\Services\TutoringGroupAvailabilityService;
@@ -69,7 +70,23 @@ class GroupsController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        return view('public.school-year', compact('year', 'classes'));
+        $servicePackages = ServicePackage::query()
+            ->commercial()
+            ->where('plan_type', ServicePackage::PLAN_SCHOOL)
+            ->forSchoolProgram((int) $year->id)
+            ->with(['academicYear:id,name', 'academicSubject:id,name'])
+            ->ordered()
+            ->get();
+
+        if ($servicePackages->isEmpty()) {
+            $servicePackages = ServicePackage::query()
+                ->commercial()
+                ->whereIn('plan_type', [ServicePackage::PLAN_SCHOOL, ServicePackage::PLAN_PREMIER])
+                ->ordered()
+                ->get();
+        }
+
+        return view('public.school-year', compact('year', 'classes', 'servicePackages'));
     }
 
     public function groupCourses(): View
@@ -121,11 +138,36 @@ class GroupsController extends Controller
             $creditUnits = StudentEntitlementService::unitsLeft(
                 (int) auth()->id(),
                 $scope,
-                (int) $group->id
+                (int) $group->id,
+                $group->academic_year_id ? (int) $group->academic_year_id : null,
+                $group->academic_subject_id ? (int) $group->academic_subject_id : null,
             );
         }
 
-        return view('public.groups-show', compact('group', 'slots', 'slotsByDate', 'cohorts', 'packages', 'creditUnits'));
+        $servicePackages = collect();
+        if ($group->isCollective() || $group->academic_year_id) {
+            $servicePackages = ServicePackage::query()
+                ->commercial()
+                ->whereIn('plan_type', [ServicePackage::PLAN_SCHOOL, ServicePackage::PLAN_PREMIER])
+                ->forSchoolProgram(
+                    $group->academic_year_id ? (int) $group->academic_year_id : null,
+                    $group->academic_subject_id ? (int) $group->academic_subject_id : null,
+                )
+                ->with(['academicYear:id,name', 'academicSubject:id,name'])
+                ->ordered()
+                ->limit(6)
+                ->get();
+        }
+
+        return view('public.groups-show', compact(
+            'group',
+            'slots',
+            'slotsByDate',
+            'cohorts',
+            'packages',
+            'creditUnits',
+            'servicePackages',
+        ));
     }
 
     public function book(Request $request, string $slug): RedirectResponse

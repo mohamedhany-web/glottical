@@ -20,7 +20,15 @@ class StudentServiceEntitlement extends Model
         'service_package_id',
         'order_id',
         'scope',
+        'plan_type',
+        'term_months',
+        'weekly_group_sessions',
+        'weekly_private_sessions',
+        'includes_community',
+        'includes_libraries',
         'tutoring_group_id',
+        'academic_year_id',
+        'academic_subject_id',
         'units_total',
         'units_used',
         'starts_at',
@@ -34,6 +42,11 @@ class StudentServiceEntitlement extends Model
         return [
             'units_total' => 'integer',
             'units_used' => 'integer',
+            'term_months' => 'integer',
+            'weekly_group_sessions' => 'integer',
+            'weekly_private_sessions' => 'integer',
+            'includes_community' => 'boolean',
+            'includes_libraries' => 'boolean',
             'starts_at' => 'datetime',
             'expires_at' => 'datetime',
         ];
@@ -57,6 +70,16 @@ class StudentServiceEntitlement extends Model
     public function tutoringGroup(): BelongsTo
     {
         return $this->belongsTo(TutoringGroup::class);
+    }
+
+    public function academicYear(): BelongsTo
+    {
+        return $this->belongsTo(AcademicYear::class);
+    }
+
+    public function academicSubject(): BelongsTo
+    {
+        return $this->belongsTo(AcademicSubject::class);
     }
 
     public function bookings(): HasMany

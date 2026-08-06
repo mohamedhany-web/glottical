@@ -58,6 +58,11 @@
                         </td>
                         <td class="px-4 py-3">
                             {{ \App\Models\ServicePackage::scopes()[$ent->scope] ?? $ent->scope }}
+                            @if($ent->academicYear || $ent->academicSubject)
+                                <div class="text-xs text-muted">
+                                    {{ collect([$ent->academicYear?->name, $ent->academicSubject?->name])->filter()->implode(' · ') }}
+                                </div>
+                            @endif
                             @if($ent->tutoringGroup)<div class="text-xs text-muted">{{ $ent->tutoringGroup->title }}</div>@endif
                             @if($ent->servicePackage)<div class="text-xs text-muted">{{ $ent->servicePackage->name }}</div>@endif
                         </td>

@@ -18,6 +18,10 @@
             </p>
         </div>
         <div class="flex flex-wrap gap-2">
+            <a href="{{ route('public.service-packages.index', $recommendedYear ? ['year' => $recommendedYear->id] : []) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-white px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-box-open text-xs"></i>
+                {{ $isRtl ? 'باقات المدرسة' : 'School packages' }}
+            </a>
             <a href="{{ route('public.groups') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-white px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
                 <i class="fas fa-school text-xs"></i>
                 {{ $isRtl ? 'صفحة المدرسة' : 'School page' }}

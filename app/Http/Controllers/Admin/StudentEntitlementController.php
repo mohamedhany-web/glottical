@@ -29,7 +29,14 @@ class StudentEntitlementController extends Controller
     public function index(Request $request): View
     {
         $query = StudentServiceEntitlement::query()
-            ->with(['user:id,name,email', 'servicePackage:id,name', 'tutoringGroup:id,title', 'order:id,order_type,status'])
+            ->with([
+                'user:id,name,email',
+                'servicePackage:id,name',
+                'tutoringGroup:id,title',
+                'academicYear:id,name',
+                'academicSubject:id,name',
+                'order:id,order_type,status',
+            ])
             ->withCount(['bookings as reserved_units_count' => fn ($q) => $q->blocking()])
             ->orderByDesc('id');
 
