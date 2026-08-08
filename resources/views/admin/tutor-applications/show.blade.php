@@ -1,7 +1,7 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
-@section('title', 'بيانات طلب معلم')
-@section('header', 'مراجعة طلب التوظيف')
+@section('title', 'بيانات طلب معلم - Glottical')
+@section('page_title', 'مراجعة طلب التوظيف')
 
 @section('content')
 @php
@@ -16,179 +16,212 @@
         'female' => 'أنثى',
         default => '—',
     };
+    $badgeClass = match ($application->status) {
+        'activated' => 'bg-accent-soft text-accent',
+        'approved' => 'bg-metal/15 text-metal',
+        'rejected' => 'bg-danger/10 text-danger',
+        default => 'bg-canvas-muted text-muted',
+    };
+    $fieldClass = 'w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
 @endphp
-<div class="space-y-6">
+
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">التوظيف · طلب #{{ $application->id }}</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ $application->full_name }}</h2>
+            <p class="mt-1 text-sm text-muted">{{ $application->headline ?: 'مراجعة طلب التوظيف' }}</p>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap items-center gap-2">
+            <span class="rounded-lg px-2.5 py-1 text-xs font-medium {{ $badgeClass }}">{{ $application->statusLabel() }}</span>
+            <a href="{{ route('admin.tutor-applications.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft hover:text-accent">كل الطلبات</a>
+            <a href="{{ route('admin.tutor-applications.hub') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft hover:text-accent">لوحة التوظيف</a>
+        </div>
+    </section>
+
     @if(session('success'))
-        <div class="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-800 font-semibold">{{ session('success') }}</div>
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
+        </div>
     @endif
     @if(session('error'))
-        <div class="rounded-xl bg-rose-50 border border-rose-200 px-4 py-3 text-rose-800 font-semibold">{{ session('error') }}</div>
+        <div class="flex items-center gap-3 rounded-2xl border border-danger/20 bg-surface px-4 py-3 text-sm font-medium text-danger shadow-soft" role="alert">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-danger/10"><i class="fas fa-exclamation text-sm"></i></span>
+            <p>{{ session('error') }}</p>
+        </div>
     @endif
 
     @if(session('activated_email'))
-        <div class="rounded-2xl border border-emerald-300 bg-emerald-50 p-5 space-y-2">
-            <p class="font-bold text-emerald-900">تم تفعيل الملف العام — المعلم يسجّل بنفس الإيميل وكلمة المرور التي أنشأها عند التقديم:</p>
-            <p class="font-mono font-bold" dir="ltr">{{ session('activated_email') }}</p>
-            @if(session('activated_user_id'))
-                <a href="{{ route('admin.users.edit', session('activated_user_id')) }}" class="inline-flex text-sm font-bold text-emerald-900 underline">فتح صفحة المستخدم</a>
-            @endif
+        <div class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+            <div class="flex items-start gap-3">
+                <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-user-check text-sm"></i></span>
+                <div>
+                    <p class="text-sm font-semibold text-ink">تم تفعيل الملف العام — المعلم يسجّل بنفس الإيميل وكلمة المرور التي أنشأها عند التقديم:</p>
+                    <p class="mt-2 font-mono text-sm font-bold text-accent" dir="ltr">{{ session('activated_email') }}</p>
+                    @if(session('activated_user_id'))
+                        <a href="{{ route('admin.users.edit', session('activated_user_id')) }}" class="mt-2 inline-flex text-sm font-semibold text-accent underline">فتح صفحة المستخدم</a>
+                    @endif
+                </div>
+            </div>
         </div>
     @endif
 
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="flex flex-wrap items-center gap-3">
-            <a href="{{ route('admin.tutor-applications.index') }}" class="text-sm font-semibold text-sky-700 hover:underline">← كل الطلبات</a>
-            <a href="{{ route('admin.tutor-applications.hub') }}" class="text-sm font-semibold text-slate-600 hover:underline">لوحة التوظيف</a>
-            <a href="{{ $applyUrl }}" target="_blank" class="text-sm font-semibold text-slate-600 hover:underline">لينك التقديم</a>
-        </div>
-        <span class="rounded-full px-3 py-1 text-xs font-semibold
-            @if($application->status === 'activated') bg-emerald-100 text-emerald-700
-            @elseif($application->status === 'approved') bg-sky-100 text-sky-700
-            @elseif($application->status === 'rejected') bg-rose-100 text-rose-700
-            @else bg-amber-100 text-amber-700 @endif">
-            {{ $application->statusLabel() }}
-        </span>
-    </div>
-
-    <div class="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
+    <div class="grid gap-5 lg:grid-cols-[1.25fr_0.75fr]">
         <div class="space-y-5">
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
+            <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
                 <div class="flex items-start gap-4">
                     @if($application->photoUrl())
-                        <img src="{{ $application->photoUrl() }}" alt="" class="h-20 w-20 rounded-2xl object-cover border border-slate-200">
+                        <img src="{{ $application->photoUrl() }}" alt="" class="size-20 rounded-2xl border border-line object-cover">
+                    @else
+                        <span class="inline-flex size-20 items-center justify-center rounded-2xl bg-canvas-muted text-xl font-bold text-muted">{{ mb_substr($application->full_name, 0, 1) }}</span>
                     @endif
                     <div>
-                        <h2 class="text-xl font-bold text-slate-800">{{ $application->full_name }}</h2>
-                        <p class="text-sky-700 font-semibold">{{ $application->headline }}</p>
-                        <p class="text-xs text-slate-500 mt-1">رقم الطلب #{{ $application->id }} · {{ $application->created_at?->format('Y-m-d H:i') }}</p>
+                        <h3 class="text-lg font-semibold text-ink">{{ $application->full_name }}</h3>
+                        <p class="mt-0.5 font-medium text-accent">{{ $application->headline }}</p>
+                        <p class="mt-1 text-xs text-muted">رقم الطلب #{{ $application->id }} · {{ $application->created_at?->format('Y-m-d H:i') }}</p>
                     </div>
                 </div>
 
-                <h3 class="font-bold text-slate-800 border-t border-slate-100 pt-4">البيانات الشخصية كاملة</h3>
-                <dl class="grid gap-3 text-sm sm:grid-cols-2">
-                    <div class="rounded-xl bg-slate-50 px-3 py-2"><dt class="text-slate-500 text-xs">البريد</dt><dd dir="ltr" class="font-semibold">{{ $application->email }}</dd></div>
-                    <div class="rounded-xl bg-slate-50 px-3 py-2"><dt class="text-slate-500 text-xs">الجوال / واتساب</dt><dd dir="ltr" class="font-semibold">{{ $application->phone ?: '—' }}</dd></div>
-                    <div class="rounded-xl bg-slate-50 px-3 py-2"><dt class="text-slate-500 text-xs">النوع</dt><dd class="font-semibold">{{ $genderLabel }}</dd></div>
-                    <div class="rounded-xl bg-slate-50 px-3 py-2"><dt class="text-slate-500 text-xs">الجنسية</dt><dd class="font-semibold">{{ $application->nationality ?: '—' }}</dd></div>
-                    <div class="rounded-xl bg-slate-50 px-3 py-2"><dt class="text-slate-500 text-xs">الدولة / المدينة</dt><dd class="font-semibold">{{ $application->city ?: '—' }}</dd></div>
-                    <div class="rounded-xl bg-slate-50 px-3 py-2"><dt class="text-slate-500 text-xs">المؤهل</dt><dd class="font-semibold">{{ $application->education ?: '—' }}</dd></div>
-                    <div class="rounded-xl bg-slate-50 px-3 py-2"><dt class="text-slate-500 text-xs">سنوات الخبرة</dt><dd class="font-semibold">{{ $application->years_experience ?? '—' }}</dd></div>
-                    <div class="rounded-xl bg-slate-50 px-3 py-2"><dt class="text-slate-500 text-xs">راجع بواسطة</dt><dd class="font-semibold">{{ $application->reviewedByUser->name ?? '—' }}</dd></div>
+                <h4 class="mt-5 border-t border-line pt-4 text-sm font-semibold text-ink">البيانات الشخصية</h4>
+                <dl class="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+                    @foreach([
+                        ['البريد', $application->email, true],
+                        ['الجوال / واتساب', $application->phone ?: '—', true],
+                        ['النوع', $genderLabel, false],
+                        ['الجنسية', $application->nationality ?: '—', false],
+                        ['الدولة / المدينة', $application->city ?: '—', false],
+                        ['المؤهل', $application->education ?: '—', false],
+                        ['سنوات الخبرة', $application->years_experience ?? '—', false],
+                        ['راجع بواسطة', $application->reviewedByUser->name ?? '—', false],
+                    ] as [$label, $value, $ltr])
+                        <div class="rounded-xl border border-line bg-canvas px-3 py-2">
+                            <dt class="text-xs text-muted">{{ $label }}</dt>
+                            <dd class="mt-0.5 font-semibold text-ink" @if($ltr) dir="ltr" @endif>{{ $value }}</dd>
+                        </div>
+                    @endforeach
                 </dl>
-            </div>
+            </article>
 
-            <div class="rounded-2xl border border-slate-200 bg-white p-5">
-                <h3 class="font-bold text-slate-800 mb-2">النبذة / السيرة</h3>
-                <p class="text-sm leading-7 text-slate-600 whitespace-pre-line">{{ $application->bio }}</p>
-            </div>
+            <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                <h3 class="text-base font-semibold text-ink">النبذة / السيرة</h3>
+                <p class="mt-2 whitespace-pre-line text-sm leading-7 text-muted">{{ $application->bio }}</p>
+            </article>
 
-            <div class="rounded-2xl border border-slate-200 bg-white p-5">
-                <h3 class="font-bold text-slate-800 mb-2">الخبرات</h3>
-                <p class="text-sm leading-7 text-slate-600 whitespace-pre-line">{{ $application->experience }}</p>
-            </div>
+            <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                <h3 class="text-base font-semibold text-ink">الخبرات</h3>
+                <p class="mt-2 whitespace-pre-line text-sm leading-7 text-muted">{{ $application->experience }}</p>
+            </article>
 
-            <div class="rounded-2xl border border-slate-200 bg-white p-5">
-                <h3 class="font-bold text-slate-800 mb-3">الفيديو التعريفي</h3>
-                @if($embed)
-                    <div class="aspect-video overflow-hidden rounded-xl bg-slate-900">
-                        <iframe src="{{ $embed }}" class="h-full w-full" allowfullscreen></iframe>
-                    </div>
-                @elseif($direct)
-                    <video controls class="w-full rounded-xl bg-slate-900" src="{{ $direct }}"></video>
-                @elseif($videoUrl)
-                    <a href="{{ $videoUrl }}" target="_blank" class="text-sky-700 font-semibold underline" dir="ltr">{{ $videoUrl }}</a>
-                @else
-                    <p class="text-slate-500 text-sm">لا يوجد فيديو.</p>
-                @endif
-            </div>
+            <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                <h3 class="text-base font-semibold text-ink">الفيديو التعريفي</h3>
+                <div class="mt-3">
+                    @if($embed)
+                        <div class="aspect-video overflow-hidden rounded-xl bg-ink">
+                            <iframe src="{{ $embed }}" class="h-full w-full" allowfullscreen></iframe>
+                        </div>
+                    @elseif($direct)
+                        <video controls class="w-full rounded-xl bg-ink" src="{{ $direct }}"></video>
+                    @elseif($videoUrl)
+                        <a href="{{ $videoUrl }}" target="_blank" class="font-semibold text-accent underline" dir="ltr">{{ $videoUrl }}</a>
+                    @else
+                        <p class="text-sm text-muted">لا يوجد فيديو.</p>
+                    @endif
+                </div>
+            </article>
 
             @if($application->user)
-                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm">
-                    <h3 class="font-bold text-emerald-900 mb-2">الحساب المفعّل</h3>
-                    <p>المستخدم: <strong>{{ $application->user->name }}</strong></p>
-                    <p dir="ltr">{{ $application->user->email }} · {{ $application->user->phone }}</p>
-                    <p class="mt-1 text-emerald-800">تفعيل: {{ $application->activated_at?->format('Y-m-d H:i') }} بواسطة {{ $application->activatedByUser->name ?? '—' }}</p>
-                    <div class="mt-3 flex flex-wrap gap-2">
-                        <a href="{{ route('admin.users.edit', $application->user) }}" class="rounded-lg bg-white border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-900">إدارة المستخدم</a>
-                        <a href="{{ route('public.instructors.show', $application->user) }}" target="_blank" class="rounded-lg bg-white border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-900">الملف العام</a>
+                <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                    <div class="flex items-start gap-3">
+                        <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-user-check text-sm"></i></span>
+                        <div class="min-w-0 flex-1">
+                            <h3 class="text-base font-semibold text-ink">الحساب المفعّل</h3>
+                            <p class="mt-1 text-sm text-muted">المستخدم: <span class="font-semibold text-ink">{{ $application->user->name }}</span></p>
+                            <p class="mt-0.5 text-sm text-muted" dir="ltr">{{ $application->user->email }} · {{ $application->user->phone }}</p>
+                            <p class="mt-1 text-xs text-muted">تفعيل: {{ $application->activated_at?->format('Y-m-d H:i') }} بواسطة {{ $application->activatedByUser->name ?? '—' }}</p>
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                <a href="{{ route('admin.users.edit', $application->user) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-3 text-xs font-semibold text-ink hover:text-accent">إدارة المستخدم</a>
+                                <a href="{{ route('public.instructors.show', $application->user) }}" target="_blank" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-3 text-xs font-semibold text-white">الملف العام</a>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </article>
             @endif
         </div>
 
         <div class="space-y-5">
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
-                <h3 class="font-bold text-slate-800">المستندات المرفوعة</h3>
+            <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft space-y-4">
+                <h3 class="text-base font-semibold text-ink">المستندات المرفوعة</h3>
                 @foreach([
                     ['label' => 'الصورة الشخصية', 'url' => $application->photoUrl(), 'pdf' => false],
                     ['label' => 'البطاقة / الجواز', 'url' => $application->idDocumentUrl(), 'pdf' => $application->idDocumentIsPdf()],
                     ['label' => 'الشهادة / الإجازة', 'url' => $application->certificateUrl(), 'pdf' => $application->certificateIsPdf()],
                 ] as $doc)
                     <div>
-                        <p class="text-xs font-semibold text-slate-500 mb-1">{{ $doc['label'] }}</p>
+                        <p class="mb-1.5 text-xs font-medium text-muted">{{ $doc['label'] }}</p>
                         @if($doc['url'])
                             @if($doc['pdf'])
-                                <a href="{{ $doc['url'] }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-sky-700">
-                                    <i class="fas fa-file-pdf text-rose-600"></i> فتح ملف PDF
+                                <a href="{{ $doc['url'] }}" target="_blank" rel="noopener" class="btn-press inline-flex items-center gap-2 rounded-xl border border-line bg-canvas px-4 py-3 text-sm font-semibold text-accent">
+                                    <i class="fas fa-file-pdf text-danger"></i> فتح ملف PDF
                                 </a>
                             @else
-                                <a href="{{ $doc['url'] }}" target="_blank" rel="noopener" class="block overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                                <a href="{{ $doc['url'] }}" target="_blank" rel="noopener" class="block overflow-hidden rounded-xl border border-line bg-canvas">
                                     <img src="{{ $doc['url'] }}" alt="{{ $doc['label'] }}" class="max-h-48 w-full object-contain" loading="lazy">
                                 </a>
                             @endif
                         @else
-                            <p class="text-sm text-slate-400">غير مرفوع</p>
+                            <p class="text-sm text-muted">غير مرفوع</p>
                         @endif
                     </div>
                 @endforeach
-            </div>
+            </article>
 
             @if($application->status === 'pending')
-                <div class="rounded-2xl border border-slate-200 bg-white p-5 space-y-3">
-                    <h3 class="font-bold text-slate-800">١) قبول الطلب بعد المراجعة</h3>
-                    <p class="text-xs text-slate-500">بعد القبول يمكنك تفعيل حساب المعلم في الخطوة التالية.</p>
+                <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft space-y-3">
+                    <h3 class="text-base font-semibold text-ink">١) قبول الطلب بعد المراجعة</h3>
+                    <p class="text-xs text-muted">بعد القبول يمكنك تفعيل حساب المعلم في الخطوة التالية.</p>
                     <form method="POST" action="{{ route('admin.tutor-applications.approve', $application) }}">
                         @csrf
-                        <button class="w-full rounded-xl bg-sky-600 py-2.5 text-sm font-bold text-white">قبول الطلب</button>
+                        <button class="btn-press w-full rounded-xl bg-accent py-2.5 text-sm font-semibold text-white">قبول الطلب</button>
                     </form>
                     <form method="POST" action="{{ route('admin.tutor-applications.reject', $application) }}" class="space-y-2">
                         @csrf
-                        <textarea name="admin_notes" rows="3" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="سبب الرفض (اختياري)">{{ old('admin_notes', $application->admin_notes) }}</textarea>
-                        <button class="w-full rounded-xl bg-rose-600 py-2.5 text-sm font-bold text-white">رفض الطلب</button>
+                        <textarea name="admin_notes" rows="3" class="{{ $fieldClass }}" placeholder="سبب الرفض (اختياري)">{{ old('admin_notes', $application->admin_notes) }}</textarea>
+                        <button class="btn-press w-full rounded-xl bg-danger py-2.5 text-sm font-semibold text-white">رفض الطلب</button>
                     </form>
-                </div>
+                </article>
             @endif
 
             @if($application->canActivateAccount())
-                <div class="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-5 space-y-3">
-                    <h3 class="font-bold text-emerald-900">٢) تفعيل الملف العام</h3>
-                    <p class="text-sm text-emerald-800 leading-6">
+                <article class="rounded-2xl border border-accent/30 bg-surface p-5 shadow-soft space-y-3">
+                    <h3 class="text-base font-semibold text-ink">٢) تفعيل الملف العام</h3>
+                    <p class="text-sm leading-6 text-muted">
                         الحساب موجود مسبقاً (أنشأه المتقدم عند التسجيل). التفعيل يعتمد الملف التعريفي ويظهر المعلم للطلاب.
                     </p>
                     @if($application->user)
-                        <p class="text-xs text-emerald-900" dir="ltr">{{ $application->user->email }}</p>
+                        <p class="text-xs font-medium text-accent" dir="ltr">{{ $application->user->email }}</p>
                     @endif
                     <form method="POST" action="{{ route('admin.tutor-applications.activate', $application) }}" onsubmit="return confirm('تأكيد تفعيل الملف العام؟')">
                         @csrf
-                        <button class="w-full rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white">
+                        <button class="btn-press w-full rounded-xl bg-accent py-3 text-sm font-semibold text-white">
                             <i class="fas fa-user-check ml-1"></i> تفعيل الملف العام الآن
                         </button>
                     </form>
-                </div>
+                </article>
             @endif
 
             @if($application->admin_notes && $application->status === 'rejected')
-                <div class="rounded-2xl border border-slate-200 bg-white p-5">
-                    <h3 class="font-bold text-slate-800 mb-2">ملاحظات الرفض</h3>
-                    <p class="text-sm text-slate-600 whitespace-pre-line">{{ $application->admin_notes }}</p>
-                </div>
+                <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                    <h3 class="text-base font-semibold text-ink">ملاحظات الرفض</h3>
+                    <p class="mt-2 whitespace-pre-line text-sm text-muted">{{ $application->admin_notes }}</p>
+                </article>
             @endif
 
             @unless($application->isActivated())
                 <form method="POST" action="{{ route('admin.tutor-applications.destroy', $application) }}" onsubmit="return confirm('حذف هذا الطلب نهائياً؟')">
                     @csrf
                     @method('DELETE')
-                    <button class="w-full rounded-xl border border-rose-200 py-2.5 text-sm font-bold text-rose-700">حذف الطلب</button>
+                    <button class="btn-press w-full rounded-xl border border-danger/30 py-2.5 text-sm font-semibold text-danger hover:bg-danger hover:text-white">حذف الطلب</button>
                 </form>
             @endunless
         </div>

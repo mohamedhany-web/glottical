@@ -1,97 +1,130 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
-@section('title', 'لوحة التوظيف')
-@section('header', 'توظيف المعلمين')
+@section('title', 'لوحة التوظيف - Glottical')
+@section('page_title', 'توظيف المعلمين')
 
 @section('content')
-<div class="space-y-6">
-    <div class="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-                <h1 class="text-2xl font-bold text-slate-800">لوحة التوظيف</h1>
-                <p class="mt-1 text-sm text-slate-500">مراجعة طلبات التقديم، عرض بيانات المتقدمين كاملة، ثم تفعيل حساب المعلم.</p>
-            </div>
-            <div class="flex flex-wrap gap-2">
-                <a href="{{ $applyUrl }}" target="_blank" class="inline-flex items-center gap-2 rounded-xl bg-[#0B3D91] px-4 py-2.5 text-sm font-bold text-white">
-                    <i class="fas fa-external-link-alt"></i> لينك التقديم العام
-                </a>
-                <button type="button" onclick="navigator.clipboard.writeText(@js($applyUrl))" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                    <i class="fas fa-copy"></i> نسخ اللينك
-                </button>
-            </div>
-        </div>
-        <div class="mt-4 rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 text-sm" dir="ltr">
-            <span class="font-semibold text-slate-500">Apply URL:</span>
-            <a href="{{ $applyUrl }}" class="text-sky-700 font-semibold underline break-all" target="_blank">{{ $applyUrl }}</a>
-        </div>
-    </div>
+@php
+    $kpis = [
+        ['label' => 'مسودات', 'value' => $stats['draft'] ?? 0, 'href' => route('admin.tutor-applications.index', ['status' => 'draft']), 'icon' => 'fa-file-alt', 'tone' => 'muted'],
+        ['label' => 'قيد المراجعة', 'value' => $stats['pending'], 'href' => route('admin.tutor-applications.index', ['status' => 'pending']), 'icon' => 'fa-inbox', 'tone' => 'metal'],
+        ['label' => 'بانتظار التفعيل', 'value' => $stats['approved'], 'href' => route('admin.tutor-applications.index', ['status' => 'approved']), 'icon' => 'fa-user-check', 'tone' => 'accent'],
+        ['label' => 'مفعّلون', 'value' => $stats['activated'], 'href' => route('admin.tutor-applications.activated'), 'icon' => 'fa-chalkboard-teacher', 'tone' => 'accent'],
+        ['label' => 'مرفوض', 'value' => $stats['rejected'], 'href' => route('admin.tutor-applications.index', ['status' => 'rejected']), 'icon' => 'fa-ban', 'tone' => 'danger'],
+        ['label' => 'معلمون نشطون', 'value' => $stats['instructors'], 'href' => route('admin.tutor-applications.activated'), 'icon' => 'fa-users', 'tone' => 'metal'],
+    ];
+    $toneClass = [
+        'accent' => 'bg-accent-soft text-accent',
+        'metal' => 'bg-metal/15 text-metal',
+        'muted' => 'bg-canvas-muted text-muted',
+        'danger' => 'bg-danger/10 text-danger',
+    ];
+@endphp
 
-    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
-        @foreach([
-            ['label' => 'مسودات', 'value' => $stats['draft'] ?? 0, 'href' => route('admin.tutor-applications.index', ['status' => 'draft']), 'tone' => 'slate'],
-            ['label' => 'قيد المراجعة', 'value' => $stats['pending'], 'href' => route('admin.tutor-applications.index', ['status' => 'pending']), 'tone' => 'amber'],
-            ['label' => 'بانتظار التفعيل', 'value' => $stats['approved'], 'href' => route('admin.tutor-applications.index', ['status' => 'approved']), 'tone' => 'sky'],
-            ['label' => 'مفعّلون', 'value' => $stats['activated'], 'href' => route('admin.tutor-applications.activated'), 'tone' => 'emerald'],
-            ['label' => 'مرفوض', 'value' => $stats['rejected'], 'href' => route('admin.tutor-applications.index', ['status' => 'rejected']), 'tone' => 'rose'],
-            ['label' => 'معلمون نشطون', 'value' => $stats['instructors'], 'href' => route('admin.tutor-applications.activated'), 'tone' => 'indigo'],
-        ] as $card)
-            <a href="{{ $card['href'] }}" class="rounded-2xl border border-slate-200 bg-white p-4 hover:border-sky-200 hover:shadow-sm transition">
-                <p class="text-xs font-semibold text-slate-500">{{ $card['label'] }}</p>
-                <p class="mt-1 text-2xl font-bold text-slate-800">{{ $card['value'] }}</p>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">الإدارة · التوظيف</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">لوحة التوظيف</h2>
+            <p class="mt-1 text-sm text-muted">مراجعة طلبات التقديم، عرض بيانات المتقدمين، ثم تفعيل الملف العام للمعلم.</p>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <button type="button" onclick="navigator.clipboard.writeText(@js($applyUrl))" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft hover:text-accent">
+                <i class="fas fa-copy text-xs"></i>
+                نسخ اللينك
+            </button>
+            <a href="{{ $applyUrl }}" target="_blank" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-external-link-alt text-xs"></i>
+                لينك التقديم العام
+            </a>
+        </div>
+    </section>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-4 py-3 sm:px-5">
+            <p class="text-xs font-medium text-muted">رابط التقديم العام</p>
+            <a href="{{ $applyUrl }}" class="mt-1 block break-all text-sm font-semibold text-accent underline" dir="ltr" target="_blank">{{ $applyUrl }}</a>
+        </div>
+    </article>
+
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        @foreach($kpis as $kpi)
+            <a href="{{ $kpi['href'] }}" class="rounded-2xl border border-line bg-surface p-4 shadow-soft transition hover:border-accent/30">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $toneClass[$kpi['tone']] }}">
+                    <i class="fas {{ $kpi['icon'] }} text-sm"></i>
+                </div>
+                <p class="mt-3 text-xs text-muted">{{ $kpi['label'] }}</p>
+                <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ number_format($kpi['value']) }}</p>
             </a>
         @endforeach
-    </div>
+    </section>
 
-    <div class="grid gap-6 lg:grid-cols-2">
-        <div class="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-                <h2 class="font-bold text-slate-800">طلبات بانتظار المراجعة</h2>
-                <a href="{{ route('admin.tutor-applications.index', ['status' => 'pending']) }}" class="text-sm font-semibold text-sky-700">الكل</a>
+    <div class="grid gap-5 lg:grid-cols-2">
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+                <div>
+                    <h3 class="text-base font-semibold text-ink">طلبات بانتظار المراجعة</h3>
+                    <p class="mt-0.5 text-xs text-muted">أحدث الطلبات الواردة</p>
+                </div>
+                <a href="{{ route('admin.tutor-applications.index', ['status' => 'pending']) }}" class="text-xs font-semibold text-accent hover:underline">الكل</a>
             </div>
-            <ul class="divide-y divide-slate-100">
+            <ul class="divide-y divide-line">
                 @forelse($recentPending as $app)
-                    <li class="px-5 py-3 flex items-center justify-between gap-3">
-                        <div>
-                            <p class="font-semibold text-slate-800">{{ $app->full_name }}</p>
-                            <p class="text-xs text-slate-500">{{ $app->headline }} · {{ $app->created_at?->diffForHumans() }}</p>
+                    <li class="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
+                        <div class="min-w-0">
+                            <p class="truncate font-semibold text-ink">{{ $app->full_name }}</p>
+                            <p class="mt-0.5 truncate text-xs text-muted">{{ $app->headline }} · {{ $app->created_at?->diffForHumans() }}</p>
                         </div>
-                        <a href="{{ route('admin.tutor-applications.show', $app) }}" class="text-sm font-bold text-sky-700">مراجعة</a>
+                        <a href="{{ route('admin.tutor-applications.show', $app) }}" class="btn-press inline-flex h-8 shrink-0 items-center rounded-lg bg-accent-soft px-3 text-xs font-semibold text-accent hover:bg-accent hover:text-white">مراجعة</a>
                     </li>
                 @empty
-                    <li class="px-5 py-8 text-center text-slate-500 text-sm">لا توجد طلبات جديدة.</li>
+                    <li class="px-5 py-12 text-center">
+                        <div class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+                            <i class="fas fa-inbox"></i>
+                        </div>
+                        <p class="text-sm font-medium text-ink">لا توجد طلبات جديدة</p>
+                    </li>
                 @endforelse
             </ul>
-        </div>
+        </article>
 
-        <div class="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-                <h2 class="font-bold text-slate-800">مقبولون — بانتظار تفعيل الحساب</h2>
-                <a href="{{ route('admin.tutor-applications.index', ['status' => 'approved']) }}" class="text-sm font-semibold text-sky-700">الكل</a>
+        <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+            <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-4 sm:px-5">
+                <div>
+                    <h3 class="text-base font-semibold text-ink">بانتظار تفعيل الحساب</h3>
+                    <p class="mt-0.5 text-xs text-muted">مقبولون جاهزون للتفعيل</p>
+                </div>
+                <a href="{{ route('admin.tutor-applications.index', ['status' => 'approved']) }}" class="text-xs font-semibold text-accent hover:underline">الكل</a>
             </div>
-            <ul class="divide-y divide-slate-100">
+            <ul class="divide-y divide-line">
                 @forelse($awaitingActivation as $app)
-                    <li class="px-5 py-3 flex items-center justify-between gap-3">
-                        <div>
-                            <p class="font-semibold text-slate-800">{{ $app->full_name }}</p>
-                            <p class="text-xs text-slate-500" dir="ltr">{{ $app->email }}</p>
+                    <li class="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
+                        <div class="min-w-0">
+                            <p class="truncate font-semibold text-ink">{{ $app->full_name }}</p>
+                            <p class="mt-0.5 truncate text-xs text-muted" dir="ltr">{{ $app->email }}</p>
                         </div>
-                        <a href="{{ route('admin.tutor-applications.show', $app) }}" class="inline-flex rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white">تفعيل</a>
+                        <a href="{{ route('admin.tutor-applications.show', $app) }}" class="btn-press inline-flex h-8 shrink-0 items-center rounded-lg bg-accent px-3 text-xs font-semibold text-white">تفعيل</a>
                     </li>
                 @empty
-                    <li class="px-5 py-8 text-center text-slate-500 text-sm">لا يوجد طلبات بانتظار التفعيل.</li>
+                    <li class="px-5 py-12 text-center">
+                        <div class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-canvas-muted text-muted">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <p class="text-sm font-medium text-ink">لا يوجد طلبات بانتظار التفعيل</p>
+                    </li>
                 @endforelse
             </ul>
-        </div>
+        </article>
     </div>
 
-    <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600 leading-7">
-        <p class="font-bold text-slate-800 mb-1">مسار العمل</p>
-        <ol class="list-decimal pr-5 space-y-1">
-            <li>المتقدم يسجّل <strong>إيميل + كلمة مرور</strong> فيُنشأ حسابه فوراً ويُوجَّه لإكمال البيانات.</li>
+    <article class="rounded-2xl border border-dashed border-line bg-canvas px-4 py-5 sm:px-5">
+        <p class="text-sm font-semibold text-ink">مسار العمل</p>
+        <ol class="mt-2 list-decimal space-y-1.5 pr-5 text-sm leading-7 text-muted">
+            <li>المتقدم يسجّل إيميل + كلمة مرور فيُنشأ حسابه فوراً ويُوجَّه لإكمال البيانات.</li>
             <li>يكمل الصورة والهوية والشهادات والفيديو ويرسل للمراجعة.</li>
-            <li>تراجع الإدارة الطلب من <strong>مراجعة الطلبات</strong> ثم <strong>قبول</strong>.</li>
-            <li><strong>تفعيل الملف العام</strong> يظهر المعلم للطلاب (بدون إنشاء كلمة مرور جديدة).</li>
+            <li>تراجع الإدارة الطلب من <span class="font-medium text-ink">مراجعة الطلبات</span> ثم قبول.</li>
+            <li><span class="font-medium text-ink">تفعيل الملف العام</span> يظهر المعلم للطلاب (بدون إنشاء كلمة مرور جديدة).</li>
         </ol>
-    </div>
+    </article>
 </div>
 @endsection
