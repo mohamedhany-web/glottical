@@ -27,6 +27,7 @@ class TutorApplyFlowTest extends TestCase
         $response = $this->post(route('public.tutor.apply.register'), [
             'full_name' => 'معلم تجريبي',
             'email' => 'tutor.test@example.com',
+            'phone' => '+966500000099',
             'password' => 'Password123',
             'password_confirmation' => 'Password123',
         ]);
@@ -37,6 +38,7 @@ class TutorApplyFlowTest extends TestCase
         $user = User::query()->where('email', 'tutor.test@example.com')->first();
         $this->assertNotNull($user);
         $this->assertSame('instructor', $user->role);
+        $this->assertSame('+966500000099', $user->phone);
         $this->assertTrue(Hash::check('Password123', $user->password));
 
         $app = TutorApplication::query()->where('user_id', $user->id)->first();

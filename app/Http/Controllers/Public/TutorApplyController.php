@@ -38,22 +38,27 @@ class TutorApplyController extends Controller
         $data = $request->validate([
             'full_name' => ['required', 'string', 'max:160'],
             'email' => ['required', 'email', 'max:190', 'unique:users,email'],
+            'phone' => ['required', 'string', 'max:40', 'unique:users,phone'],
             'password' => ['required', 'string', 'min:8', 'max:72', 'confirmed'],
         ], [
             'full_name.required' => 'الاسم الكامل مطلوب.',
             'email.required' => 'البريد الإلكتروني مطلوب.',
             'email.unique' => 'هذا البريد مسجّل مسبقاً. سجّل الدخول ثم أكمل بياناتك.',
+            'phone.required' => 'رقم الجوال مطلوب.',
+            'phone.unique' => 'رقم الجوال مسجّل مسبقاً.',
             'password.required' => 'كلمة المرور مطلوبة.',
             'password.confirmed' => 'تأكيد كلمة المرور غير مطابق.',
             'password.min' => 'كلمة المرور يجب ألا تقل عن 8 أحرف.',
         ]);
 
         $email = strtolower(trim($data['email']));
+        $phone = preg_replace('/\s+/', '', trim($data['phone'])) ?: trim($data['phone']);
 
-        $user = DB::transaction(function () use ($data, $email) {
+        $user = DB::transaction(function () use ($data, $email, $phone) {
             $user = User::create([
                 'name' => trim($data['full_name']),
                 'email' => $email,
+                'phone' => $phone,
                 'password' => Hash::make($data['password']),
                 'role' => 'instructor',
                 'is_active' => true,
@@ -63,6 +68,7 @@ class TutorApplyController extends Controller
                 'user_id' => $user->id,
                 'full_name' => trim($data['full_name']),
                 'email' => $email,
+                'phone' => $phone,
                 'status' => TutorApplication::STATUS_DRAFT,
             ]);
 
@@ -151,7 +157,7 @@ class TutorApplyController extends Controller
 
         $data = $request->validate([
             'full_name' => ['required', 'string', 'max:160'],
-            'phone' => ['required', 'string', 'max:40'],
+            'phone' => ['required', 'string', 'max:40', 'unique:users,phone,'.$user->id],
             'nationality' => ['nullable', 'string', 'max:120'],
             'city' => ['nullable', 'string', 'max:120'],
             'gender' => ['nullable', 'in:male,female'],

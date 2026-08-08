@@ -51,6 +51,11 @@
         <input id="email" type="email" name="email" value="{{ old('email') }}" required dir="ltr" autocomplete="email">
         @error('email')<p class="ta-err">{{ $message }}</p>@enderror
       </div>
+      <div class="ta-field">
+        <label for="phone">{{ $isRtl ? 'رقم الجوال / واتساب' : 'Phone / WhatsApp' }} <span class="req">*</span></label>
+        <input id="phone" type="tel" name="phone" value="{{ old('phone') }}" required dir="ltr" autocomplete="tel" placeholder="+9665xxxxxxxx">
+        @error('phone')<p class="ta-err">{{ $message }}</p>@enderror
+      </div>
       <div class="ta-grid ta-grid--2">
         <div class="ta-field">
           <label for="password">{{ $isRtl ? 'كلمة المرور' : 'Password' }} <span class="req">*</span></label>
