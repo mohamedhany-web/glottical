@@ -26,7 +26,7 @@
         : 'Your account works now. After admin approval your profile appears to students. You can update branding from the instructor panel.' }}
     </p>
     <div style="display:grid;gap:.5rem;max-width:360px;margin:1.25rem auto 0">
-      <a href="{{ route('instructor.dashboard') }}" class="sana-btn sana-btn--yellow" style="justify-content:center">{{ $isRtl ? 'لوحة المعلم' : 'Instructor dashboard' }}</a>
+      <a href="{{ route('dashboard') }}" class="sana-btn sana-btn--yellow" style="justify-content:center">{{ $isRtl ? 'لوحة المعلم' : 'Instructor dashboard' }}</a>
       <a href="{{ route('instructor.personal-branding.edit') }}" class="sana-btn sana-btn--purple-outline" style="justify-content:center">{{ $isRtl ? 'الملف التعريفي' : 'Personal branding' }}</a>
     </div>
   </div>
