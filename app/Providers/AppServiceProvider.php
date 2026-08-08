@@ -97,6 +97,10 @@ class AppServiceProvider extends ServiceProvider
         if (file_exists($filesystemHelper)) {
             require_once $filesystemHelper;
         }
+        $studentUiHelper = app_path('Helpers/StudentUiHelper.php');
+        if (file_exists($studentUiHelper)) {
+            require_once $studentUiHelper;
+        }
 
         // ضمان وجود صورة الخلفية في التخزين (نفس مسار صور المسارات) لتعمل على السيرفر عبر /storage/
         $authStoragePath = self::AUTH_BACKGROUND_STORAGE_PATH;
