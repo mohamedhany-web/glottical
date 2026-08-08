@@ -74,6 +74,13 @@ trait BuildsFeatureSchema
             $table->timestamps();
         });
 
+        Schema::create('user_permissions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id');
+            $table->foreignId('permission_id');
+            $table->timestamps();
+        });
+
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable();
@@ -91,8 +98,34 @@ trait BuildsFeatureSchema
             $table->timestamps();
         });
 
+        Schema::create('hiring_forms', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->boolean('is_published')->default(true);
+            $table->json('settings')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('hiring_form_fields', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('hiring_form_id');
+            $table->string('type', 40);
+            $table->string('label');
+            $table->text('help_text')->nullable();
+            $table->string('placeholder')->nullable();
+            $table->boolean('is_required')->default(false);
+            $table->json('options')->nullable();
+            $table->string('system_key', 60)->nullable();
+            $table->unsignedInteger('sort_order')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->json('settings')->nullable();
+            $table->timestamps();
+        });
+
         Schema::create('tutor_applications', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('hiring_form_id')->nullable();
             $table->string('full_name');
             $table->string('email');
             $table->string('phone')->nullable();
@@ -109,6 +142,7 @@ trait BuildsFeatureSchema
             $table->string('certificate_path')->nullable();
             $table->string('intro_video_path')->nullable();
             $table->string('intro_video_url')->nullable();
+            $table->json('answers')->nullable();
             $table->string('status', 32)->default('draft');
             $table->text('admin_notes')->nullable();
             $table->timestamp('reviewed_at')->nullable();

@@ -1255,6 +1255,16 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/tutor-applications/{tutorApplication}/reject', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'reject'])->name('tutor-applications.reject');
         Route::delete('/tutor-applications/{tutorApplication}', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'destroy'])->name('tutor-applications.destroy');
 
+        Route::get('/hiring-form', [\App\Http\Controllers\Admin\HiringFormController::class, 'edit'])->name('hiring-form.edit');
+        Route::put('/hiring-form', [\App\Http\Controllers\Admin\HiringFormController::class, 'update'])->name('hiring-form.update');
+        Route::post('/hiring-form/fields', [\App\Http\Controllers\Admin\HiringFormController::class, 'storeField'])->name('hiring-form.fields.store');
+        Route::put('/hiring-form/fields/{field}', [\App\Http\Controllers\Admin\HiringFormController::class, 'updateField'])->name('hiring-form.fields.update');
+        Route::delete('/hiring-form/fields/{field}', [\App\Http\Controllers\Admin\HiringFormController::class, 'destroyField'])->name('hiring-form.fields.destroy');
+        Route::post('/hiring-form/fields/{field}/move/{direction}', [\App\Http\Controllers\Admin\HiringFormController::class, 'move'])
+            ->whereIn('direction', ['up', 'down'])
+            ->name('hiring-form.fields.move');
+        Route::post('/hiring-form/reorder', [\App\Http\Controllers\Admin\HiringFormController::class, 'reorder'])->name('hiring-form.reorder');
+
         Route::get('free-trial-bookings/availability', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'availability'])->name('free-trial-bookings.availability');
         Route::post('free-trial-bookings/availability', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'storeAvailability'])->name('free-trial-bookings.availability.store');
         Route::put('free-trial-bookings/availability/{window}', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'updateAvailability'])->name('free-trial-bookings.availability.update');

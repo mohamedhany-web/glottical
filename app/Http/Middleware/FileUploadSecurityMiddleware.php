@@ -85,6 +85,11 @@ class FileUploadSecurityMiddleware
         }
 
         $mimeMap = [
+            'hiring_upload' => [
+                'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf',
+                'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'application/octet-stream',
+                'jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'mp4', 'webm', 'ogg', 'mov',
+            ],
             // ملفات الموارد والرفع العام (تشمل Excel و Word و PDF والصور) + امتدادات للتحقق عند اختلاف MIME
             'file' => [
                 'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',

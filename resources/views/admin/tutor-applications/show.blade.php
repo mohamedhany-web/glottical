@@ -103,6 +103,36 @@
                 </dl>
             </article>
 
+            @if(is_array($application->answers) && count($application->answers))
+                <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                    <h3 class="text-base font-semibold text-ink">إجابات نموذج التقديم</h3>
+                    <dl class="mt-3 grid gap-3 text-sm">
+                        @foreach($application->answers as $answer)
+                            @php
+                                $label = $answer['label'] ?? 'حقل';
+                                $isFile = ($answer['type'] ?? '') === 'file';
+                                $val = $isFile
+                                    ? ($answer['name'] ?? basename($answer['path'] ?? ''))
+                                    : (is_array($answer['value'] ?? null) ? implode('، ', $answer['value']) : ($answer['value'] ?? '—'));
+                                $fileUrl = $isFile && !empty($answer['path'])
+                                    ? \App\Services\TutorApplicationStorage::publicUrl($answer['path'])
+                                    : null;
+                            @endphp
+                            <div class="rounded-xl border border-line bg-canvas px-3 py-2">
+                                <dt class="text-xs text-muted">{{ $label }}</dt>
+                                <dd class="mt-0.5 font-semibold text-ink">
+                                    @if($fileUrl)
+                                        <a href="{{ $fileUrl }}" target="_blank" class="text-accent underline">{{ $val ?: 'فتح الملف' }}</a>
+                                    @else
+                                        <span class="whitespace-pre-line">{{ $val !== '' && $val !== null ? $val : '—' }}</span>
+                                    @endif
+                                </dd>
+                            </div>
+                        @endforeach
+                    </dl>
+                </article>
+            @endif
+
             <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
                 <h3 class="text-base font-semibold text-ink">النبذة / السيرة</h3>
                 <p class="mt-2 whitespace-pre-line text-sm leading-7 text-muted">{{ $application->bio }}</p>

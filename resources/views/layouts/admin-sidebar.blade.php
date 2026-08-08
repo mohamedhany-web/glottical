@@ -152,7 +152,7 @@
                     $sidebarTutorAppsPending = 0;
                     $sidebarTutorAwaiting = 0;
                 }
-                $hiringOpen = request()->routeIs('admin.tutor-applications.*');
+                $hiringOpen = request()->routeIs('admin.tutor-applications.*') || request()->routeIs('admin.hiring-form.*');
                 $hiringBadge = $sidebarTutorAppsPending + $sidebarTutorAwaiting;
             @endphp
             <li class="sidebar-section-label">التوظيف</li>
@@ -168,6 +168,11 @@
                     <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
                 </button>
                 <ul x-show="open" x-cloak class="mt-1 mr-3 space-y-0.5 border-r border-white/10 pr-3">
+                    <li>
+                        <a href="{{ route('admin.hiring-form.edit') }}" class="sidebar-sub-link {{ request()->routeIs('admin.hiring-form.*') ? 'active' : '' }}">
+                            <i class="fas fa-wpforms"></i><span>منشئ نموذج التقديم</span>
+                        </a>
+                    </li>
                     <li>
                         <a href="{{ route('admin.tutor-applications.hub') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutor-applications.hub') ? 'active' : '' }}">
                             <i class="fas fa-briefcase"></i><span>لوحة التوظيف</span>

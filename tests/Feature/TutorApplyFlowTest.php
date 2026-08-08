@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\HiringFormField;
 use App\Models\InstructorProfile;
 use App\Models\TutorApplication;
 use App\Models\User;
+use App\Services\HiringFormService;
 use App\Services\TutorApplicationActivationService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
@@ -56,9 +58,12 @@ class TutorApplyFlowTest extends TestCase
         Storage::fake('public');
         config(['filesystems.public_media_disk' => 'public']);
 
+        $form = HiringFormService::ensureDefaultForm();
+
         $user = User::factory()->create([
             'role' => 'instructor',
             'email' => 'teacher2@example.com',
+            'phone' => '+966500000001',
             'is_active' => true,
             'password' => Hash::make('password'),
         ]);
@@ -67,6 +72,7 @@ class TutorApplyFlowTest extends TestCase
             'user_id' => $user->id,
             'full_name' => $user->name,
             'email' => $user->email,
+            'phone' => $user->phone,
             'status' => TutorApplication::STATUS_DRAFT,
         ]);
 
@@ -77,25 +83,44 @@ class TutorApplyFlowTest extends TestCase
 
         $this->actingAs($user);
 
+        $answers = [];
+        $uploads = [];
+        foreach ($form->activeFields as $field) {
+            if ($field->isSection()) {
+                continue;
+            }
+            if ($field->isFile()) {
+                $kind = $field->settings['file_kind'] ?? 'any';
+                if ($kind === 'video') {
+                    continue;
+                }
+                $uploads[$field->id] = UploadedFile::fake()->image('f'.$field->id.'.jpg');
+                continue;
+            }
+            $answers[$field->id] = match ($field->system_key) {
+                'full_name' => 'معلم مكتمل',
+                'phone' => '+966500000001',
+                'headline' => 'معلم قرآن',
+                'bio' => 'نبذة تعريفية كافية للاختبار',
+                'experience' => "خبرة 5 سنوات\nتحفيظ",
+                'education' => 'إجازة',
+                'years_experience' => 5,
+                'gender' => 'male',
+                'intro_video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                default => 'اختبار',
+            };
+        }
+
         $response = $this->post(route('public.tutor.apply.profile.store'), [
-            'full_name' => 'معلم مكتمل',
-            'phone' => '+966500000001',
-            'headline' => 'معلم قرآن',
-            'bio' => 'نبذة تعريفية كافية للاختبار',
-            'experience' => "خبرة 5 سنوات\nتحفيظ",
-            'education' => 'إجازة',
-            'years_experience' => 5,
-            'gender' => 'male',
-            'photo' => UploadedFile::fake()->image('photo.jpg'),
-            'id_document' => UploadedFile::fake()->image('id.jpg'),
-            'certificate' => UploadedFile::fake()->image('cert.jpg'),
-            'intro_video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            'answers' => $answers,
+            'hiring_upload' => $uploads,
         ]);
 
         $response->assertRedirect(route('public.tutor.apply.profile'));
         $application->refresh();
         $this->assertSame(TutorApplication::STATUS_PENDING, $application->status);
         $this->assertNotNull($application->photo_path);
+        $this->assertNotEmpty($application->answers);
 
         $admin = User::factory()->create([
             'role' => 'super_admin',
@@ -118,6 +143,8 @@ class TutorApplyFlowTest extends TestCase
 
     public function test_apply_pages_render(): void
     {
+        HiringFormService::ensureDefaultForm();
+
         $this->get(route('public.tutor.apply'))->assertOk();
 
         $user = User::factory()->create([
@@ -134,6 +161,7 @@ class TutorApplyFlowTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('public.tutor.apply.profile'))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('إرسال للمراجعة', false);
     }
 }

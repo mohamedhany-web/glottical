@@ -3,6 +3,10 @@
     $isRtl = $locale === 'ar';
     $brand = config('app.name', 'Glottical');
     $application = $application ?? null;
+    $form = $form ?? null;
+    $fields = $fields ?? collect();
+    $oldAnswers = old('answers', []);
+    $saved = is_array($application->answers ?? null) ? $application->answers : [];
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -10,7 +14,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>{{ $isRtl ? 'إكمال بيانات المعلم' : 'Complete teacher profile' }} — {{ $brand }}</title>
+  <title>{{ $form->title ?? ($isRtl ? 'إكمال بيانات المعلم' : 'Complete teacher profile') }} — {{ $brand }}</title>
   <meta name="theme-color" content="#0B3D91">
   @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme', 'instructor-profile']])
@@ -20,11 +24,11 @@
 
 <main class="ta-wrap">
   <p class="ta-chip">{{ $isRtl ? 'الخطوة 2 من 2' : 'Step 2 of 2' }}</p>
-  <h1 class="ta-title">{{ $isRtl ? 'أكمل بياناتك الشخصية' : 'Complete your personal details' }}</h1>
+  <h1 class="ta-title">{{ $form->title ?? ($isRtl ? 'أكمل بياناتك' : 'Complete your details') }}</h1>
   <p class="ta-sub">
-    {{ $isRtl
-      ? 'حسابك جاهز: '.($user->email ?? '').' — أضف بياناتك والمستندات والفيديو التعريفي لإرسالها للمراجعة.'
-      : 'Your account is ready: '.($user->email ?? '').' — add your details, documents, and intro video for review.' }}
+    {{ $form->description ?: ($isRtl
+      ? 'حسابك جاهز: '.($user->email ?? '').' — أكمل الحقول ثم أرسل للمراجعة.'
+      : 'Your account is ready: '.($user->email ?? '').' — complete the fields and submit for review.') }}
   </p>
 
   @if(session('success'))
@@ -33,112 +37,121 @@
   @if(session('error'))
     <div class="ta-note" style="background:#FEF2F2;border-color:#FECACA;color:#991B1B">{{ session('error') }}</div>
   @endif
+  @error('form')
+    <div class="ta-note" style="background:#FEF2F2;border-color:#FECACA;color:#991B1B">{{ $message }}</div>
+  @enderror
+  @error('intro_video')
+    <div class="ta-note" style="background:#FEF2F2;border-color:#FECACA;color:#991B1B">{{ $message }}</div>
+  @enderror
+  @error('phone')
+    <div class="ta-note" style="background:#FEF2F2;border-color:#FECACA;color:#991B1B">{{ $message }}</div>
+  @enderror
 
   <form method="POST" action="{{ route('public.tutor.apply.profile.store') }}" enctype="multipart/form-data">
     @csrf
 
-    <section class="ta-card">
-      <h2>{{ $isRtl ? '١. البيانات الشخصية' : '1. Personal details' }}</h2>
-      <div class="ta-grid ta-grid--2">
-        <div class="ta-field">
-          <label for="full_name">{{ $isRtl ? 'الاسم الكامل' : 'Full name' }} <span class="req">*</span></label>
-          <input id="full_name" type="text" name="full_name" value="{{ old('full_name', $application->full_name) }}" required>
-          @error('full_name')<p class="ta-err">{{ $message }}</p>@enderror
+    @foreach($fields as $field)
+      @if($field->isSection())
+        <div class="ta-card" style="background:linear-gradient(135deg,#EEF3FB,#fff);border-style:dashed">
+          <h2 style="margin:0">{{ $field->label }}</h2>
+          @if($field->help_text)<p class="ta-hint" style="margin-top:.35rem">{{ $field->help_text }}</p>@endif
         </div>
-        <div class="ta-field">
-          <label for="phone">{{ $isRtl ? 'الجوال / واتساب' : 'Phone / WhatsApp' }} <span class="req">*</span></label>
-          <input id="phone" type="text" name="phone" value="{{ old('phone', $application->phone) }}" required dir="ltr">
-          @error('phone')<p class="ta-err">{{ $message }}</p>@enderror
-        </div>
-        <div class="ta-field">
-          <label for="gender">{{ $isRtl ? 'النوع' : 'Gender' }}</label>
-          <select id="gender" name="gender">
-            <option value="">{{ $isRtl ? '— اختياري —' : '— optional —' }}</option>
-            <option value="male" @selected(old('gender', $application->gender) === 'male')>{{ $isRtl ? 'ذكر' : 'Male' }}</option>
-            <option value="female" @selected(old('gender', $application->gender) === 'female')>{{ $isRtl ? 'أنثى' : 'Female' }}</option>
-          </select>
-        </div>
-        <div class="ta-field">
-          <label for="nationality">{{ $isRtl ? 'الجنسية' : 'Nationality' }}</label>
-          <input id="nationality" type="text" name="nationality" value="{{ old('nationality', $application->nationality) }}">
-        </div>
-        <div class="ta-field">
-          <label for="city">{{ $isRtl ? 'الدولة / المدينة' : 'Country / city' }}</label>
-          <input id="city" type="text" name="city" value="{{ old('city', $application->city) }}">
-        </div>
-        <div class="ta-field">
-          <label>{{ $isRtl ? 'البريد (للدخول)' : 'Login email' }}</label>
-          <input type="email" value="{{ $user->email }}" disabled dir="ltr" style="opacity:.7">
-        </div>
-      </div>
-    </section>
+        @continue
+      @endif
 
-    <section class="ta-card">
-      <h2>{{ $isRtl ? '٢. العنوان والسيرة' : '2. Title & bio' }}</h2>
-      <div class="ta-grid">
-        <div class="ta-field">
-          <label for="headline">{{ $isRtl ? 'عنوان مختصر' : 'Headline' }} <span class="req">*</span></label>
-          <input id="headline" type="text" name="headline" value="{{ old('headline', $application->headline) }}" required>
-          @error('headline')<p class="ta-err">{{ $message }}</p>@enderror
-        </div>
-        <div class="ta-field">
-          <label for="bio">{{ $isRtl ? 'نبذة / سيرة ذاتية' : 'Bio / CV' }} <span class="req">*</span></label>
-          <textarea id="bio" name="bio" required>{{ old('bio', $application->bio) }}</textarea>
-          @error('bio')<p class="ta-err">{{ $message }}</p>@enderror
-        </div>
-        <div class="ta-field">
-          <label for="experience">{{ $isRtl ? 'الخبرات' : 'Experience' }} <span class="req">*</span></label>
-          <textarea id="experience" name="experience" required>{{ old('experience', $application->experience) }}</textarea>
-          @error('experience')<p class="ta-err">{{ $message }}</p>@enderror
-        </div>
-        <div class="ta-grid ta-grid--2">
-          <div class="ta-field">
-            <label for="education">{{ $isRtl ? 'المؤهل' : 'Education' }}</label>
-            <input id="education" type="text" name="education" value="{{ old('education', $application->education) }}">
-          </div>
-          <div class="ta-field">
-            <label for="years_experience">{{ $isRtl ? 'سنوات الخبرة' : 'Years of experience' }}</label>
-            <input id="years_experience" type="number" min="0" max="60" name="years_experience" value="{{ old('years_experience', $application->years_experience) }}">
-          </div>
-        </div>
-      </div>
-    </section>
+      @php
+        $fid = $field->id;
+        $savedVal = $saved[(string)$fid]['value'] ?? null;
+        if ($savedVal === null && $field->system_key) {
+          $savedVal = $application->{$field->system_key} ?? null;
+          if ($field->system_key === 'photo') $savedVal = null;
+        }
+        $value = $oldAnswers[$fid] ?? $savedVal;
+      @endphp
 
-    <section class="ta-card">
-      <h2>{{ $isRtl ? '٣. المستندات والفيديو' : '3. Documents & video' }}</h2>
-      <div class="ta-grid">
+      <section class="ta-card">
         <div class="ta-field">
-          <label for="photo">{{ $isRtl ? 'صورة شخصية' : 'Personal photo' }} @unless($application->photo_path)<span class="req">*</span>@endunless</label>
-          @if($application->photoUrl())
-            <p class="ta-hint">{{ $isRtl ? 'مرفوعة مسبقاً — ارفع بديلاً للتغيير' : 'Already uploaded — replace to change' }}</p>
-          @endif
-          <input id="photo" type="file" name="photo" accept="image/*" @if(!$application->photo_path) required @endif>
-          @error('photo')<p class="ta-err">{{ $message }}</p>@enderror
-        </div>
-        <div class="ta-field">
-          <label for="id_document">{{ $isRtl ? 'البطاقة أو جواز السفر' : 'ID / passport' }} @unless($application->id_document_path)<span class="req">*</span>@endunless</label>
-          <input id="id_document" type="file" name="id_document" accept="image/*,.pdf" @if(!$application->id_document_path) required @endif>
-          @error('id_document')<p class="ta-err">{{ $message }}</p>@enderror
-        </div>
-        <div class="ta-field">
-          <label for="certificate">{{ $isRtl ? 'الشهادة أو الإجازة' : 'Certificate / license' }} @unless($application->certificate_path)<span class="req">*</span>@endunless</label>
-          <input id="certificate" type="file" name="certificate" accept="image/*,.pdf" @if(!$application->certificate_path) required @endif>
-          @error('certificate')<p class="ta-err">{{ $message }}</p>@enderror
-        </div>
-        <div class="ta-field">
-          <label for="intro_video">{{ $isRtl ? 'فيديو تعريفي (ملف)' : 'Intro video (file)' }}</label>
-          <input id="intro_video" type="file" name="intro_video" accept="video/mp4,video/webm,video/quicktime">
-          @error('intro_video')<p class="ta-err">{{ $message }}</p>@enderror
-        </div>
-        <div class="ta-field">
-          <label for="intro_video_url">{{ $isRtl ? 'أو رابط الفيديو' : 'Or video URL' }}</label>
-          <input id="intro_video_url" type="url" name="intro_video_url" value="{{ old('intro_video_url', $application->intro_video_url) }}" dir="ltr">
-          @error('intro_video_url')<p class="ta-err">{{ $message }}</p>@enderror
-        </div>
-      </div>
-    </section>
+          <label for="field_{{ $fid }}">
+            {{ $field->label }}
+            @if($field->is_required)<span class="req">*</span>@endif
+          </label>
+          @if($field->help_text)<p class="ta-hint">{{ $field->help_text }}</p>@endif
 
-    <button type="submit" class="sana-btn sana-btn--yellow sana-btn--lg" style="width:100%;justify-content:center">
+          @switch($field->type)
+            @case('long_text')
+              <textarea id="field_{{ $fid }}" name="answers[{{ $fid }}]" @if($field->is_required) required @endif placeholder="{{ $field->placeholder }}">{{ $value }}</textarea>
+              @break
+            @case('email')
+              <input id="field_{{ $fid }}" type="email" name="answers[{{ $fid }}]" value="{{ $value }}" @if($field->is_required) required @endif dir="ltr" placeholder="{{ $field->placeholder }}">
+              @break
+            @case('phone')
+              <input id="field_{{ $fid }}" type="tel" name="answers[{{ $fid }}]" value="{{ $value ?? $application->phone }}" @if($field->is_required) required @endif dir="ltr" placeholder="{{ $field->placeholder ?: '+9665...' }}">
+              @break
+            @case('number')
+              <input id="field_{{ $fid }}" type="number" name="answers[{{ $fid }}]" value="{{ $value }}" @if($field->is_required) required @endif placeholder="{{ $field->placeholder }}">
+              @break
+            @case('date')
+              <input id="field_{{ $fid }}" type="date" name="answers[{{ $fid }}]" value="{{ $value }}" @if($field->is_required) required @endif>
+              @break
+            @case('url')
+              <input id="field_{{ $fid }}" type="url" name="answers[{{ $fid }}]" value="{{ $value }}" @if($field->is_required) required @endif dir="ltr" placeholder="{{ $field->placeholder ?: 'https://' }}">
+              @break
+            @case('select')
+              <select id="field_{{ $fid }}" name="answers[{{ $fid }}]" @if($field->is_required) required @endif>
+                <option value="">{{ $isRtl ? '— اختر —' : '— choose —' }}</option>
+                @foreach($field->options ?? [] as $opt)
+                  @php $ov = is_array($opt) ? ($opt['value'] ?? '') : $opt; $ol = is_array($opt) ? ($opt['label'] ?? $ov) : $opt; @endphp
+                  <option value="{{ $ov }}" @selected((string)$value === (string)$ov)>{{ $ol }}</option>
+                @endforeach
+              </select>
+              @break
+            @case('radio')
+              <div class="ta-grid" style="gap:.45rem">
+                @foreach($field->options ?? [] as $opt)
+                  @php $ov = is_array($opt) ? ($opt['value'] ?? '') : $opt; $ol = is_array($opt) ? ($opt['label'] ?? $ov) : $opt; @endphp
+                  <label style="display:flex;align-items:center;gap:.5rem;font:700 .88rem Tajawal,sans-serif;color:#334155">
+                    <input type="radio" name="answers[{{ $fid }}]" value="{{ $ov }}" @checked((string)$value === (string)$ov) @if($field->is_required) required @endif>
+                    {{ $ol }}
+                  </label>
+                @endforeach
+              </div>
+              @break
+            @case('checkbox')
+              @php $arr = is_array($value) ? $value : (filled($value) ? [$value] : []); @endphp
+              <div class="ta-grid" style="gap:.45rem">
+                @foreach($field->options ?? [] as $opt)
+                  @php $ov = is_array($opt) ? ($opt['value'] ?? '') : $opt; $ol = is_array($opt) ? ($opt['label'] ?? $ov) : $opt; @endphp
+                  <label style="display:flex;align-items:center;gap:.5rem;font:700 .88rem Tajawal,sans-serif;color:#334155">
+                    <input type="checkbox" name="answers[{{ $fid }}][]" value="{{ $ov }}" @checked(in_array((string)$ov, array_map('strval', $arr), true))>
+                    {{ $ol }}
+                  </label>
+                @endforeach
+              </div>
+              @break
+            @case('file')
+              @php
+                $existingPath = $saved[(string)$fid]['path'] ?? null;
+                if (! $existingPath && $field->system_key === 'photo') $existingPath = $application->photo_path;
+                if (! $existingPath && $field->system_key === 'id_document') $existingPath = $application->id_document_path;
+                if (! $existingPath && $field->system_key === 'certificate') $existingPath = $application->certificate_path;
+                if (! $existingPath && $field->system_key === 'intro_video') $existingPath = $application->intro_video_path;
+              @endphp
+              @if($existingPath)
+                <p class="ta-hint" style="color:#065F46">{{ $isRtl ? 'تم الرفع مسبقاً — يمكنك استبداله بملف جديد.' : 'Already uploaded — you can replace it.' }}</p>
+              @endif
+              <input id="field_{{ $fid }}" type="file" name="hiring_upload[{{ $fid }}]" accept="{{ $field->fileAccept() }}" @if($field->is_required && ! $existingPath) required @endif>
+              @break
+            @default
+              <input id="field_{{ $fid }}" type="text" name="answers[{{ $fid }}]" value="{{ $value }}" @if($field->is_required) required @endif placeholder="{{ $field->placeholder }}">
+          @endswitch
+
+          @error('answers.'.$fid)<p class="ta-err">{{ $message }}</p>@enderror
+          @error('hiring_upload.'.$fid)<p class="ta-err">{{ $message }}</p>@enderror
+        </div>
+      </section>
+    @endforeach
+
+    <button type="submit" class="sana-btn sana-btn--yellow sana-btn--lg" style="width:100%;justify-content:center;margin-top:.5rem">
       {{ $isRtl ? 'إرسال للمراجعة' : 'Submit for review' }}
     </button>
   </form>

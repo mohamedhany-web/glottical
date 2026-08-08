@@ -89,6 +89,8 @@ return [
         'tutoring-groups' => ['manage.tutoring-groups'],
         'tutoring-group-bookings' => ['manage.tutoring-groups'],
         'tutor-work-schedules' => ['manage.tutoring-groups'],
+        'tutor-applications' => ['manage.users', 'manage.personal-branding', 'manage.contact-messages'],
+        'hiring-form' => ['manage.users', 'manage.personal-branding', 'manage.contact-messages'],
         'one-to-one-sessions' => ['manage.tutoring-groups', 'manage.courses'],
         'transactions' => ['manage.transactions'],
         'two-factor-logs' => ['manage.two-factor-logs'],

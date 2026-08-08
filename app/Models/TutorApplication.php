@@ -19,6 +19,7 @@ class TutorApplication extends Model
     public const STATUS_REJECTED = 'rejected';
 
     protected $fillable = [
+        'hiring_form_id',
         'full_name',
         'email',
         'phone',
@@ -35,6 +36,7 @@ class TutorApplication extends Model
         'certificate_path',
         'intro_video_path',
         'intro_video_url',
+        'answers',
         'status',
         'admin_notes',
         'reviewed_at',
@@ -48,9 +50,15 @@ class TutorApplication extends Model
     {
         return [
             'years_experience' => 'integer',
+            'answers' => 'array',
             'reviewed_at' => 'datetime',
             'activated_at' => 'datetime',
         ];
+    }
+
+    public function hiringForm(): BelongsTo
+    {
+        return $this->belongsTo(HiringForm::class);
     }
 
     public function reviewedByUser(): BelongsTo
