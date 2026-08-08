@@ -4,400 +4,251 @@
 
 @push('styles')
 <style>
-    .stu-dash { --stu-blue:#0B3D91; --stu-dark:#072A66; --stu-gold:#F5B800; --stu-canvas:#F4F7FC; --stu-line:#E8EEF8; --stu-muted:#5B6577; }
-    .stu-panel {
+    .kids-home {
+        --k-blue: #0B3D91;
+        --k-gold: #F5B800;
+        --k-sky: #7EC8FF;
+        --k-mint: #7AD9B0;
+        --k-coral: #FF8FAB;
+        --k-cream: #FFF8E8;
+        --k-ink: #1A2744;
+        --k-muted: #6B7A99;
+    }
+    .kids-hero {
+        border-radius: 28px;
+        background:
+            radial-gradient(circle at 12% 20%, rgba(126,200,255,.55), transparent 42%),
+            radial-gradient(circle at 88% 10%, rgba(245,184,0,.45), transparent 36%),
+            radial-gradient(circle at 70% 90%, rgba(122,217,176,.35), transparent 40%),
+            linear-gradient(135deg, #fff 0%, #F4F7FC 100%);
+        border: 2px solid #E3ECFF;
+        padding: 1.25rem 1.35rem 1.4rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .kids-hero__cloud {
+        position: absolute; border-radius: 999px; background: rgba(255,255,255,.7);
+        filter: blur(1px); pointer-events: none;
+    }
+    .kids-week {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: .55rem;
+    }
+    @media (max-width: 900px) {
+        .kids-week { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .kids-day {
+        border-radius: 22px;
+        border: 2px solid #E8EEF8;
         background: #fff;
-        border: 1px solid var(--stu-line);
-        border-radius: 18px;
+        min-height: 150px;
+        padding: .7rem .65rem .85rem;
+        transition: transform .18s ease, box-shadow .18s ease;
     }
-    .dark .stu-panel { background: #111827; border-color: #1f2937; }
-    .stu-progress {
-        height: 8px; border-radius: 999px; background: var(--stu-line); overflow: hidden;
+    .kids-day.is-today {
+        border-color: var(--k-gold);
+        box-shadow: 0 12px 28px -14px rgba(245,184,0,.55);
+        background: linear-gradient(180deg, #FFF9E8, #fff);
+        transform: translateY(-2px);
     }
-    .dark .stu-progress { background: #334155; }
-    .stu-progress > span {
-        display: block; height: 100%; border-radius: 999px;
-        background: linear-gradient(90deg, var(--stu-gold), #FFD24D);
-    }
-    .stu-chip {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 6px 12px; border-radius: 999px;
-        font-size: 11px; font-weight: 800;
-        background: #EEF3FB; color: var(--stu-blue);
-    }
-    .stu-action {
-        display: flex; flex-direction: column; gap: 10px;
-        padding: 16px; border-radius: 16px;
-        border: 1px solid var(--stu-line); background: #fff;
-        text-decoration: none !important; color: inherit;
-        transition: border-color .15s, transform .15s, box-shadow .15s;
-        min-height: 108px;
-    }
-    .stu-action:hover {
-        border-color: #C5D4EF; transform: translateY(-2px);
-        box-shadow: 0 12px 28px -16px rgba(11,61,145,.25);
-    }
-    .dark .stu-action { background: #111827; border-color: #1f2937; }
-    .stu-action__icon {
-        width: 40px; height: 40px; border-radius: 12px;
+    .kids-day__badge {
         display: inline-flex; align-items: center; justify-content: center;
-        background: #EEF3FB; color: var(--stu-blue); font-size: 15px;
+        width: 2rem; height: 2rem; border-radius: 999px;
+        font-weight: 900; font-size: .85rem; color: #fff;
+        background: var(--k-blue);
     }
-    .stu-action--gold .stu-action__icon { background: #FFF6D6; color: #8A6A00; }
-    .stu-row {
-        display: flex; align-items: center; gap: 12px;
-        padding: 12px; border-radius: 14px;
-        border: 1px solid transparent;
-        transition: background .15s, border-color .15s;
-        text-decoration: none !important; color: inherit;
+    .kids-day.is-today .kids-day__badge { background: var(--k-gold); color: #072A66; }
+    .kids-slot {
+        display: block;
+        margin-top: .45rem;
+        border-radius: 14px;
+        padding: .45rem .5rem;
+        text-decoration: none !important;
+        color: inherit;
+        border: 1.5px solid transparent;
+        font-size: .72rem;
+        line-height: 1.25;
+        transition: transform .12s ease, filter .12s ease;
     }
-    .stu-row:hover { background: var(--stu-canvas); border-color: var(--stu-line); }
-    .dark .stu-row:hover { background: #1f2937; border-color: #334155; }
+    .kids-slot:hover { transform: scale(1.03); filter: brightness(1.03); }
+    .kids-slot--gold { background: #FFF3C4; border-color: #F5B80055; }
+    .kids-slot--blue { background: #DCECFF; border-color: #0B3D9133; }
+    .kids-slot--teal { background: #D7F5E8; border-color: #2FAE7A44; }
+    .kids-slot__time { font-weight: 900; color: var(--k-ink); display: block; }
+    .kids-slot__title { font-weight: 800; color: #334; display: block; margin-top: 2px; }
+    .kids-hub {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .85rem;
+    }
+    @media (min-width: 768px) {
+        .kids-hub { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+    .kids-hub__card {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: .75rem; text-align: center;
+        min-height: 148px; padding: 1.1rem .8rem;
+        border-radius: 28px; text-decoration: none !important; color: inherit;
+        border: 2px solid #E8EEF8; background: #fff;
+        box-shadow: 0 10px 24px -18px rgba(11,61,145,.35);
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .kids-hub__card:hover {
+        transform: translateY(-4px) rotate(-.4deg);
+        box-shadow: 0 18px 34px -16px rgba(11,61,145,.35);
+    }
+    .kids-hub__icon {
+        width: 4.25rem; height: 4.25rem; border-radius: 24px;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 1.65rem; color: #fff;
+    }
+    .kids-hub__icon--materials { background: linear-gradient(135deg, #7EC8FF, #0B3D91); }
+    .kids-hub__icon--videos { background: linear-gradient(135deg, #FF8FAB, #F5B800); }
+    .kids-hub__icon--assignments { background: linear-gradient(135deg, #7AD9B0, #0B8F6A); }
+    .kids-hub__icon--lectures { background: linear-gradient(135deg, #F5B800, #E08900); }
+    .kids-empty {
+        margin-top: .55rem; border-radius: 14px; padding: .55rem;
+        background: #F7FAFF; color: var(--k-muted); font-size: .68rem; font-weight: 700;
+        text-align: center;
+    }
 </style>
 @endpush
 
 @section('content')
 @php
-    $progress = min((int) ($stats['total_progress'] ?? 0), 100);
     $isRtl = app()->getLocale() === 'ar';
+    $weekDays = $weekDays ?? collect();
+    $todayItems = $todayItems ?? collect();
+    $nextAppointment = $nextAppointment ?? null;
 @endphp
 
-<div class="stu-dash space-y-5">
-    {{-- Greeting strip --}}
-    <section class="stu-panel overflow-hidden">
-        <div class="relative px-5 py-5 sm:px-6 sm:py-6">
-            <div class="absolute inset-y-0 {{ $isRtl ? 'left-0' : 'right-0' }} w-40 sm:w-56 pointer-events-none opacity-90"
-                 style="background: radial-gradient(ellipse at center, rgba(245,184,0,0.22), transparent 70%);"></div>
-            <div class="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-                <div class="min-w-0">
-                    <span class="stu-chip mb-3">
-                        <i class="fas fa-language text-[10px]"></i>
-                        {{ config('app.name') }} · {{ __('student.your_dashboard') }}
-                    </span>
-                    <h1 class="font-heading text-2xl sm:text-[28px] font-black tracking-tight text-[#0B1220] dark:text-white leading-tight">
-                        {{ __('student.welcome_name', ['name' => auth()->user()->name]) }}
-                    </h1>
-                    <p class="mt-1.5 text-sm text-[color:var(--stu-muted)] dark:text-gray-400 max-w-xl">
-                        {{ $isRtl
-                            ? 'مدرستك (Islamic Foundations) منفصلة عن الحصص الخاصة — اختر المساحة المناسبة دون خلط.'
-                            : 'Your School (Islamic Foundations) stays separate from Private Lessons — no mix-ups.' }}
-                    </p>
-                </div>
-                <div class="w-full lg:w-56 flex-shrink-0">
-                    <div class="flex items-center justify-between text-xs font-bold mb-2">
-                        <span class="text-[color:var(--stu-muted)]">{{ __('student.total_progress') }}</span>
-                        <span class="text-[#0B3D91] dark:text-blue-300 tabular-nums">{{ $progress }}%</span>
-                    </div>
-                    <div class="stu-progress"><span style="width: {{ $progress }}%"></span></div>
-                    <p class="mt-1.5 text-[11px] text-[color:var(--stu-muted)]">{{ __('student.from_course_completion') }}</p>
-                </div>
+<div class="kids-home space-y-5">
+    <section class="kids-hero">
+        <span class="kids-hero__cloud" style="width:90px;height:36px;top:12px;{{ $isRtl ? 'left' : 'right' }}:18%;"></span>
+        <span class="kids-hero__cloud" style="width:60px;height:26px;bottom:18px;{{ $isRtl ? 'right' : 'left' }}:8%;"></span>
+        <div class="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+            <div>
+                <p class="text-xs font-black tracking-wide text-[#0B3D91]/80 mb-1">
+                    {{ $isRtl ? '📅 أسبوعي الجميل' : '📅 My fun week' }}
+                </p>
+                <h1 class="text-2xl sm:text-[30px] font-black text-[#1A2744] leading-tight">
+                    {{ __('student.welcome_name', ['name' => auth()->user()->name]) }}
+                </h1>
+                <p class="mt-1 text-sm font-semibold text-[#6B7A99]">
+                    @if($nextAppointment)
+                        {{ $isRtl ? 'موعدك القادم:' : 'Next up:' }}
+                        {{ $nextAppointment->title }}
+                        · {{ $nextAppointment->starts_at?->format('g:i A') }}
+                    @else
+                        {{ $isRtl ? 'اضغط على أي موعد للدخول إلى المحاضرة.' : 'Tap any slot to join your class.' }}
+                    @endif
+                </p>
             </div>
+            @if($todayItems->isNotEmpty())
+                <div class="inline-flex items-center gap-2 rounded-full bg-[#F5B800] text-[#072A66] px-3.5 py-2 text-xs font-black shadow-sm">
+                    <i class="fas fa-star"></i>
+                    {{ $todayItems->count() }} {{ $isRtl ? 'موعد اليوم' : 'today' }}
+                </div>
+            @endif
         </div>
     </section>
 
-    {{-- My School vs My Private Lessons --}}
-    <section class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        @if(Route::has('student.school.index'))
-        <a href="{{ route('student.school.index') }}" class="stu-panel px-5 py-5 hover:border-[#0B3D91]/30 transition-colors block no-underline text-inherit">
-            <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#0B3D91]">🏫 {{ $isRtl ? 'مدرستي' : 'My School' }}</p>
-            <h2 class="mt-1 text-lg font-black text-[#0B1220] dark:text-white">Islamic Foundations</h2>
-            <p class="mt-1 text-sm text-[color:var(--stu-muted)]">{{ $isRtl ? 'السنوات والمواد وحصص المدرسة الجماعية.' : 'Years, subjects, and school group sessions.' }}</p>
-            @if(!empty($upcomingTutoringBooking))
-                <p class="mt-3 text-xs font-bold text-[#0B3D91]">
-                    {{ $isRtl ? 'القادمة:' : 'Next:' }}
-                    {{ $upcomingTutoringBooking->tutoringGroup?->title }}
-                    · {{ $upcomingTutoringBooking->starts_at?->timezone(config('app.timezone'))->format('D, M j · g:i A') }}
-                </p>
-            @endif
-        </a>
-        @endif
-        @php $privateHub = Route::has('student.private-lectures.index') ? route('student.private-lectures.index') : route('public.courses'); @endphp
-        <a href="{{ $privateHub }}" class="stu-panel px-5 py-5 hover:border-[#F5B800]/50 transition-colors block no-underline text-inherit">
-            <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#8A6A00]">👨‍🏫 {{ $isRtl ? 'حصصي الخاصة' : 'My Private Lessons' }}</p>
-            <h2 class="mt-1 text-lg font-black text-[#0B1220] dark:text-white">{{ $isRtl ? 'الحجز الخاص' : 'Private booking' }}</h2>
-            <p class="mt-1 text-sm text-[color:var(--stu-muted)]">{{ $isRtl ? 'معلمك، المواعيد، وخطط التعلّم الخاصة.' : 'Your teacher, schedule, and private learning plans.' }}</p>
-            @if(!empty($upcomingPrivateLesson))
-                @php
-                    $plDur = (int) ($upcomingPrivateLesson->duration_minutes ?: 50);
-                    $plEnd = $upcomingPrivateLesson->scheduled_at?->copy()->addMinutes($plDur);
-                @endphp
-                <p class="mt-3 text-xs font-bold text-[#8A6A00]">
-                    {{ $upcomingPrivateLesson->course->title ?? 'Private lesson' }}
-                    · {{ $upcomingPrivateLesson->scheduled_at?->timezone(config('app.timezone'))->format('D, M j') }}
-                    · {{ $upcomingPrivateLesson->scheduled_at?->format('g:i A') }}@if($plEnd)–{{ $plEnd->format('g:i A') }}@endif
-                </p>
-            @endif
-        </a>
-    </section>
-
-    {{-- Next live / tutoring --}}
-    @if(!empty($upcomingPrivateLesson))
-        <section class="rounded-2xl overflow-hidden border border-[#F5B800]/40 bg-[#FFF8E6] shadow-[0_18px_40px_-20px_rgba(245,184,0,0.45)]">
-            <div class="px-5 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div class="min-w-0">
-                    <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#8A6A00]">{{ $isRtl ? 'حصة خاصة قادمة' : 'Upcoming Private Lesson' }}</p>
-                    <h2 class="mt-1 text-xl font-black text-[#0B1220] truncate">
-                        {{ $upcomingPrivateLesson->course->title ?? 'Private Lesson' }}
-                        @if($upcomingPrivateLesson->instructor)
-                            <span class="font-bold text-[#5B6577] text-base">· {{ $upcomingPrivateLesson->instructor->name }}</span>
-                        @endif
-                    </h2>
-                    @php
-                        $plDur = (int) ($upcomingPrivateLesson->duration_minutes ?: 50);
-                        $plEnd = $upcomingPrivateLesson->scheduled_at?->copy()->addMinutes($plDur);
-                    @endphp
-                    <p class="mt-1 text-sm text-[#5B6577]">
-                        <i class="far fa-clock ml-1"></i>
-                        {{ $upcomingPrivateLesson->scheduled_at?->timezone(config('app.timezone'))->format('l, M j') }}
-                        · {{ $upcomingPrivateLesson->scheduled_at?->format('g:i A') }}@if($plEnd) – {{ $plEnd->format('g:i A') }}@endif
-                        · {{ $plDur }} {{ $isRtl ? 'دقيقة' : 'min' }}
-                    </p>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    @if($upcomingPrivateLesson->classroomMeeting)
-                        <a href="{{ route('student.classroom.room', $upcomingPrivateLesson->classroomMeeting) }}"
-                           class="inline-flex items-center gap-2 rounded-xl bg-[#F5B800] px-4 py-2.5 text-sm font-extrabold text-[#072A66] hover:brightness-105">
-                            <i class="fas fa-video"></i> {{ $isRtl ? 'دخول الحصة' : 'Join Class' }}
-                        </a>
-                    @endif
-                    <a href="{{ Route::has('student.private-lectures.index') ? route('student.private-lectures.index') : route('student.one-to-one-sessions.index') }}"
-                       class="inline-flex items-center rounded-xl border border-[#0B3D91]/20 px-4 py-2.5 text-sm font-bold text-[#0B3D91] hover:bg-white">
-                        {{ $isRtl ? 'كل الحصص الخاصة' : 'Private Lessons' }}
-                    </a>
-                </div>
-            </div>
-        </section>
-    @elseif(!empty($upcomingTutoringBooking))
-        <section class="rounded-2xl overflow-hidden border border-[#0B3D91]/20 bg-[#0B3D91] text-white shadow-[0_18px_40px_-20px_rgba(11,61,145,0.55)]">
-            <div class="px-5 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div class="min-w-0">
-                    <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#F5B800]">{{ $isRtl ? 'حصة مدرسة قادمة' : 'Upcoming school session' }}</p>
-                    <h2 class="mt-1 text-xl font-black truncate">{{ $upcomingTutoringBooking->tutoringGroup?->title ?? ($isRtl ? 'حصة مجموعة' : 'Group session') }}</h2>
-                    <p class="mt-1 text-sm text-white/75">
-                        <i class="far fa-clock ml-1"></i>
-                        {{ $upcomingTutoringBooking->starts_at?->timezone(config('app.timezone'))->format('Y-m-d H:i') }}
-                    </p>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    @if($upcomingTutoringBooking->classroomMeeting)
-                        <a href="{{ url('classroom/join/'.$upcomingTutoringBooking->classroomMeeting->code) }}"
-                           class="inline-flex items-center gap-2 rounded-xl bg-[#F5B800] px-4 py-2.5 text-sm font-extrabold text-[#072A66] hover:brightness-105">
-                            <i class="fas fa-video"></i> {{ $isRtl ? 'دخول Live' : 'Join Live' }}
-                        </a>
-                    @endif
-                    <a href="{{ route('student.tutoring-bookings.show', $upcomingTutoringBooking) }}"
-                       class="inline-flex items-center rounded-xl border border-white/30 px-4 py-2.5 text-sm font-bold text-white hover:bg-white/10">
-                        {{ $isRtl ? 'التفاصيل' : 'Details' }}
-                    </a>
-                </div>
-            </div>
-        </section>
-    @else
-        <section class="stu-panel px-5 py-4 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-                <p class="text-sm font-bold text-[#0B1220] dark:text-white">{{ $isRtl ? 'لا توجد حصة قادمة' : 'No upcoming session' }}</p>
-                <p class="text-xs text-[color:var(--stu-muted)] mt-0.5">{{ $isRtl ? 'تصفّح المدرسة أو احجز حصة خاصة.' : 'Browse School or book a Private Lesson.' }}</p>
-            </div>
-            <div class="flex flex-wrap gap-2">
-                @if(Route::has('public.groups'))
-                    <a href="{{ route('public.groups') }}" class="inline-flex h-10 items-center gap-2 rounded-xl bg-[#0B3D91] px-4 text-sm font-bold text-white">
-                        <i class="fas fa-school text-xs"></i> {{ $isRtl ? 'المدرسة' : 'School' }}
-                    </a>
-                @endif
-                <a href="{{ route('public.courses') }}" class="inline-flex h-10 items-center gap-2 rounded-xl bg-[#F5B800] px-4 text-sm font-bold text-[#072A66]">
-                    <i class="fas fa-chalkboard-teacher text-xs"></i> {{ $isRtl ? 'حصص خاصة' : 'Private Lessons' }}
-                </a>
-            </div>
-        </section>
-    @endif
-
-    {{-- Quick actions — business pillars --}}
-    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        @if(Route::has('student.school.index'))
-        <a href="{{ route('student.school.index') }}" class="stu-action stu-action--gold">
-            <span class="stu-action__icon"><i class="fas fa-school"></i></span>
-            <div>
-                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'مدرستي' : 'My School' }}</p>
-                <p class="text-[11px] text-[color:var(--stu-muted)] mt-0.5">Islamic Foundations</p>
-            </div>
-        </a>
-        @endif
-        <a href="{{ Route::has('student.private-lectures.index') ? route('student.private-lectures.index') : route('public.courses') }}" class="stu-action">
-            <span class="stu-action__icon"><i class="fas fa-chalkboard-teacher"></i></span>
-            <div>
-                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'حصصي الخاصة' : 'My Private Lessons' }}</p>
-                <p class="text-[11px] text-[color:var(--stu-muted)] mt-0.5">{{ $isRtl ? '50 دقيقة · معلم خاص' : '50 min · private teacher' }}</p>
-            </div>
-        </a>
-        @if(Route::has('student.live-sessions.index'))
-        <a href="{{ route('student.live-sessions.index') }}" class="stu-action">
-            <span class="stu-action__icon"><i class="fas fa-broadcast-tower"></i></span>
-            <div>
-                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'البث المباشر' : 'Live broadcast' }}</p>
-                <p class="text-[11px] text-[color:var(--stu-muted)] mt-0.5">{{ $isRtl ? 'انضم الآن أو لاحقاً' : 'Join now or later' }}</p>
-            </div>
-        </a>
-        @endif
-        <a href="{{ route('my-courses.index') }}" class="stu-action">
-            <span class="stu-action__icon"><i class="fas fa-book-open"></i></span>
-            <div>
-                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ __('student.my_active_courses') }}</p>
-                <p class="text-[11px] text-[color:var(--stu-muted)] mt-0.5">{{ $stats['active_courses'] }} {{ $isRtl ? 'نشط' : 'active' }}</p>
-            </div>
-        </a>
-    </section>
-
-    {{-- Stats row (quiet) --}}
-    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <a href="{{ route('my-courses.index') }}" class="stu-panel px-4 py-4 hover:border-[#0B3D91]/25 transition-colors block">
-            <p class="text-[11px] font-bold text-[color:var(--stu-muted)]">{{ __('student.my_active_courses') }}</p>
-            <p class="mt-1 text-2xl font-black text-[#0B3D91] dark:text-blue-300 tabular-nums">{{ $stats['active_courses'] }}</p>
-        </a>
-        <a href="{{ route('student.certificates.index') }}" class="stu-panel px-4 py-4 hover:border-[#0B3D91]/25 transition-colors block">
-            <p class="text-[11px] font-bold text-[color:var(--stu-muted)]">{{ __('student.completed') }}</p>
-            <p class="mt-1 text-2xl font-black text-[#0B1220] dark:text-white tabular-nums">{{ $stats['completed_courses'] }}</p>
-        </a>
-        <div class="stu-panel px-4 py-4">
-            <p class="text-[11px] font-bold text-[color:var(--stu-muted)]">{{ __('student.total_progress') }}</p>
-            <p class="mt-1 text-2xl font-black text-[#8A6A00] tabular-nums">{{ $stats['total_progress'] }}%</p>
+    <section>
+        <div class="flex items-center justify-between mb-3 px-1">
+            <h2 class="text-base font-black text-[#1A2744]">{{ $isRtl ? 'تقويمي الأسبوعي' : 'Weekly calendar' }}</h2>
+            <p class="text-[11px] font-bold text-[#6B7A99]">{{ $isRtl ? 'إشعار قبل الموعد بـ 30 دقيقة' : 'Reminder 30 min before' }}</p>
         </div>
-        <a href="{{ route('orders.index') }}" class="stu-panel px-4 py-4 hover:border-[#0B3D91]/25 transition-colors block">
-            <p class="text-[11px] font-bold text-[color:var(--stu-muted)]">{{ __('student.pending_orders') }}</p>
-            <p class="mt-1 text-2xl font-black text-[#0B1220] dark:text-white tabular-nums">{{ $stats['pending_orders'] }}</p>
-        </a>
-    </section>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <section class="lg:col-span-2 stu-panel min-w-0">
-            <div class="flex items-center justify-between gap-3 px-5 pt-5">
-                <h2 class="font-heading text-base font-extrabold text-[#0B1220] dark:text-white">{{ __('student.my_active_courses') }}</h2>
-                <a href="{{ route('my-courses.index') }}" class="text-xs font-bold text-[#0B3D91] dark:text-blue-300">{{ __('student.view_all') }}</a>
-            </div>
-            <div class="p-3 sm:p-4 space-y-1">
-                @forelse($activeCourses->take(5) as $course)
-                    @php $prog = (float) ($course->pivot->progress ?? optional($course->enrollment ?? null)->progress ?? 0); @endphp
-                    <a href="{{ route('my-courses.show', $course->id) }}" class="stu-row">
-                        <div class="w-10 h-10 rounded-xl bg-[#EEF3FB] text-[#0B3D91] flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-book text-sm"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-sm text-[#0B1220] dark:text-white truncate">{{ $course->title }}</h3>
-                            <div class="mt-1.5 flex items-center gap-2">
-                                <div class="flex-1 stu-progress"><span style="width: {{ $prog }}%"></span></div>
-                                <span class="text-[11px] font-bold text-[color:var(--stu-muted)] tabular-nums w-8">{{ (int) $prog }}%</span>
-                            </div>
-                        </div>
-                    </a>
-                @empty
-                    <div class="text-center py-10 px-4">
-                        <p class="font-bold text-[#0B1220] dark:text-white">{{ __('student.no_active_courses') }}</p>
-                        <p class="text-sm text-[color:var(--stu-muted)] mt-1 mb-4">{{ __('student.start_journey_now') }}</p>
-                        <a href="{{ route('public.courses') }}" class="inline-flex items-center gap-2 rounded-xl bg-[#0B3D91] px-4 py-2.5 text-sm font-bold text-white">
-                            {{ __('student.explore_courses') }}
-                        </a>
-                    </div>
-                @endforelse
-            </div>
-        </section>
-
-        <div class="space-y-5 min-w-0">
-            <section class="stu-panel">
-                <div class="flex items-center justify-between px-4 pt-4">
-                    <h3 class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ __('student.assignments') }}</h3>
-                    @if($upcomingAssignments->count() > 0)
-                        <span class="stu-chip">{{ $upcomingAssignments->count() }}</span>
-                    @endif
-                </div>
-                <div class="p-3 space-y-2">
-                    @forelse($upcomingAssignments->take(3) as $assignment)
-                        @php
-                            $lecture = $assignment->lecture ?? null;
-                            $course = $assignment->course ?? optional($lecture)->course;
-                            $dueDate = optional($assignment->due_date);
-                        @endphp
-                        <div class="rounded-xl border border-[color:var(--stu-line)] dark:border-gray-700 px-3 py-2.5">
-                            <p class="text-xs font-bold text-[#0B1220] dark:text-white truncate">{{ $assignment->title }}</p>
-                            @if($course)<p class="text-[11px] text-[color:var(--stu-muted)] truncate mt-0.5">{{ $course->title }}</p>@endif
-                            @if($dueDate)
-                                <p class="text-[10px] font-bold text-[#0B3D91] mt-1.5">{{ $dueDate->translatedFormat('d M') }}</p>
+        <div class="kids-week">
+            @foreach($weekDays as $day)
+                <article class="kids-day {{ $day->is_today ? 'is-today' : '' }}">
+                    <div class="flex items-center justify-between gap-1">
+                        <span class="kids-day__badge">{{ $day->date->format('j') }}</span>
+                        <div class="text-end min-w-0">
+                            <p class="text-[11px] font-black text-[#1A2744] truncate">{{ $day->short }}</p>
+                            @if($day->is_today)
+                                <p class="text-[10px] font-extrabold text-[#8A6A00]">{{ $isRtl ? 'اليوم' : 'Today' }}</p>
                             @endif
                         </div>
-                    @empty
-                        <p class="text-center text-xs text-[color:var(--stu-muted)] py-6">{{ __('student.no_assignments') }}</p>
-                    @endforelse
-                </div>
-            </section>
+                    </div>
 
-            <section class="stu-panel">
-                <div class="flex items-center justify-between px-4 pt-4">
-                    <h3 class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ __('student.exams') }}</h3>
-                    @if($upcomingExams->count() > 0)
-                        <span class="stu-chip">{{ $upcomingExams->count() }}</span>
-                    @endif
-                </div>
-                <div class="p-3 space-y-2">
-                    @forelse($upcomingExams->take(3) as $exam)
+                    @forelse($day->items as $slot)
                         @php
-                            $course = $exam->course;
-                            $startAt = $exam->start_time ?? ($exam->start_date ? $exam->start_date->copy()->startOfDay() : null);
-                            $isAvailableNow = $startAt ? $startAt->isPast() : true;
+                            $tone = match($slot->color ?? 'blue') {
+                                'gold' => 'kids-slot--gold',
+                                'teal' => 'kids-slot--teal',
+                                default => 'kids-slot--blue',
+                            };
+                            $href = $slot->join_url
+                                ?: (Route::has('student.schedule.join')
+                                    ? route('student.schedule.join', ['type' => $slot->type, 'id' => $slot->ref_id])
+                                    : '#');
                         @endphp
-                        <a href="{{ route('student.exams.show', $exam) }}" class="block rounded-xl border border-[color:var(--stu-line)] dark:border-gray-700 px-3 py-2.5 hover:border-[#0B3D91]/30">
-                            <p class="text-xs font-bold text-[#0B1220] dark:text-white truncate">{{ $exam->title }}</p>
-                            @if($course)<p class="text-[11px] text-[color:var(--stu-muted)] truncate mt-0.5">{{ $course->title }}</p>@endif
-                            <p class="text-[10px] font-bold mt-1.5 {{ $isAvailableNow ? 'text-emerald-600' : 'text-[color:var(--stu-muted)]' }}">
-                                {{ $isAvailableNow ? __('student.available') : __('student.coming_soon') }}
-                            </p>
+                        <a href="{{ $href }}" class="kids-slot {{ $tone }}" title="{{ $isRtl ? 'دخول المحاضرة' : 'Join class' }}">
+                            <span class="kids-slot__time">
+                                <i class="far fa-clock text-[10px] opacity-70"></i>
+                                {{ $slot->starts_at?->format('g:i A') }}
+                            </span>
+                            <span class="kids-slot__title truncate">{{ $slot->title }}</span>
+                            <span class="block text-[10px] font-bold text-[#6B7A99] truncate mt-0.5">{{ $slot->subtitle }}</span>
                         </a>
                     @empty
-                        <p class="text-center text-xs text-[color:var(--stu-muted)] py-6">{{ __('student.no_exams') }}</p>
+                        <div class="kids-empty">{{ $isRtl ? 'لا مواعيد' : 'Free' }}</div>
                     @endforelse
-                </div>
-            </section>
+                </article>
+            @endforeach
         </div>
-    </div>
+    </section>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <section class="stu-panel min-w-0">
-            <h2 class="font-heading text-sm font-extrabold text-[#0B1220] dark:text-white px-5 pt-5">{{ __('student.exam_results') }}</h2>
-            <div class="p-4 space-y-2">
-                @forelse($recentExamAttempts->take(4) as $attempt)
-                    @php $exam = $attempt->exam; @endphp
-                    <div class="flex items-center gap-3 rounded-xl border border-[color:var(--stu-line)] dark:border-gray-700 px-3 py-2.5">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs font-bold truncate text-[#0B1220] dark:text-white">{{ $exam->title ?? __('student.exam_deleted') }}</p>
-                            <p class="text-[11px] text-[color:var(--stu-muted)] mt-0.5">
-                                {{ $attempt->result_status }}
-                                @if(!is_null($attempt->percentage)) · {{ number_format($attempt->percentage, 1) }}%@endif
-                            </p>
-                        </div>
-                        @if($exam)
-                            <a href="{{ route('student.exams.result', [$exam, $attempt]) }}" class="text-[11px] font-bold text-[#0B3D91]">{{ __('common.view') }}</a>
-                        @endif
-                    </div>
-                @empty
-                    <p class="text-center text-xs text-[color:var(--stu-muted)] py-8">{{ __('student.no_results_yet') }}</p>
-                @endforelse
-            </div>
-        </section>
+    <section>
+        <h2 class="text-base font-black text-[#1A2744] mb-3 px-1">{{ $isRtl ? 'مكتبتي السريعة' : 'Quick library' }}</h2>
+        <div class="kids-hub">
+            <a href="{{ route('student.library.materials') }}" class="kids-hub__card">
+                <span class="kids-hub__icon kids-hub__icon--materials"><i class="fas fa-book-open"></i></span>
+                <div>
+                    <p class="text-sm font-black text-[#1A2744]">{{ $isRtl ? 'مكتبة الماتريال' : 'Materials' }}</p>
+                    <p class="text-[11px] font-bold text-[#6B7A99] mt-0.5">{{ $isRtl ? 'ملفات ودروس' : 'Files & notes' }}</p>
+                </div>
+            </a>
+            <a href="{{ route('student.library.videos') }}" class="kids-hub__card">
+                <span class="kids-hub__icon kids-hub__icon--videos"><i class="fas fa-film"></i></span>
+                <div>
+                    <p class="text-sm font-black text-[#1A2744]">{{ $isRtl ? 'مكتبة الفيديوهات' : 'Videos' }}</p>
+                    <p class="text-[11px] font-bold text-[#6B7A99] mt-0.5">{{ $isRtl ? 'تسجيلات الحصص' : 'Class recordings' }}</p>
+                </div>
+            </a>
+            <a href="{{ route('student.assignments.index') }}" class="kids-hub__card">
+                <span class="kids-hub__icon kids-hub__icon--assignments"><i class="fas fa-pencil-alt"></i></span>
+                <div>
+                    <p class="text-sm font-black text-[#1A2744]">{{ $isRtl ? 'واجباتي' : 'Assignments' }}</p>
+                    <p class="text-[11px] font-bold text-[#6B7A99] mt-0.5">{{ $isRtl ? 'حل وسلّم' : 'Do & submit' }}</p>
+                </div>
+            </a>
+            <a href="{{ route('student.lectures.index') }}" class="kids-hub__card">
+                <span class="kids-hub__icon kids-hub__icon--lectures"><i class="fas fa-chalkboard"></i></span>
+                <div>
+                    <p class="text-sm font-black text-[#1A2744]">{{ $isRtl ? 'محاضراتي' : 'My lectures' }}</p>
+                    <p class="text-[11px] font-bold text-[#6B7A99] mt-0.5">{{ $isRtl ? 'خاصة ومجموعات' : 'Private & groups' }}</p>
+                </div>
+            </a>
+        </div>
+    </section>
 
-        <section class="stu-panel min-w-0">
-            <h2 class="font-heading text-sm font-extrabold text-[#0B1220] dark:text-white px-5 pt-5">{{ __('student.issued_certificates') }}</h2>
-            <div class="p-4 space-y-2">
-                @forelse($recentCertificates->take(4) as $certificate)
-                    <div class="rounded-xl border border-[color:var(--stu-line)] dark:border-gray-700 px-3 py-2.5">
-                        <p class="text-xs font-bold truncate text-[#0B1220] dark:text-white">
-                            {{ $certificate->title ?? $certificate->course_name ?? __('student.certificate_untitled') }}
-                        </p>
-                        @if($certificate->certificate_number)
-                            <p class="text-[10px] font-bold text-[#0B3D91] mt-1">{{ $certificate->certificate_number }}</p>
-                        @endif
-                    </div>
-                @empty
-                    <p class="text-center text-xs text-[color:var(--stu-muted)] py-8">{{ __('student.no_certificates_yet') }}</p>
-                @endforelse
-            </div>
+    @if(student_ui('show_school', true) || student_ui('show_private_lessons', true))
+        <section class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            @if(student_ui('show_school', true) && Route::has('student.classes.index'))
+                <a href="{{ route('student.classes.index') }}" class="rounded-2xl border-2 border-[#E8EEF8] bg-white px-4 py-4 no-underline text-inherit hover:border-[#0B3D91]/30 transition">
+                    <p class="text-xs font-black text-[#0B3D91]">🏫 {{ $isRtl ? 'فصولي' : 'My classes' }}</p>
+                    <p class="mt-1 text-sm font-bold text-[#6B7A99]">{{ $isRtl ? 'الجداول والانضمام للفصل' : 'Schedules & join class' }}</p>
+                </a>
+            @endif
+            @if(student_ui('show_private_lessons', true) && Route::has('student.private-lectures.index'))
+                <a href="{{ route('student.private-lectures.index') }}" class="rounded-2xl border-2 border-[#E8EEF8] bg-white px-4 py-4 no-underline text-inherit hover:border-[#F5B800]/50 transition">
+                    <p class="text-xs font-black text-[#8A6A00]">👨‍🏫 {{ $isRtl ? 'حصصي الخاصة' : 'Private lessons' }}</p>
+                    <p class="mt-1 text-sm font-bold text-[#6B7A99]">{{ $isRtl ? 'معلمك ومواعيدك' : 'Your teacher & slots' }}</p>
+                </a>
+            @endif
         </section>
-    </div>
+    @endif
 </div>
 @endsection

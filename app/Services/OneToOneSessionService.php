@@ -99,6 +99,58 @@ class OneToOneSessionService
         ]);
     }
 
+    /**
+     * حجز موعد مباشر مع معلم من صفحة الملف العام — يتطلب رصيد باقة حصص خاصة.
+     */
+    public static function bookStandaloneWithInstructor(User $student, User $instructor, Carbon $scheduledAt): OneToOneSession
+    {
+        if (! $student->isStudent()) {
+            throw new \InvalidArgumentException('الحجز متاح للطلاب فقط.');
+        }
+        if (! $instructor->isInstructor() || ! $instructor->is_active) {
+            throw new \InvalidArgumentException('المعلم غير متاح حالياً.');
+        }
+
+        $entitlement = StudentEntitlementService::availableFor(
+            (int) $student->id,
+            ServicePackage::SCOPE_PRIVATE_LESSONS
+        );
+
+        if (! $entitlement || StudentEntitlementService::bookableUnitsLeft($entitlement) < 1) {
+            throw new \InvalidArgumentException('يجب الاشتراك في باقة أولاً لحجز موعد مع المعلم.');
+        }
+
+        $duration = OneToOneSession::defaultDurationMinutes();
+
+        return DB::transaction(function () use ($student, $instructor, $scheduledAt, $entitlement, $duration) {
+            $maxNumber = (int) OneToOneSession::query()
+                ->where('student_id', $student->id)
+                ->where('instructor_id', $instructor->id)
+                ->max('session_number');
+
+            $courseId = AdvancedCourse::query()
+                ->where('instructor_id', $instructor->id)
+                ->where('is_active', true)
+                ->where('delivery_type', CourseSubscriptionService::DELIVERY_ONE_TO_ONE)
+                ->value('id');
+
+            $session = OneToOneSession::create([
+                'student_course_enrollment_id' => null,
+                'student_service_entitlement_id' => $entitlement->id,
+                'advanced_course_id' => $courseId,
+                'instructor_id' => $instructor->id,
+                'student_id' => $student->id,
+                'session_number' => $maxNumber + 1,
+                'duration_minutes' => $duration,
+                'status' => OneToOneSession::STATUS_PENDING,
+            ]);
+
+            self::scheduleSession($session, $scheduledAt, $duration, $student, requireAvailability: true);
+
+            return $session->fresh(['instructor', 'classroomMeeting']);
+        });
+    }
+
     public static function scheduleSession(
         OneToOneSession $session,
         Carbon $scheduledAt,

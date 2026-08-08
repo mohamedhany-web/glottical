@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\OneToOneSession;
+use App\Models\User;
 use App\Services\OneToOneAvailabilityService;
 use App\Services\OneToOneSessionService;
 use Carbon\Carbon;
@@ -71,6 +72,33 @@ class OneToOneSessionController extends Controller
 
         return redirect()
             ->route('student.one-to-one-sessions.show', $oneToOneSession)
+            ->with('success', __('student.one_to_one_booking_success'));
+    }
+
+    /**
+     * حجز موعد من صفحة المعلم العامة — يتطلب اشتراك باقة.
+     */
+    public function bookWithInstructor(Request $request, User $instructor): RedirectResponse
+    {
+        abort_unless($request->user()->isStudent(), 403);
+        abort_unless($instructor->isInstructor(), 404);
+
+        $data = $request->validate([
+            'scheduled_at' => ['required', 'date', 'after:now'],
+        ]);
+
+        try {
+            $session = OneToOneSessionService::bookStandaloneWithInstructor(
+                $request->user(),
+                $instructor,
+                Carbon::parse($data['scheduled_at'])
+            );
+        } catch (\InvalidArgumentException $e) {
+            return back()->withInput()->withErrors(['scheduled_at' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('student.one-to-one-sessions.show', $session)
             ->with('success', __('student.one_to_one_booking_success'));
     }
 }

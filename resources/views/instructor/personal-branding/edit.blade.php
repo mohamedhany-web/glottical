@@ -60,6 +60,13 @@
         </div>
 
         <div>
+            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ app()->getLocale() === 'ar' ? 'رابط الفيديو التعريفي' : 'Intro video URL' }}</label>
+            <input type="url" name="intro_video_url" value="{{ old('intro_video_url', auth()->user()->portfolio_intro_video_url) }}" dir="ltr" placeholder="https://youtube.com/... أو رابط مباشر mp4" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm">
+            <p class="text-xs text-slate-500 mt-1">{{ app()->getLocale() === 'ar' ? 'يظهر في صفحة ملفك العام أمام الطلاب.' : 'Shown on your public teacher page.' }}</p>
+            @error('intro_video_url')<p class="text-rose-600 text-sm mt-1">{{ $message }}</p>@enderror
+        </div>
+
+        <div>
             <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ __('instructor.intro_title') }}</label>
             <input type="text" name="headline" value="{{ old('headline', $profile->headline) }}" placeholder="{{ __('instructor.headline_placeholder') }}" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm">
             @error('headline')<p class="text-rose-600 text-sm mt-1">{{ $message }}</p>@enderror

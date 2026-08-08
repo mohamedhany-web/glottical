@@ -16,7 +16,7 @@
         ['icon' => 'fas fa-clipboard-check', 'label' => $isRtl ? 'تقييم مستوى مجاني' : 'Free assessment', 'subject' => $defaultSubject],
         ['icon' => 'fas fa-screwdriver-wrench', 'label' => $isRtl ? 'دعم فني' : 'Technical support', 'subject' => $isRtl ? 'دعم فني' : 'Technical support'],
         ['icon' => 'fas fa-book-open', 'label' => $isRtl ? 'أسئلة الدورات' : 'Course questions', 'subject' => $isRtl ? 'استفسار عن الدورات' : 'Course inquiry'],
-        ['icon' => 'fas fa-chalkboard-user', 'label' => $isRtl ? 'طلبات المعلّمين' : 'Tutor requests', 'subject' => $isRtl ? 'طلب انضمام كمعلّم' : 'Tutor application'],
+        ['icon' => 'fas fa-chalkboard-user', 'label' => $isRtl ? 'طلبات المعلّمين' : 'Tutor requests', 'subject' => $isRtl ? 'طلب انضمام كمعلّم' : 'Tutor application', 'href' => route('public.tutor.apply')],
         ['icon' => 'fas fa-handshake', 'label' => $isRtl ? 'شراكات' : 'Partnerships', 'subject' => $isRtl ? 'شراكة / تعاون' : 'Partnership'],
         ['icon' => 'fas fa-credit-card', 'label' => $isRtl ? 'الفوترة والدفع' : 'Billing', 'subject' => $isRtl ? 'الفوترة والدفع' : 'Billing & payment'],
         ['icon' => 'fas fa-comments', 'label' => $isRtl ? 'استفسار عام' : 'General', 'subject' => $isRtl ? 'استفسار عام' : 'General inquiry'],
@@ -259,12 +259,19 @@
           </p>
           <div class="sana-ct-categories" data-ct-cats>
             @foreach ($categories as $i => $cat)
-              <button type="button"
-                      class="sana-ct-cat{{ ($oldSubject === $cat['subject'] || ($i === 0 && ! old('subject'))) ? ' is-active' : '' }}"
-                      data-subject="{{ $cat['subject'] }}">
-                <i class="{{ $cat['icon'] }}"></i>
-                <span>{{ $cat['label'] }}</span>
-              </button>
+              @if(!empty($cat['href']))
+                <a href="{{ $cat['href'] }}" class="sana-ct-cat">
+                  <i class="{{ $cat['icon'] }}"></i>
+                  <span>{{ $cat['label'] }}</span>
+                </a>
+              @else
+                <button type="button"
+                        class="sana-ct-cat{{ ($oldSubject === $cat['subject'] || ($i === 0 && ! old('subject'))) ? ' is-active' : '' }}"
+                        data-subject="{{ $cat['subject'] }}">
+                  <i class="{{ $cat['icon'] }}"></i>
+                  <span>{{ $cat['label'] }}</span>
+                </button>
+              @endif
             @endforeach
           </div>
           <div style="margin-top:1.15rem">
@@ -392,7 +399,7 @@
     if (!cats || !subject) return;
     cats.addEventListener('click', function (e) {
       var btn = e.target.closest('.sana-ct-cat');
-      if (!btn) return;
+      if (!btn || btn.tagName === 'A') return;
       cats.querySelectorAll('.sana-ct-cat').forEach(function (el) { el.classList.remove('is-active'); });
       btn.classList.add('is-active');
       var value = btn.getAttribute('data-subject') || '';

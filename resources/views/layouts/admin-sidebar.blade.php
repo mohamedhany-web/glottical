@@ -95,7 +95,7 @@
 
             {{-- 2) التشغيل اليومي --}}
             @php
-                $showDailyOps = ($isFull || $u->hasPermission('manage.contact-messages') || $u->hasPermission('manage.free-trial-bookings'));
+                $showDailyOps = ($isFull || $u->hasPermission('manage.contact-messages') || $u->hasPermission('manage.free-trial-bookings') || $u->hasPermission('manage.users') || $u->hasPermission('manage.personal-branding'));
             @endphp
             @if($showDailyOps)
             <li class="sidebar-section-label">التشغيل</li>
@@ -139,6 +139,67 @@
                         <span class="sidebar-badge bg-amber-500 text-white">{{ $sidebarContactUnread > 99 ? '99+' : $sidebarContactUnread }}</span>
                     @endif
                 </a>
+            </li>
+            @endif
+
+            {{-- التوظيف: طلبات المعلمين + التفعيل --}}
+            @if($isFull || $u->hasPermission('manage.contact-messages') || $u->hasPermission('manage.users') || $u->hasPermission('manage.personal-branding'))
+            @php
+                try {
+                    $sidebarTutorAppsPending = \App\Models\TutorApplication::pending()->count();
+                    $sidebarTutorAwaiting = \App\Models\TutorApplication::awaitingActivation()->count();
+                } catch (\Exception $e) {
+                    $sidebarTutorAppsPending = 0;
+                    $sidebarTutorAwaiting = 0;
+                }
+                $hiringOpen = request()->routeIs('admin.tutor-applications.*');
+                $hiringBadge = $sidebarTutorAppsPending + $sidebarTutorAwaiting;
+            @endphp
+            <li class="sidebar-section-label">التوظيف</li>
+            <li x-data="{ open: {{ $hiringOpen ? 'true' : 'false' }} }">
+                <button type="button" @click="open = !open" class="sidebar-group-btn">
+                    <span class="flex items-center gap-3">
+                        <i class="fas fa-user-tie"></i>
+                        <span>توظيف المعلمين</span>
+                        @if($hiringBadge > 0)
+                            <span class="sidebar-badge bg-amber-500 text-white">{{ $hiringBadge > 99 ? '99+' : $hiringBadge }}</span>
+                        @endif
+                    </span>
+                    <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
+                </button>
+                <ul x-show="open" x-cloak class="mt-1 mr-3 space-y-0.5 border-r border-white/10 pr-3">
+                    <li>
+                        <a href="{{ route('admin.tutor-applications.hub') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutor-applications.hub') ? 'active' : '' }}">
+                            <i class="fas fa-briefcase"></i><span>لوحة التوظيف</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.tutor-applications.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutor-applications.index') || request()->routeIs('admin.tutor-applications.show') ? 'active' : '' }}">
+                            <i class="fas fa-inbox"></i><span>مراجعة الطلبات</span>
+                            @if($sidebarTutorAppsPending > 0)
+                                <span class="sidebar-badge bg-amber-500 text-white">{{ $sidebarTutorAppsPending }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.tutor-applications.index', ['status' => 'approved']) }}" class="sidebar-sub-link {{ request('status') === 'approved' && request()->routeIs('admin.tutor-applications.index') ? 'active' : '' }}">
+                            <i class="fas fa-user-check"></i><span>بانتظار التفعيل</span>
+                            @if($sidebarTutorAwaiting > 0)
+                                <span class="sidebar-badge bg-sky-500 text-white">{{ $sidebarTutorAwaiting }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.tutor-applications.activated') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutor-applications.activated') ? 'active' : '' }}">
+                            <i class="fas fa-chalkboard-teacher"></i><span>المعلمون المفعّلون</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('public.tutor.apply') }}" target="_blank" class="sidebar-sub-link">
+                            <i class="fas fa-external-link-alt"></i><span>لينك التقديم</span>
+                        </a>
+                    </li>
+                </ul>
             </li>
             @endif
 

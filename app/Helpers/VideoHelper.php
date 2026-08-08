@@ -51,8 +51,13 @@ class VideoHelper
 
         $url = trim((string) $url);
 
-        // مسار نسبي أو /storage/... أو رابط R2 لملف course-videos
-        if (CourseVideoStorage::looksLikeStoredMediaUrl($url) || str_starts_with($url, CourseVideoStorage::DIRECTORY.'/')) {
+        // مسار نسبي أو /storage/... أو رابط R2 لملف course-videos / tutor-applications
+        if (CourseVideoStorage::looksLikeStoredMediaUrl($url)
+            || str_starts_with($url, CourseVideoStorage::DIRECTORY.'/')
+            || str_starts_with(ltrim($url, '/'), 'tutor-applications/')) {
+            if (str_starts_with(ltrim($url, '/'), 'tutor-applications/')) {
+                return \App\Services\TutorApplicationStorage::publicUrl($url);
+            }
             $resolved = CourseVideoStorage::publicUrl($url);
 
             return is_string($resolved) && $resolved !== '' ? $resolved : null;

@@ -231,6 +231,27 @@ class TutoringGroupCheckoutService
                 ]);
 
                 TutoringCohortService::enroll($cohort);
+                if ($order->user) {
+                    TutoringClassService::enrollStudent(
+                        $cohort,
+                        $order->user,
+                        orderId: (int) $order->id,
+                        entitlementId: (int) $collectiveEntitlement->id,
+                        countSeat: false,
+                        notes: 'from_order:'.$order->id,
+                    );
+                }
+                if ($cohort->classSessions()->count() === 0
+                    && filled($cohort->study_days)
+                    && filled($cohort->study_time)
+                    && $cohort->starts_at) {
+                    try {
+                        TutoringClassService::generateSchedule($cohort);
+                        TutoringClassService::ensureAllMeetings($cohort->fresh());
+                    } catch (\Throwable) {
+                        // جدول الحصص يمكن توليده لاحقاً من لوحة الإدارة
+                    }
+                }
                 TutoringCrmHookService::onBookingCreated($booking->fresh(['tutoringGroup', 'user']));
                 TutoringGroupOrchestrationService::confirmBooking($booking);
             }

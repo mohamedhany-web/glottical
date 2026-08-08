@@ -300,6 +300,9 @@
             ?? $course->thumbnail_url
             ?: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&q=80';
           $url = route('public.course.show', $course->id);
+          $teacherProfileUrl = $instructor
+            ? route('public.instructors.show', $instructor)
+            : $url;
           $teacher = $instructor->name ?? ($isRtl ? 'معلم متخصص' : 'Specialist teacher');
           $subject = $course->academicSubject->name ?? $course->title;
           $cardTitle = __('public.private_course_with_teacher', ['subject' => $subject, 'teacher' => $teacher]);
@@ -316,7 +319,7 @@
           $hasVideo = filled($instructor?->portfolio_intro_video_url ?? null) || filled($course->video_url);
         @endphp
         <article class="gl-teacher sana-reveal">
-          <a href="{{ $url }}" style="text-decoration:none;color:inherit;display:block">
+          <a href="{{ $teacherProfileUrl }}" style="text-decoration:none;color:inherit;display:block">
             <div class="gl-teacher__media">
               @if($hasVideo)
                 <div class="gl-teacher__play"><span><i class="fas fa-play"></i></span></div>
@@ -360,17 +363,17 @@
             <div>
               <p style="margin:0 0 6px;font:800 .68rem Tajawal,sans-serif;color:#8A94A6">{{ __('public.private_packages_label') }}</p>
               <div class="gl-plans">
-                <a href="{{ $url }}?plan=1" class="gl-plan">
+                <a href="{{ route('public.service-packages.index') }}" class="gl-plan">
                   <strong>{{ __('public.private_package_1m') }}</strong>
                   <span>{{ __('public.private_package_1m_sub') }}</span>
                 </a>
-                <a href="{{ $url }}?plan=3" class="gl-plan is-featured">
+                <a href="{{ route('public.service-packages.index') }}" class="gl-plan is-featured">
                   <strong>{{ __('public.private_package_3m') }}</strong>
                   <span>{{ __('public.private_package_3m_sub') }}</span>
                 </a>
               </div>
             </div>
-            <a href="{{ $url }}" class="sana-btn sana-btn--yellow" style="justify-content:center;margin-top:2px">
+            <a href="{{ $teacherProfileUrl }}" class="sana-btn sana-btn--yellow" style="justify-content:center;margin-top:2px">
               {{ $isRtl ? 'عرض المعلم والحجز' : 'View teacher & book' }}
             </a>
           </div>

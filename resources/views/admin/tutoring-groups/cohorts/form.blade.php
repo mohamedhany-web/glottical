@@ -38,8 +38,20 @@
                     <input type="datetime-local" id="starts_at" name="starts_at" value="{{ old('starts_at', optional($cohort->starts_at)->format('Y-m-d\TH:i')) }}" class="{{ $fieldClass }}">
                 </div>
                 <div>
+                    <label class="{{ $labelClass }}" for="ends_at">تاريخ نهاية الجدول (اختياري)</label>
+                    <input type="datetime-local" id="ends_at" name="ends_at" value="{{ old('ends_at', optional($cohort->ends_at)->format('Y-m-d\TH:i')) }}" class="{{ $fieldClass }}">
+                </div>
+                <div>
                     <label class="{{ $labelClass }}" for="study_time">وقت الدراسة</label>
                     <input type="time" id="study_time" name="study_time" value="{{ old('study_time', $cohort->study_time ? \Illuminate\Support\Str::of($cohort->study_time)->substr(0,5) : '18:00') }}" class="{{ $fieldClass }}">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="sessions_count">عدد الحصص</label>
+                    <input type="number" id="sessions_count" name="sessions_count" value="{{ old('sessions_count', $cohort->sessions_count ?: 8) }}" min="1" max="60" class="{{ $fieldClass }}">
+                </div>
+                <div>
+                    <label class="{{ $labelClass }}" for="session_duration_minutes">مدة الحصة (دقيقة)</label>
+                    <input type="number" id="session_duration_minutes" name="session_duration_minutes" value="{{ old('session_duration_minutes', $cohort->session_duration_minutes ?: 60) }}" min="15" max="300" class="{{ $fieldClass }}">
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="timezone">المنطقة الزمنية</label>

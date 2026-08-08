@@ -410,6 +410,14 @@ Route::get('/courses', [\App\Http\Controllers\Public\CoursesController::class, '
 // صفحة المدربين (الملفات التعريفية المعتمدة)
 Route::get('/instructors', [\App\Http\Controllers\Public\InstructorController::class, 'index'])->name('public.instructors.index');
 Route::get('/instructors/{instructor}', [\App\Http\Controllers\Public\InstructorController::class, 'show'])->name('public.instructors.show');
+Route::get('/tutor/apply', [\App\Http\Controllers\Public\TutorApplyController::class, 'create'])->name('public.tutor.apply');
+Route::post('/tutor/apply/register', [\App\Http\Controllers\Public\TutorApplyController::class, 'register'])->name('public.tutor.apply.register');
+Route::get('/tutor/apply/profile', [\App\Http\Controllers\Public\TutorApplyController::class, 'profile'])
+    ->middleware(['auth', 'role:instructor|teacher'])
+    ->name('public.tutor.apply.profile');
+Route::post('/tutor/apply/profile', [\App\Http\Controllers\Public\TutorApplyController::class, 'storeProfile'])
+    ->middleware(['auth', 'role:instructor|teacher'])
+    ->name('public.tutor.apply.profile.store');
 
 // صفحة تفاصيل الكورس العامة
 Route::get('/course/{id}', [\App\Http\Controllers\Public\CourseShowController::class, 'show'])
@@ -751,6 +759,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/one-to-one-sessions', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'index'])->name('student.one-to-one-sessions.index');
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'show'])->name('student.one-to-one-sessions.show');
         Route::post('/one-to-one-sessions/{oneToOneSession}/book', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'book'])->name('student.one-to-one-sessions.book');
+        Route::post('/instructors/{instructor}/book-slot', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'bookWithInstructor'])->name('student.one-to-one-sessions.book-instructor');
 
         // كورسات بريفيت — محاضرات خاصة + رسائل مع المعلم
         Route::get('/private-lectures', [\App\Http\Controllers\Student\PrivateLecturesController::class, 'index'])->name('student.private-lectures.index');
@@ -763,6 +772,17 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/tutoring-bookings/from-subscription', [\App\Http\Controllers\Student\TutoringBookingController::class, 'bookFromSubscription'])->name('student.tutoring-bookings.from-subscription');
         Route::post('/tutoring-bookings/from-entitlement', [\App\Http\Controllers\Student\TutoringBookingController::class, 'bookFromEntitlement'])->name('student.tutoring-bookings.from-entitlement');
         Route::get('/my-school', [\App\Http\Controllers\Student\SchoolController::class, 'index'])->name('student.school.index');
+        Route::get('/classes', [\App\Http\Controllers\Student\ClassController::class, 'index'])->name('student.classes.index');
+        Route::get('/classes/{cohort}', [\App\Http\Controllers\Student\ClassController::class, 'show'])->name('student.classes.show');
+        Route::post('/classes/{cohort}/enroll', [\App\Http\Controllers\Student\ClassController::class, 'enroll'])->name('student.classes.enroll');
+        Route::post('/class-sessions/{session}/join', [\App\Http\Controllers\Student\ClassController::class, 'joinSession'])->name('student.classes.sessions.join');
+
+        Route::get('/schedule/join/{type}/{id}', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'join'])
+            ->whereIn('type', ['private', 'class', 'booking'])
+            ->name('student.schedule.join');
+        Route::get('/library/materials', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'materials'])->name('student.library.materials');
+        Route::get('/library/videos', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'videos'])->name('student.library.videos');
+        Route::get('/my-lectures', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'lectures'])->name('student.lectures.index');
         Route::get('/tutoring-subscriptions', [\App\Http\Controllers\Student\TutoringSubscriptionController::class, 'index'])->name('student.tutoring-subscriptions.index');
         Route::get('/tutoring-subscriptions/{subscription}', [\App\Http\Controllers\Student\TutoringSubscriptionController::class, 'show'])->name('student.tutoring-subscriptions.show');
         Route::get('/service-entitlements', [\App\Http\Controllers\Student\ServiceEntitlementController::class, 'index'])->name('student.service-entitlements.index');
@@ -1003,6 +1023,17 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
                 Route::put('/cohorts/{cohort}', [\App\Http\Controllers\Admin\TutoringGroupCohortController::class, 'update'])->name('cohorts.update');
                 Route::delete('/cohorts/{cohort}', [\App\Http\Controllers\Admin\TutoringGroupCohortController::class, 'destroy'])->name('cohorts.destroy');
 
+                Route::get('/cohorts/{cohort}/class', [\App\Http\Controllers\Admin\TutoringClassController::class, 'show'])->name('classes.show');
+                Route::post('/cohorts/{cohort}/class/generate-schedule', [\App\Http\Controllers\Admin\TutoringClassController::class, 'generateSchedule'])->name('classes.generate-schedule');
+                Route::post('/cohorts/{cohort}/class/ensure-rooms', [\App\Http\Controllers\Admin\TutoringClassController::class, 'ensureRooms'])->name('classes.ensure-rooms');
+                Route::post('/cohorts/{cohort}/class/enrollments', [\App\Http\Controllers\Admin\TutoringClassController::class, 'storeEnrollment'])->name('classes.enrollments.store');
+                Route::delete('/cohorts/{cohort}/class/enrollments/{enrollment}', [\App\Http\Controllers\Admin\TutoringClassController::class, 'cancelEnrollment'])->name('classes.enrollments.destroy');
+                Route::post('/cohorts/{cohort}/class/sessions', [\App\Http\Controllers\Admin\TutoringClassController::class, 'storeSession'])->name('classes.sessions.store');
+                Route::patch('/cohorts/{cohort}/class/sessions/{session}', [\App\Http\Controllers\Admin\TutoringClassController::class, 'updateSession'])->name('classes.sessions.update');
+                Route::post('/cohorts/{cohort}/class/sessions/{session}/room', [\App\Http\Controllers\Admin\TutoringClassController::class, 'ensureSessionRoom'])->name('classes.sessions.room');
+                Route::post('/cohorts/{cohort}/class/sessions/{session}/cancel', [\App\Http\Controllers\Admin\TutoringClassController::class, 'cancelSession'])->name('classes.sessions.cancel');
+                Route::post('/cohorts/{cohort}/class/sessions/{session}/complete', [\App\Http\Controllers\Admin\TutoringClassController::class, 'completeSession'])->name('classes.sessions.complete');
+
                 Route::get('/packages', [\App\Http\Controllers\Admin\TutoringGroupPackageController::class, 'index'])->name('packages.index');
                 Route::get('/packages/create', [\App\Http\Controllers\Admin\TutoringGroupPackageController::class, 'create'])->name('packages.create');
                 Route::post('/packages', [\App\Http\Controllers\Admin\TutoringGroupPackageController::class, 'store'])->name('packages.store');
@@ -1214,6 +1245,15 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::resource('contact-messages', \App\Http\Controllers\Admin\ContactMessageController::class);
         Route::post('/contact-messages/{contactMessage}/mark-as-read', [\App\Http\Controllers\Admin\ContactMessageController::class, 'markAsRead'])->name('contact-messages.mark-as-read');
         Route::post('/contact-messages/{contactMessage}/mark-as-unread', [\App\Http\Controllers\Admin\ContactMessageController::class, 'markAsUnread'])->name('contact-messages.mark-as-unread');
+
+        Route::get('/tutor-applications', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'hub'])->name('tutor-applications.hub');
+        Route::get('/tutor-applications/list', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'index'])->name('tutor-applications.index');
+        Route::get('/tutor-applications/activated', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'activated'])->name('tutor-applications.activated');
+        Route::get('/tutor-applications/{tutorApplication}', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'show'])->name('tutor-applications.show');
+        Route::post('/tutor-applications/{tutorApplication}/approve', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'approve'])->name('tutor-applications.approve');
+        Route::post('/tutor-applications/{tutorApplication}/activate', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'activate'])->name('tutor-applications.activate');
+        Route::post('/tutor-applications/{tutorApplication}/reject', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'reject'])->name('tutor-applications.reject');
+        Route::delete('/tutor-applications/{tutorApplication}', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'destroy'])->name('tutor-applications.destroy');
 
         Route::get('free-trial-bookings/availability', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'availability'])->name('free-trial-bookings.availability');
         Route::post('free-trial-bookings/availability', [\App\Http\Controllers\Admin\FreeTrialBookingController::class, 'storeAvailability'])->name('free-trial-bookings.availability.store');

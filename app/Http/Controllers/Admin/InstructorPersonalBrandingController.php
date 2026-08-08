@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\InstructorProfile;
+use App\Services\PublicMediaStorage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class InstructorPersonalBrandingController extends Controller
 {
@@ -68,10 +68,11 @@ class InstructorPersonalBrandingController extends Controller
         ]);
 
         if ($request->hasFile('photo')) {
-            if ($personal_branding->photo_path && Storage::disk('public')->exists($personal_branding->photo_path)) {
-                Storage::disk('public')->delete($personal_branding->photo_path);
-            }
-            $data['photo_path'] = $request->file('photo')->store('instructor-profiles', 'public');
+            $data['photo_path'] = PublicMediaStorage::store(
+                $request->file('photo'),
+                'instructor-profiles',
+                $personal_branding->photo_path
+            );
         }
 
         unset($data['photo']);
@@ -97,8 +98,8 @@ class InstructorPersonalBrandingController extends Controller
     {
         $userName = $personal_branding->user?->name ?? 'المدرب';
 
-        if ($personal_branding->photo_path && Storage::disk('public')->exists($personal_branding->photo_path)) {
-            Storage::disk('public')->delete($personal_branding->photo_path);
+        if ($personal_branding->photo_path) {
+            PublicMediaStorage::delete($personal_branding->photo_path);
         }
 
         $personal_branding->delete();

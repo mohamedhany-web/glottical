@@ -17,6 +17,7 @@
           <li><a href="{{ route('public.groups') }}">{{ __('landing.nav.groups') }}</a></li>
           <li><a href="{{ route('public.courses') }}">{{ __('landing.nav.courses') }}</a></li>
           <li><a href="{{ route('public.instructors.index') }}">{{ __('landing.nav.instructors') }}</a></li>
+          <li><a href="{{ route('public.tutor.apply') }}">{{ $isRtl ? 'تسجيل معلّم' : 'Become a teacher' }}</a></li>
           <li><a href="{{ route('public.categories') }}">{{ __('landing.nav.categories') }}</a></li>
         </ul>
       </div>

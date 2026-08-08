@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\PublicStorageUrl;
+use App\Services\PublicMediaStorage;
 use App\Services\UserProfileImageStorage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -100,9 +101,9 @@ class InstructorProfile extends Model
         }
 
         if ($path !== null) {
-            $base = UserProfileImageStorage::publicUrl($path)
-                ?? storage_public_url($path)
-                ?? PublicStorageUrl::fromPathStable($path);
+            $base = PublicStorageUrl::fromPathStable($path, PublicMediaStorage::resolvedDisk())
+                ?? UserProfileImageStorage::publicUrl($path)
+                ?? storage_public_url($path);
 
             if ($base) {
                 $ts = $this->updated_at?->timestamp ?? 0;

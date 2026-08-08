@@ -54,6 +54,12 @@ return Application::configure(basePath: dirname(__DIR__))
                  ->withoutOverlapping()
                  ->runInBackground();
 
+        // تذكير بمواعيد الحصص الخاصة والجماعية قبل 30 دقيقة
+        $schedule->command('student:send-schedule-reminders')
+                 ->everyMinute()
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
         // إنهاء جلسات البث التي تجاوزت المدة القصوى تلقائياً
         $schedule->command('live:auto-end-sessions')
                  ->everyFiveMinutes()

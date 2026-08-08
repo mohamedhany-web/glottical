@@ -28,6 +28,7 @@
                 <thead class="border-b border-line bg-canvas/60 text-xs font-semibold uppercase tracking-wide text-muted">
                     <tr>
                         <th class="px-4 py-3 text-start">الدفعة</th>
+                        <th class="px-4 py-3 text-start">الجدول</th>
                         <th class="px-4 py-3 text-start">البداية</th>
                         <th class="px-4 py-3 text-start">المقاعد</th>
                         <th class="px-4 py-3 text-start">الحالة</th>
@@ -38,11 +39,13 @@
                     @forelse($cohorts as $cohort)
                         <tr class="hover:bg-canvas/40">
                             <td class="px-4 py-3 font-medium text-ink">{{ $cohort->title }}</td>
+                            <td class="px-4 py-3 text-xs text-ink-soft">{{ $cohort->scheduleSummary() }}</td>
                             <td class="px-4 py-3 tabular-nums text-ink-soft">{{ $cohort->starts_at?->format('Y-m-d H:i') ?: '—' }}</td>
                             <td class="px-4 py-3 tabular-nums text-ink-soft">{{ $cohort->enrolled_count }} / {{ $cohort->capacity }}</td>
                             <td class="px-4 py-3"><span class="rounded-full bg-accent-soft px-2.5 py-1 text-xs font-semibold text-accent">{{ $cohort->statusLabel() }}</span></td>
                             <td class="px-4 py-3 text-end">
-                                <a href="{{ route('admin.tutoring-groups.cohorts.edit', [$group, $cohort]) }}" class="text-accent hover:underline">تعديل</a>
+                                <a href="{{ route('admin.tutoring-groups.classes.show', [$group, $cohort]) }}" class="text-accent hover:underline">الفصل</a>
+                                <a href="{{ route('admin.tutoring-groups.cohorts.edit', [$group, $cohort]) }}" class="ms-3 text-ink-soft hover:underline">تعديل</a>
                                 <form method="POST" action="{{ route('admin.tutoring-groups.cohorts.destroy', [$group, $cohort]) }}" class="inline" onsubmit="return confirm('حذف الدفعة؟');">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="ms-3 text-danger hover:underline">حذف</button>
@@ -50,7 +53,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="px-4 py-10 text-center text-muted">لا توجد دفعات بعد.</td></tr>
+                        <tr><td colspan="6" class="px-4 py-10 text-center text-muted">لا توجد دفعات بعد.</td></tr>
                     @endforelse
                 </tbody>
             </table>

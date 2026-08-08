@@ -66,6 +66,24 @@ class FileUploadSecurityMiddleware
      */
     private function getAllowedMimes(string $fieldName): array
     {
+        // أسماء حقول دقيقة أولاً — تجنّب مطابقة جزئية خاطئة (مثل id_document → document)
+        $exactMap = [
+            'photo' => ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'jpg', 'jpeg', 'png', 'gif', 'webp'],
+            'id_document' => [
+                'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf',
+                'jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf',
+            ],
+            'certificate' => [
+                'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf',
+                'jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf',
+            ],
+            'intro_video' => ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'mp4', 'webm', 'ogg', 'mov'],
+        ];
+
+        if (isset($exactMap[$fieldName])) {
+            return $exactMap[$fieldName];
+        }
+
         $mimeMap = [
             // ملفات الموارد والرفع العام (تشمل Excel و Word و PDF والصور) + امتدادات للتحقق عند اختلاف MIME
             'file' => [

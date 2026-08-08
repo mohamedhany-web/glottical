@@ -51,6 +51,8 @@ class TutoringGroupCohortController extends Controller
                 'is_visible' => true,
                 'study_days' => [6, 2],
                 'study_time' => '18:00',
+                'sessions_count' => $tutoringGroup->sessions_per_month ?: 8,
+                'session_duration_minutes' => $tutoringGroup->duration_minutes ?: 60,
             ]),
             'mode' => 'create',
             'type' => $tutoringGroup->type,
@@ -68,9 +70,26 @@ class TutoringGroupCohortController extends Controller
 
         TutoringGroupCohort::create($data);
 
+        $cohort = TutoringGroupCohort::query()
+            ->where('tutoring_group_id', $tutoringGroup->id)
+            ->latest('id')
+            ->first();
+
+        if ($cohort
+            && filled($cohort->study_days)
+            && filled($cohort->study_time)
+            && $cohort->starts_at) {
+            try {
+                \App\Services\TutoringClassService::generateSchedule($cohort);
+                \App\Services\TutoringClassService::ensureAllMeetings($cohort->fresh());
+            } catch (\Throwable) {
+                // يمكن التوليد لاحقاً من صفحة الفصل
+            }
+        }
+
         return redirect()
-            ->route('admin.tutoring-groups.cohorts.index', $tutoringGroup)
-            ->with('success', 'تم إنشاء الدفعة.');
+            ->route($cohort ? 'admin.tutoring-groups.classes.show' : 'admin.tutoring-groups.cohorts.index', $cohort ? [$tutoringGroup, $cohort] : $tutoringGroup)
+            ->with('success', 'تم إنشاء الدفعة'.($cohort && $cohort->classSessions()->exists() ? ' وتوليد جدول الحصص.' : '.'));
     }
 
     public function edit(TutoringGroup $tutoringGroup, TutoringGroupCohort $cohort): View
@@ -116,9 +135,12 @@ class TutoringGroupCohortController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255'],
             'starts_at' => ['nullable', 'date'],
+            'ends_at' => ['nullable', 'date', 'after:starts_at'],
             'study_days' => ['nullable', 'array'],
             'study_days.*' => ['integer', 'min:1', 'max:7'],
             'study_time' => ['nullable', 'date_format:H:i'],
+            'sessions_count' => ['nullable', 'integer', 'min:1', 'max:60'],
+            'session_duration_minutes' => ['nullable', 'integer', 'min:15', 'max:300'],
             'timezone' => ['nullable', 'string', 'max:64'],
             'capacity' => ['required', 'integer', 'min:1', 'max:500'],
             'min_enrollment' => ['required', 'integer', 'min:1', 'max:500'],

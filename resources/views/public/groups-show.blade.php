@@ -123,7 +123,10 @@
                   </div>
                   <p style="margin:.45rem 0;font-size:.8rem;color:#5B6577;font-weight:600">
                     {{ $cohort->starts_at?->timezone($cohort->timezone ?: 'Africa/Cairo')->format('Y-m-d H:i') ?: '—' }}
-                    · {{ implode('، ', $cohort->studyDaysLabels()) ?: ($isRtl ? 'أيام حسب الجدول' : 'schedule TBD') }}
+                    · {{ $cohort->scheduleSummary() ?: ($isRtl ? 'أيام حسب الجدول' : 'schedule TBD') }}
+                    @if($cohort->sessions_count)
+                      · {{ $cohort->sessions_count }} {{ $isRtl ? 'حصة' : 'sessions' }}
+                    @endif
                   </p>
                   <p style="margin:0 0 .75rem;font-size:.78rem;font-weight:700;color:#5B6577">
                     {{ $cohort->enrolled_count }}/{{ $cohort->capacity }} · {{ $cohort->seatsLeft() }} {{ $isRtl ? 'متبقي' : 'left' }}

@@ -329,6 +329,13 @@ class DashboardController extends Controller
                 ->first();
         }
 
+        $weekDays = \App\Services\StudentScheduleService::weekDays($user);
+        $todayItems = $weekDays->firstWhere('is_today')?->items ?? collect();
+        $nextAppointment = $weekDays->flatMap->items
+            ->filter(fn ($a) => $a->starts_at && $a->starts_at->gte(now()->subMinutes(30)))
+            ->sortBy('starts_at')
+            ->first();
+
         return view(
             'dashboard.student',
             compact(
@@ -340,7 +347,10 @@ class DashboardController extends Controller
                 'recentExamAttempts',
                 'recentCertificates',
                 'upcomingTutoringBooking',
-                'upcomingPrivateLesson'
+                'upcomingPrivateLesson',
+                'weekDays',
+                'todayItems',
+                'nextAppointment'
             )
         );
     }

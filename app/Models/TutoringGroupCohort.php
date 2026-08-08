@@ -25,8 +25,11 @@ class TutoringGroupCohort extends Model
         'title',
         'slug',
         'starts_at',
+        'ends_at',
         'study_days',
         'study_time',
+        'sessions_count',
+        'session_duration_minutes',
         'timezone',
         'capacity',
         'enrolled_count',
@@ -43,9 +46,12 @@ class TutoringGroupCohort extends Model
     {
         return [
             'starts_at' => 'datetime',
+            'ends_at' => 'datetime',
             'postponed_to' => 'datetime',
             'enrollment_closes_at' => 'datetime',
             'study_days' => 'array',
+            'sessions_count' => 'integer',
+            'session_duration_minutes' => 'integer',
             'capacity' => 'integer',
             'enrolled_count' => 'integer',
             'min_enrollment' => 'integer',
@@ -62,6 +68,43 @@ class TutoringGroupCohort extends Model
     public function bookings(): HasMany
     {
         return $this->hasMany(TutoringGroupBooking::class, 'cohort_id');
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(TutoringCohortEnrollment::class, 'tutoring_group_cohort_id');
+    }
+
+    public function activeEnrollments(): HasMany
+    {
+        return $this->enrollments()->where('status', TutoringCohortEnrollment::STATUS_ACTIVE);
+    }
+
+    public function classSessions(): HasMany
+    {
+        return $this->hasMany(TutoringClassSession::class, 'tutoring_group_cohort_id');
+    }
+
+    public function upcomingSessions(): HasMany
+    {
+        return $this->classSessions()
+            ->where('status', '!=', TutoringClassSession::STATUS_CANCELLED)
+            ->where('starts_at', '>=', now()->subHours(2))
+            ->orderBy('starts_at');
+    }
+
+    public function scheduleSummary(): string
+    {
+        $days = implode('، ', $this->studyDaysLabels());
+        $time = $this->study_time
+            ? \Illuminate\Support\Str::of((string) $this->study_time)->substr(0, 5)
+            : '—';
+
+        if ($days === '') {
+            return (string) $time;
+        }
+
+        return $days.' · '.$time;
     }
 
     public function seatsLeft(): int

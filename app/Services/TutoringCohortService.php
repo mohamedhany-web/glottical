@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Models\Notification;
+use App\Models\TutoringCohortEnrollment;
 use App\Models\TutoringGroupBooking;
 use App\Models\TutoringGroupCohort;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use InvalidArgumentException;
 
 class TutoringCohortService
@@ -130,8 +132,14 @@ class TutoringCohortService
             ->where('cohort_id', $cohort->id)
             ->whereIn('status', [TutoringGroupBooking::STATUS_PENDING, TutoringGroupBooking::STATUS_CONFIRMED])
             ->whereNotNull('user_id')
-            ->pluck('user_id')
-            ->unique();
+            ->pluck('user_id');
+
+        $enrollmentIds = TutoringCohortEnrollment::query()
+            ->where('tutoring_group_cohort_id', $cohort->id)
+            ->where('status', TutoringCohortEnrollment::STATUS_ACTIVE)
+            ->pluck('user_id');
+
+        $userIds = $userIds->merge($enrollmentIds)->unique();
 
         foreach ($userIds as $userId) {
             Notification::create([
@@ -142,8 +150,10 @@ class TutoringCohortService
                 'type' => 'reminder',
                 'priority' => 'high',
                 'audience' => 'student',
-                'action_url' => route('public.groups.show', $cohort->tutoringGroup->slug ?? ''),
-                'action_text' => 'عرض المجموعة',
+                'action_url' => Route::has('student.classes.show')
+                    ? route('student.classes.show', $cohort)
+                    : route('public.groups.show', $cohort->tutoringGroup->slug ?? ''),
+                'action_text' => 'عرض الفصل',
             ]);
         }
     }

@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
 use App\Models\InstructorProfile;
+use App\Services\PublicMediaStorage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class PersonalBrandingController extends Controller
 {
@@ -50,6 +50,7 @@ class PersonalBrandingController extends Controller
             'private_languages.*' => 'string|max:64',
             'private_specializations' => 'nullable|array',
             'private_specializations.*' => 'string|max:64',
+            'intro_video_url' => 'nullable|url|max:500',
         ], [
             'experience.max' => 'الخبرات في المجال يجب ألا تتجاوز 50 ألف حرف. إن احتجت مساحة أكبر تواصل مع الإدارة.',
             'skills.max' => 'المهارات يجب ألا تتجاوز 5 آلاف حرف.',
@@ -58,10 +59,11 @@ class PersonalBrandingController extends Controller
         ]);
 
         if ($request->hasFile('photo')) {
-            if ($profile->photo_path && Storage::disk('public')->exists($profile->photo_path)) {
-                Storage::disk('public')->delete($profile->photo_path);
-            }
-            $data['photo_path'] = $request->file('photo')->store('instructor-profiles', 'public');
+            $data['photo_path'] = PublicMediaStorage::store(
+                $request->file('photo'),
+                'instructor-profiles',
+                $profile->photo_path
+            );
         }
 
         unset($data['photo']);
@@ -84,6 +86,7 @@ class PersonalBrandingController extends Controller
 
         $user->forceFill([
             'gender' => $data['gender'] ?? $user->gender,
+            'portfolio_intro_video_url' => $data['intro_video_url'] ?? null,
             'private_teaching_meta' => [
                 'subjects' => array_values(array_intersect($data['private_subjects'] ?? [], $allowedSubjects)),
                 'age_groups' => array_values(array_intersect($data['private_age_groups'] ?? [], $allowedAges)),
@@ -94,6 +97,7 @@ class PersonalBrandingController extends Controller
 
         unset(
             $data['gender'],
+            $data['intro_video_url'],
             $data['private_subjects'],
             $data['private_age_groups'],
             $data['private_languages'],
