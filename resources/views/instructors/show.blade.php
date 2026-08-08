@@ -41,7 +41,7 @@
   @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog', 'instructor-profile']])
 </head>
 <body class="sana-home sana-courses-page sana-instructors-page gl-tp">
-@include('partials.landing.navbar', ['navActive' => 'instructors'])
+@include('partials.landing.navbar', ['navActive' => 'instructors', 'navSolid' => true, 'navHero' => false])
 
 <main>
   <div class="sana-container gl-tp-wrap">
@@ -62,20 +62,6 @@
 
     <div class="gl-tp-layout">
       <div>
-        <div class="gl-tp-video">
-          @if($introEmbedUrl)
-            <iframe src="{{ $introEmbedUrl }}" title="{{ $name }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
-          @elseif($introDirectVideo)
-            <video controls playsinline preload="metadata" poster="{{ $profile->photo_url }}">
-              <source src="{{ $introDirectVideo }}">
-            </video>
-          @elseif($profile->photo_url)
-            <img src="{{ $profile->photo_url }}" alt="{{ $name }}">
-          @else
-            <div class="gl-tp-video__empty"><i class="fas fa-chalkboard-teacher"></i></div>
-          @endif
-        </div>
-
         <div class="gl-tp-head">
           <div class="gl-tp-head__row">
             @if($profile->photo_url)
@@ -87,6 +73,20 @@
               <p class="gl-tp-title">{{ $headline }}</p>
             </div>
           </div>
+        </div>
+
+        <div class="gl-tp-video" style="margin-top:1rem">
+          @if($introEmbedUrl)
+            <iframe src="{{ $introEmbedUrl }}" title="{{ $name }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+          @elseif($introDirectVideo)
+            <video controls playsinline preload="metadata" poster="{{ $profile->photo_url }}">
+              <source src="{{ $introDirectVideo }}">
+            </video>
+          @elseif($profile->photo_url)
+            <img src="{{ $profile->photo_url }}" alt="{{ $name }}">
+          @else
+            <div class="gl-tp-video__empty"><i class="fas fa-chalkboard-teacher"></i></div>
+          @endif
         </div>
 
         @if($bioClean)
