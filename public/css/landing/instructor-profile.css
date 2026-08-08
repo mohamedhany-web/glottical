@@ -114,7 +114,21 @@
 
 /* Tutor apply */
 .ta-page { background: var(--bg, #F4F7FC); }
-.ta-wrap { max-width: 760px; margin: 0 auto; padding: 1.25rem 1.15rem 3.5rem; }
+.ta-page .sana-nav,
+.ta-page--status .sana-nav {
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 4px 24px rgba(11, 61, 145, 0.08);
+}
+.ta-page .sana-nav .sana-nav__logo-text,
+.ta-page .sana-nav .sana-nav__burger { color: var(--p-dark, #072A66) !important; }
+.ta-page .sana-nav .sana-nav__links a { color: var(--muted, #5B6577) !important; }
+.ta-page .sana-nav .sana-nav__login {
+  color: var(--p, #0B3D91) !important;
+  border-color: rgba(11, 61, 145, 0.25) !important;
+  background: #fff !important;
+}
+.ta-wrap { max-width: 760px; margin: 0 auto; padding: 5.5rem 1.15rem 3.5rem; }
 .ta-chip {
   display: inline-block; background: rgba(11, 61, 145, .1); color: #0B3D91;
   font: 800 .8rem Tajawal, sans-serif; padding: .35rem .75rem; border-radius: 999px; margin-bottom: 1rem;
@@ -166,7 +180,7 @@
   position: relative;
   max-width: 720px;
   margin: 0 auto;
-  padding: 2rem 1.15rem 4rem;
+  padding: 5.75rem 1.15rem 4rem;
 }
 .ta-status__glow {
   position: absolute;
@@ -315,6 +329,7 @@
 @media (max-width: 480px) {
   .ta-wrap { padding-inline: .9rem; }
   .ta-card { padding: 1rem .95rem; }
-  .ta-status { padding-top: 1.25rem; }
+  .ta-status { padding-top: 5rem; }
+  .ta-wrap { padding-top: 5rem; }
   .ta-status__panel { padding: 1.45rem 1.05rem 1.25rem; border-radius: 18px; }
 }

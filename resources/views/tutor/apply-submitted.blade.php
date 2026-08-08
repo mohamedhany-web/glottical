@@ -14,7 +14,7 @@
   @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme', 'instructor-profile']])
 </head>
-<body class="sana-home ta-page ta-page--status">
+<body class="sana-home sana-courses-page ta-page ta-page--status">
 @include('partials.landing.navbar', ['navActive' => null, 'navSolid' => true, 'navHero' => false])
 
 <main class="ta-status">

@@ -7,10 +7,12 @@
 
     function onScroll() {
         var y = window.scrollY || document.documentElement.scrollTop;
-        var catalogPage = document.body.classList.contains('sana-courses-page');
+        var forceSolid = (nav && nav.getAttribute('data-nav-solid') === '1')
+            || document.body.classList.contains('sana-courses-page')
+            || document.body.classList.contains('ta-page');
         if (nav) {
             nav.classList.toggle('is-scrolled', y > 20);
-            if (catalogPage) {
+            if (forceSolid) {
                 nav.classList.add('is-solid');
                 nav.classList.remove('sana-nav--hero');
             } else {

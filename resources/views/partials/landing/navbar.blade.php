@@ -7,7 +7,7 @@
     $active = $navActive ?? '';
     $langSwitch = fn (string $lang) => request()->fullUrlWithQuery(array_merge(request()->query(), ['lang' => $lang]));
 @endphp
-<header id="sana-nav" class="sana-nav {{ $navSolid ? 'is-solid' : ($navHero ? 'sana-nav--hero' : 'is-solid') }}">
+<header id="sana-nav" class="sana-nav {{ $navSolid ? 'is-solid' : ($navHero ? 'sana-nav--hero' : 'is-solid') }}" @if($navSolid || ! $navHero) data-nav-solid="1" @endif>
   <div class="sana-container">
     <div class="sana-nav__inner">
       <a href="{{ route('home') }}" class="sana-nav__brand">
