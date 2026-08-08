@@ -11,51 +11,72 @@ return new class extends Migration
         if (! Schema::hasTable('tutoring_cohort_enrollments')) {
             Schema::create('tutoring_cohort_enrollments', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('tutoring_group_cohort_id')->constrained('tutoring_group_cohorts')->cascadeOnDelete();
-                $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+                $table->unsignedBigInteger('tutoring_group_cohort_id');
+                $table->unsignedBigInteger('user_id');
                 $table->string('status', 32)->default('active');
                 $table->timestamp('enrolled_at')->nullable();
-                $table->foreignId('order_id')->nullable()->constrained('orders')->nullOnDelete();
-                $table->foreignId('student_service_entitlement_id')->nullable()->constrained('student_service_entitlements')->nullOnDelete();
+                $table->unsignedBigInteger('order_id')->nullable();
+                $table->unsignedBigInteger('student_service_entitlement_id')->nullable();
                 $table->text('notes')->nullable();
                 $table->timestamps();
 
+                $table->foreign('tutoring_group_cohort_id', 'tce_cohort_fk')
+                    ->references('id')->on('tutoring_group_cohorts')->cascadeOnDelete();
+                $table->foreign('user_id', 'tce_user_fk')
+                    ->references('id')->on('users')->cascadeOnDelete();
+                $table->foreign('order_id', 'tce_order_fk')
+                    ->references('id')->on('orders')->nullOnDelete();
+                $table->foreign('student_service_entitlement_id', 'tce_entitlement_fk')
+                    ->references('id')->on('student_service_entitlements')->nullOnDelete();
+
                 $table->unique(['tutoring_group_cohort_id', 'user_id'], 'cohort_user_enrollment_unique');
-                $table->index(['user_id', 'status']);
-                $table->index('status');
+                $table->index(['user_id', 'status'], 'tce_user_status_idx');
+                $table->index('status', 'tce_status_idx');
             });
         }
 
         if (! Schema::hasTable('tutoring_class_sessions')) {
             Schema::create('tutoring_class_sessions', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('tutoring_group_cohort_id')->constrained('tutoring_group_cohorts')->cascadeOnDelete();
-                $table->foreignId('tutoring_group_id')->constrained('tutoring_groups')->cascadeOnDelete();
+                $table->unsignedBigInteger('tutoring_group_cohort_id');
+                $table->unsignedBigInteger('tutoring_group_id');
                 $table->unsignedInteger('session_number')->default(1);
                 $table->string('title')->nullable();
                 $table->timestamp('starts_at');
                 $table->timestamp('ends_at')->nullable();
                 $table->string('status', 32)->default('scheduled');
-                $table->foreignId('classroom_meeting_id')->nullable()->constrained('classroom_meetings')->nullOnDelete();
+                $table->unsignedBigInteger('classroom_meeting_id')->nullable();
                 $table->text('notes')->nullable();
                 $table->timestamps();
 
+                $table->foreign('tutoring_group_cohort_id', 'tcs_cohort_fk')
+                    ->references('id')->on('tutoring_group_cohorts')->cascadeOnDelete();
+                $table->foreign('tutoring_group_id', 'tcs_group_fk')
+                    ->references('id')->on('tutoring_groups')->cascadeOnDelete();
+                $table->foreign('classroom_meeting_id', 'tcs_meeting_fk')
+                    ->references('id')->on('classroom_meetings')->nullOnDelete();
+
                 $table->unique(['tutoring_group_cohort_id', 'session_number'], 'cohort_session_number_unique');
-                $table->index(['starts_at', 'status']);
-                $table->index('tutoring_group_id');
+                $table->index(['starts_at', 'status'], 'tcs_starts_status_idx');
+                $table->index('tutoring_group_id', 'tcs_group_idx');
             });
         }
 
         if (! Schema::hasTable('tutoring_class_attendances')) {
             Schema::create('tutoring_class_attendances', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('tutoring_class_session_id')->constrained('tutoring_class_sessions')->cascadeOnDelete();
-                $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+                $table->unsignedBigInteger('tutoring_class_session_id');
+                $table->unsignedBigInteger('user_id');
                 $table->string('status', 32)->default('present');
                 $table->timestamp('joined_at')->nullable();
                 $table->timestamp('left_at')->nullable();
                 $table->text('notes')->nullable();
                 $table->timestamps();
+
+                $table->foreign('tutoring_class_session_id', 'tca_session_fk')
+                    ->references('id')->on('tutoring_class_sessions')->cascadeOnDelete();
+                $table->foreign('user_id', 'tca_user_fk')
+                    ->references('id')->on('users')->cascadeOnDelete();
 
                 $table->unique(['tutoring_class_session_id', 'user_id'], 'session_user_attendance_unique');
             });
