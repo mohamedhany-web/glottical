@@ -16,7 +16,7 @@
   @include('partials.landing.head', ['landingCss' => ['theme', 'instructor-profile']])
 </head>
 <body class="sana-home sana-courses-page ta-page">
-@include('partials.landing.navbar', ['navActive' => null])
+@include('partials.landing.navbar', ['navActive' => null, 'navSolid' => true, 'navHero' => false])
 
 <main class="ta-wrap">
   <p class="ta-chip">{{ $isRtl ? 'الخطوة 1 من 2' : 'Step 1 of 2' }}</p>
