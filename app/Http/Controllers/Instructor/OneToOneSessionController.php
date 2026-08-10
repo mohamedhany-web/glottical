@@ -29,11 +29,13 @@ class OneToOneSessionController extends Controller
             ->orderBy('session_number')
             ->paginate(25);
 
+        $studentColumns = $this->studentSelectColumns();
+
         $todaysSchedule = OneToOneSession::query()
             ->where('instructor_id', $instructorId)
             ->where('status', OneToOneSession::STATUS_SCHEDULED)
             ->whereBetween('scheduled_at', [$todayStart, $todayEnd])
-            ->with(['course:id,title', 'student:id,name,birth_date', 'classroomMeeting'])
+            ->with(['course:id,title', 'student:'.$studentColumns, 'classroomMeeting'])
             ->orderBy('scheduled_at')
             ->get();
 
@@ -73,7 +75,7 @@ class OneToOneSessionController extends Controller
                     $q->whereNull('instructor_notified_at')
                         ->orWhere('created_at', '>=', now()->subDays(14));
                 })
-                ->with(['student:id,name,birth_date', 'academicYear:id,name'])
+                ->with(['student:'.$studentColumns, 'academicYear:id,name'])
                 ->orderByDesc('created_at')
                 ->limit(8)
                 ->get();
@@ -88,6 +90,19 @@ class OneToOneSessionController extends Controller
             'newAssignments',
             'lessonDuration'
         ));
+    }
+
+    /**
+     * أعمدة الطالب للـ eager load — بدون birth_date إن لم يكن العمود موجوداً بعد.
+     */
+    private function studentSelectColumns(): string
+    {
+        $cols = ['id', 'name'];
+        if (Schema::hasColumn('users', 'birth_date')) {
+            $cols[] = 'birth_date';
+        }
+
+        return implode(',', $cols);
     }
 
     public function show(OneToOneSession $oneToOneSession): View
