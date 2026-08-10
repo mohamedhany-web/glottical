@@ -6,6 +6,12 @@
   $years = $years ?? collect();
   $selectedYear = $selectedYear ?? null;
   $yearId = $yearId ?? null;
+  $privateRule = $privateRule ?? null;
+  $privateTermMonths = $privateTermMonths ?? [1, 3];
+  $privateWeeklyOptions = $privateWeeklyOptions ?? [1, 2, 3, 4];
+  $fawaterakUseGateway = $fawaterakUseGateway ?? false;
+  $fawaterakMisconfigured = $fawaterakMisconfigured ?? false;
+  $footer = \App\Services\PublicFooterSettings::payload();
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -118,6 +124,42 @@
     }
     .gl-pl-step strong { display:block; color:#0B1220; margin-bottom:.25rem; }
     .gl-pl-step span { font-size:.8rem; color:#5B6577; line-height:1.65; }
+
+    /* Private custom builder */
+    .gl-pv { display:grid; gap:1.15rem; align-items:start; }
+    @media (min-width:980px) { .gl-pv { grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr); } }
+    .gl-pv-panel {
+      background:#fff; border:1.5px solid #D7DDE6; border-radius:20px;
+      padding:1.15rem 1.2rem 1.3rem; box-shadow:0 14px 34px -26px rgba(11,61,145,.45);
+    }
+    .gl-pv-label { display:block; margin:0 0 .55rem; font-size:.78rem; font-weight:800; color:#5B6577; }
+    .gl-pv-choices { display:grid; gap:.55rem; grid-template-columns:repeat(2,1fr); }
+    .gl-pv-choices.is-4 { grid-template-columns:repeat(4,1fr); }
+    @media (max-width:520px) { .gl-pv-choices.is-4 { grid-template-columns:repeat(2,1fr); } }
+    .gl-pv-choice {
+      position:relative; border:1.5px solid #D7DDE6; background:#F8FAFC; border-radius:14px;
+      padding:.85rem .6rem; text-align:center; cursor:pointer; font-weight:800; color:#5B6577;
+    }
+    .gl-pv-choice input { position:absolute; opacity:0; pointer-events:none; }
+    .gl-pv-choice.is-on, .gl-pv-choice:has(input:checked) {
+      border-color:#0B3D91; background:#EEF3FF; color:#0B3D91;
+    }
+    .gl-pv-choice strong { display:block; font-size:.95rem; }
+    .gl-pv-choice small { display:block; margin-top:.2rem; font-size:.68rem; font-weight:700; opacity:.85; }
+    .gl-pv-summary__price { font-family:Cairo,sans-serif; font-size:2rem; font-weight:900; color:#0B3D91; direction:ltr; }
+    .gl-pv-summary__old { color:#94A3B8; text-decoration:line-through; direction:ltr; font-size:.85rem; margin-inline-start:.35rem; }
+    .gl-pv-summary__save {
+      display:none; margin-top:.55rem; padding:.4rem .65rem; border-radius:10px;
+      background:#ECFDF5; color:#047857; font-size:.74rem; font-weight:800; border:1px solid #A7F3D0;
+    }
+    .gl-pv-summary__save.is-on { display:inline-flex; align-items:center; gap:.35rem; }
+    .gl-pv-lines { list-style:none; margin:.9rem 0 0; padding:0; display:grid; gap:.45rem; }
+    .gl-pv-lines li { display:flex; justify-content:space-between; gap:.75rem; font-size:.82rem; border-bottom:1px solid #F1F4F9; padding:.4rem 0; }
+    .gl-pv-lines li:last-child { border-bottom:0; }
+    .gl-pv-lines span { color:#5B6577; font-weight:700; }
+    .gl-pv-lines strong { color:#0B1220; font-weight:900; }
+    .gl-pv-pay { display:grid; gap:.45rem; margin-top:.85rem; }
+    .gl-pv-select { width:100%; height:42px; border:1.5px solid #D7DDE6; border-radius:12px; padding:0 .75rem; font-weight:700; background:#fff; }
   </style>
 </head>
 <body class="sana-home sana-courses-page sana-pricing-page">
@@ -138,9 +180,15 @@
       </h1>
       <p class="sana-cat-hero__sub">
         {{ $isRtl
-          ? 'ثلاث خطط واضحة. داخل كل خطة بدّل بين شهر و3 أشهر و6 أشهر لترى السعر والوفر فوراً. كل الأسعار بالدولار.'
-          : 'Three clear plans. Inside each plan, switch 1 / 3 / 6 months to see price and savings instantly. All prices in USD.' }}
+          ? 'ثلاث خطط جاهزة، أو خصّص باقتك الخاصة: اختر شهر أو 3 أشهر وعدد الحصص الأسبوعية الثابت.'
+          : 'Three ready plans, or build your private pack: pick 1 or 3 months and a fixed weekly session count.' }}
       </p>
+      <div style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center">
+        <a href="#plans" class="sana-btn sana-btn--yellow"><i class="fas fa-box-open"></i> {{ $isRtl ? 'الخطط الجاهزة' : 'Ready plans' }}</a>
+        @if($privateRule)
+          <a href="#private-builder" class="sana-btn sana-btn--white-outline"><i class="fas fa-sliders"></i> {{ $isRtl ? 'خصص باقتك الخاصة' : 'Build private pack' }}</a>
+        @endif
+      </div>
     </div>
   </section>
 
@@ -345,6 +393,117 @@
     </section>
   @endif
 
+  @if($privateRule)
+    <section class="sana-section sana-section--soft" id="private-builder">
+      <div class="sana-container">
+        <div class="sana-head sana-head--center sana-reveal" style="margin-bottom:20px">
+          <span class="sana-head__eyebrow">{{ $isRtl ? 'Private Sessions' : 'Private Sessions' }}</span>
+          <h2 class="sana-head__title">{{ $isRtl ? 'خصص باقتك الخاصة' : 'Build your private pack' }}</h2>
+          <span class="sana-head__line"></span>
+          <p class="sana-head__sub">
+            {{ $isRtl
+              ? 'اختر مدة الاشتراك (شهر أو 3 أشهر) وعدد الحصص الأسبوعية الثابت. السعر يُحسب فوراً من قواعد الإدارة بالدولار.'
+              : 'Choose 1 or 3 months and a fixed weekly session count. Price is calculated instantly from admin USD rules.' }}
+          </p>
+        </div>
+
+        <form method="POST" action="{{ route('public.service-packages.custom.store') }}" id="private-builder-form" class="gl-pv sana-reveal">
+          @csrf
+          <input type="hidden" name="pricing_rule_id" value="{{ $privateRule->id }}">
+
+          <div class="gl-pv-panel">
+            <div style="margin-bottom:1.1rem">
+              <span class="gl-pv-label">1) {{ $isRtl ? 'مدة الاشتراك' : 'Subscription term' }}</span>
+              <div class="gl-pv-choices">
+                @foreach($privateTermMonths as $months)
+                  <label class="gl-pv-choice {{ $months === 1 ? 'is-on' : '' }}">
+                    <input type="radio" name="term_months" value="{{ $months }}" @checked($months === 1) required>
+                    <strong>{{ $months === 1 ? ($isRtl ? 'شهر' : '1 month') : ($isRtl ? '3 أشهر' : '3 months') }}</strong>
+                    <small>{{ $months === 1 ? ($isRtl ? 'تجربة مرنة' : 'Flexible start') : ($isRtl ? 'قيمة أفضل' : 'Better value') }}</small>
+                  </label>
+                @endforeach
+              </div>
+            </div>
+
+            <div style="margin-bottom:1.1rem">
+              <span class="gl-pv-label">2) {{ $isRtl ? 'حصص أسبوعياً (ثابت)' : 'Sessions per week (fixed)' }}</span>
+              <div class="gl-pv-choices is-4">
+                @foreach($privateWeeklyOptions as $weekly)
+                  <label class="gl-pv-choice {{ $weekly === 2 ? 'is-on' : '' }}">
+                    <input type="radio" name="weekly_sessions" value="{{ $weekly }}" @checked($weekly === 2) required>
+                    <strong>{{ $weekly }}</strong>
+                    <small>{{ $isRtl ? 'حصة/أسبوع' : '/ week' }}</small>
+                  </label>
+                @endforeach
+              </div>
+            </div>
+
+            <div>
+              <span class="gl-pv-label">3) {{ $isRtl ? 'الدفع' : 'Payment' }}</span>
+              <div class="gl-pv-pay">
+                @if(!empty($fawaterakUseGateway))
+                  <p style="margin:0;font-size:.8rem;color:#0B3D91;font-weight:800;line-height:1.65">
+                    <i class="fas fa-lock"></i>
+                    {{ $isRtl ? 'بعد تأكيد الباقة ستنتقل مباشرة لبوابة فواتيرك لإتمام الدفع.' : 'After confirming, you will continue to Fawaterak to complete payment.' }}
+                  </p>
+                @elseif(!empty($fawaterakMisconfigured))
+                  <p style="margin:0;font-size:.8rem;color:#991B1B;font-weight:800;line-height:1.65">
+                    {{ $isRtl ? 'تم تفعيل فواتيرك لكن الربط غير مكتمل على الخادم.' : 'Fawaterak is enabled but server credentials are incomplete.' }}
+                  </p>
+                @else
+                  <p style="margin:0;font-size:.8rem;color:#5B6577;font-weight:800;line-height:1.65">
+                    {{ $isRtl ? 'بوابة فواتيرك غير مفعّلة حالياً. تواصل معنا عبر واتساب.' : 'Fawaterak is not enabled right now. Contact us on WhatsApp.' }}
+                  </p>
+                @endif
+              </div>
+              <p style="margin:.7rem 0 0;font-size:.74rem;color:#5B6577;font-weight:700">
+                {{ $isRtl ? 'سعر الحصة الأساسي:' : 'Base session price:' }}
+                <span style="direction:ltr;display:inline-block">${{ number_format((float) $privateRule->price_per_session, 2) }} USD</span>
+                · {{ $privateRule->session_minutes }} {{ $isRtl ? 'دقيقة' : 'min' }}
+              </p>
+            </div>
+          </div>
+
+          <aside class="gl-pv-panel">
+            <p style="margin:0;font-size:.75rem;font-weight:800;color:#5B6577">{{ $isRtl ? 'ملخص باقتك' : 'Your pack summary' }}</p>
+            <div style="margin-top:.55rem" class="gl-pv-summary__price">$<span id="pv-total">0.00</span> <small style="font-size:.85rem;color:#5B6577">USD</small></div>
+            <div id="pv-old-wrap" style="display:none;margin-top:.25rem">
+              <span class="gl-pv-summary__old">$<span id="pv-old">0.00</span></span>
+            </div>
+            <div class="gl-pv-summary__save" id="pv-save"><i class="fas fa-tag"></i> <span id="pv-save-text"></span></div>
+
+            <ul class="gl-pv-lines">
+              <li><span>{{ $isRtl ? 'المدة' : 'Term' }}</span><strong id="pv-term">—</strong></li>
+              <li><span>{{ $isRtl ? 'حصص أسبوعياً' : 'Weekly' }}</span><strong id="pv-weekly">—</strong></li>
+              <li><span>{{ $isRtl ? 'إجمالي الحصص' : 'Total sessions' }}</span><strong id="pv-sessions">—</strong></li>
+              <li><span>{{ $isRtl ? 'صلاحية الرصيد' : 'Validity' }}</span><strong id="pv-days">—</strong></li>
+              <li><span>{{ $isRtl ? 'سعر الحصة بعد الخصم' : 'Final / session' }}</span><strong id="pv-unit">—</strong></li>
+            </ul>
+
+            @auth
+              @if(!empty($fawaterakUseGateway))
+                <button type="submit" class="sana-btn sana-btn--yellow" style="width:100%;justify-content:center;margin-top:1rem" id="pv-submit">
+                  <i class="fas fa-lock"></i> {{ $isRtl ? 'ادفع عبر فواتيرك' : 'Pay with Fawaterak' }}
+                </button>
+              @else
+                <a href="{{ $footer['whatsapp_url'] ?? '#' }}" class="sana-btn sana-btn--wa" style="width:100%;justify-content:center;margin-top:1rem" target="_blank" rel="noopener">
+                  <i class="fab fa-whatsapp"></i> {{ $isRtl ? 'تواصل للشراء' : 'Contact to buy' }}
+                </a>
+              @endif
+            @else
+              <a href="{{ route('login') }}" class="sana-btn sana-btn--yellow" style="width:100%;justify-content:center;margin-top:1rem">
+                <i class="fas fa-right-to-bracket"></i> {{ $isRtl ? 'سجّل للطلب' : 'Login to order' }}
+              </a>
+            @endauth
+            <p style="margin:.65rem 0 0;font-size:.72rem;color:#5B6577;text-align:center;font-weight:700">
+              {{ $isRtl ? 'بعد التفعيل تختار المعلم والمواعيد من الحصص الخاصة.' : 'After activation, pick your teacher and schedule from private sessions.' }}
+            </p>
+          </aside>
+        </form>
+      </div>
+    </section>
+  @endif
+
   <section class="sana-section sana-section--soft">
     <div class="sana-container">
       <div class="sana-head sana-head--center sana-reveal" style="margin-bottom:18px">
@@ -419,6 +578,81 @@
 
     buttons.forEach((btn) => btn.addEventListener('click', () => apply(btn)));
   });
+
+  const form = document.getElementById('private-builder-form');
+  if (form) {
+    const quoteUrl = @json(route('public.service-packages.custom.quote'));
+    const isRtlJs = @json($isRtl);
+    const els = {
+      total: document.getElementById('pv-total'),
+      oldWrap: document.getElementById('pv-old-wrap'),
+      old: document.getElementById('pv-old'),
+      save: document.getElementById('pv-save'),
+      saveText: document.getElementById('pv-save-text'),
+      term: document.getElementById('pv-term'),
+      weekly: document.getElementById('pv-weekly'),
+      sessions: document.getElementById('pv-sessions'),
+      days: document.getElementById('pv-days'),
+      unit: document.getElementById('pv-unit'),
+    };
+
+    const syncChoiceStyles = () => {
+      form.querySelectorAll('.gl-pv-choice').forEach((label) => {
+        const input = label.querySelector('input');
+        label.classList.toggle('is-on', !!(input && input.checked));
+      });
+    };
+
+    const refresh = async () => {
+      syncChoiceStyles();
+      const term = form.querySelector('input[name="term_months"]:checked')?.value;
+      const weekly = form.querySelector('input[name="weekly_sessions"]:checked')?.value;
+      const ruleId = form.querySelector('input[name="pricing_rule_id"]')?.value;
+      if (!term || !weekly || !ruleId) return;
+
+      try {
+        const url = new URL(quoteUrl, window.location.origin);
+        url.searchParams.set('pricing_rule_id', ruleId);
+        url.searchParams.set('term_months', term);
+        url.searchParams.set('weekly_sessions', weekly);
+        const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'quote failed');
+
+        if (els.total) els.total.textContent = Number(data.amount).toFixed(2);
+        if (els.old && els.oldWrap) {
+          if (Number(data.discount_amount) > 0) {
+            els.oldWrap.style.display = '';
+            els.old.textContent = Number(data.original_amount).toFixed(2);
+          } else {
+            els.oldWrap.style.display = 'none';
+          }
+        }
+        if (els.save && els.saveText) {
+          if (Number(data.discount_percent) > 0) {
+            els.save.classList.add('is-on');
+            els.saveText.textContent = isRtlJs
+              ? `وفر ${Number(data.discount_percent)}% ($${Number(data.discount_amount).toFixed(2)})`
+              : `Save ${Number(data.discount_percent)}% ($${Number(data.discount_amount).toFixed(2)})`;
+          } else {
+            els.save.classList.remove('is-on');
+          }
+        }
+        if (els.term) els.term.textContent = Number(term) === 1 ? (isRtlJs ? 'شهر' : '1 month') : (isRtlJs ? '3 أشهر' : '3 months');
+        if (els.weekly) els.weekly.textContent = `${weekly} ${isRtlJs ? 'حصة' : 'sessions'}`;
+        if (els.sessions) els.sessions.textContent = String(data.sessions);
+        if (els.days) els.days.textContent = `${data.duration_days} ${isRtlJs ? 'يوم' : 'days'}`;
+        if (els.unit) els.unit.textContent = `$${Number(data.final_price_per_session).toFixed(2)}`;
+      } catch (e) {
+        if (els.total) els.total.textContent = '—';
+      }
+    };
+
+    form.querySelectorAll('input[name="term_months"], input[name="weekly_sessions"]').forEach((input) => {
+      input.addEventListener('change', refresh);
+    });
+    refresh();
+  }
 })();
 </script>
 </body>

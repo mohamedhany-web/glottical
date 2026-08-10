@@ -24,6 +24,7 @@
       <div>
         <h4>{{ $isRtl ? 'روابط مهمة' : 'Links' }}</h4>
         <ul>
+          <li><a href="{{ route('public.parent-progress') }}">{{ $isRtl ? 'متابعة ولي الأمر' : 'Parent progress' }}</a></li>
           <li><a href="{{ route('public.pricing') }}">{{ __('landing.nav.pricing') }}</a></li>
           <li><a href="{{ route('public.contact') }}">{{ $isRtl ? 'اتصل بنا' : 'Contact' }}</a></li>
           <li><a href="{{ route('register') }}">{{ __('landing.nav.register') }}</a></li>

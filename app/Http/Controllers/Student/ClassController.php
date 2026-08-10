@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\TutoringClassSession;
 use App\Models\TutoringCohortEnrollment;
 use App\Models\TutoringGroupCohort;
+use App\Services\ClassFeedService;
+use App\Services\StudentSchoolGameService;
+use App\Services\StudentSchoolHomeService;
 use App\Services\TutoringClassService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,34 +17,37 @@ use InvalidArgumentException;
 
 class ClassController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, StudentSchoolHomeService $home): View
     {
-        $enrollments = TutoringCohortEnrollment::query()
-            ->with([
-                'cohort.tutoringGroup.instructor',
-                'cohort.classSessions' => fn ($q) => $q
-                    ->where('status', '!=', TutoringClassSession::STATUS_CANCELLED)
-                    ->orderBy('starts_at')
-                    ->limit(5),
-            ])
+        $data = $home->build($request->user(), [
+            'q' => trim((string) $request->query('q', '')),
+            'sort' => (string) $request->query('sort', 'classes'),
+            'view' => 'week',
+            'week' => (string) $request->query('week', ''),
+        ]);
+
+        $cohortIds = TutoringCohortEnrollment::query()
             ->where('user_id', $request->user()->id)
             ->where('status', TutoringCohortEnrollment::STATUS_ACTIVE)
-            ->latest('enrolled_at')
-            ->get();
+            ->pluck('tutoring_group_cohort_id');
 
         $upcoming = TutoringClassSession::query()
-            ->with(['cohort.tutoringGroup', 'classroomMeeting'])
-            ->whereIn('tutoring_group_cohort_id', $enrollments->pluck('tutoring_group_cohort_id'))
+            ->with(['cohort.tutoringGroup.instructor', 'classroomMeeting'])
+            ->whereIn('tutoring_group_cohort_id', $cohortIds)
             ->where('status', '!=', TutoringClassSession::STATUS_CANCELLED)
             ->where('starts_at', '>=', now()->subHour())
             ->orderBy('starts_at')
-            ->limit(10)
+            ->limit(12)
             ->get();
 
-        return view('student.classes.index', [
-            'enrollments' => $enrollments,
+        $nextJoinable = $upcoming->first(fn (TutoringClassSession $s) => $s->isJoinable());
+
+        return view('student.classes.index', array_merge($data, [
             'upcoming' => $upcoming,
-        ]);
+            'nextJoinable' => $nextJoinable,
+            'searchQuery' => (string) ($data['searchQuery'] ?? $request->query('q', '')),
+            'sortMode' => (string) ($data['sortMode'] ?? $request->query('sort', 'classes')),
+        ]));
     }
 
     public function show(Request $request, TutoringGroupCohort $cohort): View
@@ -63,6 +69,10 @@ class ClassController extends Controller
         return view('student.classes.show', [
             'cohort' => $cohort,
             'enrollment' => $enrollment,
+            'feedPosts' => ClassFeedService::postsFor($cohort, $request->user()),
+            'leaderboard' => StudentSchoolGameService::cohortLeaderboard((int) $cohort->id, 8),
+            'canModerateFeed' => ClassFeedService::canModerate($request->user(), $cohort),
+            'game' => StudentSchoolGameService::profileSnapshot($request->user()),
         ]);
     }
 

@@ -31,7 +31,7 @@
         </div>
         <div class="flex-1 min-w-0 relative z-10">
             <h2 class="text-base font-extrabold text-white leading-tight truncate">{{ config('app.name') }}</h2>
-            <p class="text-[11px] text-white/70 font-medium mt-0.5">{{ __('student.learning_center') }}</p>
+            <p class="text-[11px] text-white/70 font-medium mt-0.5">{{ app()->getLocale() === 'ar' ? 'مدرستي الرقمية' : 'My Digital School' }}</p>
         </div>
     </div>
 
@@ -59,26 +59,17 @@
         @if($isStudent || ($user && $user->hasAnyPermission('student.view.courses', 'student.view.my-courses', 'student.view.orders', 'student.view.invoices', 'student.view.wallet', 'student.view.certificates', 'student.view.achievements', 'student.view.exams', 'student.view.calendar', 'student.view.notifications', 'student.view.profile', 'student.view.settings')))
 
             <div class="ins-nav-group">
-                <span><i class="fas fa-home text-[9px] opacity-50"></i> الرئيسية</span>
+                <span><i class="fas fa-school text-[9px] opacity-50"></i> {{ app()->getLocale() === 'ar' ? 'مدرستي' : 'My School' }}</span>
             </div>
             <a href="{{ route('dashboard') }}" @click="{{ $closeSidebar }}"
-               class="ins-nav {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <span class="ins-icon"><i class="fas fa-th-large"></i></span>
-                <span class="flex-1 truncate">{{ __('student.dashboard') }}</span>
+               class="ins-nav {{ request()->routeIs('dashboard') || request()->routeIs('student.school.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-home"></i></span>
+                <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'بوابة المدرسة' : 'School Home' }}</span>
             </a>
 
             <div class="ins-nav-group mt-2">
-                <span><i class="fas fa-school text-[9px] opacity-50"></i> {{ app()->getLocale() === 'ar' ? 'تعلّمي' : 'Learning' }}</span>
+                <span><i class="fas fa-book-reader text-[9px] opacity-50"></i> {{ app()->getLocale() === 'ar' ? 'تعلّمي' : 'Learning' }}</span>
             </div>
-
-            @if(student_ui('show_school', true) && Route::has('student.school.index'))
-            <a href="{{ route('student.school.index') }}" @click="{{ $closeSidebar }}"
-               class="ins-nav {{ request()->routeIs('student.school.*') ? 'active' : '' }}">
-                <span class="ins-icon"><i class="fas fa-school"></i></span>
-                <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'مدرستي' : 'My School' }}</span>
-            </a>
-            @endif
-
             @if(student_ui('show_classes', true) && Route::has('student.classes.index'))
             <a href="{{ route('student.classes.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('student.classes.*') ? 'active' : '' }}">

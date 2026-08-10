@@ -452,11 +452,11 @@
                 </p>
                 <h3 id="ft-title" class="ft-title">{{ __($a.'.free_trial_modal_title') }}</h3>
                 <p class="ft-sub">{{ __($a.'.free_trial_modal_sub') }}</p>
-            </div>
+                        </div>
             <button type="button" class="ft-close" data-close-free-trial aria-label="{{ __($a.'.free_trial_close') }}">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
-        </div>
+                    </div>
 
         <div class="ft-body">
             <div id="ft-loading" class="ft-loading">
@@ -464,7 +464,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                 </span>
                 {{ __($a.'.free_trial_loading') }}
-            </div>
+    </div>
 
             <div id="ft-error" class="ft-error hidden" role="alert"></div>
 
@@ -473,7 +473,7 @@
                     <div class="ft-row">
                         <p class="ft-label" style="margin:0">{{ __($a.'.free_trial_pick_date') }}</p>
                         <p class="ft-muted">{{ $isRtl ? 'خلال أسبوعين' : 'Next 2 weeks' }}</p>
-                    </div>
+                </div>
                     <div class="ft-scroll-wrap" data-ft-scroll-wrap>
                         <button type="button" class="ft-scroll-btn is-prev" data-ft-scroll="-1" aria-label="{{ $isRtl ? 'الأيام السابقة' : 'Previous days' }}" disabled>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="{{ $isRtl ? 'm9 18 6-6-6-6' : 'm15 18-6-6 6-6' }}"/></svg>
@@ -482,35 +482,35 @@
                         <button type="button" class="ft-scroll-btn is-next" data-ft-scroll="1" aria-label="{{ $isRtl ? 'الأيام التالية' : 'Next days' }}" disabled>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="{{ $isRtl ? 'm15 18-6-6 6-6' : 'm9 18 6-6-6-6' }}"/></svg>
                         </button>
+            </div>
                     </div>
-                </div>
 
                 <div>
                     <p class="ft-label">{{ __($a.'.free_trial_pick_time') }}</p>
                     <div id="ft-times" class="ft-times"></div>
                     <p id="ft-no-times" class="ft-sub hidden">{{ __($a.'.free_trial_no_slots') }}</p>
-                </div>
+        </div>
 
                 <form id="ft-form" class="ft-form">
                     <input type="hidden" name="starts_at" id="ft-starts-at" required>
                     <div class="ft-field-wrap">
                         <label for="ft-name" class="ft-label">{{ __($a.'.free_trial_name') }}</label>
                         <input type="text" name="name" id="ft-name" required autocomplete="name" class="ft-field" value="{{ auth()->user()->name ?? '' }}">
-                    </div>
+            </div>
                     <div class="ft-form-grid">
                         <div class="ft-field-wrap">
                             <label for="ft-email" class="ft-label">{{ __($a.'.free_trial_email') }}</label>
                             <input type="email" name="email" id="ft-email" autocomplete="email" class="ft-field" value="{{ auth()->user()->email ?? '' }}">
-                        </div>
+                            </div>
                         <div class="ft-field-wrap">
                             <label for="ft-phone" class="ft-label">{{ __($a.'.free_trial_phone') }}</label>
                             <input type="tel" name="phone" id="ft-phone" autocomplete="tel" class="ft-field" value="{{ auth()->user()->phone ?? '' }}">
                         </div>
-                    </div>
+                            </div>
                     <div class="ft-field-wrap">
                         <label for="ft-goal" class="ft-label">{{ __($a.'.free_trial_goal') }}</label>
                         <input type="text" name="goal" id="ft-goal" class="ft-field" placeholder="{{ $isRtl ? 'سفر، عمل، دراسة…' : 'Travel, work, studyâ€¦' }}">
-                    </div>
+                        </div>
                     <button type="submit" id="ft-submit" disabled class="ft-submit">
                         {{ __($a.'.free_trial_submit') }}
                     </button>
@@ -521,16 +521,16 @@
             <div id="ft-success" class="ft-success hidden">
                 <div class="ft-success-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
-                </div>
+            </div>
                 <h4 class="ft-title">{{ __($a.'.free_trial_success') }}</h4>
                 <p id="ft-success-msg" class="ft-sub"></p>
                 <button type="button" data-close-free-trial class="ft-close" aria-label="{{ __($a.'.free_trial_close') }}">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
-            </div>
-        </div>
-    </div>
-</div>
+                            </div>
+                            </div>
+                            </div>
+                        </div>
 
 @include('partials.landing.footer')
 

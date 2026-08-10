@@ -26,8 +26,8 @@
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div>
             <p class="text-xs font-medium text-muted">الباقات والأسعار · بالدولار</p>
-            <h2 class="mt-1 text-2xl font-semibold text-ink">مدخلات «خصص باقتك»</h2>
-            <p class="mt-1 text-sm text-muted">كل قاعدة تظهر للطالب كخيار. السعر النهائي = عدد الحصص × سعر الحصة − خصم الكمية.</p>
+            <h2 class="mt-1 text-2xl font-semibold text-ink">مدخلات «خصص باقتك الخاصة»</h2>
+            <p class="mt-1 text-sm text-muted">قاعدة الحصص الخاصة تُستخدم في مخصص الطالب: مدة شهر أو 3 أشهر × عدد حصص أسبوعي ثابت. الإجمالي = الحصص الأسبوعية × 4 × عدد الشهور.</p>
         </div>
         <a href="{{ route('public.service-packages.index') }}" target="_blank" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm">
             <i class="fas fa-arrow-up-right-from-square text-xs"></i> معاينة الصفحة

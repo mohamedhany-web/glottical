@@ -15,14 +15,45 @@ class OrderController extends Controller
     /**
      * عرض طلبات الطالب
      */
-    public function index()
+    public function index(Request $request)
     {
-        $orders = Order::where('user_id', auth()->id())
-            ->with(['course.academicSubject', 'course.academicYear', 'learningPath', 'servicePackage'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $q = trim((string) $request->query('q', ''));
+        $filter = (string) $request->query('filter', 'all');
+        if (! in_array($filter, ['all', 'pending', 'approved', 'rejected'], true)) {
+            $filter = 'all';
+        }
 
-        return view('student.orders.index', compact('orders'));
+        $base = Order::query()->where('user_id', auth()->id());
+
+        $counts = [
+            'all' => (clone $base)->count(),
+            'pending' => (clone $base)->where('status', Order::STATUS_PENDING)->count(),
+            'approved' => (clone $base)->where('status', Order::STATUS_APPROVED)->count(),
+            'rejected' => (clone $base)->where('status', Order::STATUS_REJECTED)->count(),
+        ];
+
+        $orders = Order::query()
+            ->where('user_id', auth()->id())
+            ->with(['course.academicSubject', 'course.academicYear', 'learningPath', 'servicePackage'])
+            ->when($filter !== 'all', fn ($query) => $query->where('status', $filter))
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($inner) use ($q) {
+                    $inner->where('notes', 'like', '%'.$q.'%')
+                        ->orWhereHas('course', fn ($cq) => $cq->where('title', 'like', '%'.$q.'%'))
+                        ->orWhereHas('servicePackage', fn ($pq) => $pq->where('name', 'like', '%'.$q.'%'))
+                        ->orWhereHas('learningPath', fn ($lq) => $lq->where('name', 'like', '%'.$q.'%'));
+                });
+            })
+            ->orderByDesc('created_at')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('student.orders.index', [
+            'orders' => $orders,
+            'searchQuery' => $q,
+            'filter' => $filter,
+            'counts' => $counts,
+        ]);
     }
 
     /**

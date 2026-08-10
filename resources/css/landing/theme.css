@@ -1610,7 +1610,8 @@ html[dir="ltr"] .sana-hero__content {
 .sana-cats-row::-webkit-scrollbar { display: none; }
 .sana-cat-m { flex: 0 0 120px; min-height: 130px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-decoration: none !important; color: var(--text); transition: transform 0.2s; box-shadow: 0 6px 20px -8px rgba(0,0,0,0.12); }
 .sana-cat-m:hover { transform: translateY(-4px) scale(1.03); }
-.sana-cat-m__emoji { font-size: 2.25rem; line-height: 1; }
+.sana-cat-m__emoji { font-size: 2.25rem; line-height: 1; color: var(--cat-accent, var(--p, #0B3D91)); }
+.sana-cat-m__emoji i { font-size: 1.85rem; }
 .sana-cat-m__name { font-size: 0.78rem; font-weight: 800; text-align: center; line-height: 1.3; }
 
 /* COURSES 5-col */
@@ -2797,8 +2798,8 @@ html.js .sana-reveal.is-visible { opacity: 1; transform: none; }
     border-color: rgba(11,61,145,0.35);
     box-shadow: 0 16px 36px -16px rgba(11,61,145,0.4);
 }
-.gl-start__track--ar { border-top: 3px solid #0B3D91; }
-.gl-start__track--en { border-top: 3px solid #F5B800; }
+.gl-start__track--ar { border-top: 3px solid var(--track-accent, #0B3D91); }
+.gl-start__track--en { border-top: 3px solid var(--track-accent, #F5B800); }
 .gl-start__track-icon {
     width: 48px;
     height: 48px;
@@ -2809,7 +2810,8 @@ html.js .sana-reveal.is-visible { opacity: 1; transform: none; }
     place-items: center;
     flex-shrink: 0;
     background: #E8EEF8;
-    color: #0B3D91;
+    color: var(--track-accent, #0B3D91);
+    font-size: 1.15rem;
     box-sizing: border-box;
 }
 .gl-start__track-icon svg {
@@ -2819,7 +2821,7 @@ html.js .sana-reveal.is-visible { opacity: 1; transform: none; }
 }
 .gl-start__track--en .gl-start__track-icon {
     background: #FFF6D6;
-    color: #9A7200;
+    color: var(--track-accent, #9A7200);
 }
 .gl-start__track-copy {
     min-width: 0;

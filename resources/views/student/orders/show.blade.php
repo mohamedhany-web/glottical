@@ -1,403 +1,329 @@
-@extends('layouts.app')
+@extends('layouts.student-timeline')
+
+@section('title', __('student_timeline.order_details_title', ['id' => $order->id]))
 
 @section('content')
-<div class="space-y-6">
-    <!-- الهيدر -->
-    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">{{ __('student.order_details_title') }} #{{ $order->id }}</h1>
-                <p class="text-gray-600 mt-1 flex items-center gap-2">
-                    <i class="fas fa-calendar-alt text-xs"></i>
-                    {{ $order->created_at->format('d/m/Y - H:i') }}
-                </p>
-            </div>
-            <a href="{{ route('orders.index') }}" 
-               class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                <i class="fas fa-arrow-right mr-2"></i>
-                {{ __('student.back_to_orders') }}
-            </a>
-        </div>
-    </div>
+@php
+    $locale = app()->getLocale();
+    $status = $order->status;
+    $rechargeUrl = Route::has('public.service-packages.index')
+        ? route('public.service-packages.index')
+        : route('dashboard');
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- تفاصيل الطلب -->
-        <div class="lg:col-span-2 space-y-6">
-            <!-- معلومات الكورس أو المسار التعليمي -->
-            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-slate-50">
-                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-book-open text-sky-600"></i>
-                        {{ $order->academic_year_id && ! $order->advanced_course_id ? 'طلب قديم' : __('student.course_info') }}
-                    </h2>
-                </div>
-                <div class="p-6">
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <div class="w-full sm:w-24 h-24 bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                            @if($order->course && $order->course->thumbnail)
-                                <img src="{{ storage_asset($order->course->thumbnail) }}" alt="{{ $order->course->title ?? 'كورس' }}" 
-                                     class="w-full h-full object-cover rounded-xl">
-                            @else
-                                <i class="fas fa-play-circle text-white text-3xl"></i>
-                            @endif
-                        </div>
-                        
-                        <div class="flex-1">
-                            @if($order->order_type === \App\Models\Order::TYPE_CUSTOM_SERVICE_PACKAGE)
-                                @php $custom = $order->custom_package_data ?? []; @endphp
-                                <h3 class="mb-3 text-lg font-bold text-gray-900">{{ $custom['name'] ?? 'باقة مخصصة' }}</h3>
-                                <div class="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-                                    <div class="rounded-lg bg-sky-50 p-3"><span class="block text-xs text-gray-500">الحصص</span><strong>{{ $custom['sessions'] ?? '—' }} حصة</strong></div>
-                                    <div class="rounded-lg bg-sky-50 p-3"><span class="block text-xs text-gray-500">مدة الحصة</span><strong>{{ $custom['session_minutes'] ?? '—' }} دقيقة</strong></div>
-                                    <div class="rounded-lg bg-sky-50 p-3"><span class="block text-xs text-gray-500">الصلاحية</span><strong>{{ $custom['duration_days'] ?? '—' }} يوم</strong></div>
-                                    <div class="rounded-lg bg-sky-50 p-3"><span class="block text-xs text-gray-500">سعر الحصة</span><strong>${{ number_format((float) ($custom['final_price_per_session'] ?? 0), 2) }}</strong></div>
-                                    <div class="rounded-lg bg-sky-50 p-3"><span class="block text-xs text-gray-500">الخصم</span><strong>{{ $custom['discount_percent'] ?? 0 }}%</strong></div>
-                                    <div class="rounded-lg bg-sky-50 p-3"><span class="block text-xs text-gray-500">الاستخدام</span><strong>{{ $custom['scope_label'] ?? '—' }}</strong></div>
-                                </div>
-                            @elseif($order->servicePackage)
-                                <h3 class="mb-2 text-lg font-bold text-gray-900">{{ $order->servicePackage->name }}</h3>
-                                <p class="text-sm text-gray-600">{{ $order->servicePackage->units_count }} حصة × {{ $order->servicePackage->sessionMinutes() }} دقيقة · {{ $order->servicePackage->validityLabel() }}</p>
-                            @elseif($order->academic_year_id && ! $order->advanced_course_id)
-                                <h3 class="text-lg font-bold text-gray-900 mb-2">{{ $order->learningPath->name ?? 'طلب قديم' }}</h3>
-                                <div class="flex flex-wrap items-center gap-2 mb-3">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                                        <i class="fas fa-clock ml-1 text-xs"></i>
-                                        طلب قديم
-                                    </span>
-                                </div>
-                            @elseif($order->course)
-                                <h3 class="text-lg font-bold text-gray-900 mb-2">{{ $order->course->title ?? 'كورس غير محدد' }}</h3>
-                                @if($order->course->academicYear || $order->course->academicSubject)
-                                <div class="flex flex-wrap items-center gap-2 mb-3">
-                                    @if($order->course->academicYear)
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-sky-100 text-sky-700">
-                                        <i class="fas fa-graduation-cap ml-1 text-xs"></i>
-                                        {{ $order->course->academicYear->name }}
-                                    </span>
-                                    @endif
-                                    @if($order->course->academicSubject)
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                                        <i class="fas fa-layer-group ml-1 text-xs"></i>
-                                        {{ $order->course->academicSubject->name }}
-                                    </span>
-                                    @endif
-                                </div>
-                                @endif
-                                @if($order->course->description)
-                                    <p class="text-sm text-gray-600 mb-3">
-                                        {{ Str::limit($order->course->description, 120) }}
-                                    </p>
-                                @endif
-                                <a href="{{ route('courses.show', $order->course) }}" 
-                                   class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white rounded-lg font-medium transition-colors shadow-lg shadow-sky-500/30">
-                                    <i class="fas fa-eye"></i>
-                                    عرض الكورس
-                                </a>
-                            @else
-                                <h3 class="text-lg font-bold text-gray-900 mb-2">غير محدد</h3>
-                                <p class="text-sm text-gray-600">لا توجد معلومات متاحة</p>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
+    $title = match (true) {
+        $order->order_type === \App\Models\Order::TYPE_CUSTOM_SERVICE_PACKAGE
+            => $order->custom_package_data['name'] ?? __('student_timeline.custom_package'),
+        (bool) $order->servicePackage => $order->servicePackage->name,
+        $order->academic_year_id && ! $order->advanced_course_id
+            => $order->learningPath->name ?? __('student_timeline.legacy_order'),
+        default => $order->course->title ?? __('student_timeline.course'),
+    };
 
-            <!-- تفاصيل الدفع -->
-            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-slate-50">
-                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas fa-credit-card text-sky-600"></i>
-                        تفاصيل الدفع
-                    </h2>
-                </div>
-                <div class="p-6">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="p-4 bg-gradient-to-br from-sky-50 to-slate-50 rounded-xl border border-sky-100">
-                            <label class="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
-                                <i class="fas fa-money-bill-wave ml-1"></i>
-                                المبلغ
-                            </label>
-                            <div class="text-2xl font-bold bg-gradient-to-r from-sky-600 to-sky-700 bg-clip-text text-transparent">
-                                {{ number_format($order->amount, 2) }} <span class="text-base text-gray-600">{{ $order->currencyCode() }}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="p-4 bg-gradient-to-br from-sky-50 to-slate-50 rounded-xl border border-sky-100">
-                            <label class="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
-                                <i class="fas fa-wallet ml-1"></i>
-                                طريقة الدفع
-                            </label>
-                            <div class="text-base font-bold text-gray-900">
-                                @if($order->payment_method == 'bank_transfer')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                                        <i class="fas fa-university ml-1 text-xs"></i>
-                                        تحويل بنكي
-                                    </span>
-                                @elseif($order->payment_method == 'cash')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                        <i class="fas fa-money-bill ml-1 text-xs"></i>
-                                        نقدي
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                                        <i class="fas fa-question-circle ml-1 text-xs"></i>
-                                        أخرى
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-                        
-                        <div class="p-4 bg-gradient-to-br from-sky-50 to-slate-50 rounded-xl border border-sky-100">
-                            <label class="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
-                                <i class="fas fa-calendar-alt ml-1"></i>
-                                تاريخ الطلب
-                            </label>
-                            <div class="text-base font-bold text-gray-900">
-                                {{ $order->created_at->format('d/m/Y') }}
-                                <span class="text-sm text-gray-500 font-normal">- {{ $order->created_at->format('H:i') }}</span>
-                            </div>
-                        </div>
-                        
-                        @if($order->approved_at)
-                        <div class="p-4 bg-gradient-to-br from-sky-50 to-slate-50 rounded-xl border border-sky-100">
-                            <label class="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
-                                <i class="fas fa-check-circle ml-1"></i>
-                                تاريخ الموافقة
-                            </label>
-                            <div class="text-base font-bold text-gray-900">
-                                {{ $order->approved_at->format('d/m/Y') }}
-                                <span class="text-sm text-gray-500 font-normal">- {{ $order->approved_at->format('H:i') }}</span>
-                            </div>
-                        </div>
-                        @endif
-                    </div>
+    $paymentLabel = match ($order->payment_method) {
+        'bank_transfer' => __('student_timeline.pay_bank'),
+        'cash' => __('student_timeline.pay_cash'),
+        'online', 'fawaterak' => __('student_timeline.pay_online'),
+        default => __('student_timeline.pay_other'),
+    };
 
-                    @if($order->notes)
-                        <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                <i class="fas fa-sticky-note text-sky-500"></i>
-                                ملاحظاتك
-                            </label>
-                            <div class="text-sm text-gray-700">
-                                {{ $order->notes }}
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            </div>
+    $statusHint = match ($status) {
+        \App\Models\Order::STATUS_PENDING => __('student_timeline.order_status_pending_hint'),
+        \App\Models\Order::STATUS_APPROVED => __('student_timeline.order_status_approved_hint'),
+        default => __('student_timeline.order_status_rejected_hint'),
+    };
 
-            <!-- صورة الإيصال -->
-            @if($order->payment_proof)
-                <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-slate-50">
-                        <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                            <i class="fas fa-receipt text-sky-600"></i>
-                            إيصال الدفع
-                        </h2>
-                    </div>
-                    <div class="p-6">
-                        <div class="text-center">
-                            <div class="inline-block p-2 bg-gray-50 rounded-xl border border-gray-200">
-                                @php
-                                    $fullPath = storage_path('app/public/' . $order->payment_proof);
-                                    $imageExists = file_exists($fullPath);
-                                    
-                                    $imageUrl = null;
-                                    if ($imageExists) {
-                                        // استخدام asset أولاً (الرابط الرمزي)
-                                        $imageUrl = storage_asset($order->payment_proof);
-                                        // إذا كان الرابط الرمزي لا يعمل، استخدم route أو url
-                                        if (!file_exists(public_path('storage/' . $order->payment_proof))) {
-                                            try {
-                                                $imageUrl = route('storage.file', ['path' => $order->payment_proof]);
-                                            } catch (\Exception $e) {
-                                                $imageUrl = url('/storage/' . $order->payment_proof);
-                                            }
-                                        }
-                                    }
-                                @endphp
-                                @if($imageExists)
-                                <img src="{{ $imageUrl }}" 
-                                     alt="إيصال الدفع" 
-                                     class="max-w-full h-auto rounded-lg shadow-md cursor-pointer hover:shadow-xl transition-all duration-300"
-                                     onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';"
-                                     onclick="openImageModal(this.src)">
-                                <div class="hidden p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                    <p class="text-sm text-yellow-800 flex items-center gap-2">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                        <span>الصورة غير متوفرة حالياً</span>
-                                    </p>
-                                </div>
-                                @else
-                                <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                    <p class="text-sm text-yellow-800 flex items-center gap-2">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                        <span>الصورة غير موجودة في الخادم</span>
-                                    </p>
-                                </div>
-                                @endif
-                            </div>
-                            <p class="text-sm text-gray-500 mt-4 flex items-center justify-center gap-2">
-                                <i class="fas fa-info-circle"></i>
-                                اضغط على الصورة لعرضها بحجم أكبر
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            @endif
-        </div>
+    $heroKicker = match ($status) {
+        \App\Models\Order::STATUS_PENDING => __('student_timeline.order_pending'),
+        \App\Models\Order::STATUS_APPROVED => __('student_timeline.order_approved'),
+        default => __('student_timeline.order_rejected'),
+    };
 
-        <!-- حالة الطلب -->
-        <div class="lg:col-span-1">
-            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden sticky top-8">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r 
-                    @if($order->status == 'pending') from-amber-50 to-yellow-50
-                    @elseif($order->status == 'approved') from-emerald-50 to-green-50
-                    @else from-rose-50 to-red-50
-                    @endif">
-                    <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <i class="fas 
-                            @if($order->status == 'pending') fa-clock text-amber-600
-                            @elseif($order->status == 'approved') fa-check-circle text-emerald-600
-                            @else fa-times-circle text-rose-600
-                            @endif"></i>
-                        حالة الطلب
-                    </h2>
-                </div>
-                
-                <div class="p-6">
-                    <div class="text-center mb-6">
-                        <div class="w-20 h-20 mx-auto mb-4 rounded-xl flex items-center justify-center shadow-lg
-                            @if($order->status == 'pending') bg-amber-100
-                            @elseif($order->status == 'approved') bg-emerald-100
-                            @else bg-rose-100
-                            @endif">
-                            <i class="fas 
-                                @if($order->status == 'pending') fa-clock text-amber-600 text-3xl
-                                @elseif($order->status == 'approved') fa-check text-emerald-600 text-3xl
-                                @else fa-times text-rose-600 text-3xl
-                                @endif"></i>
-                        </div>
-                        
-                        <div class="text-xl font-bold mb-2
-                            @if($order->status == 'pending') text-amber-600
-                            @elseif($order->status == 'approved') text-emerald-600
-                            @else text-rose-600
-                            @endif">
-                            {{ $order->status_text }}
-                        </div>
-                        <p class="text-sm text-gray-500">
-                            @if($order->status == 'pending')
-                                جاري المراجعة
-                            @elseif($order->status == 'approved')
-                                تمت الموافقة
-                            @else
-                                تم الرفض
-                            @endif
-                        </p>
-                    </div>
-
-                    @if($order->status == 'pending')
-                        <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-                            <p class="text-sm text-amber-800 flex items-start gap-2">
-                                <i class="fas fa-info-circle mt-0.5"></i>
-                                <span>طلبك قيد المراجعة من قبل الإدارة. سيتم الرد عليك قريباً.</span>
-                            </p>
-                        </div>
-                    @elseif($order->status == 'approved')
-                        <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">
-                            <p class="text-sm text-emerald-800 flex items-start gap-2">
-                                <i class="fas fa-check-circle mt-0.5"></i>
-                                <span>تمت الموافقة على طلبك! يمكنك الآن الدخول للكورس.</span>
-                            </p>
-                        </div>
-                        @if($order->invoice_id && $order->invoice)
-                        <div class="bg-sky-50 border border-sky-200 rounded-lg p-4 mb-4">
-                            <h3 class="text-sm font-bold text-sky-900 flex items-center gap-2 mb-2">
-                                <i class="fas fa-file-invoice text-sky-600"></i>
-                                الفاتورة
-                            </h3>
-                            <p class="text-sm text-sky-800 mb-3">رقم الفاتورة: <strong class="font-mono" dir="ltr">{{ $order->invoice->invoice_number }}</strong></p>
-                            <a href="{{ route('student.invoices.show', $order->invoice) }}"
-                               class="inline-flex items-center gap-2 w-full justify-center px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-semibold transition-colors">
-                                <i class="fas fa-external-link-alt text-xs"></i>
-                                عرض الفاتورة والتفاصيل
-                            </a>
-                        </div>
-                        @endif
-                        @if($order->course)
-                        <a href="{{ route('courses.show', $order->course) }}" 
-                           class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white py-3 px-4 rounded-lg font-medium transition-colors text-center block shadow-lg shadow-emerald-500/30">
-                            <i class="fas fa-arrow-left ml-2"></i>
-                            ادخل للكورس
-                        </a>
-                        @endif
-                    @else
-                        <div class="bg-rose-50 border border-rose-200 rounded-lg p-4 mb-4">
-                            <p class="text-sm text-rose-800 flex items-start gap-2">
-                                <i class="fas fa-exclamation-circle mt-0.5"></i>
-                                <span>تم رفض طلبك. يمكنك تقديم طلب جديد أو التواصل مع الإدارة.</span>
-                            </p>
-                        </div>
-                        @if($order->course)
-                        <a href="{{ route('courses.show', $order->course) }}" 
-                           class="w-full bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white py-3 px-4 rounded-lg font-medium transition-colors text-center block shadow-lg shadow-sky-500/30">
-                            <i class="fas fa-redo ml-2"></i>
-                            تقديم طلب جديد
-                        </a>
-                        @endif
-                    @endif
-
-                    @if($order->approver)
-                        <div class="mt-6 pt-6 border-t border-gray-200">
-                            <p class="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">تمت المراجعة بواسطة:</p>
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
-                                    {{ substr($order->approver->name ?? 'غير محدد', 0, 1) }}
-                                </div>
-                                <div>
-                                    <p class="font-bold text-gray-900">{{ $order->approver->name ?? 'غير محدد' }}</p>
-                                    @if($order->approved_at)
-                                        <p class="text-xs text-gray-500">{{ $order->approved_at->format('d/m/Y - H:i') }}</p>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal لعرض الصورة -->
-<div id="imageModal" class="fixed inset-0 bg-black/90 backdrop-blur-sm hidden items-center justify-center z-50" onclick="closeImageModal()">
-    <div class="max-w-5xl max-h-[90vh] p-4 relative">
-        <button onclick="closeImageModal()" class="absolute -top-12 left-0 text-white hover:text-gray-300 text-3xl font-bold transition-colors">
-            <i class="fas fa-times-circle"></i>
-        </button>
-        <img id="modalImage" src="" alt="إيصال الدفع" class="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl">
-    </div>
-</div>
-
-<script>
-function openImageModal(src) {
-    document.getElementById('modalImage').src = src;
-    document.getElementById('imageModal').classList.remove('hidden');
-    document.getElementById('imageModal').classList.add('flex');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeImageModal() {
-    document.getElementById('imageModal').classList.add('hidden');
-    document.getElementById('imageModal').classList.remove('flex');
-    document.body.style.overflow = 'auto';
-}
-
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeImageModal();
+    $proofUrl = null;
+    if ($order->payment_proof) {
+        $proofUrl = storage_asset($order->payment_proof);
+        if (! $proofUrl && Route::has('storage.file')) {
+            try {
+                $proofUrl = route('storage.file', ['path' => $order->payment_proof]);
+            } catch (\Throwable $e) {
+                $proofUrl = null;
+            }
+        }
     }
-});
-</script>
+
+    $custom = $order->order_type === \App\Models\Order::TYPE_CUSTOM_SERVICE_PACKAGE
+        ? ($order->custom_package_data ?? [])
+        : [];
+@endphp
+
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => __('student_timeline.order_details_title', ['id' => $order->id]),
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => __('student_timeline.nav_orders'), 'url' => route('orders.index')],
+        ['label' => '#'.$order->id, 'url' => null],
+    ],
+])
+
+@if(session('success'))
+    <div class="st-flash st-flash--ok">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+    <div class="st-flash st-flash--err">{{ session('error') }}</div>
+@endif
+
+<section class="st-join-hero {{ $status === \App\Models\Order::STATUS_APPROVED ? '' : 'st-join-hero--muted' }}" aria-label="{{ $order->status_text }}">
+    <div class="st-join-hero__copy">
+        <p class="st-join-hero__kicker">{{ $heroKicker }} · #{{ $order->id }}</p>
+        <h2 class="st-join-hero__title">{{ $title }}</h2>
+        <p class="st-join-hero__meta">{{ $statusHint }}</p>
+    </div>
+    <div class="st-join-hero__actions">
+        <a href="{{ route('orders.index') }}" class="st-pill st-pill--outline">{{ __('student_timeline.back_to_orders') }}</a>
+        @if($status === \App\Models\Order::STATUS_APPROVED && $order->course && Route::has('courses.show'))
+            <a href="{{ route('courses.show', $order->course) }}" class="st-pill st-pill--solid st-pill--lg">{{ __('student_timeline.enter_course') }}</a>
+        @elseif($status === \App\Models\Order::STATUS_APPROVED && $order->servicePackage && Route::has('student.service-entitlements.index'))
+            <a href="{{ route('student.service-entitlements.index') }}" class="st-pill st-pill--solid st-pill--lg">{{ __('student_timeline.nav_progress') }}</a>
+        @elseif($status === \App\Models\Order::STATUS_REJECTED)
+            <a href="{{ $rechargeUrl }}" class="st-pill st-pill--solid st-pill--lg">{{ __('student_timeline.recharge_package') }}</a>
+        @endif
+    </div>
+</section>
+
+<section class="st-stats st-stats--classes" aria-label="{{ __('student_timeline.order_summary') }}">
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.order_amount') }}</p>
+        <p class="st-stat-card__value">{{ number_format((float) $order->amount, 2) }}</p>
+        <p class="st-stat-card__hint">{{ $order->currencyCode() }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.pay_method') }}</p>
+        <p class="st-stat-card__value st-stat-card__value--text">{{ $paymentLabel }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.order_date') }}</p>
+        <p class="st-stat-card__value st-stat-card__value--text">{{ $order->created_at?->format('d/m/Y') }}</p>
+        <p class="st-stat-card__hint">{{ $order->created_at?->format('H:i') }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.order_status') }}</p>
+        <p class="st-stat-card__value st-stat-card__value--text">
+            <span class="st-order-card__badge is-{{ $status }}">{{ $order->status_text }}</span>
+        </p>
+    </article>
+</section>
+
+<div class="st-order-show">
+    <div class="st-order-show__main">
+        <section class="st-order-panel">
+            <header class="st-order-panel__head">
+                <h2>{{ __('student_timeline.order_item') }}</h2>
+            </header>
+            <div class="st-order-panel__body">
+                <div class="st-order-item">
+                    <div class="st-order-item__media" aria-hidden="true">
+                        @if($order->course?->thumbnail)
+                            <img src="{{ storage_asset($order->course->thumbnail) }}" alt="" loading="lazy">
+                        @else
+                            <i class="fas fa-box-open"></i>
+                        @endif
+                    </div>
+                    <div class="st-order-item__copy">
+                        <h3>{{ $title }}</h3>
+
+                        @if(! empty($custom))
+                            <div class="st-order-facts">
+                                <div><span>{{ __('student_timeline.learn_units_left') }}</span><strong>{{ $custom['sessions'] ?? '—' }}</strong></div>
+                                <div><span>{{ __('student_timeline.order_session_minutes') }}</span><strong>{{ $custom['session_minutes'] ?? '—' }}</strong></div>
+                                <div><span>{{ __('student_timeline.order_validity_days') }}</span><strong>{{ $custom['duration_days'] ?? '—' }}</strong></div>
+                                <div><span>{{ __('student_timeline.order_discount') }}</span><strong>{{ ($custom['discount_percent'] ?? 0) }}%</strong></div>
+                            </div>
+                        @elseif($order->servicePackage)
+                            <p>{{ $order->servicePackage->units_count }} {{ __('student_timeline.session_unit') }}
+                                · {{ $order->servicePackage->sessionMinutes() }} {{ __('student_timeline.order_minutes_short') }}
+                                · {{ $order->servicePackage->validityLabel() }}</p>
+                        @elseif($order->course)
+                            <p>
+                                {{ collect([$order->course->academicYear?->name, $order->course->academicSubject?->name])->filter()->implode(' · ') }}
+                            </p>
+                            @if($order->course->description)
+                                <p class="st-order-item__desc">{{ \Illuminate\Support\Str::limit(strip_tags($order->course->description), 140) }}</p>
+                            @endif
+                            @if(Route::has('courses.show'))
+                                <a href="{{ route('courses.show', $order->course) }}" class="st-pill st-pill--outline">{{ __('student_timeline.view_course') }}</a>
+                            @endif
+                        @elseif($order->academic_year_id && ! $order->advanced_course_id)
+                            <p>{{ __('student_timeline.legacy_order') }}</p>
+                        @else
+                            <p>{{ __('student_timeline.order_item_unknown') }}</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="st-order-panel">
+            <header class="st-order-panel__head">
+                <h2>{{ __('student_timeline.order_payment_details') }}</h2>
+            </header>
+            <div class="st-order-panel__body">
+                <div class="st-order-facts st-order-facts--wide">
+                    <div>
+                        <span>{{ __('student_timeline.order_amount') }}</span>
+                        <strong>{{ number_format((float) $order->amount, 2) }} {{ $order->currencyCode() }}</strong>
+                    </div>
+                    @if((float) ($order->original_amount ?? 0) > (float) $order->amount)
+                        <div>
+                            <span>{{ __('student_timeline.order_original_amount') }}</span>
+                            <strong>{{ number_format((float) $order->original_amount, 2) }} {{ $order->currencyCode() }}</strong>
+                        </div>
+                    @endif
+                    @if((float) ($order->discount_amount ?? 0) > 0)
+                        <div>
+                            <span>{{ __('student_timeline.order_discount') }}</span>
+                            <strong>−{{ number_format((float) $order->discount_amount, 2) }} {{ $order->currencyCode() }}</strong>
+                        </div>
+                    @endif
+                    <div>
+                        <span>{{ __('student_timeline.pay_method') }}</span>
+                        <strong>{{ $paymentLabel }}</strong>
+                    </div>
+                    <div>
+                        <span>{{ __('student_timeline.order_date') }}</span>
+                        <strong>{{ $order->created_at?->format('d/m/Y H:i') }}</strong>
+                    </div>
+                    @if($order->approved_at)
+                        <div>
+                            <span>{{ __('student_timeline.approved_date') }}</span>
+                            <strong>{{ $order->approved_at->format('d/m/Y H:i') }}</strong>
+                        </div>
+                    @endif
+                </div>
+
+                @if($order->notes)
+                    <div class="st-order-notes">
+                        <strong>{{ __('student_timeline.order_notes') }}</strong>
+                        <p>{{ $order->notes }}</p>
+                    </div>
+                @endif
+            </div>
+        </section>
+
+        @if($proofUrl)
+            <section class="st-order-panel">
+                <header class="st-order-panel__head">
+                    <h2>{{ __('student_timeline.order_receipt') }}</h2>
+                </header>
+                <div class="st-order-panel__body">
+                    <button type="button" class="st-order-receipt" data-st-lightbox="{{ $proofUrl }}" aria-label="{{ __('student_timeline.order_receipt_open') }}">
+                        <img src="{{ $proofUrl }}" alt="{{ __('student_timeline.order_receipt') }}" loading="lazy">
+                    </button>
+                    <p class="st-order-receipt__hint">{{ __('student_timeline.order_receipt_hint') }}</p>
+                </div>
+            </section>
+        @endif
+    </div>
+
+    <aside class="st-order-show__side">
+        <section class="st-order-panel st-order-panel--status is-{{ $status }}">
+            <header class="st-order-panel__head">
+                <h2>{{ __('student_timeline.order_status') }}</h2>
+            </header>
+            <div class="st-order-panel__body st-order-status">
+                <span class="st-order-status__icon" aria-hidden="true">
+                    @if($status === \App\Models\Order::STATUS_PENDING)
+                        <i class="fas fa-clock"></i>
+                    @elseif($status === \App\Models\Order::STATUS_APPROVED)
+                        <i class="fas fa-check"></i>
+                    @else
+                        <i class="fas fa-times"></i>
+                    @endif
+                </span>
+                <strong>{{ $order->status_text }}</strong>
+                <p>{{ $statusHint }}</p>
+
+                @if($status === \App\Models\Order::STATUS_APPROVED && $order->invoice && Route::has('student.invoices.show'))
+                    <div class="st-order-invoice">
+                        <span>{{ __('student_timeline.order_invoice') }}</span>
+                        <strong dir="ltr">{{ $order->invoice->invoice_number }}</strong>
+                        <a href="{{ route('student.invoices.show', $order->invoice) }}" class="st-pill st-pill--solid">{{ __('student_timeline.view_invoice') }}</a>
+                    </div>
+                @endif
+
+                @if($order->approver)
+                    <div class="st-order-reviewer">
+                        <span>{{ __('student_timeline.order_reviewed_by') }}</span>
+                        <strong>{{ $order->approver->name }}</strong>
+                        @if($order->approved_at)
+                            <small>{{ $order->approved_at->format('d/m/Y H:i') }}</small>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        </section>
+    </aside>
+</div>
+
+<div id="stOrderLightbox" class="st-lightbox" hidden>
+    <button type="button" class="st-lightbox__close" aria-label="{{ __('student_timeline.close') }}">&times;</button>
+    <img src="" alt="">
+</div>
 @endsection
+
+@section('events')
+<div class="st-events__top">
+    <h2>{{ __('student_timeline.quick_links') }}</h2>
+</div>
+
+<a href="{{ route('orders.index') }}" class="st-event-card st-event-card--blue">
+    <h3>{{ __('student_timeline.nav_orders') }}</h3>
+    <p class="st-event-card__sub">{{ __('student_timeline.back_to_orders') }}</p>
+</a>
+
+<a href="{{ $rechargeUrl }}" class="st-event-card st-event-card--orange">
+    <h3>{{ __('student_timeline.recharge_package') }}</h3>
+    <p class="st-event-card__sub">{{ __('student_timeline.recharge_hint') }}</p>
+</a>
+
+@if(Route::has('student.service-entitlements.index'))
+    <a href="{{ route('student.service-entitlements.index') }}" class="st-event-card st-event-card--pink">
+        <h3>{{ __('student_timeline.nav_progress') }}</h3>
+        <p class="st-event-card__sub">{{ __('student_timeline.credits_use_hint') }}</p>
+    </a>
+@endif
+@endsection
+
+@push('scripts')
+<script>
+(function () {
+  var box = document.getElementById('stOrderLightbox');
+  if (!box) return;
+  var img = box.querySelector('img');
+  var closeBtn = box.querySelector('.st-lightbox__close');
+
+  function open(src) {
+    img.src = src;
+    box.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+  function close() {
+    box.hidden = true;
+    img.src = '';
+    document.body.style.overflow = '';
+  }
+
+  document.querySelectorAll('[data-st-lightbox]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      open(el.getAttribute('data-st-lightbox'));
+    });
+  });
+  box.addEventListener('click', function (e) {
+    if (e.target === box) close();
+  });
+  if (closeBtn) closeBtn.addEventListener('click', close);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !box.hidden) close();
+  });
+})();
+</script>
+@endpush

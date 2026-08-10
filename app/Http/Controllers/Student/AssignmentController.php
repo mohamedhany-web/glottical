@@ -37,21 +37,38 @@ class AssignmentController extends Controller
     /**
      * قائمة الواجبات المنشورة لكورسات الطالب النشطة.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
+        $q = trim((string) $request->query('q', ''));
+        $filter = (string) $request->query('filter', 'all');
+        if (! in_array($filter, ['all', 'pending', 'submitted', 'graded'], true)) {
+            $filter = 'all';
+        }
+
         $courseIds = $user->activeCourses()->pluck('advanced_courses.id');
         if ($courseIds->isEmpty()) {
-            return view('student.assignments.index', ['assignments' => collect()]);
+            return view('student.assignments.index', [
+                'assignments' => collect(),
+                'searchQuery' => $q,
+                'filter' => $filter,
+                'counts' => ['all' => 0, 'pending' => 0, 'submitted' => 0, 'graded' => 0],
+            ]);
         }
 
         $assignments = Assignment::query()
             ->where('status', 'published')
-            ->where(function ($q) use ($courseIds) {
-                $q->whereIn('advanced_course_id', $courseIds)
+            ->where(function ($query) use ($courseIds) {
+                $query->whereIn('advanced_course_id', $courseIds)
                     ->orWhereIn('course_id', $courseIds);
             })
             ->with(['course', 'lesson'])
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($inner) use ($q) {
+                    $inner->where('title', 'like', '%'.$q.'%')
+                        ->orWhereHas('course', fn ($cq) => $cq->where('title', 'like', '%'.$q.'%'));
+                });
+            })
             ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')
             ->orderBy('due_date', 'asc')
             ->orderByDesc('created_at')
@@ -67,7 +84,27 @@ class AssignmentController extends Controller
             $assignment->my_submission = $submissions->get($assignment->id);
         });
 
-        return view('student.assignments.index', compact('assignments'));
+        $counts = [
+            'all' => $assignments->count(),
+            'pending' => $assignments->filter(fn ($a) => ! $a->my_submission)->count(),
+            'submitted' => $assignments->filter(fn ($a) => $a->my_submission && in_array($a->my_submission->status, ['submitted', 'returned'], true))->count(),
+            'graded' => $assignments->filter(fn ($a) => $a->my_submission && $a->my_submission->status === 'graded')->count(),
+        ];
+
+        if ($filter === 'pending') {
+            $assignments = $assignments->filter(fn ($a) => ! $a->my_submission)->values();
+        } elseif ($filter === 'submitted') {
+            $assignments = $assignments->filter(fn ($a) => $a->my_submission && in_array($a->my_submission->status, ['submitted', 'returned'], true))->values();
+        } elseif ($filter === 'graded') {
+            $assignments = $assignments->filter(fn ($a) => $a->my_submission && $a->my_submission->status === 'graded')->values();
+        }
+
+        return view('student.assignments.index', [
+            'assignments' => $assignments,
+            'searchQuery' => $q,
+            'filter' => $filter,
+            'counts' => $counts,
+        ]);
     }
 
     /**
@@ -487,6 +524,12 @@ class AssignmentController extends Controller
         $submission->submitted_at = now();
         $submission->status = 'submitted';
         $submission->save();
+
+        try {
+            \App\Services\StudentSchoolGameService::awardAssignmentSubmit($request->user(), (int) $submission->id);
+        } catch (\Throwable $e) {
+            \Log::warning('School XP award failed on assignment submit', ['error' => $e->getMessage()]);
+        }
 
         return redirect()
             ->route('student.assignments.show', $assignment)

@@ -16,6 +16,69 @@
     $groupsUrl = route('public.groups');
     $aboutUrl = route('public.about');
     $schoolYears = collect($schoolYears ?? []);
+    $schoolSubjects = collect($schoolSubjects ?? []);
+    $programCards = $schoolSubjects->isNotEmpty()
+        ? $schoolSubjects->map(function ($subject) use ($groupsUrl) {
+            return [
+                'name' => $subject->name,
+                'icon' => $subject->faIcon(),
+                'url' => $groupsUrl.'#subjects',
+                'color' => $subject->color ?: '#0B3D91',
+            ];
+        })
+        : $schoolYears->map(function ($year) {
+            $icon = trim((string) ($year->icon ?? ''));
+            if ($icon !== '' && str_contains($icon, 'fa-')) {
+                preg_match('/fa-[a-z0-9-]+/i', $icon, $m);
+                $icon = strtolower($m[0] ?? 'fa-school');
+            } else {
+                $icon = 'fa-school';
+            }
+
+            return [
+                'name' => $year->name,
+                'icon' => $icon,
+                'url' => route('public.school.year', $year->slug),
+                'color' => $year->color ?: '#0B3D91',
+            ];
+        });
+    $programGradients = [
+        'linear-gradient(145deg,#E8EEF8,#B8C9E8)',
+        'linear-gradient(145deg,#FFF6D6,#FFE08A)',
+        'linear-gradient(145deg,#DBEAFE,#93C5FD)',
+        'linear-gradient(145deg,#D1FAE5,#6EE7B7)',
+        'linear-gradient(145deg,#FFEDD5,#FDBA74)',
+        'linear-gradient(145deg,#EDE9FE,#C4B5FD)',
+    ];
+    $startTracks = $schoolYears->take(6)->map(function ($year) use ($isRtl) {
+        $icon = trim((string) ($year->icon ?? ''));
+        if ($icon !== '' && str_contains($icon, 'fa-')) {
+            preg_match('/fa-[a-z0-9-]+/i', $icon, $m);
+            $icon = strtolower($m[0] ?? 'fa-school');
+        } else {
+            $icon = 'fa-school';
+        }
+
+        return [
+            'name' => $year->name,
+            'sub' => $year->tagline
+                ?: ($isRtl ? 'استكشف المواد والفصول المتاحة' : 'Explore subjects and open classes'),
+            'icon' => $icon,
+            'url' => route('public.school.year', $year->slug),
+            'accent' => $year->color ?: '#0B3D91',
+        ];
+    });
+    if ($startTracks->isEmpty()) {
+        $startTracks = $schoolSubjects->take(6)->map(function ($subject) use ($groupsUrl, $isRtl) {
+            return [
+                'name' => $subject->name,
+                'sub' => $isRtl ? 'ضمن برامج المدرسة' : 'Part of the school programs',
+                'icon' => $subject->faIcon(),
+                'url' => $groupsUrl.'#subjects',
+                'accent' => $subject->color ?: '#0B3D91',
+            ];
+        });
+    }
 @endphp
 
 <main>
@@ -184,31 +247,42 @@
         : 'Three clear steps for learners and parents — no guesswork, no commitment before we understand your level.' }}</p>
     </div>
 
-    <div class="gl-start__tracks sana-reveal" aria-label="{{ $isRtl ? 'مجالا المنصة' : 'Learning areas' }}">
-      <a href="{{ $coursesUrl }}" class="gl-start__track gl-start__track--ar">
-        <span class="gl-start__track-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-        </span>
-        <div class="gl-start__track-copy">
-          <strong>{{ $isRtl ? 'العربي والإسلامي' : 'Arabic & Islamic' }}</strong>
-          <span>{{ $isRtl ? 'القرآن · التجويد · العربية · الدراسات الإسلامية' : 'Quran · Tajweed · Arabic · Islamic studies' }}</span>
-        </div>
-        <span class="gl-start__track-arrow" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $isRtl ? 'M19 12H5M12 19l-7-7 7-7' : 'M5 12h14M12 5l7 7-7 7' }}"/></svg>
-        </span>
-      </a>
-      <a href="{{ $coursesUrl }}" class="gl-start__track gl-start__track--en">
-        <span class="gl-start__track-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        </span>
-        <div class="gl-start__track-copy">
-          <strong>{{ $isRtl ? 'اللغة الإنجليزية' : 'English' }}</strong>
-          <span>{{ $isRtl ? 'محادثة · أعمال · IELTS · TOEFL' : 'Conversation · Business · IELTS · TOEFL' }}</span>
-        </div>
-        <span class="gl-start__track-arrow" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $isRtl ? 'M19 12H5M12 19l-7-7 7-7' : 'M5 12h14M12 5l7 7-7 7' }}"/></svg>
-        </span>
-      </a>
+    <div class="gl-start__tracks sana-reveal" aria-label="{{ $isRtl ? 'مجالات المنصة' : 'Learning areas' }}">
+      @forelse ($startTracks as $i => $track)
+        <a href="{{ $track['url'] }}" class="gl-start__track {{ $i % 2 === 0 ? 'gl-start__track--ar' : 'gl-start__track--en' }}" style="--track-accent:{{ $track['accent'] }}">
+          <span class="gl-start__track-icon" aria-hidden="true">
+            <i class="fas {{ $track['icon'] }}"></i>
+          </span>
+          <div class="gl-start__track-copy">
+            <strong>{{ $track['name'] }}</strong>
+            <span>{{ $track['sub'] }}</span>
+          </div>
+          <span class="gl-start__track-arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $isRtl ? 'M19 12H5M12 19l-7-7 7-7' : 'M5 12h14M12 5l7 7-7 7' }}"/></svg>
+          </span>
+        </a>
+      @empty
+        <a href="{{ $groupsUrl }}" class="gl-start__track gl-start__track--ar">
+          <span class="gl-start__track-icon" aria-hidden="true"><i class="fas fa-school"></i></span>
+          <div class="gl-start__track-copy">
+            <strong>{{ $isRtl ? 'المدرسة' : 'School' }}</strong>
+            <span>{{ $isRtl ? 'استكشف السنوات والمواد' : 'Browse years and subjects' }}</span>
+          </div>
+          <span class="gl-start__track-arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $isRtl ? 'M19 12H5M12 19l-7-7 7-7' : 'M5 12h14M12 5l7 7-7 7' }}"/></svg>
+          </span>
+        </a>
+        <a href="{{ $coursesUrl }}" class="gl-start__track gl-start__track--en">
+          <span class="gl-start__track-icon" aria-hidden="true"><i class="fas fa-user-graduate"></i></span>
+          <div class="gl-start__track-copy">
+            <strong>{{ $isRtl ? 'الحصص الخاصة' : 'Private lessons' }}</strong>
+            <span>{{ $isRtl ? 'متابعة فردية حسب مستواك' : '1:1 sessions tailored to your level' }}</span>
+          </div>
+          <span class="gl-start__track-arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $isRtl ? 'M19 12H5M12 19l-7-7 7-7' : 'M5 12h14M12 5l7 7-7 7' }}"/></svg>
+          </span>
+        </a>
+      @endforelse
     </div>
 
     <div class="gl-start__steps sana-reveal" aria-label="{{ $isRtl ? 'خطوات البدء' : 'Start steps' }}">
@@ -291,7 +365,7 @@
   </div>
 </section>
 
-{{-- ===== tracks / categories ===== --}}
+{{-- ===== tracks / categories (مواد المدرسة / السنوات) ===== --}}
 <section class="sana-section" id="categories">
   <div class="sana-container">
     <div class="sana-head-row sana-reveal">
@@ -299,14 +373,20 @@
         <h2 class="sana-head__title">{{ $isRtl ? 'برامج' : 'Browse' }} <span class="hl">{{ $isRtl ? 'المنصة' : 'programs' }}</span></h2>
         <span class="sana-head__line"></span>
       </div>
-      <a href="{{ $coursesUrl }}" class="sana-link-more">{{ $isRtl ? 'عرض الكل' : 'View all' }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></a>
+      <a href="{{ $groupsUrl }}" class="sana-link-more">{{ $isRtl ? 'عرض الكل' : 'View all' }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></a>
     </div>
     <div class="sana-cats-row sana-reveal">
-      <a href="{{ $coursesUrl }}" class="sana-cat-m" style="background:linear-gradient(145deg,#E8EEF8,#B8C9E8)"><span class="sana-cat-m__emoji">📖</span><span class="sana-cat-m__name">{{ $isRtl ? 'عربي' : 'Arabic' }}</span></a>
-      <a href="{{ $coursesUrl }}" class="sana-cat-m" style="background:linear-gradient(145deg,#FFF6D6,#FFE08A)"><span class="sana-cat-m__emoji">☪️</span><span class="sana-cat-m__name">{{ $isRtl ? 'قرآن وتجويد' : 'Quran' }}</span></a>
-      <a href="{{ $coursesUrl }}" class="sana-cat-m" style="background:linear-gradient(145deg,#DBEAFE,#93C5FD)"><span class="sana-cat-m__emoji">🌍</span><span class="sana-cat-m__name">{{ $isRtl ? 'إنجليزي' : 'English' }}</span></a>
-      <a href="{{ $coursesUrl }}" class="sana-cat-m" style="background:linear-gradient(145deg,#D1FAE5,#6EE7B7)"><span class="sana-cat-m__emoji">💼</span><span class="sana-cat-m__name">{{ $isRtl ? 'أعمال' : 'Business' }}</span></a>
-      <a href="{{ $coursesUrl }}" class="sana-cat-m" style="background:linear-gradient(145deg,#FFEDD5,#FDBA74)"><span class="sana-cat-m__emoji">🎓</span><span class="sana-cat-m__name">IELTS</span></a>
+      @forelse ($programCards as $i => $card)
+        <a href="{{ $card['url'] }}" class="sana-cat-m" style="background:{{ $programGradients[$i % count($programGradients)] }};--cat-accent:{{ $card['color'] }}">
+          <span class="sana-cat-m__emoji" aria-hidden="true"><i class="fas {{ $card['icon'] }}"></i></span>
+          <span class="sana-cat-m__name">{{ $card['name'] }}</span>
+        </a>
+      @empty
+        <a href="{{ $groupsUrl }}" class="sana-cat-m" style="background:{{ $programGradients[0] }}">
+          <span class="sana-cat-m__emoji" aria-hidden="true"><i class="fas fa-school"></i></span>
+          <span class="sana-cat-m__name">{{ $isRtl ? 'المدرسة' : 'School' }}</span>
+        </a>
+      @endforelse
     </div>
   </div>
 </section>

@@ -60,6 +60,22 @@ class ExamAttemptObserver
                     if (config('services.platform.auto_send_exam_results', true) && $examAttempt->exam->show_results_immediately) {
                         $this->sendExamResultNotification($examAttempt);
                     }
+
+                    try {
+                        if ($examAttempt->user_id) {
+                            $student = $examAttempt->relationLoaded('user')
+                                ? $examAttempt->user
+                                : $examAttempt->user()->first();
+                            if ($student) {
+                                \App\Services\StudentSchoolGameService::awardExamComplete(
+                                    $student,
+                                    (int) $examAttempt->id
+                                );
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        \Log::warning('School XP award failed on exam complete', ['error' => $e->getMessage()]);
+                    }
                 } elseif ($changes['status'] === 'auto_submitted') {
                     $action = 'exam_attempt_auto_submitted';
                 }

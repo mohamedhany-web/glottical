@@ -255,7 +255,10 @@ class User extends Authenticatable
             $base = UserProfileImageStorage::publicUrl($path)
                 ?? \App\Services\PublicStorageUrl::fromPath($path);
         }
-        $ts = $this->updated_at ? $this->updated_at->timestamp : '';
+        if (! is_string($base) || $base === '') {
+            return null;
+        }
+        $ts = $this->updated_at ? $this->updated_at->timestamp : time();
 
         return $base.(str_contains($base, '?') ? '&' : '?').'v='.$ts;
     }

@@ -35,15 +35,15 @@
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <title>{{ __('public.courses_page_title') }} — Glottical</title>
-  <meta name="description" content="{{ __('public.courses_subtitle') }}">
+    <meta name="description" content="{{ __('public.courses_subtitle') }}">
   <link rel="canonical" href="{{ route('public.courses') }}">
   <link rel="alternate" hreflang="ar" href="{{ url('/courses') }}?lang=ar">
   <link rel="alternate" hreflang="en" href="{{ url('/courses') }}?lang=en">
-  @include('partials.favicon-links')
-  @include('partials.seo-jsonld', ['jsonldType' => 'website'])
+    @include('partials.favicon-links')
+    @include('partials.seo-jsonld', ['jsonldType' => 'website'])
   @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog']])
   <style>
     .gl-catalog-panel{
@@ -159,7 +159,7 @@
       .gl-search button{width:100%}
       .gl-cal{grid-template-columns:repeat(2,minmax(0,1fr))}
     }
-  </style>
+    </style>
 </head>
 <body class="sana-home sana-courses-page">
 <div id="sana-scroll-progress"></div>
@@ -290,7 +290,7 @@
           @endif
         </div>
       </div>
-    </div>
+                </div>
 
     <div class="gl-grid">
       @forelse($courses as $course)
@@ -327,21 +327,21 @@
               @else
                 <img src="{{ $thumb }}" alt="{{ $teacher }}" loading="lazy">
               @endif
-            </div>
+                        </div>
           </a>
           <div class="gl-teacher__body">
             <div>
               <h3 class="gl-teacher__name">{{ $teacher }}</h3>
               <p class="gl-teacher__role">{{ $role }}</p>
               <p class="gl-teacher__title" style="margin-top:6px">{{ $cardTitle }}</p>
-            </div>
+                      </div>
             <div class="gl-badges">
               <span class="gl-badge">⭐ {{ __('public.private_badge_qualified') }}</span>
               @if($hasChildren)
                 <span class="gl-badge">👧 {{ __('public.private_badge_children') }}</span>
               @endif
               <span class="gl-badge">🌎 {{ $langLabel }}</span>
-            </div>
+                        </div>
             <div class="gl-dur"><i class="far fa-clock"></i> {{ __('public.private_lesson_duration') }}</div>
             <div>
               <p style="margin:0 0 6px;font:800 .68rem Tajawal,sans-serif;color:#8A94A6">{{ __('public.private_weekly_slots') }}</p>
@@ -353,7 +353,7 @@
                       @foreach($col['times'] as $t)
                         <span class="gl-cal__t">{{ $t }}</span>
                       @endforeach
-                    </div>
+                      </div>
                   @endforeach
                 </div>
               @else

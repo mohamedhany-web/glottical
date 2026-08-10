@@ -1,51 +1,139 @@
-@extends('layouts.app')
+@extends('layouts.student-timeline')
 
-@section('title', 'حجوزات المجموعات')
-@section('page_title', 'حجوزات المجموعات')
+@section('title', __('student_timeline.bookings_title'))
 
 @section('content')
-<div class="space-y-5">
-    @if($upcoming && $upcoming->classroomMeeting)
-        <article class="rounded-2xl border border-accent/25 bg-gradient-to-l from-accent/10 to-white p-5 shadow-soft">
-            <p class="text-xs font-bold uppercase tracking-wide text-accent">حصتك القادمة</p>
-            <h3 class="mt-1 text-lg font-semibold text-ink">{{ $upcoming->tutoringGroup?->title }}</h3>
-            <p class="text-sm text-muted">{{ $upcoming->starts_at?->format('Y-m-d H:i') }} · {{ $upcoming->instructor?->name }}</p>
-            <a href="{{ url('classroom/join/'.$upcoming->classroomMeeting->code) }}" class="mt-3 inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
-                <i class="fas fa-video"></i> دخول Live
-            </a>
-        </article>
-    @endif
+@php
+    $locale = app()->getLocale();
+    $bookings = $bookings ?? collect();
+    $upcoming = $upcoming ?? null;
+    $learnGroupsUrl = Route::has('student.learn.index')
+        ? route('student.learn.index', ['tab' => 'groups'])
+        : (Route::has('public.groups') ? route('public.groups') : route('dashboard'));
+    $tones = ['blue', 'pink', 'orange', 'purple'];
+@endphp
 
-    @if(session('success'))
-        <div class="rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink">{{ session('success') }}</div>
-    @endif
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => __('student_timeline.bookings_title'),
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => __('student_timeline.bookings_title'), 'url' => null],
+    ],
+])
 
-    <div class="overflow-hidden rounded-2xl border border-line bg-white shadow-soft">
-        <table class="min-w-full text-sm">
-            <thead class="border-b border-line bg-slate-50 text-xs font-semibold text-muted">
-                <tr>
-                    <th class="px-4 py-3 text-start">المجموعة</th>
-                    <th class="px-4 py-3 text-start">الموعد</th>
-                    <th class="px-4 py-3 text-start">الحالة</th>
-                    <th class="px-4 py-3 text-end">عرض</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-line">
-                @forelse($bookings as $booking)
-                    <tr>
-                        <td class="px-4 py-3 font-medium text-ink">{{ $booking->tutoringGroup?->title }}</td>
-                        <td class="px-4 py-3 tabular-nums text-muted">{{ $booking->starts_at?->format('Y-m-d H:i') }}</td>
-                        <td class="px-4 py-3"><span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold">{{ $booking->statusLabel() }}</span></td>
-                        <td class="px-4 py-3 text-end"><a href="{{ route('student.tutoring-bookings.show', $booking) }}" class="text-accent hover:underline">تفاصيل</a></td>
-                    </tr>
-                @empty
-                    <tr><td colspan="4" class="px-4 py-10 text-center text-muted">لا توجد حجوزات بعد. <a href="{{ route('public.groups') }}" class="text-accent">تصفّح المجموعات</a></td></tr>
-                @endforelse
-            </tbody>
-        </table>
-        @if($bookings->hasPages())
-            <div class="border-t border-line px-4 py-3">{{ $bookings->links() }}</div>
-        @endif
+@if(session('success'))
+    <div class="st-flash st-flash--ok">{{ session('success') }}</div>
+@endif
+
+@if($upcoming)
+    @php
+        $upJoin = $upcoming->classroomMeeting
+            ? url('classroom/join/'.$upcoming->classroomMeeting->code)
+            : null;
+    @endphp
+    <section class="st-join-hero" aria-label="{{ __('student_timeline.booking_next') }}">
+        <div class="st-join-hero__copy">
+            <p class="st-join-hero__kicker">{{ __('student_timeline.booking_next') }}</p>
+            <h2 class="st-join-hero__title">{{ $upcoming->tutoringGroup?->title ?? __('student_timeline.group_session') }}</h2>
+            <p class="st-join-hero__meta">
+                {{ $upcoming->starts_at?->locale($locale)->translatedFormat('D j M · H:i') }}
+                · {{ $upcoming->instructor?->name ?? '—' }}
+            </p>
+        </div>
+        <div class="st-join-hero__actions">
+            @if($upJoin)
+                <a href="{{ $upJoin }}" class="st-pill st-pill--solid st-pill--lg">
+                    <i class="fas fa-video" aria-hidden="true"></i>
+                    {{ __('student_timeline.join_live') }}
+                </a>
+            @endif
+            <a href="{{ route('student.tutoring-bookings.show', $upcoming) }}" class="st-pill st-pill--outline">{{ __('student_timeline.view_booking') }}</a>
+        </div>
+    </section>
+@endif
+
+<section class="st-msg-intro">
+    <div>
+        <h2>{{ __('student_timeline.bookings_title') }}</h2>
+        <p>{{ __('student_timeline.bookings_hint') }}</p>
     </div>
+    <a href="{{ $learnGroupsUrl }}" class="st-pill st-pill--solid">{{ __('student_timeline.learn_tab_groups') }}</a>
+</section>
+
+<section class="st-order-list" aria-label="{{ __('student_timeline.bookings_title') }}">
+    @forelse($bookings as $i => $booking)
+        @php
+            $tone = $tones[$i % count($tones)];
+            $status = $booking->status;
+            $join = $booking->classroomMeeting
+                ? url('classroom/join/'.$booking->classroomMeeting->code)
+                : null;
+        @endphp
+        <article class="st-order-card st-order-card--{{ $tone }}">
+            <div class="st-order-card__main">
+                <div class="st-order-card__copy">
+                    <div class="st-order-card__badges">
+                        <span class="st-booking-badge is-{{ $status }}">{{ $booking->statusLabel() }}</span>
+                        <span class="st-order-card__when">{{ $booking->starts_at?->diffForHumans() }}</span>
+                    </div>
+                    <h3>{{ $booking->tutoringGroup?->title ?? __('student_timeline.group_session') }}</h3>
+                    <p class="st-order-card__meta">
+                        {{ $booking->instructor?->name ?? '—' }}
+                        @if($booking->cohort) · {{ $booking->cohort->title }}@endif
+                    </p>
+                </div>
+                <div class="st-order-card__amount">
+                    <strong>{{ $booking->starts_at?->format('H:i') ?: '—' }}</strong>
+                    <span>{{ $booking->starts_at?->format('d/m/Y') }}</span>
+                </div>
+            </div>
+
+            <div class="st-order-card__facts">
+                <span>{{ __('student_timeline.booking_status') }}: {{ $booking->statusLabel() }}</span>
+                <span>{{ __('student_timeline.booking_payment') }}: {{ $booking->paymentStatusLabel() }}</span>
+            </div>
+
+            <div class="st-order-card__foot">
+                <a href="{{ route('student.tutoring-bookings.show', $booking) }}" class="st-pill st-pill--solid">
+                    {{ __('student_timeline.view_booking') }}
+                </a>
+                @if($join)
+                    <a href="{{ $join }}" class="st-pill st-pill--outline">
+                        <i class="fas fa-video" aria-hidden="true"></i>
+                        {{ __('student_timeline.join_live') }}
+                    </a>
+                @endif
+            </div>
+        </article>
+    @empty
+        <div class="st-empty-panel">
+            <h3>{{ __('student_timeline.no_bookings') }}</h3>
+            <p>{{ __('student_timeline.no_bookings_hint') }}</p>
+            <div class="st-biz-banner__actions">
+                <a href="{{ $learnGroupsUrl }}" class="st-pill st-pill--solid">{{ __('student_timeline.learn_tab_groups') }}</a>
+            </div>
+        </div>
+    @endforelse
+</section>
+
+@if(method_exists($bookings, 'hasPages') && $bookings->hasPages())
+    <div class="st-pager">{{ $bookings->links() }}</div>
+@endif
+@endsection
+
+@section('events')
+<div class="st-events__top">
+    <h2>{{ __('student_timeline.quick_links') }}</h2>
 </div>
+
+<a href="{{ $learnGroupsUrl }}" class="st-event-card st-event-card--orange">
+    <h3>{{ __('student_timeline.learn_tab_groups') }}</h3>
+    <p class="st-event-card__sub">{{ __('student_timeline.learn_groups_simple') }}</p>
+</a>
+
+<a href="{{ route('dashboard') }}" class="st-event-card st-event-card--blue">
+    <h3>{{ __('student_timeline.school_gate') }}</h3>
+    <p class="st-event-card__sub">{{ __('student_timeline.learn_path_school_hint') }}</p>
+</a>
 @endsection

@@ -43,10 +43,10 @@
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-  <title>{{ $courseTitle }}</title>
-  <meta name="description" content="{{ $courseDesc }}">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+    <title>{{ $courseTitle }}</title>
+    <meta name="description" content="{{ $courseDesc }}">
   <meta name="theme-color" content="#0B3D91">
   <link rel="canonical" href="{{ $courseUrl }}">
   <meta property="og:type" content="article">
@@ -55,10 +55,10 @@
   <meta property="og:description" content="{{ $courseDesc }}">
   <meta property="og:image" content="{{ $courseOgImg }}">
   <meta property="og:site_name" content="{{ $brand }}">
-  @include('partials.seo-jsonld', ['jsonldType' => 'course', 'course' => $course])
-  @include('partials.favicon-links')
+    @include('partials.seo-jsonld', ['jsonldType' => 'course', 'course' => $course])
+    @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog']])
-  <style>
+    <style>
     .gl-cs { background: var(--bg,#F4F7FC); }
     .gl-cs-wrap.sana-container {
       max-width: 1180px;
@@ -299,7 +299,7 @@
       margin-inline-start: auto; border: 0; background: transparent; cursor: pointer;
       font-size: 1rem; color: #5B6577; line-height: 1;
     }
-  </style>
+    </style>
 </head>
 <body class="sana-home sana-courses-page gl-cs">
 <div id="sana-scroll-progress"></div>
@@ -313,33 +313,33 @@
         <span>✓</span>
         <p style="margin:0;flex:1">{{ session('success') }}</p>
         <button type="button" data-flash-close aria-label="{{ $isRtl ? 'إغلاق' : 'Close' }}">×</button>
-      </div>
-    @endif
+            </div>
+            @endif
     @if (session('info'))
       <div class="gl-cs-flash gl-cs-flash--info" data-flash>
         <span>i</span>
         <p style="margin:0;flex:1">{{ session('info') }}</p>
         <button type="button" data-flash-close aria-label="{{ $isRtl ? 'إغلاق' : 'Close' }}">×</button>
-      </div>
-    @endif
+                                </div>
+                                    @endif
     @if (session('error'))
       <div class="gl-cs-flash gl-cs-flash--err" data-flash>
         <span>!</span>
         <p style="margin:0;flex:1">{{ session('error') }}</p>
         <button type="button" data-flash-close aria-label="{{ $isRtl ? 'إغلاق' : 'Close' }}">×</button>
-      </div>
-    @endif
+                            </div>
+                        @endif
 
     <nav class="gl-cs-crumb" aria-label="{{ $isRtl ? 'مسار التنقل' : 'Breadcrumb' }}">
       <a href="{{ route('home') }}">{{ __('public.home') }}</a>
       <span>/</span>
       @if ($isOneToOne)
         <a href="{{ route('public.courses') }}">{{ __('landing.nav.courses') }}</a>
-      @else
+                                @else
         <a href="{{ route('public.groups') }}">{{ __('landing.nav.groups') }}</a>
         <span>/</span>
         <a href="{{ $groupsListUrl }}">{{ $groupsListLabel }}</a>
-      @endif
+                                @endif
       <span>/</span>
       <span>{{ \Illuminate\Support\Str::limit($course->title ?? '', 42) }}</span>
     </nav>
@@ -353,16 +353,16 @@
             <video src="{{ $introDirectVideo }}" controls playsinline preload="metadata" poster="{{ $thumbUrl }}">{{ __('public.course_intro_video_unsupported') }}</video>
           @elseif ($thumbUrl)
             <img src="{{ $thumbUrl }}" alt="{{ $course->title }}" width="900" height="560">
-          @else
+                                @else
             <div class="gl-cs-media__empty">✦</div>
-          @endif
+                                @endif
           @if ($course->is_featured ?? false)
             <span class="gl-cs-badge">{{ __('public.featured_course_badge') }}</span>
           @else
             <span class="gl-cs-badge">{{ $deliveryLabel }}</span>
-          @endif
-        </div>
-      </div>
+                                @endif
+                            </div>
+                        </div>
 
       <aside class="gl-cs-panel">
         @if ($course->instructor)
@@ -373,7 +373,7 @@
           @else
             <p class="gl-cs-instructor" style="margin:0 0 .55rem"><i class="fas fa-chalkboard-user"></i> {{ $course->instructor->name }}</p>
           @endif
-        @endif
+                        @endif
 
         <h1 class="gl-cs-title">{{ $course->title ?? __('public.course_title_fallback') }}</h1>
 
@@ -387,8 +387,8 @@
           @endif
           @if (! $isPaid)
             <span class="gl-cs-tag gl-cs-tag--green">{{ __('public.free_price') }}</span>
-          @endif
-        </div>
+                        @endif
+                    </div>
 
         <div class="gl-cs-delivery {{ $isOneToOne ? 'gl-cs-delivery--solo' : '' }}">
           <p class="gl-cs-delivery__title">
@@ -406,7 +406,7 @@
               @if ($isMonthly)
                 {{ $isRtl ? ' الاشتراك كخطة تعليمية شهرية.' : ' Billed as a monthly learning plan.' }}
               @endif
-            @else
+                                        @else
               {{ $isRtl
                 ? 'تعلّم جماعي منظّم مع زملاء ومدرّس — جلسات مشتركة ومسار موحّد.'
                 : 'Organised group learning with peers and a tutor — shared sessions and a clear path.' }}
@@ -452,10 +452,10 @@
               <p class="gl-cs-note">{{ __('public.one_to_one_with') }} {{ $course->instructor->name }}</p>
             @elseif ($isMonthly)
               <p class="gl-cs-note">{{ __('public.checkout_monthly_notice') }}</p>
-            @endif
-          @else
+                                        @endif
+                                    @else
             <p class="gl-cs-price" style="color:#047857">{{ __('public.free_price') }}</p>
-          @endif
+                                    @endif
           <p class="gl-cs-access"><i></i> {{ $isRtl ? 'وصول فوري بعد التفعيل' : 'Instant access after activation' }}</p>
         </div>
 
@@ -463,41 +463,41 @@
           <div class="gl-cs-spec">
             <dt>{{ $isRtl ? 'نوع التعلّم' : 'Delivery' }}</dt>
             <dd>{{ $deliveryLabel }}</dd>
-          </div>
+                                </div>
           <div class="gl-cs-spec">
             <dt>{{ __('public.duration') }}</dt>
             <dd>@if($isOneToOne){{ __('public.private_lesson_duration') }}@else{{ $course->duration_hours ?? 0 }} {{ __('public.hours') }}@endif</dd>
-          </div>
+                                        </div>
           <div class="gl-cs-spec">
             <dt>{{ __('public.lectures_count_label') }}</dt>
             <dd>{{ $course->lessons_count ?? 0 }}</dd>
-          </div>
+                                        </div>
           <div class="gl-cs-spec">
             <dt>{{ __('public.course_category_label') }}</dt>
             <dd>{{ $categoryDisplay }}</dd>
-          </div>
-        </dl>
+                                        </div>
+                                    </dl>
 
         <div class="gl-cs-actions">
-          @auth
+                                    @auth
             @if ($isEnrolled ?? false)
               <a href="{{ route('my-courses.show', $course) }}" class="sana-btn sana-btn--yellow">{{ __('public.start_learning_now') }}</a>
             @elseif ($isPaid)
               <a href="{{ route('public.course.checkout', $course->id) }}" class="sana-btn sana-btn--yellow">{{ __('public.buy_now') }}</a>
-            @else
-              <form action="{{ route('public.course.enroll.free', $course->id) }}" method="POST">
-                @csrf
+                                        @else
+                                            <form action="{{ route('public.course.enroll.free', $course->id) }}" method="POST">
+                                                @csrf
                 <button type="submit" class="sana-btn sana-btn--yellow">{{ __('public.register_free') }}</button>
-              </form>
-            @endif
-          @endauth
-          @guest
+                                            </form>
+                                        @endif
+                                    @endauth
+                                    @guest
             @if ($isPaid)
               <a href="{{ route('register', ['redirect' => route('public.course.checkout', $course->id)]) }}" class="sana-btn sana-btn--yellow">{{ __('public.buy_now') }}</a>
-            @else
+                                        @else
               <a href="{{ route('register', ['redirect' => route('public.course.show', $course->id)]) }}" class="sana-btn sana-btn--yellow">{{ __('public.register_free') }}</a>
-            @endif
-          @endguest
+                                        @endif
+                                    @endguest
           <a href="{{ $waUrl }}" class="sana-btn sana-btn--wa" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ $isRtl ? 'واتساب' : 'WhatsApp' }}</a>
         </div>
 
@@ -527,8 +527,8 @@
               <strong>{{ __('public.checkout_benefit_certificate') }}</strong>
               <span>{{ $isRtl ? 'عند إتمام متطلبات الكورس' : 'Upon completing course requirements' }}</span>
             </div>
-          </div>
-        </div>
+                                </div>
+                            </div>
       </aside>
     </div>
 
@@ -596,7 +596,7 @@
                     {{ __('public.free_price') }}
                   @elseif ($isMonthly)
                     {{ __('public.checkout_monthly_price_label') }}
-                  @else
+                                                @else
                     {{ __('public.checkout_benefit_lifetime') }}
                   @endif
                 </td>
@@ -610,8 +610,8 @@
             <h2>{{ __('public.requirements') }}</h2>
             <div class="box">{{ $course->requirements }}</div>
           </article>
-        @endif
-      </div>
+                                                @endif
+                                            </div>
     </div>
 
     @if (isset($relatedCourses) && $relatedCourses->isNotEmpty())
@@ -622,7 +622,7 @@
             <h2>{{ $isRtl ? 'كورسات ذات صلة' : 'Related courses' }}</h2>
           </div>
           <a href="{{ route('public.courses') }}" class="sana-link-more">{{ __('public.all_courses') }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></a>
-        </div>
+                                                </div>
         <div class="gl-cs-related__grid">
           @foreach ($relatedCourses->take(3) as $related)
             @php
@@ -633,21 +633,21 @@
               <div class="gl-cs-rel__body">
                 <h3>{{ $related->title }}</h3>
                 <p>{{ $related->instructor->name ?? ($isRtl ? 'معلّم على المنصة' : 'Platform tutor') }}</p>
-              </div>
-            </a>
-          @endforeach
-        </div>
+                                            </div>
+                                        </a>
+                                    @endforeach
+                                </div>
       </section>
-    @endif
+                            @endif
 
     <section class="gl-cs-cta">
       <div class="gl-cs-cta__inner">
         <div>
           <h2>{{ $isRtl ? 'جاهز للانطلاق؟' : 'Ready to start?' }}</h2>
           <p>{{ $isRtl ? 'سجّل الآن وابدأ التعلّم بخطوات واضحة — أو احجز تقييم مستوى مجاني إن كنت غير متأكد.' : 'Enroll now and start with clear steps — or book a free level assessment if you’re unsure.' }}</p>
-        </div>
+                        </div>
         <div class="gl-cs-cta__actions">
-          @auth
+                    @auth
             @if ($isEnrolled ?? false)
               <a href="{{ route('my-courses.show', $course) }}" class="sana-btn sana-btn--yellow sana-btn--lg">{{ __('public.start_learning_now') }}</a>
             @elseif ($isPaid)
@@ -661,23 +661,23 @@
           @else
             <a href="{{ route('register', ['redirect' => $isPaid ? route('public.course.checkout', $course->id) : route('public.course.show', $course->id)]) }}" class="sana-btn sana-btn--yellow sana-btn--lg">
               {{ $isPaid ? __('public.buy_now') : __('public.register_free_now') }}
-            </a>
-          @endauth
+                        </a>
+                    @endauth
           <a href="{{ route('home') }}?open_trial=1" class="sana-btn sana-btn--wa sana-btn--lg"><i class="fas fa-clipboard-check"></i> {{ __('landing.academy.free_trial_cta') }}</a>
-        </div>
-      </div>
-    </section>
+                </div>
+            </div>
+        </section>
   </div>
-</main>
+    </main>
 
 @include('partials.landing.footer')
-<script>
+    <script>
   document.querySelectorAll('[data-flash-close]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var wrap = btn.closest('[data-flash]');
       if (wrap) wrap.remove();
     });
   });
-</script>
+    </script>
 </body>
 </html>

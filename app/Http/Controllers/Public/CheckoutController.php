@@ -770,26 +770,33 @@ class CheckoutController extends Controller
         $orderId = (int) $request->session()->get('fawaterak_order_id');
         if ($orderId < 1) {
             return redirect()->route('orders.index')
-                ->with('error', 'انتهت جلسة الدفع. إن اكتمل الدفع لدى فواتيرك ولم يُفعَّل الكورس، تواصل مع الدعم برقم الطلب.');
+                ->with('error', 'انتهت جلسة الدفع. إن اكتمل الدفع لدى فواتيرك ولم يُفعَّل الطلب، تواصل مع الدعم برقم الطلب.');
         }
 
-        $order = Order::with(['course'])->find($orderId);
+        $order = Order::with(['course', 'servicePackage'])->find($orderId);
         if (! $order || $order->user_id !== Auth::id()) {
             $request->session()->forget('fawaterak_order_id');
 
             return redirect()->route('orders.index')->with('error', 'طلب غير صالح.');
         }
 
+        $isServicePackageOrder = in_array($order->order_type, [
+            Order::TYPE_SERVICE_PACKAGE,
+            Order::TYPE_CUSTOM_SERVICE_PACKAGE,
+        ], true);
+
         if ($status === 'fail') {
             $request->session()->forget('fawaterak_order_id');
 
-            return redirect()->route('public.course.checkout', $order->advanced_course_id)
+            return redirect()->to($this->fawaterakCheckoutRetryUrl($order))
                 ->with('error', 'لم يتم إتمام الدفع. يمكنك المحاولة مرة أخرى.');
         }
 
         if ($status === 'pending') {
-            return redirect()->route('public.course.checkout', $order->advanced_course_id)
-                ->with('info', 'دفعتك قيد المعالجة لدى فواتيرك. عند اكتمالها سيُفعَّل الكورس تلقائياً أو يمكنك تحديث الصفحة لاحقاً.');
+            return redirect()->to($this->fawaterakCheckoutRetryUrl($order))
+                ->with('info', $isServicePackageOrder
+                    ? 'دفعتك قيد المعالجة لدى فواتيرك. عند اكتمالها سيُفعَّل رصيد الحصص تلقائياً أو يمكنك تحديث الصفحة لاحقاً.'
+                    : 'دفعتك قيد المعالجة لدى فواتيرك. عند اكتمالها سيُفعَّل الكورس تلقائياً أو يمكنك تحديث الصفحة لاحقاً.');
         }
 
         $lockedOrder = null;
@@ -797,7 +804,7 @@ class CheckoutController extends Controller
         try {
             $lockedOrder = Order::whereKey($orderId)
                 ->lockForUpdate()
-                ->with(['course'])
+                ->with(['course', 'servicePackage'])
                 ->first();
 
             if (! $lockedOrder || $lockedOrder->user_id !== Auth::id()) {
@@ -811,7 +818,7 @@ class CheckoutController extends Controller
                 DB::rollBack();
                 $request->session()->forget('fawaterak_order_id');
 
-                return redirect()->route('public.course.show', $lockedOrder->advanced_course_id)
+                return redirect()->to($this->fawaterakSuccessUrl($lockedOrder))
                     ->with('info', 'تمت معالجة هذا الطلب مسبقاً.');
             }
 
@@ -833,10 +840,9 @@ class CheckoutController extends Controller
                 'message' => $e->getMessage(),
             ]);
 
-            $courseIdForCheckout = $lockedOrder?->advanced_course_id
-                ?? Order::query()->whereKey($orderId)->value('advanced_course_id');
-            if ($courseIdForCheckout) {
-                return redirect()->route('public.course.checkout', $courseIdForCheckout)
+            $retryOrder = $lockedOrder ?? Order::query()->whereKey($orderId)->first();
+            if ($retryOrder) {
+                return redirect()->to($this->fawaterakCheckoutRetryUrl($retryOrder))
                     ->with('error', 'تعذّر تفعيل الطلب بعد الدفع. يرجى التواصل مع الدعم مع رقم الطلب.');
             }
 
@@ -846,13 +852,42 @@ class CheckoutController extends Controller
 
         $request->session()->forget('fawaterak_order_id');
 
-        $courseId = $lockedOrder->advanced_course_id;
         $successMsg = __('public.checkout_payment_success_with_invoice', [
             'invoice' => $invoice->invoice_number,
         ]);
 
-        return redirect()->route('public.course.show', $courseId)
+        return redirect()->to($this->fawaterakSuccessUrl($lockedOrder))
             ->with('success', $successMsg);
+    }
+
+    private function fawaterakCheckoutRetryUrl(Order $order): string
+    {
+        if ($order->order_type === Order::TYPE_CUSTOM_SERVICE_PACKAGE) {
+            return route('public.service-packages.custom.pay', $order);
+        }
+
+        if ($order->order_type === Order::TYPE_SERVICE_PACKAGE && $order->service_package_id) {
+            return route('public.service-packages.checkout', $order->service_package_id);
+        }
+
+        if ($order->advanced_course_id) {
+            return route('public.course.checkout', $order->advanced_course_id);
+        }
+
+        return route('orders.index');
+    }
+
+    private function fawaterakSuccessUrl(Order $order): string
+    {
+        if (in_array($order->order_type, [Order::TYPE_SERVICE_PACKAGE, Order::TYPE_CUSTOM_SERVICE_PACKAGE], true)) {
+            return route('student.service-entitlements.index');
+        }
+
+        if ($order->advanced_course_id) {
+            return route('public.course.show', $order->advanced_course_id);
+        }
+
+        return route('orders.index');
     }
 
     /**

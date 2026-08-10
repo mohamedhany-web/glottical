@@ -1,90 +1,221 @@
-@extends('layouts.app')
+@extends('layouts.student-timeline')
 
-@section('title', app()->getLocale() === 'ar' ? 'حصصي الخاصة' : 'My Private Lessons')
+@section('title', __('student_timeline.nav_lessons'))
 
 @section('content')
 @php
-    $isRtl = app()->getLocale() === 'ar';
+    $locale = app()->getLocale();
+    $isRtl = $locale === 'ar';
+    $sessions = $sessions ?? collect();
+    $threads = $threads ?? collect();
+    $reception = $reception ?? null;
+    $nextJoinable = $nextJoinable ?? null;
+    $upcomingCount = $upcomingCount ?? 0;
+    $searchQuery = $searchQuery ?? '';
+    $avatarFallback = asset('img/student-timeline/avatar.png');
+    $tones = ['pink', 'blue', 'purple', 'orange'];
+    $browseUrl = Route::has('student.learn.index')
+        ? route('student.learn.index', ['tab' => 'private'])
+        : (Route::has('public.courses') ? route('public.courses') : route('dashboard'));
 @endphp
-<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-10">
-    <section class="rounded-2xl border border-[#E8EEF8] bg-white p-5 shadow-sm dark:bg-gray-800 dark:border-gray-700">
-        <p class="text-xs font-bold text-[#8A6A00] mb-1">👨‍🏫 {{ $isRtl ? 'حصصي الخاصة' : 'My Private Lessons' }}</p>
-        <h1 class="text-xl font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'الحصص الخاصة' : 'Private Lessons' }}</h1>
-        <p class="mt-1 text-sm text-[#5B6577] dark:text-gray-400">
-            {{ $isRtl
-                ? 'منفصلة تمامًا عن مدرستي (Islamic Foundations) — مدة الحصة 50 دقيقة.'
-                : 'Completely separate from My School (Islamic Foundations) — each lesson is 50 minutes.' }}
-        </p>
-        @if($reception && $reception->status === 'pending')
-            <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                {{ $isRtl ? 'جارٍ تجهيز استقبالك على المنصة. سيصلك ترحيب ومتابعة من الفريق قريبًا.' : 'We are preparing your onboarding. A welcome from the team is on the way.' }}
-            </div>
-        @endif
-        <div class="mt-4 flex flex-wrap gap-2">
-            <a href="{{ route('public.courses') }}" class="inline-flex items-center rounded-xl bg-[#F5B800] px-4 py-2 text-xs font-extrabold text-[#072A66]">
-                {{ $isRtl ? 'تصفّح المعلمين' : 'Browse teachers' }}
-            </a>
-            @if(Route::has('student.school.index'))
-            <a href="{{ route('student.school.index') }}" class="inline-flex items-center rounded-xl border border-[#E8EEF8] px-4 py-2 text-xs font-bold text-[#0B3D91]">
-                🏫 {{ $isRtl ? 'مدرستي' : 'My School' }}
-            </a>
-            @endif
-        </div>
-    </section>
 
-    <section class="rounded-2xl border border-[#E8EEF8] bg-white overflow-hidden shadow-sm dark:bg-gray-800 dark:border-gray-700">
-        <div class="px-5 py-4 border-b border-[#E8EEF8] dark:border-gray-700 flex items-center justify-between gap-3">
-            <h2 class="font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'الحصص القادمة' : 'Upcoming Lessons' }}</h2>
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => __('student_timeline.nav_lessons'),
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => __('student_timeline.nav_lessons'), 'url' => null],
+    ],
+    'toolbarView' => 'student.private-lectures._index-toolbar',
+    'toolbarData' => [
+        'searchQuery' => $searchQuery,
+        'sessionCount' => method_exists($sessions, 'total') ? $sessions->total() : $sessions->count(),
+    ],
+])
+
+@if(session('success'))
+    <div class="st-flash st-flash--ok">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+    <div class="st-flash st-flash--err">{{ session('error') }}</div>
+@endif
+
+@if($reception && $reception->status === 'pending')
+    <div class="st-flash st-flash--warn">{{ __('student_timeline.reception_pending') }}</div>
+@endif
+
+@if($nextJoinable)
+    @php
+        $dur = (int) ($nextJoinable->duration_minutes ?: 50);
+        if ($dur !== 50) { $dur = 50; }
+        $awaiting = $nextJoinable->isAwaitingTeacherStart();
+        $canJoin = $nextJoinable->status === \App\Models\OneToOneSession::STATUS_SCHEDULED && $nextJoinable->classroomMeeting;
+        $joinHref = $canJoin
+            ? route('student.classroom.room', $nextJoinable->classroomMeeting)
+            : null;
+        $ends = $nextJoinable->scheduled_at
+            ? $nextJoinable->scheduled_at->copy()->addMinutes($dur)
+            : null;
+    @endphp
+    <section class="st-join-hero" aria-label="{{ __('student_timeline.join_class_now') }}">
+        <div class="st-join-hero__copy">
+            <p class="st-join-hero__kicker">
+                {{ $awaiting ? __('student_timeline.teacher_starting') : __('student_timeline.next_private_lesson') }}
+            </p>
+            <h2 class="st-join-hero__title">
+                {{ $nextJoinable->course->title ?? __('student_timeline.private_lesson') }}
+            </h2>
+            <p class="st-join-hero__meta">
+                @if($nextJoinable->instructor)
+                    {{ $nextJoinable->instructor->name }} ·
+                @endif
+                {{ $nextJoinable->scheduled_at?->timezone(config('app.timezone'))->translatedFormat($isRtl ? 'l، d M · g:i A' : 'D, M j · g:i A') }}
+                @if($ends)
+                    – {{ $ends->format('g:i A') }}
+                @endif
+                · {{ $dur }} {{ __('student_timeline.minutes') }}
+            </p>
+        </div>
+        <div class="st-join-hero__actions">
+            @if($joinHref)
+                <a href="{{ $joinHref }}" class="st-pill st-pill--solid st-pill--lg">
+                    <i class="fas fa-video" aria-hidden="true"></i>
+                    {{ __('student_timeline.join_class_now') }}
+                </a>
+            @elseif($awaiting)
+                <span class="st-pill st-pill--outline">{{ __('student_timeline.teacher_starting') }}</span>
+            @endif
             @if(Route::has('student.private-messages.index'))
-            <a href="{{ route('student.private-messages.index') }}" class="text-sm font-bold text-[#0B3D91]">{{ $isRtl ? 'رسائل المعلم' : 'Teacher messages' }}</a>
+                <a href="{{ route('student.private-messages.index') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_feed') }}</a>
             @endif
         </div>
-        <div class="divide-y divide-[#E8EEF8] dark:divide-gray-700">
-            @forelse($sessions as $session)
-                @php
-                    $dur = (int) ($session->duration_minutes ?: 50);
-                    if ($dur !== 50) { $dur = 50; }
-                    $awaiting = $session->isAwaitingTeacherStart();
-                    $ends = $session->scheduled_at ? $session->scheduled_at->copy()->addMinutes($dur) : null;
-                @endphp
-                <div class="px-5 py-4 flex flex-wrap items-center justify-between gap-3">
-                    <div class="min-w-0">
-                        <div class="flex flex-wrap items-center gap-2 mb-1">
-                            <span class="inline-flex items-center rounded-full bg-[#FFF6D6] px-2.5 py-0.5 text-[11px] font-bold text-[#8A6A00]">{{ $isRtl ? 'حصة خاصة' : 'Private Lesson' }}</span>
-                            <span class="text-xs font-bold text-[#8A94A6]">{{ $dur }} {{ $isRtl ? 'دقيقة' : 'min' }}</span>
-                        </div>
-                        <h3 class="font-bold text-[#0B1220] dark:text-white truncate">
-                            {{ $session->course->title ?? ($isRtl ? 'حصة خاصة' : 'Private lesson') }}
-                            @if($session->instructor)
-                                <span class="text-[#5B6577] font-semibold">· {{ $session->instructor->name }}</span>
-                            @endif
-                        </h3>
-                        <p class="text-sm text-[#5B6577] dark:text-gray-400">
-                            @if($session->scheduled_at)
-                                {{ $session->scheduled_at->timezone(config('app.timezone'))->format('l, M j') }}
-                                · {{ $session->scheduled_at->format('g:i A') }}@if($ends) – {{ $ends->format('g:i A') }}@endif
-                            @else
-                                {{ $isRtl ? 'بانتظار الجدولة' : 'Awaiting schedule' }}
-                            @endif
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        @if($awaiting)
-                            <span class="rounded-xl bg-amber-100 px-3 py-2 text-xs font-extrabold text-amber-800">{{ $isRtl ? 'الآن يبدأ المعلم' : 'Teacher starting soon' }}</span>
-                        @elseif($session->status === 'scheduled' && $session->classroomMeeting)
-                            <a href="{{ route('student.classroom.room', $session->classroomMeeting) }}" class="rounded-xl bg-[#F5B800] px-4 py-2 text-xs font-extrabold text-[#072A66]">{{ $isRtl ? 'دخول الحصة' : 'Join Class' }}</a>
-                        @else
-                            <span class="rounded-xl bg-[#F4F7FC] px-3 py-2 text-xs font-bold text-[#5B6577]">{{ \App\Models\OneToOneSession::statusLabels()[$session->status] ?? $session->status }}</span>
-                        @endif
-                    </div>
-                </div>
-            @empty
-                <p class="px-5 py-8 text-sm text-[#8A94A6]">{{ $isRtl ? 'لا توجد حصص خاصة بعد.' : 'No private lessons yet.' }}</p>
-            @endforelse
-        </div>
-        @if($sessions->hasPages())
-            <div class="px-5 py-3 border-t border-[#E8EEF8] dark:border-gray-700">{{ $sessions->links() }}</div>
-        @endif
     </section>
+@endif
+
+<section class="st-stats st-stats--classes" aria-label="{{ __('student_timeline.nav_lessons') }}">
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.upcoming_short') }}</p>
+        <p class="st-stat-card__value">{{ $upcomingCount }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.nav_lessons') }}</p>
+        <p class="st-stat-card__value">{{ method_exists($sessions, 'total') ? $sessions->total() : $sessions->count() }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.nav_feed') }}</p>
+        <p class="st-stat-card__value">{{ $threads->count() }}</p>
+        @if(Route::has('student.private-messages.index'))
+            <p class="st-stat-card__hint"><a href="{{ route('student.private-messages.index') }}">{{ __('student_timeline.open_chats') }}</a></p>
+        @endif
+    </article>
+</section>
+
+<section class="st-msg-intro">
+    <div>
+        <h2>{{ __('student_timeline.private_lessons_list') }}</h2>
+        <p>{{ __('student_timeline.private_lessons_hint') }}</p>
+    </div>
+    <a href="{{ $browseUrl }}" class="st-pill st-pill--solid">{{ __('student_timeline.browse_teachers') }}</a>
+</section>
+
+<section class="st-lesson-list" aria-label="{{ __('student_timeline.private_lessons_list') }}">
+    @forelse($sessions as $i => $session)
+        @php
+            $dur = (int) ($session->duration_minutes ?: 50);
+            if ($dur !== 50) { $dur = 50; }
+            $awaiting = $session->isAwaitingTeacherStart();
+            $canJoin = $session->status === \App\Models\OneToOneSession::STATUS_SCHEDULED && $session->classroomMeeting;
+            $joinHref = $canJoin ? route('student.classroom.room', $session->classroomMeeting) : null;
+            $ends = $session->scheduled_at ? $session->scheduled_at->copy()->addMinutes($dur) : null;
+            $tone = $tones[$i % count($tones)];
+            $instructor = $session->instructor;
+            $avatar = ($instructor && $instructor->profile_image)
+                ? $instructor->profile_image_url
+                : $avatarFallback;
+            $title = $session->course->title ?? __('student_timeline.private_lesson');
+            $statusLabel = \App\Models\OneToOneSession::statusLabels()[$session->status] ?? $session->status;
+        @endphp
+        <article class="st-lesson-card st-lesson-card--{{ $tone }}">
+            <div class="st-lesson-card__main">
+                <img class="st-lesson-card__avatar" src="{{ $avatar }}" alt="" width="48" height="48">
+                <div class="st-lesson-card__copy">
+                    <div class="st-lesson-card__badges">
+                        <span class="st-lesson-card__badge">{{ __('student_timeline.private_lesson') }}</span>
+                        <span class="st-lesson-card__mins">{{ $dur }} {{ __('student_timeline.minutes') }}</span>
+                    </div>
+                    <h3>{{ $title }}</h3>
+                    <p class="st-lesson-card__meta">
+                        @if($instructor)
+                            {{ $instructor->name }} ·
+                        @endif
+                        @if($session->scheduled_at)
+                            {{ $session->scheduled_at->timezone(config('app.timezone'))->translatedFormat($isRtl ? 'l، d M · g:i A' : 'D, M j · g:i A') }}
+                            @if($ends)
+                                – {{ $ends->format('g:i A') }}
+                            @endif
+                        @else
+                            {{ __('student_timeline.awaiting_schedule') }}
+                        @endif
+                    </p>
+                </div>
+            </div>
+            <div class="st-lesson-card__foot">
+                @if($joinHref)
+                    <a href="{{ $joinHref }}" class="st-pill st-pill--solid">
+                        <i class="fas fa-video" aria-hidden="true"></i>
+                        {{ __('student_timeline.join_now') }}
+                    </a>
+                @elseif($awaiting)
+                    <span class="st-lesson-card__status is-warn">{{ __('student_timeline.teacher_starting') }}</span>
+                @else
+                    <span class="st-lesson-card__status">{{ $statusLabel }}</span>
+                @endif
+            </div>
+        </article>
+    @empty
+        <div class="st-empty-panel">
+            <h3>{{ __('student_timeline.no_private_lessons') }}</h3>
+            <p>{{ __('student_timeline.no_private_lessons_hint') }}</p>
+            <div class="st-biz-banner__actions">
+                <a href="{{ $browseUrl }}" class="st-pill st-pill--solid">{{ __('student_timeline.browse_teachers') }}</a>
+                <a href="{{ route('dashboard') }}" class="st-pill st-pill--outline">{{ __('student_timeline.school_gate') }}</a>
+            </div>
+        </div>
+    @endforelse
+</section>
+
+@if(method_exists($sessions, 'hasPages') && $sessions->hasPages())
+    <div class="st-pager">
+        {{ $sessions->links() }}
+    </div>
+@endif
+@endsection
+
+@section('events')
+<div class="st-events__top">
+    <h2>{{ __('student_timeline.teacher_chats') }}</h2>
+</div>
+
+@if(Route::has('student.private-messages.index'))
+    <a href="{{ route('student.private-messages.index') }}" class="st-event-card st-event-card--blue">
+        <h3>{{ __('student_timeline.all_chats') }}</h3>
+        <p class="st-event-card__sub">{{ __('student_timeline.messages_hint') }}</p>
+    </a>
+@endif
+
+@forelse($threads->take(5) as $i => $thread)
+    <a href="{{ route('student.private-messages.show', $thread) }}" class="st-event-card st-event-card--{{ ['pink','orange','blue'][$i % 3] }}">
+        <h3>{{ $thread->instructor->name ?? __('student_timeline.teacher') }}</h3>
+        <p class="st-event-card__sub">{{ $thread->subject ?: __('student_timeline.private_chat') }}</p>
+        <div class="st-event-card__meta">
+            <span>{{ $thread->last_message_at?->diffForHumans() ?: __('student_timeline.no_messages_yet') }}</span>
+        </div>
+    </a>
+@empty
+    <p class="st-events__empty">{{ __('student_timeline.no_threads') }}</p>
+@endforelse
+
+<div class="st-events__see">
+    <a href="{{ route('dashboard') }}">{{ __('student_timeline.school_gate') }}</a>
 </div>
 @endsection

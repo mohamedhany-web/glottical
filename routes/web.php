@@ -372,6 +372,11 @@ Route::post('/classroom/join/{code}/share-annotation', [\App\Http\Controllers\Cl
 Route::get('/contact', [\App\Http\Controllers\Public\ContactController::class, 'index'])->name('public.contact');
 Route::post('/contact', [\App\Http\Controllers\Public\ContactController::class, 'store'])->name('public.contact.store');
 
+// متابعة ولي الأمر — تقارير الطالب برقم الدخول
+Route::get('/parent-progress', [\App\Http\Controllers\Public\ParentProgressController::class, 'show'])
+    ->middleware('throttle:30,1')
+    ->name('public.parent-progress');
+
 // معرض الصور والفيديوهات
 Route::get('/media', [\App\Http\Controllers\Public\MediaController::class, 'index'])->name('public.media.index');
 Route::get('/media/{media}', [\App\Http\Controllers\Public\MediaController::class, 'show'])->name('public.media.show');
@@ -389,8 +394,29 @@ Route::get('/service-packages/custom/quote', [\App\Http\Controllers\Public\Servi
 Route::post('/service-packages/custom/checkout', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'storeCustom'])
     ->middleware(['auth', 'throttle:20,1'])
     ->name('public.service-packages.custom.store');
+Route::get('/service-packages/custom/orders/{order}/pay', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'customPay'])
+    ->middleware('auth')
+    ->name('public.service-packages.custom.pay');
+Route::post('/service-packages/custom/orders/{order}/fawaterak/prepare', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'fawaterakPrepareCustom'])
+    ->middleware(['auth', 'throttle:30,1'])
+    ->name('public.service-packages.custom.fawaterak.prepare');
+Route::get('/service-packages/custom/orders/{order}/fawaterak/methods', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'fawaterakPaymentMethodsCustom'])
+    ->middleware(['auth', 'throttle:60,1'])
+    ->name('public.service-packages.custom.fawaterak.methods');
+Route::post('/service-packages/custom/orders/{order}/fawaterak/pay', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'fawaterakPayCustom'])
+    ->middleware(['auth', 'throttle:30,1'])
+    ->name('public.service-packages.custom.fawaterak.pay');
 Route::get('/service-packages/{servicePackage}/checkout', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'checkout'])->name('public.service-packages.checkout');
 Route::post('/service-packages/{servicePackage}/checkout', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'store'])->middleware('auth')->name('public.service-packages.store');
+Route::post('/service-packages/{servicePackage}/checkout/fawaterak/prepare', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'fawaterakPrepare'])
+    ->middleware(['auth', 'throttle:30,1'])
+    ->name('public.service-packages.fawaterak.prepare');
+Route::get('/service-packages/{servicePackage}/checkout/fawaterak/methods', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'fawaterakPaymentMethods'])
+    ->middleware(['auth', 'throttle:60,1'])
+    ->name('public.service-packages.fawaterak.methods');
+Route::post('/service-packages/{servicePackage}/checkout/fawaterak/pay', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'fawaterakPay'])
+    ->middleware(['auth', 'throttle:30,1'])
+    ->name('public.service-packages.fawaterak.pay');
 Route::get('/groups/courses', [\App\Http\Controllers\Public\GroupsController::class, 'groupCourses'])->name('public.groups.courses');
 Route::get('/groups/one-to-one', [\App\Http\Controllers\Public\GroupsController::class, 'oneToOneCourses'])->name('public.groups.one-to-one');
 Route::get('/groups/{slug}', [\App\Http\Controllers\Public\GroupsController::class, 'show'])->name('public.groups.show');
@@ -756,6 +782,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/consultations/{consultation}', [\App\Http\Controllers\Student\ConsultationController::class, 'show'])->name('consultations.show');
         Route::post('/consultations/{consultation}/report-payment', [\App\Http\Controllers\Student\ConsultationController::class, 'reportPayment'])->name('consultations.report-payment');
         Route::get('/my-course-subscriptions', [\App\Http\Controllers\Student\MyCourseSubscriptionController::class, 'index'])->name('student.my-course-subscriptions');
+        Route::get('/learn', [\App\Http\Controllers\Student\LearnHubController::class, 'index'])->name('student.learn.index');
+        Route::get('/learn/teachers/{instructor}', [\App\Http\Controllers\Student\LearnHubController::class, 'teacher'])->name('student.learn.teacher');
+
         Route::get('/one-to-one-sessions', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'index'])->name('student.one-to-one-sessions.index');
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'show'])->name('student.one-to-one-sessions.show');
         Route::post('/one-to-one-sessions/{oneToOneSession}/book', [\App\Http\Controllers\Student\OneToOneSessionController::class, 'book'])->name('student.one-to-one-sessions.book');
@@ -776,6 +805,11 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/classes/{cohort}', [\App\Http\Controllers\Student\ClassController::class, 'show'])->name('student.classes.show');
         Route::post('/classes/{cohort}/enroll', [\App\Http\Controllers\Student\ClassController::class, 'enroll'])->name('student.classes.enroll');
         Route::post('/class-sessions/{session}/join', [\App\Http\Controllers\Student\ClassController::class, 'joinSession'])->name('student.classes.sessions.join');
+        Route::post('/classes/{cohort}/feed', [\App\Http\Controllers\Student\ClassFeedController::class, 'store'])->name('student.classes.feed.store');
+        Route::post('/class-feed/{post}/comments', [\App\Http\Controllers\Student\ClassFeedController::class, 'comment'])->name('student.classes.feed.comment');
+        Route::post('/class-feed/{post}/hide', [\App\Http\Controllers\Student\ClassFeedController::class, 'hide'])->name('student.classes.feed.hide');
+        Route::post('/class-feed/{post}/unhide', [\App\Http\Controllers\Student\ClassFeedController::class, 'unhide'])->name('student.classes.feed.unhide');
+        Route::post('/class-feed/{post}/pin', [\App\Http\Controllers\Student\ClassFeedController::class, 'pin'])->name('student.classes.feed.pin');
 
         Route::get('/schedule/join/{type}/{id}', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'join'])
             ->whereIn('type', ['private', 'class', 'booking'])
@@ -1507,6 +1541,12 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/consultations/requests/{consultation}/notes', [\App\Http\Controllers\Admin\ConsultationController::class, 'updateNotes'])->name('consultations.notes');
         Route::post('/consultations/requests/{consultation}/cancel', [\App\Http\Controllers\Admin\ConsultationController::class, 'cancel'])->name('consultations.cancel');
         Route::post('/consultations/requests/{consultation}/complete', [\App\Http\Controllers\Admin\ConsultationController::class, 'markCompleted'])->name('consultations.complete');
+        Route::get('/placement', [\App\Http\Controllers\Admin\PlacementController::class, 'index'])->name('placement.index');
+        Route::get('/placement/create', [\App\Http\Controllers\Admin\PlacementController::class, 'create'])->name('placement.create');
+        Route::post('/placement', [\App\Http\Controllers\Admin\PlacementController::class, 'store'])->name('placement.store');
+        Route::get('/placement/student-context', [\App\Http\Controllers\Admin\PlacementController::class, 'studentContext'])->name('placement.student-context');
+        Route::get('/placement/slots', [\App\Http\Controllers\Admin\PlacementController::class, 'slots'])->name('placement.slots');
+
         Route::get('/one-to-one-sessions', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'index'])->name('one-to-one-sessions.index');
         Route::get('/one-to-one-sessions/create', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'create'])->name('one-to-one-sessions.create');
         Route::post('/one-to-one-sessions', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'store'])->name('one-to-one-sessions.store');
@@ -1826,6 +1866,10 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/tutoring-bookings/{booking}/complete', [\App\Http\Controllers\Instructor\TutoringBookingController::class, 'complete'])->name('tutoring-bookings.complete');
         Route::get('/tutoring-cohorts', [\App\Http\Controllers\Instructor\TutoringCohortController::class, 'index'])->name('tutoring-cohorts.index');
         Route::get('/tutoring-cohorts/{cohort}', [\App\Http\Controllers\Instructor\TutoringCohortController::class, 'show'])->name('tutoring-cohorts.show');
+        Route::post('/tutoring-cohorts/{cohort}/feed', [\App\Http\Controllers\Student\ClassFeedController::class, 'store'])->name('tutoring-cohorts.feed.store');
+        Route::post('/class-feed/{post}/hide', [\App\Http\Controllers\Student\ClassFeedController::class, 'hide'])->name('class-feed.hide');
+        Route::post('/class-feed/{post}/unhide', [\App\Http\Controllers\Student\ClassFeedController::class, 'unhide'])->name('class-feed.unhide');
+        Route::post('/class-feed/{post}/pin', [\App\Http\Controllers\Student\ClassFeedController::class, 'pin'])->name('class-feed.pin');
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'show'])->name('one-to-one-sessions.show');
         Route::post('/one-to-one-sessions/{oneToOneSession}/schedule', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'schedule'])->name('one-to-one-sessions.schedule');
         Route::post('/one-to-one-sessions/{oneToOneSession}/complete', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'complete'])->name('one-to-one-sessions.complete');

@@ -99,7 +99,7 @@
             <a href="{{ route('instructor.tutoring-cohorts.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('instructor.tutoring-cohorts.*') ? 'active' : '' }}">
                 <span class="ins-icon"><i class="fas fa-layer-group"></i></span>
-                <span class="flex-1 truncate">الدفعات الجماعية</span>
+                <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'قيادة الفصول' : 'Class Command' }}</span>
             </a>
             @endif
             @if(Route::has('instructor.tutor-work-schedule.index'))

@@ -307,7 +307,12 @@ class TutoringClassService
             ? TutoringClassAttendance::STATUS_LATE
             : TutoringClassAttendance::STATUS_PRESENT;
 
-        return TutoringClassAttendance::query()->updateOrCreate(
+        $existing = TutoringClassAttendance::query()
+            ->where('tutoring_class_session_id', $session->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        $attendance = TutoringClassAttendance::query()->updateOrCreate(
             [
                 'tutoring_class_session_id' => $session->id,
                 'user_id' => $user->id,
@@ -317,6 +322,13 @@ class TutoringClassService
                 'joined_at' => now(),
             ]
         );
+
+        // XP مرة واحدة عند أول تسجيل حضور لهذه الحصة
+        if (! $existing) {
+            StudentSchoolGameService::awardAttendance($session, $user, $status);
+        }
+
+        return $attendance;
     }
 
     public static function userCanAccessCohort(User $user, TutoringGroupCohort $cohort): bool

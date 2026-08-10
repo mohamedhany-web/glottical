@@ -211,7 +211,14 @@
                         <p class="mt-1 text-xs text-muted">الرصيد والحجوزات الناتجة من هذا الطلب</p>
                     </div>
                     @if($order->serviceEntitlements->isNotEmpty())
-                        <a href="{{ route('admin.tutoring-group-bookings.create', ['entitlement_id' => $order->serviceEntitlements->first()->id]) }}" class="inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                        @php
+                            $firstEnt = $order->serviceEntitlements->first();
+                            $placementMode = in_array($firstEnt->scope, [
+                                \App\Models\ServicePackage::SCOPE_PRIVATE_LESSONS,
+                                \App\Models\ServicePackage::SCOPE_GLOBAL,
+                            ], true) ? 'private' : 'group';
+                        @endphp
+                        <a href="{{ route('admin.placement.create', ['entitlement_id' => $firstEnt->id, 'student_id' => $order->user_id, 'mode' => $placementMode]) }}" class="inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
                             <i class="fas fa-user-plus"></i> تسكين حصة
                         </a>
                     @endif

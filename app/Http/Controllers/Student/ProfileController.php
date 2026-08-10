@@ -73,6 +73,7 @@ class ProfileController extends Controller
         }
 
         $user->update($data);
+        $user->refresh();
 
         return back()->with('success', 'تم تحديث البروفايل بنجاح');
     }

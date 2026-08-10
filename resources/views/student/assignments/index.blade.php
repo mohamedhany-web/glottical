@@ -1,60 +1,175 @@
-@extends('layouts.app')
+@extends('layouts.student-timeline')
 
-@section('title', 'واجباتي')
-@section('header', 'واجباتي')
+@section('title', __('student_timeline.nav_assignments'))
 
 @section('content')
-<div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-    <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">واجباتي</h1>
-            <p class="text-sm text-gray-500">الواجبات المنشورة في كورساتك المسجّل بها</p>
-        </div>
-        <a href="{{ route('my-courses.index') }}" class="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors">
-            <i class="fas fa-book-open"></i>
-            كورساتي
-        </a>
-    </div>
+@php
+    $locale = app()->getLocale();
+    $isRtl = $locale === 'ar';
+    $assignments = $assignments ?? collect();
+    $searchQuery = $searchQuery ?? '';
+    $filter = $filter ?? 'all';
+    $counts = $counts ?? ['all' => 0, 'pending' => 0, 'submitted' => 0, 'graded' => 0];
+    $tones = ['blue', 'pink', 'orange', 'purple'];
+    $coursesUrl = Route::has('my-courses.index') ? route('my-courses.index') : route('dashboard');
+    $nextPending = $assignments->first(fn ($a) => ! ($a->my_submission ?? null));
+@endphp
 
-    @if($assignments->isEmpty())
-        <div class="bg-white rounded-xl border border-gray-200 p-10 text-center text-gray-600">
-            <i class="fas fa-tasks text-4xl text-gray-300 mb-4"></i>
-            <p class="font-medium">لا توجد واجبات متاحة حالياً.</p>
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => __('student_timeline.nav_assignments'),
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => __('student_timeline.nav_assignments'), 'url' => null],
+    ],
+    'toolbarView' => 'student.assignments._toolbar',
+    'toolbarData' => [
+        'searchQuery' => $searchQuery,
+        'filter' => $filter,
+        'counts' => $counts,
+    ],
+])
+
+@if(session('success'))
+    <div class="st-flash st-flash--ok">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+    <div class="st-flash st-flash--err">{{ session('error') }}</div>
+@endif
+
+@if($nextPending)
+    <section class="st-join-hero" aria-label="{{ __('student_timeline.next_assignment') }}">
+        <div class="st-join-hero__copy">
+            <p class="st-join-hero__kicker">{{ __('student_timeline.next_assignment') }}</p>
+            <h2 class="st-join-hero__title">{{ $nextPending->title }}</h2>
+            <p class="st-join-hero__meta">
+                {{ $nextPending->course->title ?? __('student_timeline.course') }}
+                @if($nextPending->due_date)
+                    · {{ __('student_timeline.due_at', ['date' => $nextPending->due_date->timezone(config('app.timezone'))->translatedFormat($isRtl ? 'd M · g:i A' : 'M j · g:i A')]) }}
+                @endif
+            </p>
         </div>
-    @else
-        <div class="space-y-3">
-            @foreach($assignments as $assignment)
-                @php
-                    $sub = $assignment->my_submission ?? null;
-                    $courseTitle = $assignment->course->title ?? 'كورس';
-                @endphp
-                <a href="{{ route('student.assignments.show', $assignment) }}" class="block bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:border-sky-300 hover:shadow transition-all">
-                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                        <div class="min-w-0 flex-1">
-                            <h2 class="font-bold text-gray-900 text-lg">{{ $assignment->title }}</h2>
-                            <p class="text-sm text-gray-500 mt-1">{{ $courseTitle }}</p>
-                            @if($assignment->due_date)
-                                <p class="text-xs text-gray-600 mt-2">
-                                    <i class="fas fa-clock ml-1"></i>
-                                    التسليم: {{ $assignment->due_date->timezone(config('app.timezone'))->format('Y-m-d H:i') }}
-                                </p>
-                            @endif
-                        </div>
-                        <div class="shrink-0">
-                            @if(!$sub)
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">لم يُسلَّم</span>
-                            @elseif($sub->status === 'submitted')
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-sky-100 text-sky-800">قيد التصحيح</span>
-                            @elseif($sub->status === 'graded')
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">مُقيَّم{{ $sub->score !== null ? ' — '.$sub->score.'/'.$assignment->max_score : '' }}</span>
-                            @elseif($sub->status === 'returned')
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-violet-100 text-violet-800">مُعاد للتعديل</span>
-                            @endif
-                        </div>
+        <div class="st-join-hero__actions">
+            <a href="{{ route('student.assignments.show', $nextPending) }}" class="st-pill st-pill--solid st-pill--lg">
+                {{ __('student_timeline.open_assignment') }}
+            </a>
+        </div>
+    </section>
+@endif
+
+<section class="st-stats st-stats--classes" aria-label="{{ __('student_timeline.nav_assignments') }}">
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.filter_all') }}</p>
+        <p class="st-stat-card__value">{{ $counts['all'] }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.filter_pending') }}</p>
+        <p class="st-stat-card__value">{{ $counts['pending'] }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.filter_submitted') }}</p>
+        <p class="st-stat-card__value">{{ $counts['submitted'] }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.filter_graded') }}</p>
+        <p class="st-stat-card__value">{{ $counts['graded'] }}</p>
+    </article>
+</section>
+
+<section class="st-msg-intro">
+    <div>
+        <h2>{{ __('student_timeline.assignments_title') }}</h2>
+        <p>{{ __('student_timeline.assignments_hint') }}</p>
+    </div>
+    <a href="{{ $coursesUrl }}" class="st-pill st-pill--outline">{{ __('student_timeline.my_courses_short') }}</a>
+</section>
+
+<section class="st-assign-list" aria-label="{{ __('student_timeline.assignments_title') }}">
+    @forelse($assignments as $i => $assignment)
+        @php
+            $sub = $assignment->my_submission ?? null;
+            $tone = $tones[$i % count($tones)];
+            $courseTitle = $assignment->course->title ?? __('student_timeline.course');
+            if (! $sub) {
+                $statusKey = 'pending';
+                $statusLabel = __('student_timeline.asg_not_submitted');
+            } elseif ($sub->status === 'submitted') {
+                $statusKey = 'submitted';
+                $statusLabel = __('student_timeline.asg_under_review');
+            } elseif ($sub->status === 'graded') {
+                $statusKey = 'graded';
+                $statusLabel = __('student_timeline.asg_graded');
+                if ($sub->score !== null) {
+                    $statusLabel .= ' — '.$sub->score.'/'.$assignment->max_score;
+                }
+            } elseif ($sub->status === 'returned') {
+                $statusKey = 'returned';
+                $statusLabel = __('student_timeline.asg_returned');
+            } else {
+                $statusKey = 'pending';
+                $statusLabel = $sub->status;
+            }
+        @endphp
+        <a href="{{ route('student.assignments.show', $assignment) }}" class="st-assign-card st-assign-card--{{ $tone }}">
+            <div class="st-assign-card__main">
+                <div class="st-assign-card__icon" aria-hidden="true">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="st-assign-card__copy">
+                    <div class="st-assign-card__badges">
+                        <span class="st-assign-card__badge is-{{ $statusKey }}">{{ $statusLabel }}</span>
+                        @if($assignment->due_date)
+                            <span class="st-assign-card__due">
+                                {{ __('student_timeline.due_at', ['date' => $assignment->due_date->timezone(config('app.timezone'))->format('Y-m-d H:i')]) }}
+                            </span>
+                        @endif
                     </div>
-                </a>
-            @endforeach
+                    <h3>{{ $assignment->title }}</h3>
+                    <p class="st-assign-card__meta">{{ $courseTitle }}</p>
+                </div>
+            </div>
+            <span class="st-assign-card__cta">{{ __('student_timeline.open_assignment') }}</span>
+        </a>
+    @empty
+        <div class="st-empty-panel">
+            <h3>{{ __('student_timeline.no_assignments') }}</h3>
+            <p>{{ __('student_timeline.no_assignments_hint') }}</p>
+            <div class="st-biz-banner__actions">
+                <a href="{{ $coursesUrl }}" class="st-pill st-pill--solid">{{ __('student_timeline.my_courses_short') }}</a>
+                <a href="{{ route('dashboard') }}" class="st-pill st-pill--outline">{{ __('student_timeline.school_gate') }}</a>
+            </div>
         </div>
-    @endif
+    @endforelse
+</section>
+@endsection
+
+@section('events')
+<div class="st-events__top">
+    <h2>{{ __('student_timeline.quick_links') }}</h2>
+</div>
+
+@if(Route::has('student.library.materials'))
+    <a href="{{ route('student.library.materials') }}" class="st-event-card st-event-card--orange">
+        <h3>{{ __('student_timeline.nav_library_materials') }}</h3>
+        <p class="st-event-card__sub">{{ __('student_timeline.materials_hint') }}</p>
+    </a>
+@endif
+
+@if(Route::has('student.library.videos'))
+    <a href="{{ route('student.library.videos') }}" class="st-event-card st-event-card--blue">
+        <h3>{{ __('student_timeline.nav_library_videos') }}</h3>
+        <p class="st-event-card__sub">{{ __('student_timeline.videos_side_hint') }}</p>
+    </a>
+@endif
+
+@if(Route::has('student.classes.index'))
+    <a href="{{ route('student.classes.index') }}" class="st-event-card st-event-card--pink">
+        <h3>{{ __('student_timeline.my_classes') }}</h3>
+        <p class="st-event-card__sub">{{ __('student_timeline.classes_hint') }}</p>
+    </a>
+@endif
+
+<div class="st-events__see">
+    <a href="{{ route('dashboard') }}">{{ __('student_timeline.school_gate') }}</a>
 </div>
 @endsection

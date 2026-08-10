@@ -1,241 +1,224 @@
-@extends('layouts.app')
+@extends('layouts.student-timeline')
 
-@section('title', __('student.settings_title'))
-@section('header', __('student.settings_title'))
-
-@push('styles')
-<style>
-    .settings-card {
-        background: white;
-        border: 1px solid rgb(226 232 240);
-        border-radius: 16px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-        transition: all 0.2s ease;
-    }
-    .settings-card:hover {
-        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.08);
-        border-color: rgb(186 230 253);
-    }
-    .dark .settings-card {
-        background: #1e293b !important;
-        border-color: #334155 !important;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
-    .dark .settings-card:hover {
-        border-color: rgba(6, 182, 212, 0.35) !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    }
-
-    .toggle-switch {
-        position: relative;
-        display: inline-block;
-        width: 52px;
-        height: 28px;
-    }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider {
-        position: absolute;
-        cursor: pointer;
-        inset: 0;
-        background-color: rgb(203 213 225);
-        transition: 0.25s;
-        border-radius: 28px;
-    }
-    .toggle-slider:before {
-        position: absolute;
-        content: "";
-        height: 22px;
-        width: 22px;
-        left: 3px;
-        bottom: 3px;
-        background-color: white;
-        transition: 0.25s;
-        border-radius: 50%;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
-    .toggle-switch input:checked + .toggle-slider {
-        background: rgb(14 165 233);
-    }
-    .toggle-switch input:checked + .toggle-slider:before {
-        transform: translateX(24px);
-    }
-    .toggle-switch input:focus + .toggle-slider {
-        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.25);
-    }
-
-    .danger-card {
-        background: rgb(254 242 242);
-        border: 1px solid rgb(254 202 202);
-        border-radius: 12px;
-    }
-    .warning-card {
-        background: rgb(255 251 235);
-        border: 1px solid rgb(254 243 199);
-        border-radius: 12px;
-    }
-</style>
-@endpush
+@section('title', __('student_timeline.nav_settings'))
 
 @section('content')
-<div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-    <!-- الهيدر -->
-    <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{{ __('student.settings_title') }}</h1>
-        <p class="text-sm text-gray-500">{{ __('student.settings_subtitle') }}</p>
+@php
+    $locale = app()->getLocale();
+    $user = auth()->user();
+    $avatarUrl = ($user?->profile_image_url)
+        ?: asset('img/student-timeline/avatar.png');
+@endphp
+
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => __('student_timeline.nav_settings'),
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => __('student_timeline.nav_settings'), 'url' => null],
+    ],
+])
+
+@if(session('success'))
+    <div class="st-flash st-flash--ok">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+    <div class="st-flash st-flash--err">{{ session('error') }}</div>
+@endif
+
+<section class="st-settings-hero" aria-label="{{ __('student_timeline.nav_settings') }}">
+    <img class="st-settings-hero__avatar" src="{{ $avatarUrl }}" alt="" width="56" height="56">
+    <div class="st-settings-hero__copy">
+        <h2>{{ $user?->name }}</h2>
+        <p>{{ $user?->email }}</p>
     </div>
+    <div class="st-settings-hero__actions">
+        <a href="{{ route('profile') }}" class="st-pill st-pill--solid">{{ __('student_timeline.profile') }}</a>
+        <a href="{{ route('notifications') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_messages') }}</a>
+    </div>
+</section>
 
-    <div class="space-y-6">
-        <!-- إعدادات الإشعارات -->
-        <div class="settings-card p-5 sm:p-6">
-            <div class="flex items-center gap-3 mb-5">
-                <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-600 border border-sky-200 flex items-center justify-center">
-                    <i class="fas fa-bell"></i>
-                </div>
-                <h2 class="text-lg font-bold text-gray-900">{{ __('student.notification_settings') }}</h2>
-            </div>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between p-4 bg-sky-50/50 rounded-xl border border-sky-100">
-                    <div class="flex-1 min-w-0">
-                        <h3 class="text-sm font-bold text-gray-900 mb-0.5">{{ __('student.new_courses_notif') }}</h3>
-                        <p class="text-xs text-gray-600">{{ __('student.new_courses_notif_desc') }}</p>
-                    </div>
-                    <label class="toggle-switch flex-shrink-0 mr-2">
-                        <input type="checkbox" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-                <div class="flex items-center justify-between p-4 bg-sky-50/50 rounded-xl border border-sky-100">
-                    <div class="flex-1 min-w-0">
-                        <h3 class="text-sm font-bold text-gray-900 mb-0.5">{{ __('student.orders_notif') }}</h3>
-                        <p class="text-xs text-gray-600">{{ __('student.orders_notif_desc') }}</p>
-                    </div>
-                    <label class="toggle-switch flex-shrink-0 mr-2">
-                        <input type="checkbox" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-                <div class="flex items-center justify-between p-4 bg-sky-50/50 rounded-xl border border-sky-100">
-                    <div class="flex-1 min-w-0">
-                        <h3 class="text-sm font-bold text-gray-900 mb-0.5">{{ __('student.exams_notif') }}</h3>
-                        <p class="text-xs text-gray-600">{{ __('student.exams_notif_desc') }}</p>
-                    </div>
-                    <label class="toggle-switch flex-shrink-0 mr-2">
-                        <input type="checkbox" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-            </div>
+<section class="st-msg-intro">
+    <div>
+        <h2>{{ __('student_timeline.settings_title') }}</h2>
+        <p>{{ __('student_timeline.settings_hint') }}</p>
+    </div>
+</section>
+
+<section class="st-settings-block" aria-labelledby="stSetLang">
+    <div class="st-settings-block__head">
+        <span class="st-settings-block__icon" aria-hidden="true"><i class="fas fa-language"></i></span>
+        <div>
+            <h3 id="stSetLang">{{ __('student_timeline.settings_language') }}</h3>
+            <p>{{ __('student_timeline.settings_language_hint') }}</p>
         </div>
+    </div>
+    <div class="st-settings-lang">
+        <a href="{{ request()->fullUrlWithQuery(['lang' => 'ar']) }}" class="st-pill {{ $locale === 'ar' ? 'st-pill--solid' : 'st-pill--outline' }}">{{ __('student_timeline.lang_ar') }}</a>
+        <a href="{{ request()->fullUrlWithQuery(['lang' => 'en']) }}" class="st-pill {{ $locale === 'en' ? 'st-pill--solid' : 'st-pill--outline' }}">{{ __('student_timeline.lang_en') }}</a>
+    </div>
+</section>
 
-        <!-- إعدادات الخصوصية -->
-        <div class="settings-card p-5 sm:p-6">
-            <div class="flex items-center gap-3 mb-5">
-                <div class="w-10 h-10 rounded-xl bg-violet-100 text-violet-600 border border-violet-200 flex items-center justify-center">
-                    <i class="fas fa-shield-halved"></i>
-                </div>
-                <h2 class="text-lg font-bold text-gray-900">إعدادات الخصوصية</h2>
-            </div>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                    <div class="flex-1 min-w-0">
-                        <h3 class="text-sm font-bold text-gray-900 mb-0.5">إظهار التقدم للآخرين</h3>
-                        <p class="text-xs text-gray-600">السماح للمعلمين برؤية تقدمك في الكورسات</p>
-                    </div>
-                    <label class="toggle-switch flex-shrink-0 mr-2">
-                        <input type="checkbox" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                    <div class="flex-1 min-w-0">
-                        <h3 class="text-sm font-bold text-gray-900 mb-0.5">إظهار النشاط</h3>
-                        <p class="text-xs text-gray-600">إظهار آخر نشاط لك في المنصة</p>
-                    </div>
-                    <label class="toggle-switch flex-shrink-0 mr-2">
-                        <input type="checkbox">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-            </div>
+<section class="st-settings-block" aria-labelledby="stSetNotif">
+    <div class="st-settings-block__head">
+        <span class="st-settings-block__icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
+        <div>
+            <h3 id="stSetNotif">{{ __('student_timeline.settings_notifications') }}</h3>
+            <p>{{ __('student_timeline.settings_notifications_hint') }}</p>
         </div>
+    </div>
+    <div class="st-settings-rows" id="stPrefNotif">
+        <label class="st-settings-row">
+            <span>
+                <strong>{{ __('student_timeline.pref_new_courses') }}</strong>
+                <small>{{ __('student_timeline.pref_new_courses_hint') }}</small>
+            </span>
+            <input type="checkbox" data-pref="notif_courses" checked>
+        </label>
+        <label class="st-settings-row">
+            <span>
+                <strong>{{ __('student_timeline.pref_orders') }}</strong>
+                <small>{{ __('student_timeline.pref_orders_hint') }}</small>
+            </span>
+            <input type="checkbox" data-pref="notif_orders" checked>
+        </label>
+        <label class="st-settings-row">
+            <span>
+                <strong>{{ __('student_timeline.pref_classes') }}</strong>
+                <small>{{ __('student_timeline.pref_classes_hint') }}</small>
+            </span>
+            <input type="checkbox" data-pref="notif_classes" checked>
+        </label>
+    </div>
+</section>
 
-        <!-- إعدادات العرض -->
-        <div class="settings-card p-5 sm:p-6">
-            <div class="flex items-center gap-3 mb-5">
-                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 border border-amber-200 flex items-center justify-center">
-                    <i class="fas fa-palette"></i>
-                </div>
-                <h2 class="text-lg font-bold text-gray-900">إعدادات العرض</h2>
-            </div>
-            <div class="space-y-4">
-                <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">المظهر</label>
-                    <select class="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                        <option value="light">فاتح</option>
-                        <option value="dark">داكن</option>
-                        <option value="auto">تلقائي</option>
-                    </select>
-                </div>
-                <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">اللغة</label>
-                    <select class="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                        <option value="ar">العربية</option>
-                        <option value="en">English</option>
-                    </select>
-                </div>
-            </div>
+<section class="st-settings-block" aria-labelledby="stSetPrivacy">
+    <div class="st-settings-block__head">
+        <span class="st-settings-block__icon" aria-hidden="true"><i class="fas fa-shield-halved"></i></span>
+        <div>
+            <h3 id="stSetPrivacy">{{ __('student_timeline.settings_privacy') }}</h3>
+            <p>{{ __('student_timeline.settings_privacy_hint') }}</p>
         </div>
+    </div>
+    <div class="st-settings-rows" id="stPrefPrivacy">
+        <label class="st-settings-row">
+            <span>
+                <strong>{{ __('student_timeline.pref_show_progress') }}</strong>
+                <small>{{ __('student_timeline.pref_show_progress_hint') }}</small>
+            </span>
+            <input type="checkbox" data-pref="privacy_progress" checked>
+        </label>
+        <label class="st-settings-row">
+            <span>
+                <strong>{{ __('student_timeline.pref_show_activity') }}</strong>
+                <small>{{ __('student_timeline.pref_show_activity_hint') }}</small>
+            </span>
+            <input type="checkbox" data-pref="privacy_activity">
+        </label>
+    </div>
+</section>
 
-        <!-- إعدادات الحساب -->
-        <div class="settings-card p-5 sm:p-6">
-            <div class="flex items-center gap-3 mb-5">
-                <div class="w-10 h-10 rounded-xl bg-gray-100 text-gray-600 border border-gray-200 flex items-center justify-center">
-                    <i class="fas fa-user-cog"></i>
-                </div>
-                <h2 class="text-lg font-bold text-gray-900">إعدادات الحساب</h2>
-            </div>
-            <div class="space-y-4">
-                <div class="warning-card flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4">
-                    <div class="flex items-center gap-3 flex-1 min-w-0">
-                        <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-download"></i>
-                        </div>
-                        <div class="min-w-0">
-                            <h3 class="text-sm font-bold text-gray-900 mb-0.5">تنزيل البيانات</h3>
-                            <p class="text-xs text-gray-600">احصل على نسخة من جميع بياناتك</p>
-                        </div>
-                    </div>
-                    <button class="inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex-shrink-0">
-                        <i class="fas fa-download"></i>
-                        تنزيل
-                    </button>
-                </div>
-                <div class="danger-card flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4">
-                    <div class="flex items-center gap-3 flex-1 min-w-0">
-                        <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-trash-alt"></i>
-                        </div>
-                        <div class="min-w-0">
-                            <h3 class="text-sm font-bold text-gray-900 mb-0.5">حذف الحساب</h3>
-                            <p class="text-xs text-gray-600">حذف الحساب نهائياً مع جميع البيانات</p>
-                        </div>
-                    </div>
-                    <button type="button" class="inline-flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex-shrink-0"
-                            onclick="if(confirm('هل أنت متأكد من حذف الحساب؟ هذا الإجراء لا يمكن التراجع عنه.')) { /* Handle delete */ }">
-                        <i class="fas fa-trash-alt"></i>
-                        حذف الحساب
-                    </button>
-                </div>
-            </div>
+<section class="st-settings-block" aria-labelledby="stSetAccount">
+    <div class="st-settings-block__head">
+        <span class="st-settings-block__icon" aria-hidden="true"><i class="fas fa-user-cog"></i></span>
+        <div>
+            <h3 id="stSetAccount">{{ __('student_timeline.settings_account') }}</h3>
+            <p>{{ __('student_timeline.settings_account_hint') }}</p>
         </div>
-
-        <!-- حفظ الإعدادات -->
-        <div class="flex justify-end pt-2">
-            <button type="button" class="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-colors shadow-sm">
-                <i class="fas fa-save"></i>
-                <span>حفظ جميع الإعدادات</span>
+    </div>
+    <div class="st-settings-actions">
+        <a href="{{ route('profile') }}" class="st-settings-action">
+            <i class="fas fa-user" aria-hidden="true"></i>
+            <span>
+                <strong>{{ __('student_timeline.edit_profile') }}</strong>
+                <small>{{ __('student_timeline.edit_profile_hint') }}</small>
+            </span>
+        </a>
+        <a href="{{ route('notifications') }}" class="st-settings-action">
+            <i class="fas fa-bell" aria-hidden="true"></i>
+            <span>
+                <strong>{{ __('student_timeline.nav_messages') }}</strong>
+                <small>{{ __('student_timeline.notif_hint') }}</small>
+            </span>
+        </a>
+        <form method="POST" action="{{ route('logout') }}" class="st-settings-action st-settings-action--form">
+            @csrf
+            <button type="submit">
+                <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                <span>
+                    <strong>{{ __('student_timeline.nav_logout') }}</strong>
+                    <small>{{ __('student_timeline.logout_hint') }}</small>
+                </span>
             </button>
-        </div>
+        </form>
     </div>
-</div>
+</section>
+
+<p class="st-settings-note" id="stPrefSaved" hidden>{{ __('student_timeline.prefs_saved') }}</p>
 @endsection
+
+@section('events')
+<div class="st-events__top">
+    <h2>{{ __('student_timeline.quick_links') }}</h2>
+</div>
+
+<a href="{{ route('profile') }}" class="st-event-card st-event-card--blue">
+    <h3>{{ __('student_timeline.profile') }}</h3>
+    <p class="st-event-card__sub">{{ __('student_timeline.edit_profile_hint') }}</p>
+</a>
+
+<a href="{{ route('notifications') }}" class="st-event-card st-event-card--orange">
+    <h3>{{ __('student_timeline.nav_messages') }}</h3>
+    <p class="st-event-card__sub">{{ __('student_timeline.notif_hint') }}</p>
+</a>
+
+<a href="{{ route('dashboard') }}" class="st-event-card st-event-card--pink">
+    <h3>{{ __('student_timeline.school_gate') }}</h3>
+    <p class="st-event-card__sub">{{ __('student_timeline.back_to_timeline') }}</p>
+</a>
+@endsection
+
+@push('scripts')
+<script>
+(function () {
+    var KEY = 'st-student-prefs';
+    var note = document.getElementById('stPrefSaved');
+    var defaults = {
+        notif_courses: true,
+        notif_orders: true,
+        notif_classes: true,
+        privacy_progress: true,
+        privacy_activity: false
+    };
+
+    function load() {
+        try {
+            return Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY) || '{}'));
+        } catch (e) {
+            return Object.assign({}, defaults);
+        }
+    }
+
+    function save(prefs) {
+        try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch (e) {}
+        if (note) {
+            note.hidden = false;
+            clearTimeout(window.__stPrefTimer);
+            window.__stPrefTimer = setTimeout(function () { note.hidden = true; }, 1800);
+        }
+    }
+
+    var prefs = load();
+    document.querySelectorAll('[data-pref]').forEach(function (input) {
+        var key = input.getAttribute('data-pref');
+        if (Object.prototype.hasOwnProperty.call(prefs, key)) {
+            input.checked = !!prefs[key];
+        }
+        input.addEventListener('change', function () {
+            prefs[key] = !!input.checked;
+            save(prefs);
+        });
+    });
+})();
+</script>
+@endpush

@@ -72,7 +72,7 @@
                         </td>
                         <td class="px-4 py-3">
                             <div class="font-semibold text-ink">{{ $ent->reserved_units_count }} / {{ \App\Services\StudentEntitlementService::bookableUnitsLeft($ent) }}</div>
-                            <a href="{{ route('admin.tutoring-group-bookings.create', ['entitlement_id' => $ent->id]) }}" class="text-[11px] font-medium text-accent">تسكين حصة</a>
+                            <a href="{{ route('admin.placement.create', ['entitlement_id' => $ent->id, 'student_id' => $ent->user_id, 'mode' => in_array($ent->scope, [\App\Models\ServicePackage::SCOPE_PRIVATE_LESSONS, \App\Models\ServicePackage::SCOPE_GLOBAL], true) ? 'private' : 'group']) }}" class="text-[11px] font-medium text-accent">تسكين حصة</a>
                         </td>
                         <td class="px-4 py-3 text-xs text-muted">{{ $ent->expires_at?->format('Y-m-d') ?: '—' }}</td>
                         <td class="px-4 py-3">{{ $ent->status }}</td>

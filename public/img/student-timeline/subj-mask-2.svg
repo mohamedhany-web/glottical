@@ -1,0 +1,16 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="148" height="119" viewBox="0 0 148 119" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Mask Group">
+<mask id="mask0_0_21" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="148" height="119">
+<rect id="Rectangle 22" width="148" height="119" rx="16" fill="#8F98FF"/>
+</mask>
+<g mask="url(#mask0_0_21)">
+<path id="Vector" fill-rule="evenodd" clip-rule="evenodd" d="M130.346 -107.64C147.695 -112.74 166.389 -102.631 180.814 -91.7074C195.064 -80.9162 203.131 -64.5951 209.349 -47.8141C215.821 -30.3483 224.663 -10.8511 217.079 6.15916C209.597 22.9399 187.99 26.3173 172.16 35.5963C158.311 43.7138 146.389 56.8968 130.346 56.9991C114.267 57.1017 98.8398 48.1661 88.1444 36.1321C78.5511 25.3382 81.5783 8.92588 75.8351 -4.33403C69.1108 -19.8594 46.3243 -31.656 51.858 -47.6466C57.4292 -63.7455 84.0892 -56.9165 97.6077 -67.2496C111.715 -78.0324 113.322 -102.636 130.346 -107.64Z" fill="url(#paint0_linear_0_21)"/>
+</g>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_21" x1="76" y1="-3" x2="135.5" y2="57" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFC278"/>
+<stop offset="1" stop-color="white"/>
+</linearGradient>
+</defs>
+</svg>

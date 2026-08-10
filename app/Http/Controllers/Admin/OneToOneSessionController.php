@@ -49,17 +49,28 @@ class OneToOneSessionController extends Controller
         return view('admin.one-to-one-sessions.index', compact('sessions', 'stats', 'status', 'instructors', 'instructorId'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
+        $selectedEntitlementId = (int) $request->integer('entitlement_id');
+
         return view('admin.one-to-one-sessions.create', [
             'entitlements' => StudentServiceEntitlement::query()
                 ->active()
                 ->whereIn('scope', [ServicePackage::SCOPE_PRIVATE_LESSONS, ServicePackage::SCOPE_GLOBAL])
-                ->with('user:id,name,email')
+                ->with('user:id,name,email,phone')
                 ->orderBy('expires_at')
                 ->get()
-                ->filter(fn (StudentServiceEntitlement $entitlement) => StudentEntitlementService::bookableUnitsLeft($entitlement) > 0),
-            'instructors' => User::query()->whereIn('role', ['instructor', 'teacher'])->where('is_active', true)->orderBy('name')->get(['id', 'name', 'email']),
+                ->filter(fn (StudentServiceEntitlement $entitlement) => StudentEntitlementService::bookableUnitsLeft($entitlement) > 0)
+                ->values(),
+            'instructors' => User::query()
+                ->whereIn('role', ['instructor', 'teacher'])
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'email']),
+            'selectedEntitlementId' => $selectedEntitlementId,
+            'slotsUrl' => route('admin.placement.slots'),
+            'placementUrl' => route('admin.placement.create', ['mode' => 'private']),
+            'grantUrl' => route('admin.student-entitlements.create'),
         ]);
     }
 

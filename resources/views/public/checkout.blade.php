@@ -19,16 +19,16 @@
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <title>{{ __('public.checkout_page_label') }} — {{ $itemTitle }} — {{ $appName }}</title>
   <meta name="theme-color" content="#0B3D91">
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  @include('partials.favicon-links')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme']])
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <style>
-    [x-cloak]{display:none!important}
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak]{display:none!important}
     .gl-ck{background:var(--bg,#F4F7FC);padding:0 0 4rem}
     .gl-ck-hero{
       padding:clamp(88px,11vw,110px) 0 1.25rem;
@@ -99,7 +99,7 @@
     .shrink-0{flex-shrink:0}.h-10{height:2.5rem}.w-10{width:2.5rem}.w-auto{width:auto}
     .object-contain{object-fit:contain}.ring-2{box-shadow:0 0 0 2px rgba(245,184,0,.3)}
     .transition-colors{transition:border-color .15s ease,box-shadow .15s ease}
-  </style>
+    </style>
 </head>
 <body class="sana-home" x-data="{ isSubmitting: false }">
 <div id="sana-scroll-progress"></div>
@@ -117,16 +117,16 @@
         <a href="{{ route('public.course.show', $course->id) }}">{{ \Illuminate\Support\Str::limit($itemTitle, 28) }}</a>
         <span>/</span>
         <span>{{ __('public.checkout_breadcrumb_current') }}</span>
-      </nav>
+                </nav>
       <h1>{{ $isOneToOne ? ($isRtl ? 'خطتك التعليمية' : 'Your Learning Plan') : __('public.checkout_page_label') }}</h1>
       <p>{{ $isRtl ? 'أكمل الاشتراك بأمان — المعلم والمواعيد والباقة في خطوة واحدة.' : 'Complete your plan securely — teacher, schedule, and package in one step.' }}</p>
       <div class="gl-ck-steps" aria-hidden="true">
         <span class="gl-ck-step is-done">1 · {{ $isRtl ? 'اختر المعلم' : 'Choose teacher' }}</span>
         <span class="gl-ck-step is-on">2 · {{ $isRtl ? 'الدفع' : 'Checkout' }}</span>
         <span class="gl-ck-step">3 · {{ $isRtl ? 'ابدأ الحصص' : 'Start lessons' }}</span>
-      </div>
-    </div>
-  </section>
+                </div>
+            </div>
+        </section>
 
   <section class="sana-container gl-ck-wrap">
     <div class="gl-ck-grid">
@@ -134,22 +134,22 @@
         <h2>{{ __('public.checkout_payment_section_title') }}</h2>
         <p class="gl-ck-card__sub">{{ __('public.checkout_payment_section_desc') }}</p>
 
-        @if(session('error'))
+                            @if(session('error'))
           <div class="gl-ck-alert gl-ck-alert--err"><i class="fas fa-exclamation-circle"></i><p style="margin:0">{{ session('error') }}</p></div>
-        @endif
-        @if($errors->any())
+                            @endif
+                            @if($errors->any())
           <div class="gl-ck-alert gl-ck-alert--err"><ul style="margin:0;padding-inline-start:1.1rem">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
-        @endif
-        @if(session('success'))
+                            @endif
+                            @if(session('success'))
           <div class="gl-ck-alert gl-ck-alert--ok"><i class="fas fa-check-circle"></i><p style="margin:0">{{ session('success') }}</p></div>
-        @endif
-        @if(session('info'))
+                            @endif
+                            @if(session('info'))
           <div class="gl-ck-alert gl-ck-alert--info"><i class="fas fa-info-circle"></i><p style="margin:0">{{ session('info') }}</p></div>
-        @endif
+                            @endif
 
         <div class="gl-ck-panel" id="checkout-discount-panel"
-             data-quote-url="{{ route('public.course.checkout.quote', $course->id) }}"
-             data-has-wallet="{{ $checkoutHasWalletBalance ? '1' : '0' }}">
+                                     data-quote-url="{{ route('public.course.checkout.quote', $course->id) }}"
+                                     data-has-wallet="{{ $checkoutHasWalletBalance ? '1' : '0' }}">
           <h3><i class="fas fa-tags" style="color:#F5B800"></i> {{ $checkoutHasWalletBalance ? ($isRtl ? 'كوبون ورصيد المحفظة' : 'Coupon & wallet') : ($isRtl ? 'كوبون الخصم' : 'Discount coupon') }}</h3>
           <p style="margin:0 0 .75rem;font:600 .78rem Tajawal,sans-serif;color:#5B6577">
             {{ $checkoutHasWalletBalance
@@ -164,95 +164,95 @@
                 <span style="font:600 .72rem Tajawal,sans-serif;color:#5B6577">{{ __('public.checkout_auto_renew_hint') }}</span>
               </span>
             </label>
-          @endif
-          @if($checkoutHasWalletBalance)
+                                        @endif
+                                        @if($checkoutHasWalletBalance)
             <p style="margin:0 0 .75rem;font:800 .78rem Tajawal,sans-serif;color:#0B3D91">{{ $isRtl ? 'رصيدك:' : 'Balance:' }} {{ number_format($studentWalletBalance, 2) }} {{ __('public.currency_egp') }}</p>
-          @endif
+                                        @endif
           <div style="display:grid;gap:.75rem;grid-template-columns:{{ $checkoutHasWalletBalance ? '1fr 1fr' : '1fr' }}">
             <div class="gl-ck-field" style="margin:0">
               <label for="checkout_coupon_code">{{ $isRtl ? 'كود الكوبون' : 'Coupon code' }}</label>
               <input type="text" id="checkout_coupon_code" dir="ltr" autocomplete="off" class="input-checkout" placeholder="SAVE10">
-            </div>
-            @if($checkoutHasWalletBalance)
+                                        </div>
+                                        @if($checkoutHasWalletBalance)
               <div class="gl-ck-field" style="margin:0">
                 <label for="checkout_wallet_credit">{{ $isRtl ? 'من المحفظة' : 'From wallet' }}</label>
                 <input type="number" id="checkout_wallet_credit" step="0.01" min="0" value="0" max="{{ max(0, $studentWalletBalance ?? 0) }}" class="input-checkout">
-              </div>
-            @endif
-          </div>
+                                            </div>
+                                        @endif
+                                    </div>
           <div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-top:.85rem">
             <button type="button" id="checkout_apply_pricing" class="btn-acad-ghost"><i class="fas fa-rotate"></i> {{ $isRtl ? 'تحديث السعر' : 'Update price' }}</button>
             <span id="checkout_pricing_msg" class="hidden" style="font:700 .8rem Tajawal,sans-serif;color:#059669"></span>
-          </div>
-        </div>
+                                    </div>
+                                </div>
 
-        @if($fawaterakMis)
+                            @if($fawaterakMis)
           <div class="gl-ck-alert gl-ck-alert--err">
-            <i class="fas fa-exclamation-triangle"></i>
+                                        <i class="fas fa-exclamation-triangle"></i>
             <div>
               <strong>{{ $isRtl ? 'إعدادات الدفع غير مكتملة' : 'Payment settings incomplete' }}</strong>
               <p style="margin:.35rem 0 0;font-weight:600">{{ $isRtl ? 'تم تفعيل فواتيرك لكن الربط غير مكتمل على الخادم.' : 'Fawaterak is enabled but server credentials are incomplete.' }}</p>
             </div>
-          </div>
+                                </div>
           <a href="{{ route('orders.index') }}" class="btn-acad-ghost"><i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}"></i> {{ $isRtl ? 'رجوع' : 'Back' }}</a>
-        @elseif($fawaterakActive && $fawaterakIntegration === 'api')
+                            @elseif($fawaterakActive && $fawaterakIntegration === 'api')
           <div class="gl-ck-alert gl-ck-alert--sky"><i class="fas fa-lock"></i><div><strong>{{ $isRtl ? 'الدفع الإلكتروني' : 'Online payment' }}</strong><p style="margin:.25rem 0 0">{{ $isRtl ? 'اختر وسيلة الدفع ثم تابع.' : 'Choose a payment method and continue.' }}</p></div></div>
           <div id="fawaterk-api-error" class="hidden gl-ck-alert gl-ck-alert--err"></div>
           <div id="fawaterk-api-loading" style="margin-bottom:1rem;font:700 .85rem Tajawal,sans-serif;color:#5B6577"><i class="fas fa-spinner fa-spin" style="color:#0B3D91"></i> {{ $isRtl ? 'جاري تحميل وسائل الدفع...' : 'Loading payment methods…' }}</div>
           <div id="fawaterk-api-methods" class="hidden" style="display:grid;gap:.55rem;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin-bottom:1rem"></div>
           <div id="fawaterk-api-wallet-wrap" class="hidden gl-ck-field">
             <label for="fawaterk-api-wallet">{{ $isRtl ? 'رقم المحفظة' : 'Wallet number' }}</label>
-            <input type="text" id="fawaterk-api-wallet" dir="ltr" class="input-checkout" placeholder="01xxxxxxxxx" autocomplete="tel">
-          </div>
+                                    <input type="text" id="fawaterk-api-wallet" dir="ltr" class="input-checkout" placeholder="01xxxxxxxxx" autocomplete="tel">
+                                </div>
           <div id="fawaterk-api-result" class="hidden gl-ck-panel" style="font:600 .85rem Tajawal,sans-serif;color:#0B1220"></div>
           <button type="button" id="fawaterk-api-pay-btn" disabled class="btn-acad-primary" style="width:100%"><i class="fas fa-lock"></i> {{ $isRtl ? 'متابعة الدفع' : 'Continue payment' }}</button>
-        @elseif($fawaterakActive)
+                            @elseif($fawaterakActive)
           <div class="gl-ck-alert gl-ck-alert--sky"><i class="fas fa-lock"></i><div><strong>{{ $isRtl ? 'الدفع عبر فواتيرك' : 'Pay with Fawaterak' }}</strong><p style="margin:.25rem 0 0">{{ $isRtl ? 'اختر وسيلة الدفع داخل الإطار. بعد النجاح يُفعَّل الاشتراك تلقائياً.' : 'Choose a method below. Access activates automatically after success.' }}</p></div></div>
           <div id="fawaterk-checkout-error" class="hidden gl-ck-alert gl-ck-alert--err"></div>
           <div id="fawaterkDivId"></div>
           <a href="{{ route('orders.index') }}" class="btn-acad-ghost" style="margin-top:1rem"><i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}"></i> {{ $isRtl ? 'رجوع' : 'Back' }}</a>
-        @else
+                            @else
           <div class="gl-ck-alert gl-ck-alert--info"><i class="fas fa-circle-info"></i><div><strong>{{ $isRtl ? 'الدفع اليدوي' : 'Manual payment' }}</strong><p style="margin:.25rem 0 0">{{ $isRtl ? 'ارفع إيصال التحويل — يُراجع الطلب ثم يُفعَّل.' : 'Upload your transfer receipt — we review, then activate.' }}</p></div></div>
           <form action="{{ route('public.course.checkout.complete', $course->id) }}" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true" x-data="{paymentMethod:'bank_transfer'}" id="manual-checkout-form">
-            @csrf
-            <input type="hidden" name="coupon_code" id="form_coupon_code" value="{{ old('coupon_code', '') }}">
-            <input type="hidden" name="wallet_credit" id="form_wallet_credit" value="{{ old('wallet_credit', '0') }}">
+                                    @csrf
+                                        <input type="hidden" name="coupon_code" id="form_coupon_code" value="{{ old('coupon_code', '') }}">
+                                        <input type="hidden" name="wallet_credit" id="form_wallet_credit" value="{{ old('wallet_credit', '0') }}">
             <div class="gl-ck-field">
               <label>{{ $isRtl ? 'طريقة الدفع' : 'Payment method' }}</label>
-              <select name="payment_method" x-model="paymentMethod" class="input-checkout" required>
+                                            <select name="payment_method" x-model="paymentMethod" class="input-checkout" required>
                 <option value="bank_transfer">{{ $isRtl ? 'تحويل بنكي / محفظة' : 'Bank / wallet transfer' }}</option>
                 <option value="cash">{{ $isRtl ? 'دفع نقدي' : 'Cash' }}</option>
                 <option value="other">{{ $isRtl ? 'طريقة أخرى' : 'Other' }}</option>
-              </select>
-            </div>
+                                            </select>
+                                        </div>
             <div class="gl-ck-field" x-show="paymentMethod === 'bank_transfer'" x-cloak>
               <label>{{ $isRtl ? 'حساب التحويل' : 'Transfer account' }}</label>
-              <select name="wallet_id" class="input-checkout" :required="paymentMethod === 'bank_transfer'">
+                                            <select name="wallet_id" class="input-checkout" :required="paymentMethod === 'bank_transfer'">
                 <option value="">{{ $isRtl ? 'اختر الحساب' : 'Select account' }}</option>
-                @foreach(($wallets ?? []) as $wallet)
+                                                @foreach(($wallets ?? []) as $wallet)
                   <option value="{{ $wallet->id }}">{{ $wallet->name ?? ($isRtl ? 'حساب منصة' : 'Platform account') }} — {{ $wallet->account_number ?? $wallet->phone ?? '—' }}</option>
-                @endforeach
-              </select>
-            </div>
+                                                @endforeach
+                                            </select>
+                                        </div>
             <div class="gl-ck-field">
               <label>{{ $isRtl ? 'إيصال الدفع' : 'Payment proof' }}</label>
               <input type="file" name="payment_proof" accept="image/*" required class="input-checkout" style="padding:.65rem">
-            </div>
+                                        </div>
             <div class="gl-ck-field">
               <label>{{ $isRtl ? 'ملاحظات (اختياري)' : 'Notes (optional)' }}</label>
               <textarea name="notes" rows="3" class="input-checkout" placeholder="{{ $isRtl ? 'تفاصيل التحويل' : 'Transfer details' }}"></textarea>
-            </div>
+                                        </div>
             <div style="display:flex;flex-wrap:wrap;gap:.65rem">
               <button type="submit" :disabled="isSubmitting" class="btn-acad-primary" style="flex:1">
-                <i class="fas fa-file-upload" x-show="!isSubmitting"></i>
-                <i class="fas fa-spinner fa-spin" x-show="isSubmitting" x-cloak></i>
+                                            <i class="fas fa-file-upload" x-show="!isSubmitting"></i>
+                                            <i class="fas fa-spinner fa-spin" x-show="isSubmitting" x-cloak></i>
                 <span x-text="isSubmitting ? '{{ $isRtl ? 'جاري الإرسال...' : 'Submitting…' }}' : '{{ $isRtl ? 'إرسال الطلب' : 'Submit order' }}'"></span>
-              </button>
+                                        </button>
               <a href="{{ route('orders.index') }}" class="btn-acad-ghost">{{ $isRtl ? 'إلغاء' : 'Cancel' }}</a>
-            </div>
-          </form>
-        @endif
-      </div>
+                                    </div>
+                                </form>
+                            @endif
+                        </div>
 
       <aside class="gl-ck-card" style="position:sticky;top:1rem">
         <div class="gl-ck-item">
@@ -300,8 +300,8 @@
           <div class="gl-ck-sum-total">
             <span>{{ $isRtl ? 'المستحق' : 'Due now' }}</span>
             <span id="sum-final">{{ number_format($baseCoursePrice, 2) }} <span style="font-size:.8rem;font-weight:700;color:#8A94A6">{{ __('public.currency_egp') }}</span></span>
-          </div>
-        </div>
+                    </div>
+                </div>
 
         <ul class="gl-ck-benefits" style="margin-top:1rem">
           @if($isOneToOne)
@@ -315,9 +315,9 @@
           <li><i class="fas fa-check"></i> {{ __('public.checkout_benefit_support') }}</li>
         </ul>
       </aside>
-    </div>
-  </section>
-</main>
+            </div>
+        </section>
+    </main>
 
 @include('partials.landing.footer')
 @include('public.partials.checkout-scripts')

@@ -8,6 +8,7 @@ use App\Models\Certificate;
 use App\Models\PopupAd;
 use App\Models\SiteTestimonial;
 use App\Models\SiteService;
+use App\Models\AcademicSubject;
 use App\Models\AcademicYear;
 use App\Models\User;
 use App\Services\CourseSubscriptionService;
@@ -90,7 +91,19 @@ class LandingController extends Controller
             ];
 
             $schoolYears = Schema::hasTable('academic_years')
-                ? AcademicYear::query()->active()->ordered()->get(['id', 'name', 'slug', 'level_number', 'tagline'])
+                ? AcademicYear::query()->active()->ordered()->get(['id', 'name', 'slug', 'level_number', 'tagline', 'icon', 'color'])
+                : collect();
+
+            $schoolSubjects = Schema::hasTable('academic_subjects')
+                ? AcademicSubject::query()
+                    ->active()
+                    ->ordered()
+                    ->where(function ($q) {
+                        $q->whereNull('academic_year_id')
+                            ->orWhere('code', 'like', 'SCH-%');
+                    })
+                    ->limit(12)
+                    ->get(['id', 'name', 'code', 'slug', 'icon', 'color'])
                 : collect();
 
             return compact(
@@ -100,14 +113,15 @@ class LandingController extends Controller
                 'homeTestimonials',
                 'homeStats',
                 'heroSlides',
-                'schoolYears'
+                'schoolYears',
+                'schoolSubjects'
             );
         };
 
         // في وضع التطوير: بدون كاش حتى تظهر تحديثات التصميم فوراً
         $payload = config('app.debug')
             ? $buildHomePayload()
-            : Cache::remember('landing.home.v13.'.$locale, 180, $buildHomePayload);
+            : Cache::remember('landing.home.v14.'.$locale, 180, $buildHomePayload);
 
         return view('welcome', array_merge($payload, compact('popupAd')));
     }

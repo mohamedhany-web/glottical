@@ -51,19 +51,24 @@ class StudentEntitlementService
         ?int $walletId = null,
         ?int $academicYearId = null,
         ?int $academicSubjectId = null,
+        ?array $quoteOverride = null,
     ): Order {
         $allowed = ['bank_transfer', 'cash', 'other', 'online', 'wallet'];
         if (! in_array($paymentMethod, $allowed, true)) {
             $paymentMethod = 'bank_transfer';
         }
 
-        $quote = CustomServicePackagePricingService::calculate($rule, $sessions);
+        $quote = $quoteOverride ?: CustomServicePackagePricingService::calculate($rule, $sessions);
         if ($academicYearId) {
             $quote['academic_year_id'] = $academicYearId;
         }
         if ($academicSubjectId) {
             $quote['academic_subject_id'] = $academicSubjectId;
         }
+
+        $termNote = ! empty($quote['term_months'])
+            ? ' · '.$quote['term_months'].' شهر · '.((int) ($quote['weekly_sessions'] ?? 0)).' حصص/أسبوع'
+            : '';
 
         return Order::create([
             'user_id' => $user->id,
@@ -77,8 +82,28 @@ class StudentEntitlementService
             'payment_method' => $paymentMethod,
             'wallet_id' => $walletId,
             'status' => Order::STATUS_PENDING,
-            'notes' => $quote['name'].' ('.$quote['sessions'].' حصة × '.$quote['session_minutes'].' دقيقة) — USD',
+            'notes' => ($quote['name'] ?? 'باقة مخصصة').' ('.$quote['sessions'].' حصة × '.$quote['session_minutes'].' دقيقة)'.$termNote.' — USD',
         ]);
+    }
+
+    public static function createPrivateWeeklyOrder(
+        User $user,
+        ServicePackagePricingRule $rule,
+        int $termMonths,
+        int $weeklySessions,
+        string $paymentMethod = 'online',
+        ?int $walletId = null,
+    ): Order {
+        $quote = CustomServicePackagePricingService::calculatePrivateWeekly($rule, $termMonths, $weeklySessions);
+
+        return self::createCustomOrder(
+            user: $user,
+            rule: $rule,
+            sessions: (int) $quote['sessions'],
+            paymentMethod: $paymentMethod,
+            walletId: $walletId,
+            quoteOverride: $quote,
+        );
     }
 
     public static function grantFromOrder(Order $order): ?StudentServiceEntitlement
@@ -92,12 +117,25 @@ class StudentEntitlementService
             $data = $order->custom_package_data;
             $starts = now();
             $durationDays = max(1, (int) ($data['duration_days'] ?? 90));
+            $weeklyPrivate = (int) ($data['weekly_private_sessions'] ?? $data['weekly_sessions'] ?? 0);
+            $weeklyGroup = (int) ($data['weekly_group_sessions'] ?? 0);
+            $planType = $data['plan_type'] ?? (
+                in_array(($data['scope'] ?? ''), [ServicePackage::SCOPE_PRIVATE_LESSONS, ServicePackage::SCOPE_TUTORING_INDIVIDUAL], true)
+                    ? ServicePackage::PLAN_PRIVATE
+                    : null
+            );
 
             return StudentServiceEntitlement::create([
                 'user_id' => $order->user_id,
                 'service_package_id' => null,
                 'order_id' => $order->id,
-                'scope' => $data['scope'] ?? ServicePackage::SCOPE_GLOBAL,
+                'scope' => $data['scope'] ?? ServicePackage::SCOPE_PRIVATE_LESSONS,
+                'plan_type' => $planType,
+                'term_months' => isset($data['term_months']) ? (int) $data['term_months'] : null,
+                'weekly_group_sessions' => $weeklyGroup,
+                'weekly_private_sessions' => $weeklyPrivate,
+                'includes_community' => false,
+                'includes_libraries' => true,
                 'tutoring_group_id' => null,
                 'academic_year_id' => $data['academic_year_id'] ?? null,
                 'academic_subject_id' => $data['academic_subject_id'] ?? null,

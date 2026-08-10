@@ -38,13 +38,25 @@ class NotificationController extends Controller
             $query->where('priority', $request->priority);
         }
 
+        // بحث بسيط
+        if ($request->filled('q')) {
+            $needle = trim((string) $request->q);
+            if ($needle !== '') {
+                $query->where(function ($inner) use ($needle) {
+                    $inner->where('title', 'like', '%'.$needle.'%')
+                        ->orWhere('message', 'like', '%'.$needle.'%');
+                });
+            }
+        }
+
         $notifications = $query->where(function ($q) {
                 $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
             })
             ->orderBy('is_read', 'asc')
             ->orderBy('priority', 'desc')
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         // إحصائيات (إشعارات الطالب فقط: audience null أو student)
         $baseStudentNotifications = Auth::user()->customNotifications()

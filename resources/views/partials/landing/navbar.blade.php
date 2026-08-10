@@ -15,9 +15,9 @@
       </a>
       <nav class="sana-nav__links" aria-label="{{ $isRtl ? 'القائمة' : 'Main' }}">
         <a href="{{ route('home') }}" class="{{ $active === 'home' ? 'is-active' : '' }}">{{ $isRtl ? 'الرئيسية' : 'Home' }}</a>
+        <a href="{{ route('public.groups') }}" class="{{ $active === 'groups' ? 'is-active' : '' }}">{{ __('landing.nav.groups') }}</a>
         <a href="{{ route('public.courses') }}" class="sana-nav__path sana-nav__path--family {{ $active === 'courses' ? 'is-active' : '' }}">{{ __('landing.nav.courses') }}</a>
         <a href="{{ route('public.service-packages.index') }}" class="{{ ($active ?? '') === 'packages' ? 'is-active' : '' }}">{{ app()->getLocale() === 'ar' ? 'الباقات' : 'Packages' }}</a>
-        <a href="{{ route('public.groups') }}" class="{{ $active === 'groups' ? 'is-active' : '' }}">{{ __('landing.nav.groups') }}</a>
         <a href="{{ route('public.contact') }}" class="{{ $active === 'contact' ? 'is-active' : '' }}">{{ $isRtl ? 'تواصل معنا' : 'Contact' }}</a>
       </nav>
       <div class="sana-nav__end">
@@ -44,10 +44,10 @@
         </div>
       </div>
       <a href="{{ route('home') }}" class="{{ $active === 'home' ? 'is-active' : '' }}">{{ $isRtl ? 'الرئيسية' : 'Home' }}</a>
+      <a href="{{ route('public.groups') }}" class="{{ $active === 'groups' ? 'is-active' : '' }}">{{ __('landing.nav.groups') }}</a>
       <a href="{{ route('public.courses') }}" class="sana-nav__path sana-nav__path--family {{ $active === 'courses' ? 'is-active' : '' }}">{{ __('landing.nav.courses') }}</a>
       <a href="{{ route('public.service-packages.index') }}" class="{{ ($active ?? '') === 'packages' ? 'is-active' : '' }}">{{ $isRtl ? 'الباقات' : 'Packages' }}</a>
       <a href="{{ route('public.instructors.index') }}">{{ __('landing.nav.instructors') }}</a>
-      <a href="{{ route('public.groups') }}" class="{{ $active === 'groups' ? 'is-active' : '' }}">{{ __('landing.nav.groups') }}</a>
       <a href="{{ route('public.contact') }}" class="{{ $active === 'contact' ? 'is-active' : '' }}">{{ $isRtl ? 'تواصل معنا' : 'Contact' }}</a>
       <a href="{{ route('login') }}">{{ __('landing.nav.login') }}</a>
       @if(request()->routeIs('home'))

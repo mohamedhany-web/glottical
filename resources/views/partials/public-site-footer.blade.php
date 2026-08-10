@@ -91,6 +91,7 @@
                         <li><a class="hover:text-[#FFE569] transition-colors" href="{{ route('public.courses') }}">{{ __('public.courses') }}</a></li>
                         <li><a class="hover:text-[#FFE569] transition-colors" href="{{ route('public.instructors.index') }}">{{ __('landing.nav.instructors') }}</a></li>
                         <li><a class="hover:text-[#FFE569] transition-colors" href="{{ route('public.about') }}">{{ __('public.about') }}</a></li>
+                        <li><a class="hover:text-[#FFE569] transition-colors" href="{{ route('public.parent-progress') }}">{{ app()->getLocale() === 'ar' ? 'متابعة ولي الأمر' : 'Parent progress' }}</a></li>
                         <li><a class="hover:text-[#FFE569] transition-colors" href="{{ route('public.faq') }}">{{ __('public.faq') }}</a></li>
                         <li><a class="hover:text-[#FFE569] transition-colors" href="{{ route('public.help') }}">{{ __('public.help_center') }}</a></li>
                     </ul>

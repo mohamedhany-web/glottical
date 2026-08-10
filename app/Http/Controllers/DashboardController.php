@@ -211,148 +211,16 @@ class DashboardController extends Controller
     private function studentDashboard()
     {
         $user = Auth::user();
-        
-        $activeCourses = $user->activeCourses()
-            ->with(['academicYear', 'academicSubject', 'teacher'])
-            ->get();
 
-        $activeCourseIds = $activeCourses->pluck('id')->filter()->unique()->values();
+        // School Home هي تجربة الطالب الأساسية (فصول / جدول / حضور / رصيد)
+        $payload = app(\App\Services\StudentSchoolHomeService::class)->build($user, [
+            'week' => request()->query('week'),
+            'view' => request()->query('view'),
+            'sort' => request()->query('sort'),
+            'q' => request()->query('q'),
+        ]);
 
-        // تحميل بيانات التسجيلات لضمان توفر التقدم
-        $enrollments = $user->courseEnrollments()
-            ->whereIn('advanced_course_id', $activeCourseIds)
-            ->whereIn('status', ['active', 'completed'])
-            ->get()
-            ->keyBy('advanced_course_id');
-
-        $activeCourses->each(function ($course) use ($enrollments, $user) {
-            if ($enrollment = $enrollments->get($course->id)) {
-                $course->setRelation('enrollment', $enrollment);
-
-                if ($course->pivot) {
-                    $course->pivot->progress = (float) ($course->pivot->progress ?? $enrollment->progress ?? 0);
-                }
-            }
-            $course->student_points = LectureVideoQuestionAnswer::totalScoreForUserInCourse($user->id, $course->id);
-        });
-
-        $recentOrders = Order::where('user_id', $user->id)
-            ->with(['course.academicYear', 'course.academicSubject'])
-            ->latest()
-            ->take(5)
-            ->get();
-
-        $stats = [
-            'active_courses' => $activeCourses->count(),
-            'pending_orders' => Order::where('user_id', $user->id)->where('status', 'pending')->count(),
-            'completed_courses' => $user->courseEnrollments()->where('status', 'completed')->count(),
-            'total_progress' => $this->calculateOverallProgress($user),
-            'total_learning_hours' => $activeCourseIds->isEmpty()
-                ? 0
-                : (int) AdvancedCourse::whereIn('id', $activeCourseIds)->sum('duration_hours'),
-            'average_score' => round($user->getAverageScore(), 1),
-            'completed_exams' => $user->getCompletedExamsCount(),
-        ];
-
-        $upcomingAssignments = Assignment::with(['course', 'lesson'])
-            ->where('status', 'published')
-            ->where(function ($query) use ($activeCourseIds) {
-                $query->whereIn('advanced_course_id', $activeCourseIds)
-                    ->orWhereIn('course_id', $activeCourseIds);
-            })
-            ->where(function ($query) {
-                $query->whereNull('due_date')
-                    ->orWhere('due_date', '>=', now()->startOfDay());
-            })
-            ->get()
-            ->sortBy(function ($assignment) {
-                return $assignment->due_date ?? now()->addYear();
-            })
-            ->values()
-            ->take(5);
-
-        $upcomingExams = Exam::with(['course.academicSubject'])
-            ->whereIn('advanced_course_id', $activeCourseIds)
-            ->where('is_active', true)
-            ->where('is_published', true)
-            ->where(function ($query) {
-                $query->whereNull('end_time')
-                    ->orWhere('end_time', '>=', now());
-            })
-            ->get()
-            ->sortBy(function ($exam) {
-                if ($exam->start_time) {
-                    return $exam->start_time;
-                }
-
-                if ($exam->start_date) {
-                    return $exam->start_date->startOfDay();
-                }
-
-                return $exam->created_at ?? now();
-            })
-            ->values()
-            ->take(5);
-
-        $recentExamAttempts = $user->examAttempts()
-            ->with(['exam.course'])
-            ->latest()
-            ->take(5)
-            ->get();
-
-        $recentCertificates = Certificate::where('user_id', $user->id)
-            ->with('course')
-            ->orderByDesc('issued_at')
-            ->orderByDesc('created_at')
-            ->take(5)
-            ->get();
-
-        $upcomingTutoringBooking = null;
-        if (\Illuminate\Support\Facades\Schema::hasTable('tutoring_group_bookings')) {
-            $upcomingTutoringBooking = \App\Models\TutoringGroupBooking::query()
-                ->where('user_id', $user->id)
-                ->where('status', \App\Models\TutoringGroupBooking::STATUS_CONFIRMED)
-                ->where('starts_at', '>=', now())
-                ->with(['tutoringGroup:id,title', 'classroomMeeting:id,code'])
-                ->orderBy('starts_at')
-                ->first();
-        }
-
-        $upcomingPrivateLesson = null;
-        if (\Illuminate\Support\Facades\Schema::hasTable('one_to_one_sessions')) {
-            $upcomingPrivateLesson = \App\Models\OneToOneSession::query()
-                ->where('student_id', $user->id)
-                ->where('status', \App\Models\OneToOneSession::STATUS_SCHEDULED)
-                ->where('scheduled_at', '>=', now())
-                ->with(['course:id,title', 'instructor:id,name', 'classroomMeeting'])
-                ->orderBy('scheduled_at')
-                ->first();
-        }
-
-        $weekDays = \App\Services\StudentScheduleService::weekDays($user);
-        $todayItems = $weekDays->firstWhere('is_today')?->items ?? collect();
-        $nextAppointment = $weekDays->flatMap->items
-            ->filter(fn ($a) => $a->starts_at && $a->starts_at->gte(now()->subMinutes(30)))
-            ->sortBy('starts_at')
-            ->first();
-
-        return view(
-            'dashboard.student',
-            compact(
-                'stats',
-                'activeCourses',
-                'recentOrders',
-                'upcomingAssignments',
-                'upcomingExams',
-                'recentExamAttempts',
-                'recentCertificates',
-                'upcomingTutoringBooking',
-                'upcomingPrivateLesson',
-                'weekDays',
-                'todayItems',
-                'nextAppointment'
-            )
-        );
+        return view('student.school.home', $payload);
     }
 
     private function calculateOverallProgress($user)

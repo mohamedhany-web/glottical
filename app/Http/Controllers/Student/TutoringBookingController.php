@@ -35,7 +35,14 @@ class TutoringBookingController extends Controller
     public function show(Request $request, TutoringGroupBooking $booking): View
     {
         abort_unless((int) $booking->user_id === (int) $request->user()->id, 403);
-        $booking->load(['tutoringGroup', 'instructor', 'classroomMeeting', 'cohort', 'package', 'subscription']);
+        $booking->load([
+            'tutoringGroup.academicSubject:id,name',
+            'instructor:id,name,profile_image',
+            'classroomMeeting',
+            'cohort',
+            'package',
+            'subscription',
+        ]);
 
         return view('student.tutoring-bookings.show', compact('booking'));
     }

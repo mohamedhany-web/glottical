@@ -67,12 +67,22 @@ class StudentEntitlementController extends Controller
         return view('admin.student-entitlements.index', compact('entitlements', 'stats'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
+        $selectedUserId = (int) $request->integer('user_id');
+
         return view('admin.student-entitlements.form', [
-            'students' => User::query()->where('role', 'student')->orderBy('name')->limit(500)->get(['id', 'name', 'email']),
+            'students' => User::query()
+                ->where('role', 'student')
+                ->orderBy('name')
+                ->limit(800)
+                ->get(['id', 'name', 'email', 'phone']),
             'scopes' => ServicePackage::scopes(),
             'groups' => TutoringGroup::query()->active()->orderBy('title')->get(['id', 'title', 'type']),
+            'selectedUserId' => $selectedUserId,
+            'placementUrl' => \Illuminate\Support\Facades\Route::has('admin.placement.create')
+                ? route('admin.placement.create')
+                : null,
         ]);
     }
 
