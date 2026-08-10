@@ -1320,6 +1320,40 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         // إدارة المحاضرات والجروبات
         Route::resource('lectures', \App\Http\Controllers\Admin\LectureController::class);
         Route::post('/lectures/{lecture}/sync-teams-attendance', [\App\Http\Controllers\Admin\LectureController::class, 'syncTeamsAttendance'])->name('lectures.sync-teams-attendance');
+
+        // مركز المكتبات والمناهج (ماتريال + فيديو + مناهج الطلاب)
+        Route::prefix('libraries')->name('libraries.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\LibraryHubController::class, 'index'])->name('index');
+
+            Route::prefix('materials')->name('materials.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'index'])->name('index');
+                Route::get('/create', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'create'])->name('create');
+                Route::post('/', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'store'])->name('store');
+                Route::post('/bulk-visibility', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'bulkVisibility'])->name('bulk-visibility');
+                Route::get('/{material}/download', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'download'])->name('download');
+                Route::get('/{material}/edit', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'edit'])->name('edit');
+                Route::put('/{material}', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'update'])->name('update');
+                Route::post('/{material}/toggle', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'toggleVisibility'])->name('toggle');
+                Route::delete('/{material}', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'destroy'])->name('destroy');
+            });
+
+            Route::prefix('videos')->name('videos.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'index'])->name('index');
+                Route::get('/create', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'create'])->name('create');
+                Route::post('/', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'store'])->name('store');
+                Route::get('/{liveRecording}/edit', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'edit'])->name('edit');
+                Route::put('/{liveRecording}', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'update'])->name('update');
+                Route::post('/{liveRecording}/toggle', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'togglePublish'])->name('toggle');
+                Route::delete('/{liveRecording}', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'destroy'])->name('destroy');
+                Route::put('/lectures/{lecture}', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'updateLectureVideo'])->name('lecture.update');
+            });
+
+            Route::prefix('curriculum')->name('curriculum.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Admin\CurriculumHubController::class, 'index'])->name('index');
+                Route::get('/courses/{course}', [\App\Http\Controllers\Admin\CurriculumHubController::class, 'showCourse'])->name('course');
+            });
+        });
+
         // إدارة الواجبات والمشاريع (مسار الكورس قبل المسارات الأخرى لتفادي التعارض)
         Route::get('/assignments/course/{course}', [\App\Http\Controllers\Admin\AssignmentController::class, 'indexByCourse'])->name('assignments.by-course');
         Route::resource('assignments', \App\Http\Controllers\Admin\AssignmentController::class);

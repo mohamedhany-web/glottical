@@ -654,8 +654,34 @@
 
             @endif
 
-            @if($isFull || $u->hasPermission('manage.enrollments') || $u->hasPermission('manage.courses') || $u->hasPermission('manage.exams') || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.assignments') || $u->hasPermission('manage.live-sessions') || $u->hasPermission('manage.live-servers') || $u->hasPermission('manage.question-bank') || $u->hasPermission('manage.attendance') || $u->hasPermission('manage.achievements') || $u->hasPermission('manage.badges') || $u->hasPermission('manage.reviews'))
+            @if($isFull || $u->hasPermission('manage.enrollments') || $u->hasPermission('manage.courses') || $u->hasPermission('manage.exams') || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.assignments') || $u->hasPermission('manage.live-sessions') || $u->hasPermission('manage.live-servers') || $u->hasPermission('manage.question-bank') || $u->hasPermission('manage.attendance') || $u->hasPermission('manage.achievements') || $u->hasPermission('manage.badges') || $u->hasPermission('manage.reviews') || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.academic-subjects'))
             <li class="sidebar-section-label">التعليم</li>
+            {{-- مكتبات الطلاب: ماتريال + فيديو + مناهج --}}
+            @if($isFull || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.courses') || $u->hasPermission('manage.live-sessions') || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.academic-subjects'))
+            @php
+                $librariesOpen = request()->routeIs('admin.libraries.*');
+            @endphp
+            <li x-data="{ open: {{ $librariesOpen ? 'true' : 'false' }} }">
+                <button type="button" @click="open = !open" class="sidebar-group-btn">
+                    <span class="flex items-center gap-3"><i class="fas fa-layer-group"></i><span>المكتبات والمناهج</span></span>
+                    <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
+                </button>
+                <ul x-show="open" x-cloak class="mt-1 mr-3 space-y-0.5 border-r border-white/10 pr-3">
+                    @if(Route::has('admin.libraries.index'))
+                    <li><a href="{{ route('admin.libraries.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.libraries.index') ? 'active' : '' }}"><i class="fas fa-th-large"></i><span>مركز المكتبات</span></a></li>
+                    @endif
+                    @if(($isFull || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.courses')) && Route::has('admin.libraries.materials.index'))
+                    <li><a href="{{ route('admin.libraries.materials.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.libraries.materials.*') ? 'active' : '' }}"><i class="fas fa-book-open"></i><span>مكتبة الماتريال</span></a></li>
+                    @endif
+                    @if(($isFull || $u->hasPermission('manage.live-sessions') || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.courses')) && Route::has('admin.libraries.videos.index'))
+                    <li><a href="{{ route('admin.libraries.videos.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.libraries.videos.*') ? 'active' : '' }}"><i class="fas fa-film"></i><span>مكتبة الفيديوهات</span></a></li>
+                    @endif
+                    @if(($isFull || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.academic-subjects') || $u->hasPermission('manage.courses')) && Route::has('admin.libraries.curriculum.index'))
+                    <li><a href="{{ route('admin.libraries.curriculum.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.libraries.curriculum.*') ? 'active' : '' }}"><i class="fas fa-sitemap"></i><span>المناهج</span></a></li>
+                    @endif
+                </ul>
+            </li>
+            @endif
             {{-- إدارة المحتوى — الكورسات ومسارات التعلم --}}
             @if($isFull || $u->hasPermission('manage.courses') || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.academic-subjects') || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.assignments') || $u->hasPermission('manage.exams') || $u->hasPermission('manage.question-bank') || $u->hasPermission('manage.attendance') || $u->hasPermission('manage.achievements') || $u->hasPermission('manage.badges') || $u->hasPermission('manage.reviews'))
             @php
