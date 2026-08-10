@@ -646,7 +646,8 @@
                     @if($isFull || $u->hasPermission('manage.packages'))
                     <li><a href="{{ route('admin.packages.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.packages.*') ? 'active' : '' }}"><i class="fas fa-tags"></i><span>{{ __('admin.pricing_packages') }}</span></a></li>
                     @endif
-                    <li><a href="{{ route('admin.service-packages.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.service-packages.*') ? 'active' : '' }}"><i class="fas fa-box-open"></i><span>باقات الحصص</span></a></li>
+                    <li><a href="{{ route('admin.service-packages.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.service-packages.index') || request()->routeIs('admin.service-packages.create') || request()->routeIs('admin.service-packages.edit') ? 'active' : '' }}"><i class="fas fa-box-open"></i><span>باقات الحصص</span></a></li>
+                    <li><a href="{{ route('admin.service-packages.grant') }}" class="sidebar-sub-link {{ request()->routeIs('admin.service-packages.grant*') ? 'active' : '' }}"><i class="fas fa-user-plus"></i><span>منح باقة يدوياً</span></a></li>
                     <li><a href="{{ route('admin.service-package-pricing-rules.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.service-package-pricing-rules.*') ? 'active' : '' }}"><i class="fas fa-sliders"></i><span>تسعير خصص باقتك</span></a></li>
                 </ul>
             </li>

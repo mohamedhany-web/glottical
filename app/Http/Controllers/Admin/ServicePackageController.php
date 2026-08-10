@@ -7,6 +7,8 @@ use App\Models\AcademicSubject;
 use App\Models\AcademicYear;
 use App\Models\ServicePackage;
 use App\Models\TutoringGroup;
+use App\Models\User;
+use App\Services\StudentEntitlementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -113,6 +115,79 @@ class ServicePackageController extends Controller
         $servicePackage->update(['is_active' => ! $servicePackage->is_active]);
 
         return back()->with('success', $servicePackage->is_active ? 'تم تفعيل الباقة.' : 'تم إيقاف الباقة.');
+    }
+
+    public function grantForm(Request $request): View
+    {
+        $packages = ServicePackage::query()
+            ->active()
+            ->ordered()
+            ->get([
+                'id', 'name', 'scope', 'plan_type', 'term_months',
+                'units_count', 'weekly_group_sessions', 'weekly_private_sessions',
+                'duration_days', 'price', 'currency', 'badge',
+            ]);
+
+        return view('admin.service-packages.grant', [
+            'packages' => $packages,
+            'students' => User::query()
+                ->where('role', 'student')
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->limit(1000)
+                ->get(['id', 'name', 'email', 'phone']),
+            'selectedUserId' => (int) $request->integer('user_id'),
+            'selectedPackageId' => (int) $request->integer('service_package_id'),
+            'placementUrl' => \Illuminate\Support\Facades\Route::has('admin.placement.create')
+                ? route('admin.placement.create')
+                : null,
+        ]);
+    }
+
+    public function grantStore(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'user_id' => ['required', 'exists:users,id'],
+            'service_package_id' => ['required', 'exists:service_packages,id'],
+            'units_override' => ['nullable', 'integer', 'min:1', 'max:500'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $student = User::query()->findOrFail($data['user_id']);
+        if (! $student->isStudent()) {
+            return back()->withInput()->with('error', 'المستخدم المحدد ليس طالباً.');
+        }
+
+        $package = ServicePackage::query()->findOrFail($data['service_package_id']);
+        $notes = trim((string) ($data['notes'] ?? ''));
+        if ($notes === '') {
+            $notes = 'منح يدوي من لوحة الباقات بواسطة '.($request->user()?->name ?? 'admin');
+        } else {
+            $notes = 'منح يدوي: '.$notes;
+        }
+
+        $entitlement = StudentEntitlementService::grant(
+            userId: (int) $student->id,
+            package: $package,
+            orderId: null,
+            unitsOverride: isset($data['units_override']) ? (int) $data['units_override'] : null,
+            notes: $notes,
+        );
+
+        $message = 'تم تنزيل باقة «'.$package->name.'» على حساب '.$student->name.' (رصيد #'.$entitlement->id.').';
+
+        if ($request->boolean('go_placement') && \Illuminate\Support\Facades\Route::has('admin.placement.create')) {
+            return redirect()
+                ->route('admin.placement.create', [
+                    'user_id' => $student->id,
+                    'entitlement_id' => $entitlement->id,
+                ])
+                ->with('success', $message);
+        }
+
+        return redirect()
+            ->route('admin.student-entitlements.index', ['search' => $student->email ?: $student->name])
+            ->with('success', $message);
     }
 
     protected function formData(ServicePackage $package, string $mode): array

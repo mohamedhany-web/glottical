@@ -19,9 +19,14 @@
             <h2 class="mt-1 text-2xl font-semibold text-ink">باقات خدمات الطالب</h2>
             <p class="mt-1 text-sm text-muted">يدفع الطالب → يحصل رصيد حصص → يستهلك عند الإتمام → يشحن عند النفاد.</p>
         </div>
-        <a href="{{ route('admin.service-packages.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
-            <i class="fas fa-plus text-xs"></i> باقة جديدة
-        </a>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('admin.service-packages.grant') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-4 text-sm font-medium text-accent">
+                <i class="fas fa-user-plus text-xs"></i> منح باقة يدوياً
+            </a>
+            <a href="{{ route('admin.service-packages.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-plus text-xs"></i> باقة جديدة
+            </a>
+        </div>
     </section>
 
     @if(session('success'))
@@ -90,6 +95,7 @@
                         <td class="px-4 py-3">{{ $package->is_active ? 'نشطة' : 'موقوفة' }}</td>
                         <td class="px-4 py-3">
                             <div class="flex flex-wrap gap-2">
+                                <a href="{{ route('admin.service-packages.grant', ['service_package_id' => $package->id]) }}" class="text-success hover:underline">منح</a>
                                 <a href="{{ route('admin.service-packages.edit', $package) }}" class="text-accent hover:underline">تعديل</a>
                                 <form method="POST" action="{{ route('admin.service-packages.toggle-status', $package) }}">@csrf<button class="text-ink-soft hover:underline">تبديل</button></form>
                                 <form method="POST" action="{{ route('admin.service-packages.destroy', $package) }}" onsubmit="return confirm('حذف؟')">@csrf @method('DELETE')<button class="text-danger hover:underline">حذف</button></form>

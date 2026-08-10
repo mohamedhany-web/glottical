@@ -1399,6 +1399,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         // باقات خدمات الطالب ورصيد الحصص
         Route::resource('service-packages', \App\Http\Controllers\Admin\ServicePackageController::class)->except(['show']);
+        Route::get('/service-packages-grant', [\App\Http\Controllers\Admin\ServicePackageController::class, 'grantForm'])->name('service-packages.grant');
+        Route::post('/service-packages-grant', [\App\Http\Controllers\Admin\ServicePackageController::class, 'grantStore'])->name('service-packages.grant.store');
         Route::post('/service-packages/{servicePackage}/toggle-status', [\App\Http\Controllers\Admin\ServicePackageController::class, 'toggleStatus'])->name('service-packages.toggle-status');
         Route::resource('service-package-pricing-rules', \App\Http\Controllers\Admin\ServicePackagePricingRuleController::class)
             ->only(['index', 'store', 'update', 'destroy']);
