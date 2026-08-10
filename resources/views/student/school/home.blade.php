@@ -264,8 +264,11 @@
                         <img src="{{ $icon }}" alt="" width="22" height="22">
                     </span>
                     <img class="st-subject__more" src="{{ asset('img/student-timeline/ellipsis.svg') }}" alt="" width="24" height="24">
-                    <h3 class="st-subject__name">{{ $label }}</h3>
-                    <span class="st-subject__meta">{{ $class->progress_percent }}% · {{ $class->completed_sessions }}/{{ $class->total_sessions }}</span>
+                    <div class="st-subject__foot">
+                        <h3 class="st-subject__name">{{ $label }}</h3>
+                        <span class="st-subject__meta">{{ $class->completed_sessions }}/{{ $class->total_sessions }} · {{ $class->progress_percent }}%</span>
+                        <span class="st-subject__bar" aria-hidden="true"><i style="width: {{ max(4, (int) $class->progress_percent) }}%"></i></span>
+                    </div>
                 </a>
             @endforeach
         </div>
@@ -361,21 +364,23 @@
 </section>
 
 @if(!empty($recommendedYear) || !empty($placement?->admin_notes))
-    <section class="st-event-card st-event-card--purple st-biz-banner">
+    <section class="st-event-card st-event-card--purple st-biz-banner st-path-card">
         <img class="st-event-card__mask" src="{{ $eventMasks[1] }}" alt="" width="160" height="160">
-        <p class="st-event-card__kicker">{{ __('student_timeline.school_path') }}</p>
-        @if(!empty($recommendedYear))
-            <h3>{{ $recommendedYear->name }}</h3>
-            @if($recommendedYear->tagline)
-                <p class="st-event-card__sub">{{ $recommendedYear->tagline }}</p>
+        <div class="st-path-card__body">
+            <p class="st-event-card__kicker">{{ __('student_timeline.school_path') }}</p>
+            @if(!empty($recommendedYear))
+                <h3 class="st-text-auto">{{ $recommendedYear->name }}</h3>
+                @if($recommendedYear->tagline)
+                    <p class="st-event-card__sub st-text-auto">{{ $recommendedYear->tagline }}</p>
+                @endif
+                @if(Route::has('public.school.year'))
+                    <a href="{{ route('public.school.year', $recommendedYear->slug) }}" class="st-pill st-pill--light">{{ __('student_timeline.open_year_path') }}</a>
+                @endif
             @endif
-            @if(Route::has('public.school.year'))
-                <a href="{{ route('public.school.year', $recommendedYear->slug) }}" class="st-pill st-pill--light">{{ __('student_timeline.open_year_path') }}</a>
+            @if(!empty($placement?->admin_notes))
+                <p class="st-event-card__sub st-text-auto" style="margin-top:10px;">{{ $placement->admin_notes }}</p>
             @endif
-        @endif
-        @if(!empty($placement?->admin_notes))
-            <p class="st-event-card__sub" style="margin-top:10px;">{{ $placement->admin_notes }}</p>
-        @endif
+        </div>
     </section>
 @endif
 @endsection
