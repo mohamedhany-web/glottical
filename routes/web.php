@@ -288,6 +288,68 @@ Route::get('/css/landing/{sheet}.css', function (string $sheet) use ($serveAthee
     );
 })->where('sheet', '[A-Za-z0-9\-]+')->name('assets.landing.css');
 
+// Student timeline — على الاستضافة /css/* و /img/* الثابتة ترجع 404
+Route::get('/css/student-timeline.css', function () use ($serveAtheerAsset) {
+    return $serveAtheerAsset(
+        [public_path('css/student-timeline.css'), resource_path('css/student-timeline.css')],
+        'text/css; charset=UTF-8'
+    );
+})->name('assets.student-timeline.css');
+
+Route::get('/img/student-timeline/{file}', function (string $file) {
+    $file = basename($file);
+    if (! preg_match('/^[A-Za-z0-9._\-]+$/', $file) || ! preg_match('/\.(png|jpe?g|webp|gif|svg)$/i', $file)) {
+        abort(404);
+    }
+
+    $path = public_path("img/student-timeline/{$file}");
+    if (! is_file($path)) {
+        abort(404);
+    }
+
+    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    $types = [
+        'png' => 'image/png',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'webp' => 'image/webp',
+        'gif' => 'image/gif',
+        'svg' => 'image/svg+xml',
+    ];
+
+    return response((string) file_get_contents($path), 200, [
+        'Content-Type' => $types[$ext] ?? 'application/octet-stream',
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+})->where('file', '[A-Za-z0-9._\-]+')->name('assets.student-timeline.img');
+
+Route::get('/img/student-timeline/nav/{file}', function (string $file) {
+    $file = basename($file);
+    if (! preg_match('/^[A-Za-z0-9._\-]+$/', $file) || ! preg_match('/\.(png|jpe?g|webp|gif|svg)$/i', $file)) {
+        abort(404);
+    }
+
+    $path = public_path("img/student-timeline/nav/{$file}");
+    if (! is_file($path)) {
+        abort(404);
+    }
+
+    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    $types = [
+        'png' => 'image/png',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'webp' => 'image/webp',
+        'gif' => 'image/gif',
+        'svg' => 'image/svg+xml',
+    ];
+
+    return response((string) file_get_contents($path), 200, [
+        'Content-Type' => $types[$ext] ?? 'application/octet-stream',
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+})->where('file', '[A-Za-z0-9._\-]+')->name('assets.student-timeline.nav');
+
 Route::get('/js/landing/{file}.js', function (string $file) use ($serveAtheerAsset) {
     $file = basename($file);
     if (! preg_match('/^[A-Za-z0-9\-]+$/', $file)) {
