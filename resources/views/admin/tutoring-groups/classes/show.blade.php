@@ -24,6 +24,17 @@
         </div>
     </section>
 
+    @include('admin.partials.workflow-guide', [
+        'title' => 'تشغيل الفصل خطوة بخطوة',
+        'body' => 'هذه غرفة التشغيل اليومية للدفعة: الطلاب، الحصص، وغرف Live. ابدأ بتسجيل الطلاب ثم ولّد الجدول.',
+        'steps' => [
+            'أضف الطلاب المسجّلين في الدفعة (أو عبر التسكين/الحجوزات).',
+            'اضغط توليد الجدول لإنشاء الحصص حسب أيام الدراسة.',
+            'تأكد أن لكل حصة غرفة اجتماع جاهزة قبل الموعد.',
+            'تابع الحضور والحالة من نفس الصفحة.',
+        ],
+    ])
+
     @if(session('success'))
         <div class="rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft">{{ session('success') }}</div>
     @endif

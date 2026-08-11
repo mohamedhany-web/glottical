@@ -87,6 +87,14 @@
     </button>
   </form>
 
+  @if(config('services.google.client_id') && config('services.google.client_secret'))
+    <div class="gl-auth-or" aria-hidden="true"><span>{{ $isRtl ? 'أو' : 'or' }}</span></div>
+    <a href="{{ route('auth.google.redirect') }}" class="gl-auth-google">
+      <i class="fab fa-google" aria-hidden="true"></i>
+      <span>{{ $isRtl ? 'المتابعة عبر Gmail / Google' : 'Continue with Gmail / Google' }}</span>
+    </a>
+  @endif
+
   <div class="gl-auth-foot">
     {{ __('auth.no_account_question') }}
     <a href="{{ route('register') }}" class="gl-auth-link">{{ __('auth.no_account_register_now') }}</a>

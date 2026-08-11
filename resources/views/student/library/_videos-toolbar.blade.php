@@ -1,6 +1,7 @@
 @php
     $searchQuery = $searchQuery ?? '';
     $videoCount = $videoCount ?? 0;
+    $activeFolder = $activeFolder ?? null;
 @endphp
 <div class="st-top__row st-top__row--secondary">
     <p class="st-top__count">
@@ -23,6 +24,9 @@
 <form class="st-search" method="get" action="{{ route('student.library.videos') }}" role="search">
     @if(request('lang'))
         <input type="hidden" name="lang" value="{{ request('lang') }}">
+    @endif
+    @if($activeFolder)
+        <input type="hidden" name="folder" value="{{ ($activeFolder->is_uncategorized ?? false) ? 'none' : ($activeFolder->slug ?: $activeFolder->id) }}">
     @endif
     <input type="search" name="q" value="{{ $searchQuery }}" placeholder="{{ __('student_timeline.search_videos') }}" aria-label="{{ __('student_timeline.search_videos') }}">
 </form>

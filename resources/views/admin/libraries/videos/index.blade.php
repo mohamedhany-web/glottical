@@ -14,9 +14,14 @@
             <h2 class="mt-1 text-2xl font-semibold text-ink">مكتبة الفيديوهات</h2>
             <p class="mt-1 text-sm text-muted">تسجيلات البث المباشر + تسجيلات المحاضرات الظاهرة للطلاب.</p>
         </div>
-        <a href="{{ route('admin.libraries.videos.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
-            <i class="fas fa-video text-xs"></i> إضافة تسجيل بث
-        </a>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('admin.libraries.folders.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm">
+                <i class="fas fa-folder text-xs"></i> المجلدات
+            </a>
+            <a href="{{ route('admin.libraries.videos.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                <i class="fas fa-video text-xs"></i> إضافة تسجيل بث
+            </a>
+        </div>
     </section>
 
     @if(session('success'))
@@ -39,9 +44,16 @@
         <a href="{{ route('admin.libraries.videos.index', ['tab' => 'lectures'] + request()->except('tab')) }}" class="rounded-xl px-3 py-1.5 text-xs font-bold {{ ($tab ?? '') === 'lectures' ? 'bg-accent text-white' : 'border border-line bg-surface text-ink' }}">محاضرات</a>
     </div>
 
-    <form method="GET" class="grid gap-3 rounded-2xl border border-line bg-surface p-4 shadow-soft md:grid-cols-5">
+    <form method="GET" class="grid gap-3 rounded-2xl border border-line bg-surface p-4 shadow-soft md:grid-cols-6">
         <input type="hidden" name="tab" value="{{ $tab ?? 'all' }}">
         <input type="search" name="search" value="{{ request('search') }}" placeholder="بحث بالعنوان" class="{{ $field }} md:col-span-2">
+        <select name="folder_id" class="{{ $field }}">
+            <option value="">كل المجلدات</option>
+            <option value="none" @selected(request('folder_id') === 'none')>بدون مجلد</option>
+            @foreach(($folders ?? []) as $folder)
+                <option value="{{ $folder->id }}" @selected((string) request('folder_id') === (string) $folder->id)>{{ $folder->name_ar }}</option>
+            @endforeach
+        </select>
         <select name="published" class="{{ $field }}">
             <option value="">كل النشر</option>
             <option value="1" @selected(request('published') === '1')>منشور</option>
@@ -63,6 +75,7 @@
             <thead class="bg-canvas-muted text-xs text-muted">
                 <tr>
                     <th class="px-4 py-3 text-start">العنوان</th>
+                    <th class="px-4 py-3 text-start">المجلد</th>
                     <th class="px-4 py-3 text-start">الجلسة / الكورس</th>
                     <th class="px-4 py-3 text-start">الحالة</th>
                     <th class="px-4 py-3 text-start">النشر</th>
@@ -73,6 +86,7 @@
                 @forelse($liveRecordings as $r)
                     <tr class="border-t border-line">
                         <td class="px-4 py-3 font-semibold text-ink">{{ $r->title ?: 'تسجيل #'.$r->id }}</td>
+                        <td class="px-4 py-3 text-xs text-muted">{{ $r->folder?->name_ar ?: '—' }}</td>
                         <td class="px-4 py-3">
                             <div>{{ $r->session?->title ?: '—' }}</div>
                             <div class="text-xs text-muted">{{ $r->session?->course?->title }}</div>

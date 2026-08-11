@@ -1,28 +1,109 @@
-@extends('layouts.app')
-@section('title', $liveRecording->title ?? 'مشاهدة التسجيل')
+@extends('layouts.student-timeline')
+
+@section('title', $liveRecording->title ?? __('student_timeline.watch_video'))
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6">
-    <div class="flex items-center gap-3">
-        <a href="{{ route('student.live-recordings.index') }}" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition-colors"><i class="fas fa-arrow-right"></i></a>
-        <h1 class="text-xl font-bold text-slate-800 dark:text-white truncate">{{ $liveRecording->title ?? 'تسجيل الجلسة' }}</h1>
+@php
+    $locale = app()->getLocale();
+    $title = $liveRecording->title
+        ?: ($liveRecording->session?->title ?: (__('student_timeline.recording').' #'.$liveRecording->id));
+    $folder = $liveRecording->folder;
+    $backUrl = route('student.library.videos', array_filter([
+        'folder' => $folder?->slug ?: $folder?->id,
+        'lang' => request('lang'),
+    ]));
+@endphp
+
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => $title,
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => __('student_timeline.nav_library_videos'), 'url' => route('student.library.videos')],
+        ['label' => $title, 'url' => null],
+    ],
+])
+
+<section class="st-player-page">
+    <div class="st-player-bar">
+        <a href="{{ $backUrl }}" class="st-pill st-pill--outline">
+            <i class="fas fa-arrow-{{ $locale === 'ar' ? 'right' : 'left' }}" aria-hidden="true"></i>
+            {{ __('student_timeline.back_to_library') }}
+        </a>
+        @if($folder)
+            <a href="{{ route('student.library.videos', ['folder' => $folder->slug ?: $folder->id]) }}" class="st-chip">
+                <i class="{{ $folder->icon ?: 'fas fa-folder' }}" aria-hidden="true"></i>
+                {{ $folder->displayName($locale) }}
+            </a>
+        @endif
     </div>
 
-    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div class="aspect-video bg-black flex items-center justify-center">
-            <video controls class="w-full h-full" preload="metadata" crossorigin="anonymous">
-                <source src="{{ $url }}" type="video/mp4">
-                <p class="text-white p-4">المتصفح لا يدعم تشغيل الفيديو. <a href="{{ $url }}" target="_blank" class="underline">افتح الرابط في نافذة جديدة</a></p>
-            </video>
+    <article class="st-player-shell">
+        <div class="st-player-frame" data-source="{{ $source }}">
+            @if($embedUrl)
+                <iframe
+                    src="{{ $embedUrl }}"
+                    title="{{ $title }}"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
+                    allowfullscreen
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    loading="eager"
+                ></iframe>
+            @elseif($directUrl)
+                <video
+                    controls
+                    playsinline
+                    preload="metadata"
+                    @if($thumbnail) poster="{{ $thumbnail }}" @endif
+                    controlslist="nodownload"
+                >
+                    <source src="{{ $directUrl }}" type="video/mp4">
+                    {{ __('student_timeline.video_unsupported') }}
+                </video>
+            @else
+                <div class="st-player-fallback">
+                    <p>{{ __('student_timeline.video_unavailable') }}</p>
+                </div>
+            @endif
         </div>
-        <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
-            <span><i class="fas fa-video ml-1"></i> {{ $liveRecording->session?->title }}</span>
-            <span><i class="fas fa-clock ml-1"></i> {{ $liveRecording->duration_for_humans }}</span>
-            <span><i class="fas fa-hdd ml-1"></i> {{ $liveRecording->file_size_for_humans }}</span>
-            <a href="{{ $url }}" target="_blank" rel="noopener" class="text-emerald-600 dark:text-emerald-400 hover:underline font-medium">
-                <i class="fas fa-external-link-alt ml-1"></i> فتح الرابط في تاب جديد
-            </a>
+
+        <div class="st-player-meta">
+            <h1>{{ $title }}</h1>
+            <div class="st-player-meta__row">
+                @if($liveRecording->session?->course?->title)
+                    <span><i class="fas fa-graduation-cap" aria-hidden="true"></i> {{ $liveRecording->session->course->title }}</span>
+                @endif
+                @if($liveRecording->session?->instructor?->name)
+                    <span><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i> {{ $liveRecording->session->instructor->name }}</span>
+                @endif
+                @if($liveRecording->duration_seconds)
+                    <span><i class="fas fa-clock" aria-hidden="true"></i> {{ $liveRecording->duration_for_humans }}</span>
+                @endif
+            </div>
+            <p class="st-player-note">{{ __('student_timeline.player_stay_note') }}</p>
         </div>
-    </div>
+    </article>
+</section>
+@endsection
+
+@section('events')
+<div class="st-events__top">
+    <h2>{{ __('student_timeline.library_links') }}</h2>
+</div>
+
+<a href="{{ route('student.library.videos') }}" class="st-event-card st-event-card--blue">
+    <h3>{{ __('student_timeline.nav_library_videos') }}</h3>
+    <p class="st-event-card__sub">{{ __('student_timeline.videos_hint') }}</p>
+</a>
+
+@if(Route::has('student.library.materials'))
+    <a href="{{ route('student.library.materials') }}" class="st-event-card st-event-card--orange">
+        <h3>{{ __('student_timeline.nav_library_materials') }}</h3>
+        <p class="st-event-card__sub">{{ __('student_timeline.materials_hint') }}</p>
+    </a>
+@endif
+
+<div class="st-events__see">
+    <a href="{{ route('dashboard') }}">{{ __('student_timeline.school_gate') }}</a>
 </div>
 @endsection

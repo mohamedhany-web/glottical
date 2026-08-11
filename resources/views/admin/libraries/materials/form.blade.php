@@ -59,8 +59,12 @@
                 <label class="{{ $label }}">الملف {{ $mode === 'create' ? '*' : '(اتركه فارغاً للإبقاء على الحالي)' }}</label>
                 <input type="file" name="file" @if($mode === 'create') required @endif class="block w-full text-sm"
                        accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.txt,.png,.jpg,.jpeg,.webp,.mp3,.mp4">
+                <p class="mt-1 text-xs text-muted">
+                    التخزين:
+                    <strong>{{ ($storageDisk ?? 'r2') === 'r2' ? 'Cloudflare R2' : ($storageDisk ?? 'local') }}</strong>
+                </p>
                 @if($mode === 'edit' && $material->file_name)
-                    <p class="mt-1 text-xs text-muted">الحالي: {{ $material->file_name }}</p>
+                    <p class="mt-1 text-xs text-muted">الحالي: {{ $material->file_name }}@if($material->storage_disk) ({{ $material->storage_disk }})@endif</p>
                 @endif
             </div>
         </article>

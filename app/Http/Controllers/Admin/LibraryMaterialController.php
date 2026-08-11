@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\AdvancedCourse;
 use App\Models\Lecture;
 use App\Models\LectureMaterial;
+use App\Services\LectureMaterialStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -61,6 +61,7 @@ class LibraryMaterialController extends Controller
                 ->join('lectures', 'lectures.id', '=', 'lecture_materials.lecture_id')
                 ->distinct('lectures.course_id')
                 ->count('lectures.course_id'),
+            'storage_disk' => LectureMaterialStorage::resolvedDisk(),
         ];
 
         return view('admin.libraries.materials.index', [
@@ -80,6 +81,7 @@ class LibraryMaterialController extends Controller
                 'lecture_id' => (int) $request->integer('lecture_id') ?: null,
             ]),
             'mode' => 'create',
+            'storageDisk' => LectureMaterialStorage::resolvedDisk(),
             'lectures' => Lecture::query()
                 ->with('course:id,title')
                 ->orderByDesc('id')
@@ -100,12 +102,14 @@ class LibraryMaterialController extends Controller
 
         $lectureId = (int) $data['lecture_id'];
         $file = $request->file('file');
-        $path = $file->store('lecture-materials/'.$lectureId, 'public');
+        $disk = LectureMaterialStorage::resolvedDisk();
+        $path = LectureMaterialStorage::store($file, $lectureId);
 
         $material = LectureMaterial::create([
             'lecture_id' => $lectureId,
             'file_name' => $file->getClientOriginalName(),
             'file_path' => $path,
+            'storage_disk' => $disk,
             'title' => $data['title'] ?: pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
             'is_visible_to_student' => $request->boolean('is_visible_to_student', true),
             'sort_order' => (int) ($data['sort_order'] ?? 0),
@@ -113,7 +117,7 @@ class LibraryMaterialController extends Controller
 
         return redirect()
             ->route('admin.libraries.materials.index')
-            ->with('success', 'تم رفع الماتريال #'.$material->id.' بنجاح.');
+            ->with('success', 'تم رفع الماتريال #'.$material->id.' على '.($disk === 'r2' ? 'Cloudflare R2' : $disk).'.');
     }
 
     public function edit(LectureMaterial $material): View
@@ -123,6 +127,7 @@ class LibraryMaterialController extends Controller
         return view('admin.libraries.materials.form', [
             'material' => $material,
             'mode' => 'edit',
+            'storageDisk' => LectureMaterialStorage::resolvedDisk(),
             'lectures' => Lecture::query()
                 ->with('course:id,title')
                 ->orderByDesc('id')
@@ -150,10 +155,10 @@ class LibraryMaterialController extends Controller
 
         if ($request->hasFile('file')) {
             $file = $request->file('file');
-            if ($material->file_path && Storage::disk('public')->exists($material->file_path)) {
-                Storage::disk('public')->delete($material->file_path);
-            }
-            $payload['file_path'] = $file->store('lecture-materials/'.$payload['lecture_id'], 'public');
+            LectureMaterialStorage::delete($material->file_path, $material->storage_disk);
+            $disk = LectureMaterialStorage::resolvedDisk();
+            $payload['file_path'] = LectureMaterialStorage::store($file, $payload['lecture_id']);
+            $payload['storage_disk'] = $disk;
             $payload['file_name'] = $file->getClientOriginalName();
             if (empty($data['title'])) {
                 $payload['title'] = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
@@ -169,9 +174,7 @@ class LibraryMaterialController extends Controller
 
     public function destroy(LectureMaterial $material): RedirectResponse
     {
-        if ($material->file_path && Storage::disk('public')->exists($material->file_path)) {
-            Storage::disk('public')->delete($material->file_path);
-        }
+        LectureMaterialStorage::delete($material->file_path, $material->storage_disk);
         $material->delete();
 
         return back()->with('success', 'تم حذف الماتريال.');
@@ -186,12 +189,7 @@ class LibraryMaterialController extends Controller
 
     public function download(LectureMaterial $material): StreamedResponse
     {
-        abort_unless($material->file_path && Storage::disk('public')->exists($material->file_path), 404);
-
-        return Storage::disk('public')->download(
-            $material->file_path,
-            $material->file_name ?: basename($material->file_path)
-        );
+        return LectureMaterialStorage::download($material);
     }
 
     public function bulkVisibility(Request $request): RedirectResponse

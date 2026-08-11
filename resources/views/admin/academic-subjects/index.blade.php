@@ -48,6 +48,16 @@
         </div>
     </section>
 
+    @include('admin.partials.workflow-guide', [
+        'title' => 'دور مواد المدرسة',
+        'body' => 'المادة تقسّم محتوى السنة (مثل: لغة عربية، رياضيات). اربط الكورسات وفصول المدرسة بالمادة المناسبة ليسهل على الطالب والفريق التصفح.',
+        'steps' => [
+            'اختر السنة (أو ابدأ من صفحة السنوات).',
+            'أنشئ المادة وفعّل حالتها.',
+            'عند إنشاء كورس أو مجموعة جماعية اربطها بهذه المادة.',
+        ],
+    ])
+
     @if(session('success'))
         <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
             <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>

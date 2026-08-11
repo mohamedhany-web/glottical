@@ -10,58 +10,52 @@ use Illuminate\Http\Request;
 
 class ReferralController extends Controller
 {
-    protected $referralService;
-
-    public function __construct(ReferralService $referralService)
+    public function __construct(protected ReferralService $referralService)
     {
-        $this->referralService = $referralService;
     }
 
-    /**
-     * عرض صفحة الإحالات للمستخدم
-     */
     public function index()
     {
         $user = auth()->user();
-        
-        // الحصول على كود الإحالة
         $referralCode = $this->referralService->getUserReferralCode($user);
-        
-        // الإحالات الخاصة بالمستخدم (كمحيل)
+
         $referrals = Referral::where('referrer_id', $user->id)
-            ->with(['referred', 'referralProgram', 'autoCoupon'])
+            ->with(['referred', 'referralProgram'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        // الإحصائيات
         $stats = [
             'total_referrals' => $user->total_referrals ?? 0,
             'completed_referrals' => $user->completed_referrals ?? 0,
             'pending_referrals' => Referral::where('referrer_id', $user->id)
-                ->where('status', 'pending')
+                ->where('status', Referral::STATUS_PENDING)
                 ->count(),
-            'total_rewards' => Referral::where('referrer_id', $user->id)
-                ->where('status', 'completed')
-                ->sum('reward_amount'),
-            'total_discount_given' => Referral::where('referrer_id', $user->id)
-                ->sum('discount_amount'),
+            'total_credits' => (int) Referral::where('referrer_id', $user->id)->sum('referrer_units_granted'),
         ];
 
-        $referralLink = url('/register?ref=' . urlencode($referralCode));
-
+        $referralLink = url('/register?ref='.urlencode($referralCode));
         $activeProgram = ReferralProgram::currentForNewReferrals();
+        $shareMessage = $activeProgram
+            ? $this->referralService->buildShareMessage($activeProgram, $referralCode, $referralLink)
+            : ('سجّل في Glottical من رابطي: '.$referralLink);
+        $whatsappUrl = 'https://wa.me/?text='.rawurlencode($shareMessage);
 
-        return view('student.referrals.index', compact('referralCode', 'referralLink', 'referrals', 'stats', 'activeProgram'));
+        return view('student.referrals.index', compact(
+            'referralCode',
+            'referralLink',
+            'referrals',
+            'stats',
+            'activeProgram',
+            'shareMessage',
+            'whatsappUrl'
+        ));
     }
 
-    /**
-     * نسخ رابط الإحالة
-     */
     public function copyLink(Request $request)
     {
         $user = auth()->user();
         $referralCode = $this->referralService->getUserReferralCode($user);
-        $referralLink = url('/register?ref=' . urlencode($referralCode));
+        $referralLink = url('/register?ref='.urlencode($referralCode));
 
         return response()->json([
             'success' => true,

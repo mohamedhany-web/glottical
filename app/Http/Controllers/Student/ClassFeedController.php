@@ -9,9 +9,33 @@ use App\Services\ClassFeedService;
 use App\Services\TutoringClassService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ClassFeedController extends Controller
 {
+    public function index(Request $request, TutoringGroupCohort $cohort): View
+    {
+        abort_unless(TutoringClassService::userCanAccessCohort($request->user(), $cohort), 403);
+
+        $cohort->load(['tutoringGroup.instructor']);
+        $user = $request->user();
+        $canModerate = ClassFeedService::canModerate($user, $cohort);
+
+        if ($request->routeIs('instructor.*')) {
+            return view('instructor.tutoring-cohorts.community', [
+                'cohort' => $cohort,
+                'feedPosts' => ClassFeedService::postsFor($cohort, $user),
+                'canModerateFeed' => $canModerate,
+            ]);
+        }
+
+        return view('student.classes.community', [
+            'cohort' => $cohort,
+            'feedPosts' => ClassFeedService::postsFor($cohort, $user),
+            'canModerateFeed' => $canModerate,
+        ]);
+    }
+
     public function store(Request $request, TutoringGroupCohort $cohort): RedirectResponse
     {
         abort_unless(TutoringClassService::userCanAccessCohort($request->user(), $cohort), 403);
@@ -27,10 +51,11 @@ class ClassFeedController extends Controller
             $request->user(),
             $data['body'],
             $data['post_type'] ?? 'question',
-            (bool) ($data['is_pinned'] ?? false),
+            (bool) ($request->boolean('is_pinned')),
         );
 
-        return back()->with('success', 'تم نشر مشاركتك في مجتمع الفصل.');
+        return $this->backToCommunity($request, $cohort)
+            ->with('success', 'تم نشر مشاركتك في مجتمع الفصل.');
     }
 
     public function comment(Request $request, ClassFeedPost $post): RedirectResponse
@@ -44,27 +69,55 @@ class ClassFeedController extends Controller
 
         ClassFeedService::addComment($post, $request->user(), $data['body']);
 
-        return back()->with('success', 'تم إضافة التعليق.');
+        return $this->backToCommunity($request, $post->cohort)
+            ->with('success', 'تم إضافة التعليق.');
     }
 
     public function hide(Request $request, ClassFeedPost $post): RedirectResponse
     {
         ClassFeedService::hidePost($post, $request->user());
 
-        return back()->with('success', 'تم إخفاء المنشور.');
+        return $this->backToCommunity($request, $post->tutoring_group_cohort_id)
+            ->with('success', 'تم إخفاء المنشور.');
     }
 
     public function unhide(Request $request, ClassFeedPost $post): RedirectResponse
     {
         ClassFeedService::unhidePost($post, $request->user());
 
-        return back()->with('success', 'تم إظهار المنشور.');
+        return $this->backToCommunity($request, $post->tutoring_group_cohort_id)
+            ->with('success', 'تم إظهار المنشور.');
     }
 
     public function pin(Request $request, ClassFeedPost $post): RedirectResponse
     {
         ClassFeedService::togglePin($post, $request->user());
 
-        return back()->with('success', 'تم تحديث التثبيت.');
+        return $this->backToCommunity($request, $post->tutoring_group_cohort_id)
+            ->with('success', 'تم تحديث التثبيت.');
+    }
+
+    private function backToCommunity(Request $request, TutoringGroupCohort|int $cohort): RedirectResponse
+    {
+        $cohortModel = $cohort instanceof TutoringGroupCohort
+            ? $cohort
+            : TutoringGroupCohort::query()->find($cohort);
+
+        $user = $request->user();
+        $isInstructor = $user && (
+            $request->routeIs('instructor.*')
+            || (method_exists($user, 'isInstructor') && $user->isInstructor())
+            || (method_exists($user, 'isTeacher') && $user->isTeacher())
+        );
+
+        if ($isInstructor && $cohortModel && \Illuminate\Support\Facades\Route::has('instructor.tutoring-cohorts.community')) {
+            return redirect()->route('instructor.tutoring-cohorts.community', $cohortModel);
+        }
+
+        if ($cohortModel) {
+            return redirect()->route('student.classes.community', $cohortModel);
+        }
+
+        return back();
     }
 }

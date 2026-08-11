@@ -14,6 +14,7 @@
         <div class="min-w-0">
             <p class="text-xs font-medium text-muted">المدرسة · حجوزات الفصول والكوهورتات</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">حجوزات فصول المدرسة</h2>
+            <p class="mt-1 max-w-2xl text-sm text-muted">صندوق طلبات الحجز والتسكين اليدوي في دفعات الفصول والمجموعات</p>
         </div>
         <div class="admin-hero-actions flex flex-wrap gap-2">
             <a href="{{ route('admin.tutoring-group-bookings.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white"><i class="fas fa-user-plus"></i> تسكين طالب</a>
@@ -21,6 +22,17 @@
             <a href="{{ route('admin.tutoring-groups.index', 'collective') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft hover:border-accent/30 hover:text-accent">جماعية</a>
         </div>
     </section>
+
+    @include('admin.partials.workflow-guide', [
+        'title' => 'كيف تُدار الحجوزات؟',
+        'body' => 'هنا تصل طلبات الحجز من الموقع أو التسكين اليدوي. راجع الحالة ثم ضع الطالب في الدفعة/الموعد المناسب.',
+        'steps' => [
+            'راجع الطلبات قيد المراجعة أولاً.',
+            'أكّد الحجز بعد التأكد من المقعد والمدرب والموعد.',
+            'للتسكين اليدوي من رصيد طالب استخدم زر «تسكين طالب».',
+            'المجموعات الجماعية والفردية لها مسارات منفصلة في القوائم أعلاه.',
+        ],
+    ])
 
     @if(session('success'))
         <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">

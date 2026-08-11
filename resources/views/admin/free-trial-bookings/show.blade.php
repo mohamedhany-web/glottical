@@ -99,8 +99,13 @@
                         <p class="mt-1 text-sm font-semibold text-ink break-all">{{ $booking->email ?: '—' }}</p>
                     </div>
                     <div class="rounded-xl border border-line bg-canvas/60 p-4">
-                        <p class="text-xs font-medium text-muted">الهاتف</p>
+                        <p class="text-xs font-medium text-muted">الهاتف / واتساب</p>
                         <p class="mt-1 text-sm font-semibold text-ink" dir="ltr">{{ $booking->phone ?: '—' }}</p>
+                        @if($booking->whatsappUrl())
+                            <a href="{{ $booking->whatsappUrl() }}" target="_blank" rel="noopener" class="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:underline">
+                                <i class="fab fa-whatsapp"></i> فتح واتساب
+                            </a>
+                        @endif
                     </div>
                     <div class="rounded-xl border border-line bg-canvas/60 p-4">
                         <p class="text-xs font-medium text-muted">تاريخ الإنشاء</p>
@@ -109,8 +114,8 @@
                 </div>
 
                 <div class="rounded-xl border border-line bg-canvas/60 p-4">
-                    <p class="text-xs font-medium text-muted">هدف التعلم</p>
-                    <p class="mt-1 text-sm leading-7 text-ink">{{ $booking->goal ?: '—' }}</p>
+                    <p class="text-xs font-medium text-muted">الغرض من التعلم</p>
+                    <p class="mt-1 text-sm leading-7 text-ink">{{ $booking->goalLabel('ar') }}</p>
                 </div>
 
                 @if($booking->user)

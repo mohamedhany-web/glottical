@@ -12,7 +12,11 @@
         <div>
             <p class="text-xs font-medium text-muted"><a href="{{ route('admin.libraries.index') }}" class="hover:text-accent">المكتبات</a> · ماتريال</p>
             <h2 class="mt-1 text-2xl font-semibold text-ink">مكتبة الماتريال</h2>
-            <p class="mt-1 text-sm text-muted">كل ملفات المحاضرات التي تظهر للطلاب في «مكتبة الماتريال».</p>
+            <p class="mt-1 text-sm text-muted">
+                كل ملفات المحاضرات تُرفع على
+                <strong>{{ ($stats['storage_disk'] ?? 'r2') === 'r2' ? 'Cloudflare R2' : ($stats['storage_disk'] ?? 'التخزين') }}</strong>
+                وتظهر للطلاب في «مكتبة الماتريال».
+            </p>
         </div>
         <a href="{{ route('admin.libraries.materials.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
             <i class="fas fa-upload text-xs"></i> رفع ماتريال

@@ -19,6 +19,17 @@
         <a href="{{ route('admin.tutoring-groups.cohorts.index', $group) }}" class="btn-press inline-flex h-9 items-center rounded-xl border border-line px-4 text-sm text-ink-soft">رجوع</a>
     </section>
 
+    @include('admin.partials.workflow-guide', [
+        'title' => 'إعداد الدفعة',
+        'body' => 'حدد هنا متى يدرس الفصل وكم مقعداً متاحاً. بعد الحفظ انتقل لصفحة الفصل لتسجيل الطلاب وتوليد الجدول تلقائياً.',
+        'steps' => [
+            'عنوان واضح للدفعة (مثل: دفعة مارس 2026).',
+            'أيام الدراسة + وقت البداية + السعة.',
+            'الحالة: مفتوحة للتسجيل أو مغلقة.',
+            'بعد الحفظ: افتح الفصل ← أضف طلاب ← ولّد الحصص.',
+        ],
+    ])
+
     <form method="POST" action="{{ $mode === 'create' ? route('admin.tutoring-groups.cohorts.store', $group) : route('admin.tutoring-groups.cohorts.update', [$group, $cohort]) }}" class="space-y-5">
         @csrf
         @if($mode === 'edit') @method('PUT') @endif

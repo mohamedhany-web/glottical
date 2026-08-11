@@ -120,6 +120,12 @@ class PrivateLecturesController extends Controller
 
         $thread->load(['instructor:id,name,profile_image', 'messages.sender:id,name,profile_image']);
 
+        \App\Models\PrivateLessonMessage::query()
+            ->where('private_lesson_thread_id', $thread->id)
+            ->where('sender_id', '!=', $user->id)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
         $otherThreads = PrivateLessonThread::query()
             ->where('student_id', $user->id)
             ->where('id', '!=', $thread->id)

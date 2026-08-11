@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\User;
+use App\Models\Coupon;
 use App\Models\Referral;
 use App\Models\ReferralProgram;
-use App\Models\Coupon;
-use Illuminate\Support\Str;
+use App\Models\ServicePackage;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ReferralService
 {
@@ -20,12 +22,10 @@ class ReferralService
             return $user->referral_code;
         }
 
-        // إنشاء كود فريد بناءً على ID المستخدم
-        $code = 'REF' . str_pad($user->id, 6, '0', STR_PAD_LEFT) . strtoupper(Str::random(4));
-        
-        // التأكد من أن الكود فريد
+        $code = 'REF'.str_pad((string) $user->id, 6, '0', STR_PAD_LEFT).strtoupper(Str::random(4));
+
         while (User::where('referral_code', $code)->exists()) {
-            $code = 'REF' . str_pad($user->id, 6, '0', STR_PAD_LEFT) . strtoupper(Str::random(4));
+            $code = 'REF'.str_pad((string) $user->id, 6, '0', STR_PAD_LEFT).strtoupper(Str::random(4));
         }
 
         $user->update(['referral_code' => $code]);
@@ -36,7 +36,7 @@ class ReferralService
     /**
      * معالجة إحالة مستخدم جديد
      */
-    public function processReferral(User $referrer, User $referred, string $referralCode = null): ?Referral
+    public function processReferral(User $referrer, User $referred, ?string $referralCode = null): ?Referral
     {
         $program = ReferralProgram::currentForNewReferrals();
 
@@ -61,7 +61,6 @@ class ReferralService
             return $existingForReferred;
         }
 
-        // إنشاء الإحالة
         $referral = Referral::create([
             'referral_program_id' => $program->id,
             'referrer_id' => $referrer->id,
@@ -71,95 +70,79 @@ class ReferralService
             'status' => Referral::STATUS_PENDING,
         ]);
 
-        // تحديث معلومات المستخدم المحال
         $referred->update([
             'referred_by' => $referrer->id,
             'referred_at' => now(),
         ]);
 
-        // تحديث إحصائيات المحيل
         $referrer->increment('total_referrals');
 
-        // إنشاء كوبون تلقائي للمحال
-        $coupon = $this->createAutoCouponForReferred($referral, $program);
-
-        if ($coupon) {
-            $referral->update([
-                'auto_coupon_id' => $coupon->id,
-                'discount_expires_at' => Carbon::now()->addDays($program->discount_valid_days),
-            ]);
+        if ($program->usesDiscount()) {
+            $coupon = $this->createAutoCouponForReferred($referral, $program);
+            if ($coupon) {
+                $referral->update([
+                    'auto_coupon_id' => $coupon->id,
+                    'discount_expires_at' => Carbon::now()->addDays((int) ($program->discount_valid_days ?: 30)),
+                ]);
+            }
+        } elseif ($program->usesCredits() && $program->shouldGrantReferredOnSignup()) {
+            $this->grantReferredCredits($referral, $program);
         }
 
-        return $referral;
+        return $referral->fresh();
     }
 
     /**
-     * إنشاء كوبون تلقائي للمستخدم المحال
+     * إنشاء كوبون تلقائي للمستخدم المحال (وضع الخصم فقط)
      */
     public function createAutoCouponForReferred(Referral $referral, ReferralProgram $program): ?Coupon
     {
         $referred = $referral->referred;
         $referrer = $referral->referrer;
 
-        // إنشاء كود كوبون فريد
-        $couponCode = 'REF-' . strtoupper(Str::random(8));
-
-        // التأكد من أن الكود فريد
+        $couponCode = 'REF-'.strtoupper(Str::random(8));
         while (Coupon::where('code', $couponCode)->exists()) {
-            $couponCode = 'REF-' . strtoupper(Str::random(8));
+            $couponCode = 'REF-'.strtoupper(Str::random(8));
         }
 
-        // حساب مبلغ الخصم (سنستخدم الحد الأقصى كقيمة افتراضية للكوبون)
-        $discountValue = $program->discount_value;
-        if ($program->discount_type === 'percentage') {
-            // بالنسبة المئوية، نحفظ القيمة كما هي
-            $discountValue = $program->discount_value;
-        }
-
-        // إنشاء الكوبون
-        $coupon = Coupon::create([
+        return Coupon::create([
             'code' => $couponCode,
-            'name' => 'خصم الإحالة - ' . $referrer->name,
+            'name' => 'خصم الإحالة - '.$referrer->name,
             'title' => 'خصم خاص من برنامج الإحالة',
             'description' => "خصم خاص للمستخدم المحال من {$referrer->name}. برنامج: {$program->name}",
             'discount_type' => $program->discount_type,
-            'discount_value' => $discountValue,
+            'discount_value' => $program->discount_value,
             'maximum_discount' => $program->maximum_discount,
             'minimum_amount' => $program->minimum_order_amount,
             'usage_limit' => $program->max_discount_uses_per_referred,
-            'usage_limit_per_user' => 1, // للمستخدم المحال فقط
-            'applicable_user_ids' => [$referred->id], // للمستخدم المحال فقط
-            'applicable_to' => 'all', // أو 'courses' حسب الحاجة
+            'usage_limit_per_user' => 1,
+            'applicable_user_ids' => [$referred->id],
+            'applicable_to' => 'all',
             'starts_at' => now(),
-            'expires_at' => Carbon::now()->addDays($program->discount_valid_days),
+            'expires_at' => Carbon::now()->addDays((int) ($program->discount_valid_days ?: 30)),
             'is_active' => true,
-            'is_public' => false, // كوبون خاص
+            'is_public' => false,
         ]);
-
-        return $coupon;
     }
 
     /**
-     * تطبيق خصم الإحالة تلقائياً على الطلب
+     * تطبيق خصم الإحالة تلقائياً على الطلب (وضع الخصم فقط)
      */
     public function applyReferralDiscount(User $user, $orderAmount): ?Coupon
     {
-        // البحث عن إحالة للمستخدم
         $referral = Referral::where('referred_id', $user->id)
             ->where('status', Referral::STATUS_PENDING)
             ->with(['referralProgram', 'autoCoupon'])
             ->first();
 
-        if (!$referral || !$referral->referralProgram) {
+        if (! $referral || ! $referral->referralProgram || ! $referral->referralProgram->usesDiscount()) {
             return null;
         }
 
-        // التحقق من صلاحية الخصم
-        if (!$referral->canUseDiscount()) {
+        if (! $referral->canUseDiscount()) {
             return null;
         }
 
-        // التحقق من الكوبون
         if ($referral->autoCoupon && $referral->autoCoupon->isValid() && $referral->autoCoupon->canBeUsedByUser($user->id)) {
             return $referral->autoCoupon;
         }
@@ -168,7 +151,27 @@ class ReferralService
     }
 
     /**
-     * تحديث حالة الإحالة عند اكتمال الطلب
+     * اكتمال إحالة مستخدم بعد أول طلب مدفوع معتمد.
+     */
+    public function completePendingForUser(int $userId, $orderAmount = null): ?Referral
+    {
+        $referral = Referral::query()
+            ->where('referred_id', $userId)
+            ->where('status', Referral::STATUS_PENDING)
+            ->with('referralProgram')
+            ->first();
+
+        if (! $referral) {
+            return null;
+        }
+
+        $this->markReferralAsCompleted($referral, $orderAmount);
+
+        return $referral->fresh();
+    }
+
+    /**
+     * تحديث حالة الإحالة عند اكتمال الطلب + منح رصيد الحصص
      */
     public function markReferralAsCompleted(Referral $referral, $orderAmount = null): void
     {
@@ -176,18 +179,36 @@ class ReferralService
             return;
         }
 
+        $referral->loadMissing('referralProgram');
+        $program = $referral->referralProgram;
+
         $referral->update([
             'status' => Referral::STATUS_COMPLETED,
             'completed_at' => now(),
         ]);
 
-        // تحديث إحصائيات المحيل
         $referrer = $referral->referrer;
-        $referrer->increment('completed_referrals');
+        if ($referrer) {
+            $referrer->increment('completed_referrals');
+        }
 
-        // حساب المكافأة للمحيل (إذا كان هناك مكافأة)
-        $program = $referral->referralProgram;
-        if ($program && $program->referrer_reward_value !== null && (float) $program->referrer_reward_value > 0) {
+        if (! $program) {
+            return;
+        }
+
+        if ($program->usesCredits()) {
+            if ($program->shouldGrantReferredOnPurchase() && (int) $referral->referred_units_granted <= 0) {
+                $this->grantReferredCredits($referral, $program);
+            }
+            if ($program->shouldGrantReferrerOnPurchase() && (int) $referral->referrer_units_granted <= 0) {
+                $this->grantReferrerCredits($referral, $program);
+            }
+
+            return;
+        }
+
+        // وضع الخصم القديم: تسجيل مكافأة مالية/نقاط فقط
+        if ($program->referrer_reward_value !== null && (float) $program->referrer_reward_value > 0) {
             if ($program->referrer_reward_type === 'points') {
                 $referral->update([
                     'reward_points' => (int) round((float) $program->referrer_reward_value),
@@ -205,15 +226,84 @@ class ReferralService
         }
     }
 
+    public function grantReferredCredits(Referral $referral, ReferralProgram $program): void
+    {
+        $units = max(0, (int) $program->referred_credit_units);
+        if ($units <= 0 || (int) $referral->referred_units_granted > 0) {
+            return;
+        }
+
+        try {
+            $entitlement = StudentEntitlementService::grantManual(
+                userId: (int) $referral->referred_id,
+                scope: $program->credit_scope ?: ServicePackage::SCOPE_PRIVATE_LESSONS,
+                units: $units,
+                durationDays: $program->credit_duration_days ? (int) $program->credit_duration_days : null,
+                notes: 'مكافأة إحالة — رصيد للمحالة (برنامج: '.$program->name.')',
+            );
+
+            $referral->update([
+                'referred_entitlement_id' => $entitlement->id,
+                'referred_units_granted' => $units,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Referral referred credit grant failed: '.$e->getMessage(), [
+                'referral_id' => $referral->id,
+            ]);
+        }
+    }
+
+    public function grantReferrerCredits(Referral $referral, ReferralProgram $program): void
+    {
+        $units = max(0, (int) $program->referrer_credit_units);
+        if ($units <= 0 || (int) $referral->referrer_units_granted > 0) {
+            return;
+        }
+
+        try {
+            $entitlement = StudentEntitlementService::grantManual(
+                userId: (int) $referral->referrer_id,
+                scope: $program->credit_scope ?: ServicePackage::SCOPE_PRIVATE_LESSONS,
+                units: $units,
+                durationDays: $program->credit_duration_days ? (int) $program->credit_duration_days : null,
+                notes: 'مكافأة إحالة — رصيد للمحيلة (برنامج: '.$program->name.')',
+            );
+
+            $referral->update([
+                'referrer_entitlement_id' => $entitlement->id,
+                'referrer_units_granted' => $units,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Referral referrer credit grant failed: '.$e->getMessage(), [
+                'referral_id' => $referral->id,
+            ]);
+        }
+    }
+
     /**
      * الحصول على كود الإحالة للمستخدم
      */
     public function getUserReferralCode(User $user): string
     {
-        if (!$user->referral_code) {
+        if (! $user->referral_code) {
             return $this->generateReferralCode($user);
         }
 
         return $user->referral_code;
+    }
+
+    /**
+     * بناء نص مشاركة واتساب من إعدادات البرنامج
+     */
+    public function buildShareMessage(ReferralProgram $program, string $code, string $link): string
+    {
+        $units = max((int) $program->referred_credit_units, (int) $program->referrer_credit_units, 1);
+        $message = $program->resolvedShareMessage();
+
+        return str_replace(
+            ['{link}', '{code}', '{units}'],
+            [$link, $code, (string) $units],
+            $message
+        );
     }
 }

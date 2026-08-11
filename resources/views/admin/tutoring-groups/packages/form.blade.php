@@ -17,6 +17,16 @@
         <a href="{{ route('admin.tutoring-groups.packages.index', $group) }}" class="btn-press inline-flex h-9 items-center rounded-xl border border-line px-4 text-sm text-ink-soft">رجوع</a>
     </section>
 
+    @include('admin.partials.workflow-guide', [
+        'title' => 'إعداد الباقة',
+        'body' => 'الباقة تحدد ماذا يشتري الطالب (مدة + عدد حصص + سعر). بعد الحفظ تظهر في العرض الفردي وتُستخدم في التسكين.',
+        'steps' => [
+            'حدد الأشهر وعدد الحصص وسعر الساعة أو السعر النهائي.',
+            'راجع السعر المقترح تلقائياً وعدّله إن لزم.',
+            'فعّل الباقة ليظهر للطالب أو لفريق التسكين.',
+        ],
+    ])
+
     <div class="rounded-2xl border border-accent/20 bg-accent-soft/40 px-4 py-3 text-sm text-ink">
         <strong>حساب تلقائي:</strong> السعر الأصلي = سعر الساعة × حصص/شهر × عدد الأشهر.
         السعر المقترح حالياً: <span class="font-bold text-accent tabular-nums">{{ number_format($suggestedPrice, 0) }}</span>

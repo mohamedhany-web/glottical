@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Mail\InAppNotificationMail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class Notification extends Model
 {
@@ -34,6 +37,55 @@ class Notification extends Model
         'data' => 'array',
     ];
 
+    protected static function booted(): void
+    {
+        static::created(function (self $notification) {
+            $notification->dispatchEmailCopy();
+        });
+    }
+
+    /**
+     * إرسال نسخة بريدية إلى Gmail/البريد المرتبط بحساب المستخدم.
+     */
+    public function dispatchEmailCopy(): void
+    {
+        if (! filter_var(config('mail.notify_in_app', true), FILTER_VALIDATE_BOOLEAN)) {
+            return;
+        }
+
+        $data = is_array($this->data) ? $this->data : [];
+        if (! empty($data['skip_email'])) {
+            return;
+        }
+
+        try {
+            $user = $this->relationLoaded('user') ? $this->user : $this->user()->first();
+            if (! $user || empty($user->email)) {
+                return;
+            }
+
+            $mailable = new InAppNotificationMail($this, (string) ($user->name ?? ''));
+
+            // لا نوقف الطلب إذا فشل البريد
+            dispatch(function () use ($user, $mailable) {
+                try {
+                    Mail::to($user->email)->send($mailable);
+                } catch (\Throwable $e) {
+                    Log::warning('In-app notification email failed', [
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            })->afterResponse();
+        } catch (\Throwable $e) {
+            Log::warning('In-app notification email dispatch failed', [
+                'notification_id' => $this->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
     /**
      * علاقة مع المستخدم المستقبل
      */
@@ -56,6 +108,7 @@ class Notification extends Model
     public static function getTypes()
     {
         return [
+            'message' => 'رسالة',
             'general' => 'عام',
             'course' => 'كورس',
             'exam' => 'امتحان',
@@ -227,15 +280,33 @@ class Notification extends Model
     public static function sendToUsers($userIds, $data)
     {
         $notifications = [];
+        $now = now();
         foreach ($userIds as $userId) {
             $notifications[] = array_merge($data, [
                 'user_id' => $userId,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ]);
         }
 
-        return self::insert($notifications);
+        $ok = self::insert($notifications);
+
+        // insert() لا يطلق created — نرسل البريد يدوياً
+        if ($ok && filter_var(config('mail.notify_in_app', true), FILTER_VALIDATE_BOOLEAN)) {
+            $skip = is_array($data['data'] ?? null) && ! empty($data['data']['skip_email']);
+            if (! $skip) {
+                self::query()
+                    ->whereIn('user_id', $userIds)
+                    ->where('title', $data['title'] ?? '')
+                    ->where('created_at', '>=', $now->copy()->subMinute())
+                    ->latest('id')
+                    ->limit(count($notifications))
+                    ->get()
+                    ->each(fn (self $n) => $n->dispatchEmailCopy());
+            }
+        }
+
+        return $ok;
     }
 
     /**

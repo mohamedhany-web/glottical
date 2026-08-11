@@ -37,10 +37,7 @@
                 <a href="{{ request()->fullUrlWithQuery(['lang' => 'en']) }}" class="{{ $locale === 'en' ? 'is-active' : '' }}">{{ __('student_timeline.lang_en') }}</a>
             </div>
 
-            <a href="{{ route('notifications') }}" class="st-bell" aria-label="{{ __('student_timeline.nav_messages') }}">
-                <img src="{{ asset('img/student-timeline/bell.svg') }}" alt="" width="20" height="20">
-                <span class="st-bell__dot" aria-hidden="true"></span>
-            </a>
+            @include('partials.student-timeline-bell')
 
             <button type="button" class="st-top__menu" id="stTopMenu" aria-expanded="false" aria-controls="stRail" aria-label="{{ __('student_timeline.toggle_sidebar') }}">
                 <i class="fas fa-bars" aria-hidden="true"></i>

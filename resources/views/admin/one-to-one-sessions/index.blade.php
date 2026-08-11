@@ -12,6 +12,17 @@
         </div>
         <a href="{{ route('admin.one-to-one-sessions.create') }}" class="inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-white"><i class="fas fa-user-plus"></i> تسكين حصة خاصة</a>
     </div>
+
+    @include('admin.partials.workflow-guide', [
+        'title' => 'مسار الحصص الخاصة',
+        'body' => 'كل صف هنا حصة فردية بين طالب ومعلم. ابدأ من التسكين، ثم تابع الجدولة والحالة وغرفة Live من هذه القائمة.',
+        'steps' => [
+            'تأكد من باقة الطالب وجدول المعلم.',
+            'أنشئ تسكيناً جديداً أو راجع الحصص بانتظار موعد.',
+            'عند اكتمال الحصة حدّث الحالة ليُخصم الرصيد بشكل صحيح.',
+        ],
+    ])
+
     @if(session('success'))
         <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
     @endif

@@ -39,6 +39,30 @@
         </div>
     </section>
 
+    @if(($type ?? '') === 'collective')
+        @include('admin.partials.workflow-guide', [
+            'title' => 'كيف تعمل فصول / المجموعات الجماعية؟',
+            'body' => 'هذه الصفحة لإنشاء العرض الذي يراه الطالب على الموقع (مثل فصل سنة معينة). العرض وحده لا يكفي — لازم تضيف دفعات ثم تدير الفصل.',
+            'steps' => [
+                'أنشئ مجموعة جماعية جديدة وحدّد المدرب والظهور.',
+                'من زر الدفعات: أنشئ دفعة (سعة + جدول + موعد بداية).',
+                'افتح «الفصل» داخل الدفعة لتسجيل الطلاب وتوليد الحصص وغرف Live.',
+                'راجع الحجوزات أو التسكين لوضع الطلاب في الدفعة المناسبة.',
+            ],
+        ])
+    @else
+        @include('admin.partials.workflow-guide', [
+            'title' => 'كيف تعمل المجموعات الفردية؟',
+            'body' => 'المسار الفردي منفصل عن فصول المدرسة: الطالب يشتري باقة، ثم يُسكَّن مع معلم حسب جدول التوفر.',
+            'steps' => [
+                'أنشئ مجموعة فردية ظاهرة للطلاب.',
+                'أضف باقات (عدد حصص / مدة / سعر) من صفحة الباقات.',
+                'حدّث جداول عمل المدربين حتى تظهر مواعيد صحيحة.',
+                'من التسكين أو حجوزات المجموعات ثبّت الموعد مع الطالب.',
+            ],
+        ])
+    @endif
+
     @if(session('success'))
         <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
             <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>

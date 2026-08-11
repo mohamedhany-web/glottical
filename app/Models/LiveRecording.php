@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 class LiveRecording extends Model
 {
     protected $fillable = [
-        'session_id', 'title', 'file_path', 'external_url', 'storage_disk',
+        'session_id', 'library_folder_id', 'title', 'file_path', 'external_url', 'storage_disk',
         'file_size', 'duration_seconds', 'status', 'is_published',
     ];
 
@@ -21,6 +21,11 @@ class LiveRecording extends Model
     public function session()
     {
         return $this->belongsTo(LiveSession::class, 'session_id');
+    }
+
+    public function folder()
+    {
+        return $this->belongsTo(LibraryFolder::class, 'library_folder_id');
     }
 
     /**

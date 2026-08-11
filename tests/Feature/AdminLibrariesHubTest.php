@@ -102,6 +102,7 @@ class AdminLibrariesHubTest extends TestCase
             $table->string('title')->nullable();
             $table->string('file_name')->nullable();
             $table->string('file_path')->nullable();
+            $table->string('storage_disk', 32)->default('public');
             $table->boolean('is_visible_to_student')->default(true);
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
@@ -172,6 +173,7 @@ class AdminLibrariesHubTest extends TestCase
 
     public function test_admin_can_upload_and_toggle_material(): void
     {
+        config(['filesystems.lecture_materials_disk' => 'public', 'filesystems.public_media_disk' => 'public']);
         Storage::fake('public');
         $admin = $this->admin();
         $course = AdvancedCourse::create(['title' => 'كورس تجريبي', 'is_active' => true]);
@@ -192,6 +194,8 @@ class AdminLibrariesHubTest extends TestCase
         $material = LectureMaterial::query()->first();
         $this->assertNotNull($material);
         $this->assertTrue((bool) $material->is_visible_to_student);
+        $this->assertSame('public', $material->storage_disk);
+        Storage::disk('public')->assertExists($material->file_path);
 
         $this->actingAs($admin)
             ->post(route('admin.libraries.materials.toggle', $material))

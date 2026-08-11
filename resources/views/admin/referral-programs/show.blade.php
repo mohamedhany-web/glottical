@@ -100,6 +100,32 @@
                     </dd>
                 </div>
                 <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+                    <dt class="text-sm text-muted">وضع المكافأة</dt>
+                    <dd class="text-sm font-semibold text-ink">{{ $referralProgram->usesCredits() ? 'رصيد حصص' : 'خصم / كوبون' }}</dd>
+                </div>
+                @if($referralProgram->usesCredits())
+                    <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+                        <dt class="text-sm text-muted">نطاق الرصيد</dt>
+                        <dd class="text-sm font-semibold text-ink">{{ $referralProgram->creditScopeLabel() }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+                        <dt class="text-sm text-muted">حصص المدعوّة</dt>
+                        <dd class="text-sm font-bold tabular-nums text-ink">{{ (int) $referralProgram->referred_credit_units }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+                        <dt class="text-sm text-muted">حصص المحيلة</dt>
+                        <dd class="text-sm font-bold tabular-nums text-ink">{{ (int) $referralProgram->referrer_credit_units }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+                        <dt class="text-sm text-muted">حصص مُنحت للمدعوّات</dt>
+                        <dd class="text-sm font-semibold tabular-nums text-emerald-700">{{ number_format($stats['total_credits_referred'] ?? 0) }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+                        <dt class="text-sm text-muted">حصص مُنحت للمحيلات</dt>
+                        <dd class="text-sm font-semibold tabular-nums text-emerald-700">{{ number_format($stats['total_credits_referrer'] ?? 0) }}</dd>
+                    </div>
+                @else
+                <div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
                     <dt class="text-sm text-muted">نوع الخصم للمحال</dt>
                     <dd class="text-sm font-semibold text-ink">{{ $referralProgram->discount_type == 'percentage' ? 'نسبة مئوية' : 'مبلغ ثابت' }}</dd>
                 </div>
@@ -141,6 +167,7 @@
                         </dd>
                     </div>
                 @endif
+                @endif
             </dl>
         </article>
 
@@ -174,7 +201,13 @@
                                 </span>
                             </div>
                             <div class="mt-3 flex items-center justify-between text-xs text-muted">
-                                <span>الخصم: <span class="font-semibold tabular-nums text-ink">{{ number_format($referral->discount_amount ?? 0, 2) }} ج.م</span></span>
+                                <span>
+                                    @if($referralProgram->usesCredits())
+                                        حصص: <span class="font-semibold tabular-nums text-ink">{{ (int) $referral->referred_units_granted + (int) $referral->referrer_units_granted }}</span>
+                                    @else
+                                        الخصم: <span class="font-semibold tabular-nums text-ink">{{ number_format($referral->discount_amount ?? 0, 2) }} ج.م</span>
+                                    @endif
+                                </span>
                                 <span>{{ $referral->created_at->format('d/m/Y') }}</span>
                             </div>
                         </div>

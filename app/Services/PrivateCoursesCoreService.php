@@ -57,7 +57,7 @@ class PrivateCoursesCoreService
             default => PrivateLessonMessage::ROLE_STUDENT,
         };
 
-        return DB::transaction(function () use ($thread, $sender, $body, $internalNote, $role) {
+        $message = DB::transaction(function () use ($thread, $sender, $body, $internalNote, $role) {
             $message = PrivateLessonMessage::create([
                 'private_lesson_thread_id' => $thread->id,
                 'sender_id' => $sender->id,
@@ -75,6 +75,106 @@ class PrivateCoursesCoreService
 
             return $message;
         });
+
+        if (! $internalNote) {
+            self::notifyMessageRecipient($thread, $sender, $message);
+        }
+
+        return $message;
+    }
+
+    /**
+     * إشعار الطرف الآخر (طالب↔معلم) — يظهر داخل المنصة + بريد إن لم يكن متصلاً (MAIL_NOTIFY_IN_APP).
+     */
+    public static function notifyMessageRecipient(
+        PrivateLessonThread $thread,
+        User $sender,
+        PrivateLessonMessage $message
+    ): void {
+        $thread->loadMissing(['student:id,name,email', 'instructor:id,name,email']);
+
+        $recipientId = null;
+        $audience = null;
+        $actionUrl = null;
+
+        if ((int) $sender->id === (int) $thread->student_id) {
+            $recipientId = (int) $thread->instructor_id;
+            $audience = 'instructor';
+            $actionUrl = self::messageActionUrl('instructor', $thread);
+        } elseif ((int) $sender->id === (int) $thread->instructor_id) {
+            $recipientId = (int) $thread->student_id;
+            $audience = 'student';
+            $actionUrl = self::messageActionUrl('student', $thread);
+        } elseif ($sender->isAdmin()) {
+            foreach ([
+                [(int) $thread->student_id, 'student', self::messageActionUrl('student', $thread)],
+                [(int) $thread->instructor_id, 'instructor', self::messageActionUrl('instructor', $thread)],
+            ] as [$uid, $aud, $url]) {
+                if ($uid > 0 && $uid !== (int) $sender->id) {
+                    self::createMessageNotification($uid, $sender, $message, $aud, $url, $thread);
+                }
+            }
+
+            return;
+        }
+
+        if (! $recipientId || $recipientId === (int) $sender->id) {
+            return;
+        }
+
+        self::createMessageNotification($recipientId, $sender, $message, $audience, $actionUrl, $thread);
+    }
+
+    private static function messageActionUrl(string $audience, PrivateLessonThread $thread): string
+    {
+        if ($audience === 'instructor') {
+            if (\Illuminate\Support\Facades\Route::has('instructor.private-messages.show')) {
+                return route('instructor.private-messages.show', $thread);
+            }
+
+            return url('/instructor/private-messages/'.$thread->id);
+        }
+
+        if (\Illuminate\Support\Facades\Route::has('student.private-messages.show')) {
+            return route('student.private-messages.show', $thread);
+        }
+
+        return url('/private-messages/'.$thread->id);
+    }
+
+    private static function createMessageNotification(
+        int $recipientId,
+        User $sender,
+        PrivateLessonMessage $message,
+        string $audience,
+        string $actionUrl,
+        PrivateLessonThread $thread
+    ): void {
+        $preview = \Illuminate\Support\Str::limit(trim((string) $message->body), 160);
+        $isAr = app()->getLocale() === 'ar';
+
+        Notification::create([
+            'user_id' => $recipientId,
+            'sender_id' => $sender->id,
+            'title' => $isAr
+                ? ('رسالة جديدة من '.$sender->name)
+                : ('New message from '.$sender->name),
+            'message' => $preview !== ''
+                ? $preview
+                : ($isAr ? 'لديك رسالة جديدة في المحادثة الخاصة.' : 'You have a new private message.'),
+            'type' => 'message',
+            'action_url' => $actionUrl,
+            'action_text' => $isAr ? 'افتح المحادثة' : 'Open chat',
+            'priority' => 'high',
+            'target_type' => PrivateLessonThread::class,
+            'target_id' => $thread->id,
+            'audience' => $audience,
+            'is_read' => false,
+            'data' => [
+                'kind' => 'private_lesson_message',
+                'message_id' => $message->id,
+            ],
+        ]);
     }
 
     public static function ensureReception(int $studentId, ?int $instructorId = null, string $source = 'assignment'): StudentReception

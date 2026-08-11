@@ -1,313 +1,226 @@
-@extends('layouts.app')
+@extends('layouts.student-timeline')
 
 @section('title', $notification->title)
-@section('header', __('student.notification_details'))
 
 @section('content')
-<div class="space-y-6">
-    <!-- الهيدر -->
-    <div class="flex items-center justify-between">
-        <div>
-            <nav class="text-sm text-gray-500 mb-2">
-                <a href="{{ route('dashboard') }}" class="hover:text-primary-600">{{ __('student.dashboard') }}</a>
-                <span class="mx-2">/</span>
-                <a href="{{ route('notifications') }}" class="hover:text-primary-600">{{ __('student.notifications') }}</a>
-                <span class="mx-2">/</span>
-                <span>{{ $notification->title }}</span>
-            </nav>
+@php
+    $locale = app()->getLocale();
+    $isRtl = $locale === 'ar';
+    $senderName = $notification->sender->name ?? __('student_timeline.system');
+    $typeLabel = \App\Models\Notification::getTypes()[$notification->type] ?? $notification->type;
+    $priorityLabel = \App\Models\Notification::getPriorities()[$notification->priority] ?? $notification->priority;
+    $when = $notification->created_at
+        ? $notification->created_at->timezone(config('app.timezone'))->translatedFormat($isRtl ? 'd M Y · g:i A' : 'M j, Y · g:i A')
+        : null;
+    $readWhen = $notification->read_at
+        ? $notification->read_at->timezone(config('app.timezone'))->translatedFormat($isRtl ? 'd M Y · g:i A' : 'M j, Y · g:i A')
+        : null;
+    $expiresWhen = $notification->expires_at
+        ? $notification->expires_at->timezone(config('app.timezone'))->translatedFormat($isRtl ? 'd M Y · g:i A' : 'M j, Y · g:i A')
+        : null;
+    $hasAction = $notification->action_url && $notification->action_text;
+    $otherNotifications = $otherNotifications ?? collect();
+@endphp
+
+<div class="st-ndet-page">
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => __('student_timeline.notif_detail_kicker'),
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => __('student_timeline.nav_messages'), 'url' => route('notifications')],
+        ['label' => __('student_timeline.notif_detail_kicker'), 'url' => null],
+    ],
+])
+
+@if(session('success'))
+    <div class="st-flash st-flash--ok">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+    <div class="st-flash st-flash--err">{{ session('error') }}</div>
+@endif
+
+<section class="st-ndet-hero" aria-label="{{ __('student_timeline.notif_detail_kicker') }}">
+    <div class="st-ndet-hero__glow" aria-hidden="true"></div>
+    <div class="st-ndet-hero__row">
+        <div class="st-ndet-hero__copy">
+            <h1>{{ $notification->title }}</h1>
+            <p class="st-ndet-hero__meta">
+                {{ __('student_timeline.notif_from', ['name' => $senderName]) }}
+                @if($when)
+                    <span aria-hidden="true">·</span> {{ $when }}
+                @endif
+            </p>
+            <div class="st-ndet-hero__chips">
+                <span class="st-ndet-chip">{{ $typeLabel }}</span>
+                @if($notification->priority !== 'normal')
+                    <span class="st-ndet-chip st-ndet-chip--gold">{{ $priorityLabel }}</span>
+                @endif
+                @if($notification->is_read)
+                    <span class="st-ndet-chip st-ndet-chip--soft">{{ __('student_timeline.notif_read') }}</span>
+                @else
+                    <span class="st-ndet-chip st-ndet-chip--gold">{{ __('student_timeline.notif_new') }}</span>
+                @endif
+            </div>
         </div>
-        <a href="{{ route('notifications') }}" 
-           class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-            <i class="fas fa-arrow-right ml-2"></i>
-            {{ __('student.back_to_notifications') }}
-        </a>
+        <div class="st-ndet-hero__actions">
+            @if($hasAction)
+                <a href="{{ route('notifications.go', $notification) }}" class="st-pill st-pill--solid st-ndet-cta">
+                    {{ $notification->action_text }}
+                    <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}" aria-hidden="true"></i>
+                </a>
+            @endif
+            <a href="{{ route('notifications') }}" class="st-pill st-pill--outline st-ndet-back">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('student_timeline.notif_back') }}
+            </a>
+        </div>
     </div>
+</section>
 
-    <!-- محتوى الإشعار -->
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <!-- المحتوى الرئيسي -->
-        <div class="xl:col-span-2">
-            <div class="bg-white shadow-sm rounded-lg border border-gray-200">
-                <!-- هيدر الإشعار -->
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <div class="flex items-center space-x-4 space-x-reverse">
-                        <!-- أيقونة النوع -->
-                        <div class="w-12 h-12 rounded-full flex items-center justify-center
-                            @if($notification->type_color == 'blue') bg-blue-100
-                            @elseif($notification->type_color == 'green') bg-green-100
-                            @elseif($notification->type_color == 'yellow') bg-yellow-100
-                            @elseif($notification->type_color == 'red') bg-red-100
-                            @elseif($notification->type_color == 'purple') bg-purple-100
-                            @elseif($notification->type_color == 'orange') bg-orange-100
-                            @else bg-gray-100
-                            @endif">
-                            <i class="{{ $notification->type_icon }} 
-                                @if($notification->type_color == 'blue') text-blue-600
-                                @elseif($notification->type_color == 'green') text-green-600
-                                @elseif($notification->type_color == 'yellow') text-yellow-600
-                                @elseif($notification->type_color == 'red') text-red-600
-                                @elseif($notification->type_color == 'purple') text-purple-600
-                                @elseif($notification->type_color == 'orange') text-orange-600
-                                @else text-gray-600
-                                @endif text-xl"></i>
-                        </div>
+<section class="st-ndet-layout">
+    <div class="st-ndet-main">
+        <article class="st-panel st-ndet-panel">
+            <h2 class="st-ndet-label">{{ __('student_timeline.notif_message') }}</h2>
+            <div class="st-ndet-prose st-text-auto">{{ $notification->message }}</div>
 
-                        <!-- العنوان والحالة -->
-                        <div class="flex-1">
-                            <h1 class="text-2xl font-bold text-gray-900">{{ $notification->title }}</h1>
-                            <div class="flex items-center gap-3 mt-2">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-                                    @if($notification->type_color == 'blue') bg-blue-100 text-blue-800
-                                    @elseif($notification->type_color == 'green') bg-green-100 text-green-800
-                                    @elseif($notification->type_color == 'yellow') bg-yellow-100 text-yellow-800
-                                    @elseif($notification->type_color == 'red') bg-red-100 text-red-800
-                                    @elseif($notification->type_color == 'purple') bg-purple-100 text-purple-800
-                                    @elseif($notification->type_color == 'orange') bg-orange-100 text-orange-800
-                                    @else bg-gray-100 text-gray-800
-                                    @endif">
-                                    {{ \App\Models\Notification::getTypes()[$notification->type] ?? $notification->type }}
-                                </span>
+            @if($hasAction)
+                <a href="{{ route('notifications.go', $notification) }}" class="st-ndet-action-link">
+                    <span>
+                        <strong>{{ __('student_timeline.notif_action_needed') }}</strong>
+                        <em>{{ $notification->action_text }}</em>
+                    </span>
+                    <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                </a>
+            @endif
 
-                                @if($notification->priority !== 'normal')
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-                                        @if($notification->priority_color == 'red') bg-red-100 text-red-800
-                                        @elseif($notification->priority_color == 'yellow') bg-yellow-100 text-yellow-800
-                                        @else bg-gray-100 text-gray-800
-                                        @endif">
-                                        {{ \App\Models\Notification::getPriorities()[$notification->priority] ?? $notification->priority }}
-                                    </span>
-                                @endif
-
-                                @if($notification->is_read)
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-                                        <i class="fas fa-check ml-1"></i>
-                                        مقروء
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                        <i class="fas fa-circle text-xs ml-1"></i>
-                                        جديد
-                                    </span>
-                                @endif
+            @if(is_array($notification->data) && count($notification->data) > 0)
+                <div class="st-ndet-data">
+                    <p class="st-ndet-data__label">{{ __('student_timeline.notif_extra') }}</p>
+                    <dl class="st-ndet-data__list">
+                        @foreach($notification->data as $key => $value)
+                            <div class="st-ndet-data__row">
+                                <dt>{{ ucfirst((string) $key) }}</dt>
+                                <dd class="st-text-auto">{{ is_array($value) ? json_encode($value, JSON_UNESCAPED_UNICODE) : $value }}</dd>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- محتوى الإشعار -->
-                <div class="p-6">
-                    <div class="prose max-w-none">
-                        <div class="text-gray-900 text-lg leading-relaxed whitespace-pre-wrap">{{ $notification->message }}</div>
-                    </div>
-
-                    <!-- زر الإجراء -->
-                    @if($notification->action_url && $notification->action_text)
-                        <div class="mt-8 p-6 bg-primary-50 border border-primary-200 rounded-lg">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h4 class="font-medium text-primary-900 mb-1">إجراء مطلوب</h4>
-                                    <p class="text-sm text-primary-700">انقر على الزر للمتابعة</p>
-                                </div>
-                                <a href="{{ route('notifications.go', $notification) }}" 
-                                   class="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
-                                    {{ $notification->action_text }}
-                                    <i class="fas fa-external-link-alt mr-2"></i>
-                                </a>
-                            </div>
-                        </div>
-                    @endif
-
-                    <!-- بيانات إضافية -->
-                    @if($notification->data)
-                        <div class="mt-6 p-4 bg-gray-50 rounded-lg">
-                            <h4 class="font-medium text-gray-900 mb-2">معلومات إضافية</h4>
-                            <div class="text-sm text-gray-600">
-                                @foreach($notification->data as $key => $value)
-                                    <div class="flex items-center justify-between py-1">
-                                        <span class="font-medium">{{ ucfirst($key) }}:</span>
-                                        <span>{{ is_array($value) ? json_encode($value) : $value }}</span>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        <!-- الشريط الجانبي -->
-        <div class="space-y-6">
-            <!-- معلومات الإشعار -->
-            <div class="bg-white shadow-sm rounded-lg border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-900">معلومات الإشعار</h3>
-                </div>
-                <div class="p-6 space-y-4">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-gray-500">المرسل</span>
-                        <span class="text-sm text-gray-900">{{ $notification->sender->name ?? 'النظام' }}</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-gray-500">تاريخ الإرسال</span>
-                        <span class="text-sm text-gray-900">{{ $notification->created_at->format('Y-m-d H:i') }}</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-gray-500">تاريخ القراءة</span>
-                        <span class="text-sm text-gray-900">
-                            {{ $notification->read_at ? $notification->read_at->format('Y-m-d H:i') : 'لم يُقرأ بعد' }}
-                        </span>
-                    </div>
-
-                    @if($notification->expires_at)
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm font-medium text-gray-500">ينتهي في</span>
-                            <span class="text-sm {{ $notification->isExpired() ? 'text-red-600' : 'text-gray-900' }}">
-                                {{ $notification->expires_at->format('Y-m-d H:i') }}
-                            </span>
-                        </div>
-                    @endif
-
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm font-medium text-gray-500">الحالة</span>
-                        <span class="text-sm font-medium {{ $notification->is_read ? 'text-green-600' : 'text-blue-600' }}">
-                            {{ $notification->is_read ? 'مقروء' : 'جديد' }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- إجراءات -->
-            <div class="bg-white shadow-sm rounded-lg border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-900">إجراءات</h3>
-                </div>
-                <div class="p-6 space-y-3">
-                    @if(!$notification->is_read)
-                        <button onclick="markAsRead()" 
-                                class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                            <i class="fas fa-check ml-2"></i>
-                            تحديد كمقروء
-                        </button>
-                    @endif
-                    
-                    <button onclick="deleteNotification()" 
-                            class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                        <i class="fas fa-trash ml-2"></i>
-                        حذف الإشعار
-                    </button>
-                    
-                    <a href="{{ route('notifications') }}" 
-                       class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors block text-center">
-                        <i class="fas fa-list ml-2"></i>
-                        جميع الإشعارات
-                    </a>
-                </div>
-            </div>
-
-            <!-- إشعارات أخرى -->
-            @php
-                $otherNotifications = auth()->user()->customNotifications()
-                                                 ->where(function ($q) { $q->whereNull('audience')->orWhere('audience', 'student'); })
-                                                 ->where('id', '!=', $notification->id)
-                                                 ->valid()
-                                                 ->orderBy('created_at', 'desc')
-                                                 ->take(5)
-                                                 ->get();
-            @endphp
-
-            @if($otherNotifications->count() > 0)
-                <div class="bg-white shadow-sm rounded-lg border border-gray-200">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-900">إشعارات أخرى</h3>
-                    </div>
-                    <div class="p-6">
-                        <div class="space-y-3">
-                            @foreach($otherNotifications as $other)
-                                <a href="{{ route('notifications.show', $other) }}" 
-                                   class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                    <div class="flex items-center space-x-3 space-x-reverse">
-                                        <div class="w-8 h-8 rounded-full flex items-center justify-center
-                                            @if($other->type_color == 'blue') bg-blue-100
-                                            @elseif($other->type_color == 'green') bg-green-100
-                                            @elseif($other->type_color == 'yellow') bg-yellow-100
-                                            @elseif($other->type_color == 'red') bg-red-100
-                                            @elseif($other->type_color == 'purple') bg-purple-100
-                                            @elseif($other->type_color == 'orange') bg-orange-100
-                                            @else bg-gray-100
-                                            @endif">
-                                            <i class="{{ $other->type_icon }} text-sm
-                                                @if($other->type_color == 'blue') text-blue-600
-                                                @elseif($other->type_color == 'green') text-green-600
-                                                @elseif($other->type_color == 'yellow') text-yellow-600
-                                                @elseif($other->type_color == 'red') text-red-600
-                                                @elseif($other->type_color == 'purple') text-purple-600
-                                                @elseif($other->type_color == 'orange') text-orange-600
-                                                @else text-gray-600
-                                                @endif"></i>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex items-center gap-2">
-                                                <p class="text-sm font-medium text-gray-900 truncate">{{ $other->title }}</p>
-                                                @if(!$other->is_read)
-                                                    <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                                @endif
-                                            </div>
-                                            <p class="text-xs text-gray-500 mt-1">{{ $other->created_at->diffForHumans() }}</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
+                        @endforeach
+                    </dl>
                 </div>
             @endif
-        </div>
+        </article>
     </div>
+
+    <aside class="st-ndet-side">
+        <article class="st-panel st-ndet-panel">
+            <h2 class="st-ndet-label">{{ __('student_timeline.notif_info') }}</h2>
+            <ul class="st-ndet-meta">
+                <li>
+                    <span>{{ __('student_timeline.notif_sender') }}</span>
+                    <strong>{{ $senderName }}</strong>
+                </li>
+                <li>
+                    <span>{{ __('student_timeline.notif_sent_at') }}</span>
+                    <strong>{{ $when ?? '—' }}</strong>
+                </li>
+                <li>
+                    <span>{{ __('student_timeline.notif_read_at') }}</span>
+                    <strong>{{ $readWhen ?? __('student_timeline.notif_not_read_yet') }}</strong>
+                </li>
+                @if($expiresWhen)
+                    <li>
+                        <span>{{ __('student_timeline.notif_expires_at') }}</span>
+                        <strong class="{{ $notification->isExpired() ? 'is-warn' : '' }}">{{ $expiresWhen }}</strong>
+                    </li>
+                @endif
+                <li>
+                    <span>{{ __('student_timeline.notif_status') }}</span>
+                    <strong>{{ $notification->is_read ? __('student_timeline.notif_read') : __('student_timeline.notif_new') }}</strong>
+                </li>
+            </ul>
+
+            <div class="st-ndet-actions">
+                @if(! $notification->is_read)
+                    <button type="button" class="st-pill st-pill--solid" id="stNdetMarkRead">
+                        <i class="fas fa-check" aria-hidden="true"></i>
+                        {{ __('student_timeline.mark_read') }}
+                    </button>
+                @endif
+                <button type="button" class="st-pill st-pill--outline st-ndet-del" id="stNdetDelete">
+                    <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                    {{ __('student_timeline.delete_notification') }}
+                </button>
+                <a href="{{ route('notifications') }}" class="st-pill st-pill--light">
+                    <i class="fas fa-list" aria-hidden="true"></i>
+                    {{ __('student_timeline.notif_all') }}
+                </a>
+            </div>
+        </article>
+
+        @if($otherNotifications->count() > 0)
+            <article class="st-panel st-ndet-panel">
+                <h2 class="st-ndet-label">{{ __('student_timeline.notif_others') }}</h2>
+                <div class="st-ndet-others">
+                    @foreach($otherNotifications as $other)
+                        <a href="{{ route('notifications.show', $other) }}" class="st-ndet-other {{ $other->is_read ? '' : 'is-unread' }}">
+                            <span class="st-ndet-other__icon" aria-hidden="true"><i class="{{ $other->type_icon }}"></i></span>
+                            <span class="st-ndet-other__body">
+                                <strong>{{ \Illuminate\Support\Str::limit($other->title, 42) }}</strong>
+                                <em>{{ $other->created_at?->diffForHumans() }}</em>
+                            </span>
+                            @if(! $other->is_read)
+                                <span class="st-ndet-other__dot" aria-hidden="true"></span>
+                            @endif
+                        </a>
+                    @endforeach
+                </div>
+            </article>
+        @endif
+    </aside>
+</section>
 </div>
+@endsection
 
 @push('scripts')
 <script>
-function markAsRead() {
-    fetch(`{{ route('notifications.mark-read', $notification) }}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
-}
+(function () {
+    var markBtn = document.getElementById('stNdetMarkRead');
+    var delBtn = document.getElementById('stNdetDelete');
+    var csrf = @json(csrf_token());
+    var markUrl = @json(route('notifications.mark-read', $notification));
+    var delUrl = @json(route('notifications.destroy', $notification));
+    var listUrl = @json(route('notifications'));
+    var confirmDel = @json(__('student_timeline.confirm_delete_notif'));
 
-function deleteNotification() {
-    if (confirm('هل تريد حذف هذا الإشعار؟')) {
-        fetch(`{{ route('notifications.destroy', $notification) }}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.href = '{{ route("notifications") }}';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
+    if (markBtn) {
+        markBtn.addEventListener('click', function () {
+            fetch(markUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json'
+                }
+            }).then(function (r) { return r.json(); }).then(function (data) {
+                if (data.success) location.reload();
+            }).catch(function () {});
         });
     }
-}
+
+    if (delBtn) {
+        delBtn.addEventListener('click', function () {
+            if (! window.confirm(confirmDel)) return;
+            fetch(delUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json'
+                }
+            }).then(function (r) { return r.json(); }).then(function (data) {
+                if (data.success) window.location.href = listUrl;
+            }).catch(function () {});
+        });
+    }
+})();
 </script>
 @endpush
-@endsection

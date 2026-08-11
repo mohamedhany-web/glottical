@@ -186,7 +186,7 @@
         asset('img/student-timeline/event-mask-2.svg'),
         asset('img/student-timeline/event-mask-3.svg'),
     ];
-    $eventTones = ['pink', 'blue', 'orange'];
+    $eventTones = ['green', 'blue', 'orange', 'purple', 'pink'];
 @endphp
 
 <div class="st-events__top">

@@ -10,9 +10,30 @@ class ReferralProgram extends Model
 {
     use HasFactory;
 
+    public const REWARD_MODE_CREDITS = 'credits';
+
+    public const REWARD_MODE_DISCOUNT = 'discount';
+
+    public const GRANT_SIGNUP = 'signup';
+
+    public const GRANT_FIRST_PURCHASE = 'first_purchase';
+
+    public const GRANT_BOTH = 'both';
+
+    public const GRANT_NONE = 'none';
+
     protected $fillable = [
         'name',
         'description',
+        'reward_mode',
+        'credit_scope',
+        'referred_credit_units',
+        'referrer_credit_units',
+        'credit_duration_days',
+        'grant_referred_on',
+        'grant_referrer_on',
+        'share_message_ar',
+        'share_message_en',
         'discount_type',
         'discount_value',
         'maximum_discount',
@@ -40,6 +61,9 @@ class ReferralProgram extends Model
         'referral_code_valid_days' => 'integer',
         'max_referrals_per_user' => 'integer',
         'max_discount_uses_per_referred' => 'integer',
+        'referred_credit_units' => 'integer',
+        'referrer_credit_units' => 'integer',
+        'credit_duration_days' => 'integer',
         'allow_self_referral' => 'boolean',
         'starts_at' => 'date',
         'expires_at' => 'date',
@@ -61,6 +85,52 @@ class ReferralProgram extends Model
         return static::active()->orderByDesc('id')->first();
     }
 
+    public function usesCredits(): bool
+    {
+        return ($this->reward_mode ?: self::REWARD_MODE_CREDITS) === self::REWARD_MODE_CREDITS;
+    }
+
+    public function usesDiscount(): bool
+    {
+        return ($this->reward_mode ?: self::REWARD_MODE_CREDITS) === self::REWARD_MODE_DISCOUNT;
+    }
+
+    public function shouldGrantReferredOnSignup(): bool
+    {
+        return in_array($this->grant_referred_on, [self::GRANT_SIGNUP, self::GRANT_BOTH], true);
+    }
+
+    public function shouldGrantReferredOnPurchase(): bool
+    {
+        return in_array($this->grant_referred_on, [self::GRANT_FIRST_PURCHASE, self::GRANT_BOTH], true);
+    }
+
+    public function shouldGrantReferrerOnPurchase(): bool
+    {
+        return ($this->grant_referrer_on ?: self::GRANT_FIRST_PURCHASE) === self::GRANT_FIRST_PURCHASE;
+    }
+
+    public function creditScopeLabel(?string $locale = null): string
+    {
+        $scope = $this->credit_scope ?: ServicePackage::SCOPE_PRIVATE_LESSONS;
+        $labels = ServicePackage::scopes();
+
+        return $labels[$scope] ?? $scope;
+    }
+
+    public function resolvedShareMessage(?string $locale = null): string
+    {
+        $locale = $locale ?: (app()->getLocale() === 'ar' ? 'ar' : 'en');
+        $custom = $locale === 'ar' ? $this->share_message_ar : $this->share_message_en;
+        if (filled($custom)) {
+            return trim((string) $custom);
+        }
+
+        return $locale === 'ar'
+            ? 'سجّل في Glottical من رابطي واحصل على رصيد حصص مجاني: {link}'
+            : 'Join Glottical with my link and get free lesson credits: {link}';
+    }
+
     // العلاقات
     public function referrals()
     {
@@ -71,20 +141,20 @@ class ReferralProgram extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true)
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('starts_at')
-                  ->orWhere('starts_at', '<=', now());
+                    ->orWhere('starts_at', '<=', now());
             })
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>=', now());
+                    ->orWhere('expires_at', '>=', now());
             });
     }
 
     // Methods
     public function isValid()
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
@@ -101,7 +171,7 @@ class ReferralProgram extends Model
 
     public function calculateDiscount($amount)
     {
-        if (!$this->isValid()) {
+        if (! $this->isValid()) {
             return 0;
         }
 
@@ -117,12 +187,10 @@ class ReferralProgram extends Model
             $discount = $this->discount_value;
         }
 
-        // تطبيق الحد الأقصى للخصم
         if ($this->maximum_discount && $discount > $this->maximum_discount) {
             $discount = $this->maximum_discount;
         }
 
-        // التأكد من عدم تجاوز المبلغ
         if ($discount > $amount) {
             $discount = $amount;
         }
@@ -132,11 +200,10 @@ class ReferralProgram extends Model
 
     public function canUserRefer($userId)
     {
-        if (!$this->isValid()) {
+        if (! $this->isValid()) {
             return false;
         }
 
-        // التحقق من الحد الأقصى للإحالات
         if ($this->max_referrals_per_user) {
             $userReferralsCount = Referral::where('referrer_id', $userId)
                 ->where('referral_program_id', $this->id)

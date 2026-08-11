@@ -16,6 +16,17 @@
         </a>
     </div>
 
+    @include('admin.partials.workflow-guide', [
+        'title' => 'ما هو التسكين؟',
+        'body' => 'التسكين هو ربط طالب (لديه باقة/رصيد) بمعلم وموعد. استخدمه للحصص الخاصة 1:1 أو لإكمال مسار المجموعات بعد تجهيز الباقات وجداول المدربين.',
+        'steps' => [
+            'تأكد أن للطالب باقة نشطة أو رصيد قابل للحجز.',
+            'حدّث جداول عمل المدربين حتى تظهر أوقات متاحة.',
+            'اضغط «تسكين جديد» واتبع المعالج خطوة بخطوة.',
+            'راجع أحدث الحصص من اللوحات أدناه أو من صفحة 1:1.',
+        ],
+    ])
+
     <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
             <p class="text-xs font-medium text-muted">بانتظار موعد 1:1</p>

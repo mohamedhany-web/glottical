@@ -202,7 +202,11 @@
 
     <article class="rounded-2xl border border-line bg-white p-4 shadow-soft sm:p-5">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h3 class="text-sm font-black text-ink">👥 {{ $isRtl ? 'مجتمع الفصل (Moderation)' : 'Class feed moderation' }}</h3>
+            <h3 class="text-sm font-black text-ink">👥 {{ $isRtl ? 'مجتمع الفصل' : 'Class community' }}</h3>
+            <a href="{{ route('instructor.tutoring-cohorts.community', $cohort) }}"
+               class="inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-bold text-accent hover:bg-slate-50">
+                {{ $isRtl ? 'فتح المجتمع كاملاً' : 'Open full community' }}
+            </a>
         </div>
         <form method="POST" action="{{ route('instructor.tutoring-cohorts.feed.store', $cohort) }}" class="mb-4 space-y-2">
             @csrf

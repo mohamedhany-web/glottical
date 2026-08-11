@@ -1029,6 +1029,13 @@ class CheckoutController extends Controller
             'payment_id' => $payment->id,
         ]);
 
+        try {
+            app(\App\Services\ReferralService::class)
+                ->completePendingForUser((int) $order->user_id, $order->amount);
+        } catch (\Throwable $e) {
+            Log::warning('Referral update failed after online payment: '.$e->getMessage(), ['order_id' => $order->id]);
+        }
+
         if ($order->advanced_course_id) {
             CourseSubscriptionService::syncEnrollmentFromOrder(
                 $order,

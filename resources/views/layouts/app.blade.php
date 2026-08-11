@@ -451,8 +451,20 @@ function themeManager() {
                             @endphp
                             @if($headerIsInstructor)
                                 @php $headerHasCourses = auth()->user()->hasTeachingCourses(); @endphp
+                                @if(Route::has('instructor.private-messages.index'))
+                                    <a href="{{ route('instructor.private-messages.index') }}" class="app-quick-link app-quick-link--gold">
+                                        <i class="fas fa-comments text-[10px]"></i>
+                                        {{ $appRtl ? 'الرسائل' : 'Messages' }}
+                                    </a>
+                                @endif
+                                @if(Route::has('instructor.notifications.index'))
+                                    <a href="{{ route('instructor.notifications.index') }}" class="app-quick-link">
+                                        <i class="fas fa-bell text-[10px]"></i>
+                                        {{ $appRtl ? 'إشعارات' : 'Alerts' }}
+                                    </a>
+                                @endif
                                 @if(Route::has('instructor.tutoring-bookings.index'))
-                                    <a href="{{ route('instructor.tutoring-bookings.index') }}" class="app-quick-link app-quick-link--gold">
+                                    <a href="{{ route('instructor.tutoring-bookings.index') }}" class="app-quick-link">
                                         <i class="fas fa-users text-[10px]"></i>
                                         {{ $appRtl ? 'الحجوزات' : 'Bookings' }}
                                     </a>

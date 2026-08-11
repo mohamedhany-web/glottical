@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\LectureMaterialStorage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -11,6 +12,7 @@ class LectureMaterial extends Model
         'lecture_id',
         'file_name',
         'file_path',
+        'storage_disk',
         'title',
         'is_visible_to_student',
         'sort_order',
@@ -23,5 +25,23 @@ class LectureMaterial extends Model
     public function lecture(): BelongsTo
     {
         return $this->belongsTo(Lecture::class);
+    }
+
+    public function resolvedDisk(): string
+    {
+        return LectureMaterialStorage::diskFor($this);
+    }
+
+    public function downloadUrl(): ?string
+    {
+        if (! $this->file_path) {
+            return null;
+        }
+
+        if (\Illuminate\Support\Facades\Route::has('student.library.materials.download')) {
+            return route('student.library.materials.download', $this);
+        }
+
+        return LectureMaterialStorage::publicUrl($this);
     }
 }

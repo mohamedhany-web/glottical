@@ -17,12 +17,21 @@
         ],
         [
             'title' => 'مكتبة الفيديوهات',
-            'desc' => 'تسجيلات البث المباشر + فيديوهات المحاضرات',
+            'desc' => 'تسجيلات البث + فيديوهات المحاضرات + مجلدات التصنيف',
             'stat' => $stats['videos_ready'] + $stats['lecture_videos'],
             'meta' => $stats['videos_published'].' منشور · '.$stats['lecture_videos'].' محاضرة',
             'icon' => 'fa-film',
             'href' => route('admin.libraries.videos.index'),
             'cta' => 'إدارة الفيديوهات',
+        ],
+        [
+            'title' => 'مجلدات الفيديو',
+            'desc' => 'تصنيف الفيديوهات المتنوعة كمجلدات للطالبات',
+            'stat' => $stats['video_folders'] ?? 0,
+            'meta' => 'تنظيم التصفح في المكتبة',
+            'icon' => 'fa-folder-open',
+            'href' => route('admin.libraries.folders.index'),
+            'cta' => 'إدارة المجلدات',
         ],
         [
             'title' => 'المناهج',
@@ -44,6 +53,16 @@
             <p class="mt-1 text-sm text-muted">تحكم كامل بما يظهر للطالب في مكتبة الماتريال والفيديوهات ومسارات المناهج.</p>
         </div>
     </section>
+
+    @include('admin.partials.workflow-guide', [
+        'title' => 'المكتبات والمناهج باختصار',
+        'body' => 'هنا تنظيم المحتوى الذي يراه الطالب في مكتبته — وليس تسكين الطلاب في فصول حية. المجلدات تصنّف الفيديوهات، والمناهج ترتب أقسام الكورس.',
+        'steps' => [
+            'الماتريال: ارفع الملفات وحدد الظهور للطالب.',
+            'الفيديوهات: أدر التسجيلات واربطها بمجلدات للتصفح.',
+            'المناهج: رتّب سنوات/مواد/عناصر المنهج داخل البرامج.',
+        ],
+    ])
 
     @if(session('success'))
         <div class="rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink">{{ session('success') }}</div>

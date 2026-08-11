@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\VideoHelper;
 use App\Models\AcademicSubject;
 use App\Models\AcademicYear;
 use App\Models\AdvancedCourse;
@@ -148,6 +149,21 @@ class StudentLearnHubService
         $photo = $profile->photo_url
             ?: ($instructor->profile_image_url ?: asset('img/student-timeline/avatar.png'));
 
+        $introVideoUrl = trim((string) ($instructor->portfolio_intro_video_url ?? ''));
+        $introEmbedUrl = VideoHelper::getEmbedUrl($introVideoUrl);
+        $introDirectVideo = VideoHelper::getDirectVideoUrl($introVideoUrl);
+        $introThumb = VideoHelper::getThumbnail($introVideoUrl) ?: $photo;
+
+        $locale = app()->getLocale() === 'ar' ? 'ar' : 'en';
+        $teachingChips = $this->teachingMetaLabels($instructor, $locale);
+        if ($instructor->gender && isset(config('private_lessons.genders')[$instructor->gender])) {
+            array_unshift(
+                $teachingChips,
+                (string) (config("private_lessons.genders.{$instructor->gender}.{$locale}")
+                    ?? config("private_lessons.genders.{$instructor->gender}.en"))
+            );
+        }
+
         return [
             'profile' => $profile,
             'instructor' => $instructor,
@@ -159,7 +175,46 @@ class StudentLearnHubService
             'one_to_one_courses' => $courses->filter(fn ($c) => $c->isOneToOne())->values(),
             'packages_url' => route('public.service-packages.index'),
             'photo_url' => $photo,
+            'intro_video_url' => $introVideoUrl !== '' ? $introVideoUrl : null,
+            'intro_embed_url' => $introEmbedUrl,
+            'intro_direct_video' => $introDirectVideo,
+            'intro_video_thumb' => $introThumb,
+            'has_intro_video' => filled($introEmbedUrl) || filled($introDirectVideo),
+            'teaching_chips' => $teachingChips,
+            'consultation_price' => $profile->consultation_price_egp !== null
+                ? (float) $profile->consultation_price_egp
+                : null,
+            'consultation_duration' => $profile->consultation_duration_minutes
+                ? (int) $profile->consultation_duration_minutes
+                : null,
+            'courses_count' => $courses->count(),
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function teachingMetaLabels(User $instructor, string $locale): array
+    {
+        $meta = $instructor->privateTeachingMeta();
+        $labels = [];
+
+        foreach (['subjects', 'age_groups', 'languages', 'specializations'] as $group) {
+            $map = config("private_lessons.{$group}", []);
+            foreach (($meta[$group] ?? []) as $key) {
+                if (! is_string($key) || $key === '') {
+                    continue;
+                }
+                $entry = $map[$key] ?? null;
+                if (is_array($entry)) {
+                    $labels[] = (string) ($entry[$locale] ?? $entry['en'] ?? $key);
+                } else {
+                    $labels[] = $key;
+                }
+            }
+        }
+
+        return array_values(array_unique($labels));
     }
 
     public function unitsLeft(int $userId, string $scope): int

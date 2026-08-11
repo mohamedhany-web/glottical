@@ -19,6 +19,15 @@
     $bio = $profile?->bio_clean ?: '';
     $skills = $profile?->skills_list ?? [];
     $experience = $profile?->experience_list ?? [];
+    $teachingChips = $teaching_chips ?? [];
+    $hasIntroVideo = !empty($has_intro_video);
+    $introEmbedUrl = $intro_embed_url ?? null;
+    $introDirectVideo = $intro_direct_video ?? null;
+    $introThumb = $intro_video_thumb ?? $photoUrl;
+    $consultationPrice = $consultation_price ?? null;
+    $consultationDuration = $consultation_duration ?? null;
+    $coursesCount = (int) ($courses_count ?? ($groupCourses->count() + $oneToOneCourses->count()));
+    $allCourses = $oneToOneCourses->concat($groupCourses)->values();
 @endphp
 
 @include('partials.student-timeline-top', [
@@ -38,6 +47,7 @@
     <div class="st-flash st-flash--err">{{ $errors->first() }}</div>
 @endif
 
+{{-- Identity --}}
 <section class="st-teacher-hero">
     <div class="st-teacher-hero__glow" aria-hidden="true"></div>
     <div class="st-teacher-hero__inner">
@@ -48,10 +58,10 @@
             @if($headline)
                 <p class="st-teacher-hero__headline">{{ $headline }}</p>
             @endif
-            @if(!empty($skills))
+            @if(!empty($skills) || !empty($teachingChips))
                 <div class="st-learn-chips st-learn-chips--light">
-                    @foreach(array_slice($skills, 0, 6) as $skill)
-                        <span>{{ $skill }}</span>
+                    @foreach(array_slice(array_values(array_unique(array_merge($teachingChips, $skills))), 0, 8) as $chip)
+                        <span>{{ $chip }}</span>
                     @endforeach
                 </div>
             @endif
@@ -69,8 +79,118 @@
     </div>
 </section>
 
+{{-- Quick facts --}}
+<section class="st-teacher-facts" aria-label="{{ __('student_timeline.learn_teacher_facts') }}">
+    <article class="st-teacher-fact">
+        <span class="st-teacher-fact__icon" aria-hidden="true"><i class="fas fa-graduation-cap"></i></span>
+        <div>
+            <strong>{{ $coursesCount }}</strong>
+            <small>{{ __('student_timeline.learn_teacher_courses') }}</small>
+        </div>
+    </article>
+    <article class="st-teacher-fact">
+        <span class="st-teacher-fact__icon" aria-hidden="true"><i class="fas fa-lightbulb"></i></span>
+        <div>
+            <strong>{{ count($skills) }}</strong>
+            <small>{{ __('student_timeline.learn_skills') }}</small>
+        </div>
+    </article>
+    <article class="st-teacher-fact">
+        <span class="st-teacher-fact__icon" aria-hidden="true"><i class="fas fa-calendar-week"></i></span>
+        <div>
+            <strong>{{ count($weeklyCalendar) }}</strong>
+            <small>{{ __('student_timeline.learn_week_days') }}</small>
+        </div>
+    </article>
+    @if($consultationDuration || $consultationPrice !== null)
+        <article class="st-teacher-fact">
+            <span class="st-teacher-fact__icon" aria-hidden="true"><i class="fas fa-comments"></i></span>
+            <div>
+                <strong>
+                    @if($consultationDuration)
+                        {{ $consultationDuration }}{{ __('student_timeline.learn_min_short') }}
+                    @else
+                        —
+                    @endif
+                </strong>
+                <small>
+                    @if($consultationPrice !== null)
+                        {{ number_format($consultationPrice, 0) }} {{ __('student_timeline.learn_egp') }}
+                    @else
+                        {{ __('student_timeline.learn_consultation') }}
+                    @endif
+                </small>
+            </div>
+        </article>
+    @endif
+</section>
+
 <div class="st-teacher-layout">
     <div class="st-teacher-main">
+        @if($bio !== '')
+            <section class="st-settings-block" aria-labelledby="stTeacherBio">
+                <div class="st-settings-block__head">
+                    <span class="st-settings-block__icon" aria-hidden="true"><i class="fas fa-quote-right"></i></span>
+                    <div>
+                        <h3 id="stTeacherBio">{{ __('student_timeline.learn_about_teacher') }}</h3>
+                        <p>{{ __('student_timeline.learn_about_hint') }}</p>
+                    </div>
+                </div>
+                <p class="st-teacher-bio">{{ $bio }}</p>
+            </section>
+        @endif
+
+        @if(!empty($skills))
+            <section class="st-settings-block" aria-labelledby="stTeacherSkills">
+                <div class="st-settings-block__head">
+                    <span class="st-settings-block__icon" aria-hidden="true"><i class="fas fa-star"></i></span>
+                    <div>
+                        <h3 id="stTeacherSkills">{{ __('student_timeline.learn_skills') }}</h3>
+                        <p>{{ __('student_timeline.learn_skills_hint') }}</p>
+                    </div>
+                </div>
+                <div class="st-learn-chips">
+                    @foreach($skills as $skill)
+                        <span>{{ $skill }}</span>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
+        @if(!empty($teachingChips))
+            <section class="st-settings-block" aria-labelledby="stTeacherMeta">
+                <div class="st-settings-block__head">
+                    <span class="st-settings-block__icon" aria-hidden="true"><i class="fas fa-tags"></i></span>
+                    <div>
+                        <h3 id="stTeacherMeta">{{ __('student_timeline.learn_teaching_focus') }}</h3>
+                        <p>{{ __('student_timeline.learn_teaching_focus_hint') }}</p>
+                    </div>
+                </div>
+                <div class="st-learn-chips">
+                    @foreach($teachingChips as $chip)
+                        <span>{{ $chip }}</span>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
+        @if(!empty($experience))
+            <section class="st-settings-block" aria-labelledby="stTeacherExp">
+                <div class="st-settings-block__head">
+                    <span class="st-settings-block__icon" aria-hidden="true"><i class="fas fa-medal"></i></span>
+                    <div>
+                        <h3 id="stTeacherExp">{{ __('student_timeline.learn_experience') }}</h3>
+                        <p>{{ __('student_timeline.learn_experience_hint') }}</p>
+                    </div>
+                </div>
+                <ul class="st-teacher-list">
+                    @foreach($experience as $item)
+                        <li>{{ $item }}</li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
+
         <section class="st-settings-block" aria-labelledby="stTeacherBook">
             <div class="st-settings-block__head">
                 <span class="st-settings-block__icon" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
@@ -113,37 +233,7 @@
             @endif
         </section>
 
-        @if($bio !== '')
-            <section class="st-settings-block" aria-labelledby="stTeacherBio">
-                <div class="st-settings-block__head">
-                    <span class="st-settings-block__icon" aria-hidden="true"><i class="fas fa-quote-right"></i></span>
-                    <div>
-                        <h3 id="stTeacherBio">{{ __('student_timeline.learn_about_teacher') }}</h3>
-                        <p>{{ __('student_timeline.learn_about_hint') }}</p>
-                    </div>
-                </div>
-                <p class="st-teacher-bio">{{ $bio }}</p>
-            </section>
-        @endif
-
-        @if(!empty($experience))
-            <section class="st-settings-block" aria-labelledby="stTeacherExp">
-                <div class="st-settings-block__head">
-                    <span class="st-settings-block__icon" aria-hidden="true"><i class="fas fa-medal"></i></span>
-                    <div>
-                        <h3 id="stTeacherExp">{{ __('student_timeline.learn_experience') }}</h3>
-                        <p>{{ __('student_timeline.learn_experience_hint') }}</p>
-                    </div>
-                </div>
-                <ul class="st-teacher-list">
-                    @foreach(array_slice($experience, 0, 8) as $item)
-                        <li>{{ $item }}</li>
-                    @endforeach
-                </ul>
-            </section>
-        @endif
-
-        @if($oneToOneCourses->isNotEmpty() || $groupCourses->isNotEmpty())
+        @if($allCourses->isNotEmpty())
             <section class="st-settings-block" aria-labelledby="stTeacherCourses">
                 <div class="st-settings-block__head">
                     <span class="st-settings-block__icon" aria-hidden="true"><i class="fas fa-graduation-cap"></i></span>
@@ -153,14 +243,14 @@
                     </div>
                 </div>
                 <div class="st-teacher-courses">
-                    @foreach($oneToOneCourses->take(4) as $course)
+                    @foreach($oneToOneCourses as $course)
                         <article class="st-teacher-course">
                             <span class="st-learn-badge is-ok">1:1</span>
                             <strong>{{ $course->title }}</strong>
                             <small>{{ (int) ($course->lessons_count ?? 0) }} {{ __('student_timeline.learn_lessons') }}</small>
                         </article>
                     @endforeach
-                    @foreach($groupCourses->take(4) as $course)
+                    @foreach($groupCourses as $course)
                         <article class="st-teacher-course">
                             <span class="st-learn-badge">{{ __('student_timeline.learn_tab_groups') }}</span>
                             <strong>{{ $course->title }}</strong>
@@ -173,6 +263,37 @@
     </div>
 
     <aside class="st-teacher-side">
+        <section class="st-tvideo st-tvideo--side" aria-labelledby="stTeacherVideo">
+            <div class="st-tvideo__head">
+                <h2 id="stTeacherVideo">{{ __('student_timeline.learn_intro_video') }}</h2>
+                <span class="st-tvideo__badge" aria-hidden="true"><i class="fas fa-play"></i></span>
+            </div>
+            <div class="st-tvideo__frame{{ $hasIntroVideo ? '' : ' is-empty' }}">
+                @if($introEmbedUrl)
+                    <iframe
+                        src="{{ $introEmbedUrl }}"
+                        title="{{ $instructor->name }} — {{ __('student_timeline.learn_intro_video') }}"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
+                        allowfullscreen
+                        loading="lazy"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                    ></iframe>
+                @elseif($introDirectVideo)
+                    <video controls playsinline preload="metadata" poster="{{ $introThumb }}">
+                        <source src="{{ $introDirectVideo }}">
+                        {{ __('student_timeline.learn_video_unsupported') }}
+                    </video>
+                @else
+                    <div class="st-tvideo__poster" style="--st-tvideo-poster: url('{{ $photoUrl }}')">
+                        <div class="st-tvideo__poster-inner">
+                            <span class="st-tvideo__play" aria-hidden="true"><i class="fas fa-video"></i></span>
+                            <strong>{{ __('student_timeline.learn_no_video_title') }}</strong>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </section>
+
         <section class="st-teacher-week" aria-label="{{ __('student_timeline.learn_week_rhythm') }}">
             <h3>{{ __('student_timeline.learn_week_rhythm') }}</h3>
             @forelse($weeklyCalendar as $day)
@@ -189,7 +310,12 @@
             @endforelse
         </section>
 
-        <a href="{{ route('student.learn.index', ['tab' => 'groups']) }}" class="st-event-card st-event-card--blue" style="display:block;text-decoration:none">
+        <a href="{{ route('student.learn.index', ['tab' => 'private']) }}" class="st-event-card st-event-card--blue" style="display:block;text-decoration:none">
+            <h3>{{ __('student_timeline.learn_pick_teacher') }}</h3>
+            <p class="st-event-card__sub">{{ __('student_timeline.learn_teachers_hint') }}</p>
+        </a>
+
+        <a href="{{ route('student.learn.index', ['tab' => 'groups']) }}" class="st-event-card st-event-card--purple" style="display:block;text-decoration:none">
             <h3>{{ __('student_timeline.learn_tab_groups') }}</h3>
             <p class="st-event-card__sub">{{ __('student_timeline.learn_groups_hint') }}</p>
         </a>

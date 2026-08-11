@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AdvancedCourse;
 use App\Models\Lecture;
+use App\Models\LibraryFolder;
 use App\Models\LiveRecording;
 use App\Models\LiveSession;
 use Illuminate\Http\RedirectResponse;
@@ -32,7 +33,7 @@ class LibraryVideoController extends Controller
             : 'all';
 
         $liveQuery = LiveRecording::query()
-            ->with(['session:id,title,course_id,instructor_id', 'session.course:id,title', 'session.instructor:id,name'])
+            ->with(['session:id,title,course_id,instructor_id', 'session.course:id,title', 'session.instructor:id,name', 'folder:id,name_ar,name_en'])
             ->orderByDesc('id');
 
         if ($request->filled('search')) {
@@ -50,6 +51,13 @@ class LibraryVideoController extends Controller
         }
         if ($request->filled('session_id')) {
             $liveQuery->where('session_id', (int) $request->session_id);
+        }
+        if ($request->filled('folder_id')) {
+            if ($request->folder_id === 'none') {
+                $liveQuery->whereNull('library_folder_id');
+            } else {
+                $liveQuery->where('library_folder_id', (int) $request->folder_id);
+            }
         }
 
         $liveRecordings = ($tab === 'lectures')
@@ -101,6 +109,7 @@ class LibraryVideoController extends Controller
             'stats' => $stats,
             'sessions' => LiveSession::query()->orderByDesc('scheduled_at')->limit(200)->get(['id', 'title']),
             'courses' => AdvancedCourse::query()->orderBy('title')->get(['id', 'title']),
+            'folders' => LibraryFolder::query()->ordered()->get(['id', 'name_ar', 'name_en', 'slug']),
         ]);
     }
 
@@ -119,6 +128,7 @@ class LibraryVideoController extends Controller
                 ->orderByDesc('scheduled_at')
                 ->limit(300)
                 ->get(['id', 'title', 'course_id', 'scheduled_at']),
+            'folders' => LibraryFolder::query()->active()->ordered()->get(),
         ]);
     }
 
@@ -126,6 +136,7 @@ class LibraryVideoController extends Controller
     {
         $data = $request->validate([
             'session_id' => ['required', 'exists:live_sessions,id'],
+            'library_folder_id' => ['nullable', 'exists:library_folders,id'],
             'title' => ['nullable', 'string', 'max:255'],
             'external_url' => ['nullable', 'url', 'max:2000'],
             'file_path' => ['nullable', 'string', 'max:1000'],
@@ -143,6 +154,7 @@ class LibraryVideoController extends Controller
 
         $rec = LiveRecording::create([
             'session_id' => (int) $data['session_id'],
+            'library_folder_id' => $data['library_folder_id'] ?? null,
             'title' => $data['title'] ?: ('تسجيل '.$session->title),
             'external_url' => $data['external_url'] ?? null,
             'file_path' => $data['file_path'] ?? null,
@@ -167,6 +179,7 @@ class LibraryVideoController extends Controller
                 ->orderByDesc('scheduled_at')
                 ->limit(300)
                 ->get(['id', 'title', 'course_id', 'scheduled_at']),
+            'folders' => LibraryFolder::query()->ordered()->get(),
         ]);
     }
 
@@ -174,6 +187,7 @@ class LibraryVideoController extends Controller
     {
         $data = $request->validate([
             'session_id' => ['required', 'exists:live_sessions,id'],
+            'library_folder_id' => ['nullable', 'exists:library_folders,id'],
             'title' => ['nullable', 'string', 'max:255'],
             'external_url' => ['nullable', 'url', 'max:2000'],
             'file_path' => ['nullable', 'string', 'max:1000'],
@@ -191,6 +205,7 @@ class LibraryVideoController extends Controller
 
         $liveRecording->update([
             'session_id' => (int) $data['session_id'],
+            'library_folder_id' => $data['library_folder_id'] ?? null,
             'title' => $data['title'] ?: ('تسجيل '.$session->title),
             'external_url' => $data['external_url'] ?? null,
             'file_path' => $data['file_path'] ?? null,

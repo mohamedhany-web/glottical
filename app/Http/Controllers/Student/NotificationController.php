@@ -99,7 +99,17 @@ class NotificationController extends Controller
 
         $notification->load(['sender']);
 
-        return view('student.notifications.show', compact('notification'));
+        $otherNotifications = Auth::user()->customNotifications()
+            ->where(function ($q) {
+                $q->whereNull('audience')->orWhere('audience', 'student');
+            })
+            ->where('id', '!=', $notification->id)
+            ->valid()
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('student.notifications.show', compact('notification', 'otherNotifications'));
     }
 
     /**
@@ -152,6 +162,9 @@ class NotificationController extends Controller
     {
         $count = Auth::user()
                     ->customNotifications()
+                    ->where(function ($q) {
+                        $q->whereNull('audience')->orWhere('audience', 'student');
+                    })
                     ->unread()
                     ->update([
                         'is_read' => true,
@@ -199,6 +212,9 @@ class NotificationController extends Controller
         $notifications = Auth::user()
                            ->customNotifications()
                            ->with(['sender'])
+                           ->where(function ($q) {
+                               $q->whereNull('audience')->orWhere('audience', 'student');
+                           })
                            ->where(function($q) {
                                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
                            })
@@ -207,6 +223,52 @@ class NotificationController extends Controller
                            ->get();
 
         return response()->json($notifications);
+    }
+
+    /**
+     * بيانات جرس النافبار (تحديث تلقائي) — JSON.
+     */
+    public function navPoll()
+    {
+        $base = Auth::user()->customNotifications()
+            ->where(function ($q) {
+                $q->whereNull('audience')->orWhere('audience', 'student');
+            })
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            });
+
+        $count = (clone $base)->unread()->count();
+
+        $items = (clone $base)
+            ->orderBy('is_read')
+            ->orderByDesc('created_at')
+            ->limit(8)
+            ->get()
+            ->map(function (Notification $n) {
+                $href = route('notifications.go', $n);
+                if (empty($n->action_url)) {
+                    $href = route('notifications.show', $n);
+                }
+
+                return [
+                    'id' => $n->id,
+                    'title' => $n->title,
+                    'message' => \Illuminate\Support\Str::limit((string) $n->message, 110),
+                    'priority' => $n->priority,
+                    'is_read' => (bool) $n->is_read,
+                    'href' => $href,
+                    'time' => optional($n->created_at)->diffForHumans(),
+                    'icon' => $n->type_icon,
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'unread_count' => $count,
+            'items' => $items,
+            'email' => Auth::user()->email,
+        ]);
     }
 
     /**

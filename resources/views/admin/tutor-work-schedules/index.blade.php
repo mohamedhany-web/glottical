@@ -166,6 +166,16 @@
         </div>
     </section>
 
+    @include('admin.partials.workflow-guide', [
+        'title' => 'لماذا جداول المدربين مهمة؟',
+        'body' => 'بدون أوقات توافر لن تظهر مواعيد صحيحة في التسكين ولا في حجز الطلاب. حدّث جدول كل مدرب قبل فتح التسجيل.',
+        'steps' => [
+            'اختر المدرب من القائمة.',
+            'أضف نوافذ العمل لكل يوم (من–إلى).',
+            'احفظ — تصبح الأوقات متاحة فوراً لمعالج التسكين والحجز.',
+        ],
+    ])
+
     @if(session('success'))
         <div class="rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft">{{ session('success') }}</div>
     @endif

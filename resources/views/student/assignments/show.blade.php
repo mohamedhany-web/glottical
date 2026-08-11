@@ -1,268 +1,317 @@
-@extends('layouts.app')
+@extends('layouts.student-timeline')
 
 @section('title', $assignment->title)
-@section('header', $assignment->title)
 
 @section('content')
 @php
-    $courseTitle = $assignment->course->title ?? 'كورس';
+    $locale = app()->getLocale();
+    $isRtl = $locale === 'ar';
+    $courseTitle = $assignment->course->title ?? __('student_timeline.course');
     $instrFiles = is_array($assignment->resource_attachments) ? $assignment->resource_attachments : [];
+    $eventMasks = [
+        asset('img/student-timeline/event-mask-1.svg'),
+        asset('img/student-timeline/event-mask-2.svg'),
+        asset('img/student-timeline/event-mask-3.svg'),
+    ];
+
+    $statusKey = 'pending';
+    $statusLabel = __('student_timeline.asg_not_submitted');
+    if ($submission) {
+        if ($submission->status === 'submitted') {
+            $statusKey = 'submitted';
+            $statusLabel = __('student_timeline.asg_under_review');
+        } elseif ($submission->status === 'graded') {
+            $statusKey = 'graded';
+            $statusLabel = __('student_timeline.asg_graded');
+        } elseif ($submission->status === 'returned') {
+            $statusKey = 'returned';
+            $statusLabel = __('student_timeline.asg_returned');
+        }
+    }
+
+    $dueFormatted = $assignment->due_date
+        ? $assignment->due_date->timezone(config('app.timezone'))->translatedFormat($isRtl ? 'd M Y · g:i A' : 'M j, Y · g:i A')
+        : null;
 @endphp
-<div class="w-full max-w-full space-y-5 sm:space-y-6">
-    {{-- شريط علوي — عرض كامل، أسلوب لوحة الطالب --}}
-    <div class="ins-stat-card bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/80 rounded-xl shadow-sm overflow-hidden">
-        <div class="px-4 py-4 sm:px-6 sm:py-5 bg-gradient-to-l from-[#f2f4ff] via-white to-white dark:from-[#1e2b5a] dark:via-[#1e293b] dark:to-[#1e293b] border-b border-gray-200/80 dark:border-gray-700/80">
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div class="min-w-0 flex-1">
-                    <nav class="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-3">
-                        <a href="{{ route('student.assignments.index') }}" class="inline-flex items-center gap-1.5 font-semibold text-[#283593] dark:text-indigo-300 hover:text-[#FB5607] dark:hover:text-orange-300 transition-colors">
-                            <i class="fas fa-arrow-right text-[10px] sm:text-xs"></i>
-                            واجباتي
-                        </a>
-                        <span class="text-gray-300 dark:text-gray-600" aria-hidden="true">/</span>
-                        <span class="truncate text-gray-600 dark:text-gray-300">{{ $courseTitle }}</span>
-                    </nav>
-                    <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 font-heading leading-tight">{{ $assignment->title }}</h1>
-                    @if($assignment->lesson)
-                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                            <i class="fas fa-book-open ml-1 text-[#283593] dark:text-indigo-400"></i>
-                            {{ $assignment->lesson->title ?? '' }}
-                        </p>
-                    @endif
-                </div>
-                <div class="flex flex-wrap items-center gap-2 shrink-0">
-                    @if($assignment->due_date)
-                        <div class="inline-flex items-center gap-2 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs sm:text-sm">
-                            <i class="fas fa-calendar-alt text-amber-600 dark:text-amber-400"></i>
-                            <div>
-                                <span class="block font-bold text-amber-900 dark:text-amber-200">آخر موعد</span>
-                                <span class="text-amber-800 dark:text-amber-300/90">{{ $assignment->due_date->timezone(config('app.timezone'))->format('Y-m-d H:i') }}</span>
-                                @if($assignment->allow_late_submission)
-                                    <span class="block text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5">يُقبل التسليم المتأخر</span>
-                                @endif
-                            </div>
-                        </div>
-                    @endif
-                    <div class="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/40 px-3 py-2 text-xs sm:text-sm">
-                        <i class="fas fa-star text-[#FB5607]"></i>
-                        <span class="text-gray-700 dark:text-gray-300">الدرجة العظمى: <strong class="text-gray-900 dark:text-white">{{ $assignment->max_score }}</strong></span>
-                    </div>
-                </div>
+
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => $assignment->title,
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => __('student_timeline.nav_assignments'), 'url' => route('student.assignments.index')],
+        ['label' => \Illuminate\Support\Str::limit($assignment->title, 28), 'url' => null],
+    ],
+])
+
+@if(session('success'))
+    <div class="st-flash st-flash--ok">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+    <div class="st-flash st-flash--err">{{ session('error') }}</div>
+@endif
+@if($errors->any())
+    <div class="st-flash st-flash--err">{{ $errors->first() }}</div>
+@endif
+
+<section class="st-event-card st-event-card--blue st-biz-banner st-asg-hero">
+    <img class="st-event-card__mask" src="{{ $eventMasks[0] }}" alt="" width="160" height="160">
+    <div class="st-biz-banner__row">
+        <div>
+            <p class="st-event-card__kicker">{{ $courseTitle }}</p>
+            <h3>{{ $assignment->title }}</h3>
+            <p class="st-event-card__sub">
+                @if($assignment->lesson?->title)
+                    {{ $assignment->lesson->title }}
+                    @if($dueFormatted) · @endif
+                @endif
+                @if($dueFormatted)
+                    {{ __('student_timeline.due_at', ['date' => $dueFormatted]) }}
+                @endif
+            </p>
+            <div class="st-asg-hero__chips">
+                <span class="st-assign-card__badge is-{{ $statusKey }}">{{ $statusLabel }}</span>
+                <span class="st-asg-chip">
+                    <i class="fas fa-star" aria-hidden="true"></i>
+                    {{ __('student_timeline.asg_max_score', ['score' => $assignment->max_score]) }}
+                </span>
+                @if($assignment->allow_late_submission)
+                    <span class="st-asg-chip st-asg-chip--soft">{{ __('student_timeline.asg_late_ok') }}</span>
+                @endif
             </div>
+        </div>
+        <div class="st-biz-banner__actions">
+            <a href="{{ route('student.assignments.index') }}" class="st-pill st-pill--light">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('student_timeline.nav_assignments') }}
+            </a>
         </div>
     </div>
+</section>
 
-    <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 sm:gap-6 w-full">
-        {{-- العمود الرئيسي: التفاصيل والموارد --}}
-        <div class="xl:col-span-7 2xl:col-span-8 space-y-5 sm:space-y-6 min-w-0">
-            <div class="bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/80 rounded-xl shadow-sm overflow-hidden">
-                <div class="px-4 py-3 sm:px-6 border-b border-gray-200 dark:border-gray-700 bg-sky-50/60 dark:bg-sky-950/20">
-                    <h2 class="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                        <span class="w-8 h-8 rounded-lg bg-[#eef2ff] dark:bg-indigo-900/50 text-[#283593] dark:text-indigo-300 flex items-center justify-center text-sm">
-                            <i class="fas fa-file-alt"></i>
-                        </span>
-                        وصف الواجب
-                    </h2>
-                </div>
-                <div class="p-4 sm:p-6 space-y-4">
-                    @if($assignment->description)
-                        <div class="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed">{!! nl2br(e($assignment->description)) !!}</div>
-                    @else
-                        <p class="text-sm text-gray-500 dark:text-gray-400">لا يوجد وصف إضافي.</p>
-                    @endif
-                    @if($assignment->instructions)
-                        <div class="rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 p-4 sm:p-5">
-                            <p class="text-xs font-bold text-slate-600 dark:text-slate-400 mb-2 uppercase tracking-wide">التعليمات</p>
-                            <div class="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">{{ $assignment->instructions }}</div>
-                        </div>
-                    @endif
+<section class="st-asg-layout">
+    <div class="st-asg-main">
+        <article class="st-panel st-asg-panel">
+            <div class="st-section-head">
+                <div>
+                    <h2>{{ __('student_timeline.asg_description') }}</h2>
+                    <p>{{ __('student_timeline.asg_description_hint') }}</p>
                 </div>
             </div>
-
-            @if(count($instrFiles) > 0)
-                <div class="bg-white dark:bg-gray-800/80 border border-sky-200/80 dark:border-sky-800/50 rounded-xl shadow-sm overflow-hidden">
-                    <div class="px-4 py-3 sm:px-6 border-b border-sky-100 dark:border-sky-900/40 bg-sky-50/80 dark:bg-sky-950/25">
-                        <h2 class="text-base font-bold text-sky-900 dark:text-sky-200 flex items-center gap-2">
-                            <i class="fas fa-paperclip text-sky-600 dark:text-sky-400"></i>
-                            ملفات من المدرب
-                        </h2>
-                    </div>
-                    <div class="p-4 sm:p-6">
-                        <ul class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            @foreach($instrFiles as $att)
-                                @php
-                                    $p = is_array($att) ? ($att['path'] ?? '') : '';
-                                    $url = $p ? (\App\Services\AssignmentFileStorage::publicUrl($p)) : null;
-                                    $label = is_array($att) ? ($att['original_name'] ?? basename($p)) : '';
-                                    $mime = is_array($att) ? ($att['mime'] ?? '') : '';
-                                    $isImg = $mime && str_starts_with((string) $mime, 'image/');
-                                @endphp
-                                @if($url)
-                                    <li class="text-sm rounded-xl border border-sky-100 dark:border-sky-900/40 overflow-hidden bg-sky-50/30 dark:bg-slate-900/30">
-                                        @if($isImg)
-                                            <a href="{{ $url }}" target="_blank" rel="noopener" class="block">
-                                                <img src="{{ $url }}" alt="{{ $label }}" class="w-full max-h-56 object-cover">
-                                            </a>
-                                            <div class="p-3">
-                                                <a href="{{ $url }}" target="_blank" rel="noopener" class="text-sky-700 dark:text-sky-300 font-semibold hover:underline text-xs">{{ $label }}</a>
-                                            </div>
-                                        @else
-                                            <a href="{{ $url }}" target="_blank" rel="noopener" class="flex items-center gap-3 p-4 hover:bg-sky-50/80 dark:hover:bg-sky-950/30 transition-colors">
-                                                <span class="w-10 h-10 rounded-lg bg-white dark:bg-gray-800 border border-sky-200 dark:border-sky-800 flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0">
-                                                    <i class="fas fa-file-download"></i>
-                                                </span>
-                                                <span class="font-semibold text-sky-800 dark:text-sky-200 min-w-0 break-words">{{ $label }}</span>
-                                            </a>
-                                        @endif
-                                    </li>
-                                @endif
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-            @endif
-        </div>
-
-        {{-- العمود الجانبي: التسليم والنموذج --}}
-        <div class="xl:col-span-5 2xl:col-span-4 space-y-5 sm:space-y-6 min-w-0">
-            @if($submission)
-                <div class="bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/80 rounded-xl shadow-sm overflow-hidden">
-                    <div class="px-4 py-3 sm:px-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/40">
-                        <h2 class="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                            <i class="fas fa-user-check text-[#283593] dark:text-indigo-400"></i>
-                            تسليمك
-                        </h2>
-                    </div>
-                    <div class="p-4 sm:p-5 space-y-3">
-                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                            الحالة:
-                            @if($submission->status === 'submitted')
-                                <span class="font-semibold text-sky-700 dark:text-sky-300">قيد التصحيح</span>
-                            @elseif($submission->status === 'graded')
-                                <span class="font-semibold text-emerald-700 dark:text-emerald-400">مُقيَّم</span>
-                                @if($submission->score !== null)
-                                    <span class="text-gray-700 dark:text-gray-300"> — الدرجة: {{ $submission->score }} / {{ $assignment->max_score }}</span>
-                                @endif
-                            @elseif($submission->status === 'returned')
-                                <span class="font-semibold text-violet-700 dark:text-violet-300">مُعاد للتعديل</span>
-                            @endif
-                        </p>
-                        @if($submission->submitted_at)
-                            <p class="text-xs text-gray-500 dark:text-gray-400">آخر إرسال: {{ $submission->submitted_at->timezone(config('app.timezone'))->format('Y-m-d H:i') }}</p>
-                        @endif
-                        @if($submission->content)
-                            <div class="rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 p-4 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap max-h-64 overflow-y-auto">{{ $submission->content }}</div>
-                        @endif
-                        @if(is_array($submission->attachments) && count($submission->attachments))
-                            <div>
-                                <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">المرفقات</p>
-                                <ul class="space-y-1.5">
-                                    @foreach($submission->attachments as $att)
-                                        @php
-                                            $p = is_array($att) ? ($att['path'] ?? null) : null;
-                                            $name = is_array($att) ? ($att['original_name'] ?? basename((string) $p)) : '';
-                                            $fileUrl = $p ? \App\Services\AssignmentFileStorage::publicUrl($p) : null;
-                                        @endphp
-                                        @if($fileUrl)
-                                            <li>
-                                                <a href="{{ $fileUrl }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-[#283593] dark:text-indigo-300 hover:text-[#FB5607] dark:hover:text-orange-300 text-sm font-medium">
-                                                    <i class="fas fa-paperclip text-xs"></i>{{ $name }}
-                                                </a>
-                                            </li>
-                                        @endif
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-                        @if($submission->feedback)
-                            <div class="rounded-xl border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/15 p-4">
-                                <p class="text-xs font-bold text-amber-800 dark:text-amber-200 mb-1">ملاحظات المُصحّح</p>
-                                <p class="text-sm text-amber-950 dark:text-amber-100 whitespace-pre-wrap">{{ $submission->feedback }}</p>
-                            </div>
-                        @endif
-                        @if(!empty($canDeleteSubmission))
-                            <form action="{{ route('student.assignments.submission.destroy', $assignment) }}" method="post" class="pt-2 border-t border-gray-200 dark:border-gray-600" onsubmit="return confirm('سيتم حذف التسليم بالكامل ومرفقاته من التخزين. هل أنت متأكد؟');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 dark:border-rose-800/60 bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-200 px-4 py-2.5 text-sm font-bold hover:bg-rose-100 dark:hover:bg-rose-950/50 transition-colors">
-                                    <i class="fas fa-trash-alt"></i>
-                                    حذف التسليم (قبل انتهاء الموعد)
-                                </button>
-                            </form>
-                        @endif
-                    </div>
-                </div>
+            @if($assignment->description)
+                <div class="st-asg-prose">{!! nl2br(e($assignment->description)) !!}</div>
+            @else
+                <p class="st-asg-muted">{{ __('student_timeline.asg_no_description') }}</p>
             @endif
 
-            @if($canSubmit)
-                <div class="bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/80 rounded-xl shadow-sm overflow-hidden ring-1 ring-[#283593]/5 dark:ring-indigo-500/10">
-                    <div class="px-4 py-3 sm:px-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-l from-[#fff7ed] to-white dark:from-[#431407]/30 dark:to-[#1e293b]">
-                        <h2 class="text-base font-bold text-gray-900 dark:text-gray-100">
-                            @if($submission && $submission->status === 'returned')
-                                إعادة إرسال التسليم
-                            @else
-                                تسليم الواجب
-                            @endif
-                        </h2>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">تسليم واحد فقط بعد الإرسال. يمكنك حذف التسليم قبل انتهاء الموعد لإرسال نسخة جديدة.</p>
-                        @if(!empty($directUploadToCloud))
-                            <p class="text-[11px] text-emerald-700 dark:text-emerald-400 mt-2 flex items-start gap-1.5">
-                                <i class="fas fa-cloud-upload-alt mt-0.5"></i>
-                                <span>المرفقات تُرفع مباشرة إلى التخزين السحابي (R2/S3) دون المرور بحجم حد PHP.</span>
-                            </p>
-                        @endif
+            @if($assignment->instructions)
+                <div class="st-asg-box">
+                    <p class="st-asg-box__label">{{ __('student_timeline.asg_instructions') }}</p>
+                    <div class="st-asg-prose">{{ $assignment->instructions }}</div>
+                </div>
+            @endif
+        </article>
+
+        @if(count($instrFiles) > 0)
+            <article class="st-panel st-asg-panel">
+                <div class="st-section-head">
+                    <div>
+                        <h2>{{ __('student_timeline.asg_teacher_files') }}</h2>
+                        <p>{{ __('student_timeline.asg_teacher_files_hint') }}</p>
                     </div>
-                    <div class="p-4 sm:p-5">
-                        <form id="assignment-submit-form" action="{{ route('student.assignments.submit', $assignment) }}" method="post" enctype="multipart/form-data" class="space-y-4">
-                            @csrf
-                            <div id="assignment-direct-tokens"></div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">النص</label>
-                                <textarea name="content" rows="8" class="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#283593]/30 focus:border-[#283593] dark:focus:border-indigo-500 transition-shadow">{{ old('content', ($submission && $submission->status === 'returned') ? ($submission->content ?? '') : '') }}</textarea>
-                                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">اختياري إذا أرفقت ملفات.</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">مرفقات</label>
-                                @if(!empty($directUploadToCloud))
-                                    <div class="space-y-3">
-                                        <input type="file" id="mx-assignment-direct-picker" multiple accept=".pdf,.doc,.docx,.zip,.rar,.jpg,.jpeg,.png,.gif,.webp" class="block w-full text-sm text-gray-600 dark:text-gray-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#f2f4ff] dark:file:bg-indigo-900/50 file:text-[#283593] dark:file:text-indigo-200 hover:file:bg-[#e8ecff] dark:hover:file:bg-indigo-900/70 cursor-pointer">
-                                        <p id="mx-assignment-upload-status" class="text-xs text-gray-500 dark:text-gray-400 hidden"></p>
-                                        <ul id="mx-assignment-remote-list" class="space-y-2 text-sm"></ul>
-                                    </div>
+                </div>
+                <ul class="st-asg-files">
+                    @foreach($instrFiles as $att)
+                        @php
+                            $p = is_array($att) ? ($att['path'] ?? '') : '';
+                            $url = $p ? (\App\Services\AssignmentFileStorage::publicUrl($p)) : null;
+                            $label = is_array($att) ? ($att['original_name'] ?? basename($p)) : '';
+                            $mime = is_array($att) ? ($att['mime'] ?? '') : '';
+                            $isImg = $mime && str_starts_with((string) $mime, 'image/');
+                        @endphp
+                        @if($url)
+                            <li class="st-asg-file">
+                                @if($isImg)
+                                    <a href="{{ $url }}" target="_blank" rel="noopener" class="st-asg-file__preview">
+                                        <img src="{{ $url }}" alt="{{ $label }}">
+                                    </a>
+                                @else
+                                    <span class="st-asg-file__icon" aria-hidden="true"><i class="fas fa-paperclip"></i></span>
                                 @endif
-                                <div id="mx-assignment-classic-files-wrap" class="{{ !empty($directUploadToCloud) ? 'hidden' : '' }} {{ !empty($directUploadToCloud) ? '' : 'mt-0' }} space-y-2">
-                                    @if(!empty($directUploadToCloud))
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">أو عند تعذّر الرفع السحابي:</p>
-                                    @endif
-                                    <input type="file" name="attachments[]" multiple accept=".pdf,.doc,.docx,.zip,.rar,.jpg,.jpeg,.png,.gif,.webp" class="block w-full text-sm text-gray-600 dark:text-gray-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#f2f4ff] dark:file:bg-indigo-900/50 file:text-[#283593] dark:file:text-indigo-200 hover:file:bg-[#e8ecff] dark:hover:file:bg-indigo-900/70 cursor-pointer">
+                                <div class="st-asg-file__copy">
+                                    <a href="{{ $url }}" target="_blank" rel="noopener">{{ $label }}</a>
                                 </div>
-                                @if(!empty($directUploadToCloud))
-                                    <button type="button" id="mx-assignment-toggle-classic" class="mt-2 text-xs font-semibold text-[#283593] dark:text-indigo-300 hover:underline">
-                                        رفع عبر الخادم (بديل)
-                                    </button>
-                                @endif
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1.5">حتى 10 ملفات، 40 ميجابايت لكل ملف — PDF، Word، صور، أرشيف.
-                                    @if($submission && $submission->status === 'returned')
-                                        <span class="font-medium text-violet-700 dark:text-violet-300">المرفقات السابقة تبقى ما لم تحذفها من التسليم السابق عبر «حذف التسليم».</span>
-                                    @endif
-                                </p>
-                            </div>
-                            <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-l from-[#283593] to-[#3949ab] hover:from-[#1F2A7A] hover:to-[#283593] text-white px-6 py-3 rounded-xl font-bold text-sm shadow-md shadow-[#283593]/20 transition-all">
-                                <i class="fas fa-paper-plane"></i>
-                                إرسال التسليم
-                            </button>
-                        </form>
+                            </li>
+                        @endif
+                    @endforeach
+                </ul>
+            </article>
+        @endif
+    </div>
+
+    <aside class="st-asg-side">
+        @if($submission)
+            <article class="st-panel st-asg-panel">
+                <div class="st-section-head">
+                    <div>
+                        <h2>{{ __('student_timeline.asg_your_submission') }}</h2>
+                        <p>
+                            <span class="st-assign-card__badge is-{{ $statusKey }}">{{ $statusLabel }}</span>
+                            @if($submission->status === 'graded' && $submission->score !== null)
+                                <span class="st-asg-chip">{{ $submission->score }} / {{ $assignment->max_score }}</span>
+                            @endif
+                        </p>
                     </div>
                 </div>
-            @elseif($submitBlockReason)
-                <div class="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-900/20 text-amber-900 dark:text-amber-200 px-4 py-4 text-sm font-medium flex gap-3 items-start">
-                    <i class="fas fa-info-circle mt-0.5 text-amber-600 dark:text-amber-400 shrink-0"></i>
-                    <span>{{ $submitBlockReason }}</span>
+
+                @if($submission->submitted_at)
+                    <p class="st-asg-muted">
+                        {{ __('student_timeline.asg_last_sent', [
+                            'date' => $submission->submitted_at->timezone(config('app.timezone'))->translatedFormat($isRtl ? 'd M · g:i A' : 'M j · g:i A'),
+                        ]) }}
+                    </p>
+                @endif
+
+                @if($submission->content)
+                    <div class="st-asg-box st-asg-box--scroll">{{ $submission->content }}</div>
+                @endif
+
+                @if(is_array($submission->attachments) && count($submission->attachments))
+                    <ul class="st-asg-attach-list">
+                        @foreach($submission->attachments as $att)
+                            @php
+                                $p = is_array($att) ? ($att['path'] ?? null) : null;
+                                $name = is_array($att) ? ($att['original_name'] ?? basename((string) $p)) : '';
+                                $fileUrl = $p ? \App\Services\AssignmentFileStorage::publicUrl($p) : null;
+                            @endphp
+                            @if($fileUrl)
+                                <li>
+                                    <a href="{{ $fileUrl }}" target="_blank" rel="noopener">
+                                        <i class="fas fa-paperclip" aria-hidden="true"></i>
+                                        {{ $name }}
+                                    </a>
+                                </li>
+                            @endif
+                        @endforeach
+                    </ul>
+                @endif
+
+                @if($submission->feedback)
+                    <div class="st-asg-box st-asg-box--feedback">
+                        <p class="st-asg-box__label">{{ __('student_timeline.asg_feedback') }}</p>
+                        <p>{{ $submission->feedback }}</p>
+                    </div>
+                @endif
+
+                @if(!empty($canDeleteSubmission))
+                    <form action="{{ route('student.assignments.submission.destroy', $assignment) }}" method="post"
+                          onsubmit="return confirm(@json(__('student_timeline.asg_delete_confirm')));">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="st-asg-danger">
+                            <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                            {{ __('student_timeline.asg_delete_submission') }}
+                        </button>
+                    </form>
+                @endif
+            </article>
+        @endif
+
+        @if($canSubmit)
+            <article class="st-panel st-asg-panel st-asg-panel--submit">
+                <div class="st-section-head">
+                    <div>
+                        <h2>
+                            @if($submission && $submission->status === 'returned')
+                                {{ __('student_timeline.asg_resubmit') }}
+                            @else
+                                {{ __('student_timeline.asg_submit') }}
+                            @endif
+                        </h2>
+                        <p>{{ __('student_timeline.asg_submit_hint') }}</p>
+                    </div>
                 </div>
-            @endif
-        </div>
-    </div>
+
+                @if(!empty($directUploadToCloud))
+                    <p class="st-asg-cloud">
+                        <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+                        {{ __('student_timeline.asg_cloud_hint') }}
+                    </p>
+                @endif
+
+                <form id="assignment-submit-form" action="{{ route('student.assignments.submit', $assignment) }}" method="post" enctype="multipart/form-data" class="st-asg-form">
+                    @csrf
+                    <div id="assignment-direct-tokens"></div>
+
+                    <label class="st-asg-field">
+                        <span>{{ __('student_timeline.asg_content_label') }}</span>
+                        <textarea name="content" rows="7" placeholder="{{ __('student_timeline.asg_content_placeholder') }}">{{ old('content', ($submission && $submission->status === 'returned') ? ($submission->content ?? '') : '') }}</textarea>
+                        <em>{{ __('student_timeline.asg_content_optional') }}</em>
+                    </label>
+
+                    <div class="st-asg-field">
+                        <span>{{ __('student_timeline.asg_attachments_label') }}</span>
+                        @if(!empty($directUploadToCloud))
+                            <div class="st-asg-upload">
+                                <input type="file" id="mx-assignment-direct-picker" multiple accept=".pdf,.doc,.docx,.zip,.rar,.jpg,.jpeg,.png,.gif,.webp">
+                                <p id="mx-assignment-upload-status" class="st-asg-upload__status is-hidden" hidden></p>
+                                <ul id="mx-assignment-remote-list" class="st-asg-remote-list"></ul>
+                            </div>
+                        @endif
+                        <div id="mx-assignment-classic-files-wrap" class="{{ !empty($directUploadToCloud) ? 'is-hidden' : '' }}">
+                            @if(!empty($directUploadToCloud))
+                                <p class="st-asg-muted">{{ __('student_timeline.asg_classic_fallback') }}</p>
+                            @endif
+                            <input type="file" name="attachments[]" multiple accept=".pdf,.doc,.docx,.zip,.rar,.jpg,.jpeg,.png,.gif,.webp">
+                        </div>
+                        @if(!empty($directUploadToCloud))
+                            <button type="button" id="mx-assignment-toggle-classic" class="st-asg-linkbtn">
+                                {{ __('student_timeline.asg_toggle_classic') }}
+                            </button>
+                        @endif
+                        <em>
+                            {{ __('student_timeline.asg_attachments_hint') }}
+                            @if($submission && $submission->status === 'returned')
+                                {{ __('student_timeline.asg_attachments_returned_note') }}
+                            @endif
+                        </em>
+                    </div>
+
+                    <button type="submit" class="st-pill st-pill--solid st-pill--lg st-asg-submit">
+                        <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                        {{ __('student_timeline.asg_send') }}
+                    </button>
+                </form>
+            </article>
+        @elseif($submitBlockReason)
+            <div class="st-asg-block">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                <p>{{ $submitBlockReason }}</p>
+            </div>
+        @endif
+    </aside>
+</section>
+@endsection
+
+@section('events')
+<div class="st-events__top">
+    <h2>{{ __('student_timeline.nav_assignments') }}</h2>
 </div>
+<a href="{{ route('student.assignments.index') }}" class="st-event-card st-event-card--orange">
+    <h3>{{ __('student_timeline.assignments_title') }}</h3>
+    <p class="st-event-card__sub">{{ __('student_timeline.assignments_hint') }}</p>
+</a>
+@if(Route::has('student.library.materials'))
+    <a href="{{ route('student.library.materials') }}" class="st-event-card st-event-card--blue">
+        <h3>{{ __('student_timeline.nav_library_materials') }}</h3>
+        <p class="st-event-card__sub">{{ __('student_timeline.materials_hint') }}</p>
+    </a>
+@endif
+<div class="st-events__see">
+    <a href="{{ route('dashboard') }}">{{ __('student_timeline.school_gate') }}</a>
+</div>
+@endsection
+
 @if(!empty($directUploadToCloud))
 @push('scripts')
 <script>
@@ -273,7 +322,13 @@
         abandonUrl: @json(route('student.assignments.submission.abandon-upload', $assignment)),
         csrf: @json(csrf_token()),
         maxFiles: 10,
-        maxBytes: 40960 * 1024
+        maxBytes: 40960 * 1024,
+        msgWait: @json(__('student_timeline.asg_js_wait_upload')),
+        msgTooBig: @json(__('student_timeline.asg_js_too_big')),
+        msgMaxFiles: @json(__('student_timeline.asg_js_max_files')),
+        msgUploading: @json(__('student_timeline.asg_js_uploading')),
+        msgRemove: @json(__('student_timeline.asg_js_remove')),
+        msgFail: @json(__('student_timeline.asg_js_fail'))
     };
     var form = document.getElementById('assignment-submit-form');
     var tokenBox = document.getElementById('assignment-direct-tokens');
@@ -289,15 +344,15 @@
     function setStatus(msg, isErr) {
         if (!statusEl) return;
         if (!msg) {
-            statusEl.classList.add('hidden');
+            statusEl.hidden = true;
+            statusEl.classList.add('is-hidden');
             statusEl.textContent = '';
             return;
         }
-        statusEl.classList.remove('hidden');
+        statusEl.hidden = false;
+        statusEl.classList.remove('is-hidden');
         statusEl.textContent = msg;
-        statusEl.classList.toggle('text-rose-600', !!isErr);
-        statusEl.classList.toggle('dark:text-rose-400', !!isErr);
-        statusEl.classList.toggle('text-gray-500', !isErr);
+        statusEl.classList.toggle('is-err', !!isErr);
     }
 
     function syncHiddenTokens() {
@@ -343,15 +398,12 @@
         listEl.innerHTML = '';
         remoteItems.forEach(function(item, idx) {
             var li = document.createElement('li');
-            li.className = 'flex items-center justify-between gap-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/40 px-3 py-2';
             var label = document.createElement('span');
-            label.className = 'truncate text-gray-800 dark:text-gray-200';
-            label.textContent = item.name + (item.uploading ? ' — جاري الرفع…' : '');
+            label.textContent = item.name + (item.uploading ? ' — …' : '');
             li.appendChild(label);
             var btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'shrink-0 text-rose-600 dark:text-rose-400 text-xs font-bold hover:underline disabled:opacity-50';
-            btn.textContent = 'إزالة';
+            btn.textContent = cfg.msgRemove;
             btn.disabled = !!item.uploading;
             btn.addEventListener('click', function() {
                 if (item.uploading) return;
@@ -380,17 +432,17 @@
 
     async function uploadFile(file) {
         if (file.size > cfg.maxBytes) {
-            setStatus('الملف «' + file.name + '» يتجاوز 40 ميجابايت.', true);
+            setStatus(cfg.msgTooBig.replace(':name', file.name), true);
             return;
         }
         if (totalAttachmentSlots() >= cfg.maxFiles) {
-            setStatus('الحد 10 ملفات في التسليم الواحد.', true);
+            setStatus(cfg.msgMaxFiles, true);
             return;
         }
         var entry = { name: file.name, file_token: null, uploading: true };
         remoteItems.push(entry);
         renderList();
-        setStatus('جاري رفع «' + file.name + '»…', false);
+        setStatus(cfg.msgUploading.replace(':name', file.name), false);
         try {
             var presignRes = await fetch(cfg.presignUrl, {
                 method: 'POST',
@@ -409,8 +461,7 @@
             var presignData = {};
             try { presignData = await presignRes.json(); } catch (e) { presignData = {}; }
             if (!presignRes.ok || !presignData.direct_upload || !presignData.upload_url || !presignData.upload_token) {
-                var msg = (presignData && presignData.message) ? presignData.message : 'تعذر تجهيز الرفع.';
-                throw new Error(msg);
+                throw new Error((presignData && presignData.message) ? presignData.message : cfg.msgFail);
             }
             await putBlobToPresignedUrl(
                 presignData.upload_url,
@@ -435,7 +486,7 @@
             var completeData = {};
             try { completeData = await completeRes.json(); } catch (e2) { completeData = {}; }
             if (!completeRes.ok || !completeData.file_token) {
-                throw new Error((completeData && completeData.message) ? completeData.message : 'فشل تأكيد الملف.');
+                throw new Error((completeData && completeData.message) ? completeData.message : cfg.msgFail);
             }
             entry.uploading = false;
             entry.file_token = completeData.file_token;
@@ -443,7 +494,7 @@
         } catch (err) {
             var ix = remoteItems.indexOf(entry);
             if (ix >= 0) remoteItems.splice(ix, 1);
-            setStatus((err && err.message) ? err.message : 'فشل الرفع.', true);
+            setStatus((err && err.message) ? err.message : cfg.msgFail, true);
         }
         renderList();
         picker.value = '';
@@ -463,23 +514,22 @@
 
     if (toggleClassic && classicWrap) {
         toggleClassic.addEventListener('click', function() {
-            classicWrap.classList.toggle('hidden');
+            classicWrap.classList.toggle('is-hidden');
         });
     }
 
     form.addEventListener('submit', function(e) {
         if (remoteItems.some(function(x) { return x.uploading; })) {
             e.preventDefault();
-            setStatus('انتظر انتهاء رفع كل الملفات.', true);
+            setStatus(cfg.msgWait, true);
             return;
         }
         if (totalAttachmentSlots() > cfg.maxFiles) {
             e.preventDefault();
-            setStatus('لا يمكن تجاوز 10 ملفات.', true);
+            setStatus(cfg.msgMaxFiles, true);
         }
     });
 })();
 </script>
 @endpush
 @endif
-@endsection

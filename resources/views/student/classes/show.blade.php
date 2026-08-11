@@ -6,19 +6,34 @@
 @php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
-    $feedPosts = $feedPosts ?? collect();
+    $feedCount = (int) ($feedCount ?? 0);
     $leaderboard = $leaderboard ?? collect();
-    $canModerateFeed = $canModerateFeed ?? false;
     $game = $game ?? ['xp' => 0, 'level' => 1, 'streak' => ['current' => 0]];
-    $sessions = $cohort->classSessions ?? collect();
+    $sessions = ($cohort->classSessions ?? collect())->values();
+    $tz = config('app.timezone');
     $nextJoinable = $sessions->first(fn ($s) => method_exists($s, 'isJoinable') && $s->isJoinable());
-    $upcomingCount = $sessions->filter(fn ($s) => ! in_array($s->status, ['cancelled', 'completed'], true) && $s->starts_at && $s->starts_at->gte(now()->subHour()))->count();
+    $upcomingSessions = $sessions
+        ->filter(fn ($s) => ! in_array($s->status, ['cancelled', 'completed'], true)
+            && $s->starts_at
+            && $s->starts_at->gte(now()->subHour()))
+        ->values();
     $completedCount = $sessions->where('status', 'completed')->count();
     $totalSessions = $sessions->count();
     $progressPct = $totalSessions > 0 ? (int) round(($completedCount / $totalSessions) * 100) : 0;
     $instructorName = $cohort->tutoringGroup?->instructor?->name;
     $groupTitle = $cohort->tutoringGroup?->title;
-    $tz = config('app.timezone');
+    $subjectName = $cohort->tutoringGroup?->academicSubject?->name
+        ?? $cohort->tutoringGroup?->schoolSubject?->name
+        ?? null;
+    $eventMasks = [
+        asset('img/student-timeline/event-mask-1.svg'),
+        asset('img/student-timeline/event-mask-2.svg'),
+        asset('img/student-timeline/event-mask-3.svg'),
+    ];
+    $subjMask1 = asset('img/student-timeline/subj-mask-1.svg');
+    $subjMask2 = asset('img/student-timeline/subj-mask-2.svg');
+    $schedulePreview = $upcomingSessions->take(5);
+    $pastPreview = $sessions->where('status', 'completed')->sortByDesc('starts_at')->take(3)->values();
 @endphp
 
 @include('partials.student-timeline-top', [
@@ -27,7 +42,7 @@
     'crumbs' => [
         ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
         ['label' => __('student_timeline.my_classes'), 'url' => route('student.classes.index')],
-        ['label' => $cohort->title, 'url' => null],
+        ['label' => \Illuminate\Support\Str::limit($cohort->title, 28), 'url' => null],
     ],
 ])
 
@@ -38,54 +53,73 @@
     <div class="st-flash st-flash--err">{{ session('error') }}</div>
 @endif
 
-<section class="st-join-hero" aria-label="{{ __('student_timeline.class_room') }}">
-    <div class="st-join-hero__copy">
-        <p class="st-join-hero__kicker">{{ $groupTitle ?: __('student_timeline.my_classes') }}</p>
-        <h2 class="st-join-hero__title">{{ $cohort->title }}</h2>
-        <p class="st-join-hero__meta">
-            {{ $cohort->scheduleSummary() }}
-            @if($instructorName)
-                · {{ __('student_timeline.teacher') }}: {{ $instructorName }}
+{{-- One composition: class identity + single primary action --}}
+<section class="st-event-card st-event-card--blue st-biz-banner st-class-hero">
+    <img class="st-event-card__mask" src="{{ $eventMasks[1] }}" alt="" width="160" height="160">
+    <div class="st-biz-banner__row">
+        <div>
+            <p class="st-event-card__kicker">{{ $subjectName ?: ($groupTitle ?: __('student_timeline.my_classes')) }}</p>
+            <h3>{{ $cohort->title }}</h3>
+            <p class="st-event-card__sub">
+                {{ $cohort->scheduleSummary() }}
+                @if($instructorName)
+                    · {{ $instructorName }}
+                @endif
+            </p>
+        </div>
+        <div class="st-biz-banner__actions">
+            @if($nextJoinable)
+                <form method="POST" action="{{ route('student.classes.sessions.join', $nextJoinable) }}">
+                    @csrf
+                    <button type="submit" class="st-pill st-pill--light">
+                        <i class="fas fa-video" aria-hidden="true"></i>
+                        {{ __('student_timeline.join_class_now') }}
+                    </button>
+                </form>
+            @elseif($upcomingSessions->first())
+                <a href="#st-class-schedule" class="st-pill st-pill--light">{{ __('student_timeline.class_schedule') }}</a>
             @endif
-            · {{ $cohort->activeEnrollments->count() }}/{{ $cohort->capacity }}
-            · {{ number_format($game['xp'] ?? 0) }} XP · Lv {{ $game['level'] ?? 1 }}
-            · 🔥 {{ $game['streak']['current'] ?? 0 }}
-        </p>
-    </div>
-    <div class="st-join-hero__actions">
-        @if($nextJoinable)
-            <form method="POST" action="{{ route('student.classes.sessions.join', $nextJoinable) }}">
-                @csrf
-                <button type="submit" class="st-pill st-pill--solid st-pill--lg">
-                    <i class="fas fa-video" aria-hidden="true"></i>
-                    {{ __('student_timeline.join_class_now') }}
-                </button>
-            </form>
-        @endif
-        @if($cohort->whatsapp_group_url)
-            <a href="{{ $cohort->whatsapp_group_url }}" target="_blank" rel="noopener" class="st-pill st-pill--outline">
-                <i class="fab fa-whatsapp" aria-hidden="true"></i>
-                {{ __('student_timeline.class_whatsapp') }}
-            </a>
-        @endif
-        <a href="{{ route('student.classes.index') }}" class="st-pill st-pill--outline">{{ __('student_timeline.back_to_classes') }}</a>
+            @if($cohort->whatsapp_group_url)
+                <a href="{{ $cohort->whatsapp_group_url }}" target="_blank" rel="noopener" class="st-pill st-pill--ghost">
+                    <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                    WhatsApp
+                </a>
+            @endif
+        </div>
     </div>
 </section>
 
-<section class="st-stats st-stats--classes" aria-label="{{ __('student_timeline.class_room') }}">
-    <article class="st-stat-card">
+<section class="st-stats" aria-label="{{ __('student_timeline.class_room') }}">
+    <article class="st-subject st-subject--blue st-stat-card">
+        <img class="st-subject__blob" src="{{ $subjMask1 }}" alt="" width="132" height="132">
         <p class="st-stat-card__label">{{ __('student_timeline.path_progress') }}</p>
         <p class="st-stat-card__value">{{ $progressPct }}%</p>
+        <div class="st-stat-card__bar"><span style="width: {{ max(4, $progressPct) }}%"></span></div>
         <p class="st-stat-card__hint">{{ $completedCount }}/{{ $totalSessions }}</p>
     </article>
-    <article class="st-stat-card">
+    <article class="st-subject st-subject--orange st-stat-card">
+        <img class="st-subject__blob" src="{{ $subjMask2 }}" alt="" width="132" height="132">
         <p class="st-stat-card__label">{{ __('student_timeline.upcoming_short') }}</p>
-        <p class="st-stat-card__value">{{ $upcomingCount }}</p>
+        <p class="st-stat-card__value">{{ $upcomingSessions->count() }}</p>
+        <p class="st-stat-card__hint">
+            @if($nextJoinable?->starts_at)
+                {{ $nextJoinable->starts_at->timezone($tz)->translatedFormat('D g:i A') }}
+            @else
+                —
+            @endif
+        </p>
     </article>
-    <article class="st-stat-card">
+    <article class="st-subject st-subject--purple st-stat-card">
+        <img class="st-subject__blob" src="{{ $subjMask1 }}" alt="" width="132" height="132">
         <p class="st-stat-card__label">{{ __('student_timeline.class_seats') }}</p>
         <p class="st-stat-card__value">{{ $cohort->activeEnrollments->count() }}</p>
         <p class="st-stat-card__hint">/ {{ $cohort->capacity }}</p>
+    </article>
+    <article class="st-subject st-subject--pink st-stat-card">
+        <img class="st-subject__blob" src="{{ $subjMask2 }}" alt="" width="132" height="132">
+        <p class="st-stat-card__label">XP</p>
+        <p class="st-stat-card__value">{{ number_format($game['xp'] ?? 0) }}</p>
+        <p class="st-stat-card__hint">Lv {{ $game['level'] ?? 1 }} · 🔥 {{ $game['streak']['current'] ?? 0 }}</p>
     </article>
 </section>
 
@@ -99,9 +133,9 @@
                 </div>
             </div>
 
-            @if($sessions->isNotEmpty())
+            @if($schedulePreview->isNotEmpty())
                 <ul class="st-session-list">
-                    @foreach($sessions as $session)
+                    @foreach($schedulePreview as $session)
                         @php
                             $joinable = $session->status !== 'cancelled' && $session->isJoinable();
                             $statusTone = match ($session->status) {
@@ -110,16 +144,14 @@
                                 'cancelled' => 'off',
                                 default => 'soon',
                             };
+                            $isPrimary = $nextJoinable && (int) $nextJoinable->id === (int) $session->id;
                         @endphp
-                        <li class="st-session-row st-session-row--{{ $statusTone }}">
+                        <li class="st-session-row st-session-row--{{ $statusTone }}{{ $isPrimary ? ' is-primary' : '' }}">
                             <div class="st-session-row__body">
                                 <h3>{{ $session->displayTitle() }}</h3>
                                 <p>
                                     @if($session->starts_at)
                                         {{ $session->starts_at->timezone($tz)->translatedFormat($isRtl ? 'l، d M · g:i A' : 'D, M j · g:i A') }}
-                                        @if($session->ends_at)
-                                            — {{ $session->ends_at->timezone($tz)->format('g:i A') }}
-                                        @endif
                                     @else
                                         —
                                     @endif
@@ -127,9 +159,7 @@
                             </div>
                             <div class="st-session-row__actions">
                                 <span class="st-session-badge st-session-badge--{{ $statusTone }}">{{ $session->statusLabel() }}</span>
-                                @if($session->status === 'cancelled')
-                                    <span class="st-session-row__muted">—</span>
-                                @elseif($joinable)
+                                @if($joinable && $isPrimary)
                                     <form method="POST" action="{{ route('student.classes.sessions.join', $session) }}">
                                         @csrf
                                         <button type="submit" class="st-pill st-pill--solid">
@@ -137,10 +167,25 @@
                                             {{ __('student_timeline.join_live') }}
                                         </button>
                                     </form>
-                                @else
+                                @elseif(! $joinable && $session->status !== 'cancelled')
                                     <span class="st-session-row__muted">{{ __('student_timeline.session_soon') }}</span>
                                 @endif
                             </div>
+                        </li>
+                    @endforeach
+                </ul>
+                @if($upcomingSessions->count() > $schedulePreview->count())
+                    <p class="st-class-more">+{{ $upcomingSessions->count() - $schedulePreview->count() }} {{ __('student_timeline.upcoming_short') }}</p>
+                @endif
+            @elseif($pastPreview->isNotEmpty())
+                <ul class="st-session-list">
+                    @foreach($pastPreview as $session)
+                        <li class="st-session-row st-session-row--done">
+                            <div class="st-session-row__body">
+                                <h3>{{ $session->displayTitle() }}</h3>
+                                <p>{{ $session->starts_at?->timezone($tz)->translatedFormat($isRtl ? 'l، d M · g:i A' : 'D, M j · g:i A') }}</p>
+                            </div>
+                            <span class="st-session-badge st-session-badge--done">{{ $session->statusLabel() }}</span>
                         </li>
                     @endforeach
                 </ul>
@@ -151,91 +196,26 @@
                 </div>
             @endif
         </section>
-
-        <section class="st-panel" id="st-class-feed">
-            <div class="st-section-head">
-                <div>
-                    <h2>{{ __('student_timeline.class_community') }}</h2>
-                    <p>{{ __('student_timeline.class_community_hint') }}</p>
-                </div>
-            </div>
-
-            <form method="POST" action="{{ route('student.classes.feed.store', $cohort) }}" class="st-feed-compose">
-                @csrf
-                <textarea name="body" rows="3" maxlength="1000" required
-                          placeholder="{{ __('student_timeline.class_post_placeholder') }}"></textarea>
-                <div class="st-feed-compose__bar">
-                    <select name="post_type">
-                        <option value="question">{{ __('student_timeline.class_post_question') }}</option>
-                        @if($canModerateFeed)
-                            <option value="announcement">{{ __('student_timeline.class_post_announcement') }}</option>
-                        @endif
-                    </select>
-                    <button type="submit" class="st-pill st-pill--solid">{{ __('student_timeline.class_post_submit') }}</button>
-                </div>
-            </form>
-
-            <ul class="st-feed-list">
-                @forelse($feedPosts as $post)
-                    <li class="st-feed-card{{ $post->is_hidden ? ' is-hidden' : '' }}{{ $post->is_pinned ? ' is-pinned' : '' }}">
-                        <div class="st-feed-card__head">
-                            <div>
-                                <strong>{{ $post->author?->name }}</strong>
-                                <span class="st-feed-chip">{{ $post->typeLabel() }}</span>
-                                @if($post->is_pinned)
-                                    <span class="st-feed-chip st-feed-chip--gold">{{ __('student_timeline.class_pinned') }}</span>
-                                @endif
-                                @if($post->is_hidden)
-                                    <span class="st-feed-chip st-feed-chip--danger">{{ __('student_timeline.class_hidden') }}</span>
-                                @endif
-                            </div>
-                            <time>{{ $post->created_at?->diffForHumans() }}</time>
-                        </div>
-                        <p class="st-feed-card__body">{{ $post->body }}</p>
-
-                        @if($canModerateFeed)
-                            <div class="st-feed-card__mods">
-                                <form method="POST" action="{{ route('student.classes.feed.pin', $post) }}">@csrf
-                                    <button type="submit">{{ $post->is_pinned ? __('student_timeline.class_unpin') : __('student_timeline.class_pin') }}</button>
-                                </form>
-                                @if($post->is_hidden)
-                                    <form method="POST" action="{{ route('student.classes.feed.unhide', $post) }}">@csrf
-                                        <button type="submit">{{ __('student_timeline.class_unhide') }}</button>
-                                    </form>
-                                @else
-                                    <form method="POST" action="{{ route('student.classes.feed.hide', $post) }}">@csrf
-                                        <button type="submit" class="is-danger">{{ __('student_timeline.class_hide') }}</button>
-                                    </form>
-                                @endif
-                            </div>
-                        @endif
-
-                        <ul class="st-feed-comments">
-                            @foreach($post->visibleComments as $comment)
-                                <li>
-                                    <strong>{{ $comment->author?->name }}:</strong>
-                                    <span>{{ $comment->body }}</span>
-                                </li>
-                            @endforeach
-                        </ul>
-
-                        <form method="POST" action="{{ route('student.classes.feed.comment', $post) }}" class="st-feed-reply">
-                            @csrf
-                            <input type="text" name="body" maxlength="1000" required placeholder="{{ __('student_timeline.class_comment_placeholder') }}">
-                            <button type="submit" class="st-pill st-pill--solid">{{ __('student_timeline.class_reply') }}</button>
-                        </form>
-                    </li>
-                @empty
-                    <li class="st-empty-panel">
-                        <h3>{{ __('student_timeline.class_feed_empty') }}</h3>
-                        <p>{{ __('student_timeline.class_feed_empty_hint') }}</p>
-                    </li>
-                @endforelse
-            </ul>
-        </section>
     </div>
 
     <aside class="st-class-detail__side">
+        <a href="{{ route('student.classes.community', $cohort) }}" class="st-community-tile" aria-label="{{ __('student_timeline.class_community') }}">
+            <span class="st-community-tile__icon" aria-hidden="true">
+                <i class="fas fa-comments"></i>
+            </span>
+            <span class="st-community-tile__text">
+                <strong>{{ __('student_timeline.class_community') }}</strong>
+                <small>{{ __('student_timeline.class_community_hint') }}</small>
+            </span>
+            @if($feedCount > 0)
+                <span class="st-community-tile__badge">{{ $feedCount > 99 ? '99+' : $feedCount }}</span>
+            @else
+                <span class="st-community-tile__chevron" aria-hidden="true">
+                    <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }}"></i>
+                </span>
+            @endif
+        </a>
+
         <section class="st-panel st-panel--side">
             <div class="st-section-head">
                 <div>
@@ -244,7 +224,7 @@
                 </div>
             </div>
             <ol class="st-board">
-                @forelse($leaderboard as $row)
+                @forelse($leaderboard->take(5) as $row)
                     <li class="st-board__row{{ $row->rank <= 3 ? ' is-top' : '' }}">
                         <span class="st-board__rank">{{ $row->rank }}</span>
                         <span class="st-board__name">{{ $row->name }}</span>
@@ -256,20 +236,13 @@
             </ol>
         </section>
 
-        @if($instructorName)
-            <section class="st-panel st-panel--side">
-                <div class="st-section-head">
-                    <div>
-                        <h2>{{ __('student_timeline.teacher') }}</h2>
-                        <p>{{ $instructorName }}</p>
-                    </div>
-                </div>
-                @if(Route::has('student.private-messages.index'))
-                    <a href="{{ route('student.private-messages.index') }}" class="st-pill st-pill--outline st-pill--block">
-                        {{ __('student_timeline.open_chats') }}
-                    </a>
-                @endif
-            </section>
+        @if($instructorName && Route::has('student.private-messages.index'))
+            <a href="{{ route('student.private-messages.index') }}" class="st-event-card st-event-card--purple st-class-teacher-link">
+                <img class="st-event-card__mask" src="{{ $eventMasks[0] }}" alt="" width="120" height="120">
+                <p class="st-event-card__kicker">{{ __('student_timeline.teacher') }}</p>
+                <h3>{{ $instructorName }}</h3>
+                <p class="st-event-card__sub">{{ __('student_timeline.open_chats') }}</p>
+            </a>
         @endif
     </aside>
 </div>
@@ -282,20 +255,21 @@
         asset('img/student-timeline/event-mask-2.svg'),
         asset('img/student-timeline/event-mask-3.svg'),
     ];
-    $eventTones = ['pink', 'blue', 'orange'];
-    $sideSessions = ($cohort->classSessions ?? collect())
-        ->filter(fn ($s) => ! in_array($s->status, ['cancelled', 'completed'], true))
-        ->take(6);
+    $eventTones = ['green', 'blue', 'orange', 'purple', 'pink'];
+    $sideSessions = ($upcomingSessions ?? collect())->take(4);
 @endphp
 
 <div class="st-events__top">
-    <h2>{{ __('student_timeline.class_schedule') }}</h2>
+    <h2>{{ __('student_timeline.upcoming_short') }}</h2>
 </div>
 
 <div data-tab-panel="activities">
     @forelse($sideSessions as $i => $session)
-        @php $joinable = $session->isJoinable(); @endphp
-        <div class="st-event-card st-event-card--{{ $eventTones[$i % 3] }}">
+        @php
+            $joinable = $session->isJoinable();
+            $isPrimary = $nextJoinable && (int) $nextJoinable->id === (int) $session->id;
+        @endphp
+        <div class="st-event-card st-event-card--{{ $eventTones[$i % count($eventTones)] }}">
             <img class="st-event-card__mask" src="{{ $eventMasks[$i % 3] }}" alt="" width="160" height="160">
             <h3>{{ $session->displayTitle() }}</h3>
             <p class="st-event-card__sub">{{ $session->statusLabel() }}</p>
@@ -304,13 +278,13 @@
                 <span>{{ $session->starts_at?->timezone(config('app.timezone'))->translatedFormat('D · g:i A') }}</span>
             </div>
             <div class="st-event-card__actions">
-                @if($joinable)
+                @if($joinable && $isPrimary)
                     <form method="POST" action="{{ route('student.classes.sessions.join', $session) }}">
                         @csrf
                         <button type="submit" class="st-pill st-pill--solid">{{ __('student_timeline.join_now') }}</button>
                     </form>
                 @else
-                    <span class="st-pill st-pill--outline">{{ __('student_timeline.session_soon') }}</span>
+                    <a href="#st-class-schedule" class="st-pill st-pill--outline">{{ __('student_timeline.class_schedule') }}</a>
                 @endif
             </div>
         </div>

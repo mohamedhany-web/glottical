@@ -29,6 +29,17 @@
         </a>
     </section>
 
+    @include('admin.partials.workflow-guide', [
+        'title' => 'معالج التسكين',
+        'body' => 'اتبع الترتيب من أعلى لأسفل: طالب ← باقة ← معلم ← موعد. النظام يرفض الحفظ إن لم يتوفر رصيد أو وقت متاح.',
+        'steps' => [
+            'اختر الطالب — تظهر باقاته ورصيده تلقائياً.',
+            'حدد نوع المسار (1:1 أو مجموعة) والباقة.',
+            'اختر معلماً ثم موعداً من الأوقات المتاحة فقط.',
+            'راجع الملخص وثبّت التسكين.',
+        ],
+    ])
+
     @if(session('error'))
         <div class="rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">{{ session('error') }}</div>
     @endif

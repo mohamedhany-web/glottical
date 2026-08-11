@@ -48,8 +48,23 @@
                 <input type="text" name="title" value="{{ old('title', $recording->title) }}" class="{{ $field }}" placeholder="اختياري — يُستخدم عنوان الجلسة">
             </div>
             <div>
-                <label class="{{ $label }}">رابط خارجي (YouTube / Vimeo / …)</label>
+                <label class="{{ $label }}">مجلد المكتبة</label>
+                <select name="library_folder_id" class="{{ $field }}">
+                    <option value="">بدون مجلد</option>
+                    @foreach(($folders ?? []) as $folder)
+                        <option value="{{ $folder->id }}" @selected((string) old('library_folder_id', $recording->library_folder_id) === (string) $folder->id)>
+                            {{ $folder->name_ar }}@if($folder->name_en) — {{ $folder->name_en }}@endif
+                        </option>
+                    @endforeach
+                </select>
+                <p class="mt-1 text-xs text-muted">
+                    <a href="{{ route('admin.libraries.folders.index') }}" class="text-accent hover:underline">إدارة المجلدات</a>
+                </p>
+            </div>
+            <div>
+                <label class="{{ $label }}">رابط خارجي (YouTube / Vimeo / Bunny)</label>
                 <input type="url" name="external_url" value="{{ old('external_url', $recording->external_url) }}" class="{{ $field }}" placeholder="https://…">
+                <p class="mt-1 text-xs text-muted">يُشغَّل داخل المنصة عبر مشغّل مضمّن (بدون إجبار فتح يوتيوب في تاب جديد).</p>
             </div>
             <div class="grid gap-4 md:grid-cols-2">
                 <div>

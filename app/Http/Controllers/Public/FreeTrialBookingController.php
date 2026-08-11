@@ -38,11 +38,14 @@ class FreeTrialBookingController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $goalKeys = array_keys(\App\Models\FreeTrialBooking::goalOptions());
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:64'],
-            'goal' => ['nullable', 'string', 'max:255'],
+            'country_code' => ['nullable', 'string', 'max:12'],
+            'goal' => ['required', 'string', 'in:'.implode(',', $goalKeys)],
             'starts_at' => ['required', 'date'],
         ]);
 
@@ -59,6 +62,8 @@ class FreeTrialBookingController extends Controller
                 'starts_at' => $booking->starts_at->toIso8601String(),
                 'label' => $booking->starts_at->locale(app()->getLocale())->translatedFormat('l d F Y — H:i'),
                 'duration_minutes' => $booking->duration_minutes,
+                'goal' => $booking->goal,
+                'goal_label' => $booking->goalLabel(),
             ],
         ], 201);
     }

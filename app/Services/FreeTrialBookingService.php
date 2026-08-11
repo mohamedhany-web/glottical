@@ -75,7 +75,7 @@ class FreeTrialBookingService
     }
 
     /**
-     * @param  array{name:string,email?:string,phone?:string,goal?:string,starts_at:string}  $data
+     * @param  array{name:string,email?:string,phone?:string,country_code?:string,goal?:string,starts_at:string,notes?:string}  $data
      */
     public static function book(array $data, ?int $userId = null): FreeTrialBooking
     {
@@ -90,15 +90,29 @@ class FreeTrialBookingService
             throw new InvalidArgumentException('هذا الموعد لم يعد متاحاً. اختر موعداً آخر.');
         }
 
-        if (empty($data['email']) && empty($data['phone'])) {
-            throw new InvalidArgumentException('أدخل البريد أو رقم الهاتف للمتابعة.');
+        [$countryCode, $fullPhone] = self::normalizePhone(
+            $data['phone'] ?? null,
+            $data['country_code'] ?? null
+        );
+
+        if (empty($data['email']) && empty($fullPhone)) {
+            throw new InvalidArgumentException('أدخل البريد أو رقم الواتساب للمتابعة.');
+        }
+
+        $goal = isset($data['goal']) ? trim((string) $data['goal']) : null;
+        if ($goal === '') {
+            $goal = null;
+        }
+        if ($goal !== null && ! array_key_exists($goal, FreeTrialBooking::goalOptions())) {
+            throw new InvalidArgumentException('الغرض من التعلم غير صالح.');
         }
 
         return FreeTrialBooking::create([
             'name' => $data['name'],
             'email' => $data['email'] ?? null,
-            'phone' => $data['phone'] ?? null,
-            'goal' => $data['goal'] ?? null,
+            'phone' => $fullPhone,
+            'country_code' => $countryCode,
+            'goal' => $goal,
             'user_id' => $userId,
             'starts_at' => $starts,
             'ends_at' => $ends,
@@ -106,5 +120,40 @@ class FreeTrialBookingService
             'status' => FreeTrialBooking::STATUS_CONFIRMED,
             'notes' => $data['notes'] ?? null,
         ]);
+    }
+
+    /**
+     * @return array{0:?string,1:?string} [country_code, full_phone]
+     */
+    private static function normalizePhone(?string $phone, ?string $countryCode): array
+    {
+        $rawPhone = trim((string) $phone);
+        $dial = trim((string) $countryCode);
+
+        if ($rawPhone === '') {
+            return [null, null];
+        }
+
+        $countries = config('phone_countries.countries', []);
+        $country = collect($countries)->firstWhere('dial_code', $dial);
+
+        if ($dial === '' || ! $country) {
+            throw new InvalidArgumentException('اختر كود الدولة لرقم الواتساب.');
+        }
+
+        $national = preg_replace('/\D+/', '', $rawPhone) ?? '';
+        $national = ltrim($national, '0');
+        $regex = $country['validation']['regex'] ?? '/^\d{6,15}$/';
+
+        if ($national === '' || ! preg_match($regex, $national)) {
+            $example = $country['example'] ?? $country['placeholder'] ?? '';
+            throw new InvalidArgumentException(
+                $example !== ''
+                    ? ('رقم الواتساب غير صحيح لهذه الدولة. مثال: '.$example)
+                    : 'رقم الواتساب غير صحيح لهذه الدولة.'
+            );
+        }
+
+        return [$dial, $dial.$national];
     }
 }

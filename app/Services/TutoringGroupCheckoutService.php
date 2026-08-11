@@ -88,6 +88,22 @@ class TutoringGroupCheckoutService
      */
     public static function fulfillApprovedOrder(Order $order, ?Carbon $preferredStartsAt = null): ?StudentTutoringSubscription
     {
+        $subscription = self::fulfillApprovedOrderCore($order, $preferredStartsAt);
+
+        try {
+            app(ReferralService::class)->completePendingForUser((int) $order->user_id, $order->amount);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning(
+                'Referral update failed after tutoring fulfill: '.$e->getMessage(),
+                ['order_id' => $order->id]
+            );
+        }
+
+        return $subscription;
+    }
+
+    protected static function fulfillApprovedOrderCore(Order $order, ?Carbon $preferredStartsAt = null): ?StudentTutoringSubscription
+    {
         if ($order->order_type === Order::TYPE_CUSTOM_SERVICE_PACKAGE) {
             StudentEntitlementService::grantFromOrder($order);
 

@@ -22,6 +22,16 @@
         </a>
     </section>
 
+    @include('admin.partials.workflow-guide', [
+        'title' => 'الكورسات ≠ فصول المدرسة',
+        'body' => 'البرامج/الكورسات هنا محتوى تعليمي مسجّل (دروس ومواد). فصول المدرسة والمجموعات مسار تشغيل حي (دفعات وحصص مباشرة) ويُدار من قوائم المجموعات والتسكين.',
+        'steps' => [
+            'أنشئ برنامجاً واربطه بسنة/مادة إن لزم.',
+            'أضف الدروس والمحتوى وفعّل الظهور.',
+            'تسجيل الطلاب في الكورس منفصل عن تسكينهم في دفعة فصل حي.',
+        ],
+    ])
+
     @if(session('success'))
         <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-soft">
             <i class="fas fa-check-circle ml-1"></i> {{ session('success') }}

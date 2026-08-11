@@ -8,6 +8,7 @@ use App\Models\LectureVideoQuestion;
 use App\Models\LectureVideoQuestionAnswer;
 use App\Models\LectureWatchProgress;
 use App\Models\StudentCourseEnrollment;
+use App\Services\LectureMaterialStorage;
 use App\Services\PlatformCourseCertificateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -389,12 +390,7 @@ class MyCourseController extends Controller
             ->where('is_visible_to_student', true)
             ->firstOrFail();
 
-        $path = Storage::disk('public')->path($material->file_path);
-        if (! is_file($path)) {
-            abort(404, 'الملف غير موجود');
-        }
-
-        return response()->download($path, $material->file_name);
+        return LectureMaterialStorage::download($material);
     }
 
     /**

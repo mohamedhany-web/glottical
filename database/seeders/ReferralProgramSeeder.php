@@ -2,42 +2,58 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\ReferralProgram;
+use App\Models\ServicePackage;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class ReferralProgramSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // التحقق من وجود جدول referral_programs
-        if (!\Illuminate\Support\Facades\Schema::hasTable('referral_programs')) {
-            $this->command->warn('⚠️  جدول referral_programs غير موجود. يرجى تشغيل migrations أولاً.');
+        if (! Schema::hasTable('referral_programs')) {
+            $this->command->warn('جدول referral_programs غير موجود. يرجى تشغيل migrations أولاً.');
+
             return;
         }
 
-        // إنشاء برنامج إحالة افتراضي
-        ReferralProgram::firstOrCreate(
-            ['name' => 'برنامج الإحالات الافتراضي'],
-            [
-                'description' => 'برنامج إحالات أساسي - خصم 10% للمستخدم المحال ومكافأة 20 ج.م للمحيل',
-                'discount_type' => 'percentage',
-                'discount_value' => 10,
-                'maximum_discount' => 50,
-                'minimum_order_amount' => 100,
-                'discount_valid_days' => 30,
-                'referrer_reward_type' => 'fixed',
-                'referrer_reward_value' => 20,
-                'max_referrals_per_user' => null, // غير محدود
-                'max_discount_uses_per_referred' => 1,
-                'allow_self_referral' => false,
-                'is_active' => true,
-                'is_default' => true,
-            ]
-        );
+        $defaults = [
+            'name' => 'دعوة الأصدقاء — رصيد حصص',
+            'description' => 'ادعُ من تحب — عند اشتراكه تحصلان معاً على رصيد حصص خاصة 1:1 (بدون خصم مالي).',
+            'reward_mode' => ReferralProgram::REWARD_MODE_CREDITS,
+            'credit_scope' => ServicePackage::SCOPE_PRIVATE_LESSONS,
+            'referred_credit_units' => 1,
+            'referrer_credit_units' => 1,
+            'credit_duration_days' => 90,
+            'grant_referred_on' => ReferralProgram::GRANT_FIRST_PURCHASE,
+            'grant_referrer_on' => ReferralProgram::GRANT_FIRST_PURCHASE,
+            'share_message_ar' => 'سجّل في Glottical من رابطي واحصل على رصيد حصص: {link}',
+            'share_message_en' => 'Join Glottical with my link and get lesson credits: {link}',
+            'discount_type' => 'percentage',
+            'discount_value' => 0,
+            'maximum_discount' => null,
+            'minimum_order_amount' => null,
+            'discount_valid_days' => 30,
+            'referrer_reward_type' => 'fixed',
+            'referrer_reward_value' => 0,
+            'max_referrals_per_user' => null,
+            'max_discount_uses_per_referred' => 1,
+            'allow_self_referral' => false,
+            'is_active' => true,
+            'is_default' => true,
+        ];
 
-        $this->command->info('تم إنشاء برنامج الإحالات الافتراضي بنجاح!');
+        $program = ReferralProgram::query()->where('is_default', true)->first()
+            ?? ReferralProgram::query()->where('name', 'برنامج الإحالات الافتراضي')->first()
+            ?? ReferralProgram::query()->where('name', 'LIKE', '%أخوات%')->first()
+            ?? ReferralProgram::query()->where('name', 'LIKE', '%أصدقاء%')->first();
+
+        if ($program) {
+            $program->fill($defaults)->save();
+            $this->command->info('تم تحديث برنامج الإحالات الافتراضي.');
+        } else {
+            ReferralProgram::create($defaults);
+            $this->command->info('تم إنشاء برنامج دعوة الأصدقاء بنجاح!');
+        }
     }
 }

@@ -235,6 +235,14 @@
             #free-trial-modal .ft-form-grid{grid-template-columns:1fr 1fr}
         }
         #free-trial-modal .ft-field-wrap{display:flex;flex-direction:column;gap:.35rem}
+        #free-trial-modal .ft-phone-row{
+            display:flex;align-items:stretch;gap:.5rem;direction:ltr;
+        }
+        #free-trial-modal .ft-phone-row .ft-cc{
+            width:7.25rem;flex:0 0 auto;padding-inline:.65rem;
+            appearance:none;-webkit-appearance:none;
+        }
+        #free-trial-modal .ft-phone-row .ft-field{flex:1 1 auto;min-width:0}
         #free-trial-modal .ft-calendar{display:flex;flex-direction:column;gap:1.25rem}
         #free-trial-modal .ft-success{padding:1.5rem 0;text-align:center}
         #free-trial-modal .ft-success .ft-title{color:#0B3D91}
@@ -492,29 +500,63 @@
         </div>
 
                 <form id="ft-form" class="ft-form">
+                    @php
+                        $phoneCountries = config('phone_countries.countries', []);
+                        $defaultCountry = collect($phoneCountries)->firstWhere('code', config('phone_countries.default_country', 'SA'))
+                            ?: ['dial_code' => '+966', 'name_ar' => 'السعودية', 'name_en' => 'Saudi Arabia', 'placeholder' => '5xxxxxxxx'];
+                    @endphp
                     <input type="hidden" name="starts_at" id="ft-starts-at" required>
                     <div class="ft-field-wrap">
                         <label for="ft-name" class="ft-label">{{ __($a.'.free_trial_name') }}</label>
                         <input type="text" name="name" id="ft-name" required autocomplete="name" class="ft-field" value="{{ auth()->user()->name ?? '' }}">
-            </div>
+                    </div>
                     <div class="ft-form-grid">
                         <div class="ft-field-wrap">
                             <label for="ft-email" class="ft-label">{{ __($a.'.free_trial_email') }}</label>
                             <input type="email" name="email" id="ft-email" autocomplete="email" class="ft-field" value="{{ auth()->user()->email ?? '' }}">
-                            </div>
+                        </div>
                         <div class="ft-field-wrap">
                             <label for="ft-phone" class="ft-label">{{ __($a.'.free_trial_phone') }}</label>
-                            <input type="tel" name="phone" id="ft-phone" autocomplete="tel" class="ft-field" value="{{ auth()->user()->phone ?? '' }}">
-                        </div>
+                            <div class="ft-phone-row">
+                                <select name="country_code" id="ft-country-code" class="ft-field ft-cc" aria-label="{{ __($a.'.free_trial_country_code') }}">
+                                    @foreach($phoneCountries as $c)
+                                        @php $dial = $c['dial_code'] ?? ''; @endphp
+                                        @if($dial !== '' && $dial !== 'OTHER')
+                                            <option
+                                                value="{{ $dial }}"
+                                                data-placeholder="{{ $c['placeholder'] ?? '' }}"
+                                                @selected($dial === ($defaultCountry['dial_code'] ?? '+966'))
+                                            >{{ $dial }} {{ $isRtl ? ($c['name_ar'] ?? $c['name_en'] ?? '') : ($c['name_en'] ?? $c['name_ar'] ?? '') }}</option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    id="ft-phone"
+                                    autocomplete="tel-national"
+                                    class="ft-field"
+                                    dir="ltr"
+                                    inputmode="numeric"
+                                    placeholder="{{ $defaultCountry['placeholder'] ?? '' }}"
+                                    value="{{ auth()->user()->phone ? preg_replace('/^\+\d+/', '', (string) auth()->user()->phone) : '' }}"
+                                >
                             </div>
+                        </div>
+                    </div>
                     <div class="ft-field-wrap">
                         <label for="ft-goal" class="ft-label">{{ __($a.'.free_trial_goal') }}</label>
-                        <input type="text" name="goal" id="ft-goal" class="ft-field" placeholder="{{ $isRtl ? 'سفر، عمل، دراسة…' : 'Travel, work, studyâ€¦' }}">
-                        </div>
+                        <select name="goal" id="ft-goal" class="ft-field" required>
+                            <option value="" disabled selected>{{ __($a.'.free_trial_goal_placeholder') }}</option>
+                            <option value="consultation">{{ __($a.'.free_trial_goal_consultation') }}</option>
+                            <option value="trial">{{ __($a.'.free_trial_goal_trial') }}</option>
+                            <option value="placement">{{ __($a.'.free_trial_goal_placement') }}</option>
+                        </select>
+                    </div>
                     <button type="submit" id="ft-submit" disabled class="ft-submit">
                         {{ __($a.'.free_trial_submit') }}
                     </button>
-                    <p class="ft-muted" style="text-align:center;line-height:1.6">{{ $isRtl ? 'بدون التزام · سنؤكد الموعد برسالة قصيرة' : 'No commitment Â· Weâ€™ll confirm by a short message' }}</p>
+                    <p class="ft-muted" style="text-align:center;line-height:1.6">{{ $isRtl ? 'بدون التزام · سنؤكد الموعد برسالة قصيرة' : 'No commitment · We’ll confirm by a short message' }}</p>
                 </form>
             </div>
 
@@ -1178,6 +1220,15 @@
         }
 
         var form = document.getElementById('ft-form');
+        var countrySelect = document.getElementById('ft-country-code');
+        var phoneInput = document.getElementById('ft-phone');
+        if (countrySelect && phoneInput) {
+            countrySelect.addEventListener('change', function(){
+                var opt = countrySelect.options[countrySelect.selectedIndex];
+                var ph = opt ? (opt.getAttribute('data-placeholder') || '') : '';
+                if (ph) phoneInput.setAttribute('placeholder', ph);
+            });
+        }
         form.addEventListener('submit', function(e){
             e.preventDefault();
             var err = document.getElementById('ft-error');
@@ -1186,6 +1237,7 @@
                 name: document.getElementById('ft-name').value,
                 email: document.getElementById('ft-email').value || null,
                 phone: document.getElementById('ft-phone').value || null,
+                country_code: document.getElementById('ft-country-code').value || null,
                 goal: document.getElementById('ft-goal').value || null,
                 starts_at: document.getElementById('ft-starts-at').value
             };
@@ -1201,14 +1253,14 @@
             }).then(function(r){ return r.json().then(function(j){ return { ok: r.ok, status: r.status, body: j }; }); })
             .then(function(res){
                 if (!res.ok) {
-                    err.textContent = (res.body && res.body.message) ? res.body.message : ((res.body && res.body.errors) ? Object.values(res.body.errors)[0][0] : 'ÙØ´Ù„ Ø§Ù„Ø­Ø¬Ø²');
+                    err.textContent = (res.body && res.body.message) ? res.body.message : ((res.body && res.body.errors) ? Object.values(res.body.errors)[0][0] : 'فشل الحجز');
                     err.classList.remove('hidden');
                     document.getElementById('ft-submit').disabled = false;
                     return;
                 }
                 document.getElementById('ft-calendar').classList.add('hidden');
                 document.getElementById('ft-success').classList.remove('hidden');
-                document.getElementById('ft-success-msg').textContent = (res.body.message || '') + (res.body.booking && res.body.booking.label ? (' â€” ' + res.body.booking.label) : '');
+                document.getElementById('ft-success-msg').textContent = (res.body.message || '') + (res.body.booking && res.body.booking.label ? (' — ' + res.body.booking.label) : '');
             }).catch(function(){
                 err.textContent = 'فشل الاتصال — حاول مجدداً';
                 err.classList.remove('hidden');

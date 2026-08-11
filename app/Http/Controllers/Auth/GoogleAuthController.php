@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Contracts\Factory as SocialiteFactory;
 
 class GoogleAuthController extends Controller
@@ -20,7 +21,11 @@ class GoogleAuthController extends Controller
             return redirect()->route('login')
                 ->withErrors(['email' => __('auth.login_register_google_only')]);
         }
-        return app(SocialiteFactory::class)->driver('google')->redirect();
+
+        return app(SocialiteFactory::class)
+            ->driver('google')
+            ->scopes(['openid', 'profile', 'email'])
+            ->redirect();
     }
 
     /**
@@ -32,13 +37,14 @@ class GoogleAuthController extends Controller
             $googleUser = app(SocialiteFactory::class)->driver('google')->user();
         } catch (\Exception $e) {
             \Log::warning('Google OAuth error', ['message' => $e->getMessage()]);
+
             return redirect()->route('login')
                 ->withErrors(['email' => __('auth.login_register_google_only')]);
         }
 
         $email = $googleUser->getEmail();
         $googleId = $googleUser->getId();
-        $name = $googleUser->getName() ?: ($googleUser->getNickname() ?: explode('@', $email)[0]);
+        $name = $googleUser->getName() ?: ($googleUser->getNickname() ?: explode('@', (string) $email)[0]);
 
         if (empty($email)) {
             return redirect()->route('login')
@@ -47,37 +53,46 @@ class GoogleAuthController extends Controller
 
         $user = User::where('google_id', $googleId)->first();
 
-        if (!$user) {
+        if (! $user) {
             $user = User::whereRaw('LOWER(email) = ?', [strtolower($email)])->first();
         }
 
-        if (!$user) {
-            $user = User::create([
+        if (! $user) {
+            $payload = [
                 'name' => $name,
                 'email' => $email,
-                'email_verified_at' => now(),
                 'password' => Hash::make(Str::random(64)),
                 'google_id' => $googleId,
                 'role' => 'student',
                 'is_active' => true,
-            ]);
+            ];
+            if (Schema::hasColumn('users', 'email_verified_at')) {
+                $payload['email_verified_at'] = now();
+            }
+            $user = User::create($payload);
         } else {
+            $updates = [];
             if (empty($user->google_id)) {
-                $user->update([
-                    'google_id' => $googleId,
-                    'email_verified_at' => $user->email_verified_at ?? now(),
-                ]);
+                $updates['google_id'] = $googleId;
+            }
+            if (Schema::hasColumn('users', 'email_verified_at') && empty($user->email_verified_at)) {
+                $updates['email_verified_at'] = now();
+            }
+            if ($updates) {
+                $user->update($updates);
             }
         }
 
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             return redirect()->route('login')
                 ->withErrors(['email' => 'حسابك غير نشط. يرجى التواصل مع الإدارة.']);
         }
 
         Auth::login($user, true);
         request()->session()->regenerate();
-        $user->update(['last_login_at' => now()]);
+        if (Schema::hasColumn('users', 'last_login_at')) {
+            $user->update(['last_login_at' => now()]);
+        }
 
         $intended = session('url.intended');
 
@@ -91,9 +106,9 @@ class GoogleAuthController extends Controller
             return redirect()->intended(route('instructor.dashboard'));
         }
 
-        // إذا كان القصد من مجتمع الذكاء الاصطناعي والمساهم → لوحة المساهم
         if ($intended && str_contains($intended, 'community') && $user->is_community_contributor) {
             session()->forget('url.intended');
+
             return redirect()->route('community.contributor.dashboard');
         }
 

@@ -35,6 +35,16 @@
         </div>
     </section>
 
+    @include('admin.partials.workflow-guide', [
+        'title' => 'ترتيب المدرسة من الأعلى للأسفل',
+        'body' => 'ابدأ بالسنوات ثم المواد ثم اربط العروض (كورسات / مجموعات). بدون سنة ومادة منظمين يصعب على العميل فهم أين يضع كل فصل.',
+        'steps' => [
+            'أنشئ سنوات المدرسة (مثل: الصف الأول، الثاني…).',
+            'أضف مواد داخل كل سنة من صفحة المواد.',
+            'اربط فصول المدرسة أو الكورسات بهذه السنة/المادة عند الإنشاء.',
+        ],
+    ])
+
     @if(session('success'))
         <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
             <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>

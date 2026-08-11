@@ -34,6 +34,16 @@
         </div>
     </section>
 
+    @include('admin.partials.workflow-guide', [
+        'title' => 'تسكين حصة خاصة',
+        'body' => 'هذه الصفحة لتثبيت حصة 1:1 مباشرة. إن احتجت مساراً أوسع (مجموعات أيضاً) استخدم معالج التسكين.',
+        'steps' => [
+            'اختر الطالب والرصيد المناسب.',
+            'اختر المعلم ثم موعداً من الأوقات المتاحة فقط.',
+            'احفظ — تُنشأ الحصة وتظهر في قائمة 1:1.',
+        ],
+    ])
+
     @if(session('error'))
         <div class="rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">{{ session('error') }}</div>
     @endif

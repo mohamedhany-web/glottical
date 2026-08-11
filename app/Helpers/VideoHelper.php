@@ -29,15 +29,35 @@ class VideoHelper
             return $base.$query;
         }
 
-        if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/', $url, $m)) {
-            return 'https://www.youtube.com/embed/'.$m[1].'?rel=0&modestbranding=1&playsinline=1';
+        if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/|youtube-nocookie\.com\/embed\/)([a-zA-Z0-9_-]{11})/', $url, $m)) {
+            $origin = rtrim((string) config('app.url'), '/');
+            $query = http_build_query([
+                'rel' => 0,
+                'modestbranding' => 1,
+                'playsinline' => 1,
+                'iv_load_policy' => 3,
+                'fs' => 1,
+                'enablejsapi' => 1,
+                'origin' => $origin,
+            ]);
+
+            // youtube-nocookie يقلل التشتيت ويُبقي التشغيل داخل الصفحة قدر الإمكان
+            return 'https://www.youtube-nocookie.com/embed/'.$m[1].'?'.$query;
         }
 
         if (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $url, $m)) {
-            return 'https://player.vimeo.com/video/'.$m[1].'?title=0&byline=0&portrait=0';
+            return 'https://player.vimeo.com/video/'.$m[1].'?title=0&byline=0&portrait=0&dnt=1';
         }
 
         return null;
+    }
+
+    /**
+     * هل الرابط يحتاج iframe (يوتيوب/فيميو/باني) بدل وسم video؟
+     */
+    public static function isEmbedSource(?string $url): bool
+    {
+        return self::getEmbedUrl($url) !== null;
     }
 
     /**
@@ -92,7 +112,7 @@ class VideoHelper
         if (str_contains($url, 'mediadelivery.net')) {
             return 'bunny';
         }
-        if (preg_match('/youtube\.com|youtu\.be/', $url)) {
+        if (preg_match('/youtube\.com|youtu\.be|youtube-nocookie\.com/', $url)) {
             return 'youtube';
         }
         if (str_contains($url, 'vimeo.com')) {
@@ -144,7 +164,9 @@ class VideoHelper
         $direct = self::getDirectVideoUrl($url);
 
         if ($embedUrl) {
-            return "<iframe src='{$embedUrl}' width='{$width}' height='{$height}' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen' allowfullscreen class='w-full h-full' style='border: none;'></iframe>";
+            $safe = e($embedUrl);
+
+            return "<iframe src='{$safe}' width='{$width}' height='{$height}' frameborder='0' allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share' allowfullscreen referrerpolicy='strict-origin-when-cross-origin' loading='lazy' class='w-full h-full' style='border: none;'></iframe>";
         }
 
         if ($direct) {

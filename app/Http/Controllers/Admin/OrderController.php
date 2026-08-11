@@ -447,14 +447,8 @@ class OrderController extends Controller
                 // تحديث حالة الإحالة إذا كانت موجودة (لا نوقف الموافقة إذا فشل)
                 Log::info('Order approve: after order updated', ['order_id' => $order->id]);
                 try {
-                    $referralService = app(\App\Services\ReferralService::class);
-                    $referral = \App\Models\Referral::where('referred_id', $order->user_id)
-                        ->where('status', \App\Models\Referral::STATUS_PENDING)
-                        ->first();
-
-                    if ($referral) {
-                        $referralService->markReferralAsCompleted($referral, $order->amount);
-                    }
+                    app(\App\Services\ReferralService::class)
+                        ->completePendingForUser((int) $order->user_id, $order->amount);
                 } catch (\Throwable $e) {
                     Log::warning('Referral update failed during order approval: '.$e->getMessage(), ['order_id' => $order->id]);
                 }

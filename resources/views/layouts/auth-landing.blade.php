@@ -227,6 +227,22 @@
       box-shadow: 0 10px 28px rgba(245,184,0,.4);
     }
     .gl-auth-submit:hover { filter: brightness(1.03); }
+    .gl-auth-or {
+      display: flex; align-items: center; gap: .75rem; margin: 1rem 0 .85rem;
+      color: #94a3b8; font: 700 .75rem Tajawal, sans-serif;
+    }
+    .gl-auth-or::before, .gl-auth-or::after {
+      content: ""; flex: 1; height: 1px; background: #E8EEF8;
+    }
+    .gl-auth-google {
+      width: 100%; min-height: 3rem; border-radius: 999px; display: inline-flex;
+      align-items: center; justify-content: center; gap: .6rem;
+      border: 1px solid #E2E8F0; background: #fff; color: #0f172a;
+      font: 800 .9rem Cairo, Tajawal, sans-serif; text-decoration: none !important;
+      box-shadow: 0 6px 18px rgba(15,23,42,.05);
+    }
+    .gl-auth-google:hover { background: #f8fafc; border-color: #cbd5e1; }
+    .gl-auth-google i { color: #ea4335; font-size: 1rem; }
     .gl-auth-foot {
       margin-top: 1.15rem; padding-top: 1rem; border-top: 1px solid #E8EEF8;
       text-align: center; font: 600 .84rem Tajawal, sans-serif; color: #5B6577;

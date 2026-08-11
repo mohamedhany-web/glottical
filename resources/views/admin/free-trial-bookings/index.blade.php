@@ -137,12 +137,19 @@
                             <td class="px-3 py-3">
                                 <p class="font-semibold text-ink">{{ $b->name }}</p>
                                 @if($b->goal)
-                                    <p class="mt-0.5 text-xs text-muted">{{ \Illuminate\Support\Str::limit($b->goal, 40) }}</p>
+                                    <p class="mt-0.5 text-xs text-muted">{{ $b->goalLabel('ar') }}</p>
                                 @endif
                             </td>
                             <td class="px-3 py-3 text-xs text-muted">
                                 @if($b->email)<p><i class="fas fa-envelope ml-1 text-[10px]"></i>{{ $b->email }}</p>@endif
-                                @if($b->phone)<p class="mt-0.5"><i class="fas fa-phone ml-1 text-[10px]"></i>{{ $b->phone }}</p>@endif
+                                @if($b->phone)
+                                    <p class="mt-0.5" dir="ltr">
+                                        <i class="fas fa-phone ml-1 text-[10px]"></i>{{ $b->phone }}
+                                        @if($b->whatsappUrl())
+                                            <a href="{{ $b->whatsappUrl() }}" target="_blank" rel="noopener" class="mr-1 text-emerald-700 hover:underline" title="واتساب"><i class="fab fa-whatsapp"></i></a>
+                                        @endif
+                                    </p>
+                                @endif
                             </td>
                             <td class="whitespace-nowrap px-3 py-3 font-medium tabular-nums text-ink">
                                 {{ $b->starts_at?->timezone(config('app.timezone'))->format('Y-m-d H:i') }}

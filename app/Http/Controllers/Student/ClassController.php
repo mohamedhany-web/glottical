@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\ClassFeedPost;
 use App\Models\TutoringClassSession;
 use App\Models\TutoringCohortEnrollment;
 use App\Models\TutoringGroupCohort;
@@ -66,12 +67,19 @@ class ClassController extends Controller
             ->where('status', TutoringCohortEnrollment::STATUS_ACTIVE)
             ->first();
 
+        $feedCount = 0;
+        if (ClassFeedService::tablesReady()) {
+            $feedCount = ClassFeedPost::query()
+                ->where('tutoring_group_cohort_id', $cohort->id)
+                ->where('is_hidden', false)
+                ->count();
+        }
+
         return view('student.classes.show', [
             'cohort' => $cohort,
             'enrollment' => $enrollment,
-            'feedPosts' => ClassFeedService::postsFor($cohort, $request->user()),
+            'feedCount' => $feedCount,
             'leaderboard' => StudentSchoolGameService::cohortLeaderboard((int) $cohort->id, 8),
-            'canModerateFeed' => ClassFeedService::canModerate($request->user(), $cohort),
             'game' => StudentSchoolGameService::profileSnapshot($request->user()),
         ]);
     }

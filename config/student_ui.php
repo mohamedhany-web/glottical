@@ -12,7 +12,7 @@ return [
     'show_achievements' => false,
     'show_wallet' => false,
     'show_orders' => true,
-    'show_referrals' => false,
+    'show_referrals' => true,
     'show_consultations' => false,
     'show_legacy_calendar' => false,
     'show_course_progress' => false,

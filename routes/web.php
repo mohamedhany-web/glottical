@@ -611,6 +611,14 @@ Route::middleware(['guest', 'guest-only'])->group(function () {
     Route::post('/2fa/verify', [\App\Http\Controllers\Auth\TwoFactorController::class, 'verifyChallenge'])
         ->middleware('throttle:30,1')
         ->name('two-factor.verify');
+
+    // تسجيل الدخول / الربط عبر حساب Google (Gmail)
+    Route::get('/auth/google', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'redirect'])
+        ->middleware('throttle:20,1')
+        ->name('auth.google.redirect');
+    Route::get('/auth/google/callback', [\App\Http\Controllers\Auth\GoogleAuthController::class, 'callback'])
+        ->middleware('throttle:30,1')
+        ->name('auth.google.callback');
 });
 
 // تسجيل الخروج - يجب أن يكون المستخدم مسجل دخول
@@ -835,6 +843,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/notifications/cleanup', [\App\Http\Controllers\Student\NotificationController::class, 'cleanup'])->name('notifications.cleanup');
         Route::get('/api/notifications/unread-count', [\App\Http\Controllers\Student\NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
         Route::get('/api/notifications/recent', [\App\Http\Controllers\Student\NotificationController::class, 'getRecent'])->name('notifications.recent');
+        Route::get('/api/notifications/nav', [\App\Http\Controllers\Student\NotificationController::class, 'navPoll'])->name('notifications.nav-poll');
         Route::get('/calendar', [\App\Http\Controllers\Student\CalendarController::class, 'index'])->name('calendar');
         Route::get('/api/calendar/events', [\App\Http\Controllers\Student\CalendarController::class, 'getEvents'])->name('calendar.events');
 
@@ -867,6 +876,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/classes/{cohort}', [\App\Http\Controllers\Student\ClassController::class, 'show'])->name('student.classes.show');
         Route::post('/classes/{cohort}/enroll', [\App\Http\Controllers\Student\ClassController::class, 'enroll'])->name('student.classes.enroll');
         Route::post('/class-sessions/{session}/join', [\App\Http\Controllers\Student\ClassController::class, 'joinSession'])->name('student.classes.sessions.join');
+        Route::get('/classes/{cohort}/community', [\App\Http\Controllers\Student\ClassFeedController::class, 'index'])->name('student.classes.community');
         Route::post('/classes/{cohort}/feed', [\App\Http\Controllers\Student\ClassFeedController::class, 'store'])->name('student.classes.feed.store');
         Route::post('/class-feed/{post}/comments', [\App\Http\Controllers\Student\ClassFeedController::class, 'comment'])->name('student.classes.feed.comment');
         Route::post('/class-feed/{post}/hide', [\App\Http\Controllers\Student\ClassFeedController::class, 'hide'])->name('student.classes.feed.hide');
@@ -877,6 +887,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             ->whereIn('type', ['private', 'class', 'booking'])
             ->name('student.schedule.join');
         Route::get('/library/materials', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'materials'])->name('student.library.materials');
+        Route::get('/library/materials/{material}/download', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'downloadMaterial'])->name('student.library.materials.download');
         Route::get('/library/videos', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'videos'])->name('student.library.videos');
         Route::get('/my-lectures', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'lectures'])->name('student.lectures.index');
         Route::get('/tutoring-subscriptions', [\App\Http\Controllers\Student\TutoringSubscriptionController::class, 'index'])->name('student.tutoring-subscriptions.index');
@@ -1335,6 +1346,15 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
                 Route::put('/{material}', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'update'])->name('update');
                 Route::post('/{material}/toggle', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'toggleVisibility'])->name('toggle');
                 Route::delete('/{material}', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'destroy'])->name('destroy');
+            });
+
+            Route::prefix('folders')->name('folders.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Admin\LibraryFolderController::class, 'index'])->name('index');
+                Route::get('/create', [\App\Http\Controllers\Admin\LibraryFolderController::class, 'create'])->name('create');
+                Route::post('/', [\App\Http\Controllers\Admin\LibraryFolderController::class, 'store'])->name('store');
+                Route::get('/{folder}/edit', [\App\Http\Controllers\Admin\LibraryFolderController::class, 'edit'])->name('edit');
+                Route::put('/{folder}', [\App\Http\Controllers\Admin\LibraryFolderController::class, 'update'])->name('update');
+                Route::delete('/{folder}', [\App\Http\Controllers\Admin\LibraryFolderController::class, 'destroy'])->name('destroy');
             });
 
             Route::prefix('videos')->name('videos.')->group(function () {
@@ -1964,10 +1984,22 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/tutoring-bookings/{booking}/complete', [\App\Http\Controllers\Instructor\TutoringBookingController::class, 'complete'])->name('tutoring-bookings.complete');
         Route::get('/tutoring-cohorts', [\App\Http\Controllers\Instructor\TutoringCohortController::class, 'index'])->name('tutoring-cohorts.index');
         Route::get('/tutoring-cohorts/{cohort}', [\App\Http\Controllers\Instructor\TutoringCohortController::class, 'show'])->name('tutoring-cohorts.show');
+        Route::get('/tutoring-cohorts/{cohort}/community', [\App\Http\Controllers\Student\ClassFeedController::class, 'index'])->name('tutoring-cohorts.community');
         Route::post('/tutoring-cohorts/{cohort}/feed', [\App\Http\Controllers\Student\ClassFeedController::class, 'store'])->name('tutoring-cohorts.feed.store');
+        Route::post('/class-feed/{post}/comments', [\App\Http\Controllers\Student\ClassFeedController::class, 'comment'])->name('class-feed.comment');
         Route::post('/class-feed/{post}/hide', [\App\Http\Controllers\Student\ClassFeedController::class, 'hide'])->name('class-feed.hide');
         Route::post('/class-feed/{post}/unhide', [\App\Http\Controllers\Student\ClassFeedController::class, 'unhide'])->name('class-feed.unhide');
         Route::post('/class-feed/{post}/pin', [\App\Http\Controllers\Student\ClassFeedController::class, 'pin'])->name('class-feed.pin');
+
+        Route::get('/private-messages', [\App\Http\Controllers\Instructor\PrivateMessagesController::class, 'index'])->name('private-messages.index');
+        Route::get('/private-messages/{thread}', [\App\Http\Controllers\Instructor\PrivateMessagesController::class, 'show'])->name('private-messages.show');
+        Route::post('/private-messages/{thread}', [\App\Http\Controllers\Instructor\PrivateMessagesController::class, 'send'])->name('private-messages.send');
+
+        Route::get('/notifications', [\App\Http\Controllers\Instructor\NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/notifications/{notification}/go', [\App\Http\Controllers\Instructor\NotificationController::class, 'go'])->name('notifications.go');
+        Route::post('/notifications/{notification}/mark-read', [\App\Http\Controllers\Instructor\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+        Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Instructor\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+        Route::get('/api/notifications/unread-count', [\App\Http\Controllers\Instructor\NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'show'])->name('one-to-one-sessions.show');
         Route::post('/one-to-one-sessions/{oneToOneSession}/schedule', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'schedule'])->name('one-to-one-sessions.schedule');
         Route::post('/one-to-one-sessions/{oneToOneSession}/complete', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'complete'])->name('one-to-one-sessions.complete');

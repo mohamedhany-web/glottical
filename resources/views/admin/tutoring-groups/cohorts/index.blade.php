@@ -9,6 +9,7 @@
         <div class="min-w-0">
             <p class="text-xs font-medium text-muted">إدارة المحتوى · مجموعات جماعية · دفعات</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ $group->title }}</h2>
+            <p class="mt-1 text-sm text-muted">كل دفعة = مجموعة طلاب بجدول وسعة وموعد بداية مستقل</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('admin.tutoring-groups.edit', [$type, $group]) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft hover:text-accent">تعديل المجموعة</a>
@@ -17,6 +18,16 @@
             </a>
         </div>
     </section>
+
+    @include('admin.partials.workflow-guide', [
+        'title' => 'ما الفرق بين المجموعة والدفعة؟',
+        'body' => 'المجموعة هي العرض العام على الموقع. الدفعة هي التشغيل الفعلي: طلاب محددون + أيام دراسة + سعة مقاعد. يمكنك فتح أكثر من دفعة لنفس العرض.',
+        'steps' => [
+            'أنشئ دفعة جديدة وحدد الجدول والسعة والحالة.',
+            'اضغط «الفصل» لإضافة الطلاب وتوليد الحصص وغرف الاجتماع.',
+            'عند امتلاء الدفعة أو انتهاء الفترة أنشئ دفعة تالية.',
+        ],
+    ])
 
     @if(session('success'))
         <div class="rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft">{{ session('success') }}</div>

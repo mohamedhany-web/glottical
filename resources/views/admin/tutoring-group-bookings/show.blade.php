@@ -22,6 +22,16 @@
         </a>
     </section>
 
+    @include('admin.partials.workflow-guide', [
+        'title' => 'معالجة هذا الحجز',
+        'body' => 'راجع بيانات الطالب والمجموعة والموعد، ثم حدّث الحالة (تأكيد / إلغاء) أو عدّل التعيين إن لزم قبل موعد الحصة.',
+        'steps' => [
+            'تأكد من المجموعة/الدفعة والمعلم والموعد.',
+            'أكّد الحجز إن كان المقعد متاحاً.',
+            'إن وُجدت غرفة اجتماع راجع رابطها قبل الحصة.',
+        ],
+    ])
+
     @if(session('success'))
         <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
             <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>

@@ -18,7 +18,7 @@
         <div class="min-w-0">
             <p class="text-xs font-medium text-muted">التسويق · الإحالات</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">برامج الإحالات</h2>
-            <p class="mt-1 max-w-2xl text-sm text-muted">إدارة برامج الإحالات والخصومات</p>
+            <p class="mt-1 max-w-2xl text-sm text-muted">إدارة برامج الإحالات ورصيد الحصص للمدعوين</p>
         </div>
         <a href="{{ route('admin.referral-programs.create') }}"
            class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-[#0d4f4a]">
@@ -74,9 +74,9 @@
                             <th class="px-4 py-3 text-start font-medium">اسم البرنامج</th>
                             <th class="px-4 py-3 text-start font-medium">الافتراضي</th>
                             <th class="px-4 py-3 text-start font-medium">الإحالات</th>
-                            <th class="px-4 py-3 text-start font-medium">خصم المحال</th>
-                            <th class="px-4 py-3 text-start font-medium">مكافأة المحيل</th>
-                            <th class="px-4 py-3 text-start font-medium">مدة الخصم</th>
+                            <th class="px-4 py-3 text-start font-medium">الوضع</th>
+                            <th class="px-4 py-3 text-start font-medium">مكافأة الحصص</th>
+                            <th class="px-4 py-3 text-start font-medium">النطاق</th>
                             <th class="px-4 py-3 text-start font-medium">الحالة</th>
                             <th class="px-4 py-3 text-end font-medium">الإجراءات</th>
                         </tr>
@@ -107,19 +107,14 @@
                                     {{ number_format($program->referrals_count ?? 0) }}
                                 </td>
                                 <td class="px-4 py-3">
-                                    <p class="font-semibold tabular-nums text-ink">
-                                        @if($program->discount_type == 'percentage')
-                                            {{ number_format($program->discount_value, 0) }}%
-                                        @else
-                                            {{ number_format($program->discount_value, 2) }} ج.م
-                                        @endif
-                                    </p>
-                                    @if($program->maximum_discount)
-                                        <p class="text-xs text-muted">حد أقصى: {{ number_format($program->maximum_discount, 2) }} ج.م</p>
-                                    @endif
+                                    <span class="inline-flex items-center rounded-lg border border-line bg-canvas px-2.5 py-1 text-[11px] font-semibold text-ink">
+                                        {{ $program->usesCredits() ? 'رصيد حصص' : 'خصم' }}
+                                    </span>
                                 </td>
                                 <td class="px-4 py-3">
-                                    @if($program->referrer_reward_value)
+                                    @if($program->usesCredits())
+                                        <p class="font-semibold tabular-nums text-ink">مدعوّة {{ (int) $program->referred_credit_units }} · محيلة {{ (int) $program->referrer_credit_units }}</p>
+                                    @elseif($program->referrer_reward_value)
                                         <p class="font-semibold tabular-nums text-ink">
                                             @if($program->referrer_reward_type == 'percentage')
                                                 {{ number_format($program->referrer_reward_value, 0) }}%
@@ -130,11 +125,11 @@
                                             @endif
                                         </p>
                                     @else
-                                        <span class="text-xs text-muted">لا توجد مكافأة</span>
+                                        <span class="text-xs text-muted">—</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-muted">
-                                    {{ $program->discount_valid_days }} يوم
+                                <td class="px-4 py-3 text-xs text-muted">
+                                    {{ $program->usesCredits() ? $program->creditScopeLabel() : (($program->discount_valid_days ?? '—').' يوم') }}
                                 </td>
                                 <td class="px-4 py-3">
                                     <span class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold

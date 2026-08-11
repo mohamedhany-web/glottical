@@ -80,10 +80,7 @@
                 <a href="{{ request()->fullUrlWithQuery(['lang' => 'en']) }}" class="{{ $locale === 'en' ? 'is-active' : '' }}">{{ __('student_timeline.lang_en') }}</a>
             </div>
 
-            <a href="{{ route('notifications') }}" class="st-bell" aria-label="{{ __('student_timeline.nav_messages') }}">
-                <img src="{{ asset('img/student-timeline/bell.svg') }}" alt="" width="20" height="20">
-                <span class="st-bell__dot" aria-hidden="true"></span>
-            </a>
+            @include('partials.student-timeline-bell')
 
             <button type="button" class="st-top__menu" id="stTopMenu" aria-expanded="false" aria-controls="stRail" aria-label="{{ __('student_timeline.toggle_sidebar') }}">
                 <i class="fas fa-bars" aria-hidden="true"></i>
@@ -94,11 +91,11 @@
     <div class="st-top__row st-top__row--secondary">
         <div class="st-datepill" aria-label="{{ $cal->translatedFormat('l, F j') }}">
             <a href="{{ $timelinePrevUrl ?? '#' }}" class="st-datepill__nav" aria-label="{{ $viewMode === 'day' ? __('student_timeline.prev_day') : __('student_timeline.prev_week') }}">
-                <img src="{{ asset('img/student-timeline/chevron.svg') }}" alt="" width="14" height="14" style="transform: {{ $isRtl ? 'none' : 'scaleX(-1)' }}">
+                <i class="fas {{ $isRtl ? 'fa-chevron-right' : 'fa-chevron-left' }}" aria-hidden="true"></i>
             </a>
             <a href="{{ $timelineTodayUrl ?? route('dashboard') }}" class="st-datepill__label">{{ $cal->translatedFormat($isRtl ? 'l، j F' : 'l, F j') }}</a>
             <a href="{{ $timelineNextUrl ?? '#' }}" class="st-datepill__nav" aria-label="{{ $viewMode === 'day' ? __('student_timeline.next_day') : __('student_timeline.next_week') }}">
-                <img src="{{ asset('img/student-timeline/chevron.svg') }}" alt="" width="14" height="14" style="transform: {{ $isRtl ? 'scaleX(-1)' : 'none' }}">
+                <i class="fas {{ $isRtl ? 'fa-chevron-left' : 'fa-chevron-right' }}" aria-hidden="true"></i>
             </a>
         </div>
 
@@ -291,53 +288,66 @@
 
 <section class="st-cal" aria-label="{{ __('student_timeline.calendar') }}">
     <div class="st-cal__todo">
-        <div class="st-cal__daynum">{{ $cal->format('d') }}</div>
-        <div class="st-cal__month">{{ $cal->translatedFormat('F') }}</div>
-        <div class="st-cal__year">{{ $cal->format('Y') }}</div>
-
-        <div class="st-cal__label">{{ __('student_timeline.todo_list') }}</div>
-        @forelse($todoItems as $mission)
-            <div class="st-cal__note {{ $loop->even ? 'st-cal__note--dark' : '' }}">
-                {{ $mission->title }}
-                @if(!empty($mission->completed)) ✓ @else · {{ $mission->progress }}/{{ $mission->target }} @endif
-            </div>
-        @empty
-            <div class="st-cal__note">{{ __('student_timeline.notes_to_be_made') }}</div>
-            <div class="st-cal__note st-cal__note--dark">{{ __('student_timeline.dont_forget_activities') }}</div>
-        @endforelse
-
-        <div class="st-cal__sched-label">
-            {{ $viewMode === 'day' ? __('student_timeline.day_view') : __('student_timeline.my_week') }}
+        <div class="st-cal__todo-head">
+            <div class="st-cal__daynum">{{ $cal->format('d') }}</div>
+            <div class="st-cal__month">{{ $cal->translatedFormat('F') }}</div>
+            <div class="st-cal__year">{{ $cal->format('Y') }}</div>
         </div>
-        @forelse($scheduleRows as $row)
-            @php $schedHref = $scheduleJoinUrl($row); @endphp
-            @if($schedHref)
-                <a href="{{ $schedHref }}" class="st-cal__row st-cal__row--link">
-                    <span>{{ trim(($row->day_short ?? '').' · '.($row->starts_at?->format('g:i A') ?? '—'), ' ·') }}</span>
-                    <span>{{ \Illuminate\Support\Str::limit($row->title ?? '', 28) }}</span>
-                </a>
-            @else
-                <div class="st-cal__row">
-                    <span>{{ trim(($row->day_short ?? '').' · '.($row->starts_at?->format('g:i A') ?? '—'), ' ·') }}</span>
-                    <span>{{ \Illuminate\Support\Str::limit($row->title ?? '', 28) }}</span>
+
+        <div class="st-cal__todo-body">
+            <div class="st-cal__label">{{ __('student_timeline.todo_list') }}</div>
+            @forelse($todoItems as $mission)
+                <div class="st-cal__note {{ $loop->even ? 'st-cal__note--dark' : '' }}">
+                    {{ $mission->title }}
+                    @if(!empty($mission->completed)) ✓ @else · {{ $mission->progress }}/{{ $mission->target }} @endif
                 </div>
-            @endif
-        @empty
-            <div class="st-cal__row">
-                <span>—</span>
-                <span>{{ __('student_timeline.no_events') }}</span>
+            @empty
+                <div class="st-cal__note">{{ __('student_timeline.notes_to_be_made') }}</div>
+                <div class="st-cal__note st-cal__note--dark">{{ __('student_timeline.dont_forget_activities') }}</div>
+            @endforelse
+
+            <div class="st-cal__sched-label">
+                {{ $viewMode === 'day' ? __('student_timeline.day_view') : __('student_timeline.my_week') }}
             </div>
-        @endforelse
+            @forelse($scheduleRows as $row)
+                @php $schedHref = $scheduleJoinUrl($row); @endphp
+                @if($schedHref)
+                    <a href="{{ $schedHref }}" class="st-cal__row st-cal__row--link">
+                        <span>{{ trim(($row->day_short ?? '').' · '.($row->starts_at?->format('g:i A') ?? '—'), ' ·') }}</span>
+                        <span>{{ \Illuminate\Support\Str::limit($row->title ?? '', 28) }}</span>
+                    </a>
+                @else
+                    <div class="st-cal__row">
+                        <span>{{ trim(($row->day_short ?? '').' · '.($row->starts_at?->format('g:i A') ?? '—'), ' ·') }}</span>
+                        <span>{{ \Illuminate\Support\Str::limit($row->title ?? '', 28) }}</span>
+                    </div>
+                @endif
+            @empty
+                <div class="st-cal__row">
+                    <span>—</span>
+                    <span>{{ __('student_timeline.no_events') }}</span>
+                </div>
+            @endforelse
+        </div>
     </div>
 
     <div class="st-cal__grid">
         <img class="st-cal__grid-bg" src="{{ asset('img/student-timeline/cal-wave.svg') }}" alt="" aria-hidden="true">
         <div class="st-cal__grid-head">
             <h3>{{ __('student_timeline.calendar') }}</h3>
-            <div class="st-cal__months" aria-hidden="true">
-                <span>{{ $cal->copy()->subMonth()->translatedFormat('M') }} <small>{{ $cal->copy()->subMonth()->format('Y') }}</small></span>
-                <span class="is-active">{{ $cal->translatedFormat('M') }} <small>{{ $cal->format('Y') }}</small></span>
-                <span>{{ $cal->copy()->addMonth()->translatedFormat('M') }} <small>{{ $cal->copy()->addMonth()->format('Y') }}</small></span>
+            <div class="st-cal__months">
+                <a href="{{ $timelineMonthPrevUrl ?? '#' }}" class="st-cal__month-link" aria-label="{{ __('student_timeline.prev_month') }}">
+                    {{ $cal->copy()->subMonth()->translatedFormat('M') }}
+                    <small>{{ $cal->copy()->subMonth()->format('Y') }}</small>
+                </a>
+                <span class="is-active" aria-current="true">
+                    {{ $cal->translatedFormat('M') }}
+                    <small>{{ $cal->format('Y') }}</small>
+                </span>
+                <a href="{{ $timelineMonthNextUrl ?? '#' }}" class="st-cal__month-link" aria-label="{{ __('student_timeline.next_month') }}">
+                    {{ $cal->copy()->addMonth()->translatedFormat('M') }}
+                    <small>{{ $cal->copy()->addMonth()->format('Y') }}</small>
+                </a>
             </div>
         </div>
         <div class="st-cal__board">
@@ -447,10 +457,17 @@
 
 <div class="st-events__top">
     <h2>{{ __('student_timeline.events') }}</h2>
-    <span class="st-events__filter">
-        <img src="{{ asset('img/student-timeline/filter.svg') }}" alt="" width="14" height="14">
-        {{ __('student_timeline.filter') }}
-    </span>
+    <div class="st-events__filter-wrap" data-st-filter>
+        <button type="button" class="st-events__filter" id="stEventsFilterBtn" aria-expanded="false" aria-haspopup="true" aria-controls="stEventsFilterMenu">
+            <img src="{{ asset('img/student-timeline/filter.svg') }}" alt="" width="14" height="14">
+            <span data-st-filter-label>{{ __('student_timeline.filter') }}</span>
+        </button>
+        <div class="st-events__filter-menu" id="stEventsFilterMenu" role="menu" hidden>
+            <button type="button" role="menuitem" data-st-filter-value="all">{{ __('student_timeline.filter_all') }}</button>
+            <button type="button" role="menuitem" data-st-filter-value="activities">{{ __('student_timeline.filter_activities') }}</button>
+            <button type="button" role="menuitem" data-st-filter-value="reminders">{{ __('student_timeline.filter_reminders') }}</button>
+        </div>
+    </div>
 </div>
 
 <div class="st-tabs" data-st-tabs>
@@ -500,7 +517,7 @@
     @endforelse
 </div>
 
-<div class="st-events__next">
+<div class="st-events__next" data-st-next-day>
     <h3>{{ __('student_timeline.next_day') }}</h3>
     @forelse($nextDayItems as $i => $slot)
         <a href="{{ $slot->join_url ?: '#' }}" class="st-event-card st-event-card--{{ $eventTones[($i + 1) % 3] }}" style="min-height:110px;margin-bottom:10px;">
@@ -523,14 +540,100 @@
 
 @push('scripts')
 <script>
-document.querySelectorAll('[data-st-tabs] button').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-        var tab = btn.getAttribute('data-tab');
-        document.querySelectorAll('[data-st-tabs] button').forEach(function (b) { b.classList.toggle('is-active', b === btn); });
-        document.querySelectorAll('[data-tab-panel]').forEach(function (panel) {
-            panel.hidden = panel.getAttribute('data-tab-panel') !== tab;
+(function () {
+    var labels = {
+        all: @json(__('student_timeline.filter_all')),
+        activities: @json(__('student_timeline.filter_activities')),
+        reminders: @json(__('student_timeline.filter_reminders')),
+        default: @json(__('student_timeline.filter'))
+    };
+    var wrap = document.querySelector('[data-st-filter]');
+    var btn = document.getElementById('stEventsFilterBtn');
+    var menu = document.getElementById('stEventsFilterMenu');
+    var labelEl = wrap ? wrap.querySelector('[data-st-filter-label]') : null;
+    var nextDay = document.querySelector('[data-st-next-day]');
+    var tabBtns = document.querySelectorAll('[data-st-tabs] button');
+    var panels = document.querySelectorAll('[data-tab-panel]');
+    var current = 'all';
+
+    function setTab(tab) {
+        tabBtns.forEach(function (b) {
+            b.classList.toggle('is-active', b.getAttribute('data-tab') === tab);
+        });
+        panels.forEach(function (panel) {
+            var name = panel.getAttribute('data-tab-panel');
+            if (current === 'all') {
+                panel.hidden = name !== 'activities';
+            } else {
+                panel.hidden = name !== tab;
+            }
+        });
+        if (nextDay) {
+            nextDay.hidden = current === 'reminders';
+        }
+    }
+
+    function applyFilter(value) {
+        current = value;
+        if (labelEl) {
+            labelEl.textContent = labels[value] || labels.default;
+        }
+        if (menu) {
+            menu.querySelectorAll('[data-st-filter-value]').forEach(function (item) {
+                item.classList.toggle('is-active', item.getAttribute('data-st-filter-value') === value);
+            });
+        }
+        setTab(value === 'reminders' ? 'reminders' : 'activities');
+        closeMenu();
+    }
+
+    function closeMenu() {
+        if (!menu || !btn) return;
+        menu.hidden = true;
+        btn.setAttribute('aria-expanded', 'false');
+    }
+
+    function openMenu() {
+        if (!menu || !btn) return;
+        menu.hidden = false;
+        btn.setAttribute('aria-expanded', 'true');
+    }
+
+    tabBtns.forEach(function (tabBtn) {
+        tabBtn.addEventListener('click', function () {
+            var tab = tabBtn.getAttribute('data-tab');
+            current = tab;
+            if (labelEl) {
+                labelEl.textContent = labels[tab] || labels.default;
+            }
+            if (menu) {
+                menu.querySelectorAll('[data-st-filter-value]').forEach(function (item) {
+                    item.classList.toggle('is-active', item.getAttribute('data-st-filter-value') === tab);
+                });
+            }
+            setTab(tab);
+            closeMenu();
         });
     });
-});
+
+    if (btn && menu) {
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (menu.hidden) openMenu();
+            else closeMenu();
+        });
+        menu.querySelectorAll('[data-st-filter-value]').forEach(function (item) {
+            item.addEventListener('click', function () {
+                applyFilter(item.getAttribute('data-st-filter-value'));
+            });
+        });
+        document.addEventListener('click', function (e) {
+            if (wrap && !wrap.contains(e.target)) closeMenu();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeMenu();
+        });
+    }
+})();
 </script>
 @endpush

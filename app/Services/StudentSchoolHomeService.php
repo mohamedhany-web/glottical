@@ -319,6 +319,12 @@ class StudentSchoolHomeService
             'timelineSortUrl' => $timelineQuery(['sort' => $sort === 'classes' ? 'progress' : 'classes']),
             'timelineViewUrl' => $timelineQuery(['view' => $view === 'week' ? 'day' : 'week']),
             'timelineTodayUrl' => $timelineQuery(['week' => now($tz)->toDateString(), 'view' => $view === 'day' ? 'day' : null]),
+            'timelineMonthPrevUrl' => $timelineQuery([
+                'week' => $weekAnchor->copy()->subMonthNoOverflow()->startOfMonth()->toDateString(),
+            ]),
+            'timelineMonthNextUrl' => $timelineQuery([
+                'week' => $weekAnchor->copy()->addMonthNoOverflow()->startOfMonth()->toDateString(),
+            ]),
             'nextAppointment' => $nextAppointment,
             'recommendedYear' => $recommendedYear,
             'placement' => $placement,

@@ -8,6 +8,7 @@ use App\Models\LectureMaterial;
 use App\Models\AdvancedCourse;
 use App\Models\AttendanceRecord;
 use App\Models\TeamsAttendanceFile;
+use App\Services\LectureMaterialStorage;
 use App\Services\TeamsAttendanceImportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -195,7 +196,7 @@ class LectureController extends Controller
             $sortOrder = 0;
             foreach ($materialFiles as $index => $file) {
                 if (!$file || !$file->isValid()) continue;
-                $path = $file->store('lecture-materials/' . $lecture->id, 'public');
+                $path = LectureMaterialStorage::store($file, (int) $lecture->id);
                 if (!$path) continue;
                 // دعم كلا النموذجين: منهج (قيمة واحدة لكل ملف) أو إضافة محاضرة (قيمتان لكل صف: hidden ثم checkbox)
                 $visibleVal = $visible[$index] ?? $visible[2 * $index + 1] ?? $visible[2 * $index] ?? 1;
@@ -203,6 +204,7 @@ class LectureController extends Controller
                     'lecture_id' => $lecture->id,
                     'file_name' => $file->getClientOriginalName(),
                     'file_path' => $path,
+                    'storage_disk' => LectureMaterialStorage::resolvedDisk(),
                     'title' => $titles[$index] ?? null,
                     'is_visible_to_student' => (int)$visibleVal === 1,
                     'sort_order' => $sortOrder++,
@@ -415,7 +417,7 @@ class LectureController extends Controller
         if (!empty($deleteIds)) {
             $toDelete = LectureMaterial::where('lecture_id', $lecture->id)->whereIn('id', $deleteIds)->get();
             foreach ($toDelete as $m) {
-                Storage::disk('public')->delete($m->file_path);
+                LectureMaterialStorage::delete($m->file_path, $m->storage_disk);
                 $m->delete();
             }
         }
@@ -434,13 +436,14 @@ class LectureController extends Controller
             $sortOrder = $sortStart;
             foreach ($materialFiles as $index => $file) {
                 if (!$file || !$file->isValid()) continue;
-                $path = $file->store('lecture-materials/' . $lecture->id, 'public');
+                $path = LectureMaterialStorage::store($file, (int) $lecture->id);
                 if (!$path) continue;
                 $visibleVal = $visible[$index] ?? $visible[2 * $index + 1] ?? $visible[2 * $index] ?? 1;
                 LectureMaterial::create([
                     'lecture_id' => $lecture->id,
                     'file_name' => $file->getClientOriginalName(),
                     'file_path' => $path,
+                    'storage_disk' => LectureMaterialStorage::resolvedDisk(),
                     'title' => $titles[$index] ?? null,
                     'is_visible_to_student' => (int)$visibleVal === 1,
                     'sort_order' => $sortOrder++,

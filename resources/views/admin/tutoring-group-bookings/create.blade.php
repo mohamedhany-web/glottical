@@ -19,6 +19,16 @@
         <a href="{{ route('admin.tutoring-group-bookings.index') }}" class="inline-flex h-9 items-center rounded-xl border border-line bg-surface px-4 text-sm text-ink">رجوع</a>
     </section>
 
+    @include('admin.partials.workflow-guide', [
+        'title' => 'تسكين يدوي من رصيد',
+        'body' => 'استخدم هذه الصفحة عندما يكون للطالب رصيد حصص وتريد تثبيت حجز دون انتظار طلب من الموقع.',
+        'steps' => [
+            'اختر رصيد الطالب المناسب للمجموعة.',
+            'حدد المجموعة/الدفعة والمعلم والموعد المتاح.',
+            'احفظ — يخصم النظام من الرصيد ويمنع تعارض جدول المعلم.',
+        ],
+    ])
+
     @if(session('error'))
         <div class="rounded-2xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm font-medium text-danger">{{ session('error') }}</div>
     @endif

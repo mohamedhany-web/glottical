@@ -102,6 +102,20 @@
                 <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'قيادة الفصول' : 'Class Command' }}</span>
             </a>
             @endif
+            @if(Route::has('instructor.private-messages.index'))
+            <a href="{{ route('instructor.private-messages.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('instructor.private-messages.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-comments"></i></span>
+                <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'رسائل الطلاب' : 'Student messages' }}</span>
+            </a>
+            @endif
+            @if(Route::has('instructor.notifications.index'))
+            <a href="{{ route('instructor.notifications.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('instructor.notifications.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-bell"></i></span>
+                <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'الإشعارات' : 'Notifications' }}</span>
+            </a>
+            @endif
             @if(Route::has('instructor.tutor-work-schedule.index'))
             <a href="{{ route('instructor.tutor-work-schedule.index') }}" @click="{{ $closeSidebar }}"
                class="ins-nav {{ request()->routeIs('instructor.tutor-work-schedule.*') ? 'active' : '' }}">

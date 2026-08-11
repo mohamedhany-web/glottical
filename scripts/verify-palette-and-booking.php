@@ -44,11 +44,12 @@ if ($slot) {
     $booking = App\Services\FreeTrialBookingService::book([
         'name' => 'اختبار تناسق الألوان',
         'email' => 'palette-test@example.com',
-        'phone' => '01000000000',
-        'goal' => 'test',
+        'phone' => '1012345678',
+        'country_code' => '+20',
+        'goal' => 'placement',
         'starts_at' => $slot,
     ]);
-    echo 'booking_ok id='.$booking->id.' duration='.$booking->duration_minutes."\n";
+    echo 'booking_ok id='.$booking->id.' duration='.$booking->duration_minutes.' goal='.$booking->goal.' phone='.$booking->phone."\n";
 } else {
     echo "booking_skip no_slot\n";
 }

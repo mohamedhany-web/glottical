@@ -1,281 +1,211 @@
-@extends('layouts.app')
+@extends('layouts.student-timeline')
 
-@section('title', __('student.referrals_title') . ' - ' . config('app.name'))
-@section('header', __('student.referrals_title'))
+@section('title', __('student.referrals_title'))
 
 @section('content')
-<div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-    <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
-        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1">{{ __('student.referrals_title') }}</h1>
-        <p class="text-sm text-gray-500 dark:text-slate-300">{{ __('student.referrals_subtitle') }}</p>
-    </div>
+@php
+    $locale = app()->getLocale();
+    $activeProgram = $activeProgram ?? null;
+    $eventMasks = [
+        asset('img/student-timeline/event-mask-1.svg'),
+        asset('img/student-timeline/event-mask-2.svg'),
+        asset('img/student-timeline/event-mask-3.svg'),
+    ];
+@endphp
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm">
-            <p class="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">{{ __('student.total_referrals') }}</p>
-            <p class="text-2xl font-bold text-sky-600 mt-1">{{ number_format($stats['total_referrals']) }}</p>
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => __('student.referrals_title'),
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => __('student.referrals_title'), 'url' => null],
+    ],
+])
+
+<section class="st-event-card st-event-card--blue st-biz-banner st-class-hero">
+    <img class="st-event-card__mask" src="{{ $eventMasks[1] }}" alt="" width="160" height="160">
+    <div class="st-biz-banner__row">
+        <div>
+            <p class="st-event-card__kicker">{{ __('student.referrals_kicker') }}</p>
+            <h3>{{ __('student.referrals_title') }}</h3>
+            <p class="st-event-card__sub">{{ __('student.referrals_subtitle') }}</p>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm">
-            <p class="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">{{ __('student.completed_referrals') }}</p>
-            <p class="text-2xl font-bold text-emerald-600 mt-1">{{ number_format($stats['completed_referrals']) }}</p>
-        </div>
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm">
-            <p class="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">{{ __('student.pending_referrals') }}</p>
-            <p class="text-2xl font-bold text-amber-600 mt-1">{{ number_format($stats['pending_referrals']) }}</p>
-        </div>
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm">
-            <p class="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">إجمالي المكافآت</p>
-            <p class="text-2xl font-bold text-purple-600 mt-1">{{ number_format($stats['total_rewards'], 2) }} ج.م</p>
+        <div class="st-biz-banner__actions">
+            <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" class="st-pill st-pill--light">
+                <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                {{ __('student.referrals_share_wa') }}
+            </a>
         </div>
     </div>
+</section>
 
-    @if($activeProgram)
-    <div class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-slate-800 p-5 shadow-sm">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-            <i class="fas fa-gift text-emerald-600"></i>
-            القواعد الحالية (برنامج: {{ $activeProgram->name }})
-        </h3>
-        <ul class="text-sm text-gray-700 dark:text-slate-300 space-y-2 list-disc list-inside">
-            <li>خصم للصديق المدعو:
-                @if($activeProgram->discount_type === 'percentage')
-                    {{ rtrim(rtrim(number_format($activeProgram->discount_value, 2), '0'), '.') }}% على أول شراء (كورس) ضمن الشروط
-                @else
-                    {{ number_format($activeProgram->discount_value, 2) }} ج.م
-                @endif
-                @if($activeProgram->maximum_discount)
-                    — حد أقصى للخصم {{ number_format($activeProgram->maximum_discount, 2) }} ج.م
-                @endif
-            </li>
-            <li>مدة صلاحية كوبون الخصم: {{ $activeProgram->discount_valid_days }} يوماً من تاريخ التسجيل.</li>
-            <li>مكافأتك عند اكتمال الطلب:
-                @if($activeProgram->referrer_reward_type === 'points')
-                    {{ number_format($activeProgram->referrer_reward_value ?? 0, 0) }} نقطة
-                @elseif($activeProgram->referrer_reward_type === 'percentage')
-                    {{ rtrim(rtrim(number_format($activeProgram->referrer_reward_value ?? 0, 2), '0'), '.') }}% من قيمة الطلب
-                @else
-                    {{ number_format($activeProgram->referrer_reward_value ?? 0, 2) }} ج.م
-                @endif
-                @if(!$activeProgram->referrer_reward_value)
-                    (غير محددة في البرنامج)
-                @endif
-            </li>
-            @if($activeProgram->max_referrals_per_user)
-            <li>حد أقصى {{ $activeProgram->max_referrals_per_user }} إحالة لكل حساب ضمن هذا البرنامج.</li>
+<section class="st-stats" aria-label="{{ __('student.referrals_stats') }}">
+    <article class="st-subject st-subject--blue st-stat-card">
+        <p class="st-stat-card__label">{{ __('student.total_referrals') }}</p>
+        <p class="st-stat-card__value">{{ number_format($stats['total_referrals']) }}</p>
+    </article>
+    <article class="st-subject st-subject--orange st-stat-card">
+        <p class="st-stat-card__label">{{ __('student.completed_referrals') }}</p>
+        <p class="st-stat-card__value">{{ number_format($stats['completed_referrals']) }}</p>
+    </article>
+    <article class="st-subject st-subject--purple st-stat-card">
+        <p class="st-stat-card__label">{{ __('student.pending_referrals') }}</p>
+        <p class="st-stat-card__value">{{ number_format($stats['pending_referrals']) }}</p>
+    </article>
+    <article class="st-subject st-subject--pink st-stat-card">
+        <p class="st-stat-card__label">{{ __('student.referrals_credits_earned') }}</p>
+        <p class="st-stat-card__value">{{ number_format($stats['total_credits']) }}</p>
+        <p class="st-stat-card__hint">{{ __('student.referrals_credits_hint') }}</p>
+    </article>
+</section>
+
+@if($activeProgram)
+    <section class="st-panel" style="margin-bottom:16px">
+        <div class="st-section-head">
+            <div>
+                <h2>{{ __('student.referrals_rules_title') }}</h2>
+                <p>{{ $activeProgram->name }}</p>
+            </div>
+        </div>
+        <ul class="st-teacher-list">
+            @if($activeProgram->usesCredits())
+                <li>{{ __('student.referrals_rule_referred', ['units' => (int) $activeProgram->referred_credit_units, 'scope' => $activeProgram->creditScopeLabel()]) }}</li>
+                <li>{{ __('student.referrals_rule_referrer', ['units' => (int) $activeProgram->referrer_credit_units]) }}</li>
+                <li>{{ __('student.referrals_rule_when') }}</li>
+            @else
+                <li>{{ __('student.referrals_rule_discount_legacy') }}</li>
             @endif
         </ul>
-    </div>
-    @else
-    <div class="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-5 text-amber-900 dark:text-amber-200 text-sm">
-        <i class="fas fa-exclamation-triangle ml-2"></i>
-        لا يوجد برنامج إحالات نشط حالياً. يمكنك نسخ رابطك، لكن لن تُسجَّل إحالات أو مكافآت حتى يفعّل المشرف برنامجاً من لوحة الإدارة.
-    </div>
-    @endif
+    </section>
+@else
+    <div class="st-flash st-flash--err" style="margin-bottom:16px">{{ __('student.referrals_no_program') }}</div>
+@endif
 
-    <!-- Referral Code Card -->
-    <div class="bg-gradient-to-br from-sky-500 via-sky-600 to-indigo-600 rounded-xl shadow-sm p-5 sm:p-6 text-white relative overflow-hidden border border-sky-400/30">
-        <div class="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full -mr-40 -mt-40 blur-3xl group-hover:bg-white/15 transition-all duration-500"></div>
-        <div class="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full -ml-32 -mb-32 blur-3xl group-hover:bg-white/15 transition-all duration-500"></div>
-        <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
-        
-        <div class="relative z-10">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                <div class="flex-1">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
-                            <i class="fas fa-link text-2xl text-white"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-xl font-bold mb-1 flex items-center gap-2">
-                                كود الإحالة الخاص بك
-                            </h2>
-                            <p class="text-sky-100 text-sm">شارك هذا الكود واحصل على مكافآت</p>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-white/20 backdrop-blur-sm rounded-xl p-5 mb-4 border border-white/20 shadow-lg">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div class="flex-1">
-                                <p class="text-sm text-sky-100 mb-2 font-medium flex items-center gap-2">
-                                    <i class="fas fa-tag"></i>
-                                    كود الإحالة
-                                </p>
-                                <p class="text-2xl font-bold tracking-wider bg-white/10 px-4 py-2 rounded-lg inline-block">{{ $referralCode }}</p>
-                            </div>
-                            <button type="button" onclick="copyReferralCode('{{ $referralCode }}')" 
-                                    class="bg-white text-sky-600 px-6 py-3 rounded-xl font-bold hover:bg-sky-50 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg transform hover:scale-105">
-                                <i class="fas fa-copy"></i>
-                                نسخ الكود
-                            </button>
-                        </div>
-                    </div>
+<div class="st-teacher-layout">
+    <div class="st-teacher-main">
+        <section class="st-panel">
+            <div class="st-section-head">
+                <div>
+                    <h2>{{ __('student.referrals_your_code') }}</h2>
+                    <p>{{ __('student.referrals_code_hint') }}</p>
+                </div>
+            </div>
+            <div class="st-feed-compose" style="gap:12px">
+                <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+                    <strong style="font-size:1.35rem;letter-spacing:.04em;color:#0B3D91" id="stRefCode">{{ $referralCode }}</strong>
+                    <button type="button" class="st-pill st-pill--solid" onclick="stCopyRef('{{ $referralCode }}', 'code')">
+                        <i class="fas fa-copy" aria-hidden="true"></i> {{ __('student.referrals_copy_code') }}
+                    </button>
+                </div>
+                <label class="st-feed-compose__hint" for="stRefLink">{{ __('student.referrals_your_link') }}</label>
+                <input id="stRefLink" type="text" readonly value="{{ $referralLink }}" class="st-feed-reply" style="width:100%;padding:12px 14px;border:1.5px solid #d7dde6;border-radius:14px;font:700 13px Cairo,Tajawal,sans-serif;direction:ltr">
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                    <button type="button" class="st-pill st-pill--solid" onclick="stCopyRef(document.getElementById('stRefLink').value, 'link')">
+                        <i class="fas fa-link" aria-hidden="true"></i> {{ __('student.referrals_copy_link') }}
+                    </button>
+                    <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" class="st-pill st-pill--outline">
+                        <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ __('student.referrals_share_wa') }}
+                    </a>
+                </div>
+            </div>
+        </section>
 
-                    <div class="bg-white/20 backdrop-blur-sm rounded-xl p-5 border border-white/20 shadow-lg">
-                        <p class="text-sm text-sky-100 mb-3 font-medium flex items-center gap-2">
-                            <i class="fas fa-link"></i>
-                            رابط الإحالة
+        <section class="st-panel">
+            <div class="st-section-head">
+                <div>
+                    <h2>{{ __('student.referrals_how_title') }}</h2>
+                    <p>{{ __('student.referrals_how_hint') }}</p>
+                </div>
+            </div>
+            <div class="st-teacher-courses">
+                <article class="st-teacher-course">
+                    <span class="st-learn-badge is-ok">1</span>
+                    <strong>{{ __('student.referrals_step1_title') }}</strong>
+                    <small>{{ __('student.referrals_step1_body') }}</small>
+                </article>
+                <article class="st-teacher-course">
+                    <span class="st-learn-badge is-ok">2</span>
+                    <strong>{{ __('student.referrals_step2_title') }}</strong>
+                    <small>{{ __('student.referrals_step2_body') }}</small>
+                </article>
+                <article class="st-teacher-course">
+                    <span class="st-learn-badge is-ok">3</span>
+                    <strong>{{ __('student.referrals_step3_title') }}</strong>
+                    <small>{{ __('student.referrals_step3_body') }}</small>
+                </article>
+            </div>
+        </section>
+    </div>
+
+    <aside class="st-teacher-side">
+        <section class="st-panel st-panel--side">
+            <div class="st-section-head">
+                <div>
+                    <h2>{{ __('student.referrals_list_title') }}</h2>
+                    <p>{{ __('student.referrals_list_hint') }}</p>
+                </div>
+            </div>
+            @forelse($referrals as $referral)
+                <div class="st-board__row" style="display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px 0;border-bottom:1px solid var(--st-line)">
+                    <div>
+                        <strong style="font-size:13px">{{ $referral->referred->name ?? '—' }}</strong>
+                        <p style="margin:2px 0 0;font-size:11px;color:var(--st-muted)">{{ $referral->created_at?->format('Y-m-d') }}</p>
+                    </div>
+                    <div style="text-align:end">
+                        <span class="st-learn-badge {{ $referral->status === 'completed' ? 'is-ok' : '' }}">
+                            @if($referral->status === 'completed') {{ __('student.referrals_status_done') }}
+                            @elseif($referral->status === 'pending') {{ __('student.referrals_status_pending') }}
+                            @else {{ __('student.referrals_status_cancelled') }}
+                            @endif
+                        </span>
+                        <p style="margin:4px 0 0;font-size:11px;font-weight:800;color:#0B3D91">
+                            +{{ (int) $referral->referrer_units_granted }} {{ __('student.referrals_units_short') }}
                         </p>
-                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                            <input type="text" 
-                                   id="referralLink" 
-                                   value="{{ $referralLink }}" 
-                                   readonly
-                                   class="flex-1 bg-white/30 backdrop-blur-sm border border-white/30 rounded-lg px-4 py-3 text-white font-medium focus:outline-none focus:ring-2 focus:ring-white/50 text-sm">
-                            <button type="button" onclick="copyReferralLink()" 
-                                    class="bg-white text-sky-600 px-6 py-3 rounded-lg font-bold hover:bg-sky-50 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg transform hover:scale-105">
-                                <i class="fas fa-copy"></i>
-                                نسخ الرابط
-                            </button>
-                            <a href="https://wa.me/?text={{ urlencode('سجّل في المنصة عبر رابطي واحصل على خصم: ' . $referralLink) }}" target="_blank" rel="noopener"
-                               class="bg-emerald-500 text-white px-5 py-3 rounded-lg font-bold hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg">
-                                <i class="fab fa-whatsapp"></i>
-                                واتساب
-                            </a>
-                        </div>
                     </div>
                 </div>
-
-                <div class="text-center md:text-right flex-shrink-0">
-                    <div class="w-36 h-36 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto md:mx-0 mb-4 border border-white/20 shadow-lg group-hover:scale-105 transition-transform duration-300">
-                        <i class="fas fa-qrcode text-7xl text-white opacity-80"></i>
-                    </div>
-                    <p class="text-sm text-sky-100 font-medium">شارك الكود عبر وسائل التواصل</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- How It Works -->
-    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
-        <div class="px-4 sm:px-5 py-4 border-b border-gray-100 dark:border-slate-700">
-            <h3 class="text-base font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
-                <i class="fas fa-info-circle text-sky-600 ml-2"></i>
-                كيف يعمل برنامج الإحالات؟
-            </h3>
-        </div>
-        <div class="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div class="p-4 rounded-lg border border-sky-100 dark:border-sky-900/50 bg-sky-50 dark:bg-sky-900/20">
-                <h4 class="font-bold text-gray-900 dark:text-slate-100 mb-2">1) شارك كود الإحالة</h4>
-                <p class="text-sm text-gray-600 dark:text-slate-300">انسخ كود الإحالة أو الرابط وشاركه مع أصدقائك.</p>
-            </div>
-            <div class="p-4 rounded-lg border border-purple-100 dark:border-purple-900/50 bg-purple-50 dark:bg-purple-900/20">
-                <h4 class="font-bold text-gray-900 dark:text-slate-100 mb-2">2) صديقك يسجّل بالرابط</h4>
-                <p class="text-sm text-gray-600 dark:text-slate-300">يفتح <span class="font-mono text-xs bg-white/80 dark:bg-slate-700 px-1 rounded">/register?ref=كودك</span> ويكمل التسجيل.</p>
-            </div>
-            <div class="p-4 rounded-lg border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-900/20">
-                <h4 class="font-bold text-gray-900 dark:text-slate-100 mb-2">3) اكتمال الإحالة</h4>
-                <p class="text-sm text-gray-600 dark:text-slate-300">عند اعتماد أول طلب شراء للمدعو، تُسجَّل الإحالة «مكتملة» وتظهر مكافأتك.</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
-        <div class="px-4 sm:px-5 py-4 border-b border-gray-100 dark:border-slate-700">
-            <h3 class="text-base font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
-                <i class="fas fa-list text-sky-600 ml-2"></i>
-                قائمة الإحالات
-            </h3>
-        </div>
-
-        @if($referrals->count() > 0)
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
-                <thead class="bg-gray-50 dark:bg-slate-900/40">
-                    <tr>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">المستخدم المحال</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">تاريخ الإحالة</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">الحالة</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">الخصم</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">المكافأة</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
-                    @foreach($referrals as $referral)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/40">
-                        <td class="px-4 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0 h-10 w-10">
-                                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-sky-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                                        {{ substr($referral->referred->name ?? 'N', 0, 1) }}
-                                    </div>
-                                </div>
-                                <div class="mr-4">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-slate-100">{{ $referral->referred->name ?? 'غير معروف' }}</div>
-                                    <div class="text-sm text-gray-500 dark:text-slate-400">{{ $referral->referred->phone ?? 'N/A' }}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-400">
-                            {{ $referral->created_at->format('d/m/Y') }}
-                        </td>
-                        <td class="px-4 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                @if($referral->status == 'completed') bg-emerald-100 text-emerald-800
-                                @elseif($referral->status == 'pending') bg-amber-100 text-amber-800
-                                @else bg-red-100 text-red-800
-                                @endif">
-                                @if($referral->status == 'completed') مكتملة
-                                @elseif($referral->status == 'pending') قيد الانتظار
-                                @else ملغاة
-                                @endif
-                            </span>
-                        </td>
-                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-slate-100">
-                            {{ number_format($referral->discount_amount ?? 0, 2) }} ج.م
-                        </td>
-                        <td class="px-4 py-4 whitespace-nowrap text-sm font-bold text-emerald-600">
-                            {{ number_format($referral->reward_amount ?? 0, 2) }} ج.م
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <div class="p-4 border-t border-gray-100 dark:border-slate-700">{{ $referrals->links() }}</div>
-        @else
-        <div class="p-10 sm:p-12 text-center">
-            <div class="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4 text-gray-400">
-                <i class="fas fa-user-friends text-2xl"></i>
-            </div>
-            <p class="text-gray-700 dark:text-slate-200 text-base font-semibold mb-1">لا توجد إحالات حتى الآن</p>
-            <p class="text-gray-500 dark:text-slate-400 text-sm mb-5">ابدأ بمشاركة كود الإحالة مع أصدقائك واحصل على مكافآت.</p>
-            <div class="inline-flex items-center gap-2 px-4 py-2 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-lg">
-                <i class="fas fa-info-circle text-sky-600"></i>
-                <span class="text-sm text-gray-700 dark:text-slate-300">كلما زادت الإحالات، زادت المكافآت.</span>
-            </div>
-        </div>
-        @endif
-    </div>
+            @empty
+                <p class="st-learn-note">{{ __('student.referrals_empty') }}</p>
+            @endforelse
+            <div style="margin-top:12px">{{ $referrals->links() }}</div>
+        </section>
+    </aside>
 </div>
 
-<div id="referral-toast" class="fixed top-4 left-4 rtl:left-auto rtl:right-4 z-[100] hidden px-4 py-3 rounded-xl bg-emerald-600 text-white text-sm font-semibold shadow-lg max-w-sm" role="status"></div>
-
+<div id="stRefToast" class="st-flash st-flash--ok" style="display:none;position:fixed;inset-inline-start:16px;bottom:16px;z-index:80;max-width:280px" role="status"></div>
 <script>
-function showReferralToast(msg) {
-    var el = document.getElementById('referral-toast');
-    if (!el) { alert(msg); return; }
-    el.textContent = msg;
-    el.classList.remove('hidden');
-    clearTimeout(window._refToastT);
-    window._refToastT = setTimeout(function() { el.classList.add('hidden'); }, 3200);
-}
-function copyReferralCode(code) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(code).then(function() {
-            showReferralToast('تم نسخ كود الإحالة');
-        }).catch(function() { showReferralToast('انسخ الكود يدوياً: ' + code); });
-    } else {
-        showReferralToast('انسخ الكود يدوياً: ' + code);
+function stCopyRef(text, kind) {
+    var msg = kind === 'code'
+        ? @json(__('student.referrals_copied_code'))
+        : @json(__('student.referrals_copied_link'));
+    var toast = document.getElementById('stRefToast');
+    function show() {
+        if (!toast) return;
+        toast.textContent = msg;
+        toast.style.display = 'block';
+        clearTimeout(window._stRefT);
+        window._stRefT = setTimeout(function () { toast.style.display = 'none'; }, 2800);
     }
-}
-function copyReferralLink() {
-    var link = document.getElementById('referralLink').value;
     if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(link).then(function() {
-            showReferralToast('تم نسخ رابط الإحالة');
-        }).catch(function() { showReferralToast('انسخ الرابط يدوياً من الحقل'); });
-    } else {
-        showReferralToast('انسخ الرابط يدوياً من الحقل');
-    }
+        navigator.clipboard.writeText(text).then(show).catch(show);
+    } else { show(); }
 }
 </script>
+@endsection
+
+@section('events')
+<div class="st-events__top">
+    <h2>{{ __('student_timeline.quick_links') }}</h2>
+</div>
+<a href="{{ route('student.learn.index') }}" class="st-event-card st-event-card--blue">
+    <h3>{{ __('student_timeline.nav_learn') }}</h3>
+    <p class="st-event-card__sub">{{ __('student.referrals_cta_learn') }}</p>
+</a>
+<a href="{{ route('student.service-entitlements.index') }}" class="st-event-card st-event-card--green">
+    <h3>{{ __('student_timeline.nav_progress') }}</h3>
+    <p class="st-event-card__sub">{{ __('student.referrals_cta_credits') }}</p>
+</a>
+<a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" class="st-event-card st-event-card--orange">
+    <h3>{{ __('student.referrals_share_wa') }}</h3>
+    <p class="st-event-card__sub">{{ __('student.referrals_share_hint') }}</p>
+</a>
 @endsection

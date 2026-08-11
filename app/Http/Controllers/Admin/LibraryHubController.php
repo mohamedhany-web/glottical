@@ -64,6 +64,7 @@ class LibraryHubController extends Controller
             'videos_ready' => $videosReady,
             'videos_published' => $videosPublished,
             'lecture_videos' => $lectureVideos,
+            'video_folders' => \App\Models\LibraryFolder::query()->count(),
             'years' => $years,
             'subjects' => $subjects,
             'courses' => $courses,
