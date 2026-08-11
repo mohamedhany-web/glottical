@@ -334,31 +334,33 @@
         <img class="st-cal__grid-bg" src="{{ asset('img/student-timeline/cal-wave.svg') }}" alt="" aria-hidden="true">
         <div class="st-cal__grid-head">
             <h3>{{ __('student_timeline.calendar') }}</h3>
-            <div class="st-cal__months">
+            <div class="st-cal__months" aria-hidden="true">
                 <span>{{ $cal->copy()->subMonth()->translatedFormat('M') }} <small>{{ $cal->copy()->subMonth()->format('Y') }}</small></span>
-                <span>{{ $cal->translatedFormat('M') }} <small>{{ $cal->format('Y') }}</small></span>
+                <span class="is-active">{{ $cal->translatedFormat('M') }} <small>{{ $cal->format('Y') }}</small></span>
                 <span>{{ $cal->copy()->addMonth()->translatedFormat('M') }} <small>{{ $cal->copy()->addMonth()->format('Y') }}</small></span>
             </div>
         </div>
-        <div class="st-weekdays">
-            @foreach($weekdays as $wd)
-                <span>{{ $wd }}</span>
-            @endforeach
-        </div>
-        <div class="st-days">
-            @foreach($calendarDays as $day)
-                @php
-                    $isCurrentMonth = $day->month === $cal->month;
-                    $isToday = $day->isToday();
-                    $isMarked = $markedDates->has($day->toDateString());
-                @endphp
-                <span class="st-day {{ ! $isCurrentMonth ? 'is-muted' : '' }} {{ $isToday ? 'is-today' : '' }} {{ $isMarked && ! $isToday ? 'is-mark' : '' }}">
-                    @if($isMarked && ! $isToday)
-                        <img class="st-day__ring" src="{{ asset('img/student-timeline/day-circle.svg') }}" alt="" width="37" height="37">
-                    @endif
-                    <span class="st-day__num">{{ $day->day }}</span>
-                </span>
-            @endforeach
+        <div class="st-cal__board">
+            <div class="st-weekdays" role="row">
+                @foreach($weekdays as $wd)
+                    <span class="st-weekday">{{ $wd }}</span>
+                @endforeach
+            </div>
+            <div class="st-days" role="grid">
+                @foreach($calendarDays as $day)
+                    @php
+                        $isCurrentMonth = $day->month === $cal->month;
+                        $isToday = $day->isToday();
+                        $isMarked = $markedDates->has($day->toDateString());
+                    @endphp
+                    <span class="st-day {{ ! $isCurrentMonth ? 'is-muted' : '' }} {{ $isToday ? 'is-today' : '' }} {{ $isMarked && ! $isToday ? 'is-mark' : '' }}">
+                        @if($isMarked && ! $isToday)
+                            <img class="st-day__ring" src="{{ asset('img/student-timeline/day-circle.svg') }}" alt="" width="37" height="37">
+                        @endif
+                        <span class="st-day__num">{{ $day->day }}</span>
+                    </span>
+                @endforeach
+            </div>
         </div>
     </div>
 </section>
