@@ -606,6 +606,15 @@ html.st-ltr .st-events {
   background: var(--st-bg);
   width: 100%;
 }
+.st-main > .st-cal,
+.st-main > .st-stats,
+.st-main > .st-biz-banner,
+.st-main > .st-path-card,
+.st-main > .st-event-card,
+.st-main > .st-top,
+.st-main > section {
+  flex-shrink: 0;
+}
 .st-top {
   display: flex;
   flex-wrap: wrap;
@@ -917,22 +926,34 @@ a.st-chip:hover {
 .st-subject--purple { background: linear-gradient(180deg, #fff 48%, #efecff); }
 .st-subject--orange { background: linear-gradient(180deg, #fff 48%, #fff1e4); }
 
-/* Calendar block — both panes size to content; never clip the last week row */
+/* Calendar — never shrink/clip inside the flex main column */
 .st-cal {
   direction: ltr;
   display: grid;
   grid-template-columns: minmax(220px, 270px) minmax(0, 1fr);
   grid-template-areas: "todo grid";
   align-items: stretch;
-  border-radius: 22px;
-  overflow: hidden;
-  background: var(--st-pink-deep);
+  border-radius: 0;
+  overflow: visible;
+  background: transparent;
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  min-height: auto;
+  height: auto;
+  flex: 0 0 auto;
+  flex-shrink: 0;
   box-sizing: border-box;
-  box-shadow: 0 18px 34px -20px rgba(206,98,98,.5);
+  box-shadow: none;
   margin-bottom: 18px;
+  gap: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.st-cal::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 html[dir="rtl"] .st-cal,
 html.st-rtl .st-cal {
@@ -942,8 +963,20 @@ html.st-rtl .st-cal {
 .st-cal__todo,
 .st-cal__grid {
   direction: inherit;
-  min-height: 100%;
+  min-height: auto;
+  height: auto;
   box-sizing: border-box;
+  overflow: visible;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.st-cal__todo::-webkit-scrollbar,
+.st-cal__grid::-webkit-scrollbar,
+.st-cal__board::-webkit-scrollbar,
+.st-days::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 html[dir="rtl"] .st-cal__todo,
 html[dir="rtl"] .st-cal__grid,
@@ -959,14 +992,38 @@ html.st-ltr .st-cal__grid {
 }
 .st-cal__todo { grid-area: todo; }
 .st-cal__grid { grid-area: grid; }
+
+/* Rounded corners on panes (parent stays overflow:visible so nothing clips) */
+html[dir="rtl"] .st-cal__grid,
+html.st-rtl .st-cal__grid {
+  border-radius: 22px 0 0 22px;
+  box-shadow: 0 18px 34px -20px rgba(11, 61, 145, .45);
+}
+html[dir="rtl"] .st-cal__todo,
+html.st-rtl .st-cal__todo {
+  border-radius: 0 22px 22px 0;
+  box-shadow: 0 18px 34px -20px rgba(206, 98, 98, .45);
+}
+html[dir="ltr"] .st-cal__todo,
+html.st-ltr .st-cal__todo,
+html:not([dir="rtl"]):not(.st-rtl) .st-cal__todo {
+  border-radius: 22px 0 0 22px;
+  box-shadow: 0 18px 34px -20px rgba(206, 98, 98, .45);
+}
+html[dir="ltr"] .st-cal__grid,
+html.st-ltr .st-cal__grid,
+html:not([dir="rtl"]):not(.st-rtl) .st-cal__grid {
+  border-radius: 0 22px 22px 0;
+  box-shadow: 0 18px 34px -20px rgba(11, 61, 145, .45);
+}
+
 .st-cal__todo {
   background: var(--st-pink);
   color: #fff;
-  padding: 20px 16px 22px;
+  padding: 20px 16px 24px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  overflow: visible;
 }
 .st-cal__daynum {
   font-size: clamp(44px, 5.5vw, 60px);
@@ -1035,8 +1092,7 @@ html.st-ltr .st-cal__grid {
   position: relative;
   background: linear-gradient(160deg, #0B3D91 0%, #0997d9 100%);
   color: #fff;
-  padding: 18px 18px 20px;
-  overflow: visible;
+  padding: 18px 18px 24px;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -1051,6 +1107,7 @@ html.st-ltr .st-cal__grid {
   height: calc(100% - 40px);
   object-fit: cover;
   z-index: 0;
+  border-radius: inherit;
 }
 .st-cal__grid-head {
   position: relative;
@@ -1099,6 +1156,9 @@ html.st-ltr .st-cal__grid {
   gap: 8px;
   width: 100%;
   flex: 0 0 auto;
+  overflow: visible;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 .st-weekdays,
 .st-days {
@@ -1127,9 +1187,11 @@ html.st-ltr .st-cal__grid {
   text-align: center;
 }
 .st-days {
-  row-gap: 6px;
+  row-gap: 8px;
   flex: 0 0 auto;
   align-content: start;
+  overflow: visible;
+  padding-bottom: 2px;
 }
 .st-day {
   position: relative;
@@ -1392,6 +1454,7 @@ html.st-ltr .st-cal__grid {
       "todo"
       "grid";
     min-height: 0;
+    overflow: visible;
   }
   html[dir="rtl"] .st-cal,
   html.st-rtl .st-cal {
@@ -1400,6 +1463,19 @@ html.st-ltr .st-cal__grid {
       "todo"
       "grid";
   }
+  .st-cal__todo,
+  .st-cal__grid,
+  html[dir="rtl"] .st-cal__todo,
+  html[dir="rtl"] .st-cal__grid,
+  html.st-rtl .st-cal__todo,
+  html.st-rtl .st-cal__grid,
+  html[dir="ltr"] .st-cal__todo,
+  html[dir="ltr"] .st-cal__grid,
+  html:not([dir="rtl"]):not(.st-rtl) .st-cal__todo,
+  html:not([dir="rtl"]):not(.st-rtl) .st-cal__grid {
+    border-radius: 18px;
+  }
+  .st-cal__todo { margin-bottom: 10px; }
   .st-cal__grid-head {
     flex-wrap: wrap;
     align-items: flex-start;
