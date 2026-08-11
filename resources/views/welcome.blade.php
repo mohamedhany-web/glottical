@@ -539,7 +539,7 @@
                                     dir="ltr"
                                     inputmode="numeric"
                                     placeholder="{{ $defaultCountry['placeholder'] ?? '' }}"
-                                    value="{{ auth()->user()->phone ? preg_replace('/^\+\d+/', '', (string) auth()->user()->phone) : '' }}"
+                                    value="{{ ($ftPhone = auth()->user()?->phone) ? preg_replace('/^\+\d+/', '', (string) $ftPhone) : '' }}"
                                 >
                             </div>
                         </div>
