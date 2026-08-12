@@ -9,7 +9,7 @@
         <div>
             <p class="text-xs font-medium text-slate-500">لوحة المعلم</p>
             <h2 class="mt-1 text-2xl font-semibold text-slate-900">ماتريال حسب السنة</h2>
-            <p class="mt-1 text-sm text-slate-500">فولدر لكل سنة دراسية — يظهر للطالب بعد اشتراك باقة المكتبات.</p>
+            <p class="mt-1 text-sm text-slate-500">مجلداتك تظهر لطلابك فقط. مجلدات الإدارة للعرض إن وُجدت.</p>
         </div>
     </section>
 

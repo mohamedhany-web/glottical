@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Lecture;
 use App\Models\LectureMaterial;
 use App\Models\LibraryFolder;
-use App\Models\LiveRecording;
-use App\Models\LiveSession;
 use App\Models\OneToOneSession;
 use App\Models\TutoringClassSession;
 use App\Models\TutoringCohortEnrollment;
@@ -328,92 +326,68 @@ class StudentHomeExtrasController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
         $folderId = $request->query('folder');
-        $source = (string) $request->query('source', 'all');
-        if (! in_array($source, ['all', 'live', 'lectures'], true)) {
-            $source = 'all';
-        }
         $activeFolder = null;
-
         $user = $request->user();
-        $enrolledCourseIds = collect();
-        if (Schema::hasTable('student_course_enrollments')) {
-            $enrolledCourseIds = DB::table('student_course_enrollments')
-                ->where('user_id', $user->id)
-                ->when(Schema::hasColumn('student_course_enrollments', 'status'), fn ($query) => $query->where('status', 'active'))
-                ->pluck('advanced_course_id');
-        }
 
         $folders = collect();
         $uncategorizedCount = 0;
-        $videos = collect();
-        $lectureRecordings = collect();
+        $videos = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 24);
+        $academyCount = 0;
+        $teacherCount = 0;
 
-        if (Schema::hasTable('library_folders')) {
+        if (Schema::hasTable('library_folders') && Schema::hasTable('library_videos')) {
+            $teacherIds = \App\Services\StudentTeacherLinkService::instructorIdsForStudent($user);
+
             $folders = LibraryFolderAccessService::foldersVisibleTo($user, LibraryFolder::KIND_VIDEOS)
                 ->with(['academicYear:id,name', 'instructor:id,name'])
+                ->withCount(['libraryVideos' => function ($query) use ($teacherIds) {
+                    $query->published()->where(function ($inner) use ($teacherIds) {
+                        $inner->where(function ($g) {
+                            $g->where('audience', \App\Models\LibraryVideo::AUDIENCE_GENERAL)
+                                ->orWhereNull('audience');
+                        });
+                        if ($teacherIds !== []) {
+                            $inner->orWhere(function ($t) use ($teacherIds) {
+                                $t->where('audience', \App\Models\LibraryVideo::AUDIENCE_TEACHER_STUDENTS)
+                                    ->whereIn('instructor_id', $teacherIds);
+                            });
+                        }
+                    });
+                }])
                 ->get();
-        }
 
-        $allowedFolderIds = $folders->pluck('id');
+            $allowedFolderIds = $folders->pluck('id');
+            $base = LibraryFolderAccessService::videosVisibleTo($user);
 
-        if (Schema::hasTable('live_recordings') && Schema::hasTable('live_sessions') && $source !== 'lectures') {
-            $sessionIds = LiveSession::query()
-                ->where('status', 'ended')
-                ->where(function ($query) use ($enrolledCourseIds) {
-                    $query->whereIn('course_id', $enrolledCourseIds)
-                        ->orWhere('require_enrollment', false)
-                        ->orWhereNull('course_id');
-                })
-                ->pluck('id');
+            $uncategorizedCount = (clone $base)->whereNull('library_folder_id')->count();
+            $academyCount = (clone $base)->where(function ($query) {
+                $query->where('audience', \App\Models\LibraryVideo::AUDIENCE_GENERAL)
+                    ->orWhereNull('audience');
+            })->count();
+            $teacherCount = (clone $base)->where('audience', \App\Models\LibraryVideo::AUDIENCE_TEACHER_STUDENTS)->count();
 
-            $baseVideoQuery = LiveRecording::query()
-                ->whereIn('session_id', $sessionIds)
-                ->where('status', 'ready')
-                ->where('is_published', true)
-                ->where(function ($query) use ($allowedFolderIds) {
-                    $query->whereNull('library_folder_id');
-                    if ($allowedFolderIds->isNotEmpty()) {
-                        $query->orWhereIn('library_folder_id', $allowedFolderIds);
-                    }
-                });
-
-            if (Schema::hasTable('library_folders')) {
-                $folders = $folders->map(function ($folder) use ($sessionIds) {
-                    $folder->recordings_count = LiveRecording::query()
-                        ->where('library_folder_id', $folder->id)
-                        ->whereIn('session_id', $sessionIds)
-                        ->where('status', 'ready')
-                        ->where('is_published', true)
-                        ->count();
-
-                    return $folder;
-                });
-
-                $uncategorizedCount = (clone $baseVideoQuery)->whereNull('library_folder_id')->count();
-
-                if ($folderId === 'none') {
-                    $activeFolder = (object) [
-                        'id' => 'none',
-                        'slug' => 'none',
-                        'is_uncategorized' => true,
-                    ];
-                } elseif (filled($folderId)) {
-                    $activeFolder = LibraryFolderAccessService::resolveFolderFromParam($folderId);
-                    abort_unless(
-                        $activeFolder && $allowedFolderIds->contains((int) $activeFolder->id),
-                        403,
-                        'يلزم اشتراك باقة المكتبات لهذه السنة.'
-                    );
-                    abort_unless(
-                        LibraryFolderAccessService::canAccessFolder($user, $activeFolder),
-                        403,
-                        'يلزم اشتراك باقة المكتبات لهذه السنة.'
-                    );
-                }
+            if ($folderId === 'none') {
+                $activeFolder = (object) [
+                    'id' => 'none',
+                    'slug' => 'none',
+                    'is_uncategorized' => true,
+                ];
+            } elseif (filled($folderId)) {
+                $activeFolder = LibraryFolderAccessService::resolveFolderFromParam($folderId);
+                abort_unless(
+                    $activeFolder && $allowedFolderIds->contains((int) $activeFolder->id),
+                    403,
+                    'هذا المجلد غير متاح لك.'
+                );
+                abort_unless(
+                    LibraryFolderAccessService::canAccessFolder($user, $activeFolder),
+                    403,
+                    'هذا المجلد غير متاح لك.'
+                );
             }
 
-            $videos = (clone $baseVideoQuery)
-                ->with(['session.course', 'session.instructor', 'folder'])
+            $videos = (clone $base)
+                ->with(['folder', 'instructor:id,name'])
                 ->when($activeFolder && ! ($activeFolder->is_uncategorized ?? false), function ($query) use ($activeFolder) {
                     $query->where('library_folder_id', $activeFolder->id);
                 })
@@ -423,65 +397,59 @@ class StudentHomeExtrasController extends Controller
                 ->when($q !== '', function ($query) use ($q) {
                     $query->where(function ($inner) use ($q) {
                         $inner->where('title', 'like', '%'.$q.'%')
-                            ->orWhereHas('session', function ($sq) use ($q) {
-                                $sq->where('title', 'like', '%'.$q.'%')
-                                    ->orWhereHas('course', fn ($cq) => $cq->where('title', 'like', '%'.$q.'%'))
-                                    ->orWhereHas('instructor', fn ($iq) => $iq->where('name', 'like', '%'.$q.'%'));
-                            });
+                            ->orWhere('description', 'like', '%'.$q.'%');
                     });
                 })
-                ->latest('id')
+                ->ordered()
                 ->paginate(24)
                 ->withQueryString();
-        } elseif (! Schema::hasTable('live_recordings')) {
-            $videos = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 24);
-        }
-
-        // تسجيلات محاضرات الكورسات المسجّل بها الطالب (رابط أو ملف)
-        if ($source !== 'live' && ! $activeFolder && Schema::hasTable('lectures') && $enrolledCourseIds->isNotEmpty()) {
-            $lectureRecordings = Lecture::query()
-                ->with(['course:id,title', 'instructor:id,name'])
-                ->whereIn('course_id', $enrolledCourseIds)
-                ->where(function ($query) {
-                    $query->where(function ($u) {
-                        $u->whereNotNull('recording_url')->where('recording_url', '!=', '');
-                    });
-                    if (Schema::hasColumn('lectures', 'recording_file_path')) {
-                        $query->orWhere(function ($f) {
-                            $f->whereNotNull('recording_file_path')->where('recording_file_path', '!=', '');
-                        });
-                    }
-                })
-                ->when($q !== '', function ($query) use ($q) {
-                    $query->where(function ($inner) use ($q) {
-                        $inner->where('title', 'like', '%'.$q.'%')
-                            ->orWhereHas('course', fn ($cq) => $cq->where('title', 'like', '%'.$q.'%'))
-                            ->orWhereHas('instructor', fn ($iq) => $iq->where('name', 'like', '%'.$q.'%'));
-                    });
-                })
-                ->orderByDesc('scheduled_at')
-                ->orderByDesc('id')
-                ->limit(40)
-                ->get();
-        }
-
-        if (! ($videos instanceof \Illuminate\Contracts\Pagination\Paginator)) {
-            $videos = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 24);
         }
 
         return view('student.library.videos', [
             'videos' => $videos,
-            'lectureRecordings' => $lectureRecordings,
+            'lectureRecordings' => collect(),
             'folders' => $folders,
             'activeFolder' => $activeFolder,
             'uncategorizedCount' => $uncategorizedCount,
             'searchQuery' => $q,
-            'sourceFilter' => $source,
+            'sourceFilter' => 'library',
+            'academyCount' => $academyCount,
+            'teacherCount' => $teacherCount,
         ]);
     }
 
     /**
-     * مشاهدة تسجيل محاضرة داخل مكتبة الفيديو (للطالب المسجّل في الكورس).
+     * مشاهدة فيديو المكتبة (عام من الإدارة أو من معلم الطالب).
+     */
+    public function watchLibraryVideo(Request $request, \App\Models\LibraryVideo $libraryVideo): View
+    {
+        $user = $request->user();
+        abort_unless(
+            LibraryFolderAccessService::canAccessVideo($user, $libraryVideo),
+            403,
+            'هذا الفيديو غير متاح لك.'
+        );
+
+        $url = $libraryVideo->getUrl();
+        abort_unless($url, 404, 'رابط الفيديو غير متوفر حالياً');
+
+        $embedUrl = VideoHelper::getEmbedUrl($url);
+        $directUrl = $embedUrl ? null : (VideoHelper::getDirectVideoUrl($url) ?: $url);
+        $source = VideoHelper::getVideoSource($url);
+        $thumbnail = VideoHelper::getThumbnail($url);
+
+        return view('student.library.video-show', [
+            'libraryVideo' => $libraryVideo,
+            'url' => $url,
+            'embedUrl' => $embedUrl,
+            'directUrl' => $directUrl,
+            'source' => $source,
+            'thumbnail' => $thumbnail,
+        ]);
+    }
+
+    /**
+     * مشاهدة تسجيل محاضرة (مسار كورس — ليس مكتبة عامة).
      */
     public function watchLectureRecording(Request $request, Lecture $lecture): View
     {

@@ -896,6 +896,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/library/materials', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'materials'])->name('student.library.materials');
         Route::get('/library/materials/{material}/download', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'downloadMaterial'])->name('student.library.materials.download');
         Route::get('/library/videos', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'videos'])->name('student.library.videos');
+        Route::get('/library/videos/{libraryVideo}', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'watchLibraryVideo'])->name('student.library.videos.show');
         Route::get('/library/lecture-recordings/{lecture}', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'watchLectureRecording'])->name('student.library.lecture-recordings.show');
         Route::get('/my-lectures', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'lectures'])->name('student.lectures.index');
         Route::get('/tutoring-subscriptions', [\App\Http\Controllers\Student\TutoringSubscriptionController::class, 'index'])->name('student.tutoring-subscriptions.index');
@@ -1110,6 +1111,18 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/academy-instructors/assignments', [\App\Http\Controllers\Admin\AcademyInstructorController::class, 'storeAssignment'])->name('academy-instructors.assignments.store');
         Route::patch('/academy-instructors/assignments/{assignment}/status', [\App\Http\Controllers\Admin\AcademyInstructorController::class, 'updateAssignmentStatus'])->name('academy-instructors.assignments.status');
         Route::delete('/academy-instructors/assignments/{assignment}', [\App\Http\Controllers\Admin\AcademyInstructorController::class, 'destroyAssignment'])->name('academy-instructors.assignments.destroy');
+
+        // مركز تحكم المعلم (بيانات + جدول + 1:1 + حجوزات)
+        Route::get('/teachers', [\App\Http\Controllers\Admin\TeacherControlController::class, 'index'])->name('teachers.index');
+        Route::get('/teachers/{teacher}', [\App\Http\Controllers\Admin\TeacherControlController::class, 'show'])->name('teachers.show');
+        Route::put('/teachers/{teacher}/profile', [\App\Http\Controllers\Admin\TeacherControlController::class, 'updateProfile'])->name('teachers.update-profile');
+        Route::post('/teachers/{teacher}/work-schedule', [\App\Http\Controllers\Admin\TeacherControlController::class, 'syncWorkSchedule'])->name('teachers.sync-work-schedule');
+        Route::post('/teachers/{teacher}/one-to-one-availability', [\App\Http\Controllers\Admin\TeacherControlController::class, 'syncOneToOneAvailability'])->name('teachers.sync-oto-availability');
+        Route::post('/teachers/{teacher}/sessions/{session}/schedule', [\App\Http\Controllers\Admin\TeacherControlController::class, 'scheduleOneToOne'])->name('teachers.sessions.schedule');
+        Route::post('/teachers/{teacher}/sessions/{session}/complete', [\App\Http\Controllers\Admin\TeacherControlController::class, 'completeOneToOne'])->name('teachers.sessions.complete');
+        Route::post('/teachers/{teacher}/sessions/{session}/cancel', [\App\Http\Controllers\Admin\TeacherControlController::class, 'cancelOneToOne'])->name('teachers.sessions.cancel');
+        Route::post('/teachers/{teacher}/sessions/{session}/reassign', [\App\Http\Controllers\Admin\TeacherControlController::class, 'reassignOneToOne'])->name('teachers.sessions.reassign');
+        Route::patch('/teachers/{teacher}/bookings/{booking}/status', [\App\Http\Controllers\Admin\TeacherControlController::class, 'updateBookingStatus'])->name('teachers.bookings.status');
 
         // مسارات الكورسات (تصفية صفحة /courses العامة)
         Route::resource('course-categories', \App\Http\Controllers\Admin\CourseCategoryController::class)->except(['show', 'create']);
@@ -1369,11 +1382,12 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
                 Route::get('/', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'index'])->name('index');
                 Route::get('/create', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'create'])->name('create');
                 Route::post('/', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'store'])->name('store');
-                Route::get('/{liveRecording}/edit', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'edit'])->name('edit');
-                Route::put('/{liveRecording}', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'update'])->name('update');
-                Route::post('/{liveRecording}/toggle', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'togglePublish'])->name('toggle');
-                Route::delete('/{liveRecording}', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'destroy'])->name('destroy');
-                Route::put('/lectures/{lecture}', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'updateLectureVideo'])->name('lecture.update');
+                Route::post('/presign-upload', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'presignUpload'])->name('presign');
+                Route::post('/complete-upload', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'completeUpload'])->name('complete');
+                Route::get('/{libraryVideo}/edit', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'edit'])->name('edit');
+                Route::put('/{libraryVideo}', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'update'])->name('update');
+                Route::post('/{libraryVideo}/toggle', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'togglePublish'])->name('toggle');
+                Route::delete('/{libraryVideo}', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'destroy'])->name('destroy');
             });
 
             Route::prefix('curriculum')->name('curriculum.')->group(function () {
@@ -2019,6 +2033,18 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/libraries/materials/folders/{folder}', [\App\Http\Controllers\Instructor\MaterialLibraryController::class, 'show'])->name('libraries.materials.show');
         Route::post('/libraries/materials/folders/{folder}/upload', [\App\Http\Controllers\Instructor\MaterialLibraryController::class, 'upload'])->name('libraries.materials.upload');
         Route::delete('/libraries/materials/folders/{folder}/materials/{material}', [\App\Http\Controllers\Instructor\MaterialLibraryController::class, 'destroyMaterial'])->name('libraries.materials.destroy');
+
+        // مكتبة فيديو المعلم → طلابه فقط
+        Route::get('/libraries/videos', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'index'])->name('libraries.videos.index');
+        Route::get('/libraries/videos/create', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'create'])->name('libraries.videos.create');
+        Route::post('/libraries/videos', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'store'])->name('libraries.videos.store');
+        Route::post('/libraries/videos/presign-upload', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'presignUpload'])->name('libraries.videos.presign');
+        Route::post('/libraries/videos/complete-upload', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'completeUpload'])->name('libraries.videos.complete');
+        Route::post('/libraries/videos/folders', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'storeFolder'])->name('libraries.videos.folders.store');
+        Route::get('/libraries/videos/{libraryVideo}/edit', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'edit'])->name('libraries.videos.edit');
+        Route::put('/libraries/videos/{libraryVideo}', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'update'])->name('libraries.videos.update');
+        Route::post('/libraries/videos/{libraryVideo}/toggle', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'togglePublish'])->name('libraries.videos.toggle');
+        Route::delete('/libraries/videos/{libraryVideo}', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'destroy'])->name('libraries.videos.destroy');
 
         // تسجيل المحاضرات
         Route::get('/lecture-recordings', [\App\Http\Controllers\Instructor\LectureRecordingController::class, 'index'])->name('lecture-recordings.index');

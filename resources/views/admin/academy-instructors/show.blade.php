@@ -18,7 +18,12 @@
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">{{ $instructor->name }}</h2>
             <p class="mt-1 text-sm text-muted">{{ $instructor->email }} @if($instructor->phone)· {{ $instructor->phone }}@endif</p>
         </div>
-        <a href="{{ route('admin.academy-instructors.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink-soft">رجوع</a>
+        <div class="flex flex-wrap gap-2">
+            @if(Route::has('admin.teachers.show'))
+                <a href="{{ route('admin.teachers.show', $instructor) }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">مركز التحكم</a>
+            @endif
+            <a href="{{ route('admin.academy-instructors.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink-soft">رجوع</a>
+        </div>
     </section>
 
     @if(session('success'))

@@ -17,16 +17,16 @@
         ],
         [
             'title' => 'مكتبة الفيديوهات',
-            'desc' => 'تسجيلات البث + فيديوهات المحاضرات + مجلدات التصنيف',
-            'stat' => $stats['videos_ready'] + $stats['lecture_videos'],
-            'meta' => $stats['videos_published'].' منشور · '.$stats['lecture_videos'].' محاضرة',
+            'desc' => 'روابط أو رفع Cloudflare — مكتبة عامة بدون تسجيلات بث',
+            'stat' => $stats['videos_ready'],
+            'meta' => $stats['videos_published'].' منشور · '.($stats['video_folders'] ?? 0).' مجلد',
             'icon' => 'fa-film',
             'href' => route('admin.libraries.videos.index'),
             'cta' => 'إدارة الفيديوهات',
         ],
         [
-            'title' => 'مجلدات الفيديو',
-            'desc' => 'تصنيف الفيديوهات المتنوعة كمجلدات للطالبات',
+            'title' => 'مجلدات المكتبة',
+            'desc' => 'تصنيف فيديو وماتريال (معلم × سنة + باقة)',
             'stat' => $stats['video_folders'] ?? 0,
             'meta' => 'تنظيم التصفح في المكتبة',
             'icon' => 'fa-folder-open',
@@ -112,22 +112,22 @@
 
         <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
             <div class="flex items-center justify-between border-b border-line px-4 py-3">
-                <h3 class="font-semibold text-ink">أحدث فيديوهات البث</h3>
+                <h3 class="font-semibold text-ink">أحدث فيديوهات المكتبة</h3>
                 <a href="{{ route('admin.libraries.videos.create') }}" class="text-sm font-medium text-accent hover:underline">إضافة فيديو</a>
             </div>
             <div class="divide-y divide-line">
                 @forelse($recentVideos as $v)
                     <div class="flex items-center justify-between gap-3 px-4 py-3 text-sm">
                         <div class="min-w-0">
-                            <div class="truncate font-medium text-ink">{{ $v->title ?: ('تسجيل #'.$v->id) }}</div>
-                            <div class="truncate text-xs text-muted">{{ $v->session?->title ?: '—' }}</div>
+                            <div class="truncate font-medium text-ink">{{ $v->title }}</div>
+                            <div class="truncate text-xs text-muted">{{ $v->folder?->displayName() ?: 'عام' }} · {{ $v->sourceLabel() }}</div>
                         </div>
                         <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold {{ $v->is_published ? 'bg-success/10 text-success' : 'bg-canvas-muted text-muted' }}">
                             {{ $v->is_published ? 'منشور' : 'مسودة' }}
                         </span>
                     </div>
                 @empty
-                    <p class="px-4 py-8 text-center text-sm text-muted">لا تسجيلات بعد.</p>
+                    <p class="px-4 py-8 text-center text-sm text-muted">لا فيديوهات بعد.</p>
                 @endforelse
             </div>
         </article>

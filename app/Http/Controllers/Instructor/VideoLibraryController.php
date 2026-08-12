@@ -1,32 +1,30 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Instructor;
 
 use App\Helpers\VideoHelper;
 use App\Http\Controllers\Controller;
+use App\Models\AcademicYear;
 use App\Models\LibraryFolder;
 use App\Models\LibraryVideo;
 use App\Services\LibraryVideoUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 /**
- * مكتبة فيديو عامة من الإدارة + عرض فيديوهات المعلمين لطلابهم.
+ * فيديوهات المعلم لطلابه فقط — لا تظهر لمعلمين آخرين ولا للعامة.
  */
-class LibraryVideoController extends Controller
+class VideoLibraryController extends Controller
 {
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
             $user = $request->user();
-            if (! $user || (! $user->isAdmin()
-                && ! in_array((string) $user->role, ['admin', 'super_admin'], true)
-                && ! $user->hasPermission('manage.live-sessions')
-                && ! $user->hasPermission('manage.lectures')
-                && ! $user->hasPermission('manage.courses'))) {
-                abort(403);
+            if (! $user || ! $user->isAcademyWorkingInstructor()) {
+                abort(403, 'مكتبة الفيديو متاحة للمعلمين المعتمدين فقط.');
             }
 
             return $next($request);
@@ -35,62 +33,36 @@ class LibraryVideoController extends Controller
 
     public function index(Request $request): View
     {
-        $query = LibraryVideo::query()
-            ->with(['folder:id,name_ar,name_en', 'creator:id,name', 'instructor:id,name'])
-            ->ordered();
+        $user = $request->user();
 
-        if ($request->filled('search')) {
-            $s = trim((string) $request->search);
-            $query->where(function ($q) use ($s) {
-                $q->where('title', 'like', "%{$s}%")
-                    ->orWhere('description', 'like', "%{$s}%")
-                    ->orWhere('external_url', 'like', "%{$s}%");
-            });
-        }
-        if ($request->filled('folder_id')) {
-            if ($request->folder_id === 'none') {
-                $query->whereNull('library_folder_id');
-            } else {
-                $query->where('library_folder_id', (int) $request->folder_id);
-            }
-        }
-        if ($request->filled('published')) {
-            $query->where('is_published', $request->published === '1');
-        }
-        if ($request->filled('audience')) {
-            if ($request->audience === 'teacher_students') {
-                $query->where('audience', LibraryVideo::AUDIENCE_TEACHER_STUDENTS);
-            } elseif ($request->audience === 'general') {
-                $query->general();
-            }
-        }
-        if ($request->filled('source')) {
-            if ($request->source === 'link') {
-                $query->whereNotNull('external_url')->where('external_url', '!=', '');
-            } elseif ($request->source === 'file') {
-                $query->whereNotNull('file_path')->where('file_path', '!=', '');
-            }
-        }
+        $videos = LibraryVideo::query()
+            ->where('instructor_id', $user->id)
+            ->where('audience', LibraryVideo::AUDIENCE_TEACHER_STUDENTS)
+            ->with(['folder:id,name_ar,name_en'])
+            ->ordered()
+            ->paginate(24)
+            ->withQueryString();
 
-        $videos = $query->paginate(25)->withQueryString();
+        $folders = LibraryFolder::query()
+            ->ofKind(LibraryFolder::KIND_VIDEOS)
+            ->where('instructor_id', $user->id)
+            ->with(['academicYear:id,name'])
+            ->withCount(['libraryVideos' => fn ($q) => $q->where('instructor_id', $user->id)])
+            ->ordered()
+            ->get();
 
-        $stats = [
-            'total' => LibraryVideo::query()->count(),
-            'published' => LibraryVideo::query()->where('is_published', true)->count(),
-            'general' => LibraryVideo::query()->general()->count(),
-            'teacher' => LibraryVideo::query()->where('audience', LibraryVideo::AUDIENCE_TEACHER_STUDENTS)->count(),
-        ];
+        $years = Schema::hasTable('academic_years')
+            ? AcademicYear::query()->ordered()->get(['id', 'name'])
+            : collect();
 
-        return view('admin.libraries.videos.index', [
-            'videos' => $videos,
-            'stats' => $stats,
-            'folders' => LibraryFolder::query()->ofKind(LibraryFolder::KIND_VIDEOS)->ordered()->get(['id', 'name_ar', 'name_en', 'slug']),
-        ]);
+        return view('instructor.libraries.videos.index', compact('videos', 'folders', 'years'));
     }
 
     public function create(): View
     {
-        return view('admin.libraries.videos.form', [
+        $user = request()->user();
+
+        return view('instructor.libraries.videos.form', [
             'mode' => 'create',
             'video' => new LibraryVideo([
                 'is_published' => true,
@@ -99,16 +71,21 @@ class LibraryVideoController extends Controller
             ]),
             'folders' => LibraryFolder::query()
                 ->ofKind(LibraryFolder::KIND_VIDEOS)
-                ->whereNull('instructor_id')
+                ->where('instructor_id', $user->id)
                 ->active()
                 ->ordered()
                 ->get(),
             'uploadDisk' => LibraryVideoUploadService::uploadDiskName(),
+            'presignRoute' => route('instructor.libraries.videos.presign'),
+            'completeRoute' => route('instructor.libraries.videos.complete'),
+            'storeRoute' => route('instructor.libraries.videos.store'),
+            'indexRoute' => route('instructor.libraries.videos.index'),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $user = $request->user();
         $data = $this->validatedMeta($request);
 
         if (empty($data['external_url']) && empty($data['file_path'])) {
@@ -119,11 +96,16 @@ class LibraryVideoController extends Controller
             return back()->withInput()->withErrors(['external_url' => 'الرابط غير مدعوم (YouTube / Vimeo / Bunny / رابط مباشر).']);
         }
 
-        $video = LibraryVideo::create([
-            'library_folder_id' => $data['library_folder_id'] ?? null,
-            'created_by' => $request->user()->id,
-            'audience' => LibraryVideo::AUDIENCE_GENERAL,
-            'instructor_id' => null,
+        $folderId = $data['library_folder_id'] ?? null;
+        if ($folderId) {
+            $this->assertOwnsFolder((int) $folderId);
+        }
+
+        LibraryVideo::create([
+            'library_folder_id' => $folderId,
+            'created_by' => $user->id,
+            'audience' => LibraryVideo::AUDIENCE_TEACHER_STUDENTS,
+            'instructor_id' => $user->id,
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
             'external_url' => $data['external_url'] ?? null,
@@ -137,22 +119,34 @@ class LibraryVideoController extends Controller
         ]);
 
         return redirect()
-            ->route('admin.libraries.videos.index')
-            ->with('success', 'تم إضافة فيديو عام #'.$video->id.' (يظهر للطلاب حسب باقة المكتبة).');
+            ->route('instructor.libraries.videos.index')
+            ->with('success', 'تم إضافة الفيديو — يظهر لطلابك فقط (والإدارة).');
     }
 
     public function edit(LibraryVideo $libraryVideo): View
     {
-        return view('admin.libraries.videos.form', [
+        $this->assertOwnsVideo($libraryVideo);
+        $user = request()->user();
+
+        return view('instructor.libraries.videos.form', [
             'mode' => 'edit',
             'video' => $libraryVideo,
-            'folders' => LibraryFolder::query()->ofKind(LibraryFolder::KIND_VIDEOS)->ordered()->get(),
+            'folders' => LibraryFolder::query()
+                ->ofKind(LibraryFolder::KIND_VIDEOS)
+                ->where('instructor_id', $user->id)
+                ->ordered()
+                ->get(),
             'uploadDisk' => LibraryVideoUploadService::uploadDiskName(),
+            'presignRoute' => route('instructor.libraries.videos.presign'),
+            'completeRoute' => route('instructor.libraries.videos.complete'),
+            'storeRoute' => route('instructor.libraries.videos.update', $libraryVideo),
+            'indexRoute' => route('instructor.libraries.videos.index'),
         ]);
     }
 
     public function update(Request $request, LibraryVideo $libraryVideo): RedirectResponse
     {
+        $this->assertOwnsVideo($libraryVideo);
         $data = $this->validatedMeta($request);
 
         if (empty($data['external_url']) && empty($data['file_path']) && ! $libraryVideo->file_path) {
@@ -163,8 +157,15 @@ class LibraryVideoController extends Controller
             return back()->withInput()->withErrors(['external_url' => 'الرابط غير مدعوم (YouTube / Vimeo / Bunny / رابط مباشر).']);
         }
 
+        $folderId = $data['library_folder_id'] ?? null;
+        if ($folderId) {
+            $this->assertOwnsFolder((int) $folderId);
+        }
+
         $payload = [
-            'library_folder_id' => $data['library_folder_id'] ?? null,
+            'library_folder_id' => $folderId,
+            'audience' => LibraryVideo::AUDIENCE_TEACHER_STUDENTS,
+            'instructor_id' => $request->user()->id,
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
             'external_url' => $data['external_url'] ?? null,
@@ -172,12 +173,6 @@ class LibraryVideoController extends Controller
             'is_published' => $request->boolean('is_published', true),
             'sort_order' => (int) ($data['sort_order'] ?? 0),
         ];
-
-        // الإدارة تضيف فيديوهات عامة فقط؛ فيديوهات المعلم تبقى لطلابه
-        if (! $libraryVideo->isTeacherPrivate()) {
-            $payload['audience'] = LibraryVideo::AUDIENCE_GENERAL;
-            $payload['instructor_id'] = null;
-        }
 
         if (! empty($data['file_path'])) {
             if ($libraryVideo->file_path && $libraryVideo->file_path !== $data['file_path']) {
@@ -200,23 +195,52 @@ class LibraryVideoController extends Controller
         $libraryVideo->update($payload);
 
         return redirect()
-            ->route('admin.libraries.videos.index')
+            ->route('instructor.libraries.videos.index')
             ->with('success', 'تم تحديث الفيديو.');
-    }
-
-    public function togglePublish(LibraryVideo $libraryVideo): RedirectResponse
-    {
-        $libraryVideo->update(['is_published' => ! $libraryVideo->is_published]);
-
-        return back()->with('success', $libraryVideo->is_published ? 'تم نشر الفيديو.' : 'تم إلغاء نشر الفيديو.');
     }
 
     public function destroy(LibraryVideo $libraryVideo): RedirectResponse
     {
+        $this->assertOwnsVideo($libraryVideo);
         LibraryVideoUploadService::deleteStored($libraryVideo->file_path, $libraryVideo->storage_disk);
         $libraryVideo->delete();
 
-        return back()->with('success', 'تم حذف الفيديو من المكتبة.');
+        return back()->with('success', 'تم حذف الفيديو.');
+    }
+
+    public function togglePublish(LibraryVideo $libraryVideo): RedirectResponse
+    {
+        $this->assertOwnsVideo($libraryVideo);
+        $libraryVideo->update(['is_published' => ! $libraryVideo->is_published]);
+
+        return back()->with('success', $libraryVideo->is_published ? 'تم نشر الفيديو لطلابك.' : 'تم إلغاء نشر الفيديو.');
+    }
+
+    public function storeFolder(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'name_ar' => ['required', 'string', 'max:120'],
+            'name_en' => ['nullable', 'string', 'max:120'],
+            'academic_year_id' => ['nullable', 'integer', 'exists:academic_years,id'],
+            'description_ar' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        LibraryFolder::create([
+            'instructor_id' => $user->id,
+            'academic_year_id' => isset($data['academic_year_id']) ? (int) $data['academic_year_id'] : null,
+            'kind' => LibraryFolder::KIND_VIDEOS,
+            'name_ar' => $data['name_ar'],
+            'name_en' => $data['name_en'] ?? null,
+            'description_ar' => $data['description_ar'] ?? null,
+            'icon' => 'fas fa-video',
+            'color' => 'blue',
+            'sort_order' => 0,
+            'is_active' => true,
+            'requires_library_entitlement' => false,
+        ]);
+
+        return back()->with('success', 'تم إنشاء مجلد الفيديو — يظهر لطلابك فقط.');
     }
 
     public function presignUpload(Request $request): JsonResponse
@@ -263,5 +287,26 @@ class LibraryVideoController extends Controller
             'is_published' => ['nullable', 'boolean'],
             'clear_file' => ['nullable', 'boolean'],
         ]);
+    }
+
+    private function assertOwnsVideo(LibraryVideo $video): void
+    {
+        $user = request()->user();
+        abort_unless(
+            $video->isTeacherPrivate() && (int) $video->instructor_id === (int) $user->id,
+            403,
+            'هذا الفيديو ليس لك.'
+        );
+    }
+
+    private function assertOwnsFolder(int $folderId): void
+    {
+        $user = request()->user();
+        $ok = LibraryFolder::query()
+            ->ofKind(LibraryFolder::KIND_VIDEOS)
+            ->where('id', $folderId)
+            ->where('instructor_id', $user->id)
+            ->exists();
+        abort_unless($ok, 403, 'المجلد غير تابع لك.');
     }
 }

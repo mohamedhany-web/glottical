@@ -3192,6 +3192,78 @@ html[dir="rtl"] .st-chat__bubble.is-theirs { border-bottom-right-radius: 14px; b
 }
 
 /* ===== Library videos ===== */
+.st-lib-source-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 18px;
+}
+.st-lib-source-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(11, 61, 145, .12);
+  padding: 14px 16px;
+  background: linear-gradient(180deg, #fff 35%, #f4f7fc);
+}
+.st-lib-source-chip i {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+.st-lib-source-chip--academy i { background: #0B3D91; }
+.st-lib-source-chip--teacher i { background: #8A6A00; }
+.st-lib-source-chip strong {
+  display: block;
+  font-size: .95rem;
+  color: #0B3D91;
+}
+.st-lib-source-chip--teacher strong { color: #8A6A00; }
+.st-lib-source-chip span {
+  display: block;
+  margin-top: 2px;
+  font-size: .78rem;
+  color: #5B6577;
+}
+.st-lib-section-head {
+  margin: 22px 0 12px;
+}
+.st-lib-section-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #0B3D91;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.st-lib-section-head p {
+  margin: 4px 0 0;
+  font-size: .85rem;
+  color: #5B6577;
+}
+.st-lib-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .01em;
+}
+.st-lib-badge--academy {
+  background: rgba(11, 61, 145, .1);
+  color: #0B3D91;
+}
+.st-lib-badge--teacher {
+  background: rgba(245, 184, 0, .22);
+  color: #8A6A00;
+}
+
 .st-folder-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -3409,6 +3481,7 @@ html[dir="rtl"] .st-chat__bubble.is-theirs { border-bottom-right-radius: 14px; b
   .st-folder-grid,
   .st-video-grid { grid-template-columns: 1fr; }
   .st-video-card__foot .st-pill { width: 100%; justify-content: center; }
+  .st-lib-source-strip { grid-template-columns: 1fr; }
 }
 
 /* ===== Assignments ===== */

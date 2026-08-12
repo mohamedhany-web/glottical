@@ -70,10 +70,10 @@ class MaterialLibraryController extends Controller
             'color' => 'blue',
             'sort_order' => 0,
             'is_active' => true,
-            'requires_library_entitlement' => true,
+            'requires_library_entitlement' => false,
         ]);
 
-        return back()->with('success', 'تم إنشاء مجلد الماتريال. يظهر للطالب بعد اشتراك باقة المكتبات لتلك السنة.');
+        return back()->with('success', 'تم إنشاء مجلد الماتريال — يظهر لطلابك فقط (والإدارة).');
     }
 
     public function show(LibraryFolder $folder): View

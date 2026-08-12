@@ -66,12 +66,12 @@
                     <p class="mt-3 text-sm text-muted line-clamp-2">{{ $folder->description_ar }}</p>
                 @endif
                 <p class="mt-3 text-xs text-muted">
-                    {{ (int) $folder->recordings_count }} فيديو · {{ (int) $folder->materials_count }} ماتريال · ترتيب {{ $folder->sort_order }}
+                    {{ (int) ($folder->library_videos_count ?? 0) }} فيديو مكتبة · {{ (int) $folder->materials_count }} ماتريال · ترتيب {{ $folder->sort_order }}
                 </p>
                 <div class="mt-4 flex flex-wrap gap-3 text-sm">
                     <a href="{{ route('admin.libraries.folders.edit', $folder) }}" class="text-accent hover:underline">تعديل</a>
                     @if(in_array($folder->kind, ['videos', 'both'], true))
-                        <a href="{{ route('admin.libraries.videos.index', ['folder_id' => $folder->id, 'tab' => 'live']) }}" class="text-ink-soft hover:underline">الفيديوهات</a>
+                        <a href="{{ route('admin.libraries.videos.index', ['folder_id' => $folder->id]) }}" class="text-ink-soft hover:underline">الفيديوهات</a>
                     @endif
                     @if(in_array($folder->kind, ['materials', 'both'], true))
                         <a href="{{ route('admin.libraries.materials.index', ['folder_id' => $folder->id]) }}" class="text-ink-soft hover:underline">الماتريال</a>

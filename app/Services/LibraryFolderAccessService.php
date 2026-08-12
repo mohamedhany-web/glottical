@@ -3,13 +3,16 @@
 namespace App\Services;
 
 use App\Models\LibraryFolder;
+use App\Models\LibraryVideo;
 use App\Models\StudentServiceEntitlement;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * بوابة ظهور فولدرات المكتبة (ماتريال/فيديو) حسب السنة وباقة المكتبات.
+ * بوابة ظهور فولدرات المكتبة (ماتريال/فيديو):
+ * - عام من الإدارة: باقة المكتبات / مجاني
+ * - فولدر معلم: لطلاب هذا المعلم فقط (وليس للعامة)
  */
 class LibraryFolderAccessService
 {
@@ -17,6 +20,11 @@ class LibraryFolderAccessService
     {
         if (! $user || ! $folder->is_active) {
             return false;
+        }
+
+        // فولدر معلم → طلاب هذا المعلم فقط
+        if ($folder->instructor_id) {
+            return StudentTeacherLinkService::studentStudiesWith($user, (int) $folder->instructor_id);
         }
 
         if (! Schema::hasColumn('library_folders', 'requires_library_entitlement')) {
@@ -28,6 +36,28 @@ class LibraryFolderAccessService
         }
 
         return self::hasLibraryEntitlementForYear($user, $folder->academic_year_id ? (int) $folder->academic_year_id : null);
+    }
+
+    public static function canAccessVideo(?User $user, LibraryVideo $video): bool
+    {
+        if (! $user || ! $video->is_published) {
+            return false;
+        }
+
+        if ($video->isTeacherPrivate()) {
+            if (! $video->instructor_id) {
+                return false;
+            }
+
+            return StudentTeacherLinkService::studentStudiesWith($user, (int) $video->instructor_id);
+        }
+
+        if ($video->folder) {
+            return self::canAccessFolder($user, $video->folder);
+        }
+
+        // فيديو عام بدون مجلد: يظهر لكل طالب مسجّل
+        return true;
     }
 
     public static function hasLibraryEntitlementForYear(User $user, ?int $academicYearId): bool
@@ -49,7 +79,6 @@ class LibraryFolderAccessService
         }
 
         foreach ($ents as $e) {
-            // باقة عامة بدون سنة = تفتح كل السنوات
             if (! $e->academic_year_id) {
                 return true;
             }
@@ -62,9 +91,7 @@ class LibraryFolderAccessService
     }
 
     /**
-     * سنوات يمكن للطالب رؤية فولدراتها المقيّدة.
-     *
-     * @return list<int|string> '*' يعني كل السنوات عبر باقة عامة
+     * @return list<int|string>
      */
     public static function accessibleYearIds(User $user): array
     {
@@ -92,7 +119,7 @@ class LibraryFolderAccessService
     }
 
     /**
-     * فولدرات ظاهرة للطالب: المجانية دائماً + المقيّدة حسب باقة السنة.
+     * فولدرات ظاهرة للطالب: عام (إدارة) حسب الباقة + فولدرات معلميه فقط.
      */
     public static function foldersVisibleTo(User $user, string $kind = 'materials'): Builder
     {
@@ -101,27 +128,74 @@ class LibraryFolderAccessService
             ->ordered()
             ->ofKind($kind);
 
-        if (! Schema::hasColumn('library_folders', 'requires_library_entitlement')) {
-            return $q;
-        }
-
+        $teacherIds = StudentTeacherLinkService::instructorIdsForStudent($user);
         $years = self::accessibleYearIds($user);
 
-        return $q->where(function (Builder $inner) use ($years) {
-            $inner->where('requires_library_entitlement', false);
+        return $q->where(function (Builder $outer) use ($years, $teacherIds) {
+            // 1) فولدرات الإدارة العامة (بدون معلم)
+            $outer->where(function (Builder $general) use ($years) {
+                $general->whereNull('instructor_id');
 
-            if (in_array('*', $years, true)) {
-                $inner->orWhere('requires_library_entitlement', true);
-            } elseif ($years !== []) {
-                $inner->orWhere(function (Builder $gated) use ($years) {
-                    $gated->where('requires_library_entitlement', true)
-                        ->where(function (Builder $yearQ) use ($years) {
-                            $yearQ->whereIn('academic_year_id', $years)
-                                ->orWhereNull('academic_year_id');
+                if (! Schema::hasColumn('library_folders', 'requires_library_entitlement')) {
+                    return;
+                }
+
+                $general->where(function (Builder $access) use ($years) {
+                    $access->where('requires_library_entitlement', false);
+
+                    if (in_array('*', $years, true)) {
+                        $access->orWhere('requires_library_entitlement', true);
+                    } elseif ($years !== []) {
+                        $access->orWhere(function (Builder $gated) use ($years) {
+                            $gated->where('requires_library_entitlement', true)
+                                ->where(function (Builder $yearQ) use ($years) {
+                                    $yearQ->whereIn('academic_year_id', $years)
+                                        ->orWhereNull('academic_year_id');
+                                });
                         });
+                    }
                 });
+            });
+
+            // 2) فولدرات المعلمون المرتبطون بالطالب فقط
+            if ($teacherIds !== []) {
+                $outer->orWhereIn('instructor_id', $teacherIds);
             }
         });
+    }
+
+    /**
+     * استعلام فيديوهات ظاهرة للطالب: عام من الإدارة + من معلميه.
+     */
+    public static function videosVisibleTo(User $user): Builder
+    {
+        $teacherIds = StudentTeacherLinkService::instructorIdsForStudent($user);
+        $allowedFolderIds = self::foldersVisibleTo($user, LibraryFolder::KIND_VIDEOS)->pluck('id');
+
+        return LibraryVideo::query()
+            ->published()
+            ->where(function (Builder $q) use ($teacherIds, $allowedFolderIds) {
+                // عام من الإدارة
+                $q->where(function (Builder $general) use ($allowedFolderIds) {
+                    $general->where(function ($a) {
+                        $a->where('audience', LibraryVideo::AUDIENCE_GENERAL)
+                            ->orWhereNull('audience');
+                    })->where(function ($folderQ) use ($allowedFolderIds) {
+                        $folderQ->whereNull('library_folder_id');
+                        if ($allowedFolderIds->isNotEmpty()) {
+                            $folderQ->orWhereIn('library_folder_id', $allowedFolderIds);
+                        }
+                    });
+                });
+
+                // من معلمي الطالب فقط
+                if ($teacherIds !== []) {
+                    $q->orWhere(function (Builder $teacher) use ($teacherIds) {
+                        $teacher->where('audience', LibraryVideo::AUDIENCE_TEACHER_STUDENTS)
+                            ->whereIn('instructor_id', $teacherIds);
+                    });
+                }
+            });
     }
 
     public static function resolveFolderFromParam(string|int|null $folderId): ?LibraryFolder

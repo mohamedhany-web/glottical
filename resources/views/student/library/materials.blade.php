@@ -115,7 +115,9 @@
         <h2>{{ $folderLabel ?: __('student_timeline.materials_title') }}</h2>
         <p>{{ $activeFolder && !($activeFolder->is_uncategorized ?? false) && method_exists($activeFolder, 'displayDescription') && $activeFolder->displayDescription($locale)
             ? $activeFolder->displayDescription($locale)
-            : __('student_timeline.materials_hint') }}</p>
+            : ($locale === 'ar'
+                ? 'ملفات عامة من الأكاديمية، بالإضافة إلى ما يرسله معلموك إليك.'
+                : 'Academy files plus materials your teachers send you.') }}</p>
     </div>
     @if(Route::has('student.library.videos'))
         <a href="{{ route('student.library.videos') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_library_videos') }}</a>
@@ -142,8 +144,10 @@
                     <strong>{{ $folder->displayName($locale) }}</strong>
                     <em>
                         {{ $folder->academicYear->name ?? '' }}
-                        @if($folder->instructor)
-                            · {{ $folder->instructor->name }}
+                        @if($folder->instructor_id)
+                            · <span class="st-lib-badge st-lib-badge--teacher">{{ $locale === 'ar' ? 'معلمك' : 'Teacher' }}</span>
+                        @else
+                            · <span class="st-lib-badge st-lib-badge--academy">{{ $locale === 'ar' ? 'أكاديمية' : 'Academy' }}</span>
                         @endif
                         · {{ trans_choice('student_timeline.folder_files_count', (int) $folder->materials_count, ['count' => (int) $folder->materials_count]) }}
                     </em>

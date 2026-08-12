@@ -682,10 +682,41 @@
                 </ul>
             </li>
             @endif
+            @if($isFull || $u->hasPermission('manage.users') || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.courses'))
+            @php $teacherControlOpen = request()->routeIs('admin.teachers.*'); @endphp
+            <li x-data="{ open: {{ $teacherControlOpen ? 'true' : 'false' }} }">
+                <button type="button" @click="open = !open" class="sidebar-group-btn">
+                    <span class="flex items-center gap-3"><i class="fas fa-user-tie"></i><span>تحكم المعلمين</span></span>
+                    <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
+                </button>
+                <ul x-show="open" x-cloak class="mt-1 mr-3 space-y-0.5 border-r border-white/10 pr-3">
+                    <li>
+                        <a href="{{ route('admin.teachers.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.teachers.index') ? 'active' : '' }}">
+                            <i class="fas fa-th-large"></i><span>مركز التحكم</span>
+                        </a>
+                    </li>
+                    @if(Route::has('admin.academy-instructors.index') && ($isFull || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.users')))
+                    <li>
+                        <a href="{{ route('admin.academy-instructors.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.academy-instructors.*') ? 'active' : '' }}">
+                            <i class="fas fa-user-check"></i><span>توصيف الطلاب</span>
+                        </a>
+                    </li>
+                    @endif
+                    @if(Route::has('admin.tutor-work-schedules.index') && ($isFull || $u->hasPermission('manage.tutoring-groups')))
+                    <li>
+                        <a href="{{ route('admin.tutor-work-schedules.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutor-work-schedules.*') ? 'active' : '' }}">
+                            <i class="fas fa-calendar-alt"></i><span>جداول العمل</span>
+                        </a>
+                    </li>
+                    @endif
+                </ul>
+            </li>
+            @endif
+
             {{-- إدارة المحتوى — الكورسات ومسارات التعلم --}}
             @if($isFull || $u->hasPermission('manage.courses') || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.academic-subjects') || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.assignments') || $u->hasPermission('manage.exams') || $u->hasPermission('manage.question-bank') || $u->hasPermission('manage.attendance') || $u->hasPermission('manage.achievements') || $u->hasPermission('manage.badges') || $u->hasPermission('manage.reviews'))
             @php
-                $contentManagementOpen = request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.academic-years.*') || request()->routeIs('admin.academic-subjects.*') || request()->routeIs('admin.academy-instructors.*') || request()->routeIs('admin.course-categories.*') || request()->routeIs('admin.exams.*') || request()->routeIs('admin.question-bank.*') || request()->routeIs('admin.question-categories.*') || request()->routeIs('admin.lectures.*') || request()->routeIs('admin.assignments.*') || request()->routeIs('admin.achievements.*') || request()->routeIs('admin.badges.*') || request()->routeIs('admin.reviews.*');
+                $contentManagementOpen = request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.academic-years.*') || request()->routeIs('admin.academic-subjects.*') || request()->routeIs('admin.course-categories.*') || request()->routeIs('admin.exams.*') || request()->routeIs('admin.question-bank.*') || request()->routeIs('admin.question-categories.*') || request()->routeIs('admin.lectures.*') || request()->routeIs('admin.assignments.*') || request()->routeIs('admin.achievements.*') || request()->routeIs('admin.badges.*') || request()->routeIs('admin.reviews.*');
             @endphp
             <li x-data="{ open: {{ $contentManagementOpen ? 'true' : 'false' }} }">
                 <button type="button" @click="open = !open" class="sidebar-group-btn">
@@ -698,9 +729,6 @@
                     @endif
                     @if($isFull || $u->hasPermission('manage.academic-subjects') || $u->hasPermission('manage.academic-years'))
                     <li><a href="{{ route('admin.academic-subjects.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.academic-subjects.*') ? 'active' : '' }}"><i class="fas fa-book"></i><span>مواد المدرسة</span></a></li>
-                    @endif
-                    @if($isFull || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.users'))
-                    <li><a href="{{ route('admin.academy-instructors.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.academy-instructors.*') ? 'active' : '' }}"><i class="fas fa-chalkboard-teacher"></i><span>مدربو الأكاديمية</span></a></li>
                     @endif
                     @if($isFull || $u->hasPermission('manage.courses'))
                     @php $advancedCoursesActive = request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.courses.lessons.*'); @endphp
@@ -915,15 +943,19 @@
                     <li>
                         <a href="{{ route('admin.certificates.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.certificates.index') ? 'active' : '' }}">
                             <i class="fas fa-list"></i><span>{{ __('admin.certificates_list') }}</span>
-                            @php try { $totalCertificates = \App\Models\Certificate::count(); } catch (\Exception $e) { $totalCertificates = 0; } @endphp
+                            @php try { $totalCertificates = \App\Models\Certificate::count(); } catch (\Throwable $e) { $totalCertificates = 0; } @endphp
                             @if($totalCertificates > 0)<span class="sidebar-badge bg-indigo-400 text-white">{{ $totalCertificates }}</span>@endif
                         </a>
                     </li>
                     <li><a href="{{ route('admin.certificates.create') }}" class="sidebar-sub-link {{ request()->routeIs('admin.certificates.create') ? 'active' : '' }}"><i class="fas fa-plus-circle"></i><span>{{ __('admin.issue_certificate') }}</span></a></li>
                     @php
-                        $pendingCertificates = \App\Models\Certificate::where(function($q) {
-                            $q->where('status', 'pending')->orWhere('is_verified', false);
-                        })->count();
+                        try {
+                            $pendingCertificates = \App\Models\Certificate::where(function($q) {
+                                $q->where('status', 'pending')->orWhere('is_verified', false);
+                            })->count();
+                        } catch (\Throwable $e) {
+                            $pendingCertificates = 0;
+                        }
                     @endphp
                     @if($pendingCertificates > 0)
                     <li>

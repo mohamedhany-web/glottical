@@ -1,32 +1,32 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
-@section('title', $mode === 'create' ? 'إضافة فيديو للمكتبة' : 'تعديل فيديو')
-@section('page_title', $mode === 'create' ? 'إضافة فيديو للمكتبة' : 'تعديل فيديو')
+@section('title', $mode === 'create' ? 'إضافة فيديو لطلابك' : 'تعديل فيديو')
+@section('header', $mode === 'create' ? 'إضافة فيديو لطلابك' : 'تعديل فيديو')
 
 @section('content')
 @php
-    $field = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
-    $label = 'mb-1.5 block text-xs font-medium text-muted';
+    $field = 'h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 focus:border-[#0B3D91] focus:outline-none focus:ring-2 focus:ring-[#0B3D91]/20';
+    $label = 'mb-1.5 block text-xs font-medium text-slate-500';
 @endphp
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div>
-            <p class="text-xs font-medium text-muted"><a href="{{ route('admin.libraries.videos.index') }}" class="hover:text-accent">مكتبة الفيديوهات</a></p>
-            <h2 class="mt-1 text-2xl font-semibold text-ink">{{ $mode === 'create' ? 'فيديو جديد' : 'تعديل فيديو' }}</h2>
-            <p class="mt-1 text-sm text-muted">رابط خارجي أو رفع مباشر إلى Cloudflare (بدون حد مساحة عبر الخادم).</p>
+            <p class="text-xs font-medium text-slate-500"><a href="{{ $indexRoute }}" class="hover:text-[#0B3D91]">مكتبة الفيديو</a></p>
+            <h2 class="mt-1 text-2xl font-semibold text-slate-900">{{ $mode === 'create' ? 'فيديو جديد لطلابك' : 'تعديل فيديو' }}</h2>
+            <p class="mt-1 text-sm text-slate-500">يظهر فقط لطلابك المرتبطين بك + الإدارة. رابط أو رفع Cloudflare بدون حد مساحة عبر السيرفر.</p>
         </div>
-        <a href="{{ route('admin.libraries.videos.index') }}" class="btn-press inline-flex h-9 items-center rounded-xl border border-line px-4 text-sm">رجوع</a>
+        <a href="{{ $indexRoute }}" class="inline-flex h-9 items-center rounded-xl border border-slate-200 px-4 text-sm">رجوع</a>
     </section>
 
     @if($errors->any())
-        <div class="rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">{{ $errors->first() }}</div>
+        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ $errors->first() }}</div>
     @endif
     @if(session('error'))
-        <div class="rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">{{ session('error') }}</div>
+        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
     @endif
 
     <form method="POST" id="library-video-form"
-          action="{{ $mode === 'create' ? route('admin.libraries.videos.store') : route('admin.libraries.videos.update', $video) }}"
+          action="{{ $mode === 'create' ? $storeRoute : $storeRoute }}"
           class="space-y-5">
         @csrf
         @if($mode === 'edit') @method('PUT') @endif
@@ -36,10 +36,10 @@
         <input type="hidden" name="file_size" id="file_size" value="{{ old('file_size', $video->file_size ?? 0) }}">
         <input type="hidden" name="mime_type" id="mime_type" value="{{ old('mime_type', $video->mime_type) }}">
 
-        <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft space-y-4">
+        <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
             <div>
                 <label class="{{ $label }}">عنوان الفيديو *</label>
-                <input type="text" name="title" required value="{{ old('title', $video->title) }}" class="{{ $field }}" placeholder="مثال: مقدمة الوحدة الأولى">
+                <input type="text" name="title" required value="{{ old('title', $video->title) }}" class="{{ $field }}" placeholder="مثال: مراجعة الوحدة">
             </div>
             <div>
                 <label class="{{ $label }}">الوصف</label>
@@ -47,16 +47,15 @@
             </div>
             <div class="grid gap-4 md:grid-cols-2">
                 <div>
-                    <label class="{{ $label }}">مجلد المكتبة</label>
+                    <label class="{{ $label }}">مجلدك</label>
                     <select name="library_folder_id" class="{{ $field }}">
-                        <option value="">بدون مجلد (عام)</option>
+                        <option value="">بدون مجلد</option>
                         @foreach(($folders ?? []) as $folder)
                             <option value="{{ $folder->id }}" @selected((string) old('library_folder_id', $video->library_folder_id) === (string) $folder->id)>
-                                {{ $folder->name_ar }}@if($folder->name_en) — {{ $folder->name_en }}@endif
+                                {{ $folder->name_ar }}
                             </option>
                         @endforeach
                     </select>
-                    <p class="mt-1 text-xs text-muted"><a href="{{ route('admin.libraries.folders.index') }}" class="text-accent hover:underline">إدارة المجلدات</a></p>
                 </div>
                 <div>
                     <label class="{{ $label }}">الترتيب</label>
@@ -64,49 +63,47 @@
                 </div>
             </div>
 
-            <div class="rounded-xl border border-dashed border-line bg-canvas-muted/40 p-4 space-y-3">
-                <h3 class="text-sm font-semibold text-ink">① رابط خارجي</h3>
-                <input type="url" name="external_url" id="external_url" value="{{ old('external_url', $video->external_url) }}" class="{{ $field }}" placeholder="https://youtube.com/… أو Vimeo / Bunny">
-                <p class="text-xs text-muted">يُشغَّل داخل المنصة. يمكن تركه فارغاً إذا رفعت ملفاً.</p>
+            <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-4 space-y-3">
+                <h3 class="text-sm font-semibold text-slate-900">① رابط خارجي</h3>
+                <input type="url" name="external_url" id="external_url" value="{{ old('external_url', $video->external_url) }}" class="{{ $field }}" placeholder="https://youtube.com/…">
             </div>
 
-            <div class="rounded-xl border border-dashed border-line bg-canvas-muted/40 p-4 space-y-3">
-                <h3 class="text-sm font-semibold text-ink">② رفع ملف إلى Cloudflare</h3>
-                <p class="text-xs text-muted">الرفع مباشر من المتصفح إلى R2 — شريط تقدم وبدون حد مساحة عبر السيرفر. قرص: <strong>{{ $uploadDisk ?? 'r2' }}</strong></p>
+            <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-4 space-y-3">
+                <h3 class="text-sm font-semibold text-slate-900">② رفع ملف إلى Cloudflare</h3>
+                <p class="text-xs text-slate-500">رفع مباشر من المتصفح مع شريط تقدم. قرص: <strong>{{ $uploadDisk ?? 'r2' }}</strong></p>
                 <input type="file" id="video_file" accept="video/*,.mp4,.webm,.mov,.mkv,.m4v,.avi" class="block w-full text-sm">
                 <div id="upload-progress-wrap" class="hidden">
-                    <div class="flex items-center justify-between text-xs text-muted mb-1">
+                    <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
                         <span id="upload-status">جاري الرفع…</span>
                         <span id="upload-percent">0%</span>
                     </div>
-                    <div class="h-2 rounded-full bg-line overflow-hidden">
-                        <div id="upload-bar" class="h-full w-0 bg-accent transition-all duration-150"></div>
+                    <div class="h-2 rounded-full bg-slate-200 overflow-hidden">
+                        <div id="upload-bar" class="h-full w-0 bg-[#0B3D91] transition-all duration-150"></div>
                     </div>
                 </div>
-                <div id="upload-result" class="text-xs text-success hidden"></div>
+                <div id="upload-result" class="text-xs text-emerald-700 hidden"></div>
                 @if($mode === 'edit' && $video->file_path)
-                    <label class="inline-flex items-center gap-2 text-sm text-muted">
-                        <input type="checkbox" name="clear_file" value="1"> حذف الملف الحالي من التخزين
+                    <label class="inline-flex items-center gap-2 text-sm text-slate-500">
+                        <input type="checkbox" name="clear_file" value="1"> حذف الملف الحالي
                     </label>
-                    <p class="text-xs text-muted">الحالي: {{ $video->file_path }} ({{ $video->file_size_for_humans }})</p>
                 @endif
             </div>
 
             <div class="grid gap-4 md:grid-cols-2">
                 <div>
-                    <label class="{{ $label }}">المدة (ثوانٍ) اختياري</label>
+                    <label class="{{ $label }}">المدة (ثوانٍ)</label>
                     <input type="number" name="duration_seconds" min="0" value="{{ old('duration_seconds', $video->duration_seconds ?? 0) }}" class="{{ $field }}">
                 </div>
                 <div class="flex items-end pb-2">
                     <label class="inline-flex items-center gap-2 text-sm">
                         <input type="checkbox" name="is_published" value="1" @checked(old('is_published', $video->is_published ?? true))>
-                        منشور في مكتبة الطلاب
+                        منشور لطلابك
                     </label>
                 </div>
             </div>
         </article>
 
-        <button type="submit" id="save-btn" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-semibold text-white">
+        <button type="submit" id="save-btn" class="inline-flex h-11 items-center gap-2 rounded-xl bg-[#0B3D91] px-5 text-sm font-semibold text-white">
             <i class="fas fa-save text-xs"></i> حفظ
         </button>
     </form>
@@ -167,7 +164,7 @@
         setProgress(0, 'تجهيز رابط Cloudflare…');
 
         try {
-            var presignRes = await fetch(@json(route('admin.libraries.videos.presign')), {
+            var presignRes = await fetch(@json($presignRoute), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -195,7 +192,7 @@
             );
 
             setProgress(99, 'تأكيد الملف…');
-            var completeRes = await fetch(@json(route('admin.libraries.videos.complete')), {
+            var completeRes = await fetch(@json($completeRoute), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -214,18 +211,17 @@
             document.getElementById('storage_disk').value = completeData.storage_disk;
             document.getElementById('file_size').value = completeData.file_size;
             document.getElementById('mime_type').value = completeData.mime_type || '';
-            // امسح الرابط الخارجي إن رُفع ملف (اختياري — نتركه لو المستخدم يبغى الاثنين)
             setProgress(100, 'اكتمل الرفع');
             uploadResult.textContent = 'تم الرفع بنجاح (' + (completeData.file_size_human || '') + '). احفظ النموذج.';
             uploadResult.classList.remove('hidden');
-            uploadResult.classList.remove('text-danger');
-            uploadResult.classList.add('text-success');
+            uploadResult.classList.remove('text-rose-700');
+            uploadResult.classList.add('text-emerald-700');
         } catch (err) {
             setProgress(0, 'فشل الرفع');
             uploadResult.textContent = err.message || String(err);
             uploadResult.classList.remove('hidden');
-            uploadResult.classList.remove('text-success');
-            uploadResult.classList.add('text-danger');
+            uploadResult.classList.remove('text-emerald-700');
+            uploadResult.classList.add('text-rose-700');
             document.getElementById('file_path').value = @json(old('file_path', $video->file_path));
         } finally {
             saveBtn.disabled = false;

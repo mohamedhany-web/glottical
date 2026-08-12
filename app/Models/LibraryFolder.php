@@ -57,6 +57,11 @@ class LibraryFolder extends Model
         return $this->hasMany(LiveRecording::class, 'library_folder_id');
     }
 
+    public function libraryVideos(): HasMany
+    {
+        return $this->hasMany(LibraryVideo::class, 'library_folder_id');
+    }
+
     public function materials(): HasMany
     {
         return $this->hasMany(LectureMaterial::class, 'library_folder_id');

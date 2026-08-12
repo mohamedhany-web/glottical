@@ -184,6 +184,13 @@
                 <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'مكتبة الماتريال' : 'Materials library' }}</span>
             </a>
             @endif
+            @if($canAccessCurriculumLibrary && Route::has('instructor.libraries.videos.index'))
+            <a href="{{ route('instructor.libraries.videos.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('instructor.libraries.videos.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-film"></i></span>
+                <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'فيديوهات لطلابك' : 'Videos for students' }}</span>
+            </a>
+            @endif
 
             @if(Route::has('instructor.lecture-recordings.index'))
             <a href="{{ route('instructor.lecture-recordings.index') }}" @click="{{ $closeSidebar }}"

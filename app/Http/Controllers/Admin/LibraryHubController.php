@@ -8,10 +8,9 @@ use App\Models\AcademicYear;
 use App\Models\AdvancedCourse;
 use App\Models\CourseSection;
 use App\Models\CurriculumItem;
-use App\Models\Lecture;
 use App\Models\LectureMaterial;
-use App\Models\LiveRecording;
-use Illuminate\Http\Request;
+use App\Models\LibraryFolder;
+use App\Models\LibraryVideo;
 use Illuminate\View\View;
 
 class LibraryHubController extends Controller
@@ -32,14 +31,8 @@ class LibraryHubController extends Controller
     {
         $materialsTotal = LectureMaterial::query()->count();
         $materialsVisible = LectureMaterial::query()->where('is_visible_to_student', true)->count();
-        $videosReady = LiveRecording::query()->where('status', 'ready')->count();
-        $videosPublished = LiveRecording::query()->where('is_published', true)->count();
-        $lectureVideos = Lecture::query()
-            ->where(function ($q) {
-                $q->whereNotNull('recording_url')->where('recording_url', '!=', '')
-                    ->orWhereNotNull('recording_file_path')->where('recording_file_path', '!=', '');
-            })
-            ->count();
+        $videosTotal = LibraryVideo::query()->count();
+        $videosPublished = LibraryVideo::query()->where('is_published', true)->count();
         $years = AcademicYear::query()->count();
         $subjects = AcademicSubject::query()->count();
         $courses = AdvancedCourse::query()->count();
@@ -52,8 +45,8 @@ class LibraryHubController extends Controller
             ->take(6)
             ->get();
 
-        $recentVideos = LiveRecording::query()
-            ->with(['session:id,title'])
+        $recentVideos = LibraryVideo::query()
+            ->with(['folder:id,name_ar,name_en'])
             ->latest('id')
             ->take(6)
             ->get();
@@ -61,10 +54,10 @@ class LibraryHubController extends Controller
         $stats = [
             'materials_total' => $materialsTotal,
             'materials_visible' => $materialsVisible,
-            'videos_ready' => $videosReady,
+            'videos_ready' => $videosTotal,
             'videos_published' => $videosPublished,
-            'lecture_videos' => $lectureVideos,
-            'video_folders' => \App\Models\LibraryFolder::query()->count(),
+            'lecture_videos' => 0,
+            'video_folders' => LibraryFolder::query()->ofKind(LibraryFolder::KIND_VIDEOS)->count(),
             'years' => $years,
             'subjects' => $subjects,
             'courses' => $courses,

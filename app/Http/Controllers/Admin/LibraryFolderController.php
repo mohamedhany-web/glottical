@@ -31,6 +31,7 @@ class LibraryFolderController extends Controller
             ->withCount([
                 'recordings' => fn ($q) => $q->where('is_published', true)->where('status', 'ready'),
                 'materials',
+                'libraryVideos' => fn ($q) => $q->where('is_published', true),
             ])
             ->ordered()
             ->get();
@@ -105,6 +106,7 @@ class LibraryFolderController extends Controller
     public function destroy(LibraryFolder $folder): RedirectResponse
     {
         $folder->recordings()->update(['library_folder_id' => null]);
+        $folder->libraryVideos()->update(['library_folder_id' => null]);
         $folder->materials()->update(['library_folder_id' => null]);
         $folder->delete();
 
