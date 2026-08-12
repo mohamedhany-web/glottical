@@ -10,13 +10,14 @@
     $activeFolder = $activeFolder ?? null;
     $uncategorizedCount = (int) ($uncategorizedCount ?? 0);
     $searchQuery = $searchQuery ?? '';
+    $lectureRecordings = $lectureRecordings ?? collect();
+    $sourceFilter = $sourceFilter ?? 'all';
     $tones = ['blue', 'pink', 'orange', 'purple', 'green'];
-    $videosEmpty = $videos instanceof \Illuminate\Contracts\Pagination\Paginator
+    $videosEmpty = ($videos instanceof \Illuminate\Contracts\Pagination\Paginator
         ? $videos->isEmpty()
-        : collect($videos)->isEmpty();
-    $videoCount = method_exists($videos, 'total')
-        ? $videos->total()
-        : collect($videos)->count();
+        : collect($videos)->isEmpty()) && collect($lectureRecordings)->isEmpty();
+    $videoCount = (method_exists($videos, 'total') ? $videos->total() : collect($videos)->count())
+        + collect($lectureRecordings)->count();
     $watchRoute = Route::has('student.live-recordings.show')
         ? 'student.live-recordings.show'
         : (Route::has('live-recordings.show') ? 'live-recordings.show' : null);
@@ -74,9 +75,16 @@
             ? $activeFolder->displayDescription($locale)
             : __('student_timeline.videos_hint') }}</p>
     </div>
-    @if(Route::has('student.library.materials'))
-        <a href="{{ route('student.library.materials') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_library_materials') }}</a>
-    @endif
+    <div class="st-biz-banner__actions">
+        @if(! $activeFolder)
+            <a href="{{ route('student.library.videos', array_filter(['source' => 'all', 'q' => $searchQuery ?: null])) }}" class="st-pill {{ $sourceFilter === 'all' ? 'st-pill--solid' : 'st-pill--outline' }}">{{ __('student_timeline.videos_source_all') }}</a>
+            <a href="{{ route('student.library.videos', array_filter(['source' => 'lectures', 'q' => $searchQuery ?: null])) }}" class="st-pill {{ $sourceFilter === 'lectures' ? 'st-pill--solid' : 'st-pill--outline' }}">{{ __('student_timeline.videos_source_lectures') }}</a>
+            <a href="{{ route('student.library.videos', array_filter(['source' => 'live', 'q' => $searchQuery ?: null])) }}" class="st-pill {{ $sourceFilter === 'live' ? 'st-pill--solid' : 'st-pill--outline' }}">{{ __('student_timeline.videos_source_live') }}</a>
+        @endif
+        @if(Route::has('student.library.materials'))
+            <a href="{{ route('student.library.materials') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_library_materials') }}</a>
+        @endif
+    </div>
 </section>
 
 @if($folders->isNotEmpty() || $uncategorizedCount > 0)
@@ -130,6 +138,36 @@
         </div>
     </div>
 @else
+    @if(collect($lectureRecordings)->isNotEmpty())
+        <section class="st-video-grid" aria-label="{{ __('student_timeline.videos_source_lectures') }}" style="margin-bottom:1.25rem">
+            @foreach($lectureRecordings as $i => $lecture)
+                @php
+                    $tone = $tones[$i % count($tones)];
+                    $watchUrl = route('student.library.lecture-recordings.show', $lecture);
+                @endphp
+                <article class="st-video-card st-video-card--{{ $tone }}">
+                    <div class="st-video-card__thumb" aria-hidden="true">
+                        <i class="fas fa-play"></i>
+                    </div>
+                    <div class="st-video-card__body">
+                        <p class="st-video-card__course">{{ $lecture->course?->title ?: __('student_timeline.recording') }}</p>
+                        <h3>{{ $lecture->title }}</h3>
+                        @if($lecture->instructor?->name)
+                            <p class="st-video-card__meta">{{ $lecture->instructor->name }}</p>
+                        @endif
+                    </div>
+                    <div class="st-video-card__foot">
+                        <a href="{{ $watchUrl }}" class="st-pill st-pill--solid">
+                            <i class="fas fa-play" aria-hidden="true"></i>
+                            {{ __('student_timeline.watch_video') }}
+                        </a>
+                    </div>
+                </article>
+            @endforeach
+        </section>
+    @endif
+
+    @if(! ($videos instanceof \Illuminate\Contracts\Pagination\Paginator ? $videos->isEmpty() : collect($videos)->isEmpty()))
     <section class="st-video-grid" aria-label="{{ __('student_timeline.videos_title') }}">
         @foreach($videos as $i => $video)
             @php
@@ -176,6 +214,7 @@
         <div class="st-pager">
             {{ $videos->links() }}
         </div>
+    @endif
     @endif
 @endif
 @endsection

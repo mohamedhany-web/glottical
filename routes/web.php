@@ -679,6 +679,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/my-courses/{course}/lectures/{lecture}', [\App\Http\Controllers\Student\MyCourseController::class, 'getLectureData'])
             ->middleware(['ownership:course,course'])
             ->name('my-courses.lectures.show');
+        Route::get('/my-courses/{course}/lectures/{lecture}/recording-stream', [\App\Http\Controllers\Student\MyCourseController::class, 'streamLectureRecording'])
+            ->middleware(['ownership:course,course'])
+            ->name('my-courses.lectures.recording-stream');
         Route::get('/my-courses/{course}/lectures/{lecture}/materials/{material}/download', [\App\Http\Controllers\Student\MyCourseController::class, 'downloadLectureMaterial'])
             ->middleware(['ownership:course,course'])
             ->name('my-courses.lectures.material.download');
@@ -893,6 +896,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/library/materials', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'materials'])->name('student.library.materials');
         Route::get('/library/materials/{material}/download', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'downloadMaterial'])->name('student.library.materials.download');
         Route::get('/library/videos', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'videos'])->name('student.library.videos');
+        Route::get('/library/lecture-recordings/{lecture}', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'watchLectureRecording'])->name('student.library.lecture-recordings.show');
         Route::get('/my-lectures', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'lectures'])->name('student.lectures.index');
         Route::get('/tutoring-subscriptions', [\App\Http\Controllers\Student\TutoringSubscriptionController::class, 'index'])->name('student.tutoring-subscriptions.index');
         Route::get('/tutoring-subscriptions/{subscription}', [\App\Http\Controllers\Student\TutoringSubscriptionController::class, 'show'])->name('student.tutoring-subscriptions.show');

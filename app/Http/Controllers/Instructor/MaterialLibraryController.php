@@ -78,11 +78,12 @@ class MaterialLibraryController extends Controller
 
     public function show(LibraryFolder $folder): View
     {
-        $this->assertOwnsFolder($folder);
+        $this->assertCanViewFolder($folder);
 
         $folder->load(['academicYear:id,name', 'materials' => fn ($q) => $q->orderBy('sort_order')->latest('id')]);
+        $canManage = (int) $folder->instructor_id === (int) request()->user()->id;
 
-        return view('instructor.libraries.materials.show', compact('folder'));
+        return view('instructor.libraries.materials.show', compact('folder', 'canManage'));
     }
 
     public function upload(Request $request, LibraryFolder $folder): RedirectResponse
@@ -122,6 +123,19 @@ class MaterialLibraryController extends Controller
         return back()->with('success', 'تم حذف الملف.');
     }
 
+    private function assertCanViewFolder(LibraryFolder $folder): void
+    {
+        $user = request()->user();
+        abort_unless(
+            $folder->kind === LibraryFolder::KIND_MATERIALS || $folder->kind === LibraryFolder::KIND_BOTH,
+            404
+        );
+        abort_unless(
+            (int) $folder->instructor_id === (int) $user->id || $folder->instructor_id === null,
+            403
+        );
+    }
+
     private function assertOwnsFolder(LibraryFolder $folder): void
     {
         $user = request()->user();
@@ -129,6 +143,6 @@ class MaterialLibraryController extends Controller
             $folder->kind === LibraryFolder::KIND_MATERIALS || $folder->kind === LibraryFolder::KIND_BOTH,
             404
         );
-        abort_unless((int) $folder->instructor_id === (int) $user->id, 403);
+        abort_unless((int) $folder->instructor_id === (int) $user->id, 403, 'هذا المجلد إداري — رفع الملفات للمعلم المالك فقط.');
     }
 }

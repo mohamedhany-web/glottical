@@ -27,7 +27,11 @@ class LibraryFolderController extends Controller
     public function index(): View
     {
         $folders = LibraryFolder::query()
-            ->withCount(['recordings' => fn ($q) => $q->where('is_published', true)->where('status', 'ready')])
+            ->with(['academicYear:id,name', 'instructor:id,name'])
+            ->withCount([
+                'recordings' => fn ($q) => $q->where('is_published', true)->where('status', 'ready'),
+                'materials',
+            ])
             ->ordered()
             ->get();
 

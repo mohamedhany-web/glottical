@@ -109,7 +109,7 @@ class LibraryVideoController extends Controller
             'stats' => $stats,
             'sessions' => LiveSession::query()->orderByDesc('scheduled_at')->limit(200)->get(['id', 'title']),
             'courses' => AdvancedCourse::query()->orderBy('title')->get(['id', 'title']),
-            'folders' => LibraryFolder::query()->ordered()->get(['id', 'name_ar', 'name_en', 'slug']),
+            'folders' => LibraryFolder::query()->ofKind(LibraryFolder::KIND_VIDEOS)->ordered()->get(['id', 'name_ar', 'name_en', 'slug']),
         ]);
     }
 
@@ -128,7 +128,7 @@ class LibraryVideoController extends Controller
                 ->orderByDesc('scheduled_at')
                 ->limit(300)
                 ->get(['id', 'title', 'course_id', 'scheduled_at']),
-            'folders' => LibraryFolder::query()->active()->ordered()->get(),
+            'folders' => LibraryFolder::query()->ofKind(LibraryFolder::KIND_VIDEOS)->active()->ordered()->get(),
         ]);
     }
 
@@ -179,7 +179,7 @@ class LibraryVideoController extends Controller
                 ->orderByDesc('scheduled_at')
                 ->limit(300)
                 ->get(['id', 'title', 'course_id', 'scheduled_at']),
-            'folders' => LibraryFolder::query()->ordered()->get(),
+            'folders' => LibraryFolder::query()->ofKind(LibraryFolder::KIND_VIDEOS)->ordered()->get(),
         ]);
     }
 

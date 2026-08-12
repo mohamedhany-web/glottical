@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\LibraryFolder;
 use App\Models\StudentServiceEntitlement;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -16,6 +17,10 @@ class LibraryFolderAccessService
     {
         if (! $user || ! $folder->is_active) {
             return false;
+        }
+
+        if (! Schema::hasColumn('library_folders', 'requires_library_entitlement')) {
+            return true;
         }
 
         if (! $folder->requires_library_entitlement) {
@@ -33,12 +38,12 @@ class LibraryFolderAccessService
 
         StudentEntitlementService::expireStaleForUser((int) $user->id);
 
-        $query = StudentServiceEntitlement::query()
+        $ents = StudentServiceEntitlement::query()
             ->forUser((int) $user->id)
             ->active()
-            ->where('includes_libraries', true);
+            ->where('includes_libraries', true)
+            ->get();
 
-        $ents = $query->get();
         if ($ents->isEmpty()) {
             return false;
         }
@@ -57,9 +62,9 @@ class LibraryFolderAccessService
     }
 
     /**
-     * سنوات يمكن للطالب رؤية فولدراتها.
+     * سنوات يمكن للطالب رؤية فولدراتها المقيّدة.
      *
-     * @return list<int|null> null يعني «كل السنوات» عبر باقة عامة
+     * @return list<int|string> '*' يعني كل السنوات عبر باقة عامة
      */
     public static function accessibleYearIds(User $user): array
     {
@@ -86,27 +91,54 @@ class LibraryFolderAccessService
         return $ents->pluck('academic_year_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
     }
 
-    public static function foldersVisibleTo(User $user, string $kind = 'materials')
+    /**
+     * فولدرات ظاهرة للطالب: المجانية دائماً + المقيّدة حسب باقة السنة.
+     */
+    public static function foldersVisibleTo(User $user, string $kind = 'materials'): Builder
     {
-        $years = self::accessibleYearIds($user);
-        if ($years === []) {
-            return LibraryFolder::query()->whereRaw('1=0');
-        }
-
         $q = LibraryFolder::query()
             ->active()
             ->ordered()
-            ->where(function ($inner) use ($kind) {
-                $inner->where('kind', $kind)->orWhere('kind', 'both');
-            });
+            ->ofKind($kind);
 
-        if (in_array('*', $years, true)) {
+        if (! Schema::hasColumn('library_folders', 'requires_library_entitlement')) {
             return $q;
         }
 
-        return $q->where(function ($inner) use ($years) {
-            $inner->whereIn('academic_year_id', $years)
-                ->orWhere('requires_library_entitlement', false);
+        $years = self::accessibleYearIds($user);
+
+        return $q->where(function (Builder $inner) use ($years) {
+            $inner->where('requires_library_entitlement', false);
+
+            if (in_array('*', $years, true)) {
+                $inner->orWhere('requires_library_entitlement', true);
+            } elseif ($years !== []) {
+                $inner->orWhere(function (Builder $gated) use ($years) {
+                    $gated->where('requires_library_entitlement', true)
+                        ->where(function (Builder $yearQ) use ($years) {
+                            $yearQ->whereIn('academic_year_id', $years)
+                                ->orWhereNull('academic_year_id');
+                        });
+                });
+            }
         });
+    }
+
+    public static function resolveFolderFromParam(string|int|null $folderId): ?LibraryFolder
+    {
+        if ($folderId === null || $folderId === '' || $folderId === 'none') {
+            return null;
+        }
+
+        return LibraryFolder::query()
+            ->active()
+            ->where(function (Builder $query) use ($folderId) {
+                if (ctype_digit((string) $folderId)) {
+                    $query->where('id', (int) $folderId);
+                } else {
+                    $query->where('slug', (string) $folderId);
+                }
+            })
+            ->first();
     }
 }

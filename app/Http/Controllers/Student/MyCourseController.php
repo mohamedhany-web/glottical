@@ -310,6 +310,11 @@ class MyCourseController extends Controller
         $recordingUrl = $lecture->recording_url ? trim($lecture->recording_url) : null;
         $videoPlatform = $lecture->video_platform ? trim(strtolower($lecture->video_platform)) : null;
 
+        if ((! $recordingUrl) && $lecture->recording_file_path) {
+            $recordingUrl = route('my-courses.lectures.recording-stream', [$courseId, $lectureId]);
+            $videoPlatform = 'direct';
+        }
+
         $materials = $lecture->materials()
             ->where('is_visible_to_student', true)
             ->orderBy('sort_order')
@@ -362,6 +367,9 @@ class MyCourseController extends Controller
             'duration_minutes' => $lecture->duration_minutes ?? 60,
             'min_watch_percent_to_unlock_next' => $lecture->min_watch_percent_to_unlock_next,
             'recording_url' => $recordingUrl,
+            'recording_file_url' => $lecture->recording_file_path
+                ? route('my-courses.lectures.recording-stream', [$courseId, $lectureId])
+                : null,
             'video_platform' => $videoPlatform,
             'teams_meeting_link' => $lecture->teams_meeting_link ?? null,
             'teams_registration_link' => $lecture->teams_registration_link ?? null,
@@ -374,6 +382,45 @@ class MyCourseController extends Controller
                 'watch_time_seconds' => (int) $watchProgress->watch_time_seconds,
                 'video_duration_seconds' => (int) $watchProgress->video_duration_seconds,
             ] : null,
+        ]);
+    }
+
+    /**
+     * بث ملف تسجيل المحاضرة للطالب المسجّل (بدون رابط عام مباشر).
+     */
+    public function streamLectureRecording($courseId, $lectureId)
+    {
+        $user = Auth::user();
+        $course = $user->activeCourses()->findOrFail($courseId);
+        $lecture = $course->lectures()->findOrFail($lectureId);
+
+        abort_unless($lecture->recording_file_path, 404);
+
+        $diskName = $lecture->storage_disk ?: LectureMaterialStorage::resolvedDisk();
+        $path = str_replace('\\', '/', ltrim((string) $lecture->recording_file_path, '/'));
+
+        $disk = Storage::disk($diskName);
+        if (! $disk->exists($path) && $diskName !== 'public') {
+            $disk = Storage::disk('public');
+            abort_unless($disk->exists($path), 404);
+        } else {
+            abort_unless($disk->exists($path), 404);
+        }
+
+        $mime = 'video/mp4';
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $mime = match ($ext) {
+            'webm' => 'video/webm',
+            'mov' => 'video/quicktime',
+            'mp4' => 'video/mp4',
+            default => $mime,
+        };
+
+        return $disk->response($path, null, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="lecture-'.$lecture->id.'.'.$ext.'"',
+            'Cache-Control' => 'private, max-age=3600',
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 

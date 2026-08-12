@@ -538,8 +538,18 @@
         $lecture->refresh();
         $recordingUrl = \DB::table('lectures')->where('id', $lecture->id)->value('recording_url');
         $videoPlatform = \DB::table('lectures')->where('id', $lecture->id)->value('video_platform');
+        $recordingFilePath = \Illuminate\Support\Facades\Schema::hasColumn('lectures', 'recording_file_path')
+            ? \DB::table('lectures')->where('id', $lecture->id)->value('recording_file_path')
+            : ($lecture->recording_file_path ?? null);
         $recordingUrlFinal = $recordingUrl ? trim($recordingUrl) : ($lecture->recording_url ? trim($lecture->recording_url) : null);
         $videoPlatformFinal = $videoPlatform ? trim(strtolower($videoPlatform)) : ($lecture->video_platform ? trim(strtolower($lecture->video_platform)) : null);
+        $recordingFileUrl = $recordingFilePath
+            ? route('my-courses.lectures.recording-stream', [$course->id, $lecture->id])
+            : null;
+        if ((! $recordingUrlFinal) && $recordingFileUrl) {
+            $recordingUrlFinal = $recordingFileUrl;
+            $videoPlatformFinal = 'direct';
+        }
         $materials = $lecture->materials()->where('is_visible_to_student', true)->orderBy('sort_order')->get()->map(function($m) use ($course, $lecture) {
             return [
                 'id' => $m->id,
@@ -584,6 +594,7 @@
             'duration_minutes' => $lecture->duration_minutes ?? 60,
             'min_watch_percent_to_unlock_next' => $lecture->min_watch_percent_to_unlock_next,
             'recording_url' => $recordingUrlFinal,
+            'recording_file_url' => $recordingFileUrl,
             'video_platform' => $videoPlatformFinal,
             'notes' => $lecture->notes ?? null,
             'materials' => $materials,

@@ -1,18 +1,26 @@
 @extends('layouts.admin')
 
-@section('title', 'مجلدات مكتبة الفيديو')
-@section('page_title', 'مجلدات مكتبة الفيديو')
+@section('title', 'مجلدات المكتبات')
+@section('page_title', 'مجلدات المكتبات')
 
 @section('content')
+@php
+    $kindLabel = [
+        'videos' => 'فيديو',
+        'materials' => 'ماتريال',
+        'both' => 'فيديو + ماتريال',
+    ];
+@endphp
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div>
-            <p class="text-xs font-medium text-muted"><a href="{{ route('admin.libraries.index') }}" class="hover:text-accent">مركز المكتبات</a> · <a href="{{ route('admin.libraries.videos.index') }}" class="hover:text-accent">الفيديوهات</a></p>
+            <p class="text-xs font-medium text-muted"><a href="{{ route('admin.libraries.index') }}" class="hover:text-accent">مركز المكتبات</a></p>
             <h2 class="mt-1 text-2xl font-semibold text-ink">مجلدات التصنيف</h2>
-            <p class="mt-1 text-sm text-muted">نظّم الفيديوهات المتنوعة في مجلدات تظهر للطالبات كتصفّح مجلدات.</p>
+            <p class="mt-1 text-sm text-muted">فولدرات معلم × سنة للماتريال والفيديو، مع بوابة باقة المكتبات.</p>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('admin.libraries.videos.index') }}" class="btn-press inline-flex h-9 items-center rounded-xl border border-line px-4 text-sm">الفيديوهات</a>
+            <a href="{{ route('admin.libraries.materials.index') }}" class="btn-press inline-flex h-9 items-center rounded-xl border border-line px-4 text-sm">الماتريال</a>
             <a href="{{ route('admin.libraries.folders.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
                 <i class="fas fa-folder-plus text-xs"></i> مجلد جديد
             </a>
@@ -42,14 +50,33 @@
                         {{ $folder->is_active ? 'نشط' : 'مخفي' }}
                     </span>
                 </div>
+                <div class="mt-3 flex flex-wrap gap-2 text-[11px]">
+                    <span class="rounded-full bg-slate-100 px-2 py-0.5 text-slate-700">{{ $kindLabel[$folder->kind] ?? $folder->kind }}</span>
+                    @if($folder->academicYear)
+                        <span class="rounded-full bg-blue-50 px-2 py-0.5 text-blue-700">{{ $folder->academicYear->name }}</span>
+                    @endif
+                    @if($folder->instructor)
+                        <span class="rounded-full bg-amber-50 px-2 py-0.5 text-amber-800">{{ $folder->instructor->name }}</span>
+                    @endif
+                    <span class="rounded-full px-2 py-0.5 {{ $folder->requires_library_entitlement ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700' }}">
+                        {{ $folder->requires_library_entitlement ? 'يتطلب باقة' : 'مجاني' }}
+                    </span>
+                </div>
                 @if($folder->description_ar)
                     <p class="mt-3 text-sm text-muted line-clamp-2">{{ $folder->description_ar }}</p>
                 @endif
-                <p class="mt-3 text-xs text-muted">{{ (int) $folder->recordings_count }} فيديو منشور · ترتيب {{ $folder->sort_order }}</p>
+                <p class="mt-3 text-xs text-muted">
+                    {{ (int) $folder->recordings_count }} فيديو · {{ (int) $folder->materials_count }} ماتريال · ترتيب {{ $folder->sort_order }}
+                </p>
                 <div class="mt-4 flex flex-wrap gap-3 text-sm">
                     <a href="{{ route('admin.libraries.folders.edit', $folder) }}" class="text-accent hover:underline">تعديل</a>
-                    <a href="{{ route('admin.libraries.videos.index', ['folder_id' => $folder->id, 'tab' => 'live']) }}" class="text-ink-soft hover:underline">عرض الفيديوهات</a>
-                    <form method="POST" action="{{ route('admin.libraries.folders.destroy', $folder) }}" onsubmit="return confirm('حذف المجلد؟ الفيديوهات ستبقى بدون مجلد.')">
+                    @if(in_array($folder->kind, ['videos', 'both'], true))
+                        <a href="{{ route('admin.libraries.videos.index', ['folder_id' => $folder->id, 'tab' => 'live']) }}" class="text-ink-soft hover:underline">الفيديوهات</a>
+                    @endif
+                    @if(in_array($folder->kind, ['materials', 'both'], true))
+                        <a href="{{ route('admin.libraries.materials.index', ['folder_id' => $folder->id]) }}" class="text-ink-soft hover:underline">الماتريال</a>
+                    @endif
+                    <form method="POST" action="{{ route('admin.libraries.folders.destroy', $folder) }}" onsubmit="return confirm('حذف المجلد؟ المحتوى سيبقى بدون مجلد.')">
                         @csrf @method('DELETE')
                         <button type="submit" class="text-danger hover:underline">حذف</button>
                     </form>
@@ -57,7 +84,7 @@
             </article>
         @empty
             <div class="sm:col-span-2 xl:col-span-3 rounded-2xl border border-dashed border-line bg-surface px-6 py-10 text-center text-sm text-muted">
-                لا توجد مجلدات بعد. أنشئ أول مجلد لتنظيم مكتبة الفيديو.
+                لا توجد مجلدات بعد. أنشئ أول مجلد لتنظيم المكتبات.
             </div>
         @endforelse
     </div>

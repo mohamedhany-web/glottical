@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Student;
 use App\Helpers\VideoHelper;
 use App\Http\Controllers\Controller;
 use App\Models\LiveRecording;
+use App\Services\LibraryFolderAccessService;
+use Illuminate\Http\Request;
 
 class LiveRecordingController extends Controller
 {
@@ -23,12 +25,21 @@ class LiveRecordingController extends Controller
     {
         $liveRecording->load(['session.course', 'session.instructor', 'folder']);
         $session = $liveRecording->session;
+        $user = auth()->user();
 
-        if (! $session || ! $session->canUserJoin(auth()->user())) {
+        if (! $session || ! $session->canUserJoin($user)) {
             abort(403, 'ليس لديك صلاحية مشاهدة هذا التسجيل');
         }
         if ($liveRecording->status !== 'ready' || ! $liveRecording->is_published) {
             abort(404);
+        }
+
+        if ($liveRecording->folder) {
+            abort_unless(
+                LibraryFolderAccessService::canAccessFolder($user, $liveRecording->folder),
+                403,
+                'يلزم اشتراك باقة المكتبات لهذه السنة لمشاهدة هذا التسجيل.'
+            );
         }
 
         $url = $liveRecording->getUrl();

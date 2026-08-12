@@ -28,16 +28,30 @@
         @if($mode === 'edit') @method('PUT') @endif
 
         <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft space-y-4">
-            <div>
-                <label class="{{ $label }}">المحاضرة *</label>
-                <select name="lecture_id" required class="{{ $field }}">
-                    <option value="">اختر محاضرة…</option>
-                    @foreach($lectures as $lecture)
-                        <option value="{{ $lecture->id }}" @selected((string) old('lecture_id', $material->lecture_id) === (string) $lecture->id)>
-                            #{{ $lecture->id }} — {{ $lecture->title }} @if($lecture->course) ({{ $lecture->course->title }}) @endif
-                        </option>
-                    @endforeach
-                </select>
+            <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                    <label class="{{ $label }}">المحاضرة (اختياري إن اخترت مجلداً)</label>
+                    <select name="lecture_id" class="{{ $field }}">
+                        <option value="">بدون محاضرة — فولدر فقط</option>
+                        @foreach($lectures as $lecture)
+                            <option value="{{ $lecture->id }}" @selected((string) old('lecture_id', $material->lecture_id) === (string) $lecture->id)>
+                                #{{ $lecture->id }} — {{ $lecture->title }} @if($lecture->course) ({{ $lecture->course->title }}) @endif
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $label }}">مجلد الماتريال (معلم×سنة)</label>
+                    <select name="library_folder_id" class="{{ $field }}">
+                        <option value="">بدون مجلد</option>
+                        @foreach(($folders ?? []) as $folder)
+                            <option value="{{ $folder->id }}" @selected((string) old('library_folder_id', $material->library_folder_id) === (string) $folder->id)>
+                                {{ $folder->name_ar }}@if($folder->name_en) / {{ $folder->name_en }}@endif
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-xs text-muted">يجب اختيار محاضرة أو مجلد على الأقل.</p>
+                </div>
             </div>
             <div>
                 <label class="{{ $label }}">عنوان العرض</label>

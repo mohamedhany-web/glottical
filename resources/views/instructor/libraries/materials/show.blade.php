@@ -19,6 +19,7 @@
         <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ $errors->first() }}</div>
     @endif
 
+    @if($canManage ?? true)
     <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h3 class="text-base font-semibold mb-3">رفع ملف (PDF / PPT / …)</h3>
         <form method="POST" action="{{ route('instructor.libraries.materials.upload', $folder) }}" enctype="multipart/form-data" class="grid gap-3 md:grid-cols-4">
@@ -29,6 +30,9 @@
             <button class="h-10 rounded-xl bg-[#0B3D91] px-4 text-sm font-semibold text-white">رفع</button>
         </form>
     </article>
+    @else
+        <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">مجلد إداري — عرض فقط. ارفع في فولدراتك الخاصة.</div>
+    @endif
 
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <table class="min-w-full text-sm">
@@ -48,11 +52,15 @@
                         </td>
                         <td class="px-4 py-3">{{ $m->is_visible_to_student ? 'ظاهر' : 'مخفي' }}</td>
                         <td class="px-4 py-3 text-end">
+                            @if($canManage ?? true)
                             <form method="POST" action="{{ route('instructor.libraries.materials.destroy', [$folder, $m]) }}" onsubmit="return confirm('حذف الملف؟')">
                                 @csrf
                                 @method('DELETE')
                                 <button class="text-rose-600 font-semibold">حذف</button>
                             </form>
+                            @else
+                                —
+                            @endif
                         </td>
                     </tr>
                 @empty

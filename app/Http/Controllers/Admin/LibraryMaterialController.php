@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\AdvancedCourse;
 use App\Models\Lecture;
 use App\Models\LectureMaterial;
+use App\Models\LibraryFolder;
 use App\Services\LectureMaterialStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -29,7 +31,14 @@ class LibraryMaterialController extends Controller
     public function index(Request $request): View
     {
         $query = LectureMaterial::query()
-            ->with(['lecture:id,title,course_id,instructor_id', 'lecture.course:id,title', 'lecture.instructor:id,name'])
+            ->with([
+                'lecture:id,title,course_id,instructor_id',
+                'lecture.course:id,title',
+                'lecture.instructor:id,name',
+                'folder:id,name_ar,name_en,instructor_id,academic_year_id',
+                'folder.instructor:id,name',
+                'folder.academicYear:id,name',
+            ])
             ->orderByDesc('id');
 
         if ($request->filled('search')) {
@@ -37,7 +46,8 @@ class LibraryMaterialController extends Controller
             $query->where(function ($q) use ($s) {
                 $q->where('title', 'like', "%{$s}%")
                     ->orWhere('file_name', 'like', "%{$s}%")
-                    ->orWhereHas('lecture', fn ($lq) => $lq->where('title', 'like', "%{$s}%"));
+                    ->orWhereHas('lecture', fn ($lq) => $lq->where('title', 'like', "%{$s}%"))
+                    ->orWhereHas('folder', fn ($fq) => $fq->where('name_ar', 'like', "%{$s}%")->orWhere('name_en', 'like', "%{$s}%"));
             });
         }
         if ($request->filled('course_id')) {
@@ -46,6 +56,9 @@ class LibraryMaterialController extends Controller
         }
         if ($request->filled('lecture_id')) {
             $query->where('lecture_id', (int) $request->lecture_id);
+        }
+        if ($request->filled('folder_id')) {
+            $query->where('library_folder_id', (int) $request->folder_id);
         }
         if ($request->filled('visibility')) {
             $query->where('is_visible_to_student', $request->visibility === 'visible');
@@ -58,17 +71,26 @@ class LibraryMaterialController extends Controller
             'visible' => LectureMaterial::query()->where('is_visible_to_student', true)->count(),
             'hidden' => LectureMaterial::query()->where('is_visible_to_student', false)->count(),
             'courses' => LectureMaterial::query()
+                ->whereNotNull('lecture_id')
                 ->join('lectures', 'lectures.id', '=', 'lecture_materials.lecture_id')
                 ->distinct('lectures.course_id')
                 ->count('lectures.course_id'),
+            'folders' => Schema::hasColumn('lecture_materials', 'library_folder_id')
+                ? LectureMaterial::query()->whereNotNull('library_folder_id')->distinct('library_folder_id')->count('library_folder_id')
+                : 0,
             'storage_disk' => LectureMaterialStorage::resolvedDisk(),
         ];
+
+        $folders = Schema::hasTable('library_folders')
+            ? LibraryFolder::query()->ofKind(LibraryFolder::KIND_MATERIALS)->ordered()->get(['id', 'name_ar', 'name_en'])
+            : collect();
 
         return view('admin.libraries.materials.index', [
             'materials' => $materials,
             'stats' => $stats,
             'courses' => AdvancedCourse::query()->orderBy('title')->get(['id', 'title']),
             'lectures' => Lecture::query()->orderByDesc('id')->limit(400)->get(['id', 'title', 'course_id']),
+            'folders' => $folders,
         ]);
     }
 
@@ -79,6 +101,7 @@ class LibraryMaterialController extends Controller
                 'is_visible_to_student' => true,
                 'sort_order' => 0,
                 'lecture_id' => (int) $request->integer('lecture_id') ?: null,
+                'library_folder_id' => (int) $request->integer('folder_id') ?: null,
             ]),
             'mode' => 'create',
             'storageDisk' => LectureMaterialStorage::resolvedDisk(),
@@ -87,26 +110,38 @@ class LibraryMaterialController extends Controller
                 ->orderByDesc('id')
                 ->limit(500)
                 ->get(['id', 'title', 'course_id']),
+            'folders' => Schema::hasTable('library_folders')
+                ? LibraryFolder::query()->ofKind(LibraryFolder::KIND_MATERIALS)->ordered()->get(['id', 'name_ar', 'name_en'])
+                : collect(),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'lecture_id' => ['required', 'exists:lectures,id'],
+            'lecture_id' => ['nullable', 'exists:lectures,id'],
+            'library_folder_id' => ['nullable', 'exists:library_folders,id'],
             'title' => ['nullable', 'string', 'max:255'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_visible_to_student' => ['nullable', 'boolean'],
             'file' => ['required', 'file', 'max:51200', 'mimes:pdf,doc,docm,docx,ppt,pptx,xls,xlsx,zip,rar,txt,png,jpg,jpeg,webp,mp3,mp4'],
         ]);
 
-        $lectureId = (int) $data['lecture_id'];
+        $lectureId = isset($data['lecture_id']) && $data['lecture_id'] !== '' ? (int) $data['lecture_id'] : null;
+        $folderId = isset($data['library_folder_id']) && $data['library_folder_id'] !== '' ? (int) $data['library_folder_id'] : null;
+        if (! $lectureId && ! $folderId) {
+            return back()->withErrors(['lecture_id' => 'اختر محاضرة أو مجلد ماتريال.'])->withInput();
+        }
+
         $file = $request->file('file');
         $disk = LectureMaterialStorage::resolvedDisk();
-        $path = LectureMaterialStorage::store($file, $lectureId);
+        $path = $folderId
+            ? LectureMaterialStorage::storeForFolder($file, $folderId)
+            : LectureMaterialStorage::store($file, (int) $lectureId);
 
         $material = LectureMaterial::create([
             'lecture_id' => $lectureId,
+            'library_folder_id' => $folderId,
             'file_name' => $file->getClientOriginalName(),
             'file_path' => $path,
             'storage_disk' => $disk,
@@ -122,7 +157,7 @@ class LibraryMaterialController extends Controller
 
     public function edit(LectureMaterial $material): View
     {
-        $material->load(['lecture.course']);
+        $material->load(['lecture.course', 'folder']);
 
         return view('admin.libraries.materials.form', [
             'material' => $material,
@@ -133,21 +168,32 @@ class LibraryMaterialController extends Controller
                 ->orderByDesc('id')
                 ->limit(500)
                 ->get(['id', 'title', 'course_id']),
+            'folders' => Schema::hasTable('library_folders')
+                ? LibraryFolder::query()->ofKind(LibraryFolder::KIND_MATERIALS)->ordered()->get(['id', 'name_ar', 'name_en'])
+                : collect(),
         ]);
     }
 
     public function update(Request $request, LectureMaterial $material): RedirectResponse
     {
         $data = $request->validate([
-            'lecture_id' => ['required', 'exists:lectures,id'],
+            'lecture_id' => ['nullable', 'exists:lectures,id'],
+            'library_folder_id' => ['nullable', 'exists:library_folders,id'],
             'title' => ['nullable', 'string', 'max:255'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_visible_to_student' => ['nullable', 'boolean'],
             'file' => ['nullable', 'file', 'max:51200', 'mimes:pdf,doc,docm,docx,ppt,pptx,xls,xlsx,zip,rar,txt,png,jpg,jpeg,webp,mp3,mp4'],
         ]);
 
+        $lectureId = isset($data['lecture_id']) && $data['lecture_id'] !== '' ? (int) $data['lecture_id'] : null;
+        $folderId = isset($data['library_folder_id']) && $data['library_folder_id'] !== '' ? (int) $data['library_folder_id'] : null;
+        if (! $lectureId && ! $folderId) {
+            return back()->withErrors(['lecture_id' => 'اختر محاضرة أو مجلد ماتريال.'])->withInput();
+        }
+
         $payload = [
-            'lecture_id' => (int) $data['lecture_id'],
+            'lecture_id' => $lectureId,
+            'library_folder_id' => $folderId,
             'title' => $data['title'] ?: $material->title,
             'is_visible_to_student' => $request->boolean('is_visible_to_student', true),
             'sort_order' => (int) ($data['sort_order'] ?? 0),
@@ -157,7 +203,9 @@ class LibraryMaterialController extends Controller
             $file = $request->file('file');
             LectureMaterialStorage::delete($material->file_path, $material->storage_disk);
             $disk = LectureMaterialStorage::resolvedDisk();
-            $payload['file_path'] = LectureMaterialStorage::store($file, $payload['lecture_id']);
+            $payload['file_path'] = $folderId
+                ? LectureMaterialStorage::storeForFolder($file, $folderId)
+                : LectureMaterialStorage::store($file, (int) $lectureId);
             $payload['storage_disk'] = $disk;
             $payload['file_name'] = $file->getClientOriginalName();
             if (empty($data['title'])) {
