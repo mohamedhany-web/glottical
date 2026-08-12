@@ -3,12 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class LibraryFolder extends Model
 {
+    public const KIND_VIDEOS = 'videos';
+
+    public const KIND_MATERIALS = 'materials';
+
+    public const KIND_BOTH = 'both';
+
     protected $fillable = [
+        'instructor_id',
+        'academic_year_id',
+        'kind',
         'name_ar',
         'name_en',
         'slug',
@@ -18,11 +28,13 @@ class LibraryFolder extends Model
         'color',
         'sort_order',
         'is_active',
+        'requires_library_entitlement',
     ];
 
     protected $casts = [
         'sort_order' => 'integer',
         'is_active' => 'boolean',
+        'requires_library_entitlement' => 'boolean',
     ];
 
     public const COLORS = ['blue', 'pink', 'orange', 'purple', 'green'];
@@ -34,12 +46,30 @@ class LibraryFolder extends Model
                 $base = $folder->name_en ?: $folder->name_ar;
                 $folder->slug = Str::slug($base) ?: ('folder-'.Str::random(6));
             }
+            if (blank($folder->kind)) {
+                $folder->kind = self::KIND_VIDEOS;
+            }
         });
     }
 
     public function recordings(): HasMany
     {
         return $this->hasMany(LiveRecording::class, 'library_folder_id');
+    }
+
+    public function materials(): HasMany
+    {
+        return $this->hasMany(LectureMaterial::class, 'library_folder_id');
+    }
+
+    public function instructor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'instructor_id');
+    }
+
+    public function academicYear(): BelongsTo
+    {
+        return $this->belongsTo(AcademicYear::class, 'academic_year_id');
     }
 
     public function scopeActive($query)
@@ -50,6 +80,13 @@ class LibraryFolder extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function scopeOfKind($query, string $kind)
+    {
+        return $query->where(function ($q) use ($kind) {
+            $q->where('kind', $kind)->orWhere('kind', self::KIND_BOTH);
+        });
     }
 
     public function displayName(?string $locale = null): string

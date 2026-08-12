@@ -289,7 +289,7 @@ class StudentLearnHubService
                     'courses_count' => (int) ($courseCounts[$profile->user_id] ?? 0),
                     'units_left' => $privateUnits,
                     'can_book' => $privateUnits > 0,
-                    'url' => route('student.learn.teacher', $profile->user_id),
+                    'url' => route('public.instructors.show', $profile->user_id),
                 ];
             })->values()
         );
@@ -366,7 +366,7 @@ class StudentLearnHubService
                     'units_left' => $unitsLeft,
                     'can_book' => $canBook,
                     'slots' => $slots->values(),
-                    'teacher_url' => $instructor ? route('student.learn.teacher', $instructor->id) : null,
+                    'teacher_url' => $instructor ? route('public.instructors.show', $instructor->id) : null,
                 ];
             })->values()
         );

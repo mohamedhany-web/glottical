@@ -8,20 +8,22 @@
     $roles = [
         'super_admin' => ['label' => 'مدير عام', 'badge' => 'bg-danger/10 text-danger'],
         'admin' => ['label' => 'إداري', 'badge' => 'bg-accent-soft text-accent'],
-        'instructor' => ['label' => 'مدرب', 'badge' => 'bg-metal/15 text-metal'],
-        'teacher' => ['label' => 'مدرس', 'badge' => 'bg-metal/15 text-metal'],
+        'instructor' => ['label' => 'معلم', 'badge' => 'bg-metal/15 text-metal'],
+        'teacher' => ['label' => 'معلم (مدرس)', 'badge' => 'bg-metal/15 text-metal'],
         'student' => ['label' => __('admin.student_role_label'), 'badge' => 'bg-accent-soft text-accent'],
         'parent' => ['label' => 'ولي أمر', 'badge' => 'bg-canvas-muted text-muted'],
         'employee' => ['label' => 'موظف', 'badge' => 'bg-metal/15 text-metal'],
     ];
     $roleKey = $user->is_employee ? 'employee' : $user->role;
     $roleMeta = $roles[$roleKey] ?? $roles['student'];
+    $isTeacherAccount = in_array($user->role, ['instructor', 'teacher'], true);
     $listRoute = ($user->role === 'student' && Route::has('admin.students-accounts.index'))
         ? route('admin.students-accounts.index')
-        : route('admin.users.index');
+        : route('admin.users.index', $isTeacherAccount ? ['role' => 'teachers'] : []);
     $listLabel = ($user->role === 'student' && Route::has('admin.students-accounts.index'))
         ? 'إدارة الطلاب والحسابات'
-        : 'إدارة المستخدمين';
+        : ($isTeacherAccount ? 'قائمة المعلمين' : 'إدارة المستخدمين');
+    $brandingProfile = $isTeacherAccount ? ($user->instructorProfile ?? null) : null;
 @endphp
 
 <div class="space-y-5">
@@ -141,13 +143,52 @@
         <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft lg:col-span-2">
             <div class="border-b border-line px-4 py-4 sm:px-5">
                 <h3 class="text-base font-semibold text-ink">إجراءات سريعة</h3>
-                <p class="mt-0.5 text-xs text-muted">تعديل أو العودة للقائمة</p>
+                <p class="mt-0.5 text-xs text-muted">{{ $isTeacherAccount ? 'تعديل الحساب والجدول والملف العام' : 'تعديل أو العودة للقائمة' }}</p>
             </div>
             <div class="space-y-2 p-4 sm:p-5">
                 <a href="{{ route('admin.users.edit', $user->id) }}" class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
                     <i class="fas fa-pen text-xs"></i>
                     تعديل بيانات المستخدم
                 </a>
+                @if($isTeacherAccount)
+                    @if(Route::has('admin.tutor-work-schedules.index'))
+                        <a href="{{ route('admin.tutor-work-schedules.index', ['instructor_id' => $user->id]) }}" class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                            <i class="fas fa-calendar-alt text-xs"></i>
+                            جدول عمل المعلم
+                        </a>
+                    @endif
+                    @if(Route::has('admin.one-to-one-sessions.index'))
+                        <a href="{{ route('admin.one-to-one-sessions.index', ['instructor_id' => $user->id]) }}" class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                            <i class="fas fa-user-clock text-xs"></i>
+                            الحصص الخاصة
+                        </a>
+                    @endif
+                    @if($brandingProfile && Route::has('admin.personal-branding.show'))
+                        <a href="{{ route('admin.personal-branding.show', $brandingProfile) }}" class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                            <i class="fas fa-id-card text-xs"></i>
+                            الملف العام / الاعتماد
+                        </a>
+                    @elseif(Route::has('admin.personal-branding.index'))
+                        <a href="{{ route('admin.personal-branding.index') }}" class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                            <i class="fas fa-id-card text-xs"></i>
+                            الملفات العامة للمعلمين
+                        </a>
+                    @endif
+                    @if(Route::has('public.instructors.show'))
+                        <a href="{{ route('public.instructors.show', $user) }}" target="_blank" rel="noopener" class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                            <i class="fas fa-external-link-alt text-xs"></i>
+                            فتح صفحة المعلم العامة
+                        </a>
+                    @endif
+                    @if($user->id !== auth()->id())
+                        <button type="button" onclick="deleteUser(this)"
+                                data-delete-url="{{ route('admin.users.delete', $user->id) }}"
+                                class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 text-sm font-medium text-rose-700">
+                            <i class="fas fa-trash text-xs"></i>
+                            حذف الحساب
+                        </button>
+                    @endif
+                @endif
                 <a href="{{ $listRoute }}" class="btn-press inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
                     <i class="fas fa-arrow-right text-xs"></i>
                     {{ $listLabel }}
@@ -156,4 +197,31 @@
         </article>
     </div>
 </div>
+@if($isTeacherAccount && $user->id !== auth()->id())
+<script>
+function deleteUser(btn) {
+    if (!confirm('حذف حساب المعلم نهائياً؟')) return;
+    var url = btn.getAttribute('data-delete-url');
+    var token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+        || '{{ csrf_token() }}';
+    fetch(url, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': token,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    }).then(function (r) { return r.json().catch(function () { return {}; }); })
+      .then(function (data) {
+        if (data && data.success === false) {
+            alert(data.message || 'تعذر الحذف');
+            return;
+        }
+        window.location.href = '{{ route('admin.users.index', ['role' => 'teachers']) }}';
+      }).catch(function () {
+        alert('تعذر حذف الحساب');
+      });
+}
+</script>
+@endif
 @endsection

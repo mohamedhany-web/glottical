@@ -95,7 +95,7 @@
         </div>
         <div class="gl-gc-band__actions">
           <a href="{{ route('home') }}?open_trial=1" class="sana-btn sana-btn--yellow"><i class="fas fa-clipboard-check"></i> {{ __($g.'.cta_trial') }}</a>
-          <a href="{{ route('public.groups.one-to-one') }}" class="sana-btn sana-btn--wa"><i class="fas fa-user"></i> {{ __($g.'.view_all_solo') }}</a>
+          <a href="{{ route('public.instructors.index') }}" class="sana-btn sana-btn--wa"><i class="fas fa-user"></i> {{ $isRtl ? 'المعلمون والحصص الخاصة' : 'Teachers & private lessons' }}</a>
           <a href="{{ $waUrl }}" class="sana-btn" style="background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.28)" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a>
         </div>
       </div>

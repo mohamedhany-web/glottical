@@ -18,7 +18,7 @@ return [
         'categories' => 'التصنيفات',
         'community' => 'المجتمع',
         'portfolio' => 'النتائج والأعمال',
-        'instructors' => 'المدربون',
+        'instructors' => 'المعلمون',
         'pricing' => 'الأسعار والباقات',
         'services' => 'الخدمات',
         'login' => 'تسجيل دخول',

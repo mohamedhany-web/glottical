@@ -67,7 +67,7 @@
         <span>/</span>
         <a href="{{ route('public.groups') }}">{{ __($g.'.title') }}</a>
         <span>/</span>
-        <a href="{{ $group->isIndividual() ? route('public.groups.one-to-one') : route('public.groups.courses') }}">
+        <a href="{{ $group->isIndividual() ? route('public.instructors.index') : route('public.groups.courses') }}">
           {{ $group->isIndividual() ? __($g.'.catalog_solo_title') : __($g.'.catalog_group_title') }}
         </a>
         <span>/</span>

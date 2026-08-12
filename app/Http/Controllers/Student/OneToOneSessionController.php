@@ -84,10 +84,56 @@ class OneToOneSessionController extends Controller
         abort_unless($instructor->isInstructor(), 404);
 
         $data = $request->validate([
-            'scheduled_at' => ['required', 'date', 'after:now'],
+            'booking_style' => ['nullable', 'in:single,monthly,multi'],
+            'scheduled_at' => ['nullable', 'date', 'after:now'],
+            'scheduled_ats' => ['nullable', 'array', 'max:24'],
+            'scheduled_ats.*' => ['date', 'after:now'],
+            'weeks' => ['nullable', 'integer', 'min:1', 'max:8'],
+            'weekly_slots' => ['nullable', 'array', 'max:3'],
+            'weekly_slots.*.day_of_week' => ['nullable', 'integer', 'min:1', 'max:7'],
+            'weekly_slots.*.time' => ['nullable', 'string', 'max:8'],
         ]);
 
+        $style = $data['booking_style'] ?? 'single';
+
         try {
+            if ($style === 'monthly') {
+                $weekly = collect($data['weekly_slots'] ?? [])
+                    ->filter(fn ($row) => ! empty($row['day_of_week']) && ! empty($row['time']))
+                    ->values()
+                    ->all();
+                $sessions = OneToOneSessionService::bookMonthlySeriesWithInstructor(
+                    $request->user(),
+                    $instructor,
+                    $weekly,
+                    (int) ($data['weeks'] ?? 4)
+                );
+
+                return redirect()
+                    ->route('student.one-to-one-sessions.index')
+                    ->with('success', 'تم تثبيت '.$sessions->count().' حصص شهرياً مع المعلم.');
+            }
+
+            if ($style === 'multi') {
+                $ats = $data['scheduled_ats'] ?? [];
+                if (count($ats) < 1) {
+                    return back()->withInput()->withErrors(['scheduled_ats' => 'اختر موعداً واحداً على الأقل.']);
+                }
+                $sessions = OneToOneSessionService::bookMultipleWithInstructor(
+                    $request->user(),
+                    $instructor,
+                    $ats
+                );
+
+                return redirect()
+                    ->route('student.one-to-one-sessions.index')
+                    ->with('success', 'تم حجز '.$sessions->count().' حصص مع المعلم.');
+            }
+
+            if (empty($data['scheduled_at'])) {
+                return back()->withInput()->withErrors(['scheduled_at' => 'اختر موعداً.']);
+            }
+
             $session = OneToOneSessionService::bookStandaloneWithInstructor(
                 $request->user(),
                 $instructor,

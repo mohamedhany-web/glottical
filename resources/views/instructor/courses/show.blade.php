@@ -62,6 +62,10 @@
                     @endif
                 </div>
             </div>
+            <a href="{{ route('instructor.courses.pricing.edit', $course) }}" class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 bg-[#0B3D91] hover:bg-[#093275] text-white rounded-xl font-semibold transition-colors">
+                <i class="fas fa-tags"></i>
+                <span>{{ app()->getLocale() === 'ar' ? 'تسعير EGP/USD' : 'EGP/USD pricing' }}</span>
+            </a>
             <a href="{{ route('instructor.courses.index') }}" class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
                 <i class="fas fa-arrow-right"></i>
                 <span>{{ __('instructor.back') }}</span>

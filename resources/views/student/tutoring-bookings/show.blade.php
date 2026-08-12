@@ -9,8 +9,8 @@
     $status = (string) $booking->status;
     $hasLive = (bool) $booking->classroomMeeting;
     $joinUrl = $hasLive ? url('classroom/join/'.$booking->classroomMeeting->code) : null;
-    $teacherUrl = ($booking->instructor_id && Route::has('student.learn.teacher'))
-        ? route('student.learn.teacher', $booking->instructor_id)
+    $teacherUrl = ($booking->instructor_id && Route::has('public.instructors.show'))
+        ? route('public.instructors.show', $booking->instructor_id)
         : null;
     $learnGroupsUrl = Route::has('student.learn.index')
         ? route('student.learn.index', ['tab' => 'groups'])

@@ -45,8 +45,11 @@
         function updateSummary(data) {
             var base = parseFloat(summary.getAttribute('data-base-price')) || 0;
             var isMonthly = summary.getAttribute('data-is-monthly') === '1';
-            var egpSmall = ' <span style="font-size:.75rem;font-weight:700;color:#8A94A6">{{ __('public.currency_egp') }}</span>' + (isMonthly ? ' <span style="font-size:.7rem;font-weight:700;color:#8A94A6">/{{ __('public.per_month') }}</span>' : '');
-            var egpLarge = ' <span style="font-size:.8rem;font-weight:700;color:#8A94A6">{{ __('public.currency_egp') }}</span>' + (isMonthly ? ' <span style="font-size:.75rem;font-weight:700;color:#8A94A6">/{{ __('public.per_month') }}</span>' : '');
+            var curEl = el('checkout_currency');
+            var cur = curEl && curEl.value === 'USD' ? 'USD' : 'EGP';
+            var curLabel = cur === 'USD' ? '{{ __('public.currency_usd') }}' : '{{ __('public.currency_egp') }}';
+            var egpSmall = ' <span style="font-size:.75rem;font-weight:700;color:#8A94A6">' + curLabel + '</span>' + (isMonthly ? ' <span style="font-size:.7rem;font-weight:700;color:#8A94A6">/{{ __('public.per_month') }}</span>' : '');
+            var egpLarge = ' <span style="font-size:.8rem;font-weight:700;color:#8A94A6">' + curLabel + '</span>' + (isMonthly ? ' <span style="font-size:.75rem;font-weight:700;color:#8A94A6">/{{ __('public.per_month') }}</span>' : '');
             if (!data || !data.ok) {
                 el('sum-original').innerHTML = fmt(base) + egpSmall;
                 el('sum-final').innerHTML = fmt(base) + egpLarge;
@@ -57,13 +60,13 @@
             el('sum-original').innerHTML = fmt(data.original_amount) + egpSmall;
             if (data.discount_amount > 0) {
                 el('sum-coupon-row').classList.remove('hidden');
-                el('sum-coupon').textContent = '− ' + fmt(data.discount_amount) + ' {{ __('public.currency_egp') }}';
+                el('sum-coupon').textContent = '− ' + fmt(data.discount_amount) + ' ' + curLabel;
             } else {
                 el('sum-coupon-row').classList.add('hidden');
             }
             if (data.wallet_credit_amount > 0) {
                 el('sum-wallet-row').classList.remove('hidden');
-                el('sum-wallet').textContent = '− ' + fmt(data.wallet_credit_amount) + ' {{ __('public.currency_egp') }}';
+                el('sum-wallet').textContent = '− ' + fmt(data.wallet_credit_amount) + ' ' + curLabel;
             } else {
                 el('sum-wallet-row').classList.add('hidden');
             }
@@ -75,8 +78,10 @@
             fd.append('_token', csrf);
             var c = el('checkout_coupon_code');
             var w = el('checkout_wallet_credit');
+            var cur = el('checkout_currency');
             fd.append('coupon_code', c ? (c.value || '').trim() : '');
             fd.append('wallet_credit', w && w.value !== '' ? w.value : '0');
+            fd.append('currency', cur && cur.value === 'USD' ? 'USD' : 'EGP');
             var ar = document.querySelector('input[name="auto_renew"]');
             if (ar && ar.checked) { fd.append('auto_renew', '1'); }
             return fetch(quoteUrl, {
@@ -92,11 +97,13 @@
                     setMsg('تم تحديث السعر.', false);
                     var hfC = el('form_coupon_code');
                     var hfW = el('form_wallet_credit');
+                    var hfCur = el('form_currency');
                     if (hfC) hfC.value = (el('checkout_coupon_code').value || '').trim();
                     if (hfW) {
                         var wIn = el('checkout_wallet_credit');
                         hfW.value = wIn && wIn.value !== '' ? wIn.value : '0';
                     }
+                    if (hfCur && cur) hfCur.value = cur.value === 'USD' ? 'USD' : 'EGP';
                     if (typeof window.muallimxOnCheckoutPricingUpdated === 'function') {
                         try { window.muallimxOnCheckoutPricingUpdated(res.data); } catch (e) {}
                     }
@@ -114,13 +121,17 @@
         }
         var btn = el('checkout_apply_pricing');
         if (btn) btn.addEventListener('click', function(e){ e.preventDefault(); quote(); });
+        var curSel = el('checkout_currency');
+        if (curSel) curSel.addEventListener('change', function(){ quote(); });
         var form = el('manual-checkout-form');
         if (form) {
             form.addEventListener('submit', function(){
                 var c = el('checkout_coupon_code');
                 var w = el('checkout_wallet_credit');
+                var cur = el('checkout_currency');
                 if (el('form_coupon_code')) el('form_coupon_code').value = c ? (c.value || '').trim() : '';
                 if (el('form_wallet_credit')) el('form_wallet_credit').value = w && w.value !== '' ? w.value : '0';
+                if (el('form_currency')) el('form_currency').value = cur && cur.value === 'USD' ? 'USD' : 'EGP';
             });
         }
         var oc = el('checkout_coupon_code');
@@ -213,6 +224,8 @@
             var wEl = document.getElementById('checkout_wallet_credit');
             fd.append('coupon_code', cEl ? (cEl.value || '').trim() : '');
             fd.append('wallet_credit', wEl && wEl.value !== '' ? wEl.value : '0');
+            var curEl = document.getElementById('checkout_currency');
+            fd.append('currency', curEl && curEl.value === 'USD' ? 'USD' : 'EGP');
             var arEl = document.querySelector('input[name="auto_renew"]');
             if (arEl && arEl.checked) { fd.append('auto_renew', '1'); }
             fetch(prepareUrl, {
@@ -385,6 +398,8 @@
             var wEl = document.getElementById('checkout_wallet_credit');
             fd.append('coupon_code', cEl ? (cEl.value || '').trim() : '');
             fd.append('wallet_credit', wEl && wEl.value !== '' ? wEl.value : '0');
+            var curEl = document.getElementById('checkout_currency');
+            fd.append('currency', curEl && curEl.value === 'USD' ? 'USD' : 'EGP');
             var arEl = document.querySelector('input[name="auto_renew"]');
             if (arEl && arEl.checked) { fd.append('auto_renew', '1'); }
             fetch(prepareUrl, {

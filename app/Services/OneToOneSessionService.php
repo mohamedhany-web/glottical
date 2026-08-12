@@ -104,6 +104,80 @@ class OneToOneSessionService
      */
     public static function bookStandaloneWithInstructor(User $student, User $instructor, Carbon $scheduledAt): OneToOneSession
     {
+        $sessions = self::bookMultipleWithInstructor($student, $instructor, [$scheduledAt]);
+
+        return $sessions->first();
+    }
+
+    /**
+     * تثبيت شهري: موعد أو موعدان أسبوعياً يتكرران لعدد أسابيع (افتراضي 4).
+     *
+     * @param  array<int, array{day_of_week:int,time:string}>  $weeklySlots  ISO 1=Mon…7=Sun + H:i
+     * @return \Illuminate\Support\Collection<int, OneToOneSession>
+     */
+    public static function bookMonthlySeriesWithInstructor(
+        User $student,
+        User $instructor,
+        array $weeklySlots,
+        int $weeks = 4,
+        ?\App\Models\StudentServiceEntitlement $entitlement = null,
+        ?User $bookedBy = null,
+        ?string $notes = null,
+        ?Carbon $from = null
+    ) {
+        $weeks = max(1, min(8, $weeks));
+        $normalized = collect($weeklySlots)
+            ->map(function ($row) {
+                $day = (int) ($row['day_of_week'] ?? 0);
+                $time = trim((string) ($row['time'] ?? ''));
+                if (strlen($time) === 8) {
+                    $time = substr($time, 0, 5);
+                }
+
+                return ['day_of_week' => $day, 'time' => $time];
+            })
+            ->filter(fn ($row) => $row['day_of_week'] >= 1 && $row['day_of_week'] <= 7 && preg_match('/^\d{2}:\d{2}$/', $row['time']))
+            ->unique(fn ($row) => $row['day_of_week'].'|'.$row['time'])
+            ->values();
+
+        if ($normalized->isEmpty()) {
+            throw new \InvalidArgumentException('اختر موعداً أسبوعياً واحداً على الأقل (يوم + وقت).');
+        }
+        if ($normalized->count() > 3) {
+            throw new \InvalidArgumentException('الحد الأقصى 3 مواعيد أسبوعية للتثبيت الشهري.');
+        }
+
+        $from = ($from?->copy() ?? now()->addHour())->startOfMinute();
+        $dates = self::expandWeeklyPattern($normalized->all(), $weeks, $from);
+
+        if (count($dates) < 1) {
+            throw new \InvalidArgumentException('تعذر توليد مواعيد من النمط الأسبوعي خلال الفترة المحددة.');
+        }
+
+        return self::bookMultipleWithInstructor(
+            $student,
+            $instructor,
+            $dates,
+            $entitlement,
+            $bookedBy,
+            trim(($notes ?? '')."\nتثبيت شهري: ".$normalized->count().' موعد/أسبوع × '.$weeks.' أسابيع')
+        );
+    }
+
+    /**
+     * حجز عدة مواعيد دفعة واحدة مع نفس المعلم (نفس الرصيد).
+     *
+     * @param  array<int, Carbon|string>  $scheduledAts
+     * @return \Illuminate\Support\Collection<int, OneToOneSession>
+     */
+    public static function bookMultipleWithInstructor(
+        User $student,
+        User $instructor,
+        array $scheduledAts,
+        ?\App\Models\StudentServiceEntitlement $entitlement = null,
+        ?User $bookedBy = null,
+        ?string $notes = null
+    ) {
         if (! $student->isStudent()) {
             throw new \InvalidArgumentException('الحجز متاح للطلاب فقط.');
         }
@@ -111,21 +185,48 @@ class OneToOneSessionService
             throw new \InvalidArgumentException('المعلم غير متاح حالياً.');
         }
 
-        $entitlement = StudentEntitlementService::availableFor(
-            (int) $student->id,
-            ServicePackage::SCOPE_PRIVATE_LESSONS
-        );
+        $dates = collect($scheduledAts)
+            ->map(fn ($at) => $at instanceof Carbon ? $at->copy() : Carbon::parse((string) $at))
+            ->filter(fn (Carbon $at) => $at->gt(now()))
+            ->unique(fn (Carbon $at) => $at->format('Y-m-d H:i'))
+            ->sortBy(fn (Carbon $at) => $at->timestamp)
+            ->values();
 
-        if (! $entitlement || StudentEntitlementService::bookableUnitsLeft($entitlement) < 1) {
-            throw new \InvalidArgumentException('يجب الاشتراك في باقة أولاً لحجز موعد مع المعلم.');
+        if ($dates->isEmpty()) {
+            throw new \InvalidArgumentException('اختر موعداً واحداً على الأقل في المستقبل.');
+        }
+        if ($dates->count() > 24) {
+            throw new \InvalidArgumentException('الحد الأقصى 24 حصة في الحجز الواحد.');
+        }
+
+        if (! $entitlement) {
+            $entitlement = StudentEntitlementService::availableFor(
+                (int) $student->id,
+                ServicePackage::SCOPE_PRIVATE_LESSONS
+            );
+        }
+
+        if (! $entitlement || StudentEntitlementService::bookableUnitsLeft($entitlement) < $dates->count()) {
+            $left = $entitlement ? StudentEntitlementService::bookableUnitsLeft($entitlement) : 0;
+            throw new \InvalidArgumentException(
+                'الرصيد غير كافٍ. المطلوب '.$dates->count().' حصة والمتاح '.$left.'.'
+            );
         }
 
         $duration = OneToOneSession::defaultDurationMinutes();
+        foreach ($dates as $at) {
+            if (! OneToOneAvailabilityService::isSlotAvailable((int) $instructor->id, $at, $duration)) {
+                throw new \InvalidArgumentException(
+                    'الموعد '.$at->format('Y-m-d H:i').' غير متاح عند هذا المعلم.'
+                );
+            }
+        }
 
-        return DB::transaction(function () use ($student, $instructor, $scheduledAt, $entitlement, $duration) {
+        $seriesId = $dates->count() > 1 ? (string) Str::uuid() : null;
+
+        return DB::transaction(function () use ($student, $instructor, $dates, $entitlement, $duration, $bookedBy, $notes, $seriesId) {
             $maxNumber = (int) OneToOneSession::query()
                 ->where('student_id', $student->id)
-                ->where('instructor_id', $instructor->id)
                 ->max('session_number');
 
             $courseId = AdvancedCourse::query()
@@ -134,21 +235,127 @@ class OneToOneSessionService
                 ->where('delivery_type', CourseSubscriptionService::DELIVERY_ONE_TO_ONE)
                 ->value('id');
 
-            $session = OneToOneSession::create([
-                'student_course_enrollment_id' => null,
-                'student_service_entitlement_id' => $entitlement->id,
-                'advanced_course_id' => $courseId,
-                'instructor_id' => $instructor->id,
-                'student_id' => $student->id,
-                'session_number' => $maxNumber + 1,
-                'duration_minutes' => $duration,
-                'status' => OneToOneSession::STATUS_PENDING,
-            ]);
+            $created = collect();
+            foreach ($dates as $i => $scheduledAt) {
+                // Re-check inside transaction against newly created siblings
+                if (! OneToOneAvailabilityService::isSlotAvailable((int) $instructor->id, $scheduledAt, $duration)) {
+                    throw new \InvalidArgumentException(
+                        'تعارض في الموعد '.$scheduledAt->format('Y-m-d H:i').' بعد بدء الحجز.'
+                    );
+                }
 
-            self::scheduleSession($session, $scheduledAt, $duration, $student, requireAvailability: true);
+                $session = OneToOneSession::create([
+                    'student_course_enrollment_id' => null,
+                    'student_service_entitlement_id' => $entitlement->id,
+                    'advanced_course_id' => $courseId,
+                    'instructor_id' => $instructor->id,
+                    'student_id' => $student->id,
+                    'session_number' => $maxNumber + $i + 1,
+                    'duration_minutes' => $duration,
+                    'status' => OneToOneSession::STATUS_PENDING,
+                    'booked_by_user_id' => $bookedBy?->id,
+                    'notes' => $notes,
+                    'series_id' => $seriesId,
+                ]);
 
-            return $session->fresh(['instructor', 'classroomMeeting']);
+                self::scheduleSession(
+                    $session,
+                    $scheduledAt,
+                    $duration,
+                    $bookedBy ?? $student,
+                    requireAvailability: true,
+                    notify: $seriesId === null
+                );
+                $created->push($session->fresh(['instructor', 'classroomMeeting']));
+            }
+
+            if ($created->count() > 1) {
+                $firstAt = $created->first()?->scheduled_at?->format('Y-m-d H:i') ?? '';
+                $lastAt = $created->last()?->scheduled_at?->format('Y-m-d H:i') ?? '';
+                Notification::create([
+                    'user_id' => $student->id,
+                    'sender_id' => $bookedBy?->id,
+                    'title' => 'تم تثبيت جدولك الشهري',
+                    'message' => 'تم جدولة '.$created->count().' حصص مع '.($instructor->name ?? 'المعلم').' (من '.$firstAt.' إلى '.$lastAt.').',
+                    'type' => 'reminder',
+                    'priority' => 'high',
+                    'audience' => 'student',
+                    'action_url' => route('student.one-to-one-sessions.index'),
+                    'action_text' => 'عرض الحصص',
+                ]);
+                Notification::create([
+                    'user_id' => $instructor->id,
+                    'sender_id' => $bookedBy?->id,
+                    'title' => 'جدول شهري 1:1 جديد',
+                    'message' => 'الطالب: '.($student->name ?? 'طالب').' — '.$created->count().' حصص مثبتة.',
+                    'type' => 'reminder',
+                    'priority' => 'normal',
+                    'audience' => 'instructor',
+                    'action_url' => route('instructor.one-to-one-sessions.index'),
+                    'action_text' => 'عرض الجدول',
+                ]);
+            }
+
+            return $created;
         });
+    }
+
+    /**
+     * @param  array<int, array{day_of_week:int,time:string}>  $weeklySlots
+     * @return array<int, Carbon>
+     */
+    public static function expandWeeklyPattern(array $weeklySlots, int $weeks, Carbon $from): array
+    {
+        $weeks = max(1, min(8, $weeks));
+        $cursor = $from->copy()->startOfDay();
+        $hardEnd = $cursor->copy()->addWeeks($weeks)->endOfDay();
+        $neededPerPattern = $weeks;
+        $byKey = [];
+
+        foreach ($weeklySlots as $slot) {
+            $day = (int) ($slot['day_of_week'] ?? 0);
+            $time = (string) ($slot['time'] ?? '');
+            if ($day < 1 || $day > 7 || ! preg_match('/^\d{2}:\d{2}$/', $time)) {
+                continue;
+            }
+            $byKey[$day.'|'.$time] = ['day_of_week' => $day, 'time' => $time, 'hits' => []];
+        }
+
+        if ($byKey === []) {
+            return [];
+        }
+
+        $guard = 0;
+        $dayCursor = $cursor->copy();
+        while ($dayCursor->lte($hardEnd) && $guard < 400) {
+            $guard++;
+            $iso = (int) $dayCursor->dayOfWeekIso;
+            foreach ($byKey as $key => $meta) {
+                if ($meta['day_of_week'] !== $iso) {
+                    continue;
+                }
+                if (count($meta['hits']) >= $neededPerPattern) {
+                    continue;
+                }
+                [$h, $m] = array_map('intval', explode(':', $meta['time']));
+                $at = $dayCursor->copy()->setTime($h, $m, 0);
+                if ($at->gt($from)) {
+                    $byKey[$key]['hits'][] = $at;
+                }
+            }
+
+            $allFull = collect($byKey)->every(fn ($meta) => count($meta['hits']) >= $neededPerPattern);
+            if ($allFull) {
+                break;
+            }
+            $dayCursor->addDay();
+        }
+
+        return collect($byKey)
+            ->flatMap(fn ($meta) => $meta['hits'])
+            ->sortBy(fn (Carbon $at) => $at->timestamp)
+            ->values()
+            ->all();
     }
 
     public static function scheduleSession(
@@ -156,7 +363,8 @@ class OneToOneSessionService
         Carbon $scheduledAt,
         int $durationMinutes,
         ?User $scheduledBy = null,
-        bool $requireAvailability = true
+        bool $requireAvailability = true,
+        bool $notify = true
     ): void {
         if (! in_array($session->status, [OneToOneSession::STATUS_PENDING, OneToOneSession::STATUS_SCHEDULED], true)) {
             throw new \InvalidArgumentException('لا يمكن جدولة هذه الحصة في حالتها الحالية.');
@@ -216,6 +424,10 @@ class OneToOneSessionService
 
         $joinUrl = url('classroom/join/'.$meeting->code);
         $when = $scheduledAt->format('Y-m-d H:i');
+
+        if (! $notify) {
+            return;
+        }
 
         Notification::create([
             'user_id' => $session->student_id,

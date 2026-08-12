@@ -113,8 +113,8 @@
                             <select name="role" id="role" required class="{{ $fieldClass }} cursor-pointer">
                                 <option value="super_admin" {{ old('role', $user->is_employee ? 'employee' : $user->role) == 'super_admin' ? 'selected' : '' }}>مدير عام</option>
                                 <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>إداري</option>
-                                <option value="instructor" {{ old('role', $user->role) == 'instructor' ? 'selected' : '' }}>مدرب</option>
-                                <option value="teacher" {{ old('role', $user->role) == 'teacher' ? 'selected' : '' }}>مدرس</option>
+                                <option value="instructor" {{ old('role', $user->role) == 'instructor' ? 'selected' : '' }}>معلم</option>
+                                <option value="teacher" {{ old('role', $user->role) == 'teacher' ? 'selected' : '' }}>معلم (مدرس)</option>
                                 <option value="student" {{ old('role', $user->role) == 'student' ? 'selected' : '' }}>{{ __('admin.student_role_label') }}</option>
                                 <option value="parent" {{ old('role', $user->role) == 'parent' ? 'selected' : '' }}>ولي أمر</option>
                                 <option value="employee" {{ old('role', $user->is_employee ? 'employee' : $user->role) == 'employee' ? 'selected' : '' }}>موظف</option>

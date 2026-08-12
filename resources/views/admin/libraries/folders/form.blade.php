@@ -74,6 +74,40 @@
                 <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $folder->is_active ?? true))>
                 ظاهر للطالبات
             </label>
+            <div class="grid gap-4 md:grid-cols-2 pt-2 border-t border-line">
+                <div>
+                    <label class="{{ $label }}">النوع</label>
+                    <select name="kind" class="{{ $field }}">
+                        <option value="videos" @selected(old('kind', $folder->kind ?? 'videos') === 'videos')>فيديو</option>
+                        <option value="materials" @selected(old('kind', $folder->kind ?? '') === 'materials')>ماتريال</option>
+                        <option value="both" @selected(old('kind', $folder->kind ?? '') === 'both')>فيديو + ماتريال</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $label }}">السنة الدراسية</label>
+                    <select name="academic_year_id" class="{{ $field }}">
+                        <option value="">— عامة —</option>
+                        @foreach(($years ?? []) as $y)
+                            <option value="{{ $y->id }}" @selected((string) old('academic_year_id', $folder->academic_year_id) === (string) $y->id)>{{ $y->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $label }}">المعلم (اختياري)</label>
+                    <select name="instructor_id" class="{{ $field }}">
+                        <option value="">— الكل / الإدارة —</option>
+                        @foreach(($instructors ?? []) as $ins)
+                            <option value="{{ $ins->id }}" @selected((string) old('instructor_id', $folder->instructor_id) === (string) $ins->id)>{{ $ins->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="requires_library_entitlement" value="1" @checked(old('requires_library_entitlement', $folder->requires_library_entitlement ?? true))>
+                        يتطلب اشتراك باقة مكتبات
+                    </label>
+                </div>
+            </div>
         </article>
 
         <button class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-semibold text-white">

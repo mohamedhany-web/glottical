@@ -187,33 +187,60 @@ class PlacementController extends Controller
             $slots = OneToOneAvailabilityService::availableSlots(
                 $instructorId,
                 now()->addHour(),
-                now()->addWeeks(3),
+                now()->addWeeks(5),
                 $duration
-            )->take(48)->map(fn ($slot) => [
+            )->take(120)->map(fn ($slot) => [
                 'starts_at' => $slot['starts_at'] instanceof Carbon
                     ? $slot['starts_at']->format('Y-m-d H:i:s')
                     : (string) $slot['starts_at'],
                 'label' => $slot['label'] ?? null,
+                'day_of_week' => $slot['starts_at'] instanceof Carbon
+                    ? (int) $slot['starts_at']->dayOfWeekIso
+                    : (int) Carbon::parse($slot['starts_at'])->dayOfWeekIso,
+                'time' => $slot['starts_at'] instanceof Carbon
+                    ? $slot['starts_at']->format('H:i')
+                    : Carbon::parse($slot['starts_at'])->format('H:i'),
             ])->values();
 
             // Build labels if service didn't include them
             $slots = $slots->map(function (array $slot) {
-                if (! empty($slot['label'])) {
-                    return $slot;
-                }
                 $at = Carbon::parse($slot['starts_at']);
+                if (empty($slot['label'])) {
+                    $slot['label'] = $at->locale('ar')->translatedFormat('D j M · H:i');
+                }
+                $slot['starts_at'] = $at->format('Y-m-d H:i:s');
+                $slot['day_of_week'] = (int) $at->dayOfWeekIso;
+                $slot['time'] = $at->format('H:i');
 
-                return [
-                    'starts_at' => $at->format('Y-m-d H:i:s'),
-                    'label' => $at->locale('ar')->translatedFormat('D j M · H:i'),
-                ];
+                return $slot;
             });
+
+            $dayLabels = OneToOneAvailabilityService::dayLabels();
+            $weeklyWindows = OneToOneAvailabilityService::rulesForInstructor($instructorId)
+                ->map(function ($rule) use ($dayLabels) {
+                    $start = is_string($rule->start_time) ? substr($rule->start_time, 0, 5) : $rule->start_time->format('H:i');
+                    $end = is_string($rule->end_time) ? substr($rule->end_time, 0, 5) : $rule->end_time->format('H:i');
+                    $day = (int) $rule->day_of_week;
+
+                    return [
+                        'day_of_week' => $day,
+                        'day_label' => $dayLabels[$day] ?? (string) $day,
+                        'start_time' => $start,
+                        'end_time' => $end,
+                        'slot_duration_minutes' => (int) ($rule->slot_duration_minutes ?: OneToOneSession::defaultDurationMinutes()),
+                        'label' => ($dayLabels[$day] ?? $day).' · '.$start,
+                    ];
+                })
+                ->unique(fn ($w) => $w['day_of_week'].'|'.$w['start_time'])
+                ->values();
 
             return response()->json([
                 'ok' => true,
                 'mode' => 'private',
                 'duration_minutes' => $duration,
                 'slots' => $slots,
+                'weekly_windows' => $weeklyWindows,
+                'day_labels' => $dayLabels,
                 'empty_hint' => $slots->isEmpty()
                     ? 'لا مواعيد متاحة لهذا المعلم خلال الأسابيع القادمة. تأكد من ضبط جدول توافره 1:1.'
                     : null,
@@ -254,11 +281,18 @@ class PlacementController extends Controller
     {
         $data = $request->validate([
             'mode' => ['required', 'in:private,group'],
+            'booking_style' => ['nullable', 'in:single,monthly,multi'],
             'student_id' => ['required', 'integer', 'exists:users,id'],
             'student_service_entitlement_id' => ['required', 'integer', 'exists:student_service_entitlements,id'],
             'instructor_id' => ['nullable', 'integer', 'exists:users,id'],
             'tutoring_group_id' => ['nullable', 'integer', 'exists:tutoring_groups,id'],
-            'scheduled_at' => ['required', 'date', 'after:now'],
+            'scheduled_at' => ['nullable', 'date', 'after:now'],
+            'scheduled_ats' => ['nullable', 'array', 'max:24'],
+            'scheduled_ats.*' => ['date', 'after:now'],
+            'weeks' => ['nullable', 'integer', 'min:1', 'max:8'],
+            'weekly_slots' => ['nullable', 'array', 'max:3'],
+            'weekly_slots.*.day_of_week' => ['nullable', 'integer', 'min:1', 'max:7'],
+            'weekly_slots.*.time' => ['nullable', 'string', 'max:8'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -304,37 +338,66 @@ class PlacementController extends Controller
             return back()->withInput()->with('error', 'المستخدم المحدد ليس معلماً.');
         }
 
-        $startsAt = Carbon::parse($data['scheduled_at']);
-        $duration = OneToOneSession::defaultDurationMinutes();
-
-        if (! OneToOneAvailabilityService::isSlotAvailable($instructorId, $startsAt, $duration)) {
-            return back()->withInput()->with('error', 'الموعد غير متاح في جدول المعلم أو يتعارض مع حجز آخر.');
-        }
+        $style = $data['booking_style'] ?? 'single';
+        $student = User::query()->findOrFail($entitlement->user_id);
+        $notes = trim(($data['notes'] ?? '')."\nتسكين من لوحة الطلاب والخدمات");
 
         try {
-            $session = OneToOneSession::create([
-                'student_service_entitlement_id' => $entitlement->id,
-                'instructor_id' => $instructor->id,
-                'student_id' => $entitlement->user_id,
-                'session_number' => (int) OneToOneSession::query()->where('student_id', $entitlement->user_id)->max('session_number') + 1,
-                'duration_minutes' => $duration,
-                'status' => OneToOneSession::STATUS_PENDING,
-                'booked_by_user_id' => $request->user()->id,
-                'notes' => trim(($data['notes'] ?? '')."\nتسكين من لوحة الطلاب والخدمات"),
-            ]);
+            if ($style === 'monthly') {
+                $weekly = collect($data['weekly_slots'] ?? [])
+                    ->filter(fn ($row) => ! empty($row['day_of_week']) && ! empty($row['time']))
+                    ->values()
+                    ->all();
+                $sessions = OneToOneSessionService::bookMonthlySeriesWithInstructor(
+                    $student,
+                    $instructor,
+                    $weekly,
+                    (int) ($data['weeks'] ?? 4),
+                    $entitlement,
+                    $request->user(),
+                    $notes
+                );
+                $first = $sessions->first();
 
-            OneToOneSessionService::scheduleSession(
-                $session,
-                $startsAt,
-                $duration,
-                $request->user(),
-                true
-            );
-        } catch (\InvalidArgumentException $e) {
-            if (isset($session) && $session->exists) {
-                $session->delete();
+                return redirect()
+                    ->route('admin.one-to-one-sessions.index', ['student_id' => $student->id])
+                    ->with('success', 'تم تثبيت '.$sessions->count().' حصص شهرياً مع المعلم'.($first?->series_id ? ' (سلسلة '.$first->series_id.')' : '').'.');
             }
 
+            if ($style === 'multi') {
+                $ats = $data['scheduled_ats'] ?? [];
+                if (count($ats) < 1) {
+                    return back()->withInput()->with('error', 'اختر موعداً واحداً على الأقل.');
+                }
+                $sessions = OneToOneSessionService::bookMultipleWithInstructor(
+                    $student,
+                    $instructor,
+                    $ats,
+                    $entitlement,
+                    $request->user(),
+                    $notes
+                );
+                $first = $sessions->first();
+
+                return redirect()
+                    ->route('admin.one-to-one-sessions.show', $first)
+                    ->with('success', 'تم حجز '.$sessions->count().' حصص مع نفس المعلم.');
+            }
+
+            if (empty($data['scheduled_at'])) {
+                return back()->withInput()->with('error', 'اختر موعداً.');
+            }
+
+            $sessions = OneToOneSessionService::bookMultipleWithInstructor(
+                $student,
+                $instructor,
+                [$data['scheduled_at']],
+                $entitlement,
+                $request->user(),
+                $notes
+            );
+            $session = $sessions->first();
+        } catch (\InvalidArgumentException $e) {
             return back()->withInput()->with('error', $e->getMessage());
         }
 

@@ -37,6 +37,9 @@ class AdminController extends Controller
         if ($request->filled('role')) {
             if ($request->role === 'employee') {
                 $query->where('is_employee', true);
+            } elseif ($request->role === 'teachers') {
+                // فلتر موحّد للمعلمين (instructor + teacher)
+                $query->whereIn('role', ['instructor', 'teacher']);
             } else {
                 $query->where('role', $request->role);
             }
@@ -1069,7 +1072,10 @@ class AdminController extends Controller
      */
     public function showUser($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::query()
+            ->with('instructorProfile')
+            ->findOrFail($id);
+
         return view('admin.users.show', compact('user'));
     }
 

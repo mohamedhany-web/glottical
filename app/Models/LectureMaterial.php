@@ -10,6 +10,7 @@ class LectureMaterial extends Model
 {
     protected $fillable = [
         'lecture_id',
+        'library_folder_id',
         'file_name',
         'file_path',
         'storage_disk',
@@ -25,6 +26,11 @@ class LectureMaterial extends Model
     public function lecture(): BelongsTo
     {
         return $this->belongsTo(Lecture::class);
+    }
+
+    public function folder(): BelongsTo
+    {
+        return $this->belongsTo(LibraryFolder::class, 'library_folder_id');
     }
 
     public function resolvedDisk(): string

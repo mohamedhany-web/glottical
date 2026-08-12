@@ -54,6 +54,13 @@ class StudentHomeExtrasController extends Controller
         $courses = collect();
         $lectures = collect();
         $typeCounts = [];
+        $libraryFolders = collect();
+
+        $folderIds = collect();
+        if (Schema::hasTable('library_folders') && Schema::hasColumn('library_folders', 'kind')) {
+            $libraryFolders = \App\Services\LibraryFolderAccessService::foldersVisibleTo($user, 'materials')->get();
+            $folderIds = $libraryFolders->pluck('id');
+        }
 
         if (Schema::hasTable('lecture_materials') && Schema::hasTable('student_course_enrollments')) {
             $courseIds = DB::table('student_course_enrollments')
@@ -61,6 +68,7 @@ class StudentHomeExtrasController extends Controller
                 ->when(Schema::hasColumn('student_course_enrollments', 'status'), fn ($query) => $query->where('status', 'active'))
                 ->pluck('advanced_course_id');
 
+            $allLectureIds = collect();
             if ($courseIds->isNotEmpty() && Schema::hasTable('lectures')) {
                 $lectureQuery = Lecture::query()
                     ->whereIn('course_id', $courseIds)
@@ -82,25 +90,42 @@ class StudentHomeExtrasController extends Controller
                 if ($lectureId > 0 && ! $lectures->contains('id', $lectureId)) {
                     $lectureId = 0;
                 }
+            }
 
+            if ($allLectureIds->isNotEmpty() || $folderIds->isNotEmpty()) {
                 $base = LectureMaterial::query()
-                    ->whereIn('lecture_id', $allLectureIds)
                     ->where(function ($query) {
                         $query->where('is_visible_to_student', true)
                             ->orWhereNull('is_visible_to_student');
+                    })
+                    ->where(function ($query) use ($allLectureIds, $folderIds) {
+                        if ($allLectureIds->isNotEmpty()) {
+                            $query->whereIn('lecture_id', $allLectureIds);
+                        }
+                        if ($folderIds->isNotEmpty()) {
+                            $method = $allLectureIds->isNotEmpty() ? 'orWhereIn' : 'whereIn';
+                            $query->{$method}('library_folder_id', $folderIds);
+                        }
                     });
 
-                // عدّادات الأنواع من مجموعة الطالبة الكاملة (قبل فلاتر البحث/النوع)
                 $typeCounts = $this->materialTypeCounts(
                     (clone $base)->get(['file_name', 'file_path'])
                 );
 
                 $materialsQuery = LectureMaterial::query()
-                    ->with(['lecture:id,title,course_id', 'lecture.course:id,title'])
-                    ->whereIn('lecture_id', $allLectureIds)
+                    ->with(['lecture:id,title,course_id', 'lecture.course:id,title', 'folder:id,name_ar,name_en,academic_year_id'])
                     ->where(function ($query) {
                         $query->where('is_visible_to_student', true)
                             ->orWhereNull('is_visible_to_student');
+                    })
+                    ->where(function ($query) use ($allLectureIds, $folderIds) {
+                        if ($allLectureIds->isNotEmpty()) {
+                            $query->whereIn('lecture_id', $allLectureIds);
+                        }
+                        if ($folderIds->isNotEmpty()) {
+                            $method = $allLectureIds->isNotEmpty() ? 'orWhereIn' : 'whereIn';
+                            $query->{$method}('library_folder_id', $folderIds);
+                        }
                     })
                     ->when($courseId > 0, function ($query) use ($courseId) {
                         $query->whereHas('lecture', fn ($lq) => $lq->where('course_id', $courseId));
@@ -163,6 +188,7 @@ class StudentHomeExtrasController extends Controller
             'courses' => $courses,
             'lectures' => $lectures,
             'typeCounts' => $typeCounts,
+            'libraryFolders' => $libraryFolders,
         ]);
     }
 
@@ -225,10 +251,21 @@ class StudentHomeExtrasController extends Controller
 
     public function downloadMaterial(Request $request, LectureMaterial $material): StreamedResponse
     {
-        abort_unless((bool) $material->is_visible_to_student, 404);
+        abort_unless((bool) $material->is_visible_to_student || $material->is_visible_to_student === null, 404);
 
         $user = $request->user();
-        $material->loadMissing('lecture:id,course_id');
+        $material->loadMissing(['lecture:id,course_id', 'folder']);
+
+        if ($material->library_folder_id && $material->folder) {
+            abort_unless(
+                \App\Services\LibraryFolderAccessService::canAccessFolder($user, $material->folder),
+                403,
+                'يلزم اشتراك باقة المكتبات لهذه السنة لتحميل الملف.'
+            );
+
+            return LectureMaterialStorage::download($material);
+        }
+
         $courseId = $material->lecture?->course_id;
         abort_unless($courseId, 404);
 
@@ -288,9 +325,28 @@ class StudentHomeExtrasController extends Controller
         $folders = collect();
         $uncategorizedCount = 0;
         if (Schema::hasTable('library_folders')) {
-            $folders = LibraryFolder::query()
-                ->active()
-                ->ordered()
+            $foldersQuery = LibraryFolder::query()->active()->ordered();
+            if (Schema::hasColumn('library_folders', 'kind')) {
+                $foldersQuery->ofKind(LibraryFolder::KIND_VIDEOS);
+            }
+            // فلترة حسب باقة المكتبات إن وُجدت سنوات
+            if (Schema::hasColumn('library_folders', 'requires_library_entitlement')) {
+                $years = \App\Services\LibraryFolderAccessService::accessibleYearIds($user);
+                if ($years !== ['*'] && $years !== []) {
+                    $foldersQuery->where(function ($q) use ($years) {
+                        $q->where('requires_library_entitlement', false)
+                            ->orWhereIn('academic_year_id', $years)
+                            ->orWhereNull('academic_year_id');
+                    });
+                } elseif ($years === []) {
+                    $foldersQuery->where(function ($q) {
+                        $q->where('requires_library_entitlement', false)
+                            ->orWhereNull('academic_year_id');
+                    });
+                }
+            }
+
+            $folders = $foldersQuery
                 ->withCount(['recordings' => function ($query) use ($sessionIds) {
                     $query->whereIn('session_id', $sessionIds)
                         ->where('status', 'ready')
@@ -317,6 +373,14 @@ class StudentHomeExtrasController extends Controller
                         }
                     })
                     ->first();
+                if ($activeFolder && Schema::hasColumn('library_folders', 'requires_library_entitlement')) {
+                    abort_unless(
+                        \App\Services\LibraryFolderAccessService::canAccessFolder($user, $activeFolder)
+                            || ! $activeFolder->requires_library_entitlement,
+                        403,
+                        'يلزم اشتراك باقة المكتبات لهذه السنة.'
+                    );
+                }
             }
         }
 

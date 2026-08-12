@@ -21,8 +21,8 @@
     $roles = [
         'super_admin' => ['label' => 'مدير عام', 'badge' => 'bg-rose-50 text-rose-700 border-rose-100'],
         'admin' => ['label' => 'إداري', 'badge' => 'bg-rose-50 text-rose-700 border-rose-100'],
-        'instructor' => ['label' => 'مدرب', 'badge' => 'bg-[#f2f5f4] text-accent border-line'],
-        'teacher' => ['label' => 'مدرس', 'badge' => 'bg-[#f2f5f4] text-accent border-line'],
+        'instructor' => ['label' => 'معلم', 'badge' => 'bg-[#f2f5f4] text-accent border-line'],
+        'teacher' => ['label' => 'معلم (مدرس)', 'badge' => 'bg-[#f2f5f4] text-accent border-line'],
         'student' => ['label' => __('admin.student_role_label'), 'badge' => 'bg-emerald-50 text-emerald-700 border-emerald-100'],
         'parent' => ['label' => 'ولي أمر', 'badge' => 'bg-canvas text-ink border-line'],
         'employee' => ['label' => 'موظف', 'badge' => 'bg-amber-50 text-amber-800 border-amber-100'],
@@ -42,7 +42,7 @@
             'trend' => null,
         ],
         [
-            'label' => 'المدربون',
+            'label' => 'المعلمون',
             'value' => number_format($stats['teachers'] ?? 0),
             'meta' => isset($stats['new_teachers_this_month']) ? ('+'.number_format($stats['new_teachers_this_month']).' هذا الشهر') : null,
             'trend' => $trends['teachers'] ?? null,
@@ -64,7 +64,7 @@
         ],
         'instructor' => [
             'count' => (int) (($usersByRole['instructor'] ?? 0) + ($usersByRole['teacher'] ?? 0)),
-            'label' => 'مدربون',
+            'label' => 'معلمون',
             'icon' => 'fas fa-chalkboard-teacher',
         ],
         'student' => [
@@ -174,6 +174,36 @@
         </section>
     @endif
 
+    @unless($isStudents)
+        <section class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+            <p class="mb-3 text-xs font-medium text-muted">اختصارات المعلمين</p>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route($indexRoute, ['role' => 'teachers']) }}"
+                   class="btn-press inline-flex h-9 items-center gap-2 rounded-xl {{ request('role') === 'teachers' ? 'bg-accent text-white' : 'border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent' }} px-4 text-sm font-medium">
+                    <i class="fas fa-chalkboard-teacher text-xs"></i> كل المعلمين
+                </a>
+                @if(Route::has('admin.tutor-work-schedules.index'))
+                    <a href="{{ route('admin.tutor-work-schedules.index') }}"
+                       class="inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                        <i class="fas fa-calendar-alt text-xs"></i> جداول العمل
+                    </a>
+                @endif
+                @if(Route::has('admin.one-to-one-sessions.index'))
+                    <a href="{{ route('admin.one-to-one-sessions.index') }}"
+                       class="inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                        <i class="fas fa-user-clock text-xs"></i> الحصص الخاصة
+                    </a>
+                @endif
+                @if(Route::has('admin.personal-branding.index'))
+                    <a href="{{ route('admin.personal-branding.index') }}"
+                       class="inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-accent-soft hover:text-accent">
+                        <i class="fas fa-id-card text-xs"></i> الملفات العامة
+                    </a>
+                @endif
+            </div>
+        </section>
+    @endunless
+
     <form method="GET" action="{{ route($indexRoute) }}" class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
         <div class="grid gap-3 md:grid-cols-2 {{ $isStudents ? 'xl:grid-cols-3' : 'xl:grid-cols-4' }}">
             <div class="{{ $isStudents ? 'xl:col-span-1' : '' }}">
@@ -187,10 +217,11 @@
                     <label class="mb-1.5 block text-xs font-medium text-muted">الدور</label>
                     <select name="role" class="h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink focus:border-accent focus:ring-accent/20">
                         <option value="">جميع الأدوار</option>
+                        <option value="teachers" @selected(request('role') == 'teachers')>المعلمون (الكل)</option>
                         <option value="super_admin" @selected(request('role') == 'super_admin')>مدير عام</option>
                         <option value="admin" @selected(request('role') == 'admin')>إداري</option>
-                        <option value="instructor" @selected(request('role') == 'instructor')>مدرب</option>
-                        <option value="teacher" @selected(request('role') == 'teacher')>مدرس</option>
+                        <option value="instructor" @selected(request('role') == 'instructor')>معلم</option>
+                        <option value="teacher" @selected(request('role') == 'teacher')>معلم (مدرس)</option>
                         <option value="student" @selected(request('role') == 'student')>{{ __('admin.student_role_label') }}</option>
                         <option value="parent" @selected(request('role') == 'parent')>ولي أمر</option>
                         <option value="employee" @selected(request('role') == 'employee')>موظف</option>
@@ -278,6 +309,16 @@
                                     <a href="{{ route('admin.users.edit', $user->id) }}"
                                        class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-muted hover:bg-accent-soft hover:text-accent"
                                        title="تعديل"><i class="fas fa-pen text-xs"></i></a>
+                                    @if(in_array($user->role, ['instructor', 'teacher'], true) && Route::has('admin.tutor-work-schedules.index'))
+                                        <a href="{{ route('admin.tutor-work-schedules.index', ['instructor_id' => $user->id]) }}"
+                                           class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-muted hover:bg-accent-soft hover:text-accent"
+                                           title="جدول العمل"><i class="fas fa-calendar-alt text-xs"></i></a>
+                                    @endif
+                                    @if(in_array($user->role, ['instructor', 'teacher'], true) && Route::has('public.instructors.show'))
+                                        <a href="{{ route('public.instructors.show', $user->id) }}" target="_blank" rel="noopener"
+                                           class="inline-flex size-9 items-center justify-center rounded-xl border border-line text-muted hover:bg-accent-soft hover:text-accent"
+                                           title="الصفحة العامة"><i class="fas fa-external-link-alt text-xs"></i></a>
+                                    @endif
                                     @if($user->id !== auth()->id())
                                         <button type="button" onclick="deleteUser(this)"
                                                 data-delete-url="{{ route('admin.users.delete', $user->id) }}"

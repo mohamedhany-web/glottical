@@ -481,6 +481,10 @@ Route::post('/service-packages/{servicePackage}/checkout/fawaterak/pay', [\App\H
     ->name('public.service-packages.fawaterak.pay');
 Route::get('/groups/courses', [\App\Http\Controllers\Public\GroupsController::class, 'groupCourses'])->name('public.groups.courses');
 Route::get('/groups/one-to-one', [\App\Http\Controllers\Public\GroupsController::class, 'oneToOneCourses'])->name('public.groups.one-to-one');
+Route::redirect('/teachers', '/instructors', 301);
+Route::get('/teachers/{instructor}', function (\App\Models\User $instructor) {
+    return redirect()->route('public.instructors.show', $instructor, 301);
+})->name('public.teachers.show');
 Route::get('/groups/{slug}', [\App\Http\Controllers\Public\GroupsController::class, 'show'])->name('public.groups.show');
 Route::post('/groups/{slug}/book', [\App\Http\Controllers\Public\GroupsController::class, 'book'])
     ->middleware('throttle:20,1')
@@ -2000,6 +2004,27 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/notifications/{notification}/mark-read', [\App\Http\Controllers\Instructor\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
         Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Instructor\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
         Route::get('/api/notifications/unread-count', [\App\Http\Controllers\Instructor\NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+
+        // مكتبة المناهج — للمعلمين المعتمدين فقط (ليس لكل من يسجّل كمعلم)
+        Route::get('/libraries/curriculum', [\App\Http\Controllers\Instructor\CurriculumLibraryController::class, 'index'])->name('libraries.curriculum.index');
+        Route::get('/libraries/curriculum/courses/{course}', [\App\Http\Controllers\Instructor\CurriculumLibraryController::class, 'showCourse'])->name('libraries.curriculum.course');
+
+        // مكتبة الماتريال (فولدر معلم×سنة)
+        Route::get('/libraries/materials', [\App\Http\Controllers\Instructor\MaterialLibraryController::class, 'index'])->name('libraries.materials.index');
+        Route::post('/libraries/materials/folders', [\App\Http\Controllers\Instructor\MaterialLibraryController::class, 'storeFolder'])->name('libraries.materials.folders.store');
+        Route::get('/libraries/materials/folders/{folder}', [\App\Http\Controllers\Instructor\MaterialLibraryController::class, 'show'])->name('libraries.materials.show');
+        Route::post('/libraries/materials/folders/{folder}/upload', [\App\Http\Controllers\Instructor\MaterialLibraryController::class, 'upload'])->name('libraries.materials.upload');
+        Route::delete('/libraries/materials/folders/{folder}/materials/{material}', [\App\Http\Controllers\Instructor\MaterialLibraryController::class, 'destroyMaterial'])->name('libraries.materials.destroy');
+
+        // تسجيل المحاضرات
+        Route::get('/lecture-recordings', [\App\Http\Controllers\Instructor\LectureRecordingController::class, 'index'])->name('lecture-recordings.index');
+        Route::put('/lecture-recordings/{lecture}', [\App\Http\Controllers\Instructor\LectureRecordingController::class, 'update'])->name('lecture-recordings.update');
+        Route::get('/lecture-recordings/{lecture}/preview', [\App\Http\Controllers\Instructor\LectureRecordingController::class, 'preview'])->name('lecture-recordings.preview');
+
+        // تسعير الكورس (EGP / USD)
+        Route::get('/courses/{course}/pricing', [\App\Http\Controllers\Instructor\CoursePricingController::class, 'edit'])->name('courses.pricing.edit');
+        Route::put('/courses/{course}/pricing', [\App\Http\Controllers\Instructor\CoursePricingController::class, 'update'])->name('courses.pricing.update');
+
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'show'])->name('one-to-one-sessions.show');
         Route::post('/one-to-one-sessions/{oneToOneSession}/schedule', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'schedule'])->name('one-to-one-sessions.schedule');
         Route::post('/one-to-one-sessions/{oneToOneSession}/complete', [\App\Http\Controllers\Instructor\OneToOneSessionController::class, 'complete'])->name('one-to-one-sessions.complete');

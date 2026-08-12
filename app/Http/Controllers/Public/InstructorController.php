@@ -9,10 +9,12 @@ use App\Models\ConsultationSetting;
 use App\Models\InstructorProfile;
 use App\Models\OneToOneWeeklyAvailability;
 use App\Models\ServicePackage;
+use App\Models\TutoringGroup;
 use App\Models\User;
 use App\Services\OneToOneAvailabilityService;
 use App\Services\StudentEntitlementService;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class InstructorController extends Controller
 {
@@ -74,6 +76,18 @@ class InstructorController extends Controller
         $groupCourses = $courses->filter(fn ($c) => ! $c->isOneToOne())->values();
         $oneToOneCourses = $courses->filter(fn ($c) => $c->isOneToOne())->values();
 
+        $privateGroups = collect();
+        if (Schema::hasTable('tutoring_groups')) {
+            $privateGroups = TutoringGroup::query()
+                ->active()
+                ->individual()
+                ->where('instructor_id', $instructor->id)
+                ->orderByDesc('is_featured')
+                ->orderBy('sort_order')
+                ->orderBy('title')
+                ->get(['id', 'title', 'slug', 'price', 'currency', 'duration_minutes', 'image_path', 'instructor_id']);
+        }
+
         $consultationSetting = ConsultationSetting::current();
 
         $weeklyRules = OneToOneWeeklyAvailability::query()
@@ -119,6 +133,7 @@ class InstructorController extends Controller
             'courses',
             'groupCourses',
             'oneToOneCourses',
+            'privateGroups',
             'consultationSetting',
             'weeklyCalendar',
             'introVideoUrl',

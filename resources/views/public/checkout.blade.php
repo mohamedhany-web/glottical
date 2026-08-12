@@ -168,6 +168,13 @@
                                         @if($checkoutHasWalletBalance)
             <p style="margin:0 0 .75rem;font:800 .78rem Tajawal,sans-serif;color:#0B3D91">{{ $isRtl ? 'رصيدك:' : 'Balance:' }} {{ number_format($studentWalletBalance, 2) }} {{ __('public.currency_egp') }}</p>
                                         @endif
+          <div class="gl-ck-field" style="margin:0 0 .85rem">
+            <label for="checkout_currency">{{ $isRtl ? 'العملة' : 'Currency' }}</label>
+            <select id="checkout_currency" class="input-checkout">
+              <option value="EGP" @selected(old('currency', 'EGP') === 'EGP')>{{ $isRtl ? 'جنيه مصري (داخل مصر)' : 'EGP (Egypt)' }}</option>
+              <option value="USD" @selected(old('currency') === 'USD')>{{ $isRtl ? 'دولار أمريكي (خارج مصر)' : 'USD (Abroad)' }}</option>
+            </select>
+          </div>
           <div style="display:grid;gap:.75rem;grid-template-columns:{{ $checkoutHasWalletBalance ? '1fr 1fr' : '1fr' }}">
             <div class="gl-ck-field" style="margin:0">
               <label for="checkout_coupon_code">{{ $isRtl ? 'كود الكوبون' : 'Coupon code' }}</label>
@@ -217,6 +224,7 @@
                                     @csrf
                                         <input type="hidden" name="coupon_code" id="form_coupon_code" value="{{ old('coupon_code', '') }}">
                                         <input type="hidden" name="wallet_credit" id="form_wallet_credit" value="{{ old('wallet_credit', '0') }}">
+                                        <input type="hidden" name="currency" id="form_currency" value="{{ old('currency', 'EGP') }}">
             <div class="gl-ck-field">
               <label>{{ $isRtl ? 'طريقة الدفع' : 'Payment method' }}</label>
                                             <select name="payment_method" x-model="paymentMethod" class="input-checkout" required>

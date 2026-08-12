@@ -115,17 +115,22 @@ class CheckoutController extends Controller
         $request->validate([
             'coupon_code' => 'nullable|string|max:64',
             'wallet_credit' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|in:EGP,USD,egp,usd',
         ]);
 
         $course = AdvancedCourse::where('id', $courseId)
             ->where('is_active', true)
             ->firstOrFail();
 
+        $currency = strtoupper((string) $request->input('currency', 'EGP')) === 'USD' ? 'USD' : 'EGP';
+
         $pricing = CourseCheckoutPricingService::resolve(
             Auth::user(),
             $course,
             $request->input('coupon_code'),
-            (float) $request->input('wallet_credit', 0)
+            (float) $request->input('wallet_credit', 0),
+            null,
+            $currency
         );
 
         if (! $pricing['ok']) {
@@ -377,13 +382,18 @@ class CheckoutController extends Controller
         $request->validate([
             'coupon_code' => 'nullable|string|max:64',
             'wallet_credit' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|in:EGP,USD,egp,usd',
         ]);
+
+        $currency = strtoupper((string) $request->input('currency', 'EGP')) === 'USD' ? 'USD' : 'EGP';
 
         $pricing = CourseCheckoutPricingService::resolve(
             Auth::user(),
             $course,
             $request->input('coupon_code'),
-            (float) $request->input('wallet_credit', 0)
+            (float) $request->input('wallet_credit', 0),
+            null,
+            $currency
         );
 
         if (! $pricing['ok']) {
@@ -402,6 +412,7 @@ class CheckoutController extends Controller
             'discount_amount' => $pricing['discount_amount'],
             'wallet_credit_amount' => $pricing['wallet_credit_amount'],
             'amount' => $pricing['final_amount'],
+            'currency' => $currency,
             'billing_mode' => $course->billing_mode ?? CourseSubscriptionService::BILLING_ONE_TIME,
             'payment_method' => 'online',
             'payment_proof' => null,
@@ -517,7 +528,7 @@ class CheckoutController extends Controller
             $phone = '0000000000';
         }
 
-        $currency = (string) config('fawaterak.currency', 'EGP');
+        $currency = $order->currencyCode() ?: (string) config('fawaterak.currency', 'EGP');
         $cartTotal = number_format($amount, 2, '.', '');
         $itemPrice = $cartTotal;
 
@@ -656,7 +667,7 @@ class CheckoutController extends Controller
         }
 
         $amount = (float) $order->amount;
-        $currency = (string) config('fawaterak.currency', 'EGP');
+        $currency = $order->currencyCode() ?: (string) config('fawaterak.currency', 'EGP');
         $cartTotal = number_format($amount, 2, '.', '');
         $itemPrice = $cartTotal;
 
@@ -1095,13 +1106,18 @@ class CheckoutController extends Controller
         $request->validate([
             'coupon_code' => 'nullable|string|max:64',
             'wallet_credit' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|in:EGP,USD,egp,usd',
         ]);
+
+        $currency = strtoupper((string) $request->input('currency', 'EGP')) === 'USD' ? 'USD' : 'EGP';
 
         $pricing = CourseCheckoutPricingService::resolve(
             Auth::user(),
             $course,
             $request->input('coupon_code'),
-            (float) $request->input('wallet_credit', 0)
+            (float) $request->input('wallet_credit', 0),
+            null,
+            $currency
         );
 
         if (! $pricing['ok']) {
@@ -1161,6 +1177,7 @@ class CheckoutController extends Controller
                 'discount_amount' => $pricing['discount_amount'],
                 'wallet_credit_amount' => $pricing['wallet_credit_amount'],
                 'amount' => $pricing['final_amount'],
+                'currency' => $currency,
                 'billing_mode' => $course->billing_mode ?? CourseSubscriptionService::BILLING_ONE_TIME,
                 'payment_method' => $request->payment_method === 'wallet' ? 'bank_transfer' : $request->payment_method,
                 'payment_proof' => $paymentProofPath,

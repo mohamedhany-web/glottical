@@ -197,7 +197,7 @@
                         </li>
                         <li class="flex items-start gap-2.5">
                             <i class="fas fa-check-circle mt-0.5 shrink-0 text-accent"></i>
-                            <span>أضف نبذة تعريفية للمدربين لعرضها في صفحة الكورس.</span>
+                            <span>أضف نبذة تعريفية للمعلمين لعرضها في صفحة الكورس.</span>
                         </li>
                     </ul>
                 </article>

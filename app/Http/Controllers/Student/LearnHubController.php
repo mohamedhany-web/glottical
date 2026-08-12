@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\StudentLearnHubService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -27,8 +28,13 @@ class LearnHubController extends Controller
         return view('student.learn.index', $payload);
     }
 
-    public function teacher(Request $request, User $instructor, StudentLearnHubService $learn): View
+    public function teacher(Request $request, User $instructor, StudentLearnHubService $learn): View|RedirectResponse
     {
+        // توحيد ملف المعلم: الصفحة العامة بدل نسخة داخلية مكررة
+        if ($instructor->isInstructor() || $instructor->isTeacher()) {
+            return redirect()->route('public.instructors.show', $instructor);
+        }
+
         $payload = $learn->teacherPage($request->user(), $instructor);
 
         return view('student.learn.teacher', $payload);

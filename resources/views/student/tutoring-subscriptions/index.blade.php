@@ -20,7 +20,7 @@
             </a>
         @empty
             <div class="sm:col-span-2 rounded-2xl border border-dashed border-line px-4 py-12 text-center text-muted">
-                لا توجد باقات نشطة. <a href="{{ route('public.groups.one-to-one') }}" class="text-accent">تصفّح المجموعات الفردية</a>
+                لا توجد باقات نشطة. <a href="{{ route('public.instructors.index') }}" class="text-accent">تصفّح المعلمين والحصص الخاصة</a>
             </div>
         @endforelse
     </div>

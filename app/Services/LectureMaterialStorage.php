@@ -74,8 +74,28 @@ class LectureMaterialStorage
      */
     public static function store(UploadedFile $file, int $lectureId): string
     {
+        return self::storeInDirectory($file, trim(self::DIRECTORY, '/').'/'.$lectureId);
+    }
+
+    /**
+     * رفع ملف داخل فولدر معلم×سنة (بدون محاضرة).
+     */
+    public static function storeForFolder(UploadedFile $file, int $folderId): string
+    {
+        return self::storeInDirectory($file, trim(self::DIRECTORY, '/').'/folders/'.$folderId);
+    }
+
+    /**
+     * رفع تسجيل محاضرة من جهاز المعلم.
+     */
+    public static function storeLectureRecording(UploadedFile $file, int $lectureId): string
+    {
+        return self::storeInDirectory($file, 'lecture-recordings/'.$lectureId);
+    }
+
+    private static function storeInDirectory(UploadedFile $file, string $dir): string
+    {
         $disk = self::resolvedDisk();
-        $dir = trim(self::DIRECTORY, '/').'/'.$lectureId;
         $ext = strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'bin');
         $ext = preg_replace('/[^a-z0-9]/', '', $ext) ?: 'bin';
         $name = Str::uuid()->toString().'.'.$ext;
@@ -88,7 +108,7 @@ class LectureMaterialStorage
         }
 
         if (! is_string($stored) || $stored === '') {
-            throw new \RuntimeException('فشل حفظ ملف الماتريال على التخزين السحابي.');
+            throw new \RuntimeException('فشل حفظ الملف على التخزين.');
         }
 
         return $stored;

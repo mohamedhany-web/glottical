@@ -173,6 +173,10 @@ class AdvancedCourseController extends Controller
             'duration_minutes' => 'nullable|integer|min:0|max:59',
             'price' => 'nullable|numeric|min:0',
             'price_after_discount' => 'nullable|numeric|min:0',
+            'price_egp' => 'nullable|numeric|min:0',
+            'price_egp_after_discount' => 'nullable|numeric|min:0',
+            'price_usd' => 'nullable|numeric|min:0',
+            'price_usd_after_discount' => 'nullable|numeric|min:0',
             'delivery_type' => 'required|in:group,one_to_one',
             'billing_mode' => 'nullable|in:one_time,monthly',
             'monthly_price' => 'nullable|numeric|min:0',
@@ -228,6 +232,10 @@ class AdvancedCourseController extends Controller
                 'duration_hours',
                 'duration_minutes',
                 'price',
+                'price_egp',
+                'price_egp_after_discount',
+                'price_usd',
+                'price_usd_after_discount',
                 'delivery_type',
                 'billing_mode',
                 'monthly_price',
@@ -259,6 +267,10 @@ class AdvancedCourseController extends Controller
 
         $data['level'] = 'beginner';
         $data['price'] = $data['price'] ?? 0;
+        if ($request->filled('price_egp')) {
+            $data['price'] = $data['price_egp'];
+            $data['price_after_discount'] = $request->input('price_egp_after_discount');
+        }
         $list = (float) $data['price'];
         if ($list > 0
             && $request->filled('price_after_discount')
@@ -395,6 +407,10 @@ class AdvancedCourseController extends Controller
             'duration_minutes' => 'nullable|integer|min:0|max:59',
             'price' => 'nullable|numeric|min:0',
             'price_after_discount' => 'nullable|numeric|min:0',
+            'price_egp' => 'nullable|numeric|min:0',
+            'price_egp_after_discount' => 'nullable|numeric|min:0',
+            'price_usd' => 'nullable|numeric|min:0',
+            'price_usd_after_discount' => 'nullable|numeric|min:0',
             'delivery_type' => 'required|in:group,one_to_one',
             'billing_mode' => 'nullable|in:one_time,monthly',
             'monthly_price' => 'nullable|numeric|min:0',
@@ -441,6 +457,10 @@ class AdvancedCourseController extends Controller
             'duration_hours',
             'duration_minutes',
             'price',
+            'price_egp',
+            'price_egp_after_discount',
+            'price_usd',
+            'price_usd_after_discount',
             'delivery_type',
             'billing_mode',
             'monthly_price',
@@ -454,6 +474,10 @@ class AdvancedCourseController extends Controller
 
         $data['level'] = 'beginner';
         $data['price'] = $data['price'] ?? 0;
+        if ($request->filled('price_egp')) {
+            $data['price'] = $data['price_egp'];
+            $data['price_after_discount'] = $request->input('price_egp_after_discount');
+        }
         $list = (float) $data['price'];
         if ($list > 0
             && $request->filled('price_after_discount')

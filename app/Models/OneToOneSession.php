@@ -31,6 +31,7 @@ class OneToOneSession extends Model
         'classroom_meeting_id',
         'booked_by_user_id',
         'notes',
+        'series_id',
     ];
 
     protected function casts(): array

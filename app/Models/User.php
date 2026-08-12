@@ -1125,4 +1125,50 @@ class User extends Authenticatable
     {
         return $this->teachingAdvancedCourseIds()->isNotEmpty();
     }
+
+    /**
+     * معلم معتمد شغّال مع الأكاديمية (وليس مجرد تسجيل طلب توظيف).
+     * يظهر له أدوات مثل مكتبة المناهج.
+     */
+    public function isAcademyWorkingInstructor(): bool
+    {
+        if (! $this->isInstructor() && ! $this->isTeacher()) {
+            return false;
+        }
+
+        if (! $this->is_active) {
+            return false;
+        }
+
+        // كورس مسند أو فصل/حجز فعلي = يعمل معنا
+        if ($this->hasTeachingCourses()) {
+            return true;
+        }
+
+        if (\Illuminate\Support\Facades\Schema::hasTable('tutoring_groups')) {
+            $hasGroup = \App\Models\TutoringGroup::query()
+                ->where('instructor_id', $this->id)
+                ->exists();
+            if ($hasGroup) {
+                return true;
+            }
+        }
+
+        // اكتمال التوظيف: تفعيل الطلب أو اعتماد الملف العام
+        if (\Illuminate\Support\Facades\Schema::hasTable('tutor_applications')) {
+            $activated = \App\Models\TutorApplication::query()
+                ->where('user_id', $this->id)
+                ->where('status', \App\Models\TutorApplication::STATUS_ACTIVATED)
+                ->exists();
+            if ($activated) {
+                return true;
+            }
+        }
+
+        if ($this->instructorProfile && $this->instructorProfile->status === \App\Models\InstructorProfile::STATUS_APPROVED) {
+            return true;
+        }
+
+        return false;
+    }
 }

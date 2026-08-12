@@ -31,10 +31,10 @@
     $isOneToOne = $course->isOneToOne();
     $from = $from ?? ($isOneToOne ? 'one_to_one' : 'groups');
     $groupsListUrl = $isOneToOne
-        ? route('public.groups.one-to-one')
+        ? route('public.instructors.index')
         : route('public.groups.courses');
     $groupsListLabel = $isOneToOne
-        ? __('landing.groups_page.catalog_solo_title')
+        ? __('landing.nav.instructors')
         : __('landing.groups_page.catalog_group_title');
     $deliveryLabel = $isOneToOne
         ? ($isRtl ? 'فردي 1:1' : '1:1 private')

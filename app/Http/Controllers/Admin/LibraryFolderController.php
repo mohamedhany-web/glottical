@@ -36,6 +36,15 @@ class LibraryFolderController extends Controller
 
     public function create(): View
     {
+        $instructors = \App\Models\User::query()
+            ->whereIn('role', ['instructor', 'teacher'])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+        $years = \Illuminate\Support\Facades\Schema::hasTable('academic_years')
+            ? \App\Models\AcademicYear::query()->ordered()->get(['id', 'name'])
+            : collect();
+
         return view('admin.libraries.folders.form', [
             'mode' => 'create',
             'folder' => new LibraryFolder([
@@ -43,7 +52,11 @@ class LibraryFolderController extends Controller
                 'color' => 'blue',
                 'sort_order' => 0,
                 'is_active' => true,
+                'kind' => LibraryFolder::KIND_VIDEOS,
+                'requires_library_entitlement' => true,
             ]),
+            'instructors' => $instructors,
+            'years' => $years,
         ]);
     }
 
@@ -59,9 +72,20 @@ class LibraryFolderController extends Controller
 
     public function edit(LibraryFolder $folder): View
     {
+        $instructors = \App\Models\User::query()
+            ->whereIn('role', ['instructor', 'teacher'])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+        $years = \Illuminate\Support\Facades\Schema::hasTable('academic_years')
+            ? \App\Models\AcademicYear::query()->ordered()->get(['id', 'name'])
+            : collect();
+
         return view('admin.libraries.folders.form', [
             'mode' => 'edit',
             'folder' => $folder,
+            'instructors' => $instructors,
+            'years' => $years,
         ]);
     }
 
@@ -77,9 +101,10 @@ class LibraryFolderController extends Controller
     public function destroy(LibraryFolder $folder): RedirectResponse
     {
         $folder->recordings()->update(['library_folder_id' => null]);
+        $folder->materials()->update(['library_folder_id' => null]);
         $folder->delete();
 
-        return back()->with('success', 'تم حذف المجلد. الفيديوهات أصبحت بدون مجلد.');
+        return back()->with('success', 'تم حذف المجلد.');
     }
 
     private function validated(Request $request, ?LibraryFolder $folder = null): array
@@ -99,6 +124,10 @@ class LibraryFolderController extends Controller
             'color' => ['required', Rule::in(LibraryFolder::COLORS)],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_active' => ['nullable', 'boolean'],
+            'instructor_id' => ['nullable', 'integer', 'exists:users,id'],
+            'academic_year_id' => ['nullable', 'integer', 'exists:academic_years,id'],
+            'kind' => ['required', Rule::in([LibraryFolder::KIND_VIDEOS, LibraryFolder::KIND_MATERIALS, LibraryFolder::KIND_BOTH])],
+            'requires_library_entitlement' => ['nullable', 'boolean'],
         ]);
 
         $slug = trim((string) ($data['slug'] ?? ''));
@@ -116,6 +145,10 @@ class LibraryFolderController extends Controller
             'color' => $data['color'],
             'sort_order' => (int) ($data['sort_order'] ?? 0),
             'is_active' => $request->boolean('is_active'),
+            'instructor_id' => $data['instructor_id'] ?? null,
+            'academic_year_id' => $data['academic_year_id'] ?? null,
+            'kind' => $data['kind'],
+            'requires_library_entitlement' => $request->boolean('requires_library_entitlement', true),
         ];
     }
 }

@@ -84,6 +84,10 @@ class AdvancedCourse extends Model
         'duration_minutes',
         'price',
         'price_after_discount',
+        'price_egp',
+        'price_egp_after_discount',
+        'price_usd',
+        'price_usd_after_discount',
         'thumbnail',
         'requirements',
         'prerequisites',
@@ -112,6 +116,10 @@ class AdvancedCourse extends Model
         'ends_at' => 'datetime',
         'price' => 'decimal:2',
         'price_after_discount' => 'decimal:2',
+        'price_egp' => 'decimal:2',
+        'price_egp_after_discount' => 'decimal:2',
+        'price_usd' => 'decimal:2',
+        'price_usd_after_discount' => 'decimal:2',
         'monthly_price' => 'decimal:2',
         'monthly_price_after_discount' => 'decimal:2',
         'rating' => 'decimal:2',
@@ -300,21 +308,45 @@ class AdvancedCourse extends Model
     /**
      * السعر الأساسي المعروض كـ «قبل الخصم» على البطاقات (حقل price).
      */
-    public function listPriceAmount(): float
+    public function listPriceAmount(?string $currency = null): float
     {
+        $currency = strtoupper((string) ($currency ?: 'EGP'));
+        if ($currency === 'USD') {
+            $v = $this->price_usd;
+            if ($v !== null && $v !== '') {
+                return round(max(0, (float) $v), 2);
+            }
+        }
+        if ($currency === 'EGP') {
+            $v = $this->price_egp;
+            if ($v !== null && $v !== '') {
+                return round(max(0, (float) $v), 2);
+            }
+        }
+
         return round(max(0, (float) ($this->price ?? 0)), 2);
     }
 
     /**
      * السعر الفعلي للشراء قبل كوبون المنصة/المحفظة: بعد الخصم الترويجي إن وُجد، وإلا السعر الأساسي.
      */
-    public function effectivePurchasePrice(): float
+    public function effectivePurchasePrice(?string $currency = null): float
     {
-        $list = $this->listPriceAmount();
+        $currency = strtoupper((string) ($currency ?: 'EGP'));
+        $list = $this->listPriceAmount($currency);
         if ($list <= 0) {
             return 0.0;
         }
-        $sale = $this->price_after_discount;
+
+        $sale = match ($currency) {
+            'USD' => $this->price_usd_after_discount,
+            default => $this->price_egp_after_discount,
+        };
+        // توافق مع الحقل القديم إن لم تُملأ الأسعار المزدوجة
+        if (($sale === null || $sale === '') && $currency === 'EGP' && ($this->price_egp === null || $this->price_egp === '')) {
+            $sale = $this->price_after_discount;
+        }
+
         if ($sale === null || $sale === '') {
             return $list;
         }
@@ -329,13 +361,19 @@ class AdvancedCourse extends Model
     /**
      * هل يُعرض على البطاقة سعران (قبل وبعد خصم ترويجي)؟
      */
-    public function hasPromotionalPrice(): bool
+    public function hasPromotionalPrice(?string $currency = null): bool
     {
-        $list = $this->listPriceAmount();
+        $currency = strtoupper((string) ($currency ?: 'EGP'));
+        $list = $this->listPriceAmount($currency);
         if ($list <= 0) {
             return false;
         }
-        $sale = $this->price_after_discount;
+        $sale = match ($currency) {
+            'USD' => $this->price_usd_after_discount,
+            default => ($this->price_egp_after_discount !== null && $this->price_egp_after_discount !== '')
+                ? $this->price_egp_after_discount
+                : $this->price_after_discount,
+        };
         if ($sale === null || $sale === '') {
             return false;
         }
@@ -380,13 +418,13 @@ class AdvancedCourse extends Model
     /**
      * السعر المعروض عند الدفع حسب نمط الفوترة.
      */
-    public function effectiveCheckoutPrice(): float
+    public function effectiveCheckoutPrice(?string $currency = null): float
     {
         if ($this->isMonthlyBilling()) {
             return $this->effectiveMonthlyPrice();
         }
 
-        return $this->effectivePurchasePrice();
+        return $this->effectivePurchasePrice($currency);
     }
 
     /**

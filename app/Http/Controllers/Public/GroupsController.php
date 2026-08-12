@@ -101,16 +101,10 @@ class GroupsController extends Controller
         ]);
     }
 
-    public function oneToOneCourses(): View
+    public function oneToOneCourses(): RedirectResponse
     {
-        $groups = $this->individualQuery()->paginate(12);
-        $oneToOneCount = $groups->total();
-
-        return view('public.groups-one-to-one', [
-            'groups' => $groups,
-            'courses' => $groups,
-            'oneToOneCount' => $oneToOneCount,
-        ]);
+        // توحيد مدخل الحصص الخاصة تحت صفحة المعلمين
+        return redirect()->route('public.instructors.index', ['focus' => 'private']);
     }
 
     public function show(string $slug): View

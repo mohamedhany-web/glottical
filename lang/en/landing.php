@@ -18,7 +18,7 @@ return [
         'categories' => 'Categories',
         'community' => 'Community',
         'portfolio' => 'Results & Work',
-        'instructors' => 'Instructors',
+        'instructors' => 'Teachers',
         'pricing' => 'Pricing & plans',
         'services' => 'Services',
         'login' => 'Login',

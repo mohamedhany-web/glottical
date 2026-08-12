@@ -6,6 +6,7 @@
     $teachingCourseIds = $user->teachingAdvancedCourseIds();
     $myCoursesCount = $teachingCourseIds->count();
     $hasTeachingCourses = $myCoursesCount > 0;
+    $canAccessCurriculumLibrary = $user->isAcademyWorkingInstructor();
     $totalStudents = $teachingCourseIds->isEmpty()
         ? 0
         : \App\Models\StudentCourseEnrollment::whereIn('advanced_course_id', $teachingCourseIds)->where('status', 'active')->distinct('user_id')->count('user_id');
@@ -167,6 +168,30 @@
             <div class="ins-nav-group mt-2">
                 <span><i class="fas fa-book-open text-[9px] opacity-50"></i> {{ $hasTeachingCourses ? 'الكورسات والأدوات' : 'الأدوات' }}</span>
             </div>
+
+            @if($canAccessCurriculumLibrary && Route::has('instructor.libraries.curriculum.index'))
+            <a href="{{ route('instructor.libraries.curriculum.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('instructor.libraries.curriculum.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-sitemap"></i></span>
+                <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'مكتبة المناهج' : 'Curriculum library' }}</span>
+            </a>
+            @endif
+
+            @if($canAccessCurriculumLibrary && Route::has('instructor.libraries.materials.index'))
+            <a href="{{ route('instructor.libraries.materials.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('instructor.libraries.materials.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-folder-open"></i></span>
+                <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'مكتبة الماتريال' : 'Materials library' }}</span>
+            </a>
+            @endif
+
+            @if(Route::has('instructor.lecture-recordings.index'))
+            <a href="{{ route('instructor.lecture-recordings.index') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('instructor.lecture-recordings.*') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-video"></i></span>
+                <span class="flex-1 truncate">{{ app()->getLocale() === 'ar' ? 'تسجيل المحاضرات' : 'Lecture recordings' }}</span>
+            </a>
+            @endif
 
             @if($hasTeachingCourses && ($isInstructor || $user->hasPermission('instructor.view.courses')))
             <a href="{{ route('instructor.courses.index') }}" @click="{{ $closeSidebar }}"

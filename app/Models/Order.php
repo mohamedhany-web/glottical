@@ -24,6 +24,7 @@ class Order extends Model
         'discount_amount',
         'wallet_credit_amount',
         'amount',
+        'currency',
         'billing_mode',
         'auto_renew',
         'payment_method',
@@ -122,6 +123,10 @@ class Order extends Model
 
     public function currencyCode(): string
     {
+        if (filled($this->currency)) {
+            return strtoupper((string) $this->currency);
+        }
+
         if ($this->order_type === self::TYPE_CUSTOM_SERVICE_PACKAGE) {
             return $this->custom_package_data['currency'] ?? 'USD';
         }

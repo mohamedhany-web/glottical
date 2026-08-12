@@ -45,17 +45,17 @@
       </div>
 
       <div class="sana-inst-hero__actions sana-reveal">
-        <a href="{{ route('public.courses', ['delivery' => 'one_to_one']) }}" class="sana-btn sana-btn--white-outline sana-btn--sm"><i class="fas fa-book-open"></i> {{ __('landing.nav.courses') }}</a>
+        <a href="#teachers-list" class="sana-btn sana-btn--white-outline sana-btn--sm"><i class="fas fa-user-graduate"></i> {{ $isRtl ? 'تصفّح المعلمين' : 'Browse teachers' }}</a>
         <a href="{{ route('public.tutor.apply') }}" class="sana-btn sana-btn--white-outline sana-btn--sm"><i class="fas fa-chalkboard-teacher"></i> {{ $isRtl ? 'انضم كمعلم' : 'Become a teacher' }}</a>
       </div>
     </div>
   </section>
 
-  <section class="sana-section sana-section--white">
+  <section class="sana-section sana-section--white" id="teachers-list">
     <div class="sana-container">
       <div class="sana-head-row sana-reveal" style="margin-bottom:28px">
         <div class="sana-head">
-          <h2 class="sana-head__title">{{ $isRtl ? 'معلّمون' : 'Teachers' }} <span class="hl">{{ $isRtl ? 'جاهزون للحجز' : 'ready to book' }}</span></h2>
+          <h2 class="sana-head__title">{{ $isRtl ? 'المعلمون' : 'Teachers' }} <span class="hl">{{ $isRtl ? 'جاهزون للحجز' : 'ready to book' }}</span></h2>
           <span class="sana-head__line"></span>
         </div>
       </div>
@@ -126,5 +126,10 @@
 </main>
 
 @include('partials.landing.footer')
+@if(request('focus') === 'private')
+<script>
+document.getElementById('teachers-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+</script>
+@endif
 </body>
 </html>
