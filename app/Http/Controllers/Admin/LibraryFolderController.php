@@ -58,6 +58,7 @@ class LibraryFolderController extends Controller
                 'sort_order' => 0,
                 'is_active' => true,
                 'kind' => LibraryFolder::KIND_VIDEOS,
+                'content_theme' => \App\Support\FamilyLibraryThemes::GENERAL,
                 'requires_library_entitlement' => true,
             ]),
             'instructors' => $instructors,
@@ -133,6 +134,7 @@ class LibraryFolderController extends Controller
             'instructor_id' => ['nullable', 'integer', 'exists:users,id'],
             'academic_year_id' => ['nullable', 'integer', 'exists:academic_years,id'],
             'kind' => ['required', Rule::in([LibraryFolder::KIND_VIDEOS, LibraryFolder::KIND_MATERIALS, LibraryFolder::KIND_BOTH])],
+            'content_theme' => ['required', Rule::in(\App\Support\FamilyLibraryThemes::keys())],
             'requires_library_entitlement' => ['nullable', 'boolean'],
         ]);
 
@@ -141,19 +143,23 @@ class LibraryFolderController extends Controller
             $slug = Str::slug($data['name_en'] ?? $data['name_ar']) ?: ('folder-'.Str::random(6));
         }
 
+        $theme = $data['content_theme'] ?? \App\Support\FamilyLibraryThemes::GENERAL;
+        $themeMeta = \App\Support\FamilyLibraryThemes::meta($theme);
+
         return [
             'name_ar' => $data['name_ar'],
             'name_en' => $data['name_en'] ?? null,
             'slug' => $slug,
             'description_ar' => $data['description_ar'] ?? null,
             'description_en' => $data['description_en'] ?? null,
-            'icon' => $data['icon'] ?: 'fas fa-folder',
-            'color' => $data['color'],
+            'icon' => $data['icon'] ?: ($themeMeta['icon'] ?? 'fas fa-folder'),
+            'color' => $data['color'] ?: ($themeMeta['tone'] ?? 'blue'),
             'sort_order' => (int) ($data['sort_order'] ?? 0),
             'is_active' => $request->boolean('is_active'),
             'instructor_id' => $data['instructor_id'] ?? null,
             'academic_year_id' => $data['academic_year_id'] ?? null,
             'kind' => $data['kind'],
+            'content_theme' => $theme,
             'requires_library_entitlement' => $request->boolean('requires_library_entitlement', true),
         ];
     }

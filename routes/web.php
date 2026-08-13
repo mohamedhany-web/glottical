@@ -893,8 +893,11 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/schedule/join/{type}/{id}', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'join'])
             ->whereIn('type', ['private', 'class', 'booking'])
             ->name('student.schedule.join');
+        Route::get('/library', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'libraryHome'])->name('student.library.home');
         Route::get('/library/materials', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'materials'])->name('student.library.materials');
         Route::get('/library/materials/{material}/download', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'downloadMaterial'])->name('student.library.materials.download');
+        Route::get('/library/materials/{material}/experience', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'experienceMaterial'])->name('student.library.materials.experience');
+        Route::get('/library/materials/{material}/experience/raw', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'experienceMaterialRaw'])->name('student.library.materials.experience.raw');
         Route::get('/library/videos', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'videos'])->name('student.library.videos');
         Route::get('/library/videos/{libraryVideo}', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'watchLibraryVideo'])->name('student.library.videos.show');
         Route::get('/library/lecture-recordings/{lecture}', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'watchLectureRecording'])->name('student.library.lecture-recordings.show');

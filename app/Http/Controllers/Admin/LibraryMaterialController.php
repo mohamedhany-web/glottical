@@ -8,9 +8,11 @@ use App\Models\Lecture;
 use App\Models\LectureMaterial;
 use App\Models\LibraryFolder;
 use App\Services\LectureMaterialStorage;
+use App\Support\FamilyLibraryThemes;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -63,6 +65,9 @@ class LibraryMaterialController extends Controller
         if ($request->filled('visibility')) {
             $query->where('is_visible_to_student', $request->visibility === 'visible');
         }
+        if ($request->filled('content_theme')) {
+            $query->where('content_theme', $request->content_theme);
+        }
 
         $materials = $query->paginate(25)->withQueryString();
 
@@ -102,9 +107,12 @@ class LibraryMaterialController extends Controller
                 'sort_order' => 0,
                 'lecture_id' => (int) $request->integer('lecture_id') ?: null,
                 'library_folder_id' => (int) $request->integer('folder_id') ?: null,
+                'content_theme' => FamilyLibraryThemes::GENERAL,
+                'experience_mode' => FamilyLibraryThemes::MODE_DOWNLOAD,
             ]),
             'mode' => 'create',
             'storageDisk' => LectureMaterialStorage::resolvedDisk(),
+            'themes' => FamilyLibraryThemes::labels('ar'),
             'lectures' => Lecture::query()
                 ->with('course:id,title')
                 ->orderByDesc('id')
@@ -122,9 +130,12 @@ class LibraryMaterialController extends Controller
             'lecture_id' => ['nullable', 'exists:lectures,id'],
             'library_folder_id' => ['nullable', 'exists:library_folders,id'],
             'title' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:2000'],
+            'content_theme' => ['nullable', Rule::in(FamilyLibraryThemes::keys())],
+            'experience_mode' => ['nullable', Rule::in([FamilyLibraryThemes::MODE_DOWNLOAD, FamilyLibraryThemes::MODE_VIEW, FamilyLibraryThemes::MODE_PLAY])],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_visible_to_student' => ['nullable', 'boolean'],
-            'file' => ['required', 'file', 'max:51200', 'mimes:pdf,doc,docm,docx,ppt,pptx,xls,xlsx,zip,rar,txt,png,jpg,jpeg,webp,mp3,mp4'],
+            'file' => ['required', 'file', 'max:51200', 'mimes:'.FamilyLibraryThemes::materialMimes()],
         ]);
 
         $lectureId = isset($data['lecture_id']) && $data['lecture_id'] !== '' ? (int) $data['lecture_id'] : null;
@@ -139,6 +150,9 @@ class LibraryMaterialController extends Controller
             ? LectureMaterialStorage::storeForFolder($file, $folderId)
             : LectureMaterialStorage::store($file, (int) $lectureId);
 
+        $theme = $data['content_theme'] ?? FamilyLibraryThemes::detectThemeFromFilename($file->getClientOriginalName());
+        $mode = $data['experience_mode'] ?? FamilyLibraryThemes::detectExperienceMode($file->getClientOriginalName(), $theme);
+
         $material = LectureMaterial::create([
             'lecture_id' => $lectureId,
             'library_folder_id' => $folderId,
@@ -146,6 +160,9 @@ class LibraryMaterialController extends Controller
             'file_path' => $path,
             'storage_disk' => $disk,
             'title' => $data['title'] ?: pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+            'description' => $data['description'] ?? null,
+            'content_theme' => $theme,
+            'experience_mode' => $mode,
             'is_visible_to_student' => $request->boolean('is_visible_to_student', true),
             'sort_order' => (int) ($data['sort_order'] ?? 0),
         ]);
@@ -163,6 +180,7 @@ class LibraryMaterialController extends Controller
             'material' => $material,
             'mode' => 'edit',
             'storageDisk' => LectureMaterialStorage::resolvedDisk(),
+            'themes' => FamilyLibraryThemes::labels('ar'),
             'lectures' => Lecture::query()
                 ->with('course:id,title')
                 ->orderByDesc('id')
@@ -180,9 +198,12 @@ class LibraryMaterialController extends Controller
             'lecture_id' => ['nullable', 'exists:lectures,id'],
             'library_folder_id' => ['nullable', 'exists:library_folders,id'],
             'title' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:2000'],
+            'content_theme' => ['nullable', Rule::in(FamilyLibraryThemes::keys())],
+            'experience_mode' => ['nullable', Rule::in([FamilyLibraryThemes::MODE_DOWNLOAD, FamilyLibraryThemes::MODE_VIEW, FamilyLibraryThemes::MODE_PLAY])],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_visible_to_student' => ['nullable', 'boolean'],
-            'file' => ['nullable', 'file', 'max:51200', 'mimes:pdf,doc,docm,docx,ppt,pptx,xls,xlsx,zip,rar,txt,png,jpg,jpeg,webp,mp3,mp4'],
+            'file' => ['nullable', 'file', 'max:51200', 'mimes:'.FamilyLibraryThemes::materialMimes()],
         ]);
 
         $lectureId = isset($data['lecture_id']) && $data['lecture_id'] !== '' ? (int) $data['lecture_id'] : null;
@@ -191,10 +212,12 @@ class LibraryMaterialController extends Controller
             return back()->withErrors(['lecture_id' => 'اختر محاضرة أو مجلد ماتريال.'])->withInput();
         }
 
+        $fileName = $material->file_name;
         $payload = [
             'lecture_id' => $lectureId,
             'library_folder_id' => $folderId,
             'title' => $data['title'] ?: $material->title,
+            'description' => $data['description'] ?? $material->description,
             'is_visible_to_student' => $request->boolean('is_visible_to_student', true),
             'sort_order' => (int) ($data['sort_order'] ?? 0),
         ];
@@ -208,10 +231,16 @@ class LibraryMaterialController extends Controller
                 : LectureMaterialStorage::store($file, (int) $lectureId);
             $payload['storage_disk'] = $disk;
             $payload['file_name'] = $file->getClientOriginalName();
+            $fileName = $file->getClientOriginalName();
             if (empty($data['title'])) {
                 $payload['title'] = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             }
         }
+
+        $theme = $data['content_theme'] ?? FamilyLibraryThemes::detectThemeFromFilename($fileName, $material->content_theme);
+        $payload['content_theme'] = $theme;
+        $payload['experience_mode'] = $data['experience_mode']
+            ?? FamilyLibraryThemes::detectExperienceMode($fileName, $theme);
 
         $material->update($payload);
 

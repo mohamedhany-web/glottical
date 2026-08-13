@@ -7,9 +7,11 @@ use App\Models\AcademicYear;
 use App\Models\LectureMaterial;
 use App\Models\LibraryFolder;
 use App\Services\LectureMaterialStorage;
+use App\Support\FamilyLibraryThemes;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
@@ -57,17 +59,22 @@ class MaterialLibraryController extends Controller
             'name_en' => ['nullable', 'string', 'max:120'],
             'academic_year_id' => ['required', 'integer', 'exists:academic_years,id'],
             'description_ar' => ['nullable', 'string', 'max:255'],
+            'content_theme' => ['nullable', Rule::in(FamilyLibraryThemes::keys())],
         ]);
+
+        $theme = $data['content_theme'] ?? FamilyLibraryThemes::GENERAL;
+        $meta = FamilyLibraryThemes::meta($theme);
 
         LibraryFolder::create([
             'instructor_id' => $user->id,
             'academic_year_id' => (int) $data['academic_year_id'],
             'kind' => LibraryFolder::KIND_MATERIALS,
+            'content_theme' => $theme,
             'name_ar' => $data['name_ar'],
             'name_en' => $data['name_en'] ?? null,
             'description_ar' => $data['description_ar'] ?? null,
-            'icon' => 'fas fa-folder-open',
-            'color' => 'blue',
+            'icon' => $meta['icon'] ?? 'fas fa-folder-open',
+            'color' => $meta['tone'] ?? 'blue',
             'sort_order' => 0,
             'is_active' => true,
             'requires_library_entitlement' => false,
@@ -92,17 +99,27 @@ class MaterialLibraryController extends Controller
 
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:200'],
-            'file' => ['required', 'file', 'max:51200'],
+            'description' => ['nullable', 'string', 'max:2000'],
+            'content_theme' => ['nullable', Rule::in(FamilyLibraryThemes::keys())],
+            'experience_mode' => ['nullable', Rule::in([FamilyLibraryThemes::MODE_DOWNLOAD, FamilyLibraryThemes::MODE_VIEW, FamilyLibraryThemes::MODE_PLAY])],
+            'file' => ['required', 'file', 'max:51200', 'mimes:'.FamilyLibraryThemes::materialMimes()],
             'is_visible_to_student' => ['nullable', 'boolean'],
         ]);
 
-        $path = LectureMaterialStorage::storeForFolder($request->file('file'), (int) $folder->id);
+        $file = $request->file('file');
+        $path = LectureMaterialStorage::storeForFolder($file, (int) $folder->id);
+        $theme = $data['content_theme']
+            ?? ($folder->content_theme ?: FamilyLibraryThemes::detectThemeFromFilename($file->getClientOriginalName()));
+        $mode = $data['experience_mode'] ?? FamilyLibraryThemes::detectExperienceMode($file->getClientOriginalName(), $theme);
 
         LectureMaterial::create([
             'lecture_id' => null,
             'library_folder_id' => $folder->id,
-            'title' => $data['title'] ?: $request->file('file')->getClientOriginalName(),
-            'file_name' => $request->file('file')->getClientOriginalName(),
+            'title' => $data['title'] ?: $file->getClientOriginalName(),
+            'description' => $data['description'] ?? null,
+            'content_theme' => $theme,
+            'experience_mode' => $mode,
+            'file_name' => $file->getClientOriginalName(),
             'file_path' => $path,
             'storage_disk' => LectureMaterialStorage::resolvedDisk(),
             'is_visible_to_student' => $request->boolean('is_visible_to_student', true),

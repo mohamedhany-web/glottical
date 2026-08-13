@@ -15,6 +15,9 @@ class LectureMaterial extends Model
         'file_path',
         'storage_disk',
         'title',
+        'content_theme',
+        'experience_mode',
+        'description',
         'is_visible_to_student',
         'sort_order',
     ];
@@ -49,5 +52,29 @@ class LectureMaterial extends Model
         }
 
         return LectureMaterialStorage::publicUrl($this);
+    }
+
+    public function experienceUrl(): ?string
+    {
+        if (! $this->file_path) {
+            return null;
+        }
+
+        $mode = $this->experience_mode ?: \App\Support\FamilyLibraryThemes::detectExperienceMode($this->file_name, $this->content_theme);
+        if (in_array($mode, [\App\Support\FamilyLibraryThemes::MODE_VIEW, \App\Support\FamilyLibraryThemes::MODE_PLAY], true)
+            && \App\Support\FamilyLibraryThemes::isPlayableInPlatform($this->file_name, $mode)
+            && \Illuminate\Support\Facades\Route::has('student.library.materials.experience')) {
+            return route('student.library.materials.experience', $this);
+        }
+
+        return $this->downloadUrl();
+    }
+
+    public function themeLabel(?string $locale = null): string
+    {
+        return \App\Support\FamilyLibraryThemes::label(
+            $this->content_theme ?: \App\Support\FamilyLibraryThemes::GENERAL,
+            $locale ?: app()->getLocale()
+        );
     }
 }

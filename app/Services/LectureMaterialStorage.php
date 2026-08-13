@@ -178,6 +178,30 @@ class LectureMaterialStorage
         return Storage::disk($diskName)->download($path, $downloadName);
     }
 
+    /**
+     * قراءة محتوى ملف نصي/HTML للعرض داخل المنصة.
+     */
+    public static function getContents(LectureMaterial $material): ?string
+    {
+        $path = str_replace('\\', '/', ltrim((string) $material->file_path, '/'));
+        if ($path === '') {
+            return null;
+        }
+
+        $diskName = self::resolveExistingDisk($path, self::diskFor($material));
+        if ($diskName === null) {
+            return null;
+        }
+
+        try {
+            $raw = Storage::disk($diskName)->get($path);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return is_string($raw) ? $raw : null;
+    }
+
     public static function publicUrl(?LectureMaterial $material): ?string
     {
         if (! $material || ! is_string($material->file_path) || $material->file_path === '') {

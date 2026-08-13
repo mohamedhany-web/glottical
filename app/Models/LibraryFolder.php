@@ -19,6 +19,7 @@ class LibraryFolder extends Model
         'instructor_id',
         'academic_year_id',
         'kind',
+        'content_theme',
         'name_ar',
         'name_en',
         'slug',
@@ -114,5 +115,15 @@ class LibraryFolder extends Model
         }
 
         return $this->description_ar ? (string) $this->description_ar : null;
+    }
+
+    public function scopeOfTheme($query, string $theme)
+    {
+        return $query->where('content_theme', $theme);
+    }
+
+    public function themeMeta(): array
+    {
+        return \App\Support\FamilyLibraryThemes::meta($this->content_theme ?: \App\Support\FamilyLibraryThemes::GENERAL);
     }
 }

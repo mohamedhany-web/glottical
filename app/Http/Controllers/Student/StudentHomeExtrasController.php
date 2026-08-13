@@ -12,9 +12,11 @@ use App\Models\TutoringCohortEnrollment;
 use App\Services\LectureMaterialStorage;
 use App\Services\LibraryFolderAccessService;
 use App\Services\StudentScheduleService;
+use App\Support\FamilyLibraryThemes;
 use App\Helpers\VideoHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
@@ -33,6 +35,58 @@ class StudentHomeExtrasController extends Controller
         return redirect()->away($url);
     }
 
+    /**
+     * بوابة المكتبة الآمنة — كتب، ألعاب، HTML، أطفال، إسلامي.
+     */
+    public function libraryHome(Request $request): View
+    {
+        $locale = app()->getLocale();
+        $themes = FamilyLibraryThemes::all();
+
+        $materialThemes = [
+            FamilyLibraryThemes::BOOKS,
+            FamilyLibraryThemes::PRESENTATIONS,
+            FamilyLibraryThemes::HTML,
+            FamilyLibraryThemes::GAMES,
+            FamilyLibraryThemes::GENERAL,
+        ];
+        $videoThemes = [
+            FamilyLibraryThemes::KIDS,
+            FamilyLibraryThemes::ISLAMIC,
+            FamilyLibraryThemes::GENERAL,
+        ];
+
+        $sections = [];
+        foreach ($materialThemes as $key) {
+            $meta = $themes[$key];
+            $sections[] = [
+                'key' => $key,
+                'kind' => 'materials',
+                'label' => $locale === 'en' ? $meta['en'] : $meta['ar'],
+                'hint' => $locale === 'en' ? $meta['hint_en'] : $meta['hint_ar'],
+                'icon' => $meta['icon'],
+                'tone' => $meta['tone'],
+                'url' => route('student.library.materials', ['theme' => $key]),
+            ];
+        }
+        foreach ($videoThemes as $key) {
+            $meta = $themes[$key];
+            $sections[] = [
+                'key' => $key,
+                'kind' => 'videos',
+                'label' => $locale === 'en' ? $meta['en'] : $meta['ar'],
+                'hint' => $locale === 'en' ? $meta['hint_en'] : $meta['hint_ar'],
+                'icon' => $meta['icon'],
+                'tone' => $meta['tone'],
+                'url' => route('student.library.videos', ['theme' => $key]),
+            ];
+        }
+
+        return view('student.library.home', [
+            'sections' => $sections,
+        ]);
+    }
+
     public function materials(Request $request): View
     {
         $user = $request->user();
@@ -42,8 +96,12 @@ class StudentHomeExtrasController extends Controller
         $folderParam = $request->query('folder');
         $type = strtolower(trim((string) $request->query('type', 'all')));
         $sort = (string) $request->query('sort', 'newest');
+        $theme = strtolower(trim((string) $request->query('theme', '')));
+        if ($theme !== '' && ! in_array($theme, FamilyLibraryThemes::keys(), true)) {
+            $theme = '';
+        }
 
-        $allowedTypes = ['all', 'pdf', 'doc', 'ppt', 'sheet', 'zip', 'image', 'audio', 'video', 'other'];
+        $allowedTypes = ['all', 'pdf', 'doc', 'ppt', 'sheet', 'zip', 'html', 'image', 'audio', 'video', 'other'];
         if (! in_array($type, $allowedTypes, true)) {
             $type = 'all';
         }
@@ -84,29 +142,33 @@ class StudentHomeExtrasController extends Controller
             }
         }
 
-        if (Schema::hasTable('lecture_materials') && Schema::hasTable('student_course_enrollments')) {
-            $courseIds = DB::table('student_course_enrollments')
-                ->where('user_id', $user->id)
-                ->when(Schema::hasColumn('student_course_enrollments', 'status'), fn ($query) => $query->where('status', 'active'))
-                ->pluck('advanced_course_id');
-
+        if (Schema::hasTable('lecture_materials')) {
+            $courseIds = collect();
             $allLectureIds = collect();
-            if ($courseIds->isNotEmpty() && Schema::hasTable('lectures')) {
-                $allLectureIds = Lecture::query()->whereIn('course_id', $courseIds)->pluck('id');
 
-                $courses = \App\Models\AdvancedCourse::query()
-                    ->whereIn('id', $courseIds)
-                    ->orderBy('title')
-                    ->get(['id', 'title']);
+            if (Schema::hasTable('student_course_enrollments')) {
+                $courseIds = DB::table('student_course_enrollments')
+                    ->where('user_id', $user->id)
+                    ->when(Schema::hasColumn('student_course_enrollments', 'status'), fn ($query) => $query->where('status', 'active'))
+                    ->pluck('advanced_course_id');
 
-                $lectures = Lecture::query()
-                    ->whereIn('course_id', $courseIds)
-                    ->when($courseId > 0, fn ($query) => $query->where('course_id', $courseId))
-                    ->orderBy('title')
-                    ->get(['id', 'title', 'course_id']);
+                if ($courseIds->isNotEmpty() && Schema::hasTable('lectures')) {
+                    $allLectureIds = Lecture::query()->whereIn('course_id', $courseIds)->pluck('id');
 
-                if ($lectureId > 0 && ! $lectures->contains('id', $lectureId)) {
-                    $lectureId = 0;
+                    $courses = \App\Models\AdvancedCourse::query()
+                        ->whereIn('id', $courseIds)
+                        ->orderBy('title')
+                        ->get(['id', 'title']);
+
+                    $lectures = Lecture::query()
+                        ->whereIn('course_id', $courseIds)
+                        ->when($courseId > 0, fn ($query) => $query->where('course_id', $courseId))
+                        ->orderBy('title')
+                        ->get(['id', 'title', 'course_id']);
+
+                    if ($lectureId > 0 && ! $lectures->contains('id', $lectureId)) {
+                        $lectureId = 0;
+                    }
                 }
             }
 
@@ -152,7 +214,10 @@ class StudentHomeExtrasController extends Controller
                     }
                 };
 
-                $base = LectureMaterial::query()->where($scopeMaterials);
+                $base = LectureMaterial::query()->where($scopeMaterials)
+                    ->when($theme !== '' && Schema::hasColumn('lecture_materials', 'content_theme'), function ($query) use ($theme) {
+                        $query->where('content_theme', $theme);
+                    });
                 $typeCounts = $this->materialTypeCounts((clone $base)->get(['file_name', 'file_path']));
 
                 $materialsQuery = LectureMaterial::query()
@@ -177,12 +242,15 @@ class StudentHomeExtrasController extends Controller
                                         ->orWhereHas('course', fn ($cq) => $cq->where('title', 'like', '%'.$q.'%'));
                                 });
                         });
+                    })
+                    ->when($theme !== '' && Schema::hasColumn('lecture_materials', 'content_theme'), function ($query) use ($theme) {
+                        $query->where('content_theme', $theme);
                     });
 
                 if ($type !== 'all') {
                     $exts = $this->materialTypeExtensions($type);
                     if ($type === 'other') {
-                        $known = ['pdf', 'doc', 'docx', 'docm', 'ppt', 'pptx', 'xls', 'xlsx', 'zip', 'rar', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'mp3', 'wav', 'm4a', 'mp4', 'mov', 'webm'];
+                        $known = ['pdf', 'doc', 'docx', 'docm', 'ppt', 'pptx', 'xls', 'xlsx', 'zip', 'rar', 'html', 'htm', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'mp3', 'wav', 'm4a', 'mp4', 'mov', 'webm'];
                         $materialsQuery->where(function ($query) use ($known) {
                             foreach ($known as $ext) {
                                 $query->where(function ($inner) use ($ext) {
@@ -221,6 +289,7 @@ class StudentHomeExtrasController extends Controller
             'courseId' => $courseId,
             'lectureId' => $lectureId,
             'typeFilter' => $type,
+            'themeFilter' => $theme,
             'sort' => $sort,
             'courses' => $courses,
             'lectures' => $lectures,
@@ -228,6 +297,7 @@ class StudentHomeExtrasController extends Controller
             'libraryFolders' => $libraryFolders,
             'activeFolder' => $activeFolder,
             'uncategorizedCount' => $uncategorizedCount,
+            'familyThemes' => FamilyLibraryThemes::all(),
         ]);
     }
 
@@ -242,6 +312,7 @@ class StudentHomeExtrasController extends Controller
             'ppt' => ['ppt', 'pptx'],
             'sheet' => ['xls', 'xlsx'],
             'zip' => ['zip', 'rar'],
+            'html' => ['html', 'htm'],
             'image' => ['png', 'jpg', 'jpeg', 'webp', 'gif'],
             'audio' => ['mp3', 'wav', 'm4a'],
             'video' => ['mp4', 'mov', 'webm'],
@@ -262,6 +333,7 @@ class StudentHomeExtrasController extends Controller
             'ppt' => 0,
             'sheet' => 0,
             'zip' => 0,
+            'html' => 0,
             'image' => 0,
             'audio' => 0,
             'video' => 0,
@@ -277,6 +349,7 @@ class StudentHomeExtrasController extends Controller
                 in_array($ext, ['ppt', 'pptx'], true) => 'ppt',
                 in_array($ext, ['xls', 'xlsx'], true) => 'sheet',
                 in_array($ext, ['zip', 'rar'], true) => 'zip',
+                in_array($ext, ['html', 'htm'], true) => 'html',
                 in_array($ext, ['png', 'jpg', 'jpeg', 'webp', 'gif'], true) => 'image',
                 in_array($ext, ['mp3', 'wav', 'm4a'], true) => 'audio',
                 in_array($ext, ['mp4', 'mov', 'webm'], true) => 'video',
@@ -290,9 +363,60 @@ class StudentHomeExtrasController extends Controller
 
     public function downloadMaterial(Request $request, LectureMaterial $material): StreamedResponse
     {
+        $this->assertStudentCanAccessMaterial($request->user(), $material);
+
+        return LectureMaterialStorage::download($material);
+    }
+
+    /**
+     * تشغيل HTML / لعبة تعليمية داخل المنصة (بدون الخروج ليوتيوب).
+     */
+    public function experienceMaterial(Request $request, LectureMaterial $material): View
+    {
+        $this->assertStudentCanAccessMaterial($request->user(), $material);
+
+        $mode = $material->experience_mode
+            ?: FamilyLibraryThemes::detectExperienceMode($material->file_name, $material->content_theme);
+        abort_unless(
+            FamilyLibraryThemes::isPlayableInPlatform($material->file_name, $mode),
+            404,
+            'هذا الملف لا يُشغَّل داخل المنصة.'
+        );
+
+        return view('student.library.material-experience', [
+            'material' => $material,
+            'frameUrl' => route('student.library.materials.experience.raw', $material),
+            'isGame' => $mode === FamilyLibraryThemes::MODE_PLAY
+                || ($material->content_theme === FamilyLibraryThemes::GAMES),
+        ]);
+    }
+
+    public function experienceMaterialRaw(Request $request, LectureMaterial $material): Response
+    {
+        $this->assertStudentCanAccessMaterial($request->user(), $material);
+
+        $mode = $material->experience_mode
+            ?: FamilyLibraryThemes::detectExperienceMode($material->file_name, $material->content_theme);
+        abort_unless(
+            FamilyLibraryThemes::isPlayableInPlatform($material->file_name, $mode),
+            404
+        );
+
+        $html = LectureMaterialStorage::getContents($material);
+        abort_unless(is_string($html) && $html !== '', 404, 'تعذر تحميل المحتوى.');
+
+        return response($html, 200, [
+            'Content-Type' => 'text/html; charset=UTF-8',
+            'Content-Security-Policy' => "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; img-src * data: blob:; media-src * data: blob: https:; style-src * 'unsafe-inline'; font-src * data:;",
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    private function assertStudentCanAccessMaterial($user, LectureMaterial $material): void
+    {
         abort_unless((bool) $material->is_visible_to_student || $material->is_visible_to_student === null, 404);
 
-        $user = $request->user();
         $material->loadMissing(['lecture:id,course_id', 'folder']);
 
         if ($material->library_folder_id && $material->folder) {
@@ -302,7 +426,7 @@ class StudentHomeExtrasController extends Controller
                 'يلزم اشتراك باقة المكتبات لهذه السنة لتحميل الملف.'
             );
 
-            return LectureMaterialStorage::download($material);
+            return;
         }
 
         $courseId = $material->lecture?->course_id;
@@ -318,14 +442,16 @@ class StudentHomeExtrasController extends Controller
         }
 
         abort_unless($enrolled, 403, 'ليس لديك صلاحية تحميل هذا الملف.');
-
-        return LectureMaterialStorage::download($material);
     }
 
     public function videos(Request $request): View|RedirectResponse
     {
         $q = trim((string) $request->query('q', ''));
         $folderId = $request->query('folder');
+        $theme = strtolower(trim((string) $request->query('theme', '')));
+        if ($theme !== '' && ! in_array($theme, FamilyLibraryThemes::keys(), true)) {
+            $theme = '';
+        }
         $activeFolder = null;
         $user = $request->user();
 
@@ -394,10 +520,16 @@ class StudentHomeExtrasController extends Controller
                 ->when($activeFolder && ($activeFolder->is_uncategorized ?? false), function ($query) {
                     $query->whereNull('library_folder_id');
                 })
+                ->when($theme !== '' && Schema::hasColumn('library_videos', 'content_theme'), function ($query) use ($theme) {
+                    $query->where('content_theme', $theme);
+                })
                 ->when($q !== '', function ($query) use ($q) {
                     $query->where(function ($inner) use ($q) {
                         $inner->where('title', 'like', '%'.$q.'%')
                             ->orWhere('description', 'like', '%'.$q.'%');
+                        if (Schema::hasColumn('library_videos', 'series_title')) {
+                            $inner->orWhere('series_title', 'like', '%'.$q.'%');
+                        }
                     });
                 })
                 ->ordered()
@@ -412,9 +544,11 @@ class StudentHomeExtrasController extends Controller
             'activeFolder' => $activeFolder,
             'uncategorizedCount' => $uncategorizedCount,
             'searchQuery' => $q,
+            'themeFilter' => $theme,
             'sourceFilter' => 'library',
             'academyCount' => $academyCount,
             'teacherCount' => $teacherCount,
+            'familyThemes' => FamilyLibraryThemes::all(),
         ]);
     }
 

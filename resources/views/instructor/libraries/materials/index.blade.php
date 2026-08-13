@@ -22,7 +22,7 @@
 
     <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h3 class="text-base font-semibold text-slate-900 mb-3">إنشاء مجلد جديد</h3>
-        <form method="POST" action="{{ route('instructor.libraries.materials.folders.store') }}" class="grid gap-3 md:grid-cols-4">
+        <form method="POST" action="{{ route('instructor.libraries.materials.folders.store') }}" class="grid gap-3 md:grid-cols-5">
             @csrf
             <input type="text" name="name_ar" required placeholder="اسم المجلد (عربي)" class="h-10 rounded-xl border border-slate-200 px-3 text-sm">
             <input type="text" name="name_en" placeholder="Name (EN)" class="h-10 rounded-xl border border-slate-200 px-3 text-sm">
@@ -30,6 +30,11 @@
                 <option value="">السنة الدراسية *</option>
                 @foreach($years as $y)
                     <option value="{{ $y->id }}">{{ $y->name }}</option>
+                @endforeach
+            </select>
+            <select name="content_theme" class="h-10 rounded-xl border border-slate-200 px-3 text-sm">
+                @foreach(\App\Support\FamilyLibraryThemes::labels('ar') as $key => $themeLabel)
+                    <option value="{{ $key }}">{{ $themeLabel }}</option>
                 @endforeach
             </select>
             <button class="h-10 rounded-xl bg-[#0B3D91] px-4 text-sm font-semibold text-white">إنشاء</button>

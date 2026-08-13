@@ -8,7 +8,7 @@
     $cards = [
         [
             'title' => 'مكتبة الماتريال',
-            'desc' => 'ملفات المحاضرات الظاهرة للطلاب في مكتبتي',
+            'desc' => 'كتب PDF وعروض وHTML وألعاب — مكتبة آمنة داخل المنصة',
             'stat' => $stats['materials_total'],
             'meta' => $stats['materials_visible'].' ظاهر · '.($stats['materials_total'] - $stats['materials_visible']).' مخفي',
             'icon' => 'fa-book-open',
@@ -17,7 +17,7 @@
         ],
         [
             'title' => 'مكتبة الفيديوهات',
-            'desc' => 'روابط أو رفع Cloudflare — مكتبة عامة بدون تسجيلات بث',
+            'desc' => 'فيديوهات أطفال ومسلسلات إسلامية — بديل آمن عن يوتيوب المفتوح',
             'stat' => $stats['videos_ready'],
             'meta' => $stats['videos_published'].' منشور · '.($stats['video_folders'] ?? 0).' مجلد',
             'icon' => 'fa-film',
@@ -26,9 +26,9 @@
         ],
         [
             'title' => 'مجلدات المكتبة',
-            'desc' => 'تصنيف فيديو وماتريال (معلم × سنة + باقة)',
+            'desc' => 'تصنيف المحتوى (كتب/ألعاب/أطفال/إسلامي) + معلم × سنة',
             'stat' => $stats['video_folders'] ?? 0,
-            'meta' => 'تنظيم التصفح في المكتبة',
+            'meta' => 'تنظيم المدرسة التفاعلية',
             'icon' => 'fa-folder-open',
             'href' => route('admin.libraries.folders.index'),
             'cta' => 'إدارة المجلدات',

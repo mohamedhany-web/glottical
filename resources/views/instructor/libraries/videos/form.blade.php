@@ -45,6 +45,24 @@
                 <label class="{{ $label }}">الوصف</label>
                 <textarea name="description" rows="3" class="{{ $field }} py-3" placeholder="اختياري">{{ old('description', $video->description) }}</textarea>
             </div>
+            <div class="grid gap-4 md:grid-cols-3">
+                <div>
+                    <label class="{{ $label }}">تصنيف المحتوى</label>
+                    <select name="content_theme" class="{{ $field }}">
+                        @foreach(\App\Support\FamilyLibraryThemes::labels('ar') as $key => $themeLabel)
+                            <option value="{{ $key }}" @selected(old('content_theme', $video->content_theme ?: 'kids') === $key)>{{ $themeLabel }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $label }}">اسم المسلسل</label>
+                    <input type="text" name="series_title" value="{{ old('series_title', $video->series_title) }}" class="{{ $field }}" placeholder="اختياري">
+                </div>
+                <div>
+                    <label class="{{ $label }}">الفئة العمرية</label>
+                    <input type="text" name="age_label" value="{{ old('age_label', $video->age_label) }}" class="{{ $field }}" placeholder="مثال: 6–10">
+                </div>
+            </div>
             <div class="grid gap-4 md:grid-cols-2">
                 <div>
                     <label class="{{ $label }}">مجلدك</label>

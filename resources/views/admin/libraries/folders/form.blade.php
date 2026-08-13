@@ -84,6 +84,15 @@
                     </select>
                 </div>
                 <div>
+                    <label class="{{ $label }}">تصنيف المحتوى الآمن</label>
+                    <select name="content_theme" class="{{ $field }}">
+                        @foreach(\App\Support\FamilyLibraryThemes::labels('ar') as $key => $themeLabel)
+                            <option value="{{ $key }}" @selected(old('content_theme', $folder->content_theme ?: 'general') === $key)>{{ $themeLabel }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-xs text-muted">أطفال · إسلامي · ألعاب · كتب — بدل يوتيوب المفتوح.</p>
+                </div>
+                <div>
                     <label class="{{ $label }}">السنة الدراسية</label>
                     <select name="academic_year_id" class="{{ $field }}">
                         <option value="">— عامة —</option>

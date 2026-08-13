@@ -57,6 +57,29 @@
                 <label class="{{ $label }}">عنوان العرض</label>
                 <input type="text" name="title" value="{{ old('title', $material->title) }}" class="{{ $field }}" placeholder="اختياري — افتراضياً اسم الملف">
             </div>
+            <div>
+                <label class="{{ $label }}">وصف مختصر للطالب</label>
+                <textarea name="description" rows="2" class="{{ $field }} py-3" placeholder="مثال: قصة تفاعلية آمنة داخل المنصة">{{ old('description', $material->description) }}</textarea>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                    <label class="{{ $label }}">تصنيف المحتوى</label>
+                    <select name="content_theme" class="{{ $field }}">
+                        @foreach(($themes ?? \App\Support\FamilyLibraryThemes::labels('ar')) as $key => $labelTheme)
+                            <option value="{{ $key }}" @selected(old('content_theme', $material->content_theme ?: 'general') === $key)>{{ $labelTheme }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-xs text-muted">كتب PDF · بوربوينت · HTML · ألعاب تعليمية — ليبقى الطفل داخل المنصة.</p>
+                </div>
+                <div>
+                    <label class="{{ $label }}">تجربة الطالب</label>
+                    <select name="experience_mode" class="{{ $field }}">
+                        <option value="download" @selected(old('experience_mode', $material->experience_mode ?: 'download') === 'download')>تحميل / فتح ملف</option>
+                        <option value="view" @selected(old('experience_mode', $material->experience_mode) === 'view')>عرض داخل المنصة (HTML)</option>
+                        <option value="play" @selected(old('experience_mode', $material->experience_mode) === 'play')>لعب داخل المنصة (لعبة)</option>
+                    </select>
+                </div>
+            </div>
             <div class="grid gap-4 md:grid-cols-2">
                 <div>
                     <label class="{{ $label }}">ترتيب</label>
@@ -72,8 +95,9 @@
             <div>
                 <label class="{{ $label }}">الملف {{ $mode === 'create' ? '*' : '(اتركه فارغاً للإبقاء على الحالي)' }}</label>
                 <input type="file" name="file" @if($mode === 'create') required @endif class="block w-full text-sm"
-                       accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.txt,.png,.jpg,.jpeg,.webp,.mp3,.mp4">
+                       accept="{{ \App\Support\FamilyLibraryThemes::materialAcceptAttr() }}">
                 <p class="mt-1 text-xs text-muted">
+                    يشمل PDF وPPT وHTML والألعاب (ZIP) والصور والصوت.
                     التخزين:
                     <strong>{{ ($storageDisk ?? 'r2') === 'r2' ? 'Cloudflare R2' : ($storageDisk ?? 'local') }}</strong>
                 </p>

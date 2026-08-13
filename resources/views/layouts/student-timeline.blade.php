@@ -16,6 +16,7 @@
         ['route' => 'student.private-lectures.index', 'match' => ['student.private-lectures.*', 'student.one-to-one-sessions.*'], 'label' => __('student_timeline.nav_lessons'), 'icon' => 'lessons.svg', 'ui' => 'show_private_lessons'],
         ['route' => 'student.service-entitlements.index', 'match' => ['student.service-entitlements.*'], 'label' => __('student_timeline.nav_progress'), 'icon' => 'credits.svg', 'ui' => 'show_entitlements'],
         ['route' => 'referrals.index', 'match' => ['referrals.*'], 'label' => __('student_timeline.nav_referrals'), 'fa' => 'fas fa-user-friends', 'ui' => 'show_referrals'],
+        ['route' => 'student.library.home', 'match' => ['student.library.home'], 'label' => __('student_timeline.nav_family_library'), 'fa' => 'fas fa-shield-alt', 'ui' => 'show_libraries'],
         ['route' => 'student.library.materials', 'match' => ['student.library.materials'], 'label' => __('student_timeline.nav_library_materials'), 'fa' => 'fas fa-book-open', 'ui' => 'show_libraries'],
         ['route' => 'student.library.videos', 'match' => ['student.library.videos'], 'label' => __('student_timeline.nav_library_videos'), 'fa' => 'fas fa-film', 'ui' => 'show_libraries'],
         ['route' => 'student.assignments.index', 'match' => ['student.assignments.*'], 'label' => __('student_timeline.nav_assignments'), 'fa' => 'fas fa-tasks', 'ui' => 'show_assignments', 'needs_libraries' => true],

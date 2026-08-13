@@ -48,6 +48,9 @@ class LibraryVideosAudienceScopeTest extends TestCase
             $table->string('audience', 32)->default('general');
             $table->unsignedBigInteger('instructor_id')->nullable();
             $table->string('title');
+            $table->string('series_title')->nullable();
+            $table->string('age_label', 40)->nullable();
+            $table->string('content_theme', 40)->default('general');
             $table->text('description')->nullable();
             $table->string('external_url', 2000)->nullable();
             $table->string('file_path', 1000)->nullable();

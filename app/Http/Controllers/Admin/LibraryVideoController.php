@@ -10,6 +10,7 @@ use App\Services\LibraryVideoUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
@@ -125,6 +126,9 @@ class LibraryVideoController extends Controller
             'audience' => LibraryVideo::AUDIENCE_GENERAL,
             'instructor_id' => null,
             'title' => $data['title'],
+            'series_title' => $data['series_title'] ?? null,
+            'age_label' => $data['age_label'] ?? null,
+            'content_theme' => $data['content_theme'] ?? \App\Support\FamilyLibraryThemes::GENERAL,
             'description' => $data['description'] ?? null,
             'external_url' => $data['external_url'] ?? null,
             'file_path' => $data['file_path'] ?? null,
@@ -166,6 +170,9 @@ class LibraryVideoController extends Controller
         $payload = [
             'library_folder_id' => $data['library_folder_id'] ?? null,
             'title' => $data['title'],
+            'series_title' => $data['series_title'] ?? null,
+            'age_label' => $data['age_label'] ?? null,
+            'content_theme' => $data['content_theme'] ?? \App\Support\FamilyLibraryThemes::GENERAL,
             'description' => $data['description'] ?? null,
             'external_url' => $data['external_url'] ?? null,
             'duration_seconds' => (int) ($data['duration_seconds'] ?? 0),
@@ -252,6 +259,9 @@ class LibraryVideoController extends Controller
         return $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
+            'content_theme' => ['nullable', Rule::in(\App\Support\FamilyLibraryThemes::keys())],
+            'series_title' => ['nullable', 'string', 'max:255'],
+            'age_label' => ['nullable', 'string', 'max:40'],
             'library_folder_id' => ['nullable', 'exists:library_folders,id'],
             'external_url' => ['nullable', 'string', 'max:2000'],
             'file_path' => ['nullable', 'string', 'max:1000'],

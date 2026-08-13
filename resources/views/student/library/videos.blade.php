@@ -12,6 +12,8 @@
     $searchQuery = $searchQuery ?? '';
     $academyCount = (int) ($academyCount ?? 0);
     $teacherCount = (int) ($teacherCount ?? 0);
+    $themeFilter = $themeFilter ?? '';
+    $familyThemes = $familyThemes ?? \App\Support\FamilyLibraryThemes::all();
     $tones = ['blue', 'pink', 'orange', 'purple', 'green'];
     $videosEmpty = $videos instanceof \Illuminate\Contracts\Pagination\Paginator
         ? $videos->isEmpty()
@@ -40,8 +42,12 @@
 
     $crumbs = [
         ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
-        ['label' => __('student_timeline.nav_library_videos'), 'url' => $activeFolder ? route('student.library.videos') : null],
+        ['label' => __('student_timeline.family_library_title'), 'url' => route('student.library.home')],
+        ['label' => __('student_timeline.nav_library_videos'), 'url' => ($activeFolder || $themeFilter) ? route('student.library.videos') : null],
     ];
+    if ($themeFilter && isset($familyThemes[$themeFilter])) {
+        $crumbs[] = ['label' => $locale === 'en' ? $familyThemes[$themeFilter]['en'] : $familyThemes[$themeFilter]['ar'], 'url' => null];
+    }
     if ($folderLabel) {
         $crumbs[] = ['label' => $folderLabel, 'url' => null];
     }
@@ -78,14 +84,33 @@
         <h2>{{ $folderLabel ?: __('student_timeline.videos_title') }}</h2>
         <p>{{ $activeFolder && !($activeFolder->is_uncategorized ?? false) && method_exists($activeFolder, 'displayDescription') && $activeFolder->displayDescription($locale)
             ? $activeFolder->displayDescription($locale)
-            : ($locale === 'ar'
-                ? 'ملفات عامة من الأكاديمية، بالإضافة إلى ما يرسله معلموك إليك مباشرة.'
-                : 'Academy library videos plus content your teachers send you.') }}</p>
+            : __('student_timeline.family_videos_hint') }}</p>
     </div>
-    @if(Route::has('student.library.materials'))
-        <a href="{{ route('student.library.materials') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_library_materials') }}</a>
-    @endif
+    <div class="st-msg-intro__actions">
+        @if(Route::has('student.library.home'))
+            <a href="{{ route('student.library.home') }}" class="st-pill st-pill--outline">{{ __('student_timeline.family_library_title') }}</a>
+        @endif
+        @if(Route::has('student.library.materials'))
+            <a href="{{ route('student.library.materials') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_library_materials') }}</a>
+        @endif
+    </div>
 </section>
+
+@if(!empty($familyThemes))
+    <section class="st-theme-strip" aria-label="{{ __('student_timeline.family_themes') }}">
+        <a href="{{ route('student.library.videos', array_filter(['q' => $searchQuery ?: null, 'folder' => $activeFolder ? (($activeFolder->is_uncategorized ?? false) ? 'none' : ($activeFolder->slug ?: $activeFolder->id)) : null])) }}"
+           class="st-theme-chip {{ $themeFilter === '' ? 'is-active' : '' }}">{{ __('student_timeline.materials_filter_all') }}</a>
+        @foreach(['kids','islamic','general'] as $themeKey)
+            @continue(!isset($familyThemes[$themeKey]))
+            @php $meta = $familyThemes[$themeKey]; @endphp
+            <a href="{{ route('student.library.videos', array_filter(['theme' => $themeKey, 'q' => $searchQuery ?: null, 'folder' => $activeFolder ? (($activeFolder->is_uncategorized ?? false) ? 'none' : ($activeFolder->slug ?: $activeFolder->id)) : null])) }}"
+               class="st-theme-chip st-theme-chip--{{ $meta['tone'] }} {{ $themeFilter === $themeKey ? 'is-active' : '' }}">
+                <i class="{{ $meta['icon'] }}" aria-hidden="true"></i>
+                {{ $locale === 'en' ? $meta['en'] : $meta['ar'] }}
+            </a>
+        @endforeach
+    </section>
+@endif
 
 @if(! $activeFolder && ($academyCount > 0 || $teacherCount > 0))
     <div class="st-lib-source-strip" aria-label="{{ $locale === 'ar' ? 'مصادر المكتبة' : 'Library sources' }}">
@@ -196,6 +221,13 @@
                     <div class="st-video-card__body">
                         <p class="st-video-card__course">{{ $course }}</p>
                         <h3>{{ $video->title }}</h3>
+                        @if($video->series_title || $video->content_theme)
+                            <p class="st-video-card__meta">
+                                @if($video->content_theme){{ $video->themeLabel($locale) }}@endif
+                                @if($video->series_title) · {{ $video->series_title }}@endif
+                                @if($video->age_label) · {{ $video->age_label }}@endif
+                            </p>
+                        @endif
                         <p class="st-video-card__meta"><span class="st-lib-badge st-lib-badge--academy">{{ $locale === 'ar' ? 'أكاديمية' : 'Academy' }}</span> · {{ $video->sourceLabel() }}</p>
                     </div>
                     <div class="st-video-card__foot">
@@ -222,6 +254,13 @@
                     <div class="st-video-card__body">
                         <p class="st-video-card__course">{{ $course }}</p>
                         <h3>{{ $video->title }}</h3>
+                        @if($video->series_title || $video->content_theme)
+                            <p class="st-video-card__meta">
+                                @if($video->content_theme){{ $video->themeLabel($locale) }}@endif
+                                @if($video->series_title) · {{ $video->series_title }}@endif
+                                @if($video->age_label) · {{ $video->age_label }}@endif
+                            </p>
+                        @endif
                         <p class="st-video-card__meta"><span class="st-lib-badge st-lib-badge--teacher">{{ $locale === 'ar' ? 'معلمك' : 'Teacher' }}</span> · {{ $video->sourceLabel() }}</p>
                     </div>
                     <div class="st-video-card__foot">
@@ -244,6 +283,13 @@
                     <div class="st-video-card__body">
                         <p class="st-video-card__course">{{ $course }}</p>
                         <h3>{{ $video->title }}</h3>
+                        @if($video->series_title || $video->content_theme)
+                            <p class="st-video-card__meta">
+                                @if($video->content_theme){{ $video->themeLabel($locale) }}@endif
+                                @if($video->series_title) · {{ $video->series_title }}@endif
+                                @if($video->age_label) · {{ $video->age_label }}@endif
+                            </p>
+                        @endif
                         <p class="st-video-card__meta">
                             <span class="st-lib-badge {{ $isTeacher ? 'st-lib-badge--teacher' : 'st-lib-badge--academy' }}">
                                 {{ $isTeacher ? ($locale === 'ar' ? 'معلمك' : 'Teacher') : ($locale === 'ar' ? 'أكاديمية' : 'Academy') }}

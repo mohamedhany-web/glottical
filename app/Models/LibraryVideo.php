@@ -17,7 +17,10 @@ class LibraryVideo extends Model
         'created_by',
         'audience',
         'instructor_id',
+        'content_theme',
         'title',
+        'series_title',
+        'age_label',
         'description',
         'external_url',
         'file_path',
@@ -134,6 +137,19 @@ class LibraryVideo extends Model
         return $this->isTeacherPrivate()
             ? 'طلاب المعلم فقط'
             : 'عام (أكاديمية)';
+    }
+
+    public function themeLabel(?string $locale = null): string
+    {
+        return \App\Support\FamilyLibraryThemes::label(
+            $this->content_theme ?: \App\Support\FamilyLibraryThemes::GENERAL,
+            $locale ?: app()->getLocale()
+        );
+    }
+
+    public function scopeOfTheme($query, string $theme)
+    {
+        return $query->where('content_theme', $theme);
     }
 
     public function getFileSizeForHumansAttribute(): string

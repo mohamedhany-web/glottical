@@ -71,6 +71,15 @@
             <h1>{{ $title }}</h1>
             <div class="st-player-meta__row">
                 <span><i class="fas fa-cloud" aria-hidden="true"></i> {{ $libraryVideo->sourceLabel() }}</span>
+                @if($libraryVideo->content_theme)
+                    <span><i class="fas fa-tag" aria-hidden="true"></i> {{ $libraryVideo->themeLabel($locale) }}</span>
+                @endif
+                @if($libraryVideo->series_title)
+                    <span><i class="fas fa-film" aria-hidden="true"></i> {{ $libraryVideo->series_title }}</span>
+                @endif
+                @if($libraryVideo->age_label)
+                    <span><i class="fas fa-child" aria-hidden="true"></i> {{ $libraryVideo->age_label }}</span>
+                @endif
                 @if($libraryVideo->duration_for_humans)
                     <span><i class="fas fa-clock" aria-hidden="true"></i> {{ $libraryVideo->duration_for_humans }}</span>
                 @endif

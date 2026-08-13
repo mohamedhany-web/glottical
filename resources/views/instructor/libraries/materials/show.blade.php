@@ -21,13 +21,24 @@
 
     @if($canManage ?? true)
     <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h3 class="text-base font-semibold mb-3">رفع ملف (PDF / PPT / …)</h3>
-        <form method="POST" action="{{ route('instructor.libraries.materials.upload', $folder) }}" enctype="multipart/form-data" class="grid gap-3 md:grid-cols-4">
+        <h3 class="text-base font-semibold mb-3">رفع محتوى آمن (PDF / PPT / HTML / ألعاب)</h3>
+        <form method="POST" action="{{ route('instructor.libraries.materials.upload', $folder) }}" enctype="multipart/form-data" class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             @csrf
             <input type="text" name="title" placeholder="عنوان العرض" class="h-10 rounded-xl border border-slate-200 px-3 text-sm">
-            <input type="file" name="file" required class="h-10 rounded-xl border border-slate-200 px-3 text-sm file:mr-2">
+            <input type="text" name="description" placeholder="وصف مختصر للطالب" class="h-10 rounded-xl border border-slate-200 px-3 text-sm">
+            <select name="content_theme" class="h-10 rounded-xl border border-slate-200 px-3 text-sm">
+                @foreach(\App\Support\FamilyLibraryThemes::labels('ar') as $key => $themeLabel)
+                    <option value="{{ $key }}" @selected(($folder->content_theme ?: 'general') === $key)>{{ $themeLabel }}</option>
+                @endforeach
+            </select>
+            <select name="experience_mode" class="h-10 rounded-xl border border-slate-200 px-3 text-sm">
+                <option value="download">تحميل</option>
+                <option value="view">عرض داخل المنصة</option>
+                <option value="play">لعب داخل المنصة</option>
+            </select>
+            <input type="file" name="file" required accept="{{ \App\Support\FamilyLibraryThemes::materialAcceptAttr() }}" class="h-10 rounded-xl border border-slate-200 px-3 text-sm file:mr-2">
             <label class="inline-flex items-center gap-2 text-sm h-10"><input type="checkbox" name="is_visible_to_student" value="1" checked> ظاهر للطالب</label>
-            <button class="h-10 rounded-xl bg-[#0B3D91] px-4 text-sm font-semibold text-white">رفع</button>
+            <button class="h-10 rounded-xl bg-[#0B3D91] px-4 text-sm font-semibold text-white md:col-span-2 lg:col-span-1">رفع</button>
         </form>
     </article>
     @else
@@ -39,6 +50,7 @@
             <thead class="bg-slate-50 text-xs text-slate-500">
                 <tr>
                     <th class="px-4 py-3 text-start">الملف</th>
+                    <th class="px-4 py-3 text-start">التصنيف</th>
                     <th class="px-4 py-3 text-start">الظهور</th>
                     <th class="px-4 py-3 text-end">إجراء</th>
                 </tr>
@@ -50,6 +62,7 @@
                             <div class="font-semibold text-slate-900">{{ $m->title ?: $m->file_name }}</div>
                             <div class="text-xs text-slate-500">{{ $m->file_name }}</div>
                         </td>
+                        <td class="px-4 py-3 text-xs">{{ $m->themeLabel('ar') }} · {{ $m->experience_mode ?: 'download' }}</td>
                         <td class="px-4 py-3">{{ $m->is_visible_to_student ? 'ظاهر' : 'مخفي' }}</td>
                         <td class="px-4 py-3 text-end">
                             @if($canManage ?? true)
@@ -64,7 +77,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="3" class="px-4 py-8 text-center text-slate-500">لا ملفات بعد.</td></tr>
+                    <tr><td colspan="4" class="px-4 py-8 text-center text-slate-500">لا ملفات بعد.</td></tr>
                 @endforelse
             </tbody>
         </table>

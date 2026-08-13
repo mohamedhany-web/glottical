@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
@@ -107,6 +108,9 @@ class VideoLibraryController extends Controller
             'audience' => LibraryVideo::AUDIENCE_TEACHER_STUDENTS,
             'instructor_id' => $user->id,
             'title' => $data['title'],
+            'series_title' => $data['series_title'] ?? null,
+            'age_label' => $data['age_label'] ?? null,
+            'content_theme' => $data['content_theme'] ?? \App\Support\FamilyLibraryThemes::KIDS,
             'description' => $data['description'] ?? null,
             'external_url' => $data['external_url'] ?? null,
             'file_path' => $data['file_path'] ?? null,
@@ -167,6 +171,9 @@ class VideoLibraryController extends Controller
             'audience' => LibraryVideo::AUDIENCE_TEACHER_STUDENTS,
             'instructor_id' => $request->user()->id,
             'title' => $data['title'],
+            'series_title' => $data['series_title'] ?? null,
+            'age_label' => $data['age_label'] ?? null,
+            'content_theme' => $data['content_theme'] ?? \App\Support\FamilyLibraryThemes::KIDS,
             'description' => $data['description'] ?? null,
             'external_url' => $data['external_url'] ?? null,
             'duration_seconds' => (int) ($data['duration_seconds'] ?? 0),
@@ -224,17 +231,22 @@ class VideoLibraryController extends Controller
             'name_en' => ['nullable', 'string', 'max:120'],
             'academic_year_id' => ['nullable', 'integer', 'exists:academic_years,id'],
             'description_ar' => ['nullable', 'string', 'max:255'],
+            'content_theme' => ['nullable', Rule::in(\App\Support\FamilyLibraryThemes::keys())],
         ]);
+
+        $theme = $data['content_theme'] ?? \App\Support\FamilyLibraryThemes::KIDS;
+        $meta = \App\Support\FamilyLibraryThemes::meta($theme);
 
         LibraryFolder::create([
             'instructor_id' => $user->id,
             'academic_year_id' => isset($data['academic_year_id']) ? (int) $data['academic_year_id'] : null,
             'kind' => LibraryFolder::KIND_VIDEOS,
+            'content_theme' => $theme,
             'name_ar' => $data['name_ar'],
             'name_en' => $data['name_en'] ?? null,
             'description_ar' => $data['description_ar'] ?? null,
-            'icon' => 'fas fa-video',
-            'color' => 'blue',
+            'icon' => $meta['icon'] ?? 'fas fa-video',
+            'color' => $meta['tone'] ?? 'blue',
             'sort_order' => 0,
             'is_active' => true,
             'requires_library_entitlement' => false,
@@ -276,6 +288,9 @@ class VideoLibraryController extends Controller
         return $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
+            'content_theme' => ['nullable', Rule::in(\App\Support\FamilyLibraryThemes::keys())],
+            'series_title' => ['nullable', 'string', 'max:255'],
+            'age_label' => ['nullable', 'string', 'max:40'],
             'library_folder_id' => ['nullable', 'exists:library_folders,id'],
             'external_url' => ['nullable', 'string', 'max:2000'],
             'file_path' => ['nullable', 'string', 'max:1000'],

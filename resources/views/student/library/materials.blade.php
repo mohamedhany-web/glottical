@@ -17,6 +17,8 @@
     $libraryFolders = $libraryFolders ?? collect();
     $activeFolder = $activeFolder ?? null;
     $uncategorizedCount = (int) ($uncategorizedCount ?? 0);
+    $themeFilter = $themeFilter ?? '';
+    $familyThemes = $familyThemes ?? \App\Support\FamilyLibraryThemes::all();
     $tones = ['blue', 'pink', 'orange', 'purple', 'green'];
 
     $materialCount = method_exists($materials, 'total') ? $materials->total() : collect($materials)->count();
@@ -35,6 +37,8 @@
             'xlsx' => ['fa' => 'fas fa-file-excel', 'label' => 'XLS', 'tone' => 'green'],
             'zip' => ['fa' => 'fas fa-file-archive', 'label' => 'ZIP', 'tone' => 'purple'],
             'rar' => ['fa' => 'fas fa-file-archive', 'label' => 'RAR', 'tone' => 'purple'],
+            'html' => ['fa' => 'fas fa-code', 'label' => 'HTML', 'tone' => 'purple'],
+            'htm' => ['fa' => 'fas fa-code', 'label' => 'HTML', 'tone' => 'purple'],
             'png' => ['fa' => 'fas fa-file-image', 'label' => 'IMG', 'tone' => 'blue'],
             'jpg' => ['fa' => 'fas fa-file-image', 'label' => 'IMG', 'tone' => 'blue'],
             'jpeg' => ['fa' => 'fas fa-file-image', 'label' => 'IMG', 'tone' => 'blue'],
@@ -52,6 +56,7 @@
         'ppt' => __('student_timeline.materials_filter_ppt'),
         'sheet' => __('student_timeline.materials_filter_sheet'),
         'zip' => __('student_timeline.materials_filter_zip'),
+        'html' => __('student_timeline.materials_filter_html'),
         'image' => __('student_timeline.materials_filter_image'),
         'audio' => __('student_timeline.materials_filter_audio'),
         'video' => __('student_timeline.materials_filter_video'),
@@ -72,14 +77,19 @@
         'folder' => $activeFolder
             ? (($activeFolder->is_uncategorized ?? false) ? 'none' : ($activeFolder->slug ?: $activeFolder->id))
             : null,
+        'theme' => $themeFilter ?: null,
         'sort' => $sort !== 'newest' ? $sort : null,
         'lang' => request('lang') ?: null,
     ], fn ($v) => $v !== null && $v !== '');
 
     $crumbs = [
         ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
-        ['label' => __('student_timeline.nav_library_materials'), 'url' => $activeFolder ? route('student.library.materials') : null],
+        ['label' => __('student_timeline.family_library_title'), 'url' => route('student.library.home')],
+        ['label' => __('student_timeline.nav_library_materials'), 'url' => ($activeFolder || $themeFilter) ? route('student.library.materials') : null],
     ];
+    if ($themeFilter && isset($familyThemes[$themeFilter])) {
+        $crumbs[] = ['label' => $locale === 'en' ? $familyThemes[$themeFilter]['en'] : $familyThemes[$themeFilter]['ar'], 'url' => null];
+    }
     if ($folderLabel) {
         $crumbs[] = ['label' => $folderLabel, 'url' => null];
     }
@@ -115,14 +125,33 @@
         <h2>{{ $folderLabel ?: __('student_timeline.materials_title') }}</h2>
         <p>{{ $activeFolder && !($activeFolder->is_uncategorized ?? false) && method_exists($activeFolder, 'displayDescription') && $activeFolder->displayDescription($locale)
             ? $activeFolder->displayDescription($locale)
-            : ($locale === 'ar'
-                ? 'ملفات عامة من الأكاديمية، بالإضافة إلى ما يرسله معلموك إليك.'
-                : 'Academy files plus materials your teachers send you.') }}</p>
+            : __('student_timeline.family_materials_hint') }}</p>
     </div>
-    @if(Route::has('student.library.videos'))
-        <a href="{{ route('student.library.videos') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_library_videos') }}</a>
-    @endif
+    <div class="st-msg-intro__actions">
+        @if(Route::has('student.library.home'))
+            <a href="{{ route('student.library.home') }}" class="st-pill st-pill--outline">{{ __('student_timeline.family_library_title') }}</a>
+        @endif
+        @if(Route::has('student.library.videos'))
+            <a href="{{ route('student.library.videos') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_library_videos') }}</a>
+        @endif
+    </div>
 </section>
+
+@if(!empty($familyThemes))
+    <section class="st-theme-strip" aria-label="{{ __('student_timeline.family_themes') }}">
+        <a href="{{ route('student.library.materials', array_filter(['q' => $searchQuery ?: null, 'folder' => $activeFolder ? (($activeFolder->is_uncategorized ?? false) ? 'none' : ($activeFolder->slug ?: $activeFolder->id)) : null])) }}"
+           class="st-theme-chip {{ $themeFilter === '' ? 'is-active' : '' }}">{{ __('student_timeline.materials_filter_all') }}</a>
+        @foreach(['books','presentations','html','games','general'] as $themeKey)
+            @continue(!isset($familyThemes[$themeKey]))
+            @php $meta = $familyThemes[$themeKey]; @endphp
+            <a href="{{ route('student.library.materials', array_merge($filterBase, ['theme' => $themeKey])) }}"
+               class="st-theme-chip st-theme-chip--{{ $meta['tone'] }} {{ $themeFilter === $themeKey ? 'is-active' : '' }}">
+                <i class="{{ $meta['icon'] }}" aria-hidden="true"></i>
+                {{ $locale === 'en' ? $meta['en'] : $meta['ar'] }}
+            </a>
+        @endforeach
+    </section>
+@endif
 
 @if($libraryFolders->isNotEmpty() || $uncategorizedCount > 0)
     <section class="st-folder-grid" aria-label="{{ __('student_timeline.folders_title') }}">
@@ -262,7 +291,9 @@
                     $meta = $fileMeta($material);
                     $tone = $meta['tone'] ?? $tones[$i % count($tones)];
                     $title = $material->title ?: $material->file_name ?: __('student_timeline.material_item');
-                    $url = $material->downloadUrl();
+                    $experienceUrl = method_exists($material, 'experienceUrl') ? $material->experienceUrl() : null;
+                    $downloadUrl = $material->downloadUrl();
+                    $playable = $experienceUrl && $experienceUrl !== $downloadUrl;
                     $courseTitle = $material->lecture?->course?->title;
                     $lectureTitle = $material->lecture?->title;
                     $folderTitle = $material->folder?->displayName($locale);
@@ -276,6 +307,9 @@
                         <span class="st-mat-card__ext">{{ $meta['label'] }}</span>
                     </div>
                     <h3 title="{{ $title }}">{{ $title }}</h3>
+                    @if($material->content_theme)
+                        <p class="st-mat-card__theme">{{ $material->themeLabel($locale) }}</p>
+                    @endif
                     @if($folderTitle)
                         <p class="st-mat-card__course">{{ $folderTitle }}@if($teacherName) · {{ $teacherName }}@endif</p>
                     @elseif($courseTitle)
@@ -285,12 +319,18 @@
                         <p class="st-mat-card__lecture">{{ $lectureTitle }}</p>
                     @endif
                     <div class="st-mat-card__foot">
-                        @if($url)
-                            <a href="{{ $url }}" class="st-mat-card__btn">
+                        @if($playable)
+                            <a href="{{ $experienceUrl }}" class="st-mat-card__btn">
+                                <i class="fas fa-play" aria-hidden="true"></i>
+                                {{ __('student_timeline.open_in_platform') }}
+                            </a>
+                        @endif
+                        @if($downloadUrl)
+                            <a href="{{ $downloadUrl }}" class="st-mat-card__btn {{ $playable ? 'st-mat-card__btn--ghost' : '' }}">
                                 <i class="fas fa-download" aria-hidden="true"></i>
                                 {{ __('student_timeline.open_file') }}
                             </a>
-                        @else
+                        @elseif(! $playable)
                             <span class="st-lib-card__missing">{{ __('student_timeline.file_unavailable') }}</span>
                         @endif
                     </div>
