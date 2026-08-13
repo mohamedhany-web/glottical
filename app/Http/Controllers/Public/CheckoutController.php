@@ -833,9 +833,16 @@ class CheckoutController extends Controller
                     ->with('info', 'تمت معالجة هذا الطلب مسبقاً.');
             }
 
-            $txRef = $request->query('transactionId')
-                ?? $request->query('invoice_id')
-                ?? $lockedOrder->fawaterak_invoice_id;
+            try {
+                $txRef = app(\App\Services\FawaterakPaymentVerifier::class)
+                    ->assertOrderPaid($lockedOrder, $request);
+            } catch (\InvalidArgumentException $e) {
+                DB::rollBack();
+
+                return redirect()->to($this->fawaterakCheckoutRetryUrl($lockedOrder))
+                    ->with('error', $e->getMessage());
+            }
+
             $invoice = $this->approveOrderAfterOnlinePayment(
                 $lockedOrder,
                 'fawaterak',
@@ -936,7 +943,7 @@ class CheckoutController extends Controller
 
         $orderTitle = $order->course->title ?? 'كورس';
 
-        $currency = (string) config('fawaterak.currency', 'EGP');
+        $currency = $order->currencyCode() ?: (string) config('fawaterak.currency', 'EGP');
 
         $orig = (float) ($order->original_amount ?? $order->amount);
         $couponDisc = (float) ($order->discount_amount ?? 0);

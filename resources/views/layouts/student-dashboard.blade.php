@@ -434,5 +434,6 @@
     </div>
 
     @stack('scripts')
+    @include('partials.timezone-sync')
 </body>
 </html>

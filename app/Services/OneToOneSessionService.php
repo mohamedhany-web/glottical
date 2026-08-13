@@ -307,7 +307,8 @@ class OneToOneSessionService
     public static function expandWeeklyPattern(array $weeklySlots, int $weeks, Carbon $from): array
     {
         $weeks = max(1, min(8, $weeks));
-        $cursor = $from->copy()->startOfDay();
+        $academy = \App\Support\AppTimezone::academy();
+        $cursor = $from->copy()->timezone($academy)->startOfDay();
         $hardEnd = $cursor->copy()->addWeeks($weeks)->endOfDay();
         $neededPerPattern = $weeks;
         $byKey = [];
@@ -337,8 +338,7 @@ class OneToOneSessionService
                 if (count($meta['hits']) >= $neededPerPattern) {
                     continue;
                 }
-                [$h, $m] = array_map('intval', explode(':', $meta['time']));
-                $at = $dayCursor->copy()->setTime($h, $m, 0);
+                $at = \App\Support\AppTimezone::wallClockToUtc($dayCursor->toDateString(), $meta['time'], $academy);
                 if ($at->gt($from)) {
                     $byKey[$key]['hits'][] = $at;
                 }

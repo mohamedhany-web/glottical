@@ -232,6 +232,24 @@
       </div>
     </div>
 
+    <div class="gl-auth-field">
+      <label for="timezone">{{ $isRtl ? 'المنطقة الزمنية' : 'Timezone' }}</label>
+      @php
+        $tzOptions = \App\Support\AppTimezone::commonZones();
+        $tzValue = old('timezone', session('pending_timezone', ''));
+      @endphp
+      <select id="timezone" name="timezone" data-timezone-select class="gl-auth-input">
+        <option value="">{{ $isRtl ? 'تلقائي من جهازك' : 'Detect from your device' }}</option>
+        @foreach ($tzOptions as $tzId => $tzLabel)
+          <option value="{{ $tzId }}" @selected($tzValue === $tzId)>{{ $tzLabel }}</option>
+        @endforeach
+      </select>
+      <input type="hidden" name="timezone_auto" id="timezone_auto" value="">
+      <p class="gl-auth-hint" style="margin-top:.35rem;font-size:.75rem;opacity:.75">
+        {{ $isRtl ? 'تُعرض مواعيد الحصص بتوقيتك المحلي مع إشارة لتوقيت مصر.' : 'Class times appear in your local timezone with an Egypt reference.' }}
+      </p>
+    </div>
+
     <label class="gl-auth-terms">
       <input type="checkbox" id="terms" required>
       <span>

@@ -418,7 +418,7 @@ class ServicePackageCheckoutController extends Controller
             $phone = '0000000000';
         }
 
-        $currency = (string) config('fawaterak.currency', 'EGP');
+        $currency = $order->currencyCode() ?: (string) config('fawaterak.currency', 'EGP');
         $cartTotal = number_format((float) $order->amount, 2, '.', '');
 
         $bearer = trim((string) config('fawaterak.plugin_bearer_token', ''));
@@ -546,7 +546,7 @@ class ServicePackageCheckoutController extends Controller
         }
 
         $amount = (float) $order->amount;
-        $currency = (string) config('fawaterak.currency', 'EGP');
+        $currency = $order->currencyCode() ?: (string) config('fawaterak.currency', 'EGP');
         $cartTotal = number_format($amount, 2, '.', '');
 
         $payload = [

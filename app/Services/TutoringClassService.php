@@ -9,6 +9,7 @@ use App\Models\TutoringClassSession;
 use App\Models\TutoringCohortEnrollment;
 use App\Models\TutoringGroupCohort;
 use App\Models\User;
+use App\Support\AppTimezone;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -44,7 +45,7 @@ class TutoringClassService
             throw new InvalidArgumentException('حدّد تاريخ بداية الدفعة أولاً.');
         }
 
-        $tz = $cohort->timezone ?: 'Africa/Cairo';
+        $tz = $cohort->timezone ?: AppTimezone::academy();
         $time = Carbon::parse((string) $cohort->study_time, $tz);
         $duration = (int) ($cohort->session_duration_minutes
             ?: $cohort->tutoringGroup?->duration_minutes
@@ -71,8 +72,8 @@ class TutoringClassService
                 $startsAt = $cursor->copy()->setTime($time->hour, $time->minute, 0);
                 if ($startsAt->gte($cohort->starts_at->copy()->timezone($tz)->subMinute())) {
                     $slots[] = [
-                        'starts_at' => $startsAt->copy()->timezone(config('app.timezone', 'UTC')),
-                        'ends_at' => $startsAt->copy()->addMinutes($duration)->timezone(config('app.timezone', 'UTC')),
+                        'starts_at' => $startsAt->copy()->utc(),
+                        'ends_at' => $startsAt->copy()->addMinutes($duration)->utc(),
                     ];
                 }
             }

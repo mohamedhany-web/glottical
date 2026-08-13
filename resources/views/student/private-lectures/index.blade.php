@@ -69,10 +69,7 @@
                 @if($nextJoinable->instructor)
                     {{ $nextJoinable->instructor->name }} ·
                 @endif
-                {{ $nextJoinable->scheduled_at?->timezone(config('app.timezone'))->translatedFormat($isRtl ? 'l، d M · g:i A' : 'D, M j · g:i A') }}
-                @if($ends)
-                    – {{ $ends->format('g:i A') }}
-                @endif
+                <x-app-datetime :at="$nextJoinable->scheduled_at" :pattern="$isRtl ? 'l، d M · g:i A' : 'D, M j · g:i A'" />
                 · {{ $dur }} {{ __('student_timeline.minutes') }}
             </p>
         </div>
@@ -149,10 +146,7 @@
                             {{ $instructor->name }} ·
                         @endif
                         @if($session->scheduled_at)
-                            {{ $session->scheduled_at->timezone(config('app.timezone'))->translatedFormat($isRtl ? 'l، d M · g:i A' : 'D, M j · g:i A') }}
-                            @if($ends)
-                                – {{ $ends->format('g:i A') }}
-                            @endif
+                            <x-app-datetime :at="$session->scheduled_at" :pattern="$isRtl ? 'l، d M · g:i A' : 'D, M j · g:i A'" />
                         @else
                             {{ __('student_timeline.awaiting_schedule') }}
                         @endif

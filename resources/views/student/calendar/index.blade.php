@@ -198,6 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var calendar = new FullCalendar.Calendar(calendarEl, {
         locale: 'ar',
         direction: 'rtl',
+        timeZone: @json(auth()->user()?->timezoneCode() ?? \App\Support\AppTimezone::academy()),
         initialView: 'dayGridMonth',
         headerToolbar: {
             right: 'prev,next today',

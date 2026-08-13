@@ -4,10 +4,12 @@ namespace App\Providers;
 
 use App\Services\AdminPanelBranding;
 use App\Services\PublicFooterSettings;
+use App\Support\AppTimezone;
 use App\Support\ErrorPageContext;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -258,6 +260,20 @@ class AppServiceProvider extends ServiceProvider
                 'errorHomeUrl' => ErrorPageContext::homeUrl(),
                 'errorHomeLabel' => ErrorPageContext::homeLabel(),
             ]);
+        });
+
+        View::composer(['layouts.student-dashboard', 'layouts.student-timeline', 'layouts.auth-atheer', 'auth.register', 'auth.login'], function ($view) {
+            $view->with([
+                'viewerTimezone' => AppTimezone::forUser(Auth::user()),
+                'academyTimezone' => AppTimezone::academy(),
+                'timezoneSyncUrl' => \Illuminate\Support\Facades\Route::has('account.timezone.sync')
+                    ? route('account.timezone.sync')
+                    : null,
+            ]);
+        });
+
+        Blade::directive('appdatetime', function ($expression) {
+            return "<?php echo \\App\\Support\\AppTimezone::labelHtml($expression, \\App\\Support\\AppTimezone::forUser(auth()->user()), app()->getLocale()); ?>";
         });
     }
 }

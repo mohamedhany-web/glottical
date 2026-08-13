@@ -26,6 +26,11 @@ class StudentEntitlementService
             $paymentMethod = 'bank_transfer';
         }
 
+        $currency = strtoupper((string) ($package->currencyCode() ?: config('fawaterak.currency', 'EGP')));
+        if (! in_array($currency, ['EGP', 'USD'], true)) {
+            $currency = 'EGP';
+        }
+
         return Order::create([
             'user_id' => $user->id,
             'service_package_id' => $package->id,
@@ -34,6 +39,7 @@ class StudentEntitlementService
             'original_amount' => $package->original_price ?? $package->price,
             'discount_amount' => max(0, (float) ($package->original_price ?? $package->price) - (float) $package->price),
             'amount' => $package->price,
+            'currency' => $currency,
             'payment_method' => $paymentMethod,
             'wallet_id' => $walletId,
             'status' => Order::STATUS_PENDING,
@@ -70,6 +76,11 @@ class StudentEntitlementService
             ? ' · '.$quote['term_months'].' شهر · '.((int) ($quote['weekly_sessions'] ?? 0)).' حصص/أسبوع'
             : '';
 
+        $currency = strtoupper((string) ($quote['currency'] ?? config('fawaterak.currency', 'EGP')));
+        if (! in_array($currency, ['EGP', 'USD'], true)) {
+            $currency = 'EGP';
+        }
+
         return Order::create([
             'user_id' => $user->id,
             'service_package_id' => null,
@@ -79,10 +90,11 @@ class StudentEntitlementService
             'original_amount' => $quote['original_amount'],
             'discount_amount' => $quote['discount_amount'],
             'amount' => $quote['amount'],
+            'currency' => $currency,
             'payment_method' => $paymentMethod,
             'wallet_id' => $walletId,
             'status' => Order::STATUS_PENDING,
-            'notes' => ($quote['name'] ?? 'باقة مخصصة').' ('.$quote['sessions'].' حصة × '.$quote['session_minutes'].' دقيقة)'.$termNote.' — USD',
+            'notes' => ($quote['name'] ?? 'باقة مخصصة').' ('.$quote['sessions'].' حصة × '.$quote['session_minutes'].' دقيقة)'.$termNote.' — '.$currency,
         ]);
     }
 

@@ -7,8 +7,7 @@ use App\Models\AcademicYear;
 use App\Models\AdvancedCourse;
 use App\Models\Lecture;
 use App\Models\LectureMaterial;
-use App\Models\LiveRecording;
-use App\Models\LiveSession;
+use App\Models\LibraryVideo;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\UploadedFile;
@@ -98,12 +97,57 @@ class AdminLibrariesHubTest extends TestCase
 
         Schema::create('lecture_materials', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('lecture_id');
+            $table->foreignId('lecture_id')->nullable();
+            $table->unsignedBigInteger('library_folder_id')->nullable();
             $table->string('title')->nullable();
             $table->string('file_name')->nullable();
             $table->string('file_path')->nullable();
             $table->string('storage_disk', 32)->default('public');
+            $table->string('content_theme', 40)->nullable();
+            $table->string('experience_mode', 20)->nullable();
+            $table->text('description')->nullable();
             $table->boolean('is_visible_to_student')->default(true);
+            $table->unsignedInteger('sort_order')->default(0);
+            $table->timestamps();
+        });
+
+        Schema::create('library_folders', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('instructor_id')->nullable();
+            $table->unsignedBigInteger('academic_year_id')->nullable();
+            $table->string('kind')->default('materials');
+            $table->string('name_ar');
+            $table->string('name_en')->nullable();
+            $table->string('slug')->unique();
+            $table->string('description_ar')->nullable();
+            $table->string('description_en')->nullable();
+            $table->string('icon')->nullable();
+            $table->string('color')->nullable();
+            $table->string('content_theme', 40)->nullable();
+            $table->unsignedInteger('sort_order')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->boolean('requires_library_entitlement')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('library_videos', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('library_folder_id')->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->string('audience', 32)->default('general');
+            $table->unsignedBigInteger('instructor_id')->nullable();
+            $table->string('title');
+            $table->string('series_title')->nullable();
+            $table->string('age_label', 40)->nullable();
+            $table->string('content_theme', 40)->default('general');
+            $table->text('description')->nullable();
+            $table->string('external_url', 2000)->nullable();
+            $table->string('file_path', 1000)->nullable();
+            $table->string('storage_disk', 40)->nullable();
+            $table->unsignedBigInteger('file_size')->default(0);
+            $table->unsignedInteger('duration_seconds')->default(0);
+            $table->string('mime_type', 120)->nullable();
+            $table->boolean('is_published')->default(true);
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
         });
@@ -207,27 +251,26 @@ class AdminLibrariesHubTest extends TestCase
     public function test_admin_can_create_and_publish_video(): void
     {
         $admin = $this->admin();
-        $session = LiveSession::create(['title' => 'بث تجريبي', 'scheduled_at' => now()]);
 
         $this->actingAs($admin)
             ->post(route('admin.libraries.videos.store'), [
-                'session_id' => $session->id,
-                'title' => 'تسجيل البث',
+                'title' => 'درس تجريبي',
                 'external_url' => 'https://example.com/video.mp4',
-                'status' => 'ready',
                 'is_published' => 1,
+                'sort_order' => 0,
+                'duration_seconds' => 0,
             ])
-            ->assertRedirect();
+            ->assertRedirect(route('admin.libraries.videos.index'));
 
-        $rec = LiveRecording::query()->first();
-        $this->assertNotNull($rec);
-        $this->assertTrue((bool) $rec->is_published);
+        $video = LibraryVideo::query()->first();
+        $this->assertNotNull($video);
+        $this->assertTrue((bool) $video->is_published);
 
         $this->actingAs($admin)
-            ->post(route('admin.libraries.videos.toggle', $rec))
+            ->post(route('admin.libraries.videos.toggle', $video))
             ->assertRedirect();
 
-        $this->assertFalse((bool) $rec->fresh()->is_published);
+        $this->assertFalse((bool) $video->fresh()->is_published);
     }
 
     public function test_admin_can_view_curriculum_course(): void

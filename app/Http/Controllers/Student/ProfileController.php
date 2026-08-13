@@ -31,6 +31,7 @@ class ProfileController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20|unique:users,phone,' . $user->id,
             'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
+            'timezone' => 'required|string|max:64',
             'current_password' => 'nullable|string',
             'password' => 'nullable|string|min:8|confirmed',
             'profile_image' => 'nullable|image|max:'.config('upload_limits.max_upload_kb'),
@@ -40,12 +41,18 @@ class ProfileController extends Controller
             'phone.unique' => 'رقم الهاتف مستخدم من قبل',
             'email.email' => 'صيغة البريد الإلكتروني غير صحيحة',
             'email.unique' => 'البريد الإلكتروني مستخدم من قبل',
+            'timezone.required' => 'المنطقة الزمنية مطلوبة',
             'current_password.required' => 'كلمة المرور الحالية مطلوبة',
             'password.min' => 'كلمة المرور يجب أن تكون 8 أحرف على الأقل',
             'password.confirmed' => 'تأكيد كلمة المرور غير متطابق',
             'profile_image.image' => 'الملف الذي تم رفعه يجب أن يكون صورة',
             'profile_image.max' => 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت',
         ]);
+
+        $timezone = \App\Support\AppTimezone::normalize($request->input('timezone'));
+        if (! $timezone) {
+            return back()->withErrors(['timezone' => 'منطقة زمنية غير صالحة.'])->withInput();
+        }
 
         // التحقق من كلمة المرور الحالية عند تغيير كلمة المرور
         if ($request->filled('password')) {
@@ -57,6 +64,7 @@ class ProfileController extends Controller
         $data = [
             'name' => $request->name,
             'phone' => $request->phone,
+            'timezone' => $timezone,
         ];
 
         if ($request->filled('email')) {

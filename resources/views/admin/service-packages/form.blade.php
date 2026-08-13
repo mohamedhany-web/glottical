@@ -136,16 +136,26 @@
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="price">السعر *</label>
-                    <input id="price" type="number" step="0.01" min="0" name="price" value="{{ old('price', $package->price) }}" required class="{{ $fieldClass }}" placeholder="USD">
-                    <p class="mt-1 text-[11px] text-muted">بالدولار الأمريكي USD.</p>
+                    <input id="price" type="number" step="0.01" min="0" name="price" value="{{ old('price', $package->price) }}" required class="{{ $fieldClass }}" placeholder="0.00">
+                    <p class="mt-1 text-[11px] text-muted">أدخل السعر بنفس عملة الباقة (يفضّل مطابقة عملة فواتيرك).</p>
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="original_price">السعر قبل الخصم</label>
                     <input id="original_price" type="number" step="0.01" min="0" name="original_price" value="{{ old('original_price', $package->original_price) }}" class="{{ $fieldClass }}">
                 </div>
                 <div>
-                    <label class="{{ $labelClass }}" for="currency">العملة</label>
-                    <input id="currency" value="USD — دولار أمريكي" class="{{ $fieldClass }}" readonly>
+                    <label class="{{ $labelClass }}" for="currency">العملة *</label>
+                    @php
+                        $currencyValue = strtoupper((string) old('currency', $package->currency ?: config('fawaterak.currency', 'EGP')));
+                        if (! in_array($currencyValue, ['EGP', 'USD'], true)) {
+                            $currencyValue = 'EGP';
+                        }
+                    @endphp
+                    <select id="currency" name="currency" required class="{{ $fieldClass }}">
+                        <option value="EGP" @selected($currencyValue === 'EGP')>EGP — جنيه مصري</option>
+                        <option value="USD" @selected($currencyValue === 'USD')>USD — دولار أمريكي</option>
+                    </select>
+                    <p class="mt-1 text-[11px] text-muted">تُستخدم نفس العملة عند إنشاء الطلب وإرسال الدفع لفواتيرك.</p>
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="sort_order">الترتيب</label>

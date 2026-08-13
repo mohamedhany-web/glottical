@@ -24,6 +24,8 @@ trait BuildsFeatureSchema
             $table->string('role')->default('student');
             $table->boolean('is_active')->default(true);
             $table->string('gender')->nullable();
+            $table->string('address')->nullable();
+            $table->string('timezone', 64)->nullable();
             $table->text('bio')->nullable();
             $table->string('profile_image')->nullable();
             $table->string('portfolio_intro_video_url')->nullable();
@@ -275,6 +277,60 @@ trait BuildsFeatureSchema
             $table->text('notes')->nullable();
             $table->timestamps();
             $table->unique(['tutoring_class_session_id', 'user_id'], 'session_user_attendance_unique');
+        });
+
+        Schema::create('student_service_entitlements', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id');
+            $table->unsignedBigInteger('service_package_id')->nullable();
+            $table->unsignedBigInteger('order_id')->nullable();
+            $table->string('scope', 64)->default('global');
+            $table->string('plan_type')->nullable();
+            $table->unsignedInteger('term_months')->nullable();
+            $table->unsignedInteger('weekly_group_sessions')->nullable();
+            $table->unsignedInteger('weekly_private_sessions')->nullable();
+            $table->boolean('includes_community')->default(false);
+            $table->boolean('includes_libraries')->default(false);
+            $table->unsignedBigInteger('tutoring_group_id')->nullable();
+            $table->unsignedBigInteger('academic_year_id')->nullable();
+            $table->unsignedBigInteger('academic_subject_id')->nullable();
+            $table->unsignedInteger('units_total')->default(0);
+            $table->unsignedInteger('units_used')->default(0);
+            $table->timestamp('starts_at')->nullable();
+            $table->timestamp('expires_at')->nullable();
+            $table->string('status', 32)->default('active');
+            $table->text('notes')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('tutoring_group_bookings', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('tutoring_group_id')->nullable();
+            $table->unsignedBigInteger('student_service_entitlement_id')->nullable();
+            $table->unsignedBigInteger('order_id')->nullable();
+            $table->string('payment_status', 32)->nullable();
+            $table->unsignedBigInteger('instructor_id')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->timestamp('starts_at')->nullable();
+            $table->timestamp('ends_at')->nullable();
+            $table->string('status', 32)->default('pending');
+            $table->text('admin_notes')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('student_tutoring_subscriptions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id');
+            $table->unsignedBigInteger('tutoring_group_id')->nullable();
+            $table->unsignedBigInteger('tutoring_group_package_id')->nullable();
+            $table->unsignedInteger('sessions_total')->default(0);
+            $table->unsignedInteger('sessions_used')->default(0);
+            $table->timestamp('starts_at')->nullable();
+            $table->timestamp('expires_at')->nullable();
+            $table->string('status')->default('active');
+            $table->unsignedBigInteger('order_id')->nullable();
+            $table->unsignedBigInteger('student_service_entitlement_id')->nullable();
+            $table->timestamps();
         });
     }
 }

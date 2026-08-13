@@ -10,7 +10,7 @@
     $leaderboard = $leaderboard ?? collect();
     $game = $game ?? ['xp' => 0, 'level' => 1, 'streak' => ['current' => 0]];
     $sessions = ($cohort->classSessions ?? collect())->values();
-    $tz = config('app.timezone');
+    $tz = auth()->user()?->timezoneCode() ?? \App\Support\AppTimezone::academy();
     $nextJoinable = $sessions->first(fn ($s) => method_exists($s, 'isJoinable') && $s->isJoinable());
     $upcomingSessions = $sessions
         ->filter(fn ($s) => ! in_array($s->status, ['cancelled', 'completed'], true)
@@ -103,7 +103,7 @@
         <p class="st-stat-card__value">{{ $upcomingSessions->count() }}</p>
         <p class="st-stat-card__hint">
             @if($nextJoinable?->starts_at)
-                {{ $nextJoinable->starts_at->timezone($tz)->translatedFormat('D g:i A') }}
+                <x-app-datetime :at="$nextJoinable->starts_at" pattern="D g:i A" />
             @else
                 —
             @endif
@@ -151,7 +151,7 @@
                                 <h3>{{ $session->displayTitle() }}</h3>
                                 <p>
                                     @if($session->starts_at)
-                                        {{ $session->starts_at->timezone($tz)->translatedFormat($isRtl ? 'l، d M · g:i A' : 'D, M j · g:i A') }}
+                                        <x-app-datetime :at="$session->starts_at" :pattern="$isRtl ? 'l، d M · g:i A' : 'D, M j · g:i A'" />
                                     @else
                                         —
                                     @endif
@@ -183,7 +183,7 @@
                         <li class="st-session-row st-session-row--done">
                             <div class="st-session-row__body">
                                 <h3>{{ $session->displayTitle() }}</h3>
-                                <p>{{ $session->starts_at?->timezone($tz)->translatedFormat($isRtl ? 'l، d M · g:i A' : 'D, M j · g:i A') }}</p>
+                                <p><x-app-datetime :at="$session->starts_at" :pattern="$isRtl ? 'l، d M · g:i A' : 'D, M j · g:i A'" /></p>
                             </div>
                             <span class="st-session-badge st-session-badge--done">{{ $session->statusLabel() }}</span>
                         </li>
@@ -275,7 +275,7 @@
             <p class="st-event-card__sub">{{ $session->statusLabel() }}</p>
             <div class="st-event-card__meta">
                 <img src="{{ asset('img/student-timeline/clock.png') }}" alt="" width="14" height="14">
-                <span>{{ $session->starts_at?->timezone(config('app.timezone'))->translatedFormat('D · g:i A') }}</span>
+                <span><x-app-datetime :at="$session->starts_at" pattern="D · g:i A" /></span>
             </div>
             <div class="st-event-card__actions">
                 @if($joinable && $isPrimary)

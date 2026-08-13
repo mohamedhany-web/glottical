@@ -32,6 +32,7 @@ class User extends Authenticatable
         'profile_image',
         'birth_date',
         'address',
+        'timezone',
         'bio',
         'gender',
         'portfolio_headline',
@@ -112,6 +113,14 @@ class User extends Authenticatable
             'portfolio_profile_submitted_at' => 'datetime',
             'portfolio_profile_reviewed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * منطقة المستخدم الزمنية للعرض (أو توقيت الأكاديمية).
+     */
+    public function timezoneCode(): string
+    {
+        return \App\Support\AppTimezone::forUser($this);
     }
 
     /**

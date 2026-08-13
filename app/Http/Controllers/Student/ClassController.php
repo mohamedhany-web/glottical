@@ -7,7 +7,9 @@ use App\Models\ClassFeedPost;
 use App\Models\TutoringClassSession;
 use App\Models\TutoringCohortEnrollment;
 use App\Models\TutoringGroupCohort;
+use App\Models\ServicePackage;
 use App\Services\ClassFeedService;
+use App\Services\StudentEntitlementService;
 use App\Services\StudentSchoolGameService;
 use App\Services\StudentSchoolHomeService;
 use App\Services\TutoringClassService;
@@ -118,14 +120,58 @@ class ClassController extends Controller
         }
 
         $group = $cohort->tutoringGroup;
+        $user = $request->user();
+
         if ($group && (float) ($group->price ?? 0) > 0) {
+            $alreadyActive = TutoringCohortEnrollment::query()
+                ->where('tutoring_group_cohort_id', $cohort->id)
+                ->where('user_id', $user->id)
+                ->where('status', TutoringCohortEnrollment::STATUS_ACTIVE)
+                ->exists();
+
+            if ($alreadyActive) {
+                return redirect()
+                    ->route('student.classes.show', $cohort)
+                    ->with('info', 'أنت منضم لهذا الفصل بالفعل.');
+            }
+
+            $entitlement = StudentEntitlementService::availableFor(
+                (int) $user->id,
+                ServicePackage::SCOPE_TUTORING_COLLECTIVE,
+                (int) $group->id,
+                $group->academic_year_id ? (int) $group->academic_year_id : null,
+                $group->academic_subject_id ? (int) $group->academic_subject_id : null,
+            );
+
+            if ($entitlement) {
+                try {
+                    \Illuminate\Support\Facades\DB::transaction(function () use ($cohort, $user, $entitlement) {
+                        // Debit seat unlock first so concurrent joins cannot double-spend.
+                        StudentEntitlementService::consume($entitlement, 1);
+                        TutoringClassService::enrollStudent(
+                            $cohort,
+                            $user,
+                            entitlementId: (int) $entitlement->id,
+                            countSeat: true,
+                            notes: 'enrolled_with_service_package_credit',
+                        );
+                    });
+                } catch (InvalidArgumentException $e) {
+                    return back()->with('error', $e->getMessage());
+                }
+
+                return redirect()
+                    ->route('student.classes.show', $cohort)
+                    ->with('success', 'تم انضمامك للفصل باستخدام رصيد باقة المدرسة.');
+            }
+
             return redirect()
                 ->route('public.groups.checkout', ['slug' => $group->slug, 'cohort' => $cohort->id])
                 ->with('info', 'أكمل الاشتراك للانضمام للفصل.');
         }
 
         try {
-            TutoringClassService::enrollStudent($cohort, $request->user(), countSeat: true);
+            TutoringClassService::enrollStudent($cohort, $user, countSeat: true);
         } catch (InvalidArgumentException $e) {
             return back()->with('error', $e->getMessage());
         }

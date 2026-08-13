@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\ConsultationRequest;
 use App\Models\OneToOneSession;
 use App\Models\OneToOneWeeklyAvailability;
+use App\Support\AppTimezone;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
@@ -71,6 +72,8 @@ class OneToOneAvailabilityService
     }
 
     /**
+     * Weekly H:i rules are interpreted in academy timezone (Egypt), returned as UTC instants.
+     *
      * @return Collection<int, array{starts_at: Carbon, ends_at: Carbon, label: string}>
      */
     public static function availableSlots(
@@ -86,9 +89,10 @@ class OneToOneAvailabilityService
             return collect();
         }
 
+        $academy = AppTimezone::academy();
         $slots = collect();
-        $cursor = $from->copy()->startOfDay();
-        $endDay = $to->copy()->endOfDay();
+        $cursor = $from->copy()->timezone($academy)->startOfDay();
+        $endDay = $to->copy()->timezone($academy)->endOfDay();
 
         while ($cursor->lte($endDay)) {
             $dayRules = $rules->where('day_of_week', $cursor->isoWeekday());
@@ -97,8 +101,8 @@ class OneToOneAvailabilityService
                 $endStr = is_string($rule->end_time) ? substr($rule->end_time, 0, 5) : $rule->end_time->format('H:i');
                 $slotDuration = (int) ($rule->slot_duration_minutes ?: $durationMinutes);
 
-                $windowStart = $cursor->copy()->setTimeFromTimeString($startStr);
-                $windowEnd = $cursor->copy()->setTimeFromTimeString($endStr);
+                $windowStart = AppTimezone::wallClockToUtc($cursor->toDateString(), $startStr, $academy);
+                $windowEnd = AppTimezone::wallClockToUtc($cursor->toDateString(), $endStr, $academy);
                 $slotStart = $windowStart->copy();
 
                 while ($slotStart->copy()->addMinutes($slotDuration)->lte($windowEnd)) {
@@ -106,9 +110,9 @@ class OneToOneAvailabilityService
                     if ($slotStart->gte($from) && $slotStart->gt(now()) && $slotEnd->lte($to)) {
                         if (! self::hasConflict($instructorId, $slotStart, $slotEnd, $excludeSessionId)) {
                             $slots->push([
-                                'starts_at' => $slotStart->copy(),
-                                'ends_at' => $slotEnd->copy(),
-                                'label' => $slotStart->format('Y-m-d H:i'),
+                                'starts_at' => $slotStart->copy()->utc(),
+                                'ends_at' => $slotEnd->copy()->utc(),
+                                'label' => $slotStart->copy()->timezone($academy)->format('Y-m-d H:i'),
                             ]);
                         }
                     }
@@ -142,14 +146,18 @@ class OneToOneAvailabilityService
             return false;
         }
 
-        $dayRules = $rules->where('day_of_week', $startsAt->isoWeekday());
+        $academy = AppTimezone::academy();
+        $localStart = $startsAt->copy()->timezone($academy);
+        $localEnd = $endsAt->copy()->timezone($academy);
+
+        $dayRules = $rules->where('day_of_week', $localStart->isoWeekday());
         foreach ($dayRules as $rule) {
             $startStr = is_string($rule->start_time) ? substr($rule->start_time, 0, 5) : $rule->start_time->format('H:i');
             $endStr = is_string($rule->end_time) ? substr($rule->end_time, 0, 5) : $rule->end_time->format('H:i');
-            $windowStart = $startsAt->copy()->setTimeFromTimeString($startStr);
-            $windowEnd = $startsAt->copy()->setTimeFromTimeString($endStr);
+            $windowStart = AppTimezone::wallClockToUtc($localStart->toDateString(), $startStr, $academy);
+            $windowEnd = AppTimezone::wallClockToUtc($localStart->toDateString(), $endStr, $academy);
 
-            if ($startsAt->gte($windowStart) && $endsAt->lte($windowEnd)) {
+            if ($startsAt->copy()->utc()->gte($windowStart) && $endsAt->copy()->utc()->lte($windowEnd)) {
                 return true;
             }
         }

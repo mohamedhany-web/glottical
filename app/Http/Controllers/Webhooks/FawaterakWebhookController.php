@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Webhooks;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\FawaterakPaymentVerifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 
 /**
  * استقبال إشعار فواتيرك بعد الدفع — يُكمّل التفعيل عند فقدان الجلسة.
@@ -47,6 +49,19 @@ class FawaterakWebhookController extends Controller
             ->where('status', Order::STATUS_PENDING)
             ->first();
 
+        // Iframe may not have stored invoice id yet — fall back to session-less lookup via pay_load/order id
+        if (! $order) {
+            $orderKey = data_get($payload, 'pay_load.order_id')
+                ?? data_get($payload, 'data.pay_load.order_id')
+                ?? data_get($payload, 'cartItems.0.description');
+            if (is_numeric($orderKey)) {
+                $order = Order::query()
+                    ->whereKey((int) $orderKey)
+                    ->where('status', Order::STATUS_PENDING)
+                    ->first();
+            }
+        }
+
         if ($order) {
             return $this->approveCourseOrder($order, $invoiceId, $payload);
         }
@@ -63,6 +78,10 @@ class FawaterakWebhookController extends Controller
                     return;
                 }
 
+                app(FawaterakPaymentVerifier::class)->assertOrderPaid($locked, null, array_merge($payload, [
+                    'invoice_id' => $invoiceId,
+                ]));
+
                 app(\App\Http\Controllers\Public\CheckoutController::class)
                     ->approveOrderAfterOnlinePaymentPublic(
                         $locked,
@@ -74,13 +93,20 @@ class FawaterakWebhookController extends Controller
             });
 
             return response()->json(['ok' => true, 'type' => 'course_order']);
+        } catch (InvalidArgumentException $e) {
+            Log::warning('Fawaterak webhook payment not verified', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
         } catch (\Throwable $e) {
             Log::error('Fawaterak webhook order approval failed', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
             ]);
 
-            return response()->json(['ok' => false], 500);
+            return response()->json(['ok' => false, 'message' => 'approval failed'], 500);
         }
     }
 }

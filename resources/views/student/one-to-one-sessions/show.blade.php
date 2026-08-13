@@ -48,16 +48,19 @@
                 @else
                     <form method="POST" action="{{ route('student.one-to-one-sessions.book', $session) }}" class="space-y-3 max-h-80 overflow-y-auto">
                         @csrf
-                        @php $grouped = $availableSlots->groupBy(fn ($s) => $s['starts_at']->format('Y-m-d')); @endphp
+                        @php
+                            $viewerTz = auth()->user()?->timezoneCode() ?? \App\Support\AppTimezone::academy();
+                            $grouped = $availableSlots->groupBy(fn ($s) => $s['starts_at']->copy()->timezone($viewerTz)->format('Y-m-d'));
+                        @endphp
                         @foreach($grouped as $date => $daySlots)
                             <div>
                                 <p class="text-xs font-bold text-violet-700 dark:text-violet-300 mb-2">{{ \Carbon\Carbon::parse($date)->locale(app()->getLocale())->isoFormat('dddd D MMMM') }}</p>
                                 <div class="flex flex-wrap gap-2">
                                     @foreach($daySlots as $slot)
                                         <label class="cursor-pointer">
-                                            <input type="radio" name="scheduled_at" value="{{ $slot['starts_at']->format('Y-m-d H:i:s') }}" class="peer sr-only" required>
+                                            <input type="radio" name="scheduled_at" value="{{ $slot['starts_at']->copy()->utc()->format('Y-m-d H:i:s') }}" class="peer sr-only" required>
                                             <span class="inline-flex px-3 py-2 rounded-lg border border-violet-200 dark:border-violet-700 text-sm font-semibold text-violet-900 dark:text-violet-100 peer-checked:bg-violet-600 peer-checked:text-white peer-checked:border-violet-600 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition">
-                                                {{ $slot['starts_at']->format('H:i') }}
+                                                {{ $slot['starts_at']->copy()->timezone($viewerTz)->format('H:i') }}
                                             </span>
                                         </label>
                                     @endforeach

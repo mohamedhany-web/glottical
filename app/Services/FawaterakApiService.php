@@ -97,8 +97,73 @@ class FawaterakApiService
         }
     }
 
+    /**
+     * @return array{ok: bool, status: int, json: ?array, body: string}
+     */
+    public function getInvoiceData(string|int $invoiceId): array
+    {
+        $id = rawurlencode((string) $invoiceId);
+
+        return $this->request('GET', '/getInvoiceData/'.$id, null);
+    }
+
+    /**
+     * هل الفاتورة مدفوعة حسب رد فواتيرك؟
+     *
+     * @return array{paid: bool, checked: bool, invoice: ?array, message: ?string}
+     */
+    public function resolveInvoicePaid(string|int $invoiceId): array
+    {
+        if (! $this->isConfigured()) {
+            return [
+                'paid' => false,
+                'checked' => false,
+                'invoice' => null,
+                'message' => 'Fawaterak API token is not configured.',
+            ];
+        }
+
+        $response = $this->getInvoiceData($invoiceId);
+        if (! $response['ok'] || ! is_array($response['json'])) {
+            return [
+                'paid' => false,
+                'checked' => true,
+                'invoice' => null,
+                'message' => 'Unable to fetch invoice from Fawaterak.',
+            ];
+        }
+
+        $json = $response['json'];
+        $data = is_array($json['data'] ?? null) ? $json['data'] : $json;
+        $paidFlag = $data['paid'] ?? $data['Paid'] ?? null;
+        $status = strtolower((string) ($data['invoice_status'] ?? $data['status'] ?? $json['status'] ?? ''));
+
+        $paid = $paidFlag === 1
+            || $paidFlag === true
+            || $paidFlag === '1'
+            || in_array($status, ['paid', 'success', 'completed'], true);
+
+        return [
+            'paid' => $paid,
+            'checked' => true,
+            'invoice' => is_array($data) ? $data : null,
+            'message' => $paid ? null : 'Invoice is not marked paid.',
+        ];
+    }
+
     private function bearerToken(): string
     {
-        return trim((string) config('fawaterak.api.token', ''));
+        $token = trim((string) config('fawaterak.api.token', ''));
+        if ($token !== '') {
+            return $token;
+        }
+
+        // Iframe setups often only configure vendor/plugin keys — reuse for getInvoiceData.
+        $plugin = trim((string) config('fawaterak.plugin_bearer_token', ''));
+        if ($plugin !== '') {
+            return $plugin;
+        }
+
+        return trim((string) config('fawaterak.vendor_key', ''));
     }
 }

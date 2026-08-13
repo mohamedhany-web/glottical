@@ -128,7 +128,11 @@ class Order extends Model
         }
 
         if ($this->order_type === self::TYPE_CUSTOM_SERVICE_PACKAGE) {
-            return $this->custom_package_data['currency'] ?? 'USD';
+            $fromQuote = strtoupper((string) ($this->custom_package_data['currency'] ?? ''));
+
+            return in_array($fromQuote, ['EGP', 'USD'], true)
+                ? $fromQuote
+                : strtoupper((string) config('fawaterak.currency', 'EGP'));
         }
 
         if ($this->servicePackage) {

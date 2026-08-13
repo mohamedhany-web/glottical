@@ -45,29 +45,31 @@ class OneToOneMonthlyBookingTest extends TestCase
             $table->timestamps();
         });
 
-        Schema::create('student_service_entitlements', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id');
-            $table->unsignedBigInteger('service_package_id')->nullable();
-            $table->unsignedBigInteger('order_id')->nullable();
-            $table->string('scope', 64);
-            $table->string('plan_type')->nullable();
-            $table->unsignedInteger('term_months')->nullable();
-            $table->unsignedInteger('weekly_group_sessions')->nullable();
-            $table->unsignedInteger('weekly_private_sessions')->nullable();
-            $table->boolean('includes_community')->default(false);
-            $table->boolean('includes_libraries')->default(false);
-            $table->unsignedBigInteger('tutoring_group_id')->nullable();
-            $table->unsignedBigInteger('academic_year_id')->nullable();
-            $table->unsignedBigInteger('academic_subject_id')->nullable();
-            $table->unsignedInteger('units_total')->default(0);
-            $table->unsignedInteger('units_used')->default(0);
-            $table->timestamp('starts_at')->nullable();
-            $table->timestamp('expires_at')->nullable();
-            $table->string('status', 32)->default('active');
-            $table->text('notes')->nullable();
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('student_service_entitlements')) {
+            Schema::create('student_service_entitlements', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id');
+                $table->unsignedBigInteger('service_package_id')->nullable();
+                $table->unsignedBigInteger('order_id')->nullable();
+                $table->string('scope', 64);
+                $table->string('plan_type')->nullable();
+                $table->unsignedInteger('term_months')->nullable();
+                $table->unsignedInteger('weekly_group_sessions')->nullable();
+                $table->unsignedInteger('weekly_private_sessions')->nullable();
+                $table->boolean('includes_community')->default(false);
+                $table->boolean('includes_libraries')->default(false);
+                $table->unsignedBigInteger('tutoring_group_id')->nullable();
+                $table->unsignedBigInteger('academic_year_id')->nullable();
+                $table->unsignedBigInteger('academic_subject_id')->nullable();
+                $table->unsignedInteger('units_total')->default(0);
+                $table->unsignedInteger('units_used')->default(0);
+                $table->timestamp('starts_at')->nullable();
+                $table->timestamp('expires_at')->nullable();
+                $table->string('status', 32)->default('active');
+                $table->text('notes')->nullable();
+                $table->timestamps();
+            });
+        }
 
         Schema::create('one_to_one_weekly_availability', function (Blueprint $table) {
             $table->id();
@@ -100,20 +102,22 @@ class OneToOneMonthlyBookingTest extends TestCase
             $table->timestamps();
         });
 
-        Schema::create('tutoring_group_bookings', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('tutoring_group_id')->nullable();
-            $table->unsignedBigInteger('student_service_entitlement_id')->nullable();
-            $table->unsignedBigInteger('order_id')->nullable();
-            $table->string('payment_status', 32)->nullable();
-            $table->unsignedBigInteger('instructor_id')->nullable();
-            $table->unsignedBigInteger('user_id')->nullable();
-            $table->timestamp('starts_at')->nullable();
-            $table->timestamp('ends_at')->nullable();
-            $table->string('status', 32)->default('pending');
-            $table->text('admin_notes')->nullable();
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('tutoring_group_bookings')) {
+            Schema::create('tutoring_group_bookings', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('tutoring_group_id')->nullable();
+                $table->unsignedBigInteger('student_service_entitlement_id')->nullable();
+                $table->unsignedBigInteger('order_id')->nullable();
+                $table->string('payment_status', 32)->nullable();
+                $table->unsignedBigInteger('instructor_id')->nullable();
+                $table->unsignedBigInteger('user_id')->nullable();
+                $table->timestamp('starts_at')->nullable();
+                $table->timestamp('ends_at')->nullable();
+                $table->string('status', 32)->default('pending');
+                $table->text('admin_notes')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -204,9 +208,9 @@ class OneToOneMonthlyBookingTest extends TestCase
         [$student, $instructor, $entitlement] = $this->seedActors(5);
 
         $ats = [
-            Carbon::parse('2026-08-17 18:00:00'), // Mon
-            Carbon::parse('2026-08-19 18:00:00'), // Wed
-            Carbon::parse('2026-08-24 18:00:00'), // Mon
+            \App\Support\AppTimezone::wallClockToUtc('2026-08-17', '18:00'), // Mon
+            \App\Support\AppTimezone::wallClockToUtc('2026-08-19', '18:00'), // Wed
+            \App\Support\AppTimezone::wallClockToUtc('2026-08-24', '18:00'), // Mon
         ];
 
         $sessions = OneToOneSessionService::bookMultipleWithInstructor(

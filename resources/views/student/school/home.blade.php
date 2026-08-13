@@ -18,10 +18,12 @@
     $upcoming = $upcoming ?? collect();
     $todayItems = $todayItems ?? collect();
     $scheduleRows = $scheduleRows ?? collect();
-    $weekAnchor = ($weekAnchor ?? now())->locale($locale);
     $viewMode = $viewMode ?? 'week';
     $sortMode = $sortMode ?? 'classes';
     $searchQuery = $searchQuery ?? '';
+    $weekAnchor = ($weekAnchor ?? now())->locale($locale);
+    $viewerTz = auth()->user()?->timezoneCode() ?? \App\Support\AppTimezone::academy();
+    $weekAnchor = $weekAnchor->copy()->timezone($viewerTz);
     $cal = $weekAnchor->copy();
     $monthStart = $cal->copy()->startOfMonth()->startOfWeek(\Carbon\Carbon::SATURDAY);
     $monthEnd = $cal->copy()->endOfMonth()->endOfWeek(\Carbon\Carbon::FRIDAY);
@@ -222,7 +224,7 @@
                 <h3>{{ $todayMission->title }}</h3>
                 <p class="st-event-card__sub">
                     {{ $todayMission->subtitle }}
-                    · {{ $todayMission->starts_at?->translatedFormat('D g:i A') }}
+                    · <x-app-datetime :at="$todayMission->starts_at" pattern="D g:i A" />
                     · {{ $todayMission->duration_minutes }} {{ __('student_timeline.minutes') }}
                 </p>
             </div>
@@ -313,12 +315,12 @@
                 @php $schedHref = $scheduleJoinUrl($row); @endphp
                 @if($schedHref)
                     <a href="{{ $schedHref }}" class="st-cal__row st-cal__row--link">
-                        <span>{{ trim(($row->day_short ?? '').' · '.($row->starts_at?->format('g:i A') ?? '—'), ' ·') }}</span>
+                        <span>{{ trim(($row->day_short ?? '').' · '.($row->starts_at ? \App\Support\AppTimezone::formatFor($row->starts_at, $viewerTz, 'g:i A', $locale) : '—'), ' ·') }}</span>
                         <span>{{ \Illuminate\Support\Str::limit($row->title ?? '', 28) }}</span>
                     </a>
                 @else
                     <div class="st-cal__row">
-                        <span>{{ trim(($row->day_short ?? '').' · '.($row->starts_at?->format('g:i A') ?? '—'), ' ·') }}</span>
+                        <span>{{ trim(($row->day_short ?? '').' · '.($row->starts_at ? \App\Support\AppTimezone::formatFor($row->starts_at, $viewerTz, 'g:i A', $locale) : '—'), ' ·') }}</span>
                         <span>{{ \Illuminate\Support\Str::limit($row->title ?? '', 28) }}</span>
                     </div>
                 @endif
@@ -415,7 +417,9 @@
         $eventCards->push((object) [
             'title' => $todayMission->title,
             'subtitle' => $todayMission->subtitle,
-            'meta' => $todayMission->starts_at?->translatedFormat($isRtl ? 'l · g:i A' : 'D · g:i A'),
+            'meta' => $todayMission->starts_at
+                ? \App\Support\AppTimezone::formatFor($todayMission->starts_at, $viewerTz, $isRtl ? 'l · g:i A' : 'D · g:i A', $locale)
+                : null,
             'url' => $todayMission->is_joinable ? $todayMission->join_url : ($todayMission->class_url ?: '#'),
             'person' => $primaryClass->instructor_name ?? null,
         ]);
@@ -427,7 +431,9 @@
         $eventCards->push((object) [
             'title' => method_exists($session, 'displayTitle') ? $session->displayTitle() : ($session->title ?? __('student_timeline.events')),
             'subtitle' => $session->cohort?->title ?: ($session->tutoringGroup?->title ?: ''),
-            'meta' => $session->starts_at?->translatedFormat($isRtl ? 'l · g:i A' : 'D · g:i A'),
+            'meta' => $session->starts_at
+                ? \App\Support\AppTimezone::formatFor($session->starts_at, $viewerTz, $isRtl ? 'l · g:i A' : 'D · g:i A', $locale)
+                : null,
             'url' => \Illuminate\Support\Facades\Route::has('student.schedule.join')
                 ? route('student.schedule.join', ['type' => 'class', 'id' => $session->id])
                 : '#',
@@ -525,7 +531,7 @@
             <h3>{{ $slot->title }}</h3>
             <div class="st-event-card__meta">
                 <img src="{{ asset('img/student-timeline/clock.png') }}" alt="" width="14" height="14">
-                <span>{{ $slot->starts_at?->format('g:i A') }}</span>
+                <span>{{ $slot->starts_at ? \App\Support\AppTimezone::formatFor($slot->starts_at, $viewerTz, 'g:i A', $locale) : '—' }}</span>
             </div>
         </a>
     @empty

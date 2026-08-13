@@ -72,29 +72,31 @@ class StudentLibrariesFoldersGateTest extends TestCase
             $table->timestamps();
         });
 
-        Schema::create('student_service_entitlements', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id');
-            $table->foreignId('service_package_id')->nullable();
-            $table->foreignId('order_id')->nullable();
-            $table->string('scope')->nullable();
-            $table->string('plan_type')->nullable();
-            $table->unsignedInteger('term_months')->nullable();
-            $table->unsignedInteger('weekly_group_sessions')->nullable();
-            $table->unsignedInteger('weekly_private_sessions')->nullable();
-            $table->boolean('includes_community')->default(false);
-            $table->boolean('includes_libraries')->default(false);
-            $table->foreignId('tutoring_group_id')->nullable();
-            $table->foreignId('academic_year_id')->nullable();
-            $table->foreignId('academic_subject_id')->nullable();
-            $table->unsignedInteger('units_total')->default(0);
-            $table->unsignedInteger('units_used')->default(0);
-            $table->timestamp('starts_at')->nullable();
-            $table->timestamp('expires_at')->nullable();
-            $table->string('status')->default('active');
-            $table->text('notes')->nullable();
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('student_service_entitlements')) {
+            Schema::create('student_service_entitlements', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id');
+                $table->foreignId('service_package_id')->nullable();
+                $table->foreignId('order_id')->nullable();
+                $table->string('scope')->nullable();
+                $table->string('plan_type')->nullable();
+                $table->unsignedInteger('term_months')->nullable();
+                $table->unsignedInteger('weekly_group_sessions')->nullable();
+                $table->unsignedInteger('weekly_private_sessions')->nullable();
+                $table->boolean('includes_community')->default(false);
+                $table->boolean('includes_libraries')->default(false);
+                $table->foreignId('tutoring_group_id')->nullable();
+                $table->foreignId('academic_year_id')->nullable();
+                $table->foreignId('academic_subject_id')->nullable();
+                $table->unsignedInteger('units_total')->default(0);
+                $table->unsignedInteger('units_used')->default(0);
+                $table->timestamp('starts_at')->nullable();
+                $table->timestamp('expires_at')->nullable();
+                $table->string('status')->default('active');
+                $table->text('notes')->nullable();
+                $table->timestamps();
+            });
+        }
 
         Schema::create('live_sessions', function (Blueprint $table) {
             $table->id();

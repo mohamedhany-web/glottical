@@ -6,6 +6,7 @@ use App\Models\TutorWorkSchedule;
 use App\Models\TutoringGroup;
 use App\Models\TutoringGroupBooking;
 use App\Models\TutoringGroupCohort;
+use App\Support\AppTimezone;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -75,8 +76,8 @@ class TutoringGroupAvailabilityService
             return collect();
         }
 
-        $from = ($from ?? now())->copy()->startOfDay();
-        $to = ($to ?? now()->addDays(21))->copy()->endOfDay();
+        $from = ($from ?? now())->copy();
+        $to = ($to ?? now()->addDays(21))->copy();
         $duration = max(30, (int) $group->duration_minutes);
         $capacity = max(1, (int) $group->capacity);
 
@@ -95,19 +96,21 @@ class TutoringGroupAvailabilityService
         $blocking = TutoringGroupBooking::query()
             ->blocking()
             ->where('instructor_id', $group->instructor_id)
-            ->whereBetween('starts_at', [$from, $to])
+            ->whereBetween('starts_at', [$from->copy()->utc(), $to->copy()->utc()])
             ->with('tutoringGroup:id,type')
             ->get(['id', 'tutoring_group_id', 'starts_at', 'ends_at']);
 
+        $academy = AppTimezone::academy();
         $slots = collect();
-        $cursor = $from->copy()->startOfDay();
+        $cursor = $from->copy()->timezone($academy)->startOfDay();
+        $endDay = $to->copy()->timezone($academy)->endOfDay();
 
-        while ($cursor->lte($to)) {
+        while ($cursor->lte($endDay)) {
             $dayRules = $rules->where('day_of_week', $cursor->isoWeekday());
             foreach ($dayRules as $rule) {
                 $ruleDuration = (int) ($rule->slot_duration_minutes ?: $duration);
-                $windowStart = $cursor->copy()->setTimeFromTimeString($rule->startTimeString());
-                $windowEnd = $cursor->copy()->setTimeFromTimeString($rule->endTimeString());
+                $windowStart = AppTimezone::wallClockToUtc($cursor->toDateString(), $rule->startTimeString(), $academy);
+                $windowEnd = AppTimezone::wallClockToUtc($cursor->toDateString(), $rule->endTimeString(), $academy);
                 $slotStart = $windowStart->copy();
 
                 while ($slotStart->copy()->addMinutes($ruleDuration)->lte($windowEnd)) {
@@ -133,12 +136,13 @@ class TutoringGroupAvailabilityService
                         }
 
                         if ($available) {
+                            $local = $slotStart->copy()->timezone($academy);
                             $slots->push([
-                                'starts_at' => $slotStart->toIso8601String(),
-                                'ends_at' => $slotEnd->toIso8601String(),
-                                'date' => $slotStart->toDateString(),
-                                'time' => $slotStart->format('H:i'),
-                                'label' => $slotStart->locale(app()->getLocale())->translatedFormat('D d M — H:i'),
+                                'starts_at' => $slotStart->copy()->utc()->toIso8601String(),
+                                'ends_at' => $slotEnd->copy()->utc()->toIso8601String(),
+                                'date' => $local->toDateString(),
+                                'time' => $local->format('H:i'),
+                                'label' => $local->locale(app()->getLocale())->translatedFormat('D d M — H:i'),
                                 'duration' => $ruleDuration,
                                 'seats_left' => $seatsLeft,
                             ]);

@@ -63,16 +63,18 @@ class LibraryVideosAudienceScopeTest extends TestCase
             $table->timestamps();
         });
 
-        Schema::create('student_service_entitlements', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id');
-            $table->boolean('includes_libraries')->default(false);
-            $table->foreignId('academic_year_id')->nullable();
-            $table->string('status')->default('active');
-            $table->timestamp('starts_at')->nullable();
-            $table->timestamp('expires_at')->nullable();
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('student_service_entitlements')) {
+            Schema::create('student_service_entitlements', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id');
+                $table->boolean('includes_libraries')->default(false);
+                $table->foreignId('academic_year_id')->nullable();
+                $table->string('status')->default('active');
+                $table->timestamp('starts_at')->nullable();
+                $table->timestamp('expires_at')->nullable();
+                $table->timestamps();
+            });
+        }
 
         if (! Schema::hasTable('advanced_courses')) {
             Schema::create('advanced_courses', function (Blueprint $table) {

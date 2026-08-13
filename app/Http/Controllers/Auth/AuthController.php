@@ -288,6 +288,8 @@ class AuthController extends Controller
             'phone' => 'required|string|max:20',
             'email' => 'required|email|unique:users',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'timezone' => ['nullable', 'string', 'max:64'],
+            'timezone_auto' => ['nullable', 'string', 'max:64'],
         ], [
             'name.required' => 'الاسم مطلوب',
             'country_code.required' => 'كود الدولة مطلوب',
@@ -338,6 +340,10 @@ class AuthController extends Controller
         }
 
         // التسجيل متاح فقط للطلاب
+        $timezone = \App\Support\AppTimezone::normalize($request->input('timezone'))
+            ?: \App\Support\AppTimezone::normalize($request->input('timezone_auto'))
+            ?: \App\Support\AppTimezone::normalize(session('pending_timezone'));
+
         $user = User::create([
             'name' => $request->name,
             'phone' => $fullPhone,
@@ -345,7 +351,9 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'role' => 'student', // فقط طالب
             'is_active' => true,
+            'timezone' => $timezone,
         ]);
+        session()->forget('pending_timezone');
 
         $referralCode = $request->input('referral_code');
         if ($referralCode === null || $referralCode === '') {

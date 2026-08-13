@@ -129,6 +129,28 @@
                 <input type="email" name="email" value="{{ old('email', $user->email) }}" autocomplete="email" dir="ltr">
                 @error('email')<small class="st-field__err">{{ $message }}</small>@enderror
             </label>
+
+            <label class="st-field st-field--full">
+                <span>{{ app()->getLocale() === 'ar' ? 'المنطقة الزمنية' : 'Timezone' }}</span>
+                @php
+                    $tzOptions = \App\Support\AppTimezone::commonZones();
+                    $tzCurrent = old('timezone', $user->timezone ?: \App\Support\AppTimezone::academy());
+                    if ($tzCurrent && ! array_key_exists($tzCurrent, $tzOptions)) {
+                        $tzOptions = [$tzCurrent => $tzCurrent] + $tzOptions;
+                    }
+                @endphp
+                <select name="timezone" data-timezone-select required>
+                    @foreach ($tzOptions as $tzId => $tzLabel)
+                        <option value="{{ $tzId }}" @selected($tzCurrent === $tzId)>{{ $tzLabel }}</option>
+                    @endforeach
+                </select>
+                <small class="st-field__hint" style="opacity:.75;display:block;margin-top:.35rem">
+                    {{ app()->getLocale() === 'ar'
+                        ? 'تُعرض مواعيد الحصص والفصول بتوقيتك. المعلمون يدخلون المواعيد بتوقيت مصر.'
+                        : 'Class times are shown in your timezone. Teachers schedule in Egypt time.' }}
+                </small>
+                @error('timezone')<small class="st-field__err">{{ $message }}</small>@enderror
+            </label>
         </div>
     </section>
 

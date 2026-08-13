@@ -630,6 +630,10 @@ Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 
+Route::post('/account/timezone', [\App\Http\Controllers\AccountTimezoneController::class, 'sync'])
+    ->middleware('throttle:30,1')
+    ->name('account.timezone.sync');
+
 // إعداد المصادقة الثنائية (TOTP) — يظهر فمن يُشمَّل بـ requiresTwoFactor (حالياً أدمن عند تفعيل الإلزام)
 Route::middleware(['auth'])->prefix('2fa')->name('two-factor.')->group(function () {
     Route::get('/setup', [\App\Http\Controllers\Auth\TwoFactorController::class, 'showSetup'])->name('setup');

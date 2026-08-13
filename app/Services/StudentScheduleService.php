@@ -8,6 +8,7 @@ use App\Models\TutoringClassSession;
 use App\Models\TutoringCohortEnrollment;
 use App\Models\TutoringGroupBooking;
 use App\Models\User;
+use App\Support\AppTimezone;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
@@ -21,9 +22,12 @@ class StudentScheduleService
      */
     public static function weekAppointments(User $user, ?Carbon $weekStart = null): Collection
     {
-        $tz = config('app.timezone', 'Africa/Cairo');
-        $start = ($weekStart ?: now($tz))->copy()->startOfWeek(Carbon::SATURDAY)->startOfDay();
+        $tz = AppTimezone::forUser($user);
+        $start = ($weekStart ?: now($tz))->copy()->timezone($tz)->startOfWeek(Carbon::SATURDAY)->startOfDay();
         $end = $start->copy()->addDays(6)->endOfDay();
+        // Query bounds in UTC
+        $startUtc = $start->copy()->utc();
+        $endUtc = $end->copy()->utc();
 
         $items = collect();
 
@@ -32,7 +36,7 @@ class StudentScheduleService
                 ->with(['course:id,title', 'instructor:id,name', 'classroomMeeting'])
                 ->where('student_id', $user->id)
                 ->where('status', OneToOneSession::STATUS_SCHEDULED)
-                ->whereBetween('scheduled_at', [$start, $end])
+                ->whereBetween('scheduled_at', [$startUtc, $endUtc])
                 ->orderBy('scheduled_at')
                 ->get()
                 ->each(function (OneToOneSession $session) use ($items) {
@@ -66,7 +70,7 @@ class StudentScheduleService
                     ->with(['cohort:id,title', 'tutoringGroup:id,title', 'classroomMeeting'])
                     ->whereIn('tutoring_group_cohort_id', $cohortIds)
                     ->where('status', '!=', TutoringClassSession::STATUS_CANCELLED)
-                    ->whereBetween('starts_at', [$start, $end])
+                    ->whereBetween('starts_at', [$startUtc, $endUtc])
                     ->orderBy('starts_at')
                     ->get()
                     ->each(function (TutoringClassSession $session) use ($items) {
@@ -94,7 +98,7 @@ class StudentScheduleService
                 ->with(['tutoringGroup:id,title', 'classroomMeeting', 'cohort:id,title'])
                 ->where('user_id', $user->id)
                 ->where('status', TutoringGroupBooking::STATUS_CONFIRMED)
-                ->whereBetween('starts_at', [$start, $end])
+                ->whereBetween('starts_at', [$startUtc, $endUtc])
                 ->orderBy('starts_at')
                 ->get()
                 ->each(function (TutoringGroupBooking $booking) use ($items) {
@@ -133,8 +137,8 @@ class StudentScheduleService
      */
     public static function weekDays(User $user, ?Carbon $weekStart = null): Collection
     {
-        $tz = config('app.timezone', 'Africa/Cairo');
-        $start = ($weekStart ?: now($tz))->copy()->startOfWeek(Carbon::SATURDAY);
+        $tz = AppTimezone::forUser($user);
+        $start = ($weekStart ?: now($tz))->copy()->timezone($tz)->startOfWeek(Carbon::SATURDAY);
         $appointments = self::weekAppointments($user, $start);
         $today = now($tz)->toDateString();
 

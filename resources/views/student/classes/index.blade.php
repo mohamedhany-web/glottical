@@ -61,7 +61,7 @@
             <h2 class="st-join-hero__title">{{ $nextJoinable->displayTitle() }}</h2>
             <p class="st-join-hero__meta">
                 {{ $nextJoinable->cohort?->title }}
-                · {{ $nextJoinable->starts_at?->timezone(config('app.timezone'))->translatedFormat($isRtl ? 'l، d M · g:i A' : 'D, M j · g:i A') }}
+                · <x-app-datetime :at="$nextJoinable->starts_at" :pattern="$isRtl ? 'l، d M · g:i A' : 'D, M j · g:i A'" />
                 @if($nextJoinable->cohort?->tutoringGroup?->instructor?->name)
                     · {{ $nextJoinable->cohort->tutoringGroup->instructor->name }}
                 @endif
@@ -156,7 +156,7 @@
                             </form>
                         @elseif($next && $next->starts_at)
                             <span class="st-class-card__next">
-                                {{ __('student_timeline.next_at', ['time' => $next->starts_at->timezone(config('app.timezone'))->translatedFormat('D g:i A')]) }}
+                                {{ __('student_timeline.next_at', ['time' => \App\Support\AppTimezone::formatFor($next->starts_at, auth()->user()?->timezoneCode(), 'D g:i A', app()->getLocale())]) }}
                             </span>
                         @else
                             <span class="st-class-card__next">{{ __('student_timeline.no_upcoming_in_class') }}</span>
@@ -207,7 +207,7 @@
             <p class="st-event-card__sub">{{ $session->cohort?->title }}</p>
             <div class="st-event-card__meta">
                 <img src="{{ asset('img/student-timeline/clock.png') }}" alt="" width="14" height="14">
-                <span>{{ $session->starts_at?->timezone(config('app.timezone'))->translatedFormat('D · g:i A') }}</span>
+                <span><x-app-datetime :at="$session->starts_at" pattern="D · g:i A" /></span>
             </div>
             <div class="st-event-card__actions">
                 @if($joinable)

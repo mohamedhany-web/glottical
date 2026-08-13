@@ -46,7 +46,7 @@ class TutoringGroupCohortController extends Controller
                 'tutoring_group_id' => $tutoringGroup->id,
                 'capacity' => $tutoringGroup->capacity ?: 8,
                 'min_enrollment' => 3,
-                'timezone' => 'Africa/Cairo',
+                'timezone' => \App\Support\AppTimezone::academy(),
                 'status' => TutoringGroupCohort::STATUS_OPEN,
                 'is_visible' => true,
                 'study_days' => [6, 2],
@@ -63,6 +63,7 @@ class TutoringGroupCohortController extends Controller
     {
         abort_unless($tutoringGroup->isCollective(), 404);
         $data = $this->validated($request);
+        $data = $this->normalizeAcademyDatetimes($data);
         $data['tutoring_group_id'] = $tutoringGroup->id;
         $data['slug'] = TutoringGroupCohort::uniqueSlug($tutoringGroup->id, $data['slug'] ?: $data['title']);
         $data['is_visible'] = $request->boolean('is_visible', true);
@@ -108,6 +109,7 @@ class TutoringGroupCohortController extends Controller
     {
         abort_unless($tutoringGroup->isCollective() && (int) $cohort->tutoring_group_id === (int) $tutoringGroup->id, 404);
         $data = $this->validated($request);
+        $data = $this->normalizeAcademyDatetimes($data);
         $data['slug'] = TutoringGroupCohort::uniqueSlug($tutoringGroup->id, $data['slug'] ?: $data['title'], $cohort->id);
         $data['is_visible'] = $request->boolean('is_visible', true);
         $data['study_days'] = array_map('intval', $data['study_days'] ?? []);
@@ -141,7 +143,11 @@ class TutoringGroupCohortController extends Controller
             'study_time' => ['nullable', 'date_format:H:i'],
             'sessions_count' => ['nullable', 'integer', 'min:1', 'max:60'],
             'session_duration_minutes' => ['nullable', 'integer', 'min:15', 'max:300'],
-            'timezone' => ['nullable', 'string', 'max:64'],
+            'timezone' => ['nullable', 'string', 'max:64', function ($attribute, $value, $fail) {
+                if ($value && ! \App\Support\AppTimezone::isValid($value)) {
+                    $fail('منطقة زمنية غير صالحة.');
+                }
+            }],
             'capacity' => ['required', 'integer', 'min:1', 'max:500'],
             'min_enrollment' => ['required', 'integer', 'min:1', 'max:500'],
             'status' => ['required', 'in:open,full,closed,postponed,completed'],
@@ -150,5 +156,31 @@ class TutoringGroupCohortController extends Controller
             'enrollment_closes_at' => ['nullable', 'date'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ]);
+    }
+
+    /**
+     * تواريخ الدفعة تُفسَّر بتوقيت الأكاديمية (أو timezone الدفعة) ثم تُحفظ UTC.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function normalizeAcademyDatetimes(array $data): array
+    {
+        $tz = \App\Support\AppTimezone::normalize($data['timezone'] ?? null)
+            ?? \App\Support\AppTimezone::academy();
+        $data['timezone'] = $tz;
+
+        foreach (['starts_at', 'ends_at', 'postponed_to', 'enrollment_closes_at'] as $field) {
+            if (empty($data[$field])) {
+                continue;
+            }
+            $raw = (string) $data[$field];
+            if (strlen($raw) <= 10) {
+                $raw .= ' 00:00:00';
+            }
+            $data[$field] = \App\Support\AppTimezone::parseLocalToUtc($raw, $tz);
+        }
+
+        return $data;
     }
 }

@@ -9,6 +9,7 @@ use App\Models\TutoringClassAttendance;
 use App\Models\TutoringClassSession;
 use App\Models\TutoringCohortEnrollment;
 use App\Models\User;
+use App\Support\AppTimezone;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
@@ -39,13 +40,13 @@ class StudentSchoolHomeService
         $view = in_array($filters['view'] ?? '', ['week', 'day'], true) ? $filters['view'] : 'week';
         $sort = in_array($filters['sort'] ?? '', ['classes', 'progress', 'name'], true) ? $filters['sort'] : 'classes';
         $search = trim((string) ($filters['q'] ?? ''));
-        $tz = config('app.timezone', 'Africa/Cairo');
+        $tz = AppTimezone::forUser($user);
         $weekAnchor = ! empty($filters['week'])
             ? Carbon::parse((string) $filters['week'], $tz)->startOfDay()
             : now($tz)->startOfDay();
         $weekStart = $weekAnchor->copy()->startOfWeek(Carbon::SATURDAY);
 
-        $hour = (int) now()->format('G');
+        $hour = (int) now($tz)->format('G');
         $greeting = $hour < 12
             ? ($isRtl ? 'صباح الخير' : 'Good morning')
             : ($hour < 17
@@ -229,7 +230,7 @@ class StudentSchoolHomeService
                 ->values()
                 ->take(6);
 
-        $timelineQuery = function (array $overrides = []) use ($weekAnchor, $view, $sort, $search): string {
+        $timelineQuery = function (array $overrides = []) use ($weekAnchor, $view, $sort, $search, $tz): string {
             $params = array_filter([
                 'week' => $overrides['week'] ?? $weekAnchor->toDateString(),
                 'view' => $overrides['view'] ?? $view,
@@ -244,7 +245,7 @@ class StudentSchoolHomeService
             if (($params['sort'] ?? '') === 'classes') {
                 unset($params['sort']);
             }
-            if (($params['week'] ?? '') === now(config('app.timezone', 'Africa/Cairo'))->toDateString()) {
+            if (($params['week'] ?? '') === now($tz)->toDateString()) {
                 unset($params['week']);
             }
 
