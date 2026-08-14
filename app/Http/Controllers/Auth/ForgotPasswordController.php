@@ -47,12 +47,22 @@ class ForgotPasswordController extends Controller
             return back()->withErrors(['email' => __('auth.account_inactive')])->withInput();
         }
 
-        $status = Password::broker()->sendResetLink(
-            ['email' => $user->email]
-        );
+        try {
+            $status = Password::broker()->sendResetLink(
+                ['email' => $user->email]
+            );
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->withErrors(['email' => __('auth.reset_link_failed')])->withInput();
+        }
 
         if ($status === Password::RESET_LINK_SENT) {
             return back()->with('status', __('auth.reset_link_sent'));
+        }
+
+        if ($status === Password::RESET_THROTTLED) {
+            return back()->withErrors(['email' => __('auth.reset_link_throttled')])->withInput();
         }
 
         return back()->withErrors(['email' => __('auth.reset_link_failed')])->withInput();

@@ -94,6 +94,33 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(30)->by('admin-employee-notification-store:'.$id);
         });
 
+        RateLimiter::for('auth-login', function (Request $request) {
+            return Limit::perMinutes(15, 20)->by('auth-login:ip:'.$request->ip());
+        });
+
+        RateLimiter::for('auth-register', function (Request $request) {
+            return Limit::perMinute(5)->by('auth-register:ip:'.$request->ip());
+        });
+
+        RateLimiter::for('auth-password-reset-request', function (Request $request) {
+            $ip = (string) $request->ip();
+            $email = strtolower(trim((string) $request->input('email', '')));
+
+            $limits = [
+                Limit::perMinute(6)->by('auth-password-reset-request:ip:'.$ip),
+            ];
+
+            if ($email !== '') {
+                $limits[] = Limit::perHour(6)->by('auth-password-reset-request:email:'.$email);
+            }
+
+            return $limits;
+        });
+
+        RateLimiter::for('auth-password-reset-submit', function (Request $request) {
+            return Limit::perMinute(10)->by('auth-password-reset-submit:ip:'.$request->ip());
+        });
+
         // تحميل دوال المساعدة (تُحمّل من هنا لضمان توفرها حتى قبل composer dump-autoload)
         $filesystemHelper = app_path('Helpers/FilesystemHelper.php');
         if (file_exists($filesystemHelper)) {

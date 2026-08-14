@@ -599,15 +599,14 @@ Route::get('/package/{slug}', function ($slug) {
 // مسارات المصادقة - محمية بحيث لا يمكن الوصول إليها إذا كان المستخدم مسجل دخول
 Route::middleware(['guest', 'guest-only'])->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,15'); // 20 طلب كل 15 دقيقة — يتضمن الدخول + إعادة المحاولة مع 2FA
+    Route::post('/login', [AuthController::class, 'login'])->middleware(ThrottleRequests::using('auth-login'));
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    // Rate limiting للتسجيل: 5 محاولات في الدقيقة من نفس IP
-    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
+    Route::post('/register', [AuthController::class, 'register'])->middleware(ThrottleRequests::using('auth-register'));
     // نسيت كلمة المرور: طلب رابط إعادة التعيين + صفحة تعيين كلمة مرور جديدة
     Route::get('/forgot-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
-    Route::post('/forgot-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->middleware('throttle:5,1')->name('password.email');
+    Route::post('/forgot-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->middleware(ThrottleRequests::using('auth-password-reset-request'))->name('password.email');
     Route::get('/reset-password/{token}', [\App\Http\Controllers\Auth\ResetPasswordController::class, 'showResetForm'])->name('password.reset');
-    Route::post('/reset-password', [\App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->middleware('throttle:5,1')->name('password.update');
+    Route::post('/reset-password', [\App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->middleware(ThrottleRequests::using('auth-password-reset-submit'))->name('password.update');
     // نفس جلسة «ضيف» مثل الدخول حتى لا تُفقد بيانات خطوة 2FA بعد إعادة التوجيه
     Route::get('/2fa/challenge', [\App\Http\Controllers\Auth\TwoFactorController::class, 'showChallenge'])
         ->middleware('throttle:60,1')
@@ -1433,6 +1432,18 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/tutor-applications/{tutorApplication}/activate', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'activate'])->name('tutor-applications.activate');
         Route::post('/tutor-applications/{tutorApplication}/reject', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'reject'])->name('tutor-applications.reject');
         Route::delete('/tutor-applications/{tutorApplication}', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'destroy'])->name('tutor-applications.destroy');
+
+        // Legacy alias: older links used instructor-applications
+        Route::redirect('/instructor-applications', '/admin/tutor-applications', 301);
+        Route::redirect('/instructor-applications/list', '/admin/tutor-applications/list', 301);
+        Route::redirect('/instructor-applications/activated', '/admin/tutor-applications/activated', 301);
+        Route::get('/instructor-applications/{tutorApplication}', function (\App\Models\TutorApplication $tutorApplication) {
+            return redirect()->route('admin.tutor-applications.show', $tutorApplication, 301);
+        });
+        Route::post('/instructor-applications/{tutorApplication}/approve', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'approve']);
+        Route::post('/instructor-applications/{tutorApplication}/activate', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'activate']);
+        Route::post('/instructor-applications/{tutorApplication}/reject', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'reject']);
+        Route::delete('/instructor-applications/{tutorApplication}', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'destroy']);
 
         Route::get('/hiring-form', [\App\Http\Controllers\Admin\HiringFormController::class, 'edit'])->name('hiring-form.edit');
         Route::put('/hiring-form', [\App\Http\Controllers\Admin\HiringFormController::class, 'update'])->name('hiring-form.update');
