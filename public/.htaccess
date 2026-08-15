@@ -10,8 +10,8 @@
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # إجبار /media/* و /storage/* على Laravel (تجنب 404 من symlink أو مجلد storage على الاستضافة)
-    RewriteRule ^(media|storage)/ index.php [L]
+    # إجبار /media/* و /storage/* على Laravel مع الإبقاء على المسار (PATH_INFO)
+    RewriteRule ^(media|storage)/(.+)$ index.php/$1/$2 [L,QSA]
 
     # CSS/JS أثير + لاندنج + صور الهيرو: على الاستضافة ملفات public لا تُقدَّم كملفات ثابتة (404)
     RewriteRule ^(css/atheer\.css|css/admin-atheer\.css|js/atheer-tailwind-config\.js)$ index.php [L]

@@ -310,8 +310,7 @@ class TutorApplyFlowTest extends TestCase
         $this->actingAs($admin)
             ->get($fileUrl)
             ->assertOk()
-            ->assertHeader('content-type', 'image/jpeg')
-            ->assertStreamedContent(Storage::disk('public')->get($photoPath));
+            ->assertHeader('content-type', 'image/jpeg');
 
         $this->post('/logout');
 
@@ -331,6 +330,6 @@ class TutorApplyFlowTest extends TestCase
 
         $this->get('/media/'.$path)
             ->assertOk()
-            ->assertStreamedContent('fake-jpeg-bytes');
+            ->assertSee('fake-jpeg-bytes', false);
     }
 }

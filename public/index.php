@@ -41,4 +41,24 @@ register_shutdown_function(static function () use ($app): void {
     }
 });
 
+// Hostinger/LiteSpeed قد يحوّل /media/* إلى index.php ويفقد المسار قبل توجيه Laravel.
+$currentPath = parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH) ?: '';
+if (! preg_match('#/(media|storage)/.+#', (string) $currentPath)) {
+    foreach (['REDIRECT_URL', 'REDIRECT_REDIRECT_URL', 'HTTP_X_ORIGINAL_URL', 'UNENCODED_URL'] as $rewriteKey) {
+        $raw = $_SERVER[$rewriteKey] ?? null;
+        if (! is_string($raw) || $raw === '') {
+            continue;
+        }
+        $rewrittenPath = parse_url($raw, PHP_URL_PATH) ?: $raw;
+        $rewrittenPath = '/'.ltrim(str_replace('\\', '/', (string) $rewrittenPath), '/');
+        if (! preg_match('#^/(media|storage)/.+#', $rewrittenPath)) {
+            continue;
+        }
+        $query = (string) ($_SERVER['QUERY_STRING'] ?? '');
+        $_SERVER['REQUEST_URI'] = $rewrittenPath.($query !== '' ? '?'.$query : '');
+        $_SERVER['PATH_INFO'] = $rewrittenPath;
+        break;
+    }
+}
+
 $app->handleRequest(Request::capture());

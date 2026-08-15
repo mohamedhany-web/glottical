@@ -464,7 +464,9 @@ Route::get('/parent-progress', [\App\Http\Controllers\Public\ParentProgressContr
 
 // معرض الصور والفيديوهات
 Route::get('/media', [\App\Http\Controllers\Public\MediaController::class, 'index'])->name('public.media.index');
-Route::get('/media/{media}', [\App\Http\Controllers\Public\MediaController::class, 'show'])->name('public.media.show');
+Route::get('/media/{media}', [\App\Http\Controllers\Public\MediaController::class, 'show'])
+    ->whereNumber('media')
+    ->name('public.media.show');
 
 // صفحة التصنيفات العامة (من course_categories في الموقع)
 Route::get('/categories', [\App\Http\Controllers\Public\CategoriesController::class, 'index'])->name('public.categories');
