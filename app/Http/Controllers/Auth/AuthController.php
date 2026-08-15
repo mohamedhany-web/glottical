@@ -250,7 +250,11 @@ class AuthController extends Controller
             }
             
             if ($user->isInstructor()) {
-                return redirect()->intended(route('instructor.dashboard'));
+                if (! $user->canAccessInstructorPanel()) {
+                    return redirect()->route('public.tutor.apply.profile');
+                }
+
+                return redirect()->intended(route('dashboard'));
             }
             
             return redirect()->intended(route('dashboard'));

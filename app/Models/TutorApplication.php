@@ -113,7 +113,7 @@ class TutorApplication extends Model
             self::STATUS_DRAFT => 'مسودة — لم يُكمل البيانات',
             self::STATUS_PENDING => 'قيد المراجعة',
             self::STATUS_APPROVED => 'مقبول — بانتظار التفعيل العام',
-            self::STATUS_ACTIVATED => 'مفعّل (ظاهر للعامة)',
+            self::STATUS_ACTIVATED => 'مفعّل (لوحة المعلم مفتوحة)',
             self::STATUS_REJECTED => 'مرفوض',
         ];
     }

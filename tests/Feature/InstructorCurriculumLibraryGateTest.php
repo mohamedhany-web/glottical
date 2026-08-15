@@ -119,7 +119,7 @@ class InstructorCurriculumLibraryGateTest extends TestCase
 
         $this->actingAs($newbie)
             ->get(route('instructor.libraries.curriculum.index'))
-            ->assertForbidden();
+            ->assertRedirect(route('public.tutor.apply.profile'));
     }
 
     public function test_activated_instructor_can_open_curriculum_library(): void

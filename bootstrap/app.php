@@ -111,6 +111,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'community.contributor' => \App\Http\Middleware\EnsureCommunityContributor::class,
             'employee.can' => \App\Http\Middleware\EnsureEmployeeCan::class,
             'rbac.strict.admin' => \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+            'instructor.activated' => \App\Http\Middleware\EnsureInstructorPanelAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

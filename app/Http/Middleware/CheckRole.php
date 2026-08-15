@@ -80,7 +80,7 @@ class CheckRole
                 return redirect()->route('admin.dashboard')
                     ->with('error', 'غير مسموح لك بالوصول لهذه الصفحة');
             } elseif ($user->isInstructor()) {
-                return redirect()->route('instructor.courses.index')
+                return redirect()->to($user->instructorHomeUrl())
                     ->with('error', 'غير مسموح لك بالوصول لهذه الصفحة');
             } else {
                 return redirect()->route('dashboard')

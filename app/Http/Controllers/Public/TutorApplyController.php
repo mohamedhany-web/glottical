@@ -116,17 +116,22 @@ class TutorApplyController extends Controller
             ]);
         }
 
-        if ($application->status === TutorApplication::STATUS_PENDING) {
-            return view('tutor.apply-submitted', compact('application'));
+        if (in_array($application->status, [
+            TutorApplication::STATUS_PENDING,
+            TutorApplication::STATUS_APPROVED,
+        ], true)) {
+            return view('tutor.apply-submitted', [
+                'application' => $application,
+                'waitStatus' => $application->status,
+            ]);
         }
 
-        if (in_array($application->status, [
-            TutorApplication::STATUS_APPROVED,
-            TutorApplication::STATUS_ACTIVATED,
-        ], true)) {
+        if ($application->status === TutorApplication::STATUS_ACTIVATED) {
             return redirect()
-                ->route('instructor.personal-branding.edit')
-                ->with('success', 'طلبك معتمد. يمكنك تحديث ملفك التعريفي من هنا.');
+                ->route('dashboard')
+                ->with('success', app()->getLocale() === 'ar'
+                    ? 'تم تفعيل حسابك. يمكنك استخدام لوحة المعلم الآن.'
+                    : 'Your account is activated. You can use the instructor dashboard now.');
         }
 
         $form = HiringFormService::publishedForm();
@@ -192,7 +197,7 @@ class TutorApplyController extends Controller
         return redirect()
             ->route('public.tutor.apply.profile')
             ->with('success', app()->getLocale() === 'ar'
-                ? 'تم إرسال بياناتك للمراجعة. حسابك جاهز للدخول، وسيظهر ملفك للعامة بعد موافقة الإدارة.'
-                : 'Your details were submitted for review. You can log in; your public profile appears after admin approval.');
+                ? 'تم إرسال بياناتك للمراجعة. لن تُفتح لوحة المعلم إلا بعد تفعيل الإدارة.'
+                : 'Your details were submitted for review. The instructor dashboard opens only after admin activation.');
     }
 }

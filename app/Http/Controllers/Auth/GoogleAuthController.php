@@ -103,7 +103,11 @@ class GoogleAuthController extends Controller
             return redirect()->intended(route('admin.dashboard'));
         }
         if ($user->isInstructor()) {
-            return redirect()->intended(route('instructor.dashboard'));
+            if (! $user->canAccessInstructorPanel()) {
+                return redirect()->route('public.tutor.apply.profile');
+            }
+
+            return redirect()->intended(route('dashboard'));
         }
 
         if ($intended && str_contains($intended, 'community') && $user->is_community_contributor) {

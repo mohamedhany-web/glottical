@@ -25,27 +25,7 @@ class LectureMaterialStorage
             $d = (string) config('filesystems.public_media_disk', 'r2');
         }
 
-        if ($d === 'r2') {
-            $cfg = config('filesystems.disks.r2', []);
-            if (empty($cfg['key']) || empty($cfg['secret']) || empty($cfg['bucket']) || empty($cfg['endpoint'])) {
-                Log::warning('LECTURE_MATERIALS_DISK=r2 لكن إعدادات Cloudflare R2 غير مكتملة؛ يُستخدم القرص public.');
-
-                return 'public';
-            }
-        }
-
-        if ($d === 's3') {
-            $bucket = config('filesystems.disks.s3.bucket');
-            if (empty($bucket)) {
-                return 'public';
-            }
-        }
-
-        if (! in_array($d, ['public', 'r2', 's3'], true)) {
-            return 'public';
-        }
-
-        return $d;
+        return CloudflareR2::resolveDisk($d);
     }
 
     public static function diskFor(?LectureMaterial $material): string
@@ -103,7 +83,8 @@ class LectureMaterialStorage
             Storage::disk('public')->makeDirectory($dir);
             $stored = $file->storeAs($dir, $name, 'public');
         } else {
-            $stored = Storage::disk($disk)->putFileAs($dir, $file, $name, ['visibility' => 'public']);
+            // لا نرسل ACL public-read — Cloudflare R2 يرفضها افتراضياً.
+            $stored = Storage::disk($disk)->putFileAs($dir, $file, $name);
         }
 
         if (! is_string($stored) || $stored === '') {
@@ -234,7 +215,7 @@ class LectureMaterialStorage
             if ($stream === false) {
                 return false;
             }
-            Storage::disk($target)->writeStream($path, $stream, ['visibility' => 'public']);
+            Storage::disk($target)->writeStream($path, $stream);
             if (is_resource($stream)) {
                 fclose($stream);
             }

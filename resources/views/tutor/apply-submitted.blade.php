@@ -3,13 +3,17 @@
     $isRtl = $locale === 'ar';
     $brand = config('app.name', 'Glottical');
     $application = $application ?? null;
+    $waitStatus = $waitStatus ?? ($application->status ?? 'pending');
+    $isApproved = $waitStatus === \App\Models\TutorApplication::STATUS_APPROVED;
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
-  <title>{{ $isRtl ? 'طلبك قيد المراجعة' : 'Application under review' }} — {{ $brand }}</title>
+  <title>{{ $isApproved
+    ? ($isRtl ? 'بانتظار تفعيل الإدارة' : 'Waiting for admin activation')
+    : ($isRtl ? 'طلبك قيد المراجعة' : 'Application under review') }} — {{ $brand }}</title>
   <meta name="theme-color" content="#0B3D91">
   @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme', 'instructor-profile']])
@@ -23,6 +27,9 @@
   @if(session('success'))
     <div class="ta-ok ta-status__flash">{{ session('success') }}</div>
   @endif
+  @if(session('error'))
+    <div class="ta-note ta-status__flash" style="background:#FEF2F2;border-color:#FECACA;color:#991B1B">{{ session('error') }}</div>
+  @endif
 
   <section class="ta-status__panel">
     <div class="ta-status__icon" aria-hidden="true">
@@ -34,18 +41,26 @@
     </div>
 
     <p class="ta-status__chip">{{ $isRtl ? 'توظيف المعلمين' : 'Teacher hiring' }}</p>
-    <h1 class="ta-status__title">{{ $isRtl ? 'طلبك قيد المراجعة' : 'Your application is under review' }}</h1>
+    <h1 class="ta-status__title">
+      {{ $isApproved
+        ? ($isRtl ? 'تم قبول طلبك — بانتظار التفعيل' : 'Accepted — waiting for activation')
+        : ($isRtl ? 'طلبك قيد المراجعة' : 'Your application is under review') }}
+    </h1>
     <p class="ta-status__lead">
-      {{ $isRtl
-        ? 'استلمنا بياناتك بنجاح. حسابك يعمل الآن، وبعد موافقة الإدارة يظهر ملفك للطلاب.'
-        : 'We received your details. Your account works now, and after admin approval your profile appears to students.' }}
+      {{ $isApproved
+        ? ($isRtl
+          ? 'قبلنا ملفك. لوحة المعلم ولوحات التحكم تُفتح بعد خطوة التفعيل من الإدارة. سجّل الدخول لاحقاً بنفس الإيميل وكلمة المرور.'
+          : 'Your profile was accepted. Dashboards open only after admin activation. Log in later with the same email and password.')
+        : ($isRtl
+          ? 'استلمنا بياناتك. لن تتمكن من دخول لوحة المعلم حتى تراجع الإدارة طلبك ثم تفعّل الحساب.'
+          : 'We received your details. You cannot open the instructor dashboard until admin review and activation.') }}
     </p>
 
     @if($application)
       <div class="ta-status__meta">
         <span>{{ $application->full_name }}</span>
         <span dir="ltr">{{ $application->email }}</span>
-        <span class="ta-status__badge">{{ $isRtl ? 'قيد المراجعة' : 'Pending review' }}</span>
+        <span class="ta-status__badge">{{ $isApproved ? ($isRtl ? 'بانتظار التفعيل' : 'Awaiting activation') : ($isRtl ? 'قيد المراجعة' : 'Pending review') }}</span>
       </div>
     @endif
 
@@ -53,33 +68,33 @@
       <li class="is-done">
         <span class="ta-status__step-dot" aria-hidden="true"></span>
         <div>
-          <strong>{{ $isRtl ? 'تم إرسال الطلب' : 'Application sent' }}</strong>
-          <p>{{ $isRtl ? 'البيانات والمستندات وصلت للإدارة.' : 'Details and documents reached the admin team.' }}</p>
+          <strong>{{ $isRtl ? 'تم إنشاء الحساب' : 'Account created' }}</strong>
+          <p>{{ $isRtl ? 'يمكنك تسجيل الدخول لإكمال الملف أو متابعة الحالة.' : 'You can log in to complete the profile or check status.' }}</p>
         </div>
       </li>
-      <li class="is-current">
+      <li class="{{ $isApproved ? 'is-done' : 'is-current' }}">
         <span class="ta-status__step-dot" aria-hidden="true"></span>
         <div>
-          <strong>{{ $isRtl ? 'المراجعة الآن' : 'Under review' }}</strong>
-          <p>{{ $isRtl ? 'نراجع الملف قبل القبول والتفعيل.' : 'We review your profile before approval and activation.' }}</p>
+          <strong>{{ $isRtl ? 'مراجعة الإدارة' : 'Admin review' }}</strong>
+          <p>{{ $isRtl ? 'نراجع البيانات والمستندات قبل القبول.' : 'We review details and documents before approval.' }}</p>
         </div>
       </li>
-      <li>
+      <li class="{{ $isApproved ? 'is-current' : '' }}">
         <span class="ta-status__step-dot" aria-hidden="true"></span>
         <div>
-          <strong>{{ $isRtl ? 'التفعيل والظهور للطلاب' : 'Activation & public profile' }}</strong>
-          <p>{{ $isRtl ? 'بعد القبول يظهر ملفك في صفحة المعلمين.' : 'After approval your profile appears on the instructors page.' }}</p>
+          <strong>{{ $isRtl ? 'تفعيل الحساب ولوحة المعلم' : 'Activation & dashboard' }}</strong>
+          <p>{{ $isRtl ? 'بعد التفعيل يظهر ملفك للطلاب وتُفتح لوحة التحكم.' : 'After activation your public profile appears and the dashboard unlocks.' }}</p>
         </div>
       </li>
     </ol>
 
     <div class="ta-status__actions">
-      <a href="{{ route('dashboard') }}" class="sana-btn sana-btn--yellow sana-btn--lg">
-        {{ $isRtl ? 'الذهاب إلى لوحة المعلم' : 'Go to instructor dashboard' }}
-      </a>
-      <a href="{{ route('instructor.personal-branding.edit') }}" class="sana-btn sana-btn--outline sana-btn--lg">
-        {{ $isRtl ? 'تحديث الملف التعريفي' : 'Update personal branding' }}
-      </a>
+      <form method="POST" action="{{ route('logout') }}">
+        @csrf
+        <button type="submit" class="sana-btn sana-btn--outline sana-btn--lg">
+          {{ $isRtl ? 'تسجيل الخروج' : 'Log out' }}
+        </button>
+      </form>
     </div>
   </section>
 </main>

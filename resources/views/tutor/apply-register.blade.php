@@ -23,8 +23,8 @@
   <h1 class="ta-title">{{ $isRtl ? 'أنشئ حسابك كمعلّم' : 'Create your teacher account' }}</h1>
   <p class="ta-sub">
     {{ $isRtl
-      ? 'سجّل بالإيميل وكلمة المرور — يُنشأ حسابك فوراً ثم نوجّهك لإكمال بياناتك الشخصية والمستندات.'
-      : 'Register with email and password — your account is created immediately, then you complete personal details and documents.' }}
+      ? 'سجّل بالإيميل وكلمة المرور ثم أكمل الملف التعريفي. لوحة المعلم تُفتح فقط بعد تفعيل الإدارة.'
+      : 'Register with email and password, then complete your profile. The instructor dashboard opens only after admin activation.' }}
   </p>
 
   @if(session('success'))
@@ -33,8 +33,8 @@
 
   <div class="ta-note">
     {{ $isRtl
-      ? 'هذا الإيميل وكلمة المرور هما بيانات دخولك للمنصة. بعد التسجيل ستكمل الصورة والهوية والشهادات والفيديو.'
-      : 'This email and password are your login credentials. After signup you will upload photo, ID, certificates, and intro video.' }}
+      ? 'هذا الإيميل وكلمة المرور هما بيانات دخولك. بعد التسجيل تكمل الملف، وبعد تفعيل الإدارة تُفتح لوحة المعلم.'
+      : 'This email and password are your login credentials. After signup you complete your profile; the dashboard unlocks after admin activation.' }}
   </div>
 
   <form method="POST" action="{{ route('public.tutor.apply.register') }}" class="ta-card">

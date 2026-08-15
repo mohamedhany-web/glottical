@@ -27,8 +27,8 @@
   <h1 class="ta-title">{{ $form->title ?? ($isRtl ? 'أكمل بياناتك' : 'Complete your details') }}</h1>
   <p class="ta-sub">
     {{ $form->description ?: ($isRtl
-      ? 'حسابك جاهز: '.($user->email ?? '').' — أكمل الحقول ثم أرسل للمراجعة.'
-      : 'Your account is ready: '.($user->email ?? '').' — complete the fields and submit for review.') }}
+      ? 'حسابك جاهز: '.($user->email ?? '').' — أكمل الملف التعريفي ثم أرسله للإدارة. لوحة المعلم لا تُفتح إلا بعد التفعيل.'
+      : 'Your account is ready: '.($user->email ?? '').' — complete your profile and submit it. The dashboard opens only after admin activation.') }}
   </p>
 
   @if(session('success'))

@@ -57,7 +57,7 @@
             <div class="flex items-start gap-3">
                 <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-user-check text-sm"></i></span>
                 <div>
-                    <p class="text-sm font-semibold text-ink">تم تفعيل الملف العام — المعلم يسجّل بنفس الإيميل وكلمة المرور التي أنشأها عند التقديم:</p>
+                    <p class="text-sm font-semibold text-ink">تم تفعيل الحساب — المعلم يسجّل بنفس الإيميل وكلمة المرور وتُفتح له لوحة المعلم:</p>
                     <p class="mt-2 font-mono text-sm font-bold text-accent" dir="ltr">{{ session('activated_email') }}</p>
                     @if(session('activated_user_id'))
                         <a href="{{ route('admin.users.edit', session('activated_user_id')) }}" class="mt-2 inline-flex text-sm font-semibold text-accent underline">فتح صفحة المستخدم</a>
@@ -224,17 +224,17 @@
 
             @if($application->canActivateAccount())
                 <article class="rounded-2xl border border-accent/30 bg-surface p-5 shadow-soft space-y-3">
-                    <h3 class="text-base font-semibold text-ink">٢) تفعيل الملف العام</h3>
+                    <h3 class="text-base font-semibold text-ink">٢) تفعيل الحساب ولوحة المعلم</h3>
                     <p class="text-sm leading-6 text-muted">
-                        الحساب موجود مسبقاً (أنشأه المتقدم عند التسجيل). التفعيل يعتمد الملف التعريفي ويظهر المعلم للطلاب.
+                        الحساب موجود مسبقاً. التفعيل يفتح لوحة المعلم ولوحات التحكم، ويعتمد الملف التعريفي للظهور للطلاب.
                     </p>
                     @if($application->user)
                         <p class="text-xs font-medium text-accent" dir="ltr">{{ $application->user->email }}</p>
                     @endif
-                    <form method="POST" action="{{ route('admin.tutor-applications.activate', $application) }}" onsubmit="return confirm('تأكيد تفعيل الملف العام؟')">
+                    <form method="POST" action="{{ route('admin.tutor-applications.activate', $application) }}" onsubmit="return confirm('تأكيد تفعيل الحساب ولوحة المعلم؟')">
                         @csrf
                         <button class="btn-press w-full rounded-xl bg-accent py-3 text-sm font-semibold text-white">
-                            <i class="fas fa-user-check ml-1"></i> تفعيل الملف العام الآن
+                            <i class="fas fa-user-check ml-1"></i> تفعيل الحساب الآن
                         </button>
                     </form>
                 </article>

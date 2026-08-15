@@ -76,6 +76,8 @@ return [
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', true),
+            // R2 لا يدعم Object ACL (public-read) إلا إذا فُعّل يدوياً. العرض العام عبر R2_PUBLIC_URL.
+            'visibility' => 'private',
             'throw' => false,
             'report' => false,
         ],
@@ -178,6 +180,15 @@ return [
     | public = تخزين محلي للتطوير فقط
     */
     'lecture_materials_disk' => env('LECTURE_MATERIALS_DISK') ?: env('PUBLIC_MEDIA_DISK', 'r2'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | مواد المناهج التفاعلية (PPTX / PDF في هيكل المنهج)
+    |--------------------------------------------------------------------------
+    | r2     = Cloudflare R2 (افتراضي)
+    | public = تخزين محلي للتطوير فقط عند غياب مفاتيح AWS_*
+    */
+    'curriculum_library_disk' => env('CURRICULUM_LIBRARY_DISK', 'r2'),
 
     /*
     |--------------------------------------------------------------------------

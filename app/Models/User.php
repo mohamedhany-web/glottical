@@ -367,6 +367,75 @@ class User extends Authenticatable
         return $this->hasOne(InstructorProfile::class);
     }
 
+    public function tutorApplications()
+    {
+        return $this->hasMany(TutorApplication::class);
+    }
+
+    public function latestTutorApplication(): ?TutorApplication
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('tutor_applications')) {
+            return null;
+        }
+
+        if ($this->relationLoaded('tutorApplications')) {
+            return $this->tutorApplications->sortByDesc('id')->first();
+        }
+
+        return $this->tutorApplications()->orderByDesc('id')->first();
+    }
+
+    /**
+     * دخول لوحة المعلم بعد تفعيل الإدارة فقط.
+     * الحسابات التي أنشأتها الإدارة بدون طلب توظيف تبقى مسموحة.
+     */
+    public function canAccessInstructorPanel(): bool
+    {
+        if (! $this->isInstructor() && ! $this->isTeacher()) {
+            return false;
+        }
+
+        if (! $this->is_active) {
+            return false;
+        }
+
+        $application = $this->latestTutorApplication();
+        if ($application === null) {
+            return true;
+        }
+
+        if ($application->status === TutorApplication::STATUS_ACTIVATED) {
+            return true;
+        }
+
+        try {
+            if ($this->hasTeachingCourses()) {
+                return true;
+            }
+        } catch (\Throwable) {
+        }
+
+        if (\Illuminate\Support\Facades\Schema::hasTable('tutoring_groups')) {
+            try {
+                if (TutoringGroup::query()->where('instructor_id', $this->id)->exists()) {
+                    return true;
+                }
+            } catch (\Throwable) {
+            }
+        }
+
+        return false;
+    }
+
+    public function instructorHomeUrl(): string
+    {
+        if ($this->canAccessInstructorPanel()) {
+            return route('dashboard');
+        }
+
+        return route('public.tutor.apply.profile');
+    }
+
     public function agreementPayments()
     {
         return $this->hasMany(AgreementPayment::class, 'instructor_id');

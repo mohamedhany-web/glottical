@@ -26,7 +26,7 @@
         <div class="min-w-0">
             <p class="text-xs font-medium text-muted">الإدارة · التوظيف</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">لوحة التوظيف</h2>
-            <p class="mt-1 text-sm text-muted">مراجعة طلبات التقديم، عرض بيانات المتقدمين، ثم تفعيل الملف العام للمعلم.</p>
+            <p class="mt-1 text-sm text-muted">مراجعة طلبات التقديم، ثم القبول، ثم التفعيل — التفعيل هو ما يفتح لوحة المعلم ويظهر الملف للطلاب.</p>
         </div>
         <div class="admin-hero-actions flex flex-wrap gap-2">
             <button type="button" onclick="navigator.clipboard.writeText(@js($applyUrl))" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft hover:text-accent">
@@ -120,10 +120,10 @@
     <article class="rounded-2xl border border-dashed border-line bg-canvas px-4 py-5 sm:px-5">
         <p class="text-sm font-semibold text-ink">مسار العمل</p>
         <ol class="mt-2 list-decimal space-y-1.5 pr-5 text-sm leading-7 text-muted">
-            <li>المتقدم يسجّل إيميل + كلمة مرور فيُنشأ حسابه فوراً ويُوجَّه لإكمال البيانات.</li>
-            <li>يكمل الصورة والهوية والشهادات والفيديو ويرسل للمراجعة.</li>
+            <li>المتقدم يسجّل إيميل + كلمة مرور فيُنشأ حسابه ويُوجَّه لإكمال الملف التعريفي.</li>
+            <li>يكمل الصورة والهوية والشهادات والفيديو ويرسل للمراجعة — بدون دخول للوحة المعلم.</li>
             <li>تراجع الإدارة الطلب من <span class="font-medium text-ink">مراجعة الطلبات</span> ثم قبول.</li>
-            <li><span class="font-medium text-ink">تفعيل الملف العام</span> يظهر المعلم للطلاب (بدون إنشاء كلمة مرور جديدة).</li>
+            <li><span class="font-medium text-ink">تفعيل الحساب</span> يفتح لوحة المعلم ويظهر الملف للطلاب (بنفس الإيميل وكلمة المرور).</li>
         </ol>
     </article>
 </div>

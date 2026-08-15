@@ -2,26 +2,32 @@
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
     $langKey = $isRtl ? 'ar' : 'en';
-    $activeDelivery = $delivery ?? 'one_to_one';
-    $activeCategoryId = (int) ($categoryId ?? 0);
-    $pathId = (int) ($pathId ?? 0);
-    $searchQuery = $searchQuery ?? '';
-    $courses = $courseModels ?? collect();
-    $filters = $filters ?? ['subject'=>'','age'=>'','gender'=>'','language'=>'','specialty'=>'','availability'=>''];
-    $filterCatalog = $filterCatalog ?? config('private_lessons');
-    $calendarByInstructor = $calendarByInstructor ?? collect();
-    $lessonDuration = (int) ($lessonDuration ?? 50);
+    $tab = in_array($tab ?? 'private', ['private', 'groups'], true) ? $tab : 'private';
+    $filters = $filters ?? [
+        'q' => '', 'subject_id' => null, 'year_id' => null, 'type' => '',
+        'subject' => '', 'age' => '', 'gender' => '', 'language' => '', 'specialty' => '', 'availability' => '',
+    ];
+    $filterCatalog = $filter_catalog ?? ($filterCatalog ?? config('private_lessons'));
+    $filterSubjects = $filter_subjects ?? collect();
+    $filterYears = $filter_years ?? collect();
+    $teachers = $teachers ?? collect();
+    $groups = $groups ?? collect();
+    $searchQuery = (string) ($filters['q'] ?? '');
+    $results = $tab === 'groups' ? $groups : $teachers;
+    $resultsCount = method_exists($results, 'total') ? $results->total() : $results->count();
+
     $baseQuery = array_filter([
-        'delivery' => $activeDelivery ?: 'one_to_one',
+        'tab' => $tab,
         'q' => $searchQuery !== '' ? $searchQuery : null,
-        'path' => $pathId ?: null,
-        'category' => $activeCategoryId ?: null,
-        'subject' => $filters['subject'] ?: null,
-        'age' => $filters['age'] ?: null,
-        'gender' => $filters['gender'] ?: null,
-        'language' => $filters['language'] ?: null,
-        'specialty' => $filters['specialty'] ?: null,
-        'availability' => $filters['availability'] ?: null,
+        'subject_id' => $filters['subject_id'] ?: null,
+        'year_id' => ($tab === 'groups' && ! empty($filters['year_id'])) ? $filters['year_id'] : null,
+        'type' => ($tab === 'groups' && ($filters['type'] ?? '') !== '') ? $filters['type'] : null,
+        'subject' => ($tab === 'private' && ($filters['subject'] ?? '') !== '') ? $filters['subject'] : null,
+        'age' => ($tab === 'private' && ($filters['age'] ?? '') !== '') ? $filters['age'] : null,
+        'gender' => ($tab === 'private' && ($filters['gender'] ?? '') !== '') ? $filters['gender'] : null,
+        'language' => ($tab === 'private' && ($filters['language'] ?? '') !== '') ? $filters['language'] : null,
+        'specialty' => ($tab === 'private' && ($filters['specialty'] ?? '') !== '') ? $filters['specialty'] : null,
+        'availability' => ($tab === 'private' && ($filters['availability'] ?? '') !== '') ? $filters['availability'] : null,
     ]);
 
     $filterUrl = function (array $overrides = []) use ($baseQuery) {
@@ -29,7 +35,7 @@
     };
 
     $chipOn = function (string $key, string $value) use ($filters) {
-        return ($filters[$key] ?? '') === $value ? 'is-on' : '';
+        return (string) ($filters[$key] ?? '') === (string) $value ? 'is-on' : '';
     };
 @endphp
 <!DOCTYPE html>
@@ -154,6 +160,17 @@
     .gl-plan span{display:block;margin-top:3px;font:600 .68rem Tajawal,sans-serif;color:#5B6577}
     .gl-plan.is-featured{border-color:#0B3D91;background:#E8EEF8;color:#0B3D91}
     .gl-plan.is-featured span{color:#0B3D91}
+    .gl-tabs{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 .95rem}
+    .gl-tab{
+      display:inline-flex;align-items:center;gap:8px;
+      min-height:2.55rem;padding:.45rem 1.1rem;border-radius:999px;
+      border:1.5px solid #D7DDE6;background:#fff;
+      font:800 .85rem Tajawal,sans-serif;text-decoration:none!important;color:#0B1220;
+    }
+    .gl-tab:hover{border-color:#0B3D91;color:#0B3D91}
+    .gl-tab.is-on{background:#0B3D91;border-color:#0B3D91;color:#fff}
+    .gl-tab.is-on:hover{color:#fff;background:#072A66;border-color:#072A66}
+    .gl-pager{margin-top:1.65rem;display:flex;justify-content:center}
     @media (max-width:520px){
       .gl-search{grid-template-columns:1fr}
       .gl-search button{width:100%}
@@ -177,8 +194,9 @@
       <p class="sana-cat-hero__desc">{{ __('public.courses_subtitle') }}</p>
       <p class="sana-cat-hero__stats">
         <span class="sana-cat-hero__stat">
-          <i class="fas fa-chalkboard-user"></i>
-          {{ number_format($courses->count()) }} {{ __('public.private_teachers_count') }}
+          <i class="fas {{ $tab === 'groups' ? 'fa-users' : 'fa-chalkboard-user' }}"></i>
+          {{ number_format($resultsCount) }}
+          {{ $tab === 'groups' ? __('public.browse_groups_count') : __('public.private_teachers_count') }}
         </span>
       </p>
     </div>
@@ -186,33 +204,52 @@
 
   <section class="sana-container" style="padding-bottom:4rem">
     <div class="gl-catalog-panel sana-reveal">
+      <nav class="gl-tabs" aria-label="{{ __('student_timeline.learn_tabs') }}">
+        <a href="{{ $filterUrl(['tab' => 'private', 'year_id' => null, 'type' => null]) }}" class="gl-tab {{ $tab === 'private' ? 'is-on' : '' }}">{{ __('public.browse_tab_private') }}</a>
+        <a href="{{ $filterUrl(['tab' => 'groups', 'subject' => null, 'age' => null, 'gender' => null, 'language' => null, 'specialty' => null, 'availability' => null]) }}" class="gl-tab {{ $tab === 'groups' ? 'is-on' : '' }}">{{ __('public.browse_tab_groups') }}</a>
+      </nav>
+
       <form action="{{ route('public.courses') }}" method="get" class="gl-search" role="search">
-        <input type="hidden" name="delivery" value="{{ $activeDelivery ?: 'one_to_one' }}">
-        @foreach(['path','category','subject','age','gender','language','specialty','availability'] as $hiddenKey)
-          @if(!empty($filters[$hiddenKey] ?? ($hiddenKey === 'path' ? $pathId : ($hiddenKey === 'category' ? $activeCategoryId : ''))))
-            <input type="hidden" name="{{ $hiddenKey }}" value="{{ $filters[$hiddenKey] ?? ($hiddenKey === 'path' ? $pathId : $activeCategoryId) }}">
+        <input type="hidden" name="tab" value="{{ $tab }}">
+        @foreach(['subject_id','year_id','type','subject','age','gender','language','specialty','availability'] as $hiddenKey)
+          @if(!empty($filters[$hiddenKey]))
+            <input type="hidden" name="{{ $hiddenKey }}" value="{{ $filters[$hiddenKey] }}">
           @endif
         @endforeach
-        <input type="search" name="q" value="{{ $searchQuery }}" placeholder="{{ __('public.search_course_placeholder') }}" aria-label="{{ __('public.search_course_placeholder') }}">
+        <input
+          type="search"
+          name="q"
+          value="{{ $searchQuery }}"
+          placeholder="{{ $tab === 'groups' ? __('student_timeline.learn_search_groups') : __('student_timeline.learn_search_teachers') }}"
+          aria-label="{{ $tab === 'groups' ? __('student_timeline.learn_search_groups') : __('student_timeline.learn_search_teachers') }}"
+        >
         <button type="submit">{{ $isRtl ? 'بحث' : 'Search' }}</button>
       </form>
-      <p class="gl-search-hint">{{ __('public.private_search_examples') }}</p>
+      <p class="gl-search-hint">{{ $tab === 'groups' ? __('public.browse_search_groups_examples') : __('public.private_search_examples') }}</p>
 
       @php
-        $filterGroups = [
+        $filterGroups = $tab === 'private' ? [
           ['key' => 'subject', 'label' => __('public.private_filter_subject'), 'options' => $filterCatalog['subjects'] ?? []],
           ['key' => 'age', 'label' => __('public.private_filter_age'), 'options' => $filterCatalog['age_groups'] ?? []],
           ['key' => 'gender', 'label' => __('public.private_filter_teacher'), 'options' => $filterCatalog['genders'] ?? []],
           ['key' => 'language', 'label' => __('public.private_filter_language'), 'options' => $filterCatalog['languages'] ?? []],
           ['key' => 'specialty', 'label' => __('public.private_filter_specialty'), 'options' => $filterCatalog['specializations'] ?? []],
           ['key' => 'availability', 'label' => __('public.private_filter_availability'), 'options' => $filterCatalog['availability'] ?? []],
+        ] : [
+          ['key' => 'type', 'label' => __('student_timeline.learn_filter_type'), 'options' => [
+            'individual' => ['ar' => __('student_timeline.learn_type_individual'), 'en' => __('student_timeline.learn_type_individual')],
+            'collective' => ['ar' => __('student_timeline.learn_type_collective'), 'en' => __('student_timeline.learn_type_collective')],
+          ]],
         ];
         $activeCount = 0;
         foreach ($filterGroups as $g) {
           if (!empty($filters[$g['key']])) { $activeCount++; }
         }
-        if (!empty($pathId)) { $activeCount++; }
+        if (!empty($filters['subject_id'])) { $activeCount++; }
+        if ($tab === 'groups' && !empty($filters['year_id'])) { $activeCount++; }
         $filtersOpenByDefault = $activeCount > 0;
+        $selectedSubject = $filterSubjects->firstWhere('id', (int) ($filters['subject_id'] ?? 0));
+        $selectedYear = $filterYears->firstWhere('id', (int) ($filters['year_id'] ?? 0));
       @endphp
 
       <div class="gl-active-filters">
@@ -224,14 +261,18 @@
             </a>
           @endif
         @endforeach
-        @if(!empty($pathId))
-          @php $pathName = optional(($learningPaths ?? collect())->firstWhere('id', $pathId))->name ?? $pathId; @endphp
-          <a href="{{ $filterUrl(['path' => null]) }}" class="gl-active-pill">
-            {{ __('public.courses_filter_paths') }}: {{ $pathName }} <i class="fas fa-times"></i>
+        @if(!empty($filters['subject_id']))
+          <a href="{{ $filterUrl(['subject_id' => null]) }}" class="gl-active-pill">
+            {{ __('student_timeline.learn_filter_subject') }}: {{ $selectedSubject->name ?? $filters['subject_id'] }} <i class="fas fa-times"></i>
+          </a>
+        @endif
+        @if($tab === 'groups' && !empty($filters['year_id']))
+          <a href="{{ $filterUrl(['year_id' => null]) }}" class="gl-active-pill">
+            {{ __('student_timeline.learn_filter_year') }}: {{ $selectedYear->name ?? $filters['year_id'] }} <i class="fas fa-times"></i>
           </a>
         @endif
         @if($activeCount > 0)
-          <a href="{{ route('public.courses', array_filter(['delivery' => $activeDelivery ?: 'one_to_one', 'q' => $searchQuery ?: null])) }}" class="gl-active-pill" style="background:#FFF6D6;color:#8A6A00">
+          <a href="{{ route('public.courses', array_filter(['tab' => $tab, 'q' => $searchQuery ?: null])) }}" class="gl-active-pill" style="background:#FFF6D6;color:#8A6A00">
             {{ $isRtl ? 'مسح الكل' : 'Clear all' }}
           </a>
         @endif
@@ -240,10 +281,12 @@
       <div class="gl-filters-shell {{ $filtersOpenByDefault ? 'is-open' : '' }}" id="gl-filters-shell">
         <button type="button" class="gl-filters-toggle" id="gl-filters-toggle" aria-expanded="{{ $filtersOpenByDefault ? 'true' : 'false' }}" aria-controls="gl-filters-body">
           <div>
-            <strong>{{ $isRtl ? 'تصفية المعلمين' : 'Filter teachers' }}</strong>
+            <strong>{{ $tab === 'groups' ? __('public.browse_filter_groups') : ($isRtl ? 'تصفية المعلمين' : 'Filter teachers') }}</strong>
             <span>
               @if($activeCount > 0)
                 {{ $isRtl ? ($activeCount.' فلتر نشط') : ($activeCount.' active') }}
+              @elseif($tab === 'groups')
+                {{ $isRtl ? 'المادة · السنة · النوع…' : 'Subject · year · type…' }}
               @else
                 {{ $isRtl ? 'المادة · العمر · اللغة · التوفر…' : 'Subject · age · language · availability…' }}
               @endif
@@ -253,6 +296,40 @@
         </button>
 
         <div class="gl-filters-body" id="gl-filters-body">
+          @if($filterSubjects->isNotEmpty())
+            <details class="gl-acc" @if(!empty($filters['subject_id'])) open @endif>
+              <summary>
+                <span>{{ __('student_timeline.learn_filter_subject') }}</span>
+                <span class="gl-acc__meta {{ !empty($filters['subject_id']) ? 'has-val' : '' }}">
+                  {{ $selectedSubject->name ?? __('student_timeline.learn_filter_subject_all') }}
+                </span>
+              </summary>
+              <div class="gl-acc__panel" role="group">
+                <a href="{{ $filterUrl(['subject_id' => null]) }}" class="gl-chip {{ empty($filters['subject_id']) ? 'is-on' : '' }}">{{ __('student_timeline.learn_filter_subject_all') }}</a>
+                @foreach($filterSubjects as $subject)
+                  <a href="{{ $filterUrl(['subject_id' => $subject->id]) }}" class="gl-chip {{ (int) ($filters['subject_id'] ?? 0) === (int) $subject->id ? 'is-on' : '' }}">{{ $subject->name }}</a>
+                @endforeach
+              </div>
+            </details>
+          @endif
+
+          @if($tab === 'groups' && $filterYears->isNotEmpty())
+            <details class="gl-acc" @if(!empty($filters['year_id'])) open @endif>
+              <summary>
+                <span>{{ __('student_timeline.learn_filter_year') }}</span>
+                <span class="gl-acc__meta {{ !empty($filters['year_id']) ? 'has-val' : '' }}">
+                  {{ $selectedYear->name ?? __('student_timeline.learn_filter_year_all') }}
+                </span>
+              </summary>
+              <div class="gl-acc__panel" role="group">
+                <a href="{{ $filterUrl(['year_id' => null]) }}" class="gl-chip {{ empty($filters['year_id']) ? 'is-on' : '' }}">{{ __('student_timeline.learn_filter_year_all') }}</a>
+                @foreach($filterYears as $year)
+                  <a href="{{ $filterUrl(['year_id' => $year->id]) }}" class="gl-chip {{ (int) ($filters['year_id'] ?? 0) === (int) $year->id ? 'is-on' : '' }}">{{ $year->name }}</a>
+                @endforeach
+              </div>
+            </details>
+          @endif
+
           @foreach($filterGroups as $group)
             @php
               $selected = $filters[$group['key']] ?? '';
@@ -266,122 +343,132 @@
               <div class="gl-acc__panel" role="group" aria-label="{{ $group['label'] }}">
                 <a href="{{ $filterUrl([$group['key'] => null]) }}" class="gl-chip {{ $selected === '' ? 'is-on' : '' }}">{{ __('public.private_filter_all') }}</a>
                 @foreach($group['options'] as $optKey => $labels)
-                  <a href="{{ $filterUrl([$group['key'] => $optKey]) }}" class="gl-chip {{ $chipOn($group['key'], $optKey) }}">{{ $labels[$langKey] ?? $optKey }}</a>
+                  <a href="{{ $filterUrl([$group['key'] => $optKey]) }}" class="gl-chip {{ $chipOn($group['key'], (string) $optKey) }}">{{ is_array($labels) ? ($labels[$langKey] ?? $optKey) : $labels }}</a>
                 @endforeach
               </div>
             </details>
           @endforeach
-
-          @if(($learningPaths ?? collect())->isNotEmpty())
-            <details class="gl-acc" @if(!empty($pathId)) open @endif>
-              <summary>
-                <span>{{ __('public.courses_filter_paths') }}</span>
-                <span class="gl-acc__meta {{ !empty($pathId) ? 'has-val' : '' }}">
-                  {{ !empty($pathId) ? (optional($learningPaths->firstWhere('id', $pathId))->name ?? __('public.courses_filter_paths')) : __('public.courses_filter_all_paths') }}
-                </span>
-              </summary>
-              <div class="gl-acc__panel" role="group">
-                <a href="{{ $filterUrl(['path' => null]) }}" class="gl-chip {{ empty($pathId) ? 'is-on' : '' }}">{{ __('public.courses_filter_all_paths') }}</a>
-                @foreach($learningPaths as $path)
-                  <a href="{{ $filterUrl(['path' => $path->id]) }}" class="gl-chip {{ (int)$pathId === (int)$path->id ? 'is-on' : '' }}">{{ $path->name }}</a>
-                @endforeach
-              </div>
-            </details>
-          @endif
         </div>
       </div>
-                </div>
+    </div>
 
     <div class="gl-grid">
-      @forelse($courses as $course)
-        @php
-          $instructor = $course->instructor;
-          $thumb = $instructor?->profile_image_url
-            ?? $course->thumbnail_url
-            ?: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&q=80';
-          $url = route('public.course.show', $course->id);
-          $teacherProfileUrl = $instructor
-            ? route('public.instructors.show', $instructor)
-            : $url;
-          $teacher = $instructor->name ?? ($isRtl ? 'معلم متخصص' : 'Specialist teacher');
-          $subject = $course->academicSubject->name ?? $course->title;
-          $cardTitle = __('public.private_course_with_teacher', ['subject' => $subject, 'teacher' => $teacher]);
-          $role = $isRtl
-            ? (($course->academicSubject->name ?? 'تعليم إسلامي').' — معلم/ة')
-            : (($course->academicSubject->name ?? 'Islamic Studies').' Teacher');
-          $meta = is_array($instructor?->private_teaching_meta) ? $instructor->private_teaching_meta : [];
-          $langs = collect($meta['languages'] ?? [])->map(fn ($k) => $filterCatalog['languages'][$k][$langKey] ?? null)->filter();
-          $langLabel = $langs->isNotEmpty()
-            ? $langs->implode(' & ')
-            : ($isRtl ? 'English & Arabic' : 'English & Arabic');
-          $hasChildren = in_array('children', $meta['specializations'] ?? [], true);
-          $calendar = $calendarByInstructor[$course->instructor_id] ?? [];
-          $hasVideo = filled($instructor?->portfolio_intro_video_url ?? null) || filled($course->video_url);
-        @endphp
-        <article class="gl-teacher sana-reveal">
-          <a href="{{ $teacherProfileUrl }}" style="text-decoration:none;color:inherit;display:block">
-            <div class="gl-teacher__media">
-              @if($hasVideo)
-                <div class="gl-teacher__play"><span><i class="fas fa-play"></i></span></div>
-                <img src="{{ $thumb }}" alt="{{ $teacher }}" style="opacity:.5" loading="lazy">
-              @else
-                <img src="{{ $thumb }}" alt="{{ $teacher }}" loading="lazy">
-              @endif
-                        </div>
-          </a>
-          <div class="gl-teacher__body">
-            <div>
-              <h3 class="gl-teacher__name">{{ $teacher }}</h3>
-              <p class="gl-teacher__role">{{ $role }}</p>
-              <p class="gl-teacher__title" style="margin-top:6px">{{ $cardTitle }}</p>
-                      </div>
-            <div class="gl-badges">
-              <span class="gl-badge">⭐ {{ __('public.private_badge_qualified') }}</span>
-              @if($hasChildren)
-                <span class="gl-badge">👧 {{ __('public.private_badge_children') }}</span>
-              @endif
-              <span class="gl-badge">🌎 {{ $langLabel }}</span>
-                        </div>
-            <div class="gl-dur"><i class="far fa-clock"></i> {{ __('public.private_lesson_duration') }}</div>
-            <div>
-              <p style="margin:0 0 6px;font:800 .68rem Tajawal,sans-serif;color:#8A94A6">{{ __('public.private_weekly_slots') }}</p>
-              @if(!empty($calendar))
-                <div class="gl-cal">
-                  @foreach($calendar as $col)
-                    <div class="gl-cal__col">
-                      <span class="gl-cal__day">{{ $col['label'] }}</span>
-                      @foreach($col['times'] as $t)
-                        <span class="gl-cal__t">{{ $t }}</span>
-                      @endforeach
-                      </div>
-                  @endforeach
-                </div>
-              @else
-                <p style="margin:0;font:600 .75rem Tajawal,sans-serif;color:#8A94A6">{{ $isRtl ? 'اختر المعلم لعرض التقويم الكامل' : 'Open the teacher page for the full calendar' }}</p>
-              @endif
-            </div>
-            <div>
-              <p style="margin:0 0 6px;font:800 .68rem Tajawal,sans-serif;color:#8A94A6">{{ __('public.private_packages_label') }}</p>
-              <div class="gl-plans">
-                <a href="{{ route('public.service-packages.index') }}" class="gl-plan">
-                  <strong>{{ __('public.private_package_1m') }}</strong>
-                  <span>{{ __('public.private_package_1m_sub') }}</span>
-                </a>
-                <a href="{{ route('public.service-packages.index') }}" class="gl-plan is-featured">
-                  <strong>{{ __('public.private_package_3m') }}</strong>
-                  <span>{{ __('public.private_package_3m_sub') }}</span>
-                </a>
+      @if($tab === 'groups')
+        @forelse($groups as $group)
+          <article class="gl-teacher sana-reveal">
+            <a href="{{ $group['url'] }}" style="text-decoration:none;color:inherit;display:block">
+              <div class="gl-teacher__media">
+                <img src="{{ $group['photo'] }}" alt="{{ $group['title'] }}" loading="lazy">
               </div>
-            </div>
-            <a href="{{ $teacherProfileUrl }}" class="sana-btn sana-btn--yellow" style="justify-content:center;margin-top:2px">
-              {{ $isRtl ? 'عرض المعلم والحجز' : 'View teacher & book' }}
             </a>
-          </div>
-        </article>
-      @empty
-        <p style="grid-column:1/-1;color:var(--muted);font-weight:700">{{ __('public.private_empty') }}</p>
-      @endforelse
+            <div class="gl-teacher__body">
+              <div>
+                <h3 class="gl-teacher__name">{{ $group['title'] }}</h3>
+                <p class="gl-teacher__role">{{ $group['instructor_name'] }}</p>
+                <p class="gl-teacher__title" style="margin-top:6px">
+                  {{ $group['type_label'] }}
+                  @if($group['subject']) · {{ $group['subject'] }}@endif
+                  @if($group['year']) · {{ $group['year'] }}@endif
+                </p>
+              </div>
+              <div class="gl-badges">
+                <span class="gl-badge">{{ $group['type_label'] }}</span>
+                @if($group['subject'])
+                  <span class="gl-badge">{{ $group['subject'] }}</span>
+                @endif
+              </div>
+              <div class="gl-dur"><i class="far fa-clock"></i> {{ __('public.browse_group_duration', ['minutes' => $group['duration']]) }}</div>
+              <a href="{{ $group['url'] }}" class="sana-btn sana-btn--yellow" style="justify-content:center;margin-top:2px">
+                {{ __('public.browse_view_group') }}
+              </a>
+            </div>
+          </article>
+        @empty
+          <p style="grid-column:1/-1;color:var(--muted);font-weight:700">{{ __('public.browse_groups_empty') }}</p>
+        @endforelse
+      @else
+        @forelse($teachers as $teacher)
+          @php
+            $headline = $teacher['headline'] !== '' ? $teacher['headline'] : __('student_timeline.learn_teacher_fallback');
+            $cardTitle = $teacher['bio'] !== ''
+              ? $teacher['bio']
+              : ($teacher['subjects'][0] ?? $headline);
+            $calendar = $teacher['calendar'] ?? [];
+          @endphp
+          <article class="gl-teacher sana-reveal">
+            <a href="{{ $teacher['url'] }}" style="text-decoration:none;color:inherit;display:block">
+              <div class="gl-teacher__media">
+                @if(!empty($teacher['has_video']))
+                  <div class="gl-teacher__play"><span><i class="fas fa-play"></i></span></div>
+                  <img src="{{ $teacher['photo'] }}" alt="{{ $teacher['name'] }}" style="opacity:.5" loading="lazy">
+                @else
+                  <img src="{{ $teacher['photo'] }}" alt="{{ $teacher['name'] }}" loading="lazy">
+                @endif
+              </div>
+            </a>
+            <div class="gl-teacher__body">
+              <div>
+                <h3 class="gl-teacher__name">{{ $teacher['name'] }}</h3>
+                <p class="gl-teacher__role">{{ $headline }}</p>
+                <p class="gl-teacher__title" style="margin-top:6px">{{ $cardTitle }}</p>
+              </div>
+              <div class="gl-badges">
+                <span class="gl-badge">⭐ {{ __('public.private_badge_qualified') }}</span>
+                @if(!empty($teacher['has_children']))
+                  <span class="gl-badge">👧 {{ __('public.private_badge_children') }}</span>
+                @endif
+                @foreach($teacher['skills'] as $skill)
+                  <span class="gl-badge">{{ $skill }}</span>
+                @endforeach
+                @foreach(array_slice($teacher['chips'] ?? [], 0, 3) as $chip)
+                  <span class="gl-badge">{{ $chip }}</span>
+                @endforeach
+              </div>
+              <div class="gl-dur"><i class="far fa-clock"></i> {{ __('public.private_lesson_duration') }}</div>
+              <div>
+                <p style="margin:0 0 6px;font:800 .68rem Tajawal,sans-serif;color:#8A94A6">{{ __('public.private_weekly_slots') }}</p>
+                @if(!empty($calendar))
+                  <div class="gl-cal">
+                    @foreach($calendar as $col)
+                      <div class="gl-cal__col">
+                        <span class="gl-cal__day">{{ $col['label'] }}</span>
+                        @foreach($col['times'] as $t)
+                          <span class="gl-cal__t">{{ $t }}</span>
+                        @endforeach
+                      </div>
+                    @endforeach
+                  </div>
+                @else
+                  <p style="margin:0;font:600 .75rem Tajawal,sans-serif;color:#8A94A6">{{ $isRtl ? 'اختر المعلم لعرض التقويم الكامل' : 'Open the teacher page for the full calendar' }}</p>
+                @endif
+              </div>
+              <div>
+                <p style="margin:0 0 6px;font:800 .68rem Tajawal,sans-serif;color:#8A94A6">{{ __('public.private_packages_label') }}</p>
+                <div class="gl-plans">
+                  <a href="{{ route('public.service-packages.index') }}" class="gl-plan">
+                    <strong>{{ __('public.private_package_1m') }}</strong>
+                    <span>{{ __('public.private_package_1m_sub') }}</span>
+                  </a>
+                  <a href="{{ route('public.service-packages.index') }}" class="gl-plan is-featured">
+                    <strong>{{ __('public.private_package_3m') }}</strong>
+                    <span>{{ __('public.private_package_3m_sub') }}</span>
+                  </a>
+                </div>
+              </div>
+              <a href="{{ $teacher['url'] }}" class="sana-btn sana-btn--yellow" style="justify-content:center;margin-top:2px">
+                {{ $isRtl ? 'عرض المعلم والحجز' : 'View teacher & book' }}
+              </a>
+            </div>
+          </article>
+        @empty
+          <p style="grid-column:1/-1;color:var(--muted);font-weight:700">{{ __('public.private_empty') }}</p>
+        @endforelse
+      @endif
     </div>
+
+    @if(method_exists($results, 'hasPages') && $results->hasPages())
+      <div class="gl-pager">{{ $results->withQueryString()->links() }}</div>
+    @endif
 
     <div class="sana-reveal" style="margin-top:2.5rem;text-align:center">
       <a href="{{ url('/?open_trial=1') }}" class="sana-btn sana-btn--yellow sana-btn--lg"><i class="fas fa-clipboard-check"></i> {{ __('landing.academy.free_trial_cta') }}</a>

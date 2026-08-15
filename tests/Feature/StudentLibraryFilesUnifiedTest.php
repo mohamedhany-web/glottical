@@ -68,7 +68,10 @@ class StudentLibraryFilesUnifiedTest extends TestCase
 
         $service = file_get_contents(app_path('Services/CurriculumLibraryStorage.php'));
         $this->assertStringContainsString('isR2Ready', $service);
-        $this->assertStringContainsString('falling back to public disk', $service);
+        $this->assertStringContainsString('CloudflareR2::isReady', $service);
+
+        $r2 = file_get_contents(app_path('Services/CloudflareR2.php'));
+        $this->assertStringContainsString('falling back to public disk', $r2);
     }
 
     public function test_home_and_admin_hub_use_files_language(): void

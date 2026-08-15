@@ -59,6 +59,14 @@ class DashboardController extends Controller
                 return redirect()->route('admin.dashboard');
             case 'instructor':
             case 'teacher': // للتوافق مع الأدوار القديمة
+                if (! $user->canAccessInstructorPanel()) {
+                    return redirect()
+                        ->route('public.tutor.apply.profile')
+                        ->with('error', app()->getLocale() === 'ar'
+                            ? 'أكمل ملفك التعريفي. لوحة المعلم تُفتح بعد تفعيل الإدارة.'
+                            : 'Complete your profile. The instructor dashboard opens after admin activation.');
+                }
+
                 return $this->instructorDashboard();
             case 'student':
                 return $this->studentDashboard();

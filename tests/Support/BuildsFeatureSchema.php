@@ -29,6 +29,9 @@ trait BuildsFeatureSchema
             $table->text('bio')->nullable();
             $table->string('profile_image')->nullable();
             $table->string('portfolio_intro_video_url')->nullable();
+            $table->json('private_teaching_meta')->nullable();
+            $table->json('portfolio_marketing_published')->nullable();
+            $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

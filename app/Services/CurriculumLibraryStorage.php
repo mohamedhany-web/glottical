@@ -3,32 +3,26 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 /**
- * تخزين مواد المناهج التفاعلية: يفضّل Cloudflare R2، ويسقط إلى public إن لم تكتمل المفاتيح.
+ * تخزين مواد المناهج التفاعلية: Cloudflare R2 عند اكتمال المفاتيح.
  *
  * .env: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET, AWS_ENDPOINT
  * اختياري: CURRICULUM_LIBRARY_DISK=r2|public
  */
 class CurriculumLibraryStorage
 {
+    /**
+     * @return list<string>
+     */
     public static function missingR2Fields(): array
     {
-        $cfg = config('filesystems.disks.r2', []);
-        $missing = [];
-        foreach (['key' => 'AWS_ACCESS_KEY_ID', 'secret' => 'AWS_SECRET_ACCESS_KEY', 'bucket' => 'AWS_BUCKET', 'endpoint' => 'AWS_ENDPOINT'] as $field => $env) {
-            if (empty($cfg[$field])) {
-                $missing[] = $env;
-            }
-        }
-
-        return $missing;
+        return CloudflareR2::missingFields();
     }
 
     public static function isR2Ready(): bool
     {
-        return self::missingR2Fields() === [];
+        return CloudflareR2::isReady();
     }
 
     /**
@@ -36,46 +30,18 @@ class CurriculumLibraryStorage
      */
     public static function resolvedDisk(): string
     {
-        $preferred = strtolower(trim((string) env('CURRICULUM_LIBRARY_DISK', 'r2')));
-        if ($preferred === '' || $preferred === '0') {
-            $preferred = 'r2';
-        }
+        $preferred = (string) config('filesystems.curriculum_library_disk', 'r2');
 
-        if ($preferred === 'r2') {
-            if (self::isR2Ready()) {
-                return 'r2';
-            }
-
-            Log::warning('Curriculum library: R2 not configured; falling back to public disk.', [
-                'missing' => self::missingR2Fields(),
-            ]);
-
-            return 'public';
-        }
-
-        if (in_array($preferred, ['public', 'local'], true)) {
-            return $preferred === 'local' ? 'local' : 'public';
-        }
-
-        return self::isR2Ready() ? 'r2' : 'public';
+        return CloudflareR2::resolveDisk($preferred);
     }
 
     /**
-     * الرفع المباشر (presign/multipart) يعمل فقط مع R2 جاهز.
+     * الرفع المباشر (presign/multipart) يعتمد على اكتمال مفاتيح R2 فقط.
+     * لا نحمّل قرص التخزين هنا حتى لا يعطّل استثناء التهيئة مسار Cloudflare رغم صحة الإعدادات.
      */
     public static function supportsDirectUpload(): bool
     {
-        if (! self::isR2Ready()) {
-            return false;
-        }
-
-        try {
-            $disk = Storage::disk('r2');
-
-            return $disk instanceof \Illuminate\Filesystem\AwsS3V3Adapter;
-        } catch (\Throwable) {
-            return false;
-        }
+        return self::isR2Ready();
     }
 
     public static function adminStatusMessage(): ?string
@@ -102,7 +68,12 @@ class CurriculumLibraryStorage
         if (stripos($msg, 'Access Denied') !== false || stripos($msg, 'InvalidAccessKeyId') !== false || stripos($msg, 'SignatureDoesNotMatch') !== false) {
             return 'مفاتيح Cloudflare R2 غير صحيحة. راجع AWS_ACCESS_KEY_ID وAWS_SECRET_ACCESS_KEY.';
         }
+        if (stripos($msg, 'AccessControlListNotSupported') !== false || stripos($msg, 'The bucket does not allow ACLs') !== false) {
+            return 'تم رفض صلاحيات ACL على Cloudflare R2. الرفع يجب أن يتم بدون public-read — راجع إعداد قرص r2.';
+        }
 
-        return 'تعذّر رفع الملف إلى التخزين. تحقّق من الإعدادات ثم أعد المحاولة. ('.$msg.')';
+        Log::error('Curriculum library upload failed', ['message' => $msg]);
+
+        return 'تعذّر رفع الملف إلى Cloudflare R2. تحقّق من الإعدادات ثم أعد المحاولة. ('.$msg.')';
     }
 }

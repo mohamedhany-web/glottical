@@ -109,7 +109,7 @@ class TwoFactorController extends Controller
             return redirect()->intended(route('admin.dashboard'));
         }
         if ($user->isInstructor()) {
-            return redirect()->intended(route('instructor.courses.index'));
+            return redirect()->intended($user->instructorHomeUrl());
         }
         return redirect()->intended(route('dashboard'));
     }
@@ -223,7 +223,7 @@ class TwoFactorController extends Controller
             return 'admin.dashboard';
         }
         if ($user->isInstructor()) {
-            return 'instructor.courses.index';
+            return $user->canAccessInstructorPanel() ? 'dashboard' : 'public.tutor.apply.profile';
         }
         return 'dashboard';
     }

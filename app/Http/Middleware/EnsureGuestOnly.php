@@ -27,7 +27,7 @@ class EnsureGuestOnly
             if ($user->isAdmin()) {
                 return redirect()->route('admin.dashboard')->with('info', 'أنت مسجل دخول بالفعل');
             } elseif ($user->isInstructor()) {
-                return redirect()->route('instructor.courses.index')->with('info', 'أنت مسجل دخول بالفعل');
+                return redirect()->to($user->instructorHomeUrl())->with('info', 'أنت مسجل دخول بالفعل');
             } else {
                 return redirect()->route('dashboard')->with('info', 'أنت مسجل دخول بالفعل');
             }

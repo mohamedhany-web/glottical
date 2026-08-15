@@ -12,8 +12,7 @@ use InvalidArgumentException;
 class TutorApplicationActivationService
 {
     /**
-     * تفعيل الملف العام للمعلم بعد قبول الطلب.
-     * الحساب يُنشأ عند التسجيل؛ هنا نعتمد الملف التعريفي ونفعّل الظهور للعامة.
+     * تفعيل حساب المعلم بعد قبول الطلب: يفتح لوحة التحكم ويظهر الملف للعامة.
      *
      * @return array{user: User, profile: InstructorProfile, password: ?string}
      */
@@ -88,13 +87,13 @@ class TutorApplicationActivationService
             Notification::create([
                 'user_id' => $user->id,
                 'sender_id' => $admin->id,
-                'title' => 'تم اعتماد ملفك كمعلّم',
-                'message' => 'مرحباً '.$user->name.' — تم قبول طلبك وتفعيل ملفك للعامة. أكمل جدول التوافر من لوحتك.',
+                'title' => 'تم تفعيل حسابك كمعلّم',
+                'message' => 'مرحباً '.$user->name.' — تم تفعيل حسابك. يمكنك الآن تسجيل الدخول واستخدام لوحة المعلم.',
                 'type' => 'general',
                 'priority' => 'high',
                 'audience' => 'instructor',
-                'action_url' => route('instructor.personal-branding.edit'),
-                'action_text' => 'الملف التعريفي',
+                'action_url' => route('dashboard'),
+                'action_text' => 'لوحة المعلم',
             ]);
 
             return [

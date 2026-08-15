@@ -830,7 +830,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             'students' => $students,
             'count' => $students->count(),
         ]);
-    })->middleware(['auth', 'role:instructor|teacher']);
+    })->middleware(['auth', 'role:instructor|teacher', 'instructor.activated']);
 
     // نظام الطلبات - محمي للطلاب فقط
     Route::middleware(['role:student'])->group(function () {
@@ -2110,7 +2110,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
     });
 
     // مسارات المدرسين
-    Route::prefix('instructor')->name('instructor.')->middleware(['auth', 'role:instructor|teacher'])->group(function () {
+    Route::prefix('instructor')->name('instructor.')->middleware(['auth', 'role:instructor|teacher', 'instructor.activated'])->group(function () {
         Route::get('/calendar', [\App\Http\Controllers\Instructor\CalendarController::class, 'index'])->name('calendar');
         Route::get('/api/calendar/events', [\App\Http\Controllers\Instructor\CalendarController::class, 'getEvents'])->name('calendar.events');
         Route::get('/consultations', [\App\Http\Controllers\Instructor\ConsultationController::class, 'index'])->name('consultations.index');

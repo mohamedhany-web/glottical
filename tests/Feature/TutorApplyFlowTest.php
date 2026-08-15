@@ -164,4 +164,115 @@ class TutorApplyFlowTest extends TestCase
             ->assertOk()
             ->assertSee('إرسال للمراجعة', false);
     }
+
+    public function test_applicant_cannot_open_instructor_dashboard_until_activated(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'instructor',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+        TutorApplication::create([
+            'user_id' => $user->id,
+            'full_name' => $user->name,
+            'email' => $user->email,
+            'status' => TutorApplication::STATUS_DRAFT,
+        ]);
+
+        $this->assertFalse($user->fresh()->canAccessInstructorPanel());
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('public.tutor.apply.profile'));
+
+        $this->actingAs($user)
+            ->get(route('instructor.calendar'))
+            ->assertRedirect(route('public.tutor.apply.profile'));
+
+        TutorApplication::query()->where('user_id', $user->id)->update([
+            'status' => TutorApplication::STATUS_PENDING,
+        ]);
+        $this->assertFalse($user->fresh()->canAccessInstructorPanel());
+
+        TutorApplication::query()->where('user_id', $user->id)->update([
+            'status' => TutorApplication::STATUS_APPROVED,
+        ]);
+        $this->assertFalse($user->fresh()->canAccessInstructorPanel());
+
+        TutorApplication::query()->where('user_id', $user->id)->update([
+            'status' => TutorApplication::STATUS_ACTIVATED,
+        ]);
+        $this->assertTrue($user->fresh()->canAccessInstructorPanel());
+
+        $this->actingAs($user)
+            ->get(route('public.tutor.apply.profile'))
+            ->assertRedirect(route('dashboard'));
+    }
+
+    public function test_pending_and_approved_show_wait_page_without_dashboard_links(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'instructor',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+        $application = TutorApplication::create([
+            'user_id' => $user->id,
+            'full_name' => $user->name,
+            'email' => $user->email,
+            'status' => TutorApplication::STATUS_PENDING,
+        ]);
+
+        $pending = $this->actingAs($user)->get(route('public.tutor.apply.profile'));
+        $pending->assertOk()
+            ->assertSee('طلبك قيد المراجعة', false)
+            ->assertDontSee('الذهاب إلى لوحة المعلم', false)
+            ->assertDontSee(route('instructor.personal-branding.edit'), false);
+
+        $application->update(['status' => TutorApplication::STATUS_APPROVED]);
+
+        $this->actingAs($user)
+            ->get(route('public.tutor.apply.profile'))
+            ->assertOk()
+            ->assertSee('بانتظار التفعيل', false)
+            ->assertDontSee('الذهاب إلى لوحة المعلم', false);
+    }
+
+    public function test_unactivated_instructor_login_goes_to_profile_not_dashboard(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'instructor',
+            'email' => 'waiting.tutor@example.com',
+            'is_active' => true,
+            'password' => Hash::make('Password123'),
+        ]);
+        TutorApplication::create([
+            'user_id' => $user->id,
+            'full_name' => $user->name,
+            'email' => $user->email,
+            'status' => TutorApplication::STATUS_PENDING,
+        ]);
+
+        $this->post('/login', [
+            'email' => 'waiting.tutor@example.com',
+            'password' => 'Password123',
+        ])->assertRedirect(route('public.tutor.apply.profile'));
+
+        $this->assertAuthenticatedAs($user);
+
+        $this->actingAs($user)
+            ->get(route('instructor.personal-branding.edit'))
+            ->assertRedirect(route('public.tutor.apply.profile'));
+    }
+
+    public function test_admin_created_instructor_without_application_keeps_dashboard(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'instructor',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $this->assertTrue($user->fresh()->canAccessInstructorPanel());
+    }
 }
