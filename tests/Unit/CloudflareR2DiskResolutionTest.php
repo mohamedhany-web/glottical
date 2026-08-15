@@ -27,6 +27,7 @@ class CloudflareR2DiskResolutionTest extends TestCase
         $this->assertTrue(CurriculumLibraryStorage::supportsDirectUpload());
         $this->assertNull(CurriculumLibraryStorage::adminStatusMessage());
         $this->assertSame('r2', LectureMaterialStorage::resolvedDisk());
+        $this->assertTrue(LectureMaterialStorage::supportsDirectUpload());
     }
 
     public function test_missing_r2_keys_fall_back_to_public_and_disable_direct_upload(): void
@@ -49,6 +50,7 @@ class CloudflareR2DiskResolutionTest extends TestCase
         $this->assertFalse(CurriculumLibraryStorage::supportsDirectUpload());
         $this->assertNotNull(CurriculumLibraryStorage::adminStatusMessage());
         $this->assertSame('public', LectureMaterialStorage::resolvedDisk());
+        $this->assertFalse(LectureMaterialStorage::supportsDirectUpload());
     }
 
     public function test_supports_direct_upload_does_not_require_storage_disk_probe(): void

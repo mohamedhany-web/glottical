@@ -80,6 +80,10 @@ return [
             'visibility' => 'private',
             'throw' => false,
             'report' => false,
+            'http' => [
+                'connect_timeout' => 15,
+                'timeout' => 90,
+            ],
         ],
 
         /*

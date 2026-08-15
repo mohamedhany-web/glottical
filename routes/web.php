@@ -1432,6 +1432,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
                 Route::get('/', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'index'])->name('index');
                 Route::get('/create', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'create'])->name('create');
                 Route::post('/', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'store'])->name('store');
+                Route::post('/presign-upload', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'presignUpload'])->name('presign');
+                Route::post('/complete-upload', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'completeUpload'])->name('complete');
                 Route::post('/bulk-visibility', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'bulkVisibility'])->name('bulk-visibility');
                 Route::get('/{material}/download', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'download'])->name('download');
                 Route::get('/{material}/edit', [\App\Http\Controllers\Admin\LibraryMaterialController::class, 'edit'])->name('edit');

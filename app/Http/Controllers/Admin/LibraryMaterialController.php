@@ -9,6 +9,7 @@ use App\Models\LectureMaterial;
 use App\Models\LibraryFolder;
 use App\Services\LectureMaterialStorage;
 use App\Support\FamilyLibraryThemes;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -112,6 +113,7 @@ class LibraryMaterialController extends Controller
             ]),
             'mode' => 'create',
             'storageDisk' => LectureMaterialStorage::resolvedDisk(),
+            'canDirectUpload' => LectureMaterialStorage::supportsDirectUpload(),
             'themes' => FamilyLibraryThemes::labels('ar'),
             'lectures' => Lecture::query()
                 ->with('course:id,title')
@@ -135,7 +137,8 @@ class LibraryMaterialController extends Controller
             'experience_mode' => ['nullable', Rule::in([FamilyLibraryThemes::MODE_DOWNLOAD, FamilyLibraryThemes::MODE_VIEW, FamilyLibraryThemes::MODE_PLAY])],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_visible_to_student' => ['nullable', 'boolean'],
-            'file' => ['required', 'file', 'max:51200', 'mimes:'.FamilyLibraryThemes::materialMimes()],
+            'upload_token' => ['nullable', 'string', 'size:64'],
+            'file' => ['nullable', 'file', 'max:51200', 'mimes:'.FamilyLibraryThemes::materialMimes()],
         ]);
 
         $lectureId = isset($data['lecture_id']) && $data['lecture_id'] !== '' ? (int) $data['lecture_id'] : null;
@@ -144,22 +147,25 @@ class LibraryMaterialController extends Controller
             return back()->withErrors(['lecture_id' => 'اختر محاضرة أو مجلد ماتريال.'])->withInput();
         }
 
-        $file = $request->file('file');
-        $disk = LectureMaterialStorage::resolvedDisk();
-        $path = $folderId
-            ? LectureMaterialStorage::storeForFolder($file, $folderId)
-            : LectureMaterialStorage::store($file, (int) $lectureId);
+        try {
+            $stored = $this->storeUploadedMaterial($request, $lectureId, $folderId, required: true);
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['file' => $e->getMessage()])->withInput();
+        } catch (\Throwable $e) {
+            return back()->withErrors(['file' => LectureMaterialStorage::uploadFailureHint($e)])->withInput();
+        }
 
-        $theme = $data['content_theme'] ?? FamilyLibraryThemes::detectThemeFromFilename($file->getClientOriginalName());
-        $mode = $data['experience_mode'] ?? FamilyLibraryThemes::detectExperienceMode($file->getClientOriginalName(), $theme);
+        $fileName = $stored['original_name'];
+        $theme = $data['content_theme'] ?? FamilyLibraryThemes::detectThemeFromFilename($fileName);
+        $mode = $data['experience_mode'] ?? FamilyLibraryThemes::detectExperienceMode($fileName, $theme);
 
         $material = LectureMaterial::create([
             'lecture_id' => $lectureId,
             'library_folder_id' => $folderId,
-            'file_name' => $file->getClientOriginalName(),
-            'file_path' => $path,
-            'storage_disk' => $disk,
-            'title' => $data['title'] ?: pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+            'file_name' => $fileName,
+            'file_path' => $stored['path'],
+            'storage_disk' => $stored['disk'],
+            'title' => $data['title'] ?: pathinfo($fileName, PATHINFO_FILENAME),
             'description' => $data['description'] ?? null,
             'content_theme' => $theme,
             'experience_mode' => $mode,
@@ -169,7 +175,7 @@ class LibraryMaterialController extends Controller
 
         return redirect()
             ->route('admin.libraries.materials.index')
-            ->with('success', 'تم رفع الماتريال #'.$material->id.' على '.($disk === 'r2' ? 'Cloudflare R2' : $disk).'.');
+            ->with('success', 'تم رفع الماتريال #'.$material->id.' على '.($stored['disk'] === 'r2' ? 'Cloudflare R2' : $stored['disk']).'.');
     }
 
     public function edit(LectureMaterial $material): View
@@ -180,6 +186,7 @@ class LibraryMaterialController extends Controller
             'material' => $material,
             'mode' => 'edit',
             'storageDisk' => LectureMaterialStorage::resolvedDisk(),
+            'canDirectUpload' => LectureMaterialStorage::supportsDirectUpload(),
             'themes' => FamilyLibraryThemes::labels('ar'),
             'lectures' => Lecture::query()
                 ->with('course:id,title')
@@ -203,6 +210,7 @@ class LibraryMaterialController extends Controller
             'experience_mode' => ['nullable', Rule::in([FamilyLibraryThemes::MODE_DOWNLOAD, FamilyLibraryThemes::MODE_VIEW, FamilyLibraryThemes::MODE_PLAY])],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_visible_to_student' => ['nullable', 'boolean'],
+            'upload_token' => ['nullable', 'string', 'size:64'],
             'file' => ['nullable', 'file', 'max:51200', 'mimes:'.FamilyLibraryThemes::materialMimes()],
         ]);
 
@@ -222,18 +230,21 @@ class LibraryMaterialController extends Controller
             'sort_order' => (int) ($data['sort_order'] ?? 0),
         ];
 
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
+        if ($request->hasFile('file') || $request->filled('upload_token')) {
+            try {
+                $stored = $this->storeUploadedMaterial($request, $lectureId, $folderId, required: true);
+            } catch (\RuntimeException $e) {
+                return back()->withErrors(['file' => $e->getMessage()])->withInput();
+            } catch (\Throwable $e) {
+                return back()->withErrors(['file' => LectureMaterialStorage::uploadFailureHint($e)])->withInput();
+            }
             LectureMaterialStorage::delete($material->file_path, $material->storage_disk);
-            $disk = LectureMaterialStorage::resolvedDisk();
-            $payload['file_path'] = $folderId
-                ? LectureMaterialStorage::storeForFolder($file, $folderId)
-                : LectureMaterialStorage::store($file, (int) $lectureId);
-            $payload['storage_disk'] = $disk;
-            $payload['file_name'] = $file->getClientOriginalName();
-            $fileName = $file->getClientOriginalName();
+            $payload['file_path'] = $stored['path'];
+            $payload['storage_disk'] = $stored['disk'];
+            $payload['file_name'] = $stored['original_name'];
+            $fileName = $stored['original_name'];
             if (empty($data['title'])) {
-                $payload['title'] = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $payload['title'] = pathinfo($fileName, PATHINFO_FILENAME);
             }
         }
 
@@ -282,5 +293,89 @@ class LibraryMaterialController extends Controller
             ->update(['is_visible_to_student' => (bool) $data['visible']]);
 
         return back()->with('success', 'تم تحديث ظهور '.count($data['ids']).' ملف.');
+    }
+
+    public function presignUpload(Request $request): JsonResponse
+    {
+        @set_time_limit(120);
+        $validated = $request->validate([
+            'content_type' => ['nullable', 'string', 'max:191'],
+            'filename' => ['required', 'string', 'max:255'],
+            'file_size' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $result = LectureMaterialStorage::presignDirectUpload(
+            (int) $request->user()->id,
+            $validated['filename'],
+            $validated['content_type'] ?? null,
+            (int) $validated['file_size']
+        );
+
+        if (! ($result['ok'] ?? false)) {
+            return response()->json([
+                'direct_upload' => $result['direct_upload'] ?? false,
+                'message' => $result['message'] ?? 'تعذّر تجهيز الرفع.',
+            ], (int) ($result['status'] ?? 422));
+        }
+
+        return response()->json([
+            'direct_upload' => true,
+            'upload_url' => $result['upload_url'],
+            'upload_token' => $result['upload_token'],
+            'content_type' => $result['content_type'],
+            'headers' => $result['headers'],
+        ]);
+    }
+
+    public function completeUpload(Request $request): JsonResponse
+    {
+        @set_time_limit(120);
+        $validated = $request->validate([
+            'upload_token' => ['required', 'string', 'size:64'],
+        ]);
+
+        $result = LectureMaterialStorage::confirmDirectUpload(
+            (int) $request->user()->id,
+            $validated['upload_token']
+        );
+
+        if (! ($result['ok'] ?? false)) {
+            return response()->json([
+                'message' => $result['message'] ?? 'فشل تأكيد الرفع.',
+            ], (int) ($result['status'] ?? 422));
+        }
+
+        return response()->json($result);
+    }
+
+    /**
+     * @return array{path:string, disk:string, original_name:string}
+     */
+    private function storeUploadedMaterial(Request $request, ?int $lectureId, ?int $folderId, bool $required = true): array
+    {
+        if ($request->filled('upload_token')) {
+            return LectureMaterialStorage::claimDirectUpload(
+                (int) $request->user()->id,
+                (string) $request->input('upload_token')
+            );
+        }
+
+        $file = $request->file('file');
+        if (! $file) {
+            if (! $required) {
+                throw new \RuntimeException('لا يوجد ملف.');
+            }
+            throw new \RuntimeException('اختر ملفاً وانتظر اكتمال الرفع قبل الحفظ.');
+        }
+
+        $path = $folderId
+            ? LectureMaterialStorage::storeForFolder($file, $folderId)
+            : LectureMaterialStorage::store($file, (int) $lectureId);
+
+        return [
+            'path' => $path,
+            'disk' => LectureMaterialStorage::resolvedDisk(),
+            'original_name' => $file->getClientOriginalName(),
+        ];
     }
 }

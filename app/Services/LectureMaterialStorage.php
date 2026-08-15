@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Models\LectureMaterial;
+use App\Support\FamilyLibraryThemes;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -26,6 +28,192 @@ class LectureMaterialStorage
         }
 
         return CloudflareR2::resolveDisk($d);
+    }
+
+    public static function supportsDirectUpload(): bool
+    {
+        return CloudflareR2::isReady();
+    }
+
+    public static function maxBytes(): int
+    {
+        return 50 * 1024 * 1024;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function allowedExtensions(): array
+    {
+        return array_values(array_filter(array_map(
+            static fn ($ext) => strtolower(trim((string) $ext)),
+            explode(',', FamilyLibraryThemes::materialMimes())
+        )));
+    }
+
+    public static function uploadFailureHint(\Throwable $e): string
+    {
+        return CurriculumLibraryStorage::uploadFailureHint($e);
+    }
+
+    /**
+     * تجهيز PUT موقّت: المتصفح يرفع مباشرة إلى R2 دون المرور بحدود PHP/Cloudflare على الطلب.
+     *
+     * @return array{ok:true, upload_url:string, upload_token:string, content_type:string, headers:array}|array{ok:false, message:string, status:int, direct_upload?:bool}
+     */
+    public static function presignDirectUpload(int $userId, string $filename, ?string $contentType, int $fileSize): array
+    {
+        if (! self::supportsDirectUpload()) {
+            return [
+                'ok' => false,
+                'direct_upload' => false,
+                'status' => 422,
+                'message' => CurriculumLibraryStorage::adminStatusMessage()
+                    ?: 'الرفع المباشر إلى Cloudflare غير متاح. استخدم الرفع عبر الخادم.',
+            ];
+        }
+
+        if ($fileSize < 1 || $fileSize > self::maxBytes()) {
+            return [
+                'ok' => false,
+                'status' => 422,
+                'message' => 'حجم الملف يتجاوز الحد المسموح (50 ميجابايت).',
+            ];
+        }
+
+        $originalName = basename(str_replace(["\0", '\\'], '', $filename));
+        if ($originalName === '' || $originalName === '.' || $originalName === '..') {
+            return ['ok' => false, 'status' => 422, 'message' => 'اسم الملف غير صالح.'];
+        }
+
+        $ext = strtolower((string) pathinfo($originalName, PATHINFO_EXTENSION));
+        if ($ext === '' || ! in_array($ext, self::allowedExtensions(), true)) {
+            return ['ok' => false, 'status' => 422, 'message' => 'امتداد الملف غير مسموح.'];
+        }
+
+        $mime = self::normalizeMime((string) ($contentType ?? ''), $ext);
+        $path = trim(self::DIRECTORY, '/').'/direct/'.now()->format('Ym').'/'.Str::uuid()->toString().'.'.$ext;
+        $token = Str::random(64);
+
+        Cache::put(
+            'lecture_material_presign:'.$token,
+            [
+                'path' => $path,
+                'user_id' => $userId,
+                'mime' => $mime,
+                'disk' => 'r2',
+                'original_name' => $originalName,
+                'max_bytes' => self::maxBytes(),
+            ],
+            now()->addMinutes(75)
+        );
+
+        try {
+            $signed = Storage::disk('r2')->temporaryUploadUrl(
+                $path,
+                now()->addMinutes(70),
+                ['ContentType' => $mime]
+            );
+        } catch (\Throwable $e) {
+            Cache::forget('lecture_material_presign:'.$token);
+            Log::error('Lecture material presign failed', ['error' => $e->getMessage()]);
+
+            return [
+                'ok' => false,
+                'direct_upload' => false,
+                'status' => 503,
+                'message' => 'تعذّر تجهيز الرفع المباشر إلى Cloudflare R2. راجع CORS على الـ bucket (PUT من نطاق الموقع) ثم أعد المحاولة.',
+            ];
+        }
+
+        return [
+            'ok' => true,
+            'upload_url' => $signed['url'],
+            'upload_token' => $token,
+            'content_type' => $mime,
+            'headers' => CurriculumLibraryR2MultipartService::filterPresignedUploadHeadersForBrowser($signed['headers'] ?? []),
+        ];
+    }
+
+    /**
+     * بعد PUT الناجح: التأكد أن الملف ظاهر على R2 دون استهلاك التوكن (الاستهلاك عند الحفظ).
+     *
+     * @return array{ok:true, file_path:string, storage_disk:string, original_name:string, file_size:int}|array{ok:false, message:string, status:int}
+     */
+    public static function confirmDirectUpload(int $userId, string $uploadToken): array
+    {
+        $payload = Cache::get('lecture_material_presign:'.$uploadToken);
+        if (! is_array($payload) || (int) ($payload['user_id'] ?? 0) !== $userId) {
+            return ['ok' => false, 'status' => 422, 'message' => 'انتهت صلاحية رابط الرفع أو أنه غير صالح.'];
+        }
+
+        $path = (string) ($payload['path'] ?? '');
+        $diskName = (string) ($payload['disk'] ?? 'r2');
+        if ($path === '' || str_contains($path, '..') || $diskName !== 'r2') {
+            return ['ok' => false, 'status' => 422, 'message' => 'مسار التخزين غير صالح.'];
+        }
+
+        try {
+            $disk = Storage::disk($diskName);
+            if (! $disk->exists($path)) {
+                return [
+                    'ok' => false,
+                    'status' => 422,
+                    'message' => 'الملف غير ظاهر على Cloudflare بعد. انتظر لحظة ثم أكّد مرة أخرى.',
+                ];
+            }
+            $size = (int) $disk->size($path);
+        } catch (\Throwable $e) {
+            Log::error('Lecture material confirm failed', ['error' => $e->getMessage(), 'path' => $path]);
+
+            return [
+                'ok' => false,
+                'status' => 503,
+                'message' => self::uploadFailureHint($e),
+            ];
+        }
+
+        if ($size <= 0) {
+            return ['ok' => false, 'status' => 422, 'message' => 'الملف المرفوع فارغ.'];
+        }
+
+        return [
+            'ok' => true,
+            'file_path' => $path,
+            'storage_disk' => $diskName,
+            'original_name' => (string) ($payload['original_name'] ?? basename($path)),
+            'file_size' => $size,
+        ];
+    }
+
+    /**
+     * استهلاك توكن الرفع المباشر عند حفظ السجل.
+     *
+     * @return array{path:string, disk:string, original_name:string}
+     */
+    public static function claimDirectUpload(int $userId, string $uploadToken): array
+    {
+        $payload = Cache::pull('lecture_material_presign:'.$uploadToken);
+        if (! is_array($payload) || (int) ($payload['user_id'] ?? 0) !== $userId) {
+            throw new \RuntimeException('انتهت صلاحية الرفع أو أنه غير صالح. أعد اختيار الملف.');
+        }
+
+        $path = (string) ($payload['path'] ?? '');
+        $diskName = (string) ($payload['disk'] ?? 'r2');
+        $originalName = (string) ($payload['original_name'] ?? '');
+        if ($path === '' || str_contains($path, '..') || $diskName !== 'r2' || ! str_starts_with($path, trim(self::DIRECTORY, '/').'/')) {
+            throw new \RuntimeException('مسار التخزين غير صالح.');
+        }
+
+        if (! Storage::disk($diskName)->exists($path)) {
+            throw new \RuntimeException('الملف غير موجود على Cloudflare R2. أعد الرفع.');
+        }
+
+        return [
+            'path' => $path,
+            'disk' => $diskName,
+            'original_name' => $originalName !== '' ? $originalName : basename($path),
+        ];
     }
 
     public static function diskFor(?LectureMaterial $material): string
@@ -226,6 +414,36 @@ class LectureMaterialStorage
 
             return false;
         }
+    }
+
+    private static function normalizeMime(string $contentType, string $ext): string
+    {
+        $mime = strtolower(trim(explode(';', $contentType)[0]));
+        $fromExt = match ($ext) {
+            'pdf' => 'application/pdf',
+            'doc' => 'application/msword',
+            'docm', 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'ppt' => 'application/vnd.ms-powerpoint',
+            'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'xls' => 'application/vnd.ms-excel',
+            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'zip' => 'application/zip',
+            'rar' => 'application/vnd.rar',
+            'txt' => 'text/plain',
+            'html', 'htm' => 'text/html',
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'webp' => 'image/webp',
+            'mp3' => 'audio/mpeg',
+            'mp4' => 'video/mp4',
+            default => 'application/octet-stream',
+        };
+
+        if ($mime === '' || $mime === 'application/octet-stream') {
+            return $fromExt;
+        }
+
+        return $mime;
     }
 
     private static function resolveExistingDisk(string $path, ?string $preferred = null): ?string

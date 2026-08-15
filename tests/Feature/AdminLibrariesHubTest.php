@@ -199,7 +199,8 @@ class AdminLibrariesHubTest extends TestCase
     public function test_library_routes_are_registered(): void
     {
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.index'));
-        $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.materials.index'));
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.materials.presign'));
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.materials.complete'));
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.videos.index'));
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.curriculum.index'));
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.curriculum.course'));
@@ -246,6 +247,50 @@ class AdminLibrariesHubTest extends TestCase
             ->assertRedirect();
 
         $this->assertFalse((bool) $material->fresh()->is_visible_to_student);
+    }
+
+    public function test_material_create_page_uses_direct_r2_upload_when_ready(): void
+    {
+        config([
+            'filesystems.disks.r2' => [
+                'key' => 'test-key',
+                'secret' => 'test-secret',
+                'bucket' => 'glottical',
+                'endpoint' => 'https://account.r2.cloudflarestorage.com',
+            ],
+            'filesystems.lecture_materials_disk' => 'r2',
+            'filesystems.public_media_disk' => 'r2',
+        ]);
+
+        $admin = $this->admin();
+        $this->actingAs($admin)
+            ->get(route('admin.libraries.materials.create'))
+            ->assertOk()
+            ->assertSee('presign-upload', false)
+            ->assertSee('جاري الرفع إلى Cloudflare', false);
+    }
+
+    public function test_material_presign_is_disabled_when_r2_keys_are_missing(): void
+    {
+        config([
+            'filesystems.disks.r2' => [
+                'key' => '',
+                'secret' => '',
+                'bucket' => '',
+                'endpoint' => '',
+            ],
+            'filesystems.lecture_materials_disk' => 'r2',
+        ]);
+
+        $admin = $this->admin();
+        $this->actingAs($admin)
+            ->postJson(route('admin.libraries.materials.presign'), [
+                'filename' => 'notes.pdf',
+                'content_type' => 'application/pdf',
+                'file_size' => 1200,
+            ])
+            ->assertStatus(422)
+            ->assertJson(['direct_upload' => false]);
     }
 
     public function test_admin_can_create_and_publish_video(): void
