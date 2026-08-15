@@ -5,6 +5,9 @@
 @section('content')
 @php
     $locale = app()->getLocale();
+    $hasSections = isset($sectionTree) && $sectionTree->isNotEmpty();
+    $hasLegacyFiles = $item->files && $item->files->isNotEmpty();
+    $hasHtmlContent = filled($item->content ?? null);
 @endphp
 
 @include('partials.student-timeline-top', [
@@ -20,6 +23,9 @@
 
 @if(session('success'))
     <div class="st-flash st-flash--ok">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+    <div class="st-flash st-flash--err">{{ session('error') }}</div>
 @endif
 
 <section class="st-msg-intro">
@@ -38,30 +44,44 @@
     </div>
     <div class="st-msg-intro__actions">
         <a href="{{ route('curriculum-library.index') }}" class="st-pill st-pill--outline">{{ __('student_timeline.lib_manahij_title') }}</a>
+        <a href="{{ route('student.library.files') }}" class="st-pill st-pill--outline">{{ __('student_timeline.lib_files_title') }}</a>
     </div>
 </section>
 
-@if(isset($sectionTree) && $sectionTree->isNotEmpty())
-    <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-        <h3 class="text-lg font-bold text-slate-800 m-0"><i class="fas fa-sitemap text-indigo-500 ml-2"></i> محتوى المنهج</h3>
-        @include('student.curriculum-library._section-node', ['sections' => $sectionTree, 'item' => $item, 'depth' => 0])
+@if($hasSections)
+    <section class="st-cl-panel" aria-label="محتوى المنهج">
+        <header class="st-cl-panel__head">
+            <h3><i class="fas fa-sitemap" aria-hidden="true"></i> محتوى المنهج</h3>
+            <p>الأقسام والمواد المرفوعة لهذا المنهج — اضغط عرض أو تحميل حسب نوع الملف.</p>
+        </header>
+        <div class="st-cl-tree">
+            @include('student.curriculum-library._section-node', ['sections' => $sectionTree, 'item' => $item, 'depth' => 0])
+        </div>
     </section>
 @endif
 
-@if($item->files && $item->files->isNotEmpty())
-    <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3 mt-4">
-        <h3 class="text-lg font-bold text-slate-800 m-0"><i class="fas fa-layer-group text-indigo-500 ml-2"></i> ملفات قديمة</h3>
-        <ul class="space-y-2 m-0 p-0 list-none">
+@if($hasLegacyFiles)
+    <section class="st-cl-panel" aria-label="ملفات قديمة">
+        <header class="st-cl-panel__head">
+            <h3><i class="fas fa-layer-group" aria-hidden="true"></i> ملفات قديمة</h3>
+            <p>ملفات مرفقة قبل الهيكل الهرمي للأقسام.</p>
+        </header>
+        <ul class="st-cl-mat-list">
             @foreach($item->files as $file)
-                <li class="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <span class="flex-1 font-medium text-slate-800">{{ $file->label ?: $file->file_type }}</span>
-                    <div class="flex items-center gap-2 flex-wrap">
+                <li class="st-cl-mat">
+                    <span class="st-cl-mat__icon st-cl-mat__icon--{{ $file->file_type === 'presentation' ? 'pptx' : ($file->file_type === 'pdf' ? 'pdf' : ($file->file_type === 'html' ? 'html' : 'other')) }}">
+                        <i class="fas {{ $file->file_type === 'presentation' ? 'fa-file-powerpoint' : ($file->file_type === 'pdf' ? 'fa-file-pdf' : ($file->file_type === 'html' ? 'fa-code' : 'fa-file')) }}" aria-hidden="true"></i>
+                    </span>
+                    <div class="st-cl-mat__body">
+                        <strong>{{ $file->label ?: $file->file_type }}</strong>
+                    </div>
+                    <div class="st-cl-mat__actions">
                         @if($file->file_type === 'html')
-                            <a href="{{ route('curriculum-library.file.view', [$item, $file]) }}" target="_blank" class="st-pill st-pill--solid">عرض</a>
+                            <a href="{{ route('curriculum-library.file.view', [$item, $file]) }}" target="_blank" rel="noopener" class="st-pill st-pill--solid">عرض</a>
                         @elseif($file->file_type === 'presentation')
-                            <a href="{{ route('curriculum-library.file.presentation', [$item, $file]) }}" target="_blank" class="st-pill st-pill--solid">عرض تفاعلي</a>
+                            <a href="{{ route('curriculum-library.file.presentation', [$item, $file]) }}" target="_blank" rel="noopener" class="st-pill st-pill--solid">عرض تفاعلي</a>
                         @elseif($file->file_type === 'pdf')
-                            <a href="{{ route('curriculum-library.file.pdf', [$item, $file]) }}" target="_blank" class="st-pill st-pill--outline">عرض</a>
+                            <a href="{{ route('curriculum-library.file.pdf', [$item, $file]) }}" target="_blank" rel="noopener" class="st-pill st-pill--outline">عرض</a>
                             <a href="{{ route('curriculum-library.file.download', [$item, $file]) }}" class="st-pill st-pill--solid">تحميل</a>
                         @else
                             <a href="{{ route('curriculum-library.file.download', [$item, $file]) }}" class="st-pill st-pill--solid">تحميل</a>
@@ -71,5 +91,19 @@
             @endforeach
         </ul>
     </section>
+@endif
+
+@if($hasHtmlContent)
+    <section class="st-cl-panel st-cl-panel--prose">
+        <div class="st-cl-prose">{!! $item->content !!}</div>
+    </section>
+@endif
+
+@if(! $hasSections && ! $hasLegacyFiles && ! $hasHtmlContent)
+    <div class="st-empty-panel">
+        <h3>لا يوجد محتوى لهذا المنهج بعد</h3>
+        <p>لم تُرفع أقسام أو مواد لهذا المنهج. راجع هيكل المنهج من لوحة الإدارة بعد رفع الملفات إلى التخزين.</p>
+        <a href="{{ route('curriculum-library.index') }}" class="st-pill st-pill--solid">العودة للمناهج</a>
+    </div>
 @endif
 @endsection

@@ -6767,3 +6767,164 @@ button.st-chip {
   .st-xp-frame,
   .st-xp-frame-wrap { min-height: 62vh; height: 62vh; }
 }
+
+/* Curriculum library (Manahij) — student show tree */
+.st-cl-panel {
+  margin: 0 0 18px;
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid var(--st-line);
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(7, 18, 38, .05);
+}
+.st-cl-panel__head {
+  margin: 0 0 14px;
+}
+.st-cl-panel__head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #0B3D91;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.st-cl-panel__head p {
+  margin: 6px 0 0;
+  font-size: .86rem;
+  font-weight: 600;
+  color: #5B6577;
+  line-height: 1.55;
+}
+.st-cl-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.st-cl-section {
+  border: 1px solid rgba(11, 61, 145, .12);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f7f9fc;
+  margin-inline-start: calc(var(--st-cl-depth, 0) * 0.75rem);
+}
+.st-cl-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #0B3D91 0%, #0a2f6e 100%);
+  color: #fff;
+}
+.st-cl-section__head h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+}
+.st-cl-section__head p {
+  margin: 4px 0 0;
+  font-size: .82rem;
+  opacity: .9;
+  color: #fff;
+}
+.st-cl-section__meta {
+  font-size: .75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .16);
+  white-space: nowrap;
+}
+.st-cl-section__body {
+  padding: 14px;
+  background: #fff;
+}
+.st-cl-section__children {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(11, 61, 145, .18);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.st-cl-mat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.st-cl-mat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--st-line);
+  background: #f8fafc;
+}
+.st-cl-mat__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: #eef5ff;
+  color: #0B3D91;
+}
+.st-cl-mat__icon--pptx { background: #fff4e0; color: #8A6A00; }
+.st-cl-mat__icon--pdf { background: #ffe8ec; color: #b42318; }
+.st-cl-mat__icon--html { background: #e8f8ef; color: #1f8a5b; }
+.st-cl-mat__body {
+  flex: 1;
+  min-width: 140px;
+}
+.st-cl-mat__body strong {
+  display: block;
+  font-size: .95rem;
+  font-weight: 800;
+  color: #0b1220;
+}
+.st-cl-mat__body em {
+  display: block;
+  margin-top: 2px;
+  font-style: normal;
+  font-size: .75rem;
+  font-weight: 600;
+  color: #5B6577;
+}
+.st-cl-mat__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.st-cl-empty {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff8e6;
+  border: 1px dashed rgba(245, 184, 0, .55);
+  color: #8A6A00;
+  font-size: .86rem;
+  font-weight: 700;
+  line-height: 1.55;
+}
+.st-cl-panel--prose .st-cl-prose {
+  color: #0b1220;
+  font-size: .95rem;
+  line-height: 1.7;
+}
+.st-cl-panel--prose .st-cl-prose :where(h1, h2, h3, h4) {
+  color: #0B3D91;
+  font-weight: 800;
+}
+@media (max-width: 640px) {
+  .st-cl-mat { align-items: flex-start; }
+  .st-cl-mat__actions { width: 100%; }
+}

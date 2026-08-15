@@ -67,7 +67,10 @@ class CurriculumLibrarySection extends Model
                         $q->with($materialRelations);
                     }
                     if ($onlyActive) {
-                        $q->where('is_active', true);
+                        // null يُعامل كنشط حتى لا تختفي مواد قديمة بدون قيمة صريحة
+                        $q->where(function ($active) {
+                            $active->where('is_active', true)->orWhereNull('is_active');
+                        });
                     }
                 },
             ])
@@ -75,7 +78,9 @@ class CurriculumLibrarySection extends Model
             ->orderBy('id');
 
         if ($onlyActive) {
-            $query->where('is_active', true);
+            $query->where(function ($active) {
+                $active->where('is_active', true)->orWhereNull('is_active');
+            });
         }
 
         $all = $query->get();
