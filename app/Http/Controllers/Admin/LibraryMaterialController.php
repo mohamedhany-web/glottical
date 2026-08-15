@@ -7,6 +7,7 @@ use App\Models\AdvancedCourse;
 use App\Models\Lecture;
 use App\Models\LectureMaterial;
 use App\Models\LibraryFolder;
+use App\Services\CloudflareR2;
 use App\Services\LectureMaterialStorage;
 use App\Support\FamilyLibraryThemes;
 use Illuminate\Http\JsonResponse;
@@ -298,6 +299,7 @@ class LibraryMaterialController extends Controller
     public function presignUpload(Request $request): JsonResponse
     {
         @set_time_limit(120);
+        CloudflareR2::ensureBrowserUploadCors([$request->getSchemeAndHttpHost()]);
         $validated = $request->validate([
             'content_type' => ['nullable', 'string', 'max:191'],
             'filename' => ['required', 'string', 'max:255'],
@@ -343,6 +345,32 @@ class LibraryMaterialController extends Controller
             return response()->json([
                 'message' => $result['message'] ?? 'فشل تأكيد الرفع.',
             ], (int) ($result['status'] ?? 422));
+        }
+
+        return response()->json($result);
+    }
+
+    public function proxyUpload(Request $request): JsonResponse
+    {
+        @set_time_limit(180);
+        $validated = $request->validate([
+            'upload_token' => ['required', 'string', 'size:64'],
+            'file' => ['required', 'file', 'max:51200'],
+        ]);
+
+        try {
+            $result = LectureMaterialStorage::proxyDirectUpload(
+                (int) $request->user()->id,
+                $validated['upload_token'],
+                $request->file('file')
+            );
+        } catch (\RuntimeException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => LectureMaterialStorage::uploadFailureHint($e),
+            ], 503);
         }
 
         return response()->json($result);

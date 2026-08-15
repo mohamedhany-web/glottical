@@ -200,7 +200,7 @@ class AdminLibrariesHubTest extends TestCase
     {
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.index'));
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.materials.presign'));
-        $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.materials.complete'));
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.materials.proxy'));
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.videos.index'));
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.curriculum.index'));
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.curriculum.course'));
@@ -267,6 +267,7 @@ class AdminLibrariesHubTest extends TestCase
             ->get(route('admin.libraries.materials.create'))
             ->assertOk()
             ->assertSee('presign-upload', false)
+            ->assertSee('proxy-upload', false)
             ->assertSee('جاري الرفع إلى Cloudflare', false);
     }
 

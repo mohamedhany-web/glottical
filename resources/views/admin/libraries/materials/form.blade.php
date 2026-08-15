@@ -109,7 +109,7 @@
                     </div>
                     <div id="upload-result" class="mt-2 hidden text-xs"></div>
                     <p class="mt-1 text-xs text-muted">
-                        الرفع مباشر من المتصفح إلى Cloudflare R2 — يظهر شريط التقدم ولن يتجمّد حفظ الصفحة.
+                        الرفع يحاول Cloudflare مباشرة، وإن حُجب CORS يكتمل تلقائياً عبر الخادم.
                         الحد 50 ميجابايت. PDF وPPT وHTML وZIP والصور والصوت.
                     </p>
                     <details class="mt-3">
@@ -198,6 +198,32 @@
         });
     }
 
+    function putFileViaServer(token, file, onPercent) {
+        return new Promise(function (resolve, reject) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', @json(route('admin.libraries.materials.proxy')), true);
+            xhr.timeout = 8 * 60 * 1000;
+            xhr.setRequestHeader('X-CSRF-TOKEN', csrf);
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.upload.onprogress = function (e) {
+                if (e.lengthComputable && onPercent) onPercent((e.loaded / e.total) * 100);
+            };
+            xhr.onload = function () {
+                var data = {};
+                try { data = JSON.parse(xhr.responseText || '{}'); } catch (e) { data = {}; }
+                if (xhr.status >= 200 && xhr.status < 300 && data.ok) resolve(data);
+                else reject(new Error(data.message || 'فشل الرفع عبر الخادم (HTTP ' + xhr.status + ')'));
+            };
+            xhr.onerror = function () { reject(new Error('تعذّر الاتصال بالخادم أثناء الرفع الاحتياطي.')); };
+            xhr.ontimeout = function () { reject(new Error('انتهت مهلة الرفع عبر الخادم.')); };
+            var fd = new FormData();
+            fd.append('upload_token', token);
+            fd.append('file', file);
+            xhr.send(fd);
+        });
+    }
+
     if (!fileInput) return;
 
     fileInput.addEventListener('change', async function () {
@@ -236,13 +262,22 @@
             }
 
             setProgress(1, 'جاري الرفع إلى Cloudflare…');
-            await putFile(
-                presignData.upload_url,
-                file,
-                presignData.content_type || file.type || 'application/octet-stream',
-                presignData.headers || {},
-                function (pct) { setProgress(pct, 'جاري الرفع إلى Cloudflare…'); }
-            );
+            try {
+                await putFile(
+                    presignData.upload_url,
+                    file,
+                    presignData.content_type || file.type || 'application/octet-stream',
+                    presignData.headers || {},
+                    function (pct) { setProgress(pct, 'جاري الرفع إلى Cloudflare…'); }
+                );
+            } catch (directErr) {
+                setProgress(1, 'الرفع المباشر حُجب — التحويل عبر الخادم…');
+                await putFileViaServer(
+                    presignData.upload_token,
+                    file,
+                    function (pct) { setProgress(pct, 'جاري الرفع عبر الخادم…'); }
+                );
+            }
 
             setProgress(99, 'تأكيد الملف…');
             var completeRes = await fetch(@json(route('admin.libraries.materials.complete')), {

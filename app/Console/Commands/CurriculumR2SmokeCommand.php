@@ -50,6 +50,13 @@ class CurriculumR2SmokeCommand extends Command
 
             $this->info('R2 smoke upload OK: '.$key);
 
+            $corsOk = \App\Services\CloudflareR2::ensureBrowserUploadCors();
+            if ($corsOk) {
+                $this->info('R2 browser CORS applied for: '.implode(', ', \App\Services\CloudflareR2::browserCorsOrigins()));
+            } else {
+                $this->warn('Could not apply R2 browser CORS (check API token permissions for PutBucketCORS). Direct browser uploads may fail until CORS is set in the R2 dashboard.');
+            }
+
             if (! $this->option('keep')) {
                 Storage::disk('r2')->delete($key);
                 $this->line('Smoke object deleted.');

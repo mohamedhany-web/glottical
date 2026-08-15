@@ -92,6 +92,7 @@ class LectureMaterialStorage
         }
 
         $mime = self::normalizeMime((string) ($contentType ?? ''), $ext);
+        CloudflareR2::ensureBrowserUploadCors();
         $path = trim(self::DIRECTORY, '/').'/direct/'.now()->format('Ym').'/'.Str::uuid()->toString().'.'.$ext;
         $token = Str::random(64);
 
@@ -183,6 +184,55 @@ class LectureMaterialStorage
             'storage_disk' => $diskName,
             'original_name' => (string) ($payload['original_name'] ?? basename($path)),
             'file_size' => $size,
+        ];
+    }
+
+    /**
+     * احتياطي عند فشل CORS: المتصفح يرسل الملف لنفس أصل الموقع ثم الخادم يكتبه على R2.
+     *
+     * @return array{ok:true, file_path:string, storage_disk:string, original_name:string, file_size:int}
+     */
+    public static function proxyDirectUpload(int $userId, string $uploadToken, UploadedFile $file): array
+    {
+        $payload = Cache::get('lecture_material_presign:'.$uploadToken);
+        if (! is_array($payload) || (int) ($payload['user_id'] ?? 0) !== $userId) {
+            throw new \RuntimeException('انتهت صلاحية رابط الرفع أو أنه غير صالح.');
+        }
+
+        $path = (string) ($payload['path'] ?? '');
+        $diskName = (string) ($payload['disk'] ?? 'r2');
+        $originalName = (string) ($payload['original_name'] ?? $file->getClientOriginalName());
+        $maxBytes = (int) ($payload['max_bytes'] ?? self::maxBytes());
+        if ($path === '' || str_contains($path, '..') || $diskName !== 'r2' || ! str_starts_with($path, trim(self::DIRECTORY, '/').'/')) {
+            throw new \RuntimeException('مسار التخزين غير صالح.');
+        }
+        if ($file->getSize() > $maxBytes) {
+            throw new \RuntimeException('حجم الملف يتجاوز الحد المسموح.');
+        }
+
+        $stream = fopen($file->getRealPath(), 'rb');
+        if ($stream === false) {
+            throw new \RuntimeException('تعذّر قراءة الملف للرفع عبر الخادم.');
+        }
+
+        try {
+            Storage::disk($diskName)->writeStream($path, $stream);
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }
+
+        if (! Storage::disk($diskName)->exists($path)) {
+            throw new \RuntimeException('تعذّر حفظ الملف على Cloudflare R2 عبر الخادم.');
+        }
+
+        return [
+            'ok' => true,
+            'file_path' => $path,
+            'storage_disk' => $diskName,
+            'original_name' => $originalName !== '' ? $originalName : basename($path),
+            'file_size' => (int) Storage::disk($diskName)->size($path),
         ];
     }
 

@@ -68,4 +68,22 @@ class CloudflareR2DiskResolutionTest extends TestCase
         $lecture = file_get_contents(app_path('Services/LectureMaterialStorage.php'));
         $this->assertStringNotContainsString("putFileAs(\$dir, \$file, \$name, ['visibility' => 'public'])", $lecture);
     }
+
+    public function test_browser_cors_origins_include_app_url_and_glottical(): void
+    {
+        config([
+            'app.url' => 'https://glottical.com',
+            'filesystems.disks.r2' => [
+                'key' => '',
+                'secret' => '',
+                'bucket' => '',
+                'endpoint' => '',
+            ],
+        ]);
+
+        $origins = CloudflareR2::browserCorsOrigins(['https://www.glottical.com/']);
+        $this->assertContains('https://glottical.com', $origins);
+        $this->assertContains('https://www.glottical.com', $origins);
+        $this->assertFalse(CloudflareR2::ensureBrowserUploadCors());
+    }
 }
