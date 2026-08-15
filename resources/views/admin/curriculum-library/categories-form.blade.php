@@ -1,69 +1,105 @@
 @extends('layouts.admin')
 
 @section('title', $category ? 'تعديل التصنيف' : 'إضافة تصنيف')
-@section('header', $category ? 'تعديل التصنيف' : 'إضافة تصنيف')
+@section('page_title', $category ? 'تعديل التصنيف' : 'إضافة تصنيف')
 
 @section('content')
-<div class="max-w-2xl">
-    <div class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-        <form action="{{ $category ? route('admin.curriculum-library.categories.update', $category) : route('admin.curriculum-library.categories.store') }}" method="POST" class="space-y-4">
-            @csrf
-            @if($category) @method('PUT') @endif
+@php
+    $field = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $label = 'mb-1.5 block text-xs font-medium text-muted';
+    $selectedRestrict = old('restricted_user_ids', isset($category) ? $category->restrictedUsers->pluck('id')->all() : []);
+@endphp
+
+<div class="mx-auto max-w-3xl space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <p class="text-xs font-medium text-muted">
+                <a href="{{ route('admin.curriculum-library.index') }}" class="hover:text-accent">المناهج التفاعلية</a>
+                ·
+                <a href="{{ route('admin.curriculum-library.categories') }}" class="hover:text-accent">التصنيفات</a>
+            </p>
+            <h2 class="mt-1 text-2xl font-semibold text-ink">{{ $category ? 'تعديل التصنيف' : 'إضافة تصنيف' }}</h2>
+            <p class="mt-1 text-sm text-muted">تنظيم عناصر المناهج التفاعلية تحت تصنيف واضح للطلاب والمعلمين.</p>
+        </div>
+        <a href="{{ route('admin.curriculum-library.categories') }}" class="btn-press inline-flex h-9 items-center rounded-xl border border-line px-4 text-sm">رجوع</a>
+    </section>
+
+    @if($errors->any())
+        <div class="rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">{{ $errors->first() }}</div>
+    @endif
+
+    <form action="{{ $category ? route('admin.curriculum-library.categories.update', $category) : route('admin.curriculum-library.categories.store') }}"
+          method="POST"
+          class="space-y-5">
+        @csrf
+        @if($category) @method('PUT') @endif
+
+        <article class="space-y-4 rounded-2xl border border-line bg-surface p-5 shadow-soft">
+            <div>
+                <label class="{{ $label }}" for="name">اسم التصنيف *</label>
+                <input id="name" type="text" name="name" value="{{ old('name', $category?->name) }}" required class="{{ $field }}">
+                @error('name') <p class="mt-1 text-xs text-danger">{{ $message }}</p> @enderror
+            </div>
 
             <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-1">اسم التصنيف</label>
-                <input type="text" name="name" value="{{ old('name', $category?->name) }}" required
-                       class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                @error('name') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
+                <label class="{{ $label }}" for="slug">الرابط (slug) — اختياري</label>
+                <input id="slug" type="text" name="slug" value="{{ old('slug', $category?->slug) }}" class="{{ $field }}" placeholder="math-arabic">
+                @error('slug') <p class="mt-1 text-xs text-danger">{{ $message }}</p> @enderror
             </div>
+
             <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-1">الرابط (slug) — اختياري</label>
-                <input type="text" name="slug" value="{{ old('slug', $category?->slug) }}"
-                       class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500">
-                @error('slug') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
+                <label class="{{ $label }}" for="description">الوصف</label>
+                <textarea id="description" name="description" rows="3" class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">{{ old('description', $category?->description) }}</textarea>
             </div>
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-1">الوصف</label>
-                <textarea name="description" rows="3" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500">{{ old('description', $category?->description) }}</textarea>
-            </div>
-            <div class="flex gap-4">
+
+            <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">ترتيب العرض</label>
-                    <input type="number" name="order" value="{{ old('order', $category?->order ?? 0) }}" min="0" class="w-24 px-3 py-2 rounded-lg border border-slate-200">
+                    <label class="{{ $label }}" for="order">ترتيب العرض</label>
+                    <input id="order" type="number" name="order" value="{{ old('order', $category?->order ?? 0) }}" min="0" class="{{ $field }}">
                 </div>
-                <div class="flex items-center gap-2 pt-6">
-                    <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', $category?->is_active ?? true) ? 'checked' : '' }} class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
-                    <label for="is_active" class="text-sm font-semibold text-slate-700">نشط</label>
+                <div class="flex items-end pb-1">
+                    <label class="inline-flex items-center gap-2 text-sm font-medium text-ink">
+                        <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', $category?->is_active ?? true) ? 'checked' : '' }} class="rounded border-line text-accent focus:ring-accent/30">
+                        نشط ويظهر للطلاب
+                    </label>
                 </div>
             </div>
+        </article>
 
-            <div class="rounded-xl border border-amber-100 bg-amber-50/60 p-4 space-y-3">
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" name="is_restricted" id="is_restricted" value="1" {{ old('is_restricted', $category?->is_restricted ?? false) ? 'checked' : '' }} class="rounded border-slate-300 text-amber-600 focus:ring-amber-500">
-                    <label for="is_restricted" class="text-sm font-bold text-slate-800">قسم خاص (يظهر فقط للمستخدمين المحددين)</label>
-                </div>
-                <p class="text-xs text-slate-600 leading-relaxed">أنسب لقسم «العميل يرفع ملف وتتحوله تفاعلي» أو أي محتوى لا يظهر للجميع. أنشئ التصنيف ثم اختر الحسابات المسموح لها.</p>
-                @php
-                    $selectedRestrict = old('restricted_user_ids', isset($category) ? $category->restrictedUsers->pluck('id')->all() : []);
-                @endphp
+        <article class="space-y-4 rounded-2xl border border-amber-200/80 bg-amber-50/40 p-5 shadow-soft">
+            <div class="flex items-start gap-3">
+                <input type="checkbox" name="is_restricted" id="is_restricted" value="1" {{ old('is_restricted', $category?->is_restricted ?? false) ? 'checked' : '' }} class="mt-1 rounded border-line text-amber-600 focus:ring-amber-500/30">
                 <div>
-                    <label for="restricted_user_ids" class="block text-sm font-semibold text-slate-700 mb-1">الطلاب المسموح لهم (Ctrl/Cmd + نقر لاختيار أكثر من واحد)</label>
-                    <select name="restricted_user_ids[]" id="restricted_user_ids" multiple size="8" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-amber-500 text-sm">
-                        @foreach($users ?? [] as $u)
-                            <option value="{{ $u->id }}" {{ in_array($u->id, $selectedRestrict, true) ? 'selected' : '' }}>
-                                {{ $u->name }} — {{ $u->email }} ({{ $u->id }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('restricted_user_ids') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
+                    <label for="is_restricted" class="text-sm font-semibold text-ink">قسم خاص (يظهر فقط للمستخدمين المحددين)</label>
+                    <p class="mt-1 text-xs leading-relaxed text-muted">مناسب لمحتوى لا يظهر للجميع. أنشئ التصنيف ثم اختر الحسابات المسموح لها.</p>
                 </div>
             </div>
 
-            <div class="flex gap-2 pt-4">
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700">{{ $category ? 'حفظ التعديلات' : 'إضافة' }}</button>
-                <a href="{{ route('admin.curriculum-library.categories') }}" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50">إلغاء</a>
+            <div>
+                <label class="{{ $label }}" for="restricted_user_ids">الطلاب المسموح لهم</label>
+                <select name="restricted_user_ids[]" id="restricted_user_ids" multiple size="8"
+                        class="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">
+                    @forelse($users ?? [] as $u)
+                        <option value="{{ $u->id }}" {{ in_array($u->id, $selectedRestrict, true) ? 'selected' : '' }}>
+                            {{ $u->name }} — {{ $u->email }}
+                        </option>
+                    @empty
+                        <option disabled value="">لا طلاب نشطون حالياً</option>
+                    @endforelse
+                </select>
+                <p class="mt-1.5 text-[11px] text-muted">Ctrl / Cmd + نقر لاختيار أكثر من حساب.</p>
+                @error('restricted_user_ids') <p class="mt-1 text-xs text-danger">{{ $message }}</p> @enderror
             </div>
-        </form>
-    </div>
+        </article>
+
+        <div class="flex flex-wrap gap-2">
+            <button type="submit" class="btn-press inline-flex h-11 items-center rounded-xl bg-accent px-5 text-sm font-semibold text-white">
+                {{ $category ? 'حفظ التعديلات' : 'إضافة التصنيف' }}
+            </button>
+            <a href="{{ route('admin.curriculum-library.categories') }}" class="btn-press inline-flex h-11 items-center rounded-xl border border-line px-5 text-sm font-medium text-ink">
+                إلغاء
+            </a>
+        </div>
+    </form>
 </div>
 @endsection
