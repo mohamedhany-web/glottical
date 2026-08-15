@@ -22,6 +22,19 @@
     $oneToOneCourses = $oneToOneCourses ?? collect();
     $privateGroups = $privateGroups ?? collect();
     $groupCourses = $groupCourses ?? collect();
+    $skillChips = [];
+    $skillNotes = [];
+    foreach ($skills as $skill) {
+        $skill = trim((string) $skill);
+        if ($skill === '') {
+            continue;
+        }
+        if (mb_strlen($skill) > 42 || substr_count($skill, ' ') > 6) {
+            $skillNotes[] = $skill;
+        } else {
+            $skillChips[] = $skill;
+        }
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -41,57 +54,63 @@
   <meta property="og:site_name" content="{{ $brand }}">
   @include('partials.favicon-links')
   @include('partials.seo-jsonld', ['jsonldType' => 'instructor', 'profile' => $profile])
-  @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog', 'instructor-profile']])
+  @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog', 'instructors-catalog', 'instructor-profile']])
 </head>
 <body class="sana-home sana-courses-page sana-instructors-page gl-tp">
+<div id="sana-scroll-progress"></div>
 @include('partials.landing.navbar', ['navActive' => 'instructors', 'navSolid' => true, 'navHero' => false])
 
-<main>
-  <div class="sana-container gl-tp-wrap">
-    <nav class="gl-tp-crumb" aria-label="{{ $isRtl ? 'مسار التنقل' : 'Breadcrumb' }}">
-      <a href="{{ url('/') }}">{{ $isRtl ? 'الرئيسية' : 'Home' }}</a>
-      <span aria-hidden="true">/</span>
-      <a href="{{ route('public.instructors.index') }}">{{ __('landing.nav.instructors') }}</a>
-      <span aria-hidden="true">/</span>
-      <span>{{ $name }}</span>
-    </nav>
+<main class="sana-cat-page">
+  <section class="sana-cat-hero gl-tp-hero" id="cat-hero">
+    <div class="sana-cat-hero__dots"></div>
+    <div class="sana-container sana-cat-hero__inner">
+      <nav class="sana-cat-hero__breadcrumb" aria-label="{{ $isRtl ? 'مسار التنقل' : 'Breadcrumb' }}">
+        <a href="{{ url('/') }}">{{ $isRtl ? 'الرئيسية' : 'Home' }}</a>
+        <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }}"></i>
+        <a href="{{ route('public.instructors.index') }}">{{ __('landing.nav.instructors') }}</a>
+        <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }}"></i>
+        <span>{{ $name }}</span>
+      </nav>
 
-    @if($errors->any())
-      <div class="gl-tp-note is-err" style="margin-bottom:1rem">{{ $errors->first() }}</div>
-    @endif
-    @if(session('success'))
-      <div class="gl-tp-note is-ok" style="margin-bottom:1rem">{{ session('success') }}</div>
-    @endif
-
-    {{-- الاسم أولاً ثم السيرة + زر الفيديو التعريفي (ليس هيرو رئيسي) --}}
-    <header class="gl-tp-identity">
-      <div class="gl-tp-identity__main">
-        @if($profile->photo_url)
-          <img class="gl-tp-photo" src="{{ $profile->photo_url }}" alt="{{ $name }}">
-        @else
-          <span class="gl-tp-photo gl-tp-photo--fallback" aria-hidden="true">{{ mb_substr($name, 0, 1) }}</span>
-        @endif
-        <div class="gl-tp-identity__text">
-          <span class="gl-tp-chip"><i class="fas fa-badge-check"></i> {{ __('public.instructors_verified') }}</span>
-          <p class="gl-tp-role-label">{{ $isRtl ? 'معلم' : 'Teacher' }}</p>
-          <h1 class="gl-tp-name">{{ $name }}</h1>
-          <p class="gl-tp-title">{{ $headline }}</p>
+      <div class="gl-tp-hero__row">
+        <div class="gl-tp-hero__ring">
+          @if($profile->photo_url)
+            <img src="{{ $profile->photo_url }}" alt="{{ $name }}">
+          @else
+            <span class="av" aria-hidden="true">{{ mb_substr($name, 0, 1) }}</span>
+          @endif
         </div>
-      </div>
-    </header>
-
-    <div class="gl-tp-layout">
-      <div>
-        <article class="gl-tp-card gl-tp-about">
-          <div class="gl-tp-about__head">
-            <h2>{{ __('public.instructor_bio_title') }}</h2>
-            @if($hasIntroVideo)
-              <button type="button" class="gl-tp-intro-btn" id="glTpIntroOpen" aria-haspopup="dialog" aria-controls="glTpIntroModal">
+        <div class="gl-tp-hero__copy">
+          <span class="sana-inst-hero__eyebrow"><i class="fas fa-circle-check"></i> {{ __('public.instructors_verified') }}</span>
+          <h1 class="sana-cat-hero__title">{{ $name }}</h1>
+          @if($headline !== '' && $headline !== $name)
+            <p class="gl-tp-hero__headline">{{ $headline }}</p>
+          @endif
+          @if($hasIntroVideo)
+            <div class="sana-inst-hero__actions">
+              <button type="button" class="sana-btn sana-btn--yellow sana-btn--sm" id="glTpIntroOpen" aria-haspopup="dialog" aria-controls="glTpIntroModal">
                 <i class="fas fa-play"></i>
                 {{ $isRtl ? 'فيديو تعريفي' : 'Intro video' }}
               </button>
-            @endif
-          </div>
+            </div>
+          @endif
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="sana-container gl-tp-wrap">
+    @if($errors->any())
+      <div class="gl-tp-note is-err">{{ $errors->first() }}</div>
+    @endif
+    @if(session('success'))
+      <div class="gl-tp-note is-ok">{{ session('success') }}</div>
+    @endif
+
+    <div class="gl-tp-layout">
+      <div class="gl-tp-stack">
+        <article class="gl-tp-card gl-tp-about">
+          <h2>{{ __('public.instructor_bio_title') }}</h2>
           @if($bioClean)
             <p class="gl-tp-bio">{{ $bioClean }}</p>
           @else
@@ -133,7 +152,7 @@
         @endif
 
         @if(count($experiences) > 0 || $profile->experience)
-          <article class="gl-tp-card" style="margin-top:1rem">
+          <article class="gl-tp-card">
             <h2>{{ __('public.experience') }}</h2>
             @if(count($experiences) > 0)
               <ul class="gl-tp-exp">
@@ -147,21 +166,30 @@
           </article>
         @endif
 
-        @if(count($skills) > 0)
-          <article class="gl-tp-card" style="margin-top:1rem">
+        @if(count($skillChips) > 0 || count($skillNotes) > 0)
+          <article class="gl-tp-card">
             <h2>{{ __('public.skills') }}</h2>
-            <div class="gl-tp-skills">
-              @foreach($skills as $skill)
-                <span class="gl-tp-skill">{{ $skill }}</span>
-              @endforeach
-            </div>
+            @if(count($skillChips) > 0)
+              <div class="gl-tp-skills">
+                @foreach($skillChips as $skill)
+                  <span class="gl-tp-skill">{{ $skill }}</span>
+                @endforeach
+              </div>
+            @endif
+            @if(count($skillNotes) > 0)
+              <ul class="gl-tp-exp {{ count($skillChips) > 0 ? 'gl-tp-exp--after-skills' : '' }}">
+                @foreach($skillNotes as $note)
+                  <li>{{ $note }}</li>
+                @endforeach
+              </ul>
+            @endif
           </article>
         @endif
 
         @if($groupCourses->isNotEmpty())
-          <article class="gl-tp-card" style="margin-top:1rem">
+          <article class="gl-tp-card">
             <h2>{{ $isRtl ? 'كورسات جماعية' : 'Group courses' }}</h2>
-            <div class="gl-tp-private__rail" style="margin-top:.5rem">
+            <div class="gl-tp-private__rail">
               @foreach($groupCourses as $course)
                 <a href="{{ route('public.course.show', $course->id) }}" class="gl-tp-private__card">
                   <strong>{{ $course->title }}</strong>
@@ -176,7 +204,7 @@
       </div>
 
       <aside class="gl-tp-aside">
-        <div class="gl-tp-card">
+        <div class="gl-tp-card gl-tp-book-card">
           <h3>{{ __('public.private_weekly_slots') }}</h3>
           @if(!empty($weeklyCalendar))
             <div class="gl-tp-cal">
@@ -196,12 +224,12 @@
           @endif
 
           @unless($canBook)
-            <p class="gl-tp-note" style="margin-top:1rem">
+            <p class="gl-tp-note">
               {{ $isRtl
                 ? 'يمكنك مشاهدة الملف والجدول. حجز الموعد يتاح بعد الاشتراك في باقة.'
                 : 'You can browse the profile and schedule. Booking unlocks after you subscribe to a package.' }}
             </p>
-            <div class="gl-tp-actions" style="margin-top:.75rem">
+            <div class="gl-tp-actions">
               <a href="{{ $packagesUrl }}" class="sana-btn sana-btn--yellow">
                 {{ $isRtl ? 'اشترك في باقة للحجز' : 'Subscribe to book' }}
               </a>
@@ -212,7 +240,7 @@
               @endguest
             </div>
           @else
-            <p class="gl-tp-note is-ok" style="margin-top:1rem">
+            <p class="gl-tp-note is-ok">
               {{ $isRtl ? ('رصيدك المتاح: '.$unitsLeft.' حصة — ثبّت شهرياً أو احجز عدة مواعيد دفعة واحدة.') : ('Available credits: '.$unitsLeft.' — lock a monthly plan or book multiple slots.') }}
             </p>
             @if($bookableSlots->isNotEmpty())
@@ -233,24 +261,24 @@
                     ->unique(fn ($r) => $r['day'].'|'.$r['time'])
                     ->values();
               @endphp
-              <form method="POST" action="{{ route('student.one-to-one-sessions.book-instructor', $profile->user) }}" class="gl-tp-book" style="margin-top:.75rem" id="glTpBookForm">
+              <form method="POST" action="{{ route('student.one-to-one-sessions.book-instructor', $profile->user) }}" class="gl-tp-book" id="glTpBookForm">
                 @csrf
-                <div class="gl-tp-style" style="display:grid;gap:.5rem;margin-bottom:.75rem">
-                  <label style="display:flex;gap:.5rem;align-items:flex-start;border:1px solid #dbe3f0;border-radius:12px;padding:.65rem .75rem;cursor:pointer">
+                <div class="gl-tp-style">
+                  <label class="gl-tp-choice">
                     <input type="radio" name="booking_style" value="monthly" checked>
                     <span>
-                      <strong>{{ $isRtl ? 'تثبيت شهري (موصى به)' : 'Monthly lock (recommended)' }}</strong><br>
-                      <small style="color:#64748b">{{ $isRtl ? 'اختر موعدين أسبوعياً لمدة 4 أسابيع' : 'Pick up to 2 weekly times for 4 weeks' }}</small>
+                      <strong>{{ $isRtl ? 'تثبيت شهري (موصى به)' : 'Monthly lock (recommended)' }}</strong>
+                      <small>{{ $isRtl ? 'اختر موعدين أسبوعياً لمدة 4 أسابيع' : 'Pick up to 2 weekly times for 4 weeks' }}</small>
                     </span>
                   </label>
-                  <label style="display:flex;gap:.5rem;align-items:flex-start;border:1px solid #dbe3f0;border-radius:12px;padding:.65rem .75rem;cursor:pointer">
+                  <label class="gl-tp-choice">
                     <input type="radio" name="booking_style" value="multi">
                     <span>
-                      <strong>{{ $isRtl ? 'عدة مواعيد' : 'Multiple slots' }}</strong><br>
-                      <small style="color:#64748b">{{ $isRtl ? 'اختر أكثر من حصة مرة واحدة' : 'Select several sessions at once' }}</small>
+                      <strong>{{ $isRtl ? 'عدة مواعيد' : 'Multiple slots' }}</strong>
+                      <small>{{ $isRtl ? 'اختر أكثر من حصة مرة واحدة' : 'Select several sessions at once' }}</small>
                     </span>
                   </label>
-                  <label style="display:flex;gap:.5rem;align-items:flex-start;border:1px solid #dbe3f0;border-radius:12px;padding:.65rem .75rem;cursor:pointer">
+                  <label class="gl-tp-choice">
                     <input type="radio" name="booking_style" value="single">
                     <span>
                       <strong>{{ $isRtl ? 'حصة واحدة' : 'Single session' }}</strong>
@@ -258,9 +286,9 @@
                   </label>
                 </div>
 
-                <div id="glTpMonthly" style="display:grid;gap:.5rem">
-                  <label style="font-size:.8rem;font-weight:700;color:#0B3D91">{{ $isRtl ? 'الموعد الأسبوعي 1' : 'Weekly slot 1' }}
-                    <select id="glTpW0" required style="width:100%;margin-top:.25rem;height:40px;border-radius:10px;border:1px solid #dbe3f0;padding:0 .75rem">
+                <div id="glTpMonthly" class="gl-tp-fields">
+                  <label class="gl-tp-field">{{ $isRtl ? 'الموعد الأسبوعي 1' : 'Weekly slot 1' }}
+                    <select id="glTpW0" required>
                       <option value="">{{ $isRtl ? 'اختر…' : 'Choose…' }}</option>
                       @foreach($weeklyOpts as $opt)
                         <option value="{{ $opt['day'] }}|{{ $opt['time'] }}">{{ $opt['label'] }}</option>
@@ -269,8 +297,8 @@
                     <input type="hidden" name="weekly_slots[0][day_of_week]" id="glTpW0Day">
                     <input type="hidden" name="weekly_slots[0][time]" id="glTpW0Time">
                   </label>
-                  <label style="font-size:.8rem;font-weight:700;color:#0B3D91">{{ $isRtl ? 'الموعد الأسبوعي 2' : 'Weekly slot 2' }}
-                    <select id="glTpW1" style="width:100%;margin-top:.25rem;height:40px;border-radius:10px;border:1px solid #dbe3f0;padding:0 .75rem">
+                  <label class="gl-tp-field">{{ $isRtl ? 'الموعد الأسبوعي 2' : 'Weekly slot 2' }}
+                    <select id="glTpW1">
                       <option value="">{{ $isRtl ? 'اختياري…' : 'Optional…' }}</option>
                       @foreach($weeklyOpts as $opt)
                         <option value="{{ $opt['day'] }}|{{ $opt['time'] }}">{{ $opt['label'] }}</option>
@@ -279,8 +307,8 @@
                     <input type="hidden" name="weekly_slots[1][day_of_week]" id="glTpW1Day">
                     <input type="hidden" name="weekly_slots[1][time]" id="glTpW1Time">
                   </label>
-                  <label style="font-size:.8rem;font-weight:700;color:#0B3D91">{{ $isRtl ? 'عدد الأسابيع' : 'Weeks' }}
-                    <select name="weeks" style="width:100%;margin-top:.25rem;height:40px;border-radius:10px;border:1px solid #dbe3f0;padding:0 .75rem">
+                  <label class="gl-tp-field">{{ $isRtl ? 'عدد الأسابيع' : 'Weeks' }}
+                    <select name="weeks">
                       <option value="4" selected>4</option>
                       <option value="3">3</option>
                       <option value="2">2</option>
@@ -288,50 +316,54 @@
                       <option value="8">8</option>
                     </select>
                   </label>
-                  <button type="submit" class="sana-btn sana-btn--yellow" style="margin-top:.25rem">
+                  <button type="submit" class="sana-btn sana-btn--yellow">
                     {{ $isRtl ? 'تثبيت الجدول الشهري' : 'Lock monthly schedule' }}
                   </button>
                 </div>
 
-                <div id="glTpMulti" class="gl-tp-slots" style="display:none;margin-top:.25rem">
-                  @foreach($bookableSlots as $slot)
-                    @php
-                      $starts = is_array($slot) ? ($slot['starts_at'] ?? null) : ($slot->starts_at ?? null);
-                      $label = is_array($slot) ? ($slot['label'] ?? null) : ($slot->label ?? null);
-                      if ($starts instanceof \Carbon\Carbon) {
-                        $value = $starts->toDateTimeString();
-                        $label = $label ?: $starts->translatedFormat('D j M — g:i A');
-                      } else {
-                        continue;
-                      }
-                    @endphp
-                    <label class="gl-tp-slot" style="cursor:pointer">
-                      <input type="checkbox" name="scheduled_ats[]" value="{{ $value }}" style="margin-inline-end:.4rem">
-                      <span>{{ $label }}</span>
-                    </label>
-                  @endforeach
-                  <button type="submit" class="sana-btn sana-btn--yellow" style="margin-top:.5rem;width:100%">
+                <div id="glTpMulti" class="gl-tp-book-pane" hidden>
+                  <div class="gl-tp-slots">
+                    @foreach($bookableSlots as $slot)
+                      @php
+                        $starts = is_array($slot) ? ($slot['starts_at'] ?? null) : ($slot->starts_at ?? null);
+                        $label = is_array($slot) ? ($slot['label'] ?? null) : ($slot->label ?? null);
+                        if ($starts instanceof \Carbon\Carbon) {
+                          $value = $starts->toDateTimeString();
+                          $label = $label ?: $starts->translatedFormat('D j M — g:i A');
+                        } else {
+                          continue;
+                        }
+                      @endphp
+                      <label class="gl-tp-slot">
+                        <input type="checkbox" name="scheduled_ats[]" value="{{ $value }}">
+                        <span>{{ $label }}</span>
+                      </label>
+                    @endforeach
+                  </div>
+                  <button type="submit" class="sana-btn sana-btn--yellow">
                     {{ $isRtl ? 'حجز المواعيد المحددة' : 'Book selected slots' }}
                   </button>
                 </div>
 
-                <div id="glTpSingle" class="gl-tp-slots" style="display:none;margin-top:.25rem">
-                  @foreach($bookableSlots as $slot)
-                    @php
-                      $starts = is_array($slot) ? ($slot['starts_at'] ?? null) : ($slot->starts_at ?? null);
-                      $label = is_array($slot) ? ($slot['label'] ?? null) : ($slot->label ?? null);
-                      if ($starts instanceof \Carbon\Carbon) {
-                        $value = $starts->toDateTimeString();
-                        $label = $label ?: $starts->translatedFormat('D j M — g:i A');
-                      } else {
-                        continue;
-                      }
-                    @endphp
-                    <button type="submit" name="scheduled_at" value="{{ $value }}" class="gl-tp-slot" formnovalidate>
-                      <span>{{ $label }}</span>
-                      <i class="fas fa-calendar-plus" style="color:#0B3D91"></i>
-                    </button>
-                  @endforeach
+                <div id="glTpSingle" class="gl-tp-book-pane" hidden>
+                  <div class="gl-tp-slots">
+                    @foreach($bookableSlots as $slot)
+                      @php
+                        $starts = is_array($slot) ? ($slot['starts_at'] ?? null) : ($slot->starts_at ?? null);
+                        $label = is_array($slot) ? ($slot['label'] ?? null) : ($slot->label ?? null);
+                        if ($starts instanceof \Carbon\Carbon) {
+                          $value = $starts->toDateTimeString();
+                          $label = $label ?: $starts->translatedFormat('D j M — g:i A');
+                        } else {
+                          continue;
+                        }
+                      @endphp
+                      <button type="submit" name="scheduled_at" value="{{ $value }}" class="gl-tp-slot" formnovalidate>
+                        <span>{{ $label }}</span>
+                        <i class="fas fa-calendar-plus"></i>
+                      </button>
+                    @endforeach
+                  </div>
                 </div>
               </form>
               <script>
@@ -356,9 +388,9 @@
                 }
                 function sync() {
                   var style = (form.querySelector('input[name="booking_style"]:checked') || {}).value || 'monthly';
-                  monthly.style.display = style === 'monthly' ? 'grid' : 'none';
-                  multi.style.display = style === 'multi' ? 'grid' : 'none';
-                  single.style.display = style === 'single' ? 'grid' : 'none';
+                  monthly.hidden = style !== 'monthly';
+                  multi.hidden = style !== 'multi';
+                  single.hidden = style !== 'single';
                   if (w0) w0.required = style === 'monthly';
                 }
                 form.querySelectorAll('input[name="booking_style"]').forEach(function (el) {
@@ -374,7 +406,7 @@
               })();
               </script>
             @else
-              <p class="gl-tp-bio" style="margin-top:.75rem">{{ $isRtl ? 'لا توجد مواعيد مفتوحة خلال الأسابيع القادمة.' : 'No open slots in the coming weeks.' }}</p>
+              <p class="gl-tp-bio">{{ $isRtl ? 'لا توجد مواعيد مفتوحة خلال الأسابيع القادمة.' : 'No open slots in the coming weeks.' }}</p>
             @endif
           @endunless
         </div>
