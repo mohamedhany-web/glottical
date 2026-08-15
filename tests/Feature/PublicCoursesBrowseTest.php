@@ -33,7 +33,12 @@ class PublicCoursesBrowseTest extends TestCase
             ->assertSee('Ahmed Quran Teacher', false)
             ->assertSee('معلم قرآن', false)
             ->assertSee(__('public.browse_tab_private'), false)
-            ->assertSee(__('public.browse_tab_groups'), false);
+            ->assertSee(__('public.browse_tab_groups'), false)
+            ->assertSee(__('public.browse_view_teacher'), false)
+            ->assertDontSee('حصة خاصة 50 دقيقة', false)
+            ->assertDontSee('4 حصص خاصة', false)
+            ->assertDontSee('خطة 3 أشهر', false)
+            ->assertDontSee('عرض المعلم والحجز', false);
     }
 
     public function test_draft_and_inactive_teachers_are_hidden(): void

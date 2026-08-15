@@ -44,23 +44,4 @@ return [
         'evening' => ['en' => 'Evening', 'ar' => 'مساءً'],
         'weekend' => ['en' => 'Weekend', 'ar' => 'نهاية الأسبوع'],
     ],
-
-    'packages' => [
-        1 => [
-            'months' => 1,
-            'lessons' => 4,
-            'label_en' => 'Monthly',
-            'label_ar' => 'شهري',
-            'sub_en' => '4 Private Lessons / Month',
-            'sub_ar' => '4 حصص خاصة / شهريًا',
-        ],
-        3 => [
-            'months' => 3,
-            'lessons' => 12,
-            'label_en' => '3-Month Plan',
-            'label_ar' => 'خطة 3 أشهر',
-            'sub_en' => '12 Private Lessons',
-            'sub_ar' => '12 حصة خاصة',
-        ],
-    ],
 ];

@@ -14,7 +14,6 @@
     $fawaterakActive = !empty($fawaterakUseGateway);
     $fawaterakMis = !empty($fawaterakMisconfigured);
     $fawaterakIntegration = $fawaterakIntegration ?? 'iframe';
-    $isOneToOne = method_exists($course, 'isOneToOne') && $course->isOneToOne();
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -118,8 +117,8 @@
         <span>/</span>
         <span>{{ __('public.checkout_breadcrumb_current') }}</span>
                 </nav>
-      <h1>{{ $isOneToOne ? ($isRtl ? 'خطتك التعليمية' : 'Your Learning Plan') : __('public.checkout_page_label') }}</h1>
-      <p>{{ $isRtl ? 'أكمل الاشتراك بأمان — المعلم والمواعيد والباقة في خطوة واحدة.' : 'Complete your plan securely — teacher, schedule, and package in one step.' }}</p>
+      <h1>{{ __('public.checkout_page_label') }}</h1>
+      <p>{{ $isRtl ? 'أكمل الاشتراك بأمان في خطوة واحدة.' : 'Complete your purchase securely in one step.' }}</p>
       <div class="gl-ck-steps" aria-hidden="true">
         <span class="gl-ck-step is-done">1 · {{ $isRtl ? 'اختر المعلم' : 'Choose teacher' }}</span>
         <span class="gl-ck-step is-on">2 · {{ $isRtl ? 'الدفع' : 'Checkout' }}</span>
@@ -277,13 +276,10 @@
                 · {{ $course->academicSubject->name }}
               @endif
             </p>
-            @if($isOneToOne)
-              <p style="color:#0B3D91;font-weight:800">{{ __('public.private_lesson_duration') }}</p>
-            @endif
           </div>
         </div>
 
-        <h2 style="font-size:1rem;margin-bottom:.75rem">{{ $isOneToOne ? __('public.private_packages_label') : __('public.checkout_order_summary_title') }}</h2>
+        <h2 style="font-size:1rem;margin-bottom:.75rem">{{ __('public.checkout_order_summary_title') }}</h2>
 
         <div id="checkout-pricing-summary"
              data-base-price="{{ $baseCoursePrice }}"
@@ -312,10 +308,7 @@
                 </div>
 
         <ul class="gl-ck-benefits" style="margin-top:1rem">
-          @if($isOneToOne)
-            <li><i class="fas fa-check"></i> {{ __('public.private_package_1m_sub') }}</li>
-            <li><i class="fas fa-check"></i> {{ $isRtl ? 'معلم خاص ومواعيد مرنة' : 'Private teacher & flexible times' }}</li>
-          @elseif($isMonthlyCheckout)
+          @if($isMonthlyCheckout)
             <li><i class="fas fa-check"></i> {{ __('public.checkout_benefit_monthly_access') }}</li>
           @else
             <li><i class="fas fa-check"></i> {{ __('public.checkout_benefit_lifetime') }}</li>

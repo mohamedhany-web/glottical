@@ -398,13 +398,10 @@
           <p>
             @if ($isOneToOne)
               {{ $isRtl
-                ? 'حصة خاصة 50 دقيقة مع معلم مؤهل — اختر خطتك التعليمية والمواعيد المناسبة لطفلك.'
-                : '50-minute private lessons with a qualified teacher — choose your learning plan and times that fit your child.' }}
+                ? 'تعلّم مباشر مع معلم مخصص داخل المنصة.'
+                : 'Live learning with a dedicated teacher on the platform.' }}
               @if ($course->instructor)
                 {{ $isRtl ? ' المعلم:' : ' Teacher:' }} <strong>{{ $course->instructor->name }}</strong>.
-              @endif
-              @if ($isMonthly)
-                {{ $isRtl ? ' الاشتراك كخطة تعليمية شهرية.' : ' Billed as a monthly learning plan.' }}
               @endif
                                         @else
               {{ $isRtl
@@ -422,21 +419,6 @@
         @endif
 
         <div class="gl-cs-price-box">
-          @if ($isOneToOne)
-            <p class="gl-cs-note" style="margin:0 0 .55rem;font-weight:800;color:#0B3D91">{{ __('public.private_packages_label') }}</p>
-            @php $selectedPlan = (int) request('plan', $isMonthly ? 1 : 0); @endphp
-            <div style="display:grid;gap:8px;margin-bottom:.85rem">
-              <a href="{{ request()->url() }}?plan=1" style="text-decoration:none;border:1.5px solid {{ $selectedPlan === 1 ? '#0B3D91' : '#D7DDE6' }};background:{{ $selectedPlan === 1 ? '#E8EEF8' : '#fff' }};border-radius:12px;padding:10px 12px;display:block">
-                <strong style="display:block;color:#0B1220">{{ __('public.private_package_1m') }}</strong>
-                <span style="font-size:.78rem;color:#5B6577">{{ __('public.private_package_1m_sub') }}</span>
-              </a>
-              <a href="{{ request()->url() }}?plan=3" style="text-decoration:none;border:1.5px solid {{ $selectedPlan === 3 ? '#0B3D91' : '#D7DDE6' }};background:{{ $selectedPlan === 3 ? '#E8EEF8' : '#fff' }};border-radius:12px;padding:10px 12px;display:block">
-                <strong style="display:block;color:#0B1220">{{ __('public.private_package_3m') }}</strong>
-                <span style="font-size:.78rem;color:#5B6577">{{ __('public.private_package_3m_sub') }}</span>
-              </a>
-            </div>
-            <p class="gl-cs-access" style="margin-bottom:.65rem"><i class="far fa-clock"></i> {{ __('public.private_lesson_duration') }}</p>
-          @endif
           @if ($isPaid)
             <p class="gl-cs-price">
               {{ number_format($checkoutPrice, 0) }}
@@ -466,7 +448,7 @@
                                 </div>
           <div class="gl-cs-spec">
             <dt>{{ __('public.duration') }}</dt>
-            <dd>@if($isOneToOne){{ __('public.private_lesson_duration') }}@else{{ $course->duration_hours ?? 0 }} {{ __('public.hours') }}@endif</dd>
+            <dd>{{ $course->duration_hours ?? 0 }} {{ __('public.hours') }}</dd>
                                         </div>
           <div class="gl-cs-spec">
             <dt>{{ __('public.lectures_count_label') }}</dt>

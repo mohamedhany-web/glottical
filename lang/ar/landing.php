@@ -12,8 +12,8 @@ return [
     'nav' => [
         'brand' => 'مدرسة إسلامية',
         'brand_name' => 'Glottical',
-        'courses' => 'الحصص الخاصة',
-        'learning_paths' => 'الحصص الخاصة',
+        'courses' => 'المعلمون',
+        'learning_paths' => 'المسارات التعليمية',
         'groups' => 'المدرسة',
         'categories' => 'التصنيفات',
         'community' => 'المجتمع',

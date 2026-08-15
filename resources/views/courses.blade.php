@@ -151,15 +151,6 @@
     .gl-cal__col{border:1px solid #E8EEF8;border-radius:10px;padding:6px 4px;background:#F4F7FC;text-align:center}
     .gl-cal__day{display:block;font:800 .65rem Tajawal,sans-serif;color:#0B3D91;margin-bottom:4px}
     .gl-cal__t{display:block;font:700 .62rem/1.35 Tajawal,sans-serif;color:#0B1220}
-    .gl-plans{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    .gl-plan{
-      text-align:center;text-decoration:none!important;border:1.5px solid #D7DDE6;border-radius:12px;
-      padding:10px 8px;color:#0B1220;background:#fff;
-    }
-    .gl-plan strong{display:block;font:800 .8rem Tajawal,sans-serif}
-    .gl-plan span{display:block;margin-top:3px;font:600 .68rem Tajawal,sans-serif;color:#5B6577}
-    .gl-plan.is-featured{border-color:#0B3D91;background:#E8EEF8;color:#0B3D91}
-    .gl-plan.is-featured span{color:#0B3D91}
     .gl-tabs{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 .95rem}
     .gl-tab{
       display:inline-flex;align-items:center;gap:8px;
@@ -424,10 +415,9 @@
                   <span class="gl-badge">{{ $chip }}</span>
                 @endforeach
               </div>
-              <div class="gl-dur"><i class="far fa-clock"></i> {{ __('public.private_lesson_duration') }}</div>
-              <div>
-                <p style="margin:0 0 6px;font:800 .68rem Tajawal,sans-serif;color:#8A94A6">{{ __('public.private_weekly_slots') }}</p>
-                @if(!empty($calendar))
+              @if(!empty($calendar))
+                <div>
+                  <p style="margin:0 0 6px;font:800 .68rem Tajawal,sans-serif;color:#8A94A6">{{ __('public.instructor_availability_title') }}</p>
                   <div class="gl-cal">
                     @foreach($calendar as $col)
                       <div class="gl-cal__col">
@@ -438,25 +428,10 @@
                       </div>
                     @endforeach
                   </div>
-                @else
-                  <p style="margin:0;font:600 .75rem Tajawal,sans-serif;color:#8A94A6">{{ $isRtl ? 'اختر المعلم لعرض التقويم الكامل' : 'Open the teacher page for the full calendar' }}</p>
-                @endif
-              </div>
-              <div>
-                <p style="margin:0 0 6px;font:800 .68rem Tajawal,sans-serif;color:#8A94A6">{{ __('public.private_packages_label') }}</p>
-                <div class="gl-plans">
-                  <a href="{{ route('public.service-packages.index') }}" class="gl-plan">
-                    <strong>{{ __('public.private_package_1m') }}</strong>
-                    <span>{{ __('public.private_package_1m_sub') }}</span>
-                  </a>
-                  <a href="{{ route('public.service-packages.index') }}" class="gl-plan is-featured">
-                    <strong>{{ __('public.private_package_3m') }}</strong>
-                    <span>{{ __('public.private_package_3m_sub') }}</span>
-                  </a>
                 </div>
-              </div>
+              @endif
               <a href="{{ $teacher['url'] }}" class="sana-btn sana-btn--yellow" style="justify-content:center;margin-top:2px">
-                {{ $isRtl ? 'عرض المعلم والحجز' : 'View teacher & book' }}
+                {{ __('public.browse_view_teacher') }}
               </a>
             </div>
           </article>

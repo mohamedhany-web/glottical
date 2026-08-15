@@ -12,8 +12,8 @@ return [
     'nav' => [
         'brand' => 'Islamic school',
         'brand_name' => 'Glottical',
-        'courses' => 'Private Lessons',
-        'learning_paths' => 'Private Lessons',
+        'courses' => 'Teachers',
+        'learning_paths' => 'Learning paths',
         'groups' => 'School',
         'categories' => 'Categories',
         'community' => 'Community',

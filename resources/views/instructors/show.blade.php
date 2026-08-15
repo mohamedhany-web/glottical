@@ -121,8 +121,8 @@
         @if($oneToOneCourses->isNotEmpty() || $privateGroups->isNotEmpty())
           <section class="gl-tp-private" id="private-lessons" aria-labelledby="glTpPrivateTitle">
             <div class="gl-tp-private__head">
-              <h2 id="glTpPrivateTitle">{{ $isRtl ? 'الحصص الخاصة' : 'Private lessons' }}</h2>
-              <p>{{ $isRtl ? 'عروض فردية مع هذا المعلم — تصفّح بشكل أفقي' : '1:1 offerings with this teacher — scroll horizontally' }}</p>
+              <h2 id="glTpPrivateTitle">{{ $isRtl ? 'مع هذا المعلم' : 'With this teacher' }}</h2>
+              <p>{{ $isRtl ? 'كورسات وعروض مرتبطة بهذا المعلم' : 'Courses and offerings linked to this teacher' }}</p>
             </div>
             <div class="gl-tp-private__rail" tabindex="0">
               @foreach($privateGroups as $group)
@@ -205,7 +205,7 @@
 
       <aside class="gl-tp-aside">
         <div class="gl-tp-card gl-tp-book-card">
-          <h3>{{ __('public.private_weekly_slots') }}</h3>
+          <h3>{{ __('public.instructor_availability_title') }}</h3>
           @if(!empty($weeklyCalendar))
             <div class="gl-tp-cal">
               @foreach($weeklyCalendar as $col)
@@ -241,7 +241,7 @@
             </div>
           @else
             <p class="gl-tp-note is-ok">
-              {{ $isRtl ? ('رصيدك المتاح: '.$unitsLeft.' حصة — ثبّت شهرياً أو احجز عدة مواعيد دفعة واحدة.') : ('Available credits: '.$unitsLeft.' — lock a monthly plan or book multiple slots.') }}
+              {{ $isRtl ? ('رصيدك المتاح: '.$unitsLeft.' حصة — اختر المواعيد المناسبة.') : ('Available credits: '.$unitsLeft.' — pick the times that work for you.') }}
             </p>
             @if($bookableSlots->isNotEmpty())
               @php
