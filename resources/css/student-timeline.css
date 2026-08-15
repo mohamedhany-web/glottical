@@ -63,12 +63,34 @@ html:not([lang="ar"]) .st-dash {
 .st-shell.is-rail-open {
   --st-rail-w: 248px;
 }
+/* Full-width main when the page has no events side panel */
+.st-shell.is-wide .st-events {
+  display: none !important;
+}
+html[dir="ltr"] .st-shell.is-wide,
+html.st-ltr .st-shell.is-wide,
+.st-shell.is-ltr.is-wide {
+  grid-template-columns: var(--st-rail-w) minmax(0, 1fr);
+  grid-template-areas: "rail main";
+}
+html[dir="rtl"] .st-shell.is-wide,
+html.st-rtl .st-shell.is-wide,
+.st-shell.is-rtl.is-wide {
+  grid-template-columns: minmax(0, 1fr) var(--st-rail-w);
+  grid-template-areas: "main rail";
+}
 /* Arabic: rail on the RIGHT, events on the LEFT */
 html[dir="rtl"] .st-shell,
 html.st-rtl .st-shell,
 .st-shell.is-rtl {
   grid-template-columns: minmax(300px, 380px) minmax(0, 1fr) var(--st-rail-w);
   grid-template-areas: "events main rail";
+}
+html[dir="rtl"] .st-shell.is-wide,
+html.st-rtl .st-shell.is-wide,
+.st-shell.is-rtl.is-wide {
+  grid-template-columns: minmax(0, 1fr) var(--st-rail-w);
+  grid-template-areas: "main rail";
 }
 .st-rail,
 .st-main,
@@ -1712,6 +1734,21 @@ html:not([dir="rtl"]):not(.st-rtl) .st-cal__grid {
     grid-template-areas:
       "main rail"
       "events rail";
+  }
+  .st-shell.is-wide,
+  html[dir="ltr"] .st-shell.is-wide,
+  html.st-ltr .st-shell.is-wide,
+  .st-shell.is-ltr.is-wide {
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: var(--st-rail-w) minmax(0, 1fr);
+    grid-template-areas: "rail main";
+  }
+  html[dir="rtl"] .st-shell.is-wide,
+  html.st-rtl .st-shell.is-wide,
+  .st-shell.is-rtl.is-wide {
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) var(--st-rail-w);
+    grid-template-areas: "main rail";
   }
   .st-events {
     max-height: none;
@@ -6665,6 +6702,8 @@ button.st-chip {
 .st-xp-shell {
   display: grid;
   gap: 14px;
+  width: 100%;
+  max-width: none;
 }
 .st-xp-head {
   display: flex;
@@ -6675,6 +6714,7 @@ button.st-chip {
   border-radius: 16px;
   border: 1px solid var(--st-line);
   background: #fff;
+  width: 100%;
 }
 .st-xp-kicker {
   margin: 0 0 6px;
@@ -6689,7 +6729,7 @@ button.st-chip {
 .st-xp-head p {
   margin: 0;
   color: var(--st-muted);
-  max-width: 60ch;
+  max-width: 72ch;
 }
 .st-xp-actions {
   display: flex;
@@ -6702,12 +6742,13 @@ button.st-chip {
   overflow: hidden;
   border: 1px solid var(--st-line);
   background: #0b1220;
-  min-height: min(72vh, 720px);
+  min-height: min(78vh, 860px);
+  width: 100%;
   box-shadow: 0 16px 36px rgba(7, 18, 38, .12);
 }
 .st-xp-frame {
   width: 100%;
-  height: min(72vh, 720px);
+  height: min(78vh, 860px);
   border: 0;
   background: #fff;
 }

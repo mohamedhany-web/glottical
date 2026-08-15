@@ -16,8 +16,7 @@
         ['route' => 'student.private-lectures.index', 'match' => ['student.private-lectures.*', 'student.one-to-one-sessions.*'], 'label' => __('student_timeline.nav_lessons'), 'icon' => 'lessons.svg', 'ui' => 'show_private_lessons'],
         ['route' => 'student.service-entitlements.index', 'match' => ['student.service-entitlements.*'], 'label' => __('student_timeline.nav_progress'), 'icon' => 'credits.svg', 'ui' => 'show_entitlements'],
         ['route' => 'referrals.index', 'match' => ['referrals.*'], 'label' => __('student_timeline.nav_referrals'), 'fa' => 'fas fa-user-friends', 'ui' => 'show_referrals'],
-        ['route' => 'student.library.home', 'match' => ['student.library.home', 'student.library.files', 'student.library.materials', 'curriculum-library.*'], 'label' => __('student_timeline.nav_family_library'), 'fa' => 'fas fa-shield-alt', 'ui' => 'show_libraries'],
-        ['route' => 'student.library.files', 'match' => ['student.library.files', 'student.library.materials', 'curriculum-library.*'], 'label' => __('student_timeline.lib_files_title'), 'fa' => 'fas fa-folder-open', 'ui' => 'show_libraries'],
+        ['route' => 'student.library.files', 'match' => ['student.library.home', 'student.library.files', 'student.library.materials', 'curriculum-library.*'], 'label' => __('student_timeline.lib_files_title'), 'fa' => 'fas fa-folder-open', 'ui' => 'show_libraries'],
         ['route' => 'student.library.curriculum', 'match' => ['student.library.curriculum'], 'label' => __('student_timeline.nav_library_curriculum'), 'fa' => 'fas fa-sitemap', 'ui' => 'show_libraries'],
         ['route' => 'student.library.videos', 'match' => ['student.library.videos'], 'label' => __('student_timeline.nav_library_videos'), 'fa' => 'fas fa-film', 'ui' => 'show_libraries'],
         ['route' => 'student.assignments.index', 'match' => ['student.assignments.*'], 'label' => __('student_timeline.nav_assignments'), 'fa' => 'fas fa-tasks', 'ui' => 'show_assignments', 'needs_libraries' => true],
@@ -74,7 +73,7 @@
 })();
 </script>
 
-<div class="st-shell{{ $appRtl ? ' is-rtl' : ' is-ltr' }}" id="stShell">
+<div class="st-shell{{ $appRtl ? ' is-rtl' : ' is-ltr' }}{{ View::hasSection('events') ? ' has-events' : ' is-wide' }}" id="stShell">
     <script>
     (function () {
         var shell = document.getElementById('stShell');
