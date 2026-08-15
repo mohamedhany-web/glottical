@@ -11,6 +11,9 @@
     if (! $direct && $application->introVideoFileUrl()) {
         $direct = $application->introVideoFileUrl();
     }
+    $photoInline = $photoInline ?? null;
+    $idInline = $idInline ?? null;
+    $certificateInline = $certificateInline ?? null;
     $photoFileUrl = $application->photo_path
         ? route('admin.tutor-applications.file', [$application, 'photo'])
         : null;
@@ -80,10 +83,8 @@
         <div class="space-y-5">
             <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
                 <div class="flex items-start gap-4">
-                    @if($photoFileUrl)
-                        <a href="{{ $photoFileUrl }}" target="_blank" rel="noopener" class="shrink-0">
-                            <img src="{{ $photoFileUrl }}" alt="" class="size-20 rounded-2xl border border-line object-cover">
-                        </a>
+                    @if($photoInline)
+                        <img src="{{ $photoInline }}" alt="" class="size-20 rounded-2xl border border-line object-cover">
                     @else
                         <span class="inline-flex size-20 items-center justify-center rounded-2xl bg-canvas-muted text-xl font-bold text-muted">{{ mb_substr($application->full_name, 0, 1) }}</span>
                     @endif
@@ -194,21 +195,23 @@
             <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft space-y-4">
                 <h3 class="text-base font-semibold text-ink">المستندات المرفوعة</h3>
                 @foreach([
-                    ['label' => 'الصورة الشخصية', 'url' => $photoFileUrl, 'pdf' => false],
-                    ['label' => 'البطاقة / الجواز', 'url' => $idFileUrl, 'pdf' => $application->idDocumentIsPdf()],
-                    ['label' => 'الشهادة / الإجازة', 'url' => $certificateFileUrl, 'pdf' => $application->certificateIsPdf()],
+                    ['label' => 'الصورة الشخصية', 'url' => $photoFileUrl, 'inline' => $photoInline, 'pdf' => false],
+                    ['label' => 'البطاقة / الجواز', 'url' => $idFileUrl, 'inline' => $idInline, 'pdf' => $application->idDocumentIsPdf()],
+                    ['label' => 'الشهادة / الإجازة', 'url' => $certificateFileUrl, 'inline' => $certificateInline, 'pdf' => $application->certificateIsPdf()],
                 ] as $doc)
                     <div>
                         <p class="mb-1.5 text-xs font-medium text-muted">{{ $doc['label'] }}</p>
-                        @if($doc['url'])
+                        @if($doc['inline'] && ! $doc['pdf'])
+                            <div class="overflow-hidden rounded-xl border border-line bg-canvas">
+                                <img src="{{ $doc['inline'] }}" alt="{{ $doc['label'] }}" class="max-h-48 w-full object-contain">
+                            </div>
+                        @elseif($doc['url'])
                             @if($doc['pdf'])
                                 <a href="{{ $doc['url'] }}" target="_blank" rel="noopener" class="btn-press inline-flex items-center gap-2 rounded-xl border border-line bg-canvas px-4 py-3 text-sm font-semibold text-accent">
                                     <i class="fas fa-file-pdf text-danger"></i> فتح ملف PDF
                                 </a>
                             @else
-                                <a href="{{ $doc['url'] }}" target="_blank" rel="noopener" class="block overflow-hidden rounded-xl border border-line bg-canvas">
-                                    <img src="{{ $doc['url'] }}" alt="{{ $doc['label'] }}" class="max-h-48 w-full object-contain" loading="lazy">
-                                </a>
+                                <p class="text-sm text-danger">الملف مسجّل لكن تعذر قراءته من التخزين. اطلب إعادة الرفع.</p>
                             @endif
                         @else
                             <p class="text-sm text-muted">غير مرفوع</p>

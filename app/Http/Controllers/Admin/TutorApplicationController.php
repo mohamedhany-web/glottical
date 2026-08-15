@@ -111,10 +111,20 @@ class TutorApplicationController extends Controller
         ]);
 
         $applyUrl = route('public.tutor.apply');
+        $photoInline = TutorApplicationStorage::inlineDataUri($tutorApplication->photo_path);
+        $idInline = $tutorApplication->idDocumentIsPdf()
+            ? null
+            : TutorApplicationStorage::inlineDataUri($tutorApplication->id_document_path);
+        $certificateInline = $tutorApplication->certificateIsPdf()
+            ? null
+            : TutorApplicationStorage::inlineDataUri($tutorApplication->certificate_path);
 
         return view('admin.tutor-applications.show', [
             'application' => $tutorApplication,
             'applyUrl' => $applyUrl,
+            'photoInline' => $photoInline,
+            'idInline' => $idInline,
+            'certificateInline' => $certificateInline,
         ]);
     }
 

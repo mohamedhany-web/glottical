@@ -67,6 +67,80 @@ class TutorApplicationStorage
         return PublicStorageUrl::localWebUrl($relative);
     }
 
+    public static function readContents(?string $path): ?string
+    {
+        $relative = self::storedRelativePath($path);
+        $candidates = [];
+        if ($relative !== null) {
+            $candidates[] = $relative;
+            if (! str_starts_with($relative, 'public/')) {
+                $candidates[] = 'public/'.$relative;
+            }
+        }
+
+        $raw = is_string($path) ? trim($path) : '';
+        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) {
+            try {
+                $remote = \Illuminate\Support\Facades\Http::timeout(20)->withOptions(['http_errors' => false])->get($raw);
+                if ($remote->successful() && $remote->body() !== '') {
+                    return $remote->body();
+                }
+            } catch (\Throwable) {
+            }
+        }
+
+        foreach (array_unique($candidates) as $candidate) {
+            foreach (['public', 'local', 'r2', 's3'] as $diskName) {
+                try {
+                    $contents = Storage::disk($diskName)->get($candidate);
+                    if (is_string($contents) && $contents !== '') {
+                        return $contents;
+                    }
+                } catch (\Throwable) {
+                }
+            }
+        }
+
+        if ($relative !== null && str_contains($relative, 'tutor-applications/')) {
+            $basename = basename($relative);
+            $directory = trim(dirname($relative), '.');
+            foreach (['public', 'r2'] as $diskName) {
+                try {
+                    foreach (Storage::disk($diskName)->files($directory) as $file) {
+                        if (basename($file) === $basename) {
+                            $contents = Storage::disk($diskName)->get($file);
+                            if (is_string($contents) && $contents !== '') {
+                                return $contents;
+                            }
+                        }
+                    }
+                } catch (\Throwable) {
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static function inlineDataUri(?string $path): ?string
+    {
+        $contents = self::readContents($path);
+        if ($contents === null || strlen($contents) > 2_500_000) {
+            return null;
+        }
+
+        $relative = self::storedRelativePath($path) ?? '';
+        $mime = match (strtolower((string) pathinfo($relative, PATHINFO_EXTENSION))) {
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+            'gif' => 'image/gif',
+            'pdf' => 'application/pdf',
+            default => 'image/jpeg',
+        };
+
+        return 'data:'.$mime.';base64,'.base64_encode($contents);
+    }
+
     public static function storePhoto(UploadedFile $file, ?string $oldPath = null): string
     {
         return self::store($file, self::DIR_PHOTOS, ['jpg', 'jpeg', 'png', 'webp', 'gif'], $oldPath);
@@ -129,6 +203,17 @@ class TutorApplicationStorage
         }
 
         $stored = str_replace('\\', '/', $stored);
+
+        if ($disk !== 'public') {
+            try {
+                Storage::disk('public')->makeDirectory($directory);
+                $copy = Storage::disk($disk)->get($stored);
+                if (is_string($copy) && $copy !== '') {
+                    Storage::disk('public')->put($stored, $copy);
+                }
+            } catch (\Throwable) {
+            }
+        }
 
         if (is_string($oldPath) && $oldPath !== '' && $oldPath !== $stored) {
             PublicMediaStorage::delete($oldPath);

@@ -304,7 +304,7 @@ class TutorApplyFlowTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.tutor-applications.show', $application))
             ->assertOk()
-            ->assertSee($fileUrl, false)
+            ->assertSee('data:image', false)
             ->assertDontSee('r2.dev', false);
 
         $this->actingAs($admin)

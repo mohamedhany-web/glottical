@@ -64,4 +64,16 @@ class TutorApplicationStorageTest extends TestCase
         $url = TutorApplicationStorage::publicUrl('https://pub-example.r2.dev/tutor-applications/photos/toqa.jpg');
         $this->assertStringContainsString('/media/tutor-applications/photos/toqa.jpg', (string) $url);
     }
+
+    public function test_inline_data_uri_reads_stored_photo(): void
+    {
+        Storage::fake('public');
+        config(['filesystems.public_media_disk' => 'public']);
+
+        $path = TutorApplicationStorage::storePhoto(UploadedFile::fake()->image('toqa.jpg', 80, 80));
+        $uri = TutorApplicationStorage::inlineDataUri($path);
+
+        $this->assertNotNull($uri);
+        $this->assertStringStartsWith('data:image/jpeg;base64,', $uri);
+    }
 }
