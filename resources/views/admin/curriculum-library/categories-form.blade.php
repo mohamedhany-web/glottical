@@ -10,7 +10,7 @@
     $selectedRestrict = old('restricted_user_ids', isset($category) ? $category->restrictedUsers->pluck('id')->all() : []);
 @endphp
 
-<div class="mx-auto max-w-3xl space-y-5">
+<div class="w-full max-w-none space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div>
             <p class="text-xs font-medium text-muted">
@@ -34,25 +34,22 @@
         @csrf
         @if($category) @method('PUT') @endif
 
-        <article class="space-y-4 rounded-2xl border border-line bg-surface p-5 shadow-soft">
-            <div>
-                <label class="{{ $label }}" for="name">اسم التصنيف *</label>
-                <input id="name" type="text" name="name" value="{{ old('name', $category?->name) }}" required class="{{ $field }}">
-                @error('name') <p class="mt-1 text-xs text-danger">{{ $message }}</p> @enderror
-            </div>
-
-            <div>
-                <label class="{{ $label }}" for="slug">الرابط (slug) — اختياري</label>
-                <input id="slug" type="text" name="slug" value="{{ old('slug', $category?->slug) }}" class="{{ $field }}" placeholder="math-arabic">
-                @error('slug') <p class="mt-1 text-xs text-danger">{{ $message }}</p> @enderror
-            </div>
-
-            <div>
-                <label class="{{ $label }}" for="description">الوصف</label>
-                <textarea id="description" name="description" rows="3" class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">{{ old('description', $category?->description) }}</textarea>
-            </div>
-
-            <div class="grid gap-4 sm:grid-cols-2">
+        <article class="space-y-4 rounded-2xl border border-line bg-surface p-5 shadow-soft md:p-6">
+            <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                    <label class="{{ $label }}" for="name">اسم التصنيف *</label>
+                    <input id="name" type="text" name="name" value="{{ old('name', $category?->name) }}" required class="{{ $field }}">
+                    @error('name') <p class="mt-1 text-xs text-danger">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="{{ $label }}" for="slug">الرابط (slug) — اختياري</label>
+                    <input id="slug" type="text" name="slug" value="{{ old('slug', $category?->slug) }}" class="{{ $field }}" placeholder="math-arabic">
+                    @error('slug') <p class="mt-1 text-xs text-danger">{{ $message }}</p> @enderror
+                </div>
+                <div class="md:col-span-2">
+                    <label class="{{ $label }}" for="description">الوصف</label>
+                    <textarea id="description" name="description" rows="4" class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">{{ old('description', $category?->description) }}</textarea>
+                </div>
                 <div>
                     <label class="{{ $label }}" for="order">ترتيب العرض</label>
                     <input id="order" type="number" name="order" value="{{ old('order', $category?->order ?? 0) }}" min="0" class="{{ $field }}">
@@ -66,7 +63,7 @@
             </div>
         </article>
 
-        <article class="space-y-4 rounded-2xl border border-amber-200/80 bg-amber-50/40 p-5 shadow-soft">
+        <article class="space-y-4 rounded-2xl border border-amber-200/80 bg-amber-50/40 p-5 shadow-soft md:p-6">
             <div class="flex items-start gap-3">
                 <input type="checkbox" name="is_restricted" id="is_restricted" value="1" {{ old('is_restricted', $category?->is_restricted ?? false) ? 'checked' : '' }} class="mt-1 rounded border-line text-amber-600 focus:ring-amber-500/30">
                 <div>
@@ -77,7 +74,7 @@
 
             <div>
                 <label class="{{ $label }}" for="restricted_user_ids">الطلاب المسموح لهم</label>
-                <select name="restricted_user_ids[]" id="restricted_user_ids" multiple size="8"
+                <select name="restricted_user_ids[]" id="restricted_user_ids" multiple size="12"
                         class="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">
                     @forelse($users ?? [] as $u)
                         <option value="{{ $u->id }}" {{ in_array($u->id, $selectedRestrict, true) ? 'selected' : '' }}>
