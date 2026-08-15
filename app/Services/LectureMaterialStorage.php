@@ -26,9 +26,8 @@ class LectureMaterialStorage
         }
 
         if ($d === 'r2') {
-            $bucket = config('filesystems.disks.r2.bucket');
-            $endpoint = config('filesystems.disks.r2.endpoint');
-            if (empty($bucket) || empty($endpoint)) {
+            $cfg = config('filesystems.disks.r2', []);
+            if (empty($cfg['key']) || empty($cfg['secret']) || empty($cfg['bucket']) || empty($cfg['endpoint'])) {
                 Log::warning('LECTURE_MATERIALS_DISK=r2 لكن إعدادات Cloudflare R2 غير مكتملة؛ يُستخدم القرص public.');
 
                 return 'public';

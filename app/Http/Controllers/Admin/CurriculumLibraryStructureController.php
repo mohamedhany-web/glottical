@@ -8,6 +8,7 @@ use App\Models\CurriculumLibraryMaterial;
 use App\Models\CurriculumLibrarySection;
 use App\Models\CurriculumPresentationDerivative;
 use App\Services\CurriculumLibraryR2MultipartService;
+use App\Services\CurriculumLibraryStorage;
 use App\Services\CurriculumPresentationConversionService;
 use Illuminate\Filesystem\AwsS3V3Adapter;
 use Illuminate\Http\JsonResponse;
@@ -41,9 +42,18 @@ class CurriculumLibraryStructureController extends Controller
     {
         $tree = CurriculumLibrarySection::treeForItem($item, false);
         $flatSections = $item->sections()->withCount('materials')->orderBy('order')->orderBy('id')->get();
-        $materialDirectUpload = $this->curriculumMaterialDiskSupportsDirectUpload();
+        $materialDirectUpload = CurriculumLibraryStorage::supportsDirectUpload();
+        $curriculumStorageWarning = CurriculumLibraryStorage::adminStatusMessage();
+        $curriculumStorageDisk = CurriculumLibraryStorage::resolvedDisk();
 
-        return view('admin.curriculum-library.structure', compact('item', 'tree', 'flatSections', 'materialDirectUpload'));
+        return view('admin.curriculum-library.structure', compact(
+            'item',
+            'tree',
+            'flatSections',
+            'materialDirectUpload',
+            'curriculumStorageWarning',
+            'curriculumStorageDisk'
+        ));
     }
 
     public function storeSection(Request $request, CurriculumLibraryItem $item)
@@ -150,14 +160,18 @@ class CurriculumLibraryStructureController extends Controller
             $allowDl = $request->boolean('allow_download');
             [$viewIn, $allowDl] = $this->applyCurriculumMaterialKindRules($fileKind, $viewIn, $allowDl);
 
-            $path = $upload->store('curriculum-library/materials/'.$section->id, 'r2');
+            $diskName = CurriculumLibraryStorage::resolvedDisk();
+            $path = $upload->store('curriculum-library/materials/'.$section->id, $diskName);
+            if (! is_string($path) || $path === '') {
+                throw new \RuntimeException('Storage::store returned empty path on disk '.$diskName);
+            }
             $order = ((int) ($section->materials()->max('order') ?? 0)) + 1;
 
             $material = CurriculumLibraryMaterial::create([
                 'curriculum_library_section_id' => $section->id,
                 'title' => $request->input('title') ?: null,
                 'path' => $path,
-                'storage_disk' => 'r2',
+                'storage_disk' => $diskName,
                 'original_name' => $upload->getClientOriginalName(),
                 'file_kind' => $fileKind,
                 'view_in_platform' => $viewIn,
@@ -176,11 +190,13 @@ class CurriculumLibraryStructureController extends Controller
             ]);
 
             return redirect()->route('admin.curriculum-library.items.structure', $item)
-                ->with('error', 'تعذّر رفع الملف. تحقّق من نوع الملف والاتصال ثم أعد المحاولة.');
+                ->with('error', CurriculumLibraryStorage::uploadFailureHint($e));
         }
 
+        $diskLabel = CurriculumLibraryStorage::resolvedDisk() === 'r2' ? 'Cloudflare R2' : 'التخزين المحلي';
+
         return redirect()->route('admin.curriculum-library.items.structure', $item)
-            ->with('success', 'تم رفع المادة بنجاح.');
+            ->with('success', 'تم رفع المادة بنجاح على '.$diskLabel.'.');
     }
 
     public function updateMaterial(Request $request, CurriculumLibraryItem $item, CurriculumLibraryMaterial $material)
@@ -360,8 +376,9 @@ class CurriculumLibraryStructureController extends Controller
 
         $sourcePathBefore = $material->path;
         $sourceDiskBefore = $material->storage_disk;
+        $diskName = CurriculumLibraryStorage::resolvedDisk();
         $oldVideoPath = $material->animation_video_path;
-        $oldVideoDisk = $material->animation_video_disk ?: 'r2';
+        $oldVideoDisk = $material->animation_video_disk ?: $diskName;
 
         $uuid = (string) Str::uuid();
         $filename = $uuid.'.'.$ext;
@@ -369,14 +386,14 @@ class CurriculumLibraryStructureController extends Controller
         $newPath = null;
 
         try {
-            $newPath = $upload->storeAs($directory, $filename, 'r2');
+            $newPath = $upload->storeAs($directory, $filename, $diskName);
             if (! $newPath) {
                 throw new \RuntimeException('Failed to store animation video sidecar.');
             }
 
             $material->forceFill([
                 'animation_video_path' => $newPath,
-                'animation_video_disk' => 'r2',
+                'animation_video_disk' => $diskName,
                 'animation_video_original_name' => $upload->getClientOriginalName(),
                 'animation_video_mime' => $mime !== '' ? $mime : ($ext === 'webm' ? 'video/webm' : 'video/mp4'),
                 'animation_video_size' => (int) $upload->getSize(),
@@ -385,7 +402,7 @@ class CurriculumLibraryStructureController extends Controller
         } catch (Throwable $e) {
             if ($newPath) {
                 try {
-                    Storage::disk('r2')->delete($newPath);
+                    Storage::disk($diskName)->delete($newPath);
                 } catch (Throwable) {
                 }
             }
@@ -398,7 +415,7 @@ class CurriculumLibraryStructureController extends Controller
             ]);
 
             return redirect()->route('admin.curriculum-library.items.structure', $item)
-                ->with('error', 'تعذّر رفع فيديو الحركات. تحقّق من الملف والاتصال ثم أعد المحاولة.');
+                ->with('error', CurriculumLibraryStorage::uploadFailureHint($e));
         }
 
         // Source invariant: never mutate original PPT/PPTX object or path.
@@ -462,11 +479,12 @@ class CurriculumLibraryStructureController extends Controller
         $this->assertSectionBelongs($item, $section);
         @set_time_limit(120);
 
-        if (! $this->curriculumMaterialDiskSupportsDirectUpload()) {
+        if (! CurriculumLibraryStorage::supportsDirectUpload()) {
             return response()->json([
                 'direct_upload' => false,
-                'message' => 'الرفع السريع غير متاح حالياً. جرّب لاحقاً أو استخدم الرفع التقليدي.',
-            ]);
+                'message' => CurriculumLibraryStorage::adminStatusMessage()
+                    ?: 'الرفع السريع غير متاح حالياً. استخدم «الرفع عبر الخادم».',
+            ], CurriculumLibraryStorage::isR2Ready() ? 503 : 422);
         }
 
         $maxBytes = (int) config('upload_limits.curriculum_material_max_bytes', 150 * 1024 * 1024);
@@ -535,7 +553,9 @@ class CurriculumLibraryStructureController extends Controller
 
             return response()->json([
                 'direct_upload' => false,
-                'message' => 'تعذّر تجهيز الرفع. أعد المحاولة بعد قليل.',
+                'message' => CurriculumLibraryStorage::isR2Ready()
+                    ? 'تعذّر تجهيز الرفع المباشر إلى R2. راجع CORS على الـ bucket أو استخدم الرفع عبر الخادم.'
+                    : (CurriculumLibraryStorage::adminStatusMessage() ?: 'تعذّر تجهيز الرفع.'),
             ], 503);
         }
 
@@ -556,7 +576,7 @@ class CurriculumLibraryStructureController extends Controller
         $this->assertSectionBelongs($item, $section);
         @set_time_limit(120);
 
-        if (! $this->curriculumMaterialDiskSupportsDirectUpload()) {
+        if (! CurriculumLibraryStorage::supportsDirectUpload()) {
             return response()->json(['message' => 'الرفع الموثوق غير متاح حالياً.'], 503);
         }
 
@@ -615,7 +635,7 @@ class CurriculumLibraryStructureController extends Controller
         $this->assertSectionBelongs($item, $section);
         @set_time_limit(120);
 
-        if (! $this->curriculumMaterialDiskSupportsDirectUpload()) {
+        if (! CurriculumLibraryStorage::supportsDirectUpload()) {
             return response()->json(['message' => 'الرفع الموثوق غير متاح حالياً.'], 503);
         }
 
@@ -755,7 +775,7 @@ class CurriculumLibraryStructureController extends Controller
         $this->assertSectionBelongs($item, $section);
         @set_time_limit(0);
 
-        if (! $this->curriculumMaterialDiskSupportsDirectUpload()) {
+        if (! CurriculumLibraryStorage::supportsDirectUpload()) {
             return response()->json(['message' => 'الرفع الموثوق غير متاح حالياً.'], 503);
         }
 
@@ -827,7 +847,7 @@ class CurriculumLibraryStructureController extends Controller
         $this->assertSectionBelongs($item, $section);
         @set_time_limit(300);
 
-        if (! $this->curriculumMaterialDiskSupportsDirectUpload()) {
+        if (! CurriculumLibraryStorage::supportsDirectUpload()) {
             return response()->json(['message' => 'الرفع الموثوق غير متاح حالياً.'], 503);
         }
 
@@ -1110,18 +1130,11 @@ class CurriculumLibraryStructureController extends Controller
     }
 
     /**
-     * قرص r2 يستخدم AwsS3V3Adapter ويدعم temporaryUploadUrl (Put موقّت) وخدمة multipart لدينا.
-     * لا تعتمد على providesTemporaryUploadUrls() — مع Flysystem 3 قد تُرجع false رغم أن R2/S3 يعملان.
+     * الرفع المباشر يعمل فقط مع Cloudflare R2 مكتمل الإعدادات.
      */
     protected function curriculumMaterialDiskSupportsDirectUpload(): bool
     {
-        try {
-            $disk = Storage::disk('r2');
-
-            return $disk instanceof AwsS3V3Adapter;
-        } catch (Throwable) {
-            return false;
-        }
+        return CurriculumLibraryStorage::supportsDirectUpload();
     }
 
     private function normalizeCurriculumMaterialMime(string $contentType, string $originalName, string $ext): string

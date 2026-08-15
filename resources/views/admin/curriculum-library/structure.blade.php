@@ -20,6 +20,13 @@
         </div>
     @endif
     {{-- شريط علوي بعرض الصفحة --}}
+    @if(!empty($curriculumStorageWarning))
+        <div class="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 text-amber-950 shadow-sm">
+            <p class="font-black text-sm mb-1 flex items-center gap-2"><i class="fas fa-exclamation-triangle text-amber-600"></i> تنبيه التخزين</p>
+            <p class="text-xs leading-relaxed font-semibold">{{ $curriculumStorageWarning }}</p>
+            <p class="text-[11px] mt-2 text-amber-800/90">القرص الحالي للرفع: <strong>{{ $curriculumStorageDisk ?? 'public' }}</strong> — يمكنك الرفع الآن عبر الخادم حتى تكتمل مفاتيح R2.</p>
+        </div>
+    @endif
     <div class="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-700 bg-gradient-to-l from-indigo-50/90 via-white to-slate-50/90 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800/95 shadow-sm">
         <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-l from-indigo-500 via-violet-500 to-cyan-500 opacity-90"></div>
         <div class="p-5 sm:p-6 lg:p-8">

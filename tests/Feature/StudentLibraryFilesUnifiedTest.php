@@ -59,19 +59,23 @@ class StudentLibraryFilesUnifiedTest extends TestCase
             ->assertOk();
     }
 
-    public function test_curriculum_uploads_hardcode_r2_disk(): void
+    public function test_curriculum_uploads_use_resolved_storage_disk(): void
     {
         $controller = file_get_contents(app_path('Http/Controllers/Admin/CurriculumLibraryStructureController.php'));
+        $this->assertStringContainsString('CurriculumLibraryStorage::resolvedDisk()', $controller);
+        $this->assertStringContainsString('CurriculumLibraryStorage::supportsDirectUpload()', $controller);
         $this->assertStringContainsString("store('curriculum-library/materials/", $controller);
-        $this->assertStringContainsString("'storage_disk' => 'r2'", $controller);
-        $this->assertStringContainsString("\$diskName = 'r2'", $controller);
+
+        $service = file_get_contents(app_path('Services/CurriculumLibraryStorage.php'));
+        $this->assertStringContainsString('isR2Ready', $service);
+        $this->assertStringContainsString('falling back to public disk', $service);
     }
 
     public function test_home_and_admin_hub_use_files_language(): void
     {
         $home = file_get_contents(resource_path('views/student/library/home.blade.php'));
         $this->assertStringContainsString("route('student.library.files')", $home);
-        $this->assertStringContainsString("tab' => 'manahij'", $home);
+        $this->assertStringContainsString('lib_files_title', $home);
 
         $hub = file_get_contents(resource_path('views/admin/libraries/index.blade.php'));
         $this->assertStringContainsString('مكتبة الملفات', $hub);
