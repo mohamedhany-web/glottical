@@ -12,6 +12,8 @@ class CurriculumLibraryPreviewOpen extends Model
 {
     protected $table = 'curriculum_library_preview_opens';
 
+    public $timestamps = false;
+
     protected $fillable = [
         'user_id',
         'curriculum_library_item_id',
