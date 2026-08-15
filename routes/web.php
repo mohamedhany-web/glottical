@@ -288,12 +288,21 @@ Route::get('/css/landing/{sheet}.css', function (string $sheet) use ($serveAthee
     );
 })->where('sheet', '[A-Za-z0-9\-]+')->name('assets.landing.css');
 
-// Student timeline — على الاستضافة /css/* و /img/* الثابتة ترجع 404
+// Student timeline — public أولاً إن وُجد، وإلا resources (يُفضّل مزامنة public عند النشر)
 Route::get('/css/student-timeline.css', function () use ($serveAtheerAsset) {
-    return $serveAtheerAsset(
-        [public_path('css/student-timeline.css'), resource_path('css/student-timeline.css')],
-        'text/css; charset=UTF-8'
-    );
+    $public = public_path('css/student-timeline.css');
+    $resource = resource_path('css/student-timeline.css');
+    $candidates = [];
+    if (is_file($public) && is_file($resource)) {
+        // اختر الأحدث تعديلاً حتى لا تُخدم نسخة public قديمة بدون أنماط المكتبة
+        $candidates = filemtime($public) >= filemtime($resource)
+            ? [$public, $resource]
+            : [$resource, $public];
+    } else {
+        $candidates = [$public, $resource];
+    }
+
+    return $serveAtheerAsset($candidates, 'text/css; charset=UTF-8');
 })->name('assets.student-timeline.css');
 
 Route::get('/img/student-timeline/{file}', function (string $file) {

@@ -15,9 +15,6 @@
     $academyVideoCount = (int) ($academyVideoCount ?? 0);
     $teacherVideoCount = (int) ($teacherVideoCount ?? 0);
     $packagesUrl = $packagesUrl ?? route('dashboard');
-    $academyTotal = $academyMaterialCount + $academyVideoCount;
-    $teacherTotal = $teacherMaterialCount + $teacherVideoCount;
-    $curriculumCourseCount = (int) ($curriculumCourseCount ?? 0);
     $manahijItemCount = (int) ($manahijItemCount ?? 0);
     $filesTotal = $academyMaterialCount + $teacherMaterialCount + $manahijItemCount;
 @endphp
@@ -41,7 +38,7 @@
         <h2>{{ __('student_timeline.family_library_title') }}</h2>
         <p>{{ __('student_timeline.family_library_hint') }}</p>
         <div class="st-family-hero__actions">
-            <a href="{{ route('student.library.files') }}" class="st-pill st-pill--solid">{{ __('student_timeline.lib_files_title') }}</a>
+            <a href="{{ route('student.library.files') }}" class="st-pill st-pill--solid">{{ __('student_timeline.lib_files_open') }}</a>
             <a href="{{ route('student.library.videos') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_library_videos') }}</a>
             <a href="{{ route('student.library.curriculum') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_library_curriculum') }}</a>
         </div>
@@ -63,8 +60,8 @@
     </div>
 @endif
 
-<section class="st-lib-hub-grid st-lib-hub-grid--3" aria-label="{{ __('student_timeline.lib_sources_title') }}">
-    <a href="{{ route('student.library.files') }}" class="st-lib-hub-card st-lib-hub-card--curriculum">
+<section class="st-lib-hub-grid st-lib-hub-grid--2" aria-label="{{ __('student_timeline.lib_sources_title') }}">
+    <a href="{{ route('student.library.files') }}" class="st-lib-hub-card st-lib-hub-card--academy">
         <span class="st-lib-hub-card__icon"><i class="fas fa-folder-open" aria-hidden="true"></i></span>
         <strong>{{ __('student_timeline.lib_files_title') }}</strong>
         <em>{{ __('student_timeline.lib_files_hub_hint') }}</em>
@@ -78,37 +75,10 @@
         </span>
     </a>
 
-    <a href="{{ route('student.library.files', ['tab' => 'materials']) }}" class="st-lib-hub-card st-lib-hub-card--academy">
-        <span class="st-lib-hub-card__icon"><i class="fas fa-university" aria-hidden="true"></i></span>
-        <strong>{{ __('student_timeline.lib_files_tab_materials') }}</strong>
-        <em>{{ __('student_timeline.lib_academy_hint') }}</em>
-        <span class="st-lib-hub-card__meta">
-            {{ trans_choice('student_timeline.lib_items_count', $academyMaterialCount + $teacherMaterialCount, ['count' => $academyMaterialCount + $teacherMaterialCount]) }}
-            · {{ trans_choice('student_timeline.lib_folders_count', $academyFolderCount + $teacherFolderCount, ['count' => $academyFolderCount + $teacherFolderCount]) }}
-        </span>
-        <span class="st-lib-hub-card__cta">
-            {{ __('student_timeline.family_open_materials') }}
-            <i class="fas fa-arrow-{{ $locale === 'ar' ? 'left' : 'right' }}" aria-hidden="true"></i>
-        </span>
-    </a>
-
-    <a href="{{ route('student.library.files', ['tab' => 'manahij']) }}" class="st-lib-hub-card st-lib-hub-card--curriculum">
-        <span class="st-lib-hub-card__icon"><i class="fas fa-chalkboard" aria-hidden="true"></i></span>
-        <strong>{{ __('student_timeline.lib_files_tab_manahij') }}</strong>
-        <em>{{ __('student_timeline.lib_manahij_hub_hint') }}</em>
-        <span class="st-lib-hub-card__meta">
-            {{ trans_choice('student_timeline.lib_items_count', $manahijItemCount, ['count' => $manahijItemCount]) }}
-        </span>
-        <span class="st-lib-hub-card__cta">
-            {{ __('student_timeline.lib_manahij_open') }}
-            <i class="fas fa-arrow-{{ $locale === 'ar' ? 'left' : 'right' }}" aria-hidden="true"></i>
-        </span>
-    </a>
-
     <a href="{{ route('student.library.videos') }}" class="st-lib-hub-card st-lib-hub-card--teacher">
         <span class="st-lib-hub-card__icon"><i class="fas fa-film" aria-hidden="true"></i></span>
         <strong>{{ __('student_timeline.nav_library_videos') }}</strong>
-        <em>{{ __('student_timeline.lib_teachers_hint') }}</em>
+        <em>{{ __('student_timeline.family_videos_hint') }}</em>
         <span class="st-lib-hub-card__meta">
             {{ trans_choice('student_timeline.lib_videos_count', $academyVideoCount + $teacherVideoCount, ['count' => $academyVideoCount + $teacherVideoCount]) }}
             @if($linkedTeacherCount > 0)
@@ -145,13 +115,13 @@
     <h3>{{ __('student_timeline.lib_files_title') }}</h3>
     <p class="st-event-card__sub">{{ __('student_timeline.lib_files_hub_hint') }}</p>
 </a>
-<a href="{{ route('student.library.curriculum') }}" class="st-event-card st-event-card--green">
-    <h3>{{ __('student_timeline.nav_library_curriculum') }}</h3>
-    <p class="st-event-card__sub">{{ __('student_timeline.lib_curriculum_hub_hint') }}</p>
-</a>
 <a href="{{ route('student.library.videos') }}" class="st-event-card st-event-card--pink">
     <h3>{{ __('student_timeline.nav_library_videos') }}</h3>
     <p class="st-event-card__sub">{{ __('student_timeline.family_videos_side') }}</p>
+</a>
+<a href="{{ route('student.library.curriculum') }}" class="st-event-card st-event-card--green">
+    <h3>{{ __('student_timeline.nav_library_curriculum') }}</h3>
+    <p class="st-event-card__sub">{{ __('student_timeline.lib_curriculum_hub_hint') }}</p>
 </a>
 @if(! $hasLibraryEntitlement)
     <a href="{{ $packagesUrl }}" class="st-event-card st-event-card--orange">

@@ -3329,6 +3329,10 @@ html[dir="rtl"] .st-chat__bubble.is-theirs { border-bottom-right-radius: 14px; b
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
   margin: 0 0 22px;
+  width: 100%;
+}
+.st-lib-hub-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .st-lib-hub-grid--3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -6606,6 +6610,7 @@ button.st-chip {
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 14px;
   margin-bottom: 18px;
+  width: 100%;
 }
 .st-family-card {
   display: flex;
