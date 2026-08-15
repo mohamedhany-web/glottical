@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/classroom-curriculum-presenter.css') }}">
+    <script src="{{ asset('js/classroom-curriculum-presenter.js') }}" defer></script>
     <style>
         * { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
         body { margin: 0; padding: 0; background: #0c1222; min-height: 100vh; }
@@ -163,6 +165,17 @@
                     window.__mxShareAnnSetGuestToken(joinToken);
                 }
                 applyGuestWhiteboardAllowed(!!enterData.allow_participant_whiteboard);
+                if (window.MxClassroomCurriculumPresenter) {
+                    if (window.__mxCurriculumPresenter && typeof window.__mxCurriculumPresenter.destroy === 'function') {
+                        window.__mxCurriculumPresenter.destroy();
+                    }
+                    window.__mxCurriculumPresenter = window.MxClassroomCurriculumPresenter.attach(null, {
+                        isHost: false,
+                        guestToken: joinToken,
+                        stateUrl: @json(route('classroom.join.curriculum.state', $code)),
+                        pollIntervalMs: 1500,
+                    });
+                }
             } catch (e) {
                 alert('تعذر الاتصال بالخادم. حاول مرة أخرى.');
                 btn.disabled = false;
@@ -253,6 +266,10 @@
 
         async function leaveMeetingAndReload() {
             if (heartbeatTimer) clearInterval(heartbeatTimer);
+            if (window.__mxCurriculumPresenter && typeof window.__mxCurriculumPresenter.destroy === 'function') {
+                try { window.__mxCurriculumPresenter.destroy(); } catch (e) {}
+                window.__mxCurriculumPresenter = null;
+            }
             if (joinToken) {
                 try {
                     await fetch(`/classroom/join/${code}/leave`, {

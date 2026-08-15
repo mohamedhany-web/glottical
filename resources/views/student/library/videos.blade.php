@@ -21,6 +21,10 @@
     $videoCount = method_exists($videos, 'total')
         ? $videos->total()
         : collect($videos)->count();
+    $hasLibraryEntitlement = (bool) ($hasLibraryEntitlement ?? false);
+    $linkedTeacherCount = (int) ($linkedTeacherCount ?? 0);
+    $packagesUrl = $packagesUrl ?? route('dashboard');
+    $hasFilters = (bool) ($activeFolder || $themeFilter || $searchQuery !== '');
 
     $formatDuration = function ($seconds) {
         $seconds = (int) $seconds;
@@ -96,6 +100,16 @@
     </div>
 </section>
 
+@if(! $hasLibraryEntitlement)
+    <div class="st-lib-package-banner" role="status">
+        <div>
+            <strong>{{ __('student_timeline.lib_need_package_title') }}</strong>
+            <p>{{ __('student_timeline.lib_need_package_videos') }}</p>
+        </div>
+        <a href="{{ $packagesUrl }}" class="st-pill st-pill--solid">{{ __('student_timeline.lib_browse_packages') }}</a>
+    </div>
+@endif
+
 @if(!empty($familyThemes))
     <section class="st-theme-strip" aria-label="{{ __('student_timeline.family_themes') }}">
         <a href="{{ route('student.library.videos', array_filter(['q' => $searchQuery ?: null, 'folder' => $activeFolder ? (($activeFolder->is_uncategorized ?? false) ? 'none' : ($activeFolder->slug ?: $activeFolder->id)) : null])) }}"
@@ -112,20 +126,20 @@
     </section>
 @endif
 
-@if(! $activeFolder && ($academyCount > 0 || $teacherCount > 0))
-    <div class="st-lib-source-strip" aria-label="{{ $locale === 'ar' ? 'مصادر المكتبة' : 'Library sources' }}">
+@if(! $activeFolder && ($academyCount > 0 || $teacherCount > 0 || $linkedTeacherCount > 0))
+    <div class="st-lib-source-strip" aria-label="{{ __('student_timeline.lib_sources_title') }}">
         <div class="st-lib-source-chip st-lib-source-chip--academy">
             <i class="fas fa-university" aria-hidden="true"></i>
             <div>
-                <strong>{{ $locale === 'ar' ? 'من الأكاديمية' : 'From academy' }}</strong>
-                <span>{{ $academyCount }} {{ $locale === 'ar' ? 'فيديو' : 'videos' }}</span>
+                <strong>{{ __('student_timeline.lib_academy_title') }}</strong>
+                <span>{{ trans_choice('student_timeline.lib_videos_count', $academyCount, ['count' => $academyCount]) }}</span>
             </div>
         </div>
         <div class="st-lib-source-chip st-lib-source-chip--teacher">
             <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
             <div>
-                <strong>{{ $locale === 'ar' ? 'من معلميك' : 'From your teachers' }}</strong>
-                <span>{{ $teacherCount }} {{ $locale === 'ar' ? 'فيديو' : 'videos' }}</span>
+                <strong>{{ __('student_timeline.lib_teachers_title') }}</strong>
+                <span>{{ trans_choice('student_timeline.lib_videos_count', $teacherCount, ['count' => $teacherCount]) }}</span>
             </div>
         </div>
     </div>
@@ -176,19 +190,31 @@
 
 @if($videosEmpty)
     <div class="st-empty-panel">
-        <h3>{{ __('student_timeline.no_videos') }}</h3>
-        <p>{{ $locale === 'ar'
-            ? 'لا توجد فيديوهات متاحة لك حالياً من الأكاديمية أو معلميك.'
-            : 'No videos are available from the academy or your teachers yet.' }}</p>
-        <div class="st-biz-banner__actions">
-            @if($activeFolder)
-                <a href="{{ route('student.library.videos') }}" class="st-pill st-pill--solid">{{ __('student_timeline.folder_all') }}</a>
-            @endif
-            @if(Route::has('student.library.materials'))
-                <a href="{{ route('student.library.materials') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_library_materials') }}</a>
-            @endif
-            <a href="{{ route('dashboard') }}" class="st-pill st-pill--outline">{{ __('student_timeline.school_gate') }}</a>
-        </div>
+        @if(! $hasLibraryEntitlement && $teacherCount === 0 && ! $hasFilters)
+            <h3>{{ __('student_timeline.lib_need_package_title') }}</h3>
+            <p>{{ __('student_timeline.lib_need_package_videos') }}</p>
+            <div class="st-biz-banner__actions">
+                <a href="{{ $packagesUrl }}" class="st-pill st-pill--solid">{{ __('student_timeline.lib_browse_packages') }}</a>
+                <a href="{{ route('dashboard') }}" class="st-pill st-pill--outline">{{ __('student_timeline.school_gate') }}</a>
+            </div>
+        @elseif($linkedTeacherCount > 0 && $teacherCount === 0 && $academyCount === 0 && ! $hasFilters)
+            <h3>{{ __('student_timeline.lib_teacher_empty_title') }}</h3>
+            <p>{{ __('student_timeline.lib_teacher_videos_empty_hint') }}</p>
+        @else
+            <h3>{{ __('student_timeline.no_videos') }}</h3>
+            <p>{{ __('student_timeline.lib_no_videos_hint') }}</p>
+            <div class="st-biz-banner__actions">
+                @if($activeFolder)
+                    <a href="{{ route('student.library.videos') }}" class="st-pill st-pill--solid">{{ __('student_timeline.folder_all') }}</a>
+                @endif
+                @if(! $hasLibraryEntitlement)
+                    <a href="{{ $packagesUrl }}" class="st-pill st-pill--outline">{{ __('student_timeline.lib_browse_packages') }}</a>
+                @endif
+                @if(Route::has('student.library.materials'))
+                    <a href="{{ route('student.library.materials') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_library_materials') }}</a>
+                @endif
+            </div>
+        @endif
     </div>
 @else
     @php

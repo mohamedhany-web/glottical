@@ -429,6 +429,20 @@ Route::post('/classroom/join/{code}/share-annotation', [\App\Http\Controllers\Cl
     ->middleware('throttle:90,1')
     ->name('classroom.join.share-annotation')
     ->where('code', '[A-Za-z0-9]+');
+Route::get('/classroom/join/{code}/curriculum/state', [\App\Http\Controllers\ClassroomJoinController::class, 'curriculumState'])
+    ->middleware('throttle:120,1')
+    ->name('classroom.join.curriculum.state')
+    ->where('code', '[A-Za-z0-9]+');
+Route::get('/classroom/join/{code}/curriculum/{sessionId}/slide/{slide}', [\App\Http\Controllers\ClassroomJoinController::class, 'curriculumSlide'])
+    ->middleware('throttle:180,1')
+    ->whereNumber('slide')
+    ->name('classroom.join.curriculum.slide')
+    ->where('code', '[A-Za-z0-9]+');
+Route::get('/classroom/join/{code}/curriculum/{sessionId}/thumb/{slide}', [\App\Http\Controllers\ClassroomJoinController::class, 'curriculumThumb'])
+    ->middleware('throttle:180,1')
+    ->whereNumber('slide')
+    ->name('classroom.join.curriculum.thumb')
+    ->where('code', '[A-Za-z0-9]+');
 
 // التواصل
 Route::get('/contact', [\App\Http\Controllers\Public\ContactController::class, 'index'])->name('public.contact');
@@ -897,6 +911,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             ->whereIn('type', ['private', 'class', 'booking'])
             ->name('student.schedule.join');
         Route::get('/library', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'libraryHome'])->name('student.library.home');
+        Route::get('/library/files', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'files'])->name('student.library.files');
+        Route::get('/library/curriculum', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'curriculum'])->name('student.library.curriculum');
         Route::get('/library/materials', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'materials'])->name('student.library.materials');
         Route::get('/library/materials/{material}/download', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'downloadMaterial'])->name('student.library.materials.download');
         Route::get('/library/materials/{material}/experience', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'experienceMaterial'])->name('student.library.materials.experience');
@@ -905,6 +921,34 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/library/videos/{libraryVideo}', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'watchLibraryVideo'])->name('student.library.videos.show');
         Route::get('/library/lecture-recordings/{lecture}', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'watchLectureRecording'])->name('student.library.lecture-recordings.show');
         Route::get('/my-lectures', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'lectures'])->name('student.lectures.index');
+
+        // مكتبة المناهج التفاعلية (Manahij X) — بجانب مواد/فيديو المكتبة الحالية
+        Route::get('/curriculum-library', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'index'])->name('curriculum-library.index');
+        Route::get('/curriculum-library/{item:slug}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'show'])->name('curriculum-library.show');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/download', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'downloadMaterial'])->name('curriculum-library.material.download');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/html', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialHtml'])->name('curriculum-library.material.html');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/pdf', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialPdf'])->name('curriculum-library.material.pdf');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/presentation', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialPresentation'])->name('curriculum-library.material.presentation');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/animation-video', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialAnimationVideo'])->name('curriculum-library.material.animation-video');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/slides/manifest', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialSlidesManifest'])->name('curriculum-library.material.slides.manifest');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/slides/{slide}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialSlideImage'])
+            ->whereNumber('slide')
+            ->name('curriculum-library.material.slides.image');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/slides/{slide}/thumb', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialSlideThumb'])
+            ->whereNumber('slide')
+            ->name('curriculum-library.material.slides.thumb');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/download', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'download'])->name('curriculum-library.file.download');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/view', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewHtml'])->name('curriculum-library.file.view');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/pdf', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewPdf'])->name('curriculum-library.file.pdf');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/presentation', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewPresentation'])->name('curriculum-library.file.presentation');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/slides/manifest', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewFileSlidesManifest'])->name('curriculum-library.file.slides.manifest');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/slides/{slide}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewFileSlideImage'])
+            ->whereNumber('slide')
+            ->name('curriculum-library.file.slides.image');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/slides/{slide}/thumb', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewFileSlideThumb'])
+            ->whereNumber('slide')
+            ->name('curriculum-library.file.slides.thumb');
+
         Route::get('/tutoring-subscriptions', [\App\Http\Controllers\Student\TutoringSubscriptionController::class, 'index'])->name('student.tutoring-subscriptions.index');
         Route::get('/tutoring-subscriptions/{subscription}', [\App\Http\Controllers\Student\TutoringSubscriptionController::class, 'show'])->name('student.tutoring-subscriptions.show');
         Route::get('/service-entitlements', [\App\Http\Controllers\Student\ServiceEntitlementController::class, 'index'])->name('student.service-entitlements.index');
@@ -932,6 +976,18 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/classroom/{meeting}/recording-audio/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadAudioRecording'])->name('student.classroom.recording-audio.upload');
         Route::post('/classroom/{meeting}/recording-audio/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectAudioUpload'])->name('student.classroom.recording-audio.complete');
         Route::post('/classroom/{meeting}/ai-report', [\App\Http\Controllers\Student\ClassroomController::class, 'generateAiReport'])->name('student.classroom.ai-report');
+
+        Route::get('/classroom/{meeting}/curriculum/catalog', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumCatalog'])->name('student.classroom.curriculum.catalog');
+        Route::post('/classroom/{meeting}/curriculum/present', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumPresent'])->name('student.classroom.curriculum.present');
+        Route::get('/classroom/{meeting}/curriculum/state', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumState'])->name('student.classroom.curriculum.state');
+        Route::post('/classroom/{meeting}/curriculum/slide', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumUpdateSlide'])->name('student.classroom.curriculum.slide.update');
+        Route::post('/classroom/{meeting}/curriculum/stop', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumStop'])->name('student.classroom.curriculum.stop');
+        Route::get('/classroom/{meeting}/curriculum/{sessionId}/slide/{slide}', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumSlide'])
+            ->whereNumber('slide')
+            ->name('student.classroom.curriculum.slide');
+        Route::get('/classroom/{meeting}/curriculum/{sessionId}/thumb/{slide}', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumThumb'])
+            ->whereNumber('slide')
+            ->name('student.classroom.curriculum.thumb');
     });
 
     // دعم المتعلمين والمدربين
@@ -1400,6 +1456,42 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
                 Route::get('/', [\App\Http\Controllers\Admin\CurriculumHubController::class, 'index'])->name('index');
                 Route::get('/courses/{course}', [\App\Http\Controllers\Admin\CurriculumHubController::class, 'showCourse'])->name('course');
             });
+        });
+
+        // مكتبة المناهج التفاعلية (Manahij X) — بجانب هيكل الكورسات الحالي
+        Route::prefix('curriculum-library')->name('curriculum-library.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'index'])->name('index');
+            Route::get('/categories', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'categories'])->name('categories');
+            Route::get('/categories/create', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'createCategory'])->name('categories.create');
+            Route::post('/categories', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'storeCategory'])->name('categories.store');
+            Route::get('/categories/{category}/edit', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'editCategory'])->name('categories.edit');
+            Route::put('/categories/{category}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'updateCategory'])->name('categories.update');
+            Route::delete('/categories/{category}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'destroyCategory'])->name('categories.destroy');
+            Route::get('/items/create', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'createItem'])->name('items.create');
+            Route::post('/items', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'storeItem'])->name('items.store');
+            Route::get('/items/{item}/structure', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'show'])->name('items.structure');
+            Route::post('/items/{item}/sections', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'storeSection'])->name('items.sections.store');
+            Route::put('/items/{item}/sections/{section}', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'updateSection'])->name('items.sections.update');
+            Route::delete('/items/{item}/sections/{section}', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'destroySection'])->name('items.sections.destroy');
+            Route::post('/items/{item}/sections/{section}/materials/presign-upload', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'presignMaterialUpload'])->name('items.materials.presign-upload');
+            Route::post('/items/{item}/sections/{section}/materials/complete-direct', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'completeMaterialDirectUpload'])->name('items.materials.complete-direct');
+            Route::post('/items/{item}/sections/{section}/materials/multipart-init', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'multipartInitMaterial'])->name('items.materials.multipart-init');
+            Route::post('/items/{item}/sections/{section}/materials/multipart-sign-part', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'multipartSignPartMaterial'])->name('items.materials.multipart-sign-part');
+            Route::post('/items/{item}/sections/{section}/materials/multipart-complete', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'multipartCompleteMaterial'])->name('items.materials.multipart-complete');
+            Route::post('/items/{item}/sections/{section}/materials/multipart-abort', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'multipartAbortMaterial'])->name('items.materials.multipart-abort');
+            Route::post('/items/{item}/sections/{section}/materials/multipart-proxy-part', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'multipartProxyUploadPartMaterial'])->name('items.materials.multipart-proxy-part');
+            Route::post('/items/{item}/sections/{section}/materials', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'storeMaterial'])->name('items.materials.store');
+            Route::put('/items/{item}/materials/{material}', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'updateMaterial'])->name('items.materials.update');
+            Route::get('/items/{item}/materials/{material}/conversion-status', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'materialPresentationConversionStatus'])->name('items.materials.conversion-status');
+            Route::post('/items/{item}/materials/{material}/retry-conversion', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'retryMaterialPresentationConversion'])->name('items.materials.retry-conversion');
+            Route::post('/items/{item}/materials/{material}/animation-video', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'storeMaterialAnimationVideo'])->name('items.materials.animation-video.store');
+            Route::delete('/items/{item}/materials/{material}/animation-video', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'destroyMaterialAnimationVideo'])->name('items.materials.animation-video.destroy');
+            Route::delete('/items/{item}/materials/{material}', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'destroyMaterial'])->name('items.materials.destroy');
+            Route::get('/items/{item}/edit', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'editItem'])->name('items.edit');
+            Route::post('/items/{item}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'updateItem']);
+            Route::put('/items/{item}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'updateItem'])->name('items.update');
+            Route::delete('/items/{item}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'destroyItem'])->name('items.destroy');
+            Route::delete('/items/{item}/files/{file}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'destroyFile'])->name('items.files.destroy');
         });
 
         // إدارة الواجبات والمشاريع (مسار الكورس قبل المسارات الأخرى لتفادي التعارض)
@@ -2090,6 +2182,17 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/classroom/{meeting}/recording-audio/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadAudioRecording'])->name('classroom.recording-audio.upload');
         Route::post('/classroom/{meeting}/recording-audio/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectAudioUpload'])->name('classroom.recording-audio.complete');
         Route::post('/classroom/{meeting}/ai-report', [\App\Http\Controllers\Student\ClassroomController::class, 'generateAiReport'])->name('classroom.ai-report');
+        Route::get('/classroom/{meeting}/curriculum/catalog', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumCatalog'])->name('classroom.curriculum.catalog');
+        Route::post('/classroom/{meeting}/curriculum/present', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumPresent'])->name('classroom.curriculum.present');
+        Route::get('/classroom/{meeting}/curriculum/state', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumState'])->name('classroom.curriculum.state');
+        Route::post('/classroom/{meeting}/curriculum/slide', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumUpdateSlide'])->name('classroom.curriculum.slide.update');
+        Route::post('/classroom/{meeting}/curriculum/stop', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumStop'])->name('classroom.curriculum.stop');
+        Route::get('/classroom/{meeting}/curriculum/{sessionId}/slide/{slide}', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumSlide'])
+            ->whereNumber('slide')
+            ->name('classroom.curriculum.slide');
+        Route::get('/classroom/{meeting}/curriculum/{sessionId}/thumb/{slide}', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumThumb'])
+            ->whereNumber('slide')
+            ->name('classroom.curriculum.thumb');
 
         // بروفايل المدرب
         Route::get('/profile', [\App\Http\Controllers\Instructor\ProfileController::class, 'index'])->name('profile');

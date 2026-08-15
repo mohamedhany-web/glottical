@@ -8,6 +8,9 @@ use App\Models\AcademicYear;
 use App\Models\AdvancedCourse;
 use App\Models\CourseSection;
 use App\Models\CurriculumItem;
+use App\Models\CurriculumLibraryCategory;
+use App\Models\CurriculumLibraryItem;
+use App\Models\CurriculumLibraryMaterial;
 use App\Models\LectureMaterial;
 use App\Models\LibraryFolder;
 use App\Models\LibraryVideo;
@@ -63,6 +66,9 @@ class LibraryHubController extends Controller
             'courses' => $courses,
             'sections' => $sections,
             'curriculum_items' => $curriculumItems,
+            'manahij_items' => CurriculumLibraryItem::query()->count(),
+            'manahij_categories' => CurriculumLibraryCategory::query()->count(),
+            'manahij_materials' => CurriculumLibraryMaterial::query()->count(),
         ];
 
         return view('admin.libraries.index', compact('stats', 'recentMaterials', 'recentVideos'));

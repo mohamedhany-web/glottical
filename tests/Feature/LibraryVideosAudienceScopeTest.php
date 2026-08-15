@@ -173,6 +173,16 @@ class LibraryVideosAudienceScopeTest extends TestCase
         ]);
         unset($otherCourse);
 
+        foreach ([$myStudent, $otherStudent] as $s) {
+            \App\Models\StudentServiceEntitlement::create([
+                'user_id' => $s->id,
+                'includes_libraries' => true,
+                'status' => 'active',
+                'starts_at' => now()->subDay(),
+                'expires_at' => now()->addMonth(),
+            ]);
+        }
+
         LibraryVideo::create([
             'title' => 'فيديو عام أكاديمية',
             'external_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',

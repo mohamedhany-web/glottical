@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ClassroomMeeting;
 use App\Models\ClassroomMeetingParticipant;
 use App\Models\LiveSetting;
+use App\Services\ClassroomCurriculumPresentService;
 use App\Support\ShareAnnotationSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -193,6 +194,93 @@ class ClassroomJoinController extends Controller
         Cache::put($key, $all, now()->addHours(6));
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * حالة عرض المنهج النشط للضيف (رمز المشارك فقط — بدون اشتراك مكتبة).
+     */
+    public function curriculumState(Request $request, string $code, ClassroomCurriculumPresentService $present)
+    {
+        $meeting = $this->resolveLiveMeetingForGuestCurriculum($request, $code);
+        if ($meeting instanceof \Illuminate\Http\JsonResponse) {
+            return $meeting;
+        }
+
+        $state = $present->publicState($meeting, 'guest');
+        if (! $state) {
+            return response()->json(['ok' => true, 'active' => false]);
+        }
+
+        $sessionId = trim((string) $request->input('session_id', $request->query('session_id', '')));
+        if ($sessionId !== '' && $sessionId !== $state['session_id']) {
+            return response()->json(['ok' => false, 'message' => 'جلسة العرض غير متطابقة', 'active' => false], 422);
+        }
+
+        return response()->json(array_merge(['ok' => true], $state));
+    }
+
+    public function curriculumSlide(
+        Request $request,
+        string $code,
+        string $sessionId,
+        int $slide,
+        ClassroomCurriculumPresentService $present
+    ) {
+        $meeting = $this->resolveLiveMeetingForGuestCurriculum($request, $code);
+        if ($meeting instanceof \Illuminate\Http\JsonResponse) {
+            return $meeting;
+        }
+
+        return $present->streamSessionAsset($meeting, $sessionId, $slide, 'image');
+    }
+
+    public function curriculumThumb(
+        Request $request,
+        string $code,
+        string $sessionId,
+        int $slide,
+        ClassroomCurriculumPresentService $present
+    ) {
+        $meeting = $this->resolveLiveMeetingForGuestCurriculum($request, $code);
+        if ($meeting instanceof \Illuminate\Http\JsonResponse) {
+            return $meeting;
+        }
+
+        return $present->streamSessionAsset($meeting, $sessionId, $slide, 'thumb');
+    }
+
+    /**
+     * @return ClassroomMeeting|\Illuminate\Http\JsonResponse
+     */
+    private function resolveLiveMeetingForGuestCurriculum(Request $request, string $code)
+    {
+        $code = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $code));
+        $meeting = ClassroomMeeting::where('code', $code)->first();
+        if (! $meeting) {
+            return response()->json(['ok' => false, 'message' => 'الغرفة غير موجودة'], 404);
+        }
+
+        if (! $meeting->started_at || $meeting->ended_at) {
+            return response()->json(['ok' => false, 'message' => 'الاجتماع غير نشط'], 422);
+        }
+
+        $token = (string) $request->input('token', $request->query('token', ''));
+        if ($token === '') {
+            return response()->json(['ok' => false, 'message' => 'رمز غير صالح'], 422);
+        }
+
+        $participant = ClassroomMeetingParticipant::where('classroom_meeting_id', $meeting->id)
+            ->where('token', $token)
+            ->whereNull('left_at')
+            ->first();
+
+        if (! $participant) {
+            return response()->json(['ok' => false, 'message' => 'غير مصرح'], 403);
+        }
+
+        $participant->update(['last_seen_at' => now()]);
+
+        return $meeting;
     }
 
     private function activeParticipantsCount(int $meetingId): int

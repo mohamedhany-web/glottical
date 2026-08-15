@@ -8,15 +8,6 @@ use Tests\TestCase;
 
 class CurriculumLibraryR2MultipartRelayTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        if (! class_exists(CurriculumLibraryR2MultipartService::class)) {
-            $this->markTestSkipped('CurriculumLibraryR2MultipartService is not present in this codebase.');
-        }
-    }
-
     public function test_relay_presigned_put_returns_etag_from_response(): void
     {
         Http::fake(function (\Illuminate\Http\Client\Request $request) {

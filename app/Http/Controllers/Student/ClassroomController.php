@@ -7,6 +7,7 @@ use App\Models\ClassroomMeeting;
 use App\Models\ClassroomMeetingReport;
 use App\Models\IntegrationSetting;
 use App\Models\LiveSetting;
+use App\Services\ClassroomCurriculumPresentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -328,10 +329,134 @@ class ClassroomController extends Controller
         return response()->json(['layers' => $layers]);
     }
 
+    public function curriculumCatalog(ClassroomMeeting $meeting, ClassroomCurriculumPresentService $present)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $present->assertMeetingLive($meeting);
+
+        return response()->json([
+            'ok' => true,
+            'items' => $present->catalogForHost($user),
+        ]);
+    }
+
+    public function curriculumPresent(Request $request, ClassroomMeeting $meeting, ClassroomCurriculumPresentService $present)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $present->assertMeetingLive($meeting);
+
+        $validated = $request->validate([
+            'item_id' => ['required', 'integer', 'min:1'],
+            'material_id' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $session = $present->startPresent(
+            $meeting,
+            $user,
+            (int) $validated['item_id'],
+            (int) $validated['material_id']
+        );
+
+        $state = $present->publicState($meeting, 'host');
+
+        return response()->json([
+            'ok' => true,
+            'session_id' => $session['session_id'],
+            'title' => $session['title'],
+            'current_slide' => $session['current_slide'],
+            'slide_count' => $session['slide_count'],
+            'item_id' => $session['item_id'],
+            'material_id' => $session['material_id'],
+            'manifest' => $state['manifest'] ?? null,
+        ]);
+    }
+
+    public function curriculumState(ClassroomMeeting $meeting, ClassroomCurriculumPresentService $present)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $present->assertMeetingLive($meeting);
+
+        $state = $present->publicState($meeting, 'host');
+        if (! $state) {
+            return response()->json(['ok' => true, 'active' => false]);
+        }
+
+        return response()->json(array_merge(['ok' => true], $state));
+    }
+
+    public function curriculumUpdateSlide(Request $request, ClassroomMeeting $meeting, ClassroomCurriculumPresentService $present)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $present->assertMeetingLive($meeting);
+
+        $validated = $request->validate([
+            'session_id' => ['required', 'string', 'max:64'],
+            'slide' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $session = $present->updateSlide(
+            $meeting,
+            (string) $validated['session_id'],
+            (int) $validated['slide']
+        );
+
+        if (! $session) {
+            return response()->json(['ok' => false, 'message' => 'جلسة العرض غير نشطة'], 422);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'session_id' => $session['session_id'],
+            'current_slide' => $session['current_slide'],
+            'slide_count' => $session['slide_count'],
+        ]);
+    }
+
+    public function curriculumStop(ClassroomMeeting $meeting, ClassroomCurriculumPresentService $present)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+
+        $present->clearSession($meeting);
+
+        return response()->json(['ok' => true, 'active' => false]);
+    }
+
+    public function curriculumSlide(
+        ClassroomMeeting $meeting,
+        string $sessionId,
+        int $slide,
+        ClassroomCurriculumPresentService $present
+    ) {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $present->assertMeetingLive($meeting);
+
+        return $present->streamSessionAsset($meeting, $sessionId, $slide, 'image');
+    }
+
+    public function curriculumThumb(
+        ClassroomMeeting $meeting,
+        string $sessionId,
+        int $slide,
+        ClassroomCurriculumPresentService $present
+    ) {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $present->assertMeetingLive($meeting);
+
+        return $present->streamSessionAsset($meeting, $sessionId, $slide, 'thumb');
+    }
+
     public function end(ClassroomMeeting $meeting)
     {
         $user = Auth::user();
         $this->ensureMeetingOwnership($meeting, $user);
+        app(ClassroomCurriculumPresentService::class)->clearSession($meeting);
         $meeting->update(['ended_at' => now()]);
 
         if (request()->routeIs('instructor.*')) {

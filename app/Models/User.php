@@ -1182,6 +1182,25 @@ class User extends Authenticatable
         return false;
     }
 
+    /** أقسام مكتبة المناهج «الخاصة» المسموح لهذا المستخدم */
+    public function curriculumLibraryRestrictedCategories()
+    {
+        return $this->belongsToMany(
+            CurriculumLibraryCategory::class,
+            'curriculum_library_category_user',
+            'user_id',
+            'category_id'
+        )->withTimestamps();
+    }
+
+    /**
+     * وصول كامل لمكتبة المناهج التفاعلية عبر باقة تتضمن المكتبات.
+     */
+    public function hasCurriculumLibraryAccess(): bool
+    {
+        return \App\Services\LibraryFolderAccessService::hasAnyLibraryEntitlement($this);
+    }
+
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new ResetPasswordNotification($token));

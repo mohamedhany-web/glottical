@@ -18,6 +18,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -41,7 +42,70 @@ class StudentHomeExtrasController extends Controller
     public function libraryHome(Request $request): View
     {
         $locale = app()->getLocale();
+        $user = $request->user();
         $themes = FamilyLibraryThemes::all();
+
+        $hasLibraryEntitlement = LibraryFolderAccessService::hasAnyLibraryEntitlement($user);
+        $teacherIds = \App\Services\StudentTeacherLinkService::instructorIdsForStudent($user);
+        $linkedTeacherCount = count($teacherIds);
+
+        $academyFolderCount = 0;
+        $teacherFolderCount = 0;
+        $academyMaterialCount = 0;
+        $teacherMaterialCount = 0;
+        $academyVideoCount = 0;
+        $teacherVideoCount = 0;
+        $curriculumCourseCount = 0;
+        $manahijItemCount = 0;
+
+        if (Schema::hasTable('library_folders')) {
+            $materialFolders = LibraryFolderAccessService::foldersVisibleTo($user, LibraryFolder::KIND_MATERIALS)->get(['id', 'instructor_id']);
+            $academyFolderCount = $materialFolders->whereNull('instructor_id')->count();
+            $teacherFolderCount = $materialFolders->whereNotNull('instructor_id')->count();
+
+            if (Schema::hasTable('lecture_materials') && $materialFolders->isNotEmpty()) {
+                $academyIds = $materialFolders->whereNull('instructor_id')->pluck('id');
+                $teacherFolderIds = $materialFolders->whereNotNull('instructor_id')->pluck('id');
+                $visible = fn ($q) => $q->where(function ($v) {
+                    $v->where('is_visible_to_student', true)->orWhereNull('is_visible_to_student');
+                });
+                if ($academyIds->isNotEmpty()) {
+                    $academyMaterialCount = LectureMaterial::query()->where($visible)->whereIn('library_folder_id', $academyIds)->count();
+                }
+                if ($teacherFolderIds->isNotEmpty()) {
+                    $teacherMaterialCount = LectureMaterial::query()->where($visible)->whereIn('library_folder_id', $teacherFolderIds)->count();
+                }
+            }
+        }
+
+        if (Schema::hasTable('library_videos')) {
+            $videosBase = LibraryFolderAccessService::videosVisibleTo($user);
+            $academyVideoCount = (clone $videosBase)->where(function ($query) {
+                $query->where('audience', \App\Models\LibraryVideo::AUDIENCE_GENERAL)
+                    ->orWhereNull('audience');
+            })->count();
+            $teacherVideoCount = (clone $videosBase)->where('audience', \App\Models\LibraryVideo::AUDIENCE_TEACHER_STUDENTS)->count();
+        }
+
+        if (Schema::hasTable('student_course_enrollments') && Schema::hasTable('advanced_courses')) {
+            try {
+                $curriculumCourseCount = $user->activeCourses()->count();
+            } catch (\Throwable) {
+                $curriculumCourseCount = DB::table('student_course_enrollments')
+                    ->where('user_id', $user->id)
+                    ->when(Schema::hasColumn('student_course_enrollments', 'status'), fn ($q) => $q->where('status', 'active'))
+                    ->count();
+            }
+        }
+
+        if (Schema::hasTable('curriculum_library_items')) {
+            $manahijItemCount = \App\Models\CurriculumLibraryItem::active()
+                ->where(function ($qry) use ($user) {
+                    $qry->whereNull('curriculum_library_items.category_id')
+                        ->orWhereHas('category', fn ($cq) => $cq->accessibleByStudent($user));
+                })
+                ->count();
+        }
 
         $materialThemes = [
             FamilyLibraryThemes::BOOKS,
@@ -84,6 +148,192 @@ class StudentHomeExtrasController extends Controller
 
         return view('student.library.home', [
             'sections' => $sections,
+            'hasLibraryEntitlement' => $hasLibraryEntitlement,
+            'linkedTeacherCount' => $linkedTeacherCount,
+            'academyFolderCount' => $academyFolderCount,
+            'teacherFolderCount' => $teacherFolderCount,
+            'academyMaterialCount' => $academyMaterialCount,
+            'teacherMaterialCount' => $teacherMaterialCount,
+            'academyVideoCount' => $academyVideoCount,
+            'teacherVideoCount' => $teacherVideoCount,
+            'curriculumCourseCount' => $curriculumCourseCount,
+            'manahijItemCount' => $manahijItemCount,
+            'packagesUrl' => Route::has('public.service-packages.index')
+                ? route('public.service-packages.index')
+                : (Route::has('public.pricing') ? route('public.pricing') : route('dashboard')),
+        ]);
+    }
+
+    /**
+     * مكتبة الملفات الموحّدة — ماتريال الأكاديمية/المعلمين + المناهج التفاعلية.
+     */
+    public function files(Request $request): View
+    {
+        $user = $request->user();
+        $locale = app()->getLocale();
+        $tab = strtolower(trim((string) $request->query('tab', 'all')));
+        if (! in_array($tab, ['all', 'materials', 'manahij'], true)) {
+            $tab = 'all';
+        }
+        $q = trim((string) $request->query('q', ''));
+
+        $hasLibraryEntitlement = LibraryFolderAccessService::hasAnyLibraryEntitlement($user);
+        $packagesUrl = Route::has('public.service-packages.index')
+            ? route('public.service-packages.index')
+            : (Route::has('public.pricing') ? route('public.pricing') : route('dashboard'));
+
+        $materialCards = collect();
+        if (in_array($tab, ['all', 'materials'], true) && Schema::hasTable('lecture_materials')) {
+            try {
+                $folderIds = collect();
+                if (Schema::hasTable('library_folders')) {
+                    $folderIds = LibraryFolderAccessService::foldersVisibleTo($user, LibraryFolder::KIND_MATERIALS)->pluck('id');
+                }
+                $materialsQuery = LectureMaterial::query()
+                    ->with(['folder:id,name_ar,name_en,instructor_id', 'lecture:id,title'])
+                    ->where(function ($v) {
+                        $v->where('is_visible_to_student', true)->orWhereNull('is_visible_to_student');
+                    })
+                    ->where(function ($scope) use ($folderIds) {
+                        if ($folderIds->isNotEmpty()) {
+                            $scope->whereIn('library_folder_id', $folderIds);
+                        } else {
+                            $scope->whereRaw('1 = 0');
+                        }
+                    });
+                if ($q !== '') {
+                    $materialsQuery->where(function ($qry) use ($q) {
+                        $qry->where('title', 'like', "%{$q}%")
+                            ->orWhere('file_name', 'like', "%{$q}%");
+                    });
+                }
+                $materialCards = $materialsQuery->latest('id')->limit($tab === 'materials' ? 48 : 12)->get()->map(function (LectureMaterial $m) {
+                    return [
+                        'source' => 'materials',
+                        'title' => $m->title ?: ($m->file_name ?: 'ملف'),
+                        'meta' => $m->folder?->displayName(app()->getLocale()) ?: ($m->lecture?->title ?: ''),
+                        'badge' => $m->folder?->instructor_id ? 'teacher' : 'academy',
+                        'url' => route('student.library.materials.experience', $m),
+                        'icon' => 'fas fa-file-alt',
+                        'locked' => false,
+                    ];
+                });
+            } catch (\Throwable) {
+                $materialCards = collect();
+            }
+        }
+
+        $manahijCards = collect();
+        if (in_array($tab, ['all', 'manahij'], true) && Schema::hasTable('curriculum_library_items')) {
+            try {
+                $usedFreePreview = Schema::hasTable('curriculum_library_preview_opens')
+                    ? \App\Models\CurriculumLibraryPreviewOpen::hasUsedFreePreview($user->id)
+                    : false;
+                $itemsQuery = \App\Models\CurriculumLibraryItem::active()
+                    ->with('category')
+                    ->ordered()
+                    ->where(function ($qry) use ($user) {
+                        $qry->whereNull('curriculum_library_items.category_id')
+                            ->orWhereHas('category', fn ($cq) => $cq->accessibleByStudent($user));
+                    });
+                if ($q !== '') {
+                    $itemsQuery->where(function ($qry) use ($q) {
+                        $qry->where('title', 'like', "%{$q}%")
+                            ->orWhere('description', 'like', "%{$q}%")
+                            ->orWhere('subject', 'like', "%{$q}%");
+                    });
+                }
+                $manahijCards = $itemsQuery->limit($tab === 'manahij' ? 48 : 12)->get()->map(function ($item) use ($hasLibraryEntitlement, $usedFreePreview, $packagesUrl) {
+                    $locked = (! $hasLibraryEntitlement) && $usedFreePreview;
+
+                    return [
+                        'source' => 'manahij',
+                        'title' => $item->title,
+                        'meta' => trim(($item->category->name ?? '').($item->subject ? ' · '.$item->subject : '')),
+                        'badge' => 'manahij',
+                        'url' => $locked ? $packagesUrl : route('curriculum-library.show', $item),
+                        'icon' => 'fas fa-chalkboard',
+                        'locked' => $locked,
+                    ];
+                });
+            } catch (\Throwable) {
+                $manahijCards = collect();
+            }
+        }
+
+        $cards = $materialCards->concat($manahijCards)->values();
+
+        return view('student.library.files', [
+            'locale' => $locale,
+            'tab' => $tab,
+            'searchQuery' => $q,
+            'cards' => $cards,
+            'materialCount' => $materialCards->count(),
+            'manahijCount' => $manahijCards->count(),
+            'hasLibraryEntitlement' => $hasLibraryEntitlement,
+            'packagesUrl' => $packagesUrl,
+        ]);
+    }
+
+    /**
+     * مناهج الطالب — كورساته المسجّل فيها مع هيكل المنهج (أقسام/عناصر).
+     */
+    public function curriculum(Request $request): View
+    {
+        $user = $request->user();
+        $locale = app()->getLocale();
+        $q = trim((string) $request->query('q', ''));
+        $courses = collect();
+
+        if (Schema::hasTable('student_course_enrollments') && Schema::hasTable('advanced_courses')) {
+            $coursesQuery = $user->activeCourses()
+                ->with([
+                    'academicYear:id,name',
+                    'academicSubject:id,name,academic_year_id',
+                    'instructor:id,name',
+                ])
+                ->withCount([
+                    'sections',
+                    'lectures',
+                ]);
+
+            if ($q !== '') {
+                $coursesQuery->where(function ($inner) use ($q) {
+                    $inner->where('advanced_courses.title', 'like', '%'.$q.'%')
+                        ->orWhereHas('academicSubject', fn ($sq) => $sq->where('name', 'like', '%'.$q.'%'))
+                        ->orWhereHas('instructor', fn ($iq) => $iq->where('name', 'like', '%'.$q.'%'));
+                });
+            }
+
+            $courses = $coursesQuery->paginate(12)->withQueryString();
+
+            // عدّ عناصر المنهج لكل كورس (إن وُجدت الجداول)
+            if (Schema::hasTable('curriculum_items') && Schema::hasTable('course_sections') && $courses->isNotEmpty()) {
+                $courseIds = $courses->getCollection()->pluck('id');
+                $itemCounts = DB::table('curriculum_items as ci')
+                    ->join('course_sections as cs', 'cs.id', '=', 'ci.course_section_id')
+                    ->whereIn('cs.advanced_course_id', $courseIds)
+                    ->when(Schema::hasColumn('curriculum_items', 'is_active'), fn ($query) => $query->where('ci.is_active', true))
+                    ->groupBy('cs.advanced_course_id')
+                    ->selectRaw('cs.advanced_course_id as course_id, count(*) as items_count')
+                    ->pluck('items_count', 'course_id');
+
+                $courses->getCollection()->transform(function ($course) use ($itemCounts) {
+                    $course->curriculum_items_count = (int) ($itemCounts[$course->id] ?? 0);
+
+                    return $course;
+                });
+            }
+        }
+
+        return view('student.library.curriculum', [
+            'courses' => $courses,
+            'searchQuery' => $q,
+            'locale' => $locale,
+            'hasLibraryEntitlement' => LibraryFolderAccessService::hasAnyLibraryEntitlement($user),
+            'packagesUrl' => Route::has('public.service-packages.index')
+                ? route('public.service-packages.index')
+                : (Route::has('public.pricing') ? route('public.pricing') : route('dashboard')),
         ]);
     }
 
@@ -283,6 +533,13 @@ class StudentHomeExtrasController extends Controller
             }
         }
 
+        $hasLibraryEntitlement = LibraryFolderAccessService::hasAnyLibraryEntitlement($user);
+        $linkedTeacherCount = count(\App\Services\StudentTeacherLinkService::instructorIdsForStudent($user));
+        $academyFolders = $libraryFolders->whereNull('instructor_id')->values();
+        $teacherFolders = $libraryFolders->whereNotNull('instructor_id')->values();
+        $academyFolderCount = $academyFolders->count();
+        $teacherFolderCount = $teacherFolders->count();
+
         return view('student.library.materials', [
             'materials' => $materials,
             'searchQuery' => $q,
@@ -295,9 +552,18 @@ class StudentHomeExtrasController extends Controller
             'lectures' => $lectures,
             'typeCounts' => $typeCounts,
             'libraryFolders' => $libraryFolders,
+            'academyFolders' => $academyFolders,
+            'teacherFolders' => $teacherFolders,
             'activeFolder' => $activeFolder,
             'uncategorizedCount' => $uncategorizedCount,
             'familyThemes' => FamilyLibraryThemes::all(),
+            'hasLibraryEntitlement' => $hasLibraryEntitlement,
+            'linkedTeacherCount' => $linkedTeacherCount,
+            'academyFolderCount' => $academyFolderCount,
+            'teacherFolderCount' => $teacherFolderCount,
+            'packagesUrl' => Route::has('public.service-packages.index')
+                ? route('public.service-packages.index')
+                : (Route::has('public.pricing') ? route('public.pricing') : route('dashboard')),
         ]);
     }
 
@@ -537,6 +803,9 @@ class StudentHomeExtrasController extends Controller
                 ->withQueryString();
         }
 
+        $hasLibraryEntitlement = LibraryFolderAccessService::hasAnyLibraryEntitlement($user);
+        $linkedTeacherCount = count(\App\Services\StudentTeacherLinkService::instructorIdsForStudent($user));
+
         return view('student.library.videos', [
             'videos' => $videos,
             'lectureRecordings' => collect(),
@@ -549,6 +818,11 @@ class StudentHomeExtrasController extends Controller
             'academyCount' => $academyCount,
             'teacherCount' => $teacherCount,
             'familyThemes' => FamilyLibraryThemes::all(),
+            'hasLibraryEntitlement' => $hasLibraryEntitlement,
+            'linkedTeacherCount' => $linkedTeacherCount,
+            'packagesUrl' => Route::has('public.service-packages.index')
+                ? route('public.service-packages.index')
+                : (Route::has('public.pricing') ? route('public.pricing') : route('dashboard')),
         ]);
     }
 

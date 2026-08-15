@@ -659,25 +659,28 @@
             {{-- مكتبات الطلاب: ماتريال + فيديو + مناهج --}}
             @if($isFull || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.courses') || $u->hasPermission('manage.live-sessions') || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.academic-subjects'))
             @php
-                $librariesOpen = request()->routeIs('admin.libraries.*');
+                $librariesOpen = request()->routeIs('admin.libraries.*') || request()->routeIs('admin.curriculum-library.*');
             @endphp
             <li x-data="{ open: {{ $librariesOpen ? 'true' : 'false' }} }">
                 <button type="button" @click="open = !open" class="sidebar-group-btn">
-                    <span class="flex items-center gap-3"><i class="fas fa-layer-group"></i><span>المكتبات والمناهج</span></span>
+                    <span class="flex items-center gap-3"><i class="fas fa-layer-group"></i><span>مكتبة الملفات</span></span>
                     <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
                 </button>
                 <ul x-show="open" x-cloak class="mt-1 mr-3 space-y-0.5 border-r border-white/10 pr-3">
                     @if(Route::has('admin.libraries.index'))
-                    <li><a href="{{ route('admin.libraries.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.libraries.index') ? 'active' : '' }}"><i class="fas fa-th-large"></i><span>مركز المكتبات</span></a></li>
+                    <li><a href="{{ route('admin.libraries.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.libraries.index') ? 'active' : '' }}"><i class="fas fa-th-large"></i><span>مركز الملفات</span></a></li>
                     @endif
                     @if(($isFull || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.courses')) && Route::has('admin.libraries.materials.index'))
-                    <li><a href="{{ route('admin.libraries.materials.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.libraries.materials.*') ? 'active' : '' }}"><i class="fas fa-book-open"></i><span>مكتبة الماتريال</span></a></li>
+                    <li><a href="{{ route('admin.libraries.materials.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.libraries.materials.*') ? 'active' : '' }}"><i class="fas fa-book-open"></i><span>ماتريال (ملفات)</span></a></li>
+                    @endif
+                    @if(($isFull || $u->hasPermission('manage.curriculum-library') || $u->hasPermission('manage.courses') || $u->hasPermission('manage.lectures')) && Route::has('admin.curriculum-library.index'))
+                    <li><a href="{{ route('admin.curriculum-library.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.curriculum-library.*') ? 'active' : '' }}"><i class="fas fa-chalkboard"></i><span>مناهج تفاعلية (ملفات)</span></a></li>
                     @endif
                     @if(($isFull || $u->hasPermission('manage.live-sessions') || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.courses')) && Route::has('admin.libraries.videos.index'))
                     <li><a href="{{ route('admin.libraries.videos.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.libraries.videos.*') ? 'active' : '' }}"><i class="fas fa-film"></i><span>مكتبة الفيديوهات</span></a></li>
                     @endif
                     @if(($isFull || $u->hasPermission('manage.academic-years') || $u->hasPermission('manage.academic-subjects') || $u->hasPermission('manage.courses')) && Route::has('admin.libraries.curriculum.index'))
-                    <li><a href="{{ route('admin.libraries.curriculum.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.libraries.curriculum.*') ? 'active' : '' }}"><i class="fas fa-sitemap"></i><span>المناهج</span></a></li>
+                    <li><a href="{{ route('admin.libraries.curriculum.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.libraries.curriculum.*') ? 'active' : '' }}"><i class="fas fa-sitemap"></i><span>هيكل الكورسات</span></a></li>
                     @endif
                 </ul>
             </li>

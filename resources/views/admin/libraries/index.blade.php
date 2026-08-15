@@ -1,66 +1,30 @@
 @extends('layouts.admin')
 
-@section('title', 'المكتبات والمناهج')
-@section('page_title', 'المكتبات والمناهج')
+@section('title', 'مكتبة الملفات')
+@section('page_title', 'مكتبة الملفات')
 
 @section('content')
 @php
-    $cards = [
-        [
-            'title' => 'مكتبة الماتريال',
-            'desc' => 'كتب PDF وعروض وHTML وألعاب — مكتبة آمنة داخل المنصة',
-            'stat' => $stats['materials_total'],
-            'meta' => $stats['materials_visible'].' ظاهر · '.($stats['materials_total'] - $stats['materials_visible']).' مخفي',
-            'icon' => 'fa-book-open',
-            'href' => route('admin.libraries.materials.index'),
-            'cta' => 'إدارة الماتريال',
-        ],
-        [
-            'title' => 'مكتبة الفيديوهات',
-            'desc' => 'فيديوهات أطفال ومسلسلات إسلامية — بديل آمن عن يوتيوب المفتوح',
-            'stat' => $stats['videos_ready'],
-            'meta' => $stats['videos_published'].' منشور · '.($stats['video_folders'] ?? 0).' مجلد',
-            'icon' => 'fa-film',
-            'href' => route('admin.libraries.videos.index'),
-            'cta' => 'إدارة الفيديوهات',
-        ],
-        [
-            'title' => 'مجلدات المكتبة',
-            'desc' => 'تصنيف المحتوى (كتب/ألعاب/أطفال/إسلامي) + معلم × سنة',
-            'stat' => $stats['video_folders'] ?? 0,
-            'meta' => 'تنظيم المدرسة التفاعلية',
-            'icon' => 'fa-folder-open',
-            'href' => route('admin.libraries.folders.index'),
-            'cta' => 'إدارة المجلدات',
-        ],
-        [
-            'title' => 'المناهج',
-            'desc' => 'سنوات المدرسة والمواد ومناهج الكورسات',
-            'stat' => $stats['years'],
-            'meta' => $stats['subjects'].' مادة · '.$stats['courses'].' كورس · '.$stats['curriculum_items'].' عنصر',
-            'icon' => 'fa-sitemap',
-            'href' => route('admin.libraries.curriculum.index'),
-            'cta' => 'إدارة المناهج',
-        ],
-    ];
+    $filesStat = (int) ($stats['materials_total'] ?? 0) + (int) ($stats['manahij_items'] ?? 0);
 @endphp
 
 <div class="space-y-5">
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div>
             <p class="text-xs font-medium text-muted">التعليم · مكتبات الطلاب</p>
-            <h2 class="mt-1 text-2xl font-semibold text-ink">مركز المكتبات والمناهج</h2>
-            <p class="mt-1 text-sm text-muted">تحكم كامل بما يظهر للطالب في مكتبة الماتريال والفيديوهات ومسارات المناهج.</p>
+            <h2 class="mt-1 text-2xl font-semibold text-ink">مركز مكتبة الملفات</h2>
+            <p class="mt-1 text-sm text-muted">الماتريال والمناهج التفاعلية فكرة واحدة للملفات — مع فيديوهات وهيكل كورسات بجانبها.</p>
         </div>
     </section>
 
     @include('admin.partials.workflow-guide', [
-        'title' => 'المكتبات والمناهج باختصار',
-        'body' => 'هنا تنظيم المحتوى الذي يراه الطالب في مكتبته — وليس تسكين الطلاب في فصول حية. المجلدات تصنّف الفيديوهات، والمناهج ترتب أقسام الكورس.',
+        'title' => 'مكتبة الملفات باختصار',
+        'body' => 'الطالب يرى الماتريال والمناهج التفاعلية كملفات في مكتبة واحدة. المجلدات تنظّم، والفيديوهات وهيكل الكورسات مسارات منفصلة.',
         'steps' => [
-            'الماتريال: ارفع الملفات وحدد الظهور للطالب.',
-            'الفيديوهات: أدر التسجيلات واربطها بمجلدات للتصفح.',
-            'المناهج: رتّب سنوات/مواد/عناصر المنهج داخل البرامج.',
+            'ملفات الماتريال: ارفع PDF/HTML وحدد الظهور للطالب.',
+            'ملفات المناهج التفاعلية: ارفع PPTX على Cloudflare R2 وحوّلها لشرائح.',
+            'الفيديوهات: أدر التسجيلات واربطها بمجلدات.',
+            'هيكل الكورسات: رتّب سنوات/مواد/عناصر المنهج داخل البرامج.',
         ],
     ])
 
@@ -68,23 +32,60 @@
         <div class="rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink">{{ session('success') }}</div>
     @endif
 
-    <div class="grid gap-4 md:grid-cols-3">
-        @foreach($cards as $card)
-            <a href="{{ $card['href'] }}" class="group rounded-2xl border border-line bg-surface p-5 shadow-soft transition hover:border-accent/40 hover:shadow-md">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
-                        <i class="fas {{ $card['icon'] }}"></i>
-                    </div>
-                    <span class="text-3xl font-semibold text-ink">{{ number_format($card['stat']) }}</span>
-                </div>
-                <h3 class="mt-4 text-lg font-semibold text-ink group-hover:text-accent">{{ $card['title'] }}</h3>
-                <p class="mt-1 text-sm text-muted">{{ $card['desc'] }}</p>
-                <p class="mt-3 text-xs font-medium text-ink-soft">{{ $card['meta'] }}</p>
-                <span class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-accent">
-                    {{ $card['cta'] }} <i class="fas fa-arrow-left text-xs"></i>
-                </span>
+    <section class="rounded-2xl border border-accent/30 bg-accent/5 p-5 shadow-soft">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <p class="text-xs font-medium text-accent">فكرة واحدة</p>
+                <h3 class="mt-1 text-xl font-semibold text-ink">مكتبة الملفات</h3>
+                <p class="mt-1 text-sm text-muted">{{ number_format($filesStat) }} ملف/منهج · ماتريال + مناهج تفاعلية على Cloudflare R2 عند الرفع.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('admin.libraries.materials.index') }}" class="btn-press inline-flex h-9 items-center rounded-xl bg-ink px-3 text-sm text-white">إدارة الماتريال</a>
+                <a href="{{ route('admin.curriculum-library.index') }}" class="btn-press inline-flex h-9 items-center rounded-xl bg-accent px-3 text-sm font-medium text-white">المناهج التفاعلية</a>
+                <a href="{{ route('admin.libraries.folders.index') }}" class="btn-press inline-flex h-9 items-center rounded-xl border border-line px-3 text-sm">المجلدات</a>
+            </div>
+        </div>
+        <div class="mt-4 grid gap-3 sm:grid-cols-2">
+            <a href="{{ route('admin.libraries.materials.index') }}" class="rounded-xl border border-line bg-surface p-4 hover:border-accent/40">
+                <div class="text-xs text-muted">ماتريال</div>
+                <div class="mt-1 text-2xl font-semibold text-ink">{{ number_format($stats['materials_total']) }}</div>
+                <p class="mt-1 text-xs text-muted">{{ $stats['materials_visible'] }} ظاهر</p>
             </a>
-        @endforeach
+            <a href="{{ route('admin.curriculum-library.index') }}" class="rounded-xl border border-line bg-surface p-4 hover:border-accent/40">
+                <div class="text-xs text-muted">مناهج تفاعلية</div>
+                <div class="mt-1 text-2xl font-semibold text-ink">{{ number_format($stats['manahij_items'] ?? 0) }}</div>
+                <p class="mt-1 text-xs text-muted">{{ ($stats['manahij_categories'] ?? 0) }} تصنيف · {{ ($stats['manahij_materials'] ?? 0) }} مادة</p>
+            </a>
+        </div>
+    </section>
+
+    <div class="grid gap-4 md:grid-cols-3">
+        <a href="{{ route('admin.libraries.videos.index') }}" class="group rounded-2xl border border-line bg-surface p-5 shadow-soft transition hover:border-accent/40 hover:shadow-md">
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent"><i class="fas fa-film"></i></div>
+                <span class="text-3xl font-semibold text-ink">{{ number_format($stats['videos_ready']) }}</span>
+            </div>
+            <h3 class="mt-4 text-lg font-semibold text-ink group-hover:text-accent">مكتبة الفيديوهات</h3>
+            <p class="mt-1 text-sm text-muted">فيديوهات أطفال ومسلسلات إسلامية</p>
+            <p class="mt-3 text-xs font-medium text-ink-soft">{{ $stats['videos_published'] }} منشور · {{ $stats['video_folders'] ?? 0 }} مجلد</p>
+        </a>
+        <a href="{{ route('admin.libraries.folders.index') }}" class="group rounded-2xl border border-line bg-surface p-5 shadow-soft transition hover:border-accent/40 hover:shadow-md">
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent"><i class="fas fa-folder-open"></i></div>
+                <span class="text-3xl font-semibold text-ink">{{ number_format($stats['video_folders'] ?? 0) }}</span>
+            </div>
+            <h3 class="mt-4 text-lg font-semibold text-ink group-hover:text-accent">مجلدات المكتبة</h3>
+            <p class="mt-1 text-sm text-muted">تصنيف المحتوى + معلم × سنة</p>
+        </a>
+        <a href="{{ route('admin.libraries.curriculum.index') }}" class="group rounded-2xl border border-line bg-surface p-5 shadow-soft transition hover:border-accent/40 hover:shadow-md">
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent"><i class="fas fa-sitemap"></i></div>
+                <span class="text-3xl font-semibold text-ink">{{ number_format($stats['years']) }}</span>
+            </div>
+            <h3 class="mt-4 text-lg font-semibold text-ink group-hover:text-accent">هيكل الكورسات</h3>
+            <p class="mt-1 text-sm text-muted">سنوات ومواد ومناهج الكورسات المسجّلة</p>
+            <p class="mt-3 text-xs font-medium text-ink-soft">{{ $stats['subjects'] }} مادة · {{ $stats['courses'] }} كورس</p>
+        </a>
     </div>
 
     <div class="grid gap-4 lg:grid-cols-2">

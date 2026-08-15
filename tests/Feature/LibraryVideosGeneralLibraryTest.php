@@ -83,6 +83,14 @@ class LibraryVideosGeneralLibraryTest extends TestCase
             'password' => Hash::make('password'),
         ]);
 
+        \App\Models\StudentServiceEntitlement::create([
+            'user_id' => $student->id,
+            'includes_libraries' => true,
+            'status' => 'active',
+            'starts_at' => now()->subDay(),
+            'expires_at' => now()->addMonth(),
+        ]);
+
         LibraryVideo::create([
             'title' => 'فيديو عام تجريبي',
             'external_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
@@ -101,6 +109,33 @@ class LibraryVideosGeneralLibraryTest extends TestCase
             ->get(route('student.library.videos.show', $video))
             ->assertOk()
             ->assertSee('فيديو عام تجريبي', false);
+    }
+
+    public function test_student_without_package_cannot_see_unfoldered_general_video(): void
+    {
+        $student = User::factory()->create([
+            'role' => 'student',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        LibraryVideo::create([
+            'title' => 'فيديو مقفل بالباقة',
+            'external_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            'audience' => LibraryVideo::AUDIENCE_GENERAL,
+            'is_published' => true,
+            'sort_order' => 0,
+        ]);
+
+        $this->actingAs($student)
+            ->get(route('student.library.videos'))
+            ->assertOk()
+            ->assertDontSee('فيديو مقفل بالباقة', false);
+
+        $video = LibraryVideo::query()->where('title', 'فيديو مقفل بالباقة')->first();
+        $this->actingAs($student)
+            ->get(route('student.library.videos.show', $video))
+            ->assertForbidden();
     }
 
     public function test_admin_can_store_link_video_without_live_session(): void

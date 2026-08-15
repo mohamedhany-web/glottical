@@ -20,9 +20,23 @@
     $themeFilter = $themeFilter ?? '';
     $familyThemes = $familyThemes ?? \App\Support\FamilyLibraryThemes::all();
     $tones = ['blue', 'pink', 'orange', 'purple', 'green'];
+    $hasLibraryEntitlement = (bool) ($hasLibraryEntitlement ?? false);
+    $linkedTeacherCount = (int) ($linkedTeacherCount ?? 0);
+    $academyFolderCount = (int) ($academyFolderCount ?? 0);
+    $teacherFolderCount = (int) ($teacherFolderCount ?? 0);
+    $packagesUrl = $packagesUrl ?? route('dashboard');
+    $academyFolders = $academyFolders ?? collect();
+    $teacherFolders = $teacherFolders ?? collect();
 
     $materialCount = method_exists($materials, 'total') ? $materials->total() : collect($materials)->count();
     $materialsEmpty = method_exists($materials, 'isEmpty') ? $materials->isEmpty() : collect($materials)->isEmpty();
+    $pageItems = $materials instanceof \Illuminate\Contracts\Pagination\Paginator
+        ? collect($materials->items())
+        : collect($materials);
+    $academyMaterials = $pageItems->filter(fn ($m) => ! ($m->folder?->instructor_id))->values();
+    $teacherMaterials = $pageItems->filter(fn ($m) => (bool) ($m->folder?->instructor_id))->values();
+    $showSections = ! $activeFolder && ! $materialsEmpty && ($academyMaterials->isNotEmpty() || $teacherMaterials->isNotEmpty());
+    $hasFilters = $courseId || $lectureId || $typeFilter !== 'all' || $searchQuery !== '' || $activeFolder || $themeFilter;
 
     $fileMeta = function ($material) {
         $name = (string) ($material->file_name ?: $material->file_path ?: '');
@@ -137,6 +151,35 @@
     </div>
 </section>
 
+@if(! $hasLibraryEntitlement)
+    <div class="st-lib-package-banner" role="status">
+        <div>
+            <strong>{{ __('student_timeline.lib_need_package_title') }}</strong>
+            <p>{{ __('student_timeline.lib_need_package_materials') }}</p>
+        </div>
+        <a href="{{ $packagesUrl }}" class="st-pill st-pill--solid">{{ __('student_timeline.lib_browse_packages') }}</a>
+    </div>
+@endif
+
+@if(! $activeFolder && ($academyFolderCount > 0 || $teacherFolderCount > 0 || $linkedTeacherCount > 0))
+    <div class="st-lib-source-strip" aria-label="{{ __('student_timeline.lib_sources_title') }}">
+        <div class="st-lib-source-chip st-lib-source-chip--academy">
+            <i class="fas fa-university" aria-hidden="true"></i>
+            <div>
+                <strong>{{ __('student_timeline.lib_academy_title') }}</strong>
+                <span>{{ trans_choice('student_timeline.lib_folders_count', $academyFolderCount, ['count' => $academyFolderCount]) }}</span>
+            </div>
+        </div>
+        <div class="st-lib-source-chip st-lib-source-chip--teacher">
+            <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
+            <div>
+                <strong>{{ __('student_timeline.lib_teachers_title') }}</strong>
+                <span>{{ trans_choice('student_timeline.lib_folders_count', $teacherFolderCount, ['count' => $teacherFolderCount]) }}</span>
+            </div>
+        </div>
+    </div>
+@endif
+
 @if(!empty($familyThemes))
     <section class="st-theme-strip" aria-label="{{ __('student_timeline.family_themes') }}">
         <a href="{{ route('student.library.materials', array_filter(['q' => $searchQuery ?: null, 'folder' => $activeFolder ? (($activeFolder->is_uncategorized ?? false) ? 'none' : ($activeFolder->slug ?: $activeFolder->id)) : null])) }}"
@@ -174,9 +217,9 @@
                     <em>
                         {{ $folder->academicYear->name ?? '' }}
                         @if($folder->instructor_id)
-                            · <span class="st-lib-badge st-lib-badge--teacher">{{ $locale === 'ar' ? 'معلمك' : 'Teacher' }}</span>
+                            · <span class="st-lib-badge st-lib-badge--teacher">{{ __('student_timeline.lib_badge_teacher') }}{{ $folder->instructor?->name ? ' · '.$folder->instructor->name : '' }}</span>
                         @else
-                            · <span class="st-lib-badge st-lib-badge--academy">{{ $locale === 'ar' ? 'أكاديمية' : 'Academy' }}</span>
+                            · <span class="st-lib-badge st-lib-badge--academy">{{ __('student_timeline.lib_badge_academy') }}</span>
                         @endif
                         · {{ trans_choice('student_timeline.folder_files_count', (int) $folder->materials_count, ['count' => (int) $folder->materials_count]) }}
                     </em>
@@ -273,70 +316,90 @@
 
     @if($materialsEmpty)
         <div class="st-empty-panel">
-            <h3>{{ __('student_timeline.no_materials') }}</h3>
-            <p>{{ __('student_timeline.no_materials_hint') }}</p>
-            <div class="st-biz-banner__actions">
-                @if($courseId || $lectureId || $typeFilter !== 'all' || $searchQuery !== '' || $activeFolder)
-                    <a href="{{ route('student.library.materials') }}" class="st-pill st-pill--solid">{{ __('student_timeline.materials_clear_filters') }}</a>
-                @endif
-                @if(Route::has('student.classes.index'))
-                    <a href="{{ route('student.classes.index') }}" class="st-pill st-pill--outline">{{ __('student_timeline.my_classes') }}</a>
-                @endif
-            </div>
+            @if(! $hasLibraryEntitlement && $teacherFolderCount === 0 && ! $hasFilters)
+                <h3>{{ __('student_timeline.lib_need_package_title') }}</h3>
+                <p>{{ __('student_timeline.lib_need_package_materials') }}</p>
+                <div class="st-biz-banner__actions">
+                    <a href="{{ $packagesUrl }}" class="st-pill st-pill--solid">{{ __('student_timeline.lib_browse_packages') }}</a>
+                    @if($linkedTeacherCount === 0)
+                        <a href="{{ route('dashboard') }}" class="st-pill st-pill--outline">{{ __('student_timeline.school_gate') }}</a>
+                    @endif
+                </div>
+            @elseif($hasLibraryEntitlement && $academyFolderCount === 0 && $teacherFolderCount === 0 && ! $hasFilters)
+                <h3>{{ __('student_timeline.lib_academy_empty_title') }}</h3>
+                <p>{{ __('student_timeline.lib_academy_empty_hint') }}</p>
+            @elseif($linkedTeacherCount > 0 && $teacherFolderCount === 0 && $academyFolderCount === 0 && ! $hasFilters)
+                <h3>{{ __('student_timeline.lib_teacher_empty_title') }}</h3>
+                <p>{{ __('student_timeline.lib_teacher_empty_hint') }}</p>
+            @else
+                <h3>{{ __('student_timeline.no_materials') }}</h3>
+                <p>{{ __('student_timeline.no_materials_hint') }}</p>
+                <div class="st-biz-banner__actions">
+                    @if($hasFilters)
+                        <a href="{{ route('student.library.materials') }}" class="st-pill st-pill--solid">{{ __('student_timeline.materials_clear_filters') }}</a>
+                    @endif
+                    @if(! $hasLibraryEntitlement)
+                        <a href="{{ $packagesUrl }}" class="st-pill st-pill--outline">{{ __('student_timeline.lib_browse_packages') }}</a>
+                    @endif
+                    @if(Route::has('student.classes.index'))
+                        <a href="{{ route('student.classes.index') }}" class="st-pill st-pill--outline">{{ __('student_timeline.my_classes') }}</a>
+                    @endif
+                </div>
+            @endif
         </div>
     @else
-        <div class="st-mat-grid" role="list">
-            @foreach($materials as $i => $material)
-                @php
-                    $meta = $fileMeta($material);
-                    $tone = $meta['tone'] ?? $tones[$i % count($tones)];
-                    $title = $material->title ?: $material->file_name ?: __('student_timeline.material_item');
-                    $experienceUrl = method_exists($material, 'experienceUrl') ? $material->experienceUrl() : null;
-                    $downloadUrl = $material->downloadUrl();
-                    $playable = $experienceUrl && $experienceUrl !== $downloadUrl;
-                    $courseTitle = $material->lecture?->course?->title;
-                    $lectureTitle = $material->lecture?->title;
-                    $folderTitle = $material->folder?->displayName($locale);
-                    $teacherName = $material->folder?->instructor?->name;
-                @endphp
-                <article class="st-mat-card st-mat-card--{{ $tone }}" role="listitem">
-                    <div class="st-mat-card__top">
-                        <span class="st-mat-card__badge" aria-hidden="true">
-                            <i class="{{ $meta['fa'] }}"></i>
-                        </span>
-                        <span class="st-mat-card__ext">{{ $meta['label'] }}</span>
-                    </div>
-                    <h3 title="{{ $title }}">{{ $title }}</h3>
-                    @if($material->content_theme)
-                        <p class="st-mat-card__theme">{{ $material->themeLabel($locale) }}</p>
-                    @endif
-                    @if($folderTitle)
-                        <p class="st-mat-card__course">{{ $folderTitle }}@if($teacherName) · {{ $teacherName }}@endif</p>
-                    @elseif($courseTitle)
-                        <p class="st-mat-card__course">{{ $courseTitle }}</p>
-                    @endif
-                    @if($lectureTitle)
-                        <p class="st-mat-card__lecture">{{ $lectureTitle }}</p>
-                    @endif
-                    <div class="st-mat-card__foot">
-                        @if($playable)
-                            <a href="{{ $experienceUrl }}" class="st-mat-card__btn">
-                                <i class="fas fa-play" aria-hidden="true"></i>
-                                {{ __('student_timeline.open_in_platform') }}
-                            </a>
-                        @endif
-                        @if($downloadUrl)
-                            <a href="{{ $downloadUrl }}" class="st-mat-card__btn {{ $playable ? 'st-mat-card__btn--ghost' : '' }}">
-                                <i class="fas fa-download" aria-hidden="true"></i>
-                                {{ __('student_timeline.open_file') }}
-                            </a>
-                        @elseif(! $playable)
-                            <span class="st-lib-card__missing">{{ __('student_timeline.file_unavailable') }}</span>
-                        @endif
-                    </div>
-                </article>
-            @endforeach
-        </div>
+        @php
+            $renderMaterialCard = function ($material, $i) use ($fileMeta, $tones, $locale) {
+                $meta = $fileMeta($material);
+                $tone = $meta['tone'] ?? $tones[$i % count($tones)];
+                $title = $material->title ?: $material->file_name ?: __('student_timeline.material_item');
+                $experienceUrl = method_exists($material, 'experienceUrl') ? $material->experienceUrl() : null;
+                $downloadUrl = $material->downloadUrl();
+                $playable = $experienceUrl && $experienceUrl !== $downloadUrl;
+                $courseTitle = $material->lecture?->course?->title;
+                $lectureTitle = $material->lecture?->title;
+                $folderTitle = $material->folder?->displayName($locale);
+                $teacherName = $material->folder?->instructor?->name;
+                $isTeacher = (bool) ($material->folder?->instructor_id);
+
+                return compact('meta', 'tone', 'title', 'experienceUrl', 'downloadUrl', 'playable', 'courseTitle', 'lectureTitle', 'folderTitle', 'teacherName', 'isTeacher');
+            };
+        @endphp
+
+        @if($showSections && $academyMaterials->isNotEmpty())
+            <div class="st-lib-section-head">
+                <h3><i class="fas fa-university" aria-hidden="true"></i> {{ __('student_timeline.lib_academy_title') }}</h3>
+                <p>{{ __('student_timeline.lib_academy_section_hint') }}</p>
+            </div>
+            <div class="st-mat-grid" role="list">
+                @foreach($academyMaterials as $i => $material)
+                    @php extract($renderMaterialCard($material, $i)); @endphp
+                    @include('student.library._material-card', compact('material', 'meta', 'tone', 'title', 'experienceUrl', 'downloadUrl', 'playable', 'courseTitle', 'lectureTitle', 'folderTitle', 'teacherName', 'isTeacher', 'locale'))
+                @endforeach
+            </div>
+        @endif
+
+        @if($showSections && $teacherMaterials->isNotEmpty())
+            <div class="st-lib-section-head">
+                <h3><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i> {{ __('student_timeline.lib_teachers_title') }}</h3>
+                <p>{{ __('student_timeline.lib_teachers_section_hint') }}</p>
+            </div>
+            <div class="st-mat-grid" role="list">
+                @foreach($teacherMaterials as $i => $material)
+                    @php extract($renderMaterialCard($material, $i)); @endphp
+                    @include('student.library._material-card', compact('material', 'meta', 'tone', 'title', 'experienceUrl', 'downloadUrl', 'playable', 'courseTitle', 'lectureTitle', 'folderTitle', 'teacherName', 'isTeacher', 'locale'))
+                @endforeach
+            </div>
+        @endif
+
+        @if(! $showSections)
+            <div class="st-mat-grid" role="list">
+                @foreach($materials as $i => $material)
+                    @php extract($renderMaterialCard($material, $i)); @endphp
+                    @include('student.library._material-card', compact('material', 'meta', 'tone', 'title', 'experienceUrl', 'downloadUrl', 'playable', 'courseTitle', 'lectureTitle', 'folderTitle', 'teacherName', 'isTeacher', 'locale'))
+                @endforeach
+            </div>
+        @endif
 
         @if(method_exists($materials, 'hasPages') && $materials->hasPages())
             <div class="st-pager">
@@ -356,6 +419,13 @@
     <a href="{{ route('student.library.videos') }}" class="st-event-card st-event-card--blue">
         <h3>{{ __('student_timeline.nav_library_videos') }}</h3>
         <p class="st-event-card__sub">{{ __('student_timeline.videos_side_hint') }}</p>
+    </a>
+@endif
+
+@if(! $hasLibraryEntitlement)
+    <a href="{{ $packagesUrl }}" class="st-event-card st-event-card--orange">
+        <h3>{{ __('student_timeline.lib_browse_packages') }}</h3>
+        <p class="st-event-card__sub">{{ __('student_timeline.lib_need_package_hint') }}</p>
     </a>
 @endif
 

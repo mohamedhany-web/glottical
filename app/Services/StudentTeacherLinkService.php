@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * روابط طالب ↔ معلم (كورسات، مجموعات، حصص خاصة).
+ * روابط طالب ↔ معلم (كورسات، مجموعات، حصص خاصة، تعيينات، entitlements).
  */
 class StudentTeacherLinkService
 {
@@ -72,6 +72,45 @@ class StudentTeacherLinkService
                     ->distinct()
                     ->pluck('instructor_id')
             );
+        }
+
+        // تعيين إداري نشط (بريفيت / عام / كورسات)
+        if (Schema::hasTable('student_instructor_assignments')) {
+            $assignmentQ = DB::table('student_instructor_assignments')
+                ->where('student_id', $student->id)
+                ->whereNotNull('instructor_id');
+
+            if (Schema::hasColumn('student_instructor_assignments', 'status')) {
+                $assignmentQ->where('status', 'active');
+            }
+
+            $ids = $ids->merge($assignmentQ->distinct()->pluck('instructor_id'));
+        }
+
+        // entitlement نشط مرتبط بمجموعة فيها معلم (اشتراك خدمة بدون enrollment صف منفصل)
+        if (Schema::hasTable('student_service_entitlements')
+            && Schema::hasTable('tutoring_groups')
+            && Schema::hasColumn('student_service_entitlements', 'tutoring_group_id')
+        ) {
+            StudentEntitlementService::expireStaleForUser((int) $student->id);
+
+            $groupIds = DB::table('student_service_entitlements')
+                ->where('user_id', $student->id)
+                ->whereNotNull('tutoring_group_id')
+                ->when(
+                    Schema::hasColumn('student_service_entitlements', 'status'),
+                    fn ($q) => $q->where('status', 'active')
+                )
+                ->pluck('tutoring_group_id');
+
+            if ($groupIds->isNotEmpty()) {
+                $ids = $ids->merge(
+                    DB::table('tutoring_groups')
+                        ->whereIn('id', $groupIds)
+                        ->whereNotNull('instructor_id')
+                        ->pluck('instructor_id')
+                );
+            }
         }
 
         return $ids->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();

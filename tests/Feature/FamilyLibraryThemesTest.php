@@ -199,6 +199,14 @@ class FamilyLibraryThemesTest extends TestCase
             'is_active' => true,
         ]);
 
+        \App\Models\StudentServiceEntitlement::create([
+            'user_id' => $student->id,
+            'includes_libraries' => true,
+            'status' => 'active',
+            'starts_at' => now()->subDay(),
+            'expires_at' => now()->addMonth(),
+        ]);
+
         $folder = LibraryFolder::create([
             'kind' => LibraryFolder::KIND_MATERIALS,
             'content_theme' => FamilyLibraryThemes::BOOKS,

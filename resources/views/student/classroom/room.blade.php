@@ -9,6 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/classroom-curriculum-presenter.css') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="{{ asset('js/classroom-curriculum-presenter.js') }}" defer></script>
     <style>
         * { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
         html { height: 100%; height: 100dvh; }
@@ -224,6 +227,10 @@
             <span class="hidden xl:block w-px h-4 bg-slate-600/50 shrink-0 rounded-full" aria-hidden="true"></span>
             <div class="flex w-full flex-col gap-2 md:w-auto md:flex-row md:flex-nowrap md:items-center md:justify-end md:gap-1.5">
             @unless($academicObserverMode)
+            <button type="button" id="mx-ml-btn-curriculum" class="classroom-room-toolbar-btn w-full justify-center gap-2 bg-indigo-600/25 hover:bg-indigo-600/35 text-indigo-100 border border-indigo-500/40 md:w-auto md:justify-start" title="عرض منهج تفاعلي" aria-pressed="false">
+                <i class="fas fa-book-open text-indigo-300 text-[11px]"></i>
+                <span class="sm:inline">عرض منهج</span>
+            </button>
             <button type="button" id="btn-wb-popup-open" class="classroom-room-toolbar-btn w-full justify-center gap-2 bg-amber-600/25 hover:bg-amber-600/35 text-amber-100 border border-amber-500/40 md:w-auto md:justify-start" title="فتح الوايت بورد في نافذة منبثقة">
                 <i class="fas fa-expand text-amber-300 text-[11px]"></i>
                 <span class="sm:inline">الوايت بورد</span>
@@ -2372,6 +2379,27 @@
                 showError();
             };
             document.head.appendChild(script);
+
+            @unless(!empty($academicObserverMode))
+            function attachCurriculumPresenter() {
+                if (!window.MxClassroomCurriculumPresenter || window.__mxCurriculumPresenter) return;
+                window.__mxCurriculumPresenter = window.MxClassroomCurriculumPresenter.attach(null, {
+                    isHost: true,
+                    catalogUrl: @json(route($rp . 'classroom.curriculum.catalog', $meeting)),
+                    presentUrl: @json(route($rp . 'classroom.curriculum.present', $meeting)),
+                    stateUrl: @json(route($rp . 'classroom.curriculum.state', $meeting)),
+                    slideUpdateUrl: @json(route($rp . 'classroom.curriculum.slide.update', $meeting)),
+                    stopUrl: @json(route($rp . 'classroom.curriculum.stop', $meeting)),
+                    pollIntervalMs: 1500,
+                });
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', attachCurriculumPresenter);
+            } else {
+                attachCurriculumPresenter();
+            }
+            setTimeout(attachCurriculumPresenter, 50);
+            @endunless
         })();
     </script>
 </body>

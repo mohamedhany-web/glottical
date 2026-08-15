@@ -56,8 +56,18 @@ class LibraryFolderAccessService
             return self::canAccessFolder($user, $video->folder);
         }
 
-        // فيديو عام بدون مجلد: يظهر لكل طالب مسجّل
-        return true;
+        // فيديو عام بدون مجلد: ضمن باقة المكتبات فقط
+        return self::hasAnyLibraryEntitlement($user);
+    }
+
+    /**
+     * هل لدى الطالب entitlement مكتبات نشط (أي سنة)؟
+     */
+    public static function hasAnyLibraryEntitlement(User $user): bool
+    {
+        $years = self::accessibleYearIds($user);
+
+        return $years !== [];
     }
 
     public static function hasLibraryEntitlementForYear(User $user, ?int $academicYearId): bool
@@ -165,25 +175,32 @@ class LibraryFolderAccessService
     }
 
     /**
-     * استعلام فيديوهات ظاهرة للطالب: عام من الإدارة + من معلميه.
+     * استعلام فيديوهات ظاهرة للطالب: عام من الإدارة (باقة) + من معلميه.
      */
     public static function videosVisibleTo(User $user): Builder
     {
         $teacherIds = StudentTeacherLinkService::instructorIdsForStudent($user);
         $allowedFolderIds = self::foldersVisibleTo($user, LibraryFolder::KIND_VIDEOS)->pluck('id');
+        $hasLibraryEntitlement = self::hasAnyLibraryEntitlement($user);
 
         return LibraryVideo::query()
             ->published()
-            ->where(function (Builder $q) use ($teacherIds, $allowedFolderIds) {
-                // عام من الإدارة
-                $q->where(function (Builder $general) use ($allowedFolderIds) {
+            ->where(function (Builder $q) use ($teacherIds, $allowedFolderIds, $hasLibraryEntitlement) {
+                // عام من الإدارة داخل مجلدات مسموحة
+                $q->where(function (Builder $general) use ($allowedFolderIds, $hasLibraryEntitlement) {
                     $general->where(function ($a) {
                         $a->where('audience', LibraryVideo::AUDIENCE_GENERAL)
                             ->orWhereNull('audience');
-                    })->where(function ($folderQ) use ($allowedFolderIds) {
-                        $folderQ->whereNull('library_folder_id');
+                    })->where(function ($folderQ) use ($allowedFolderIds, $hasLibraryEntitlement) {
                         if ($allowedFolderIds->isNotEmpty()) {
-                            $folderQ->orWhereIn('library_folder_id', $allowedFolderIds);
+                            $folderQ->whereIn('library_folder_id', $allowedFolderIds);
+                        } else {
+                            $folderQ->whereRaw('1 = 0');
+                        }
+
+                        // بدون مجلد: يتطلب باقة مكتبات
+                        if ($hasLibraryEntitlement) {
+                            $folderQ->orWhereNull('library_folder_id');
                         }
                     });
                 });

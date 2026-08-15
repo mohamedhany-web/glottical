@@ -196,6 +196,8 @@ class StudentHomeScheduleTest extends TestCase
     {
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('student.library.materials'));
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('student.library.videos'));
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('student.library.curriculum'));
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('student.library.home'));
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('student.lectures.index'));
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('student.schedule.join'));
     }

@@ -98,7 +98,7 @@ class PermissionsSeeder extends Seeder
             ['name' => 'manage.video-providers',     'display_name' => 'إدارة مصادر الفيديو',             'description' => 'إدارة مصادر وموفري الفيديو للمنصة',         'group' => 'إدارة المحتوى'],
             ['name' => 'manage.packages',            'display_name' => 'إدارة الباقات والأسعار',          'description' => 'إدارة باقات الاشتراك والتسعير',              'group' => 'العناصر المدفوعة'],
             // ['name' => 'manage.teacher-features',    'display_name' => 'إدارة مزايا اشتراك المدربين',     'description' => 'إدارة مزايا ومستويات اشتراك المدربين',       'group' => 'العناصر المدفوعة'], // removed SaaS
-            // ['name' => 'manage.curriculum-library',  'display_name' => 'إدارة مكتبة المناهج',             'description' => 'إدارة مكتبة مناهج ومحتوى المنصة',            'group' => 'العناصر المدفوعة'], // removed SaaS
+            ['name' => 'manage.curriculum-library',  'display_name' => 'إدارة المناهج التفاعلية',             'description' => 'إدارة مكتبة المناهج التفاعلية (Manahij X) وتحويل العروض',            'group' => 'إدارة المحتوى'],
 
             // التسويق التفصيلي
             ['name' => 'manage.popup-ads',           'display_name' => 'إدارة الإعلانات المنبثقة',        'description' => 'إدارة البوبأب والإعلانات الترويجية',         'group' => 'إدارة التسويق'],
