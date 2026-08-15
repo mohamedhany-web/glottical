@@ -14,6 +14,7 @@ use App\Models\CurriculumLibraryMaterial;
 use App\Models\LectureMaterial;
 use App\Models\LibraryFolder;
 use App\Models\LibraryVideo;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class LibraryHubController extends Controller
@@ -66,9 +67,9 @@ class LibraryHubController extends Controller
             'courses' => $courses,
             'sections' => $sections,
             'curriculum_items' => $curriculumItems,
-            'manahij_items' => CurriculumLibraryItem::query()->count(),
-            'manahij_categories' => CurriculumLibraryCategory::query()->count(),
-            'manahij_materials' => CurriculumLibraryMaterial::query()->count(),
+            'manahij_items' => Schema::hasTable('curriculum_library_items') ? CurriculumLibraryItem::query()->count() : 0,
+            'manahij_categories' => Schema::hasTable('curriculum_library_categories') ? CurriculumLibraryCategory::query()->count() : 0,
+            'manahij_materials' => Schema::hasTable('curriculum_library_materials') ? CurriculumLibraryMaterial::query()->count() : 0,
         ];
 
         return view('admin.libraries.index', compact('stats', 'recentMaterials', 'recentVideos'));

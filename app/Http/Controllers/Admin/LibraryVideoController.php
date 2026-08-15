@@ -6,6 +6,7 @@ use App\Helpers\VideoHelper;
 use App\Http\Controllers\Controller;
 use App\Models\LibraryFolder;
 use App\Models\LibraryVideo;
+use App\Services\CloudflareR2;
 use App\Services\LibraryVideoUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -233,10 +234,26 @@ class LibraryVideoController extends Controller
             'filename' => ['nullable', 'string', 'max:255'],
         ]);
 
+        CloudflareR2::ensureBrowserUploadCors([$request->getSchemeAndHttpHost()]);
+
         return LibraryVideoUploadService::presign(
             (int) $request->user()->id,
             $request->input('content_type'),
             $request->input('filename')
+        );
+    }
+
+    public function proxyUpload(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'upload_token' => ['required', 'string', 'size:64'],
+            'file' => ['required', 'file', 'max:204800'],
+        ]);
+
+        return LibraryVideoUploadService::proxy(
+            (int) $request->user()->id,
+            $validated['upload_token'],
+            $request->file('file')
         );
     }
 

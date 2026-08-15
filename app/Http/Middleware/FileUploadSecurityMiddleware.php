@@ -101,7 +101,10 @@ class FileUploadSecurityMiddleware
                 'application/octet-stream',
                 'text/csv', 'text/plain', 'text/html', 'application/xhtml+xml',
                 'application/zip', 'application/vnd.rar',
+                'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska',
+                'audio/mpeg', 'audio/mp3',
                 'xlsx', 'xls', 'csv', 'doc', 'docx', 'pdf', 'ppt', 'pptx', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'rar', 'html', 'htm',
+                'mp4', 'webm', 'mov', 'avi', 'mkv', 'm4v', 'mp3',
             ],
             'image' => ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
             'video' => ['video/mp4', 'video/webm', 'video/ogg'],
@@ -161,7 +164,7 @@ class FileUploadSecurityMiddleware
             'recording' => 1073741824, // 1 GB
             'image' => $maxBytes,
             'document' => $maxBytes,
-            'file' => $maxBytes,
+            'file' => max($maxBytes, 200 * 1024 * 1024),
             'avatar' => $maxBytes,
             'thumbnail' => $maxBytes,
         ];

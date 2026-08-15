@@ -1458,6 +1458,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
                 Route::post('/', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'store'])->name('store');
                 Route::post('/presign-upload', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'presignUpload'])->name('presign');
                 Route::post('/complete-upload', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'completeUpload'])->name('complete');
+                Route::post('/proxy-upload', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'proxyUpload'])->name('proxy');
                 Route::get('/{libraryVideo}/edit', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'edit'])->name('edit');
                 Route::put('/{libraryVideo}', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'update'])->name('update');
                 Route::post('/{libraryVideo}/toggle', [\App\Http\Controllers\Admin\LibraryVideoController::class, 'togglePublish'])->name('toggle');
@@ -2162,6 +2163,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/libraries/videos', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'store'])->name('libraries.videos.store');
         Route::post('/libraries/videos/presign-upload', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'presignUpload'])->name('libraries.videos.presign');
         Route::post('/libraries/videos/complete-upload', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'completeUpload'])->name('libraries.videos.complete');
+        Route::post('/libraries/videos/proxy-upload', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'proxyUpload'])->name('libraries.videos.proxy');
         Route::post('/libraries/videos/folders', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'storeFolder'])->name('libraries.videos.folders.store');
         Route::get('/libraries/videos/{libraryVideo}/edit', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'edit'])->name('libraries.videos.edit');
         Route::put('/libraries/videos/{libraryVideo}', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'update'])->name('libraries.videos.update');

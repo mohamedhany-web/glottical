@@ -88,7 +88,7 @@
 
             <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-4 space-y-3">
                 <h3 class="text-sm font-semibold text-slate-900">② رفع ملف إلى Cloudflare</h3>
-                <p class="text-xs text-slate-500">رفع مباشر من المتصفح مع شريط تقدم. قرص: <strong>{{ $uploadDisk ?? 'r2' }}</strong></p>
+                <p class="text-xs text-slate-500">الرفع يحاول Cloudflare مباشرة، وإن حُجب CORS يكتمل تلقائياً عبر الخادم. قرص: <strong>{{ $uploadDisk ?? 'r2' }}</strong></p>
                 <input type="file" id="video_file" accept="video/*,.mp4,.webm,.mov,.mkv,.m4v,.avi" class="block w-full text-sm">
                 <div id="upload-progress-wrap" class="hidden">
                     <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
@@ -155,8 +155,10 @@
             xhr.setRequestHeader('Content-Type', contentType);
             if (extraHeaders) {
                 Object.keys(extraHeaders).forEach(function (k) {
-                    if (k.toLowerCase() === 'content-type') return;
-                    try { xhr.setRequestHeader(k, extraHeaders[k]); } catch (e) {}
+                    if (String(k).toLowerCase() === 'content-type') return;
+                    var val = extraHeaders[k];
+                    if (Array.isArray(val)) val = val[0];
+                    try { xhr.setRequestHeader(k, val); } catch (e) {}
                 });
             }
             xhr.upload.onprogress = function (e) {
@@ -168,6 +170,32 @@
             };
             xhr.onerror = function () { reject(new Error('خطأ شبكة أثناء الرفع')); };
             xhr.send(file);
+        });
+    }
+
+    function putFileViaServer(token, file, onPercent) {
+        return new Promise(function (resolve, reject) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', @json($proxyRoute ?? ''), true);
+            xhr.timeout = 10 * 60 * 1000;
+            xhr.setRequestHeader('X-CSRF-TOKEN', csrf);
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.upload.onprogress = function (e) {
+                if (e.lengthComputable && onPercent) onPercent((e.loaded / e.total) * 100);
+            };
+            xhr.onload = function () {
+                var data = {};
+                try { data = JSON.parse(xhr.responseText || '{}'); } catch (e) { data = {}; }
+                if (xhr.status >= 200 && xhr.status < 300 && data.ok) resolve(data);
+                else reject(new Error(data.message || 'فشل الرفع عبر الخادم (HTTP ' + xhr.status + ')'));
+            };
+            xhr.onerror = function () { reject(new Error('تعذّر الاتصال بالخادم أثناء الرفع الاحتياطي.')); };
+            xhr.ontimeout = function () { reject(new Error('انتهت مهلة الرفع عبر الخادم.')); };
+            var fd = new FormData();
+            fd.append('upload_token', token);
+            fd.append('file', file);
+            xhr.send(fd);
         });
     }
 
@@ -201,13 +229,25 @@
             }
 
             setProgress(1, 'جاري الرفع إلى Cloudflare…');
-            await putFile(
-                presignData.upload_url,
-                file,
-                presignData.content_type || file.type || 'video/mp4',
-                presignData.headers || {},
-                function (pct) { setProgress(pct, 'جاري الرفع إلى Cloudflare…'); }
-            );
+            try {
+                await putFile(
+                    presignData.upload_url,
+                    file,
+                    presignData.content_type || file.type || 'video/mp4',
+                    presignData.headers || {},
+                    function (pct) { setProgress(pct, 'جاري الرفع إلى Cloudflare…'); }
+                );
+            } catch (directErr) {
+                if (file.size > 200 * 1024 * 1024) {
+                    throw new Error((directErr && directErr.message) ? directErr.message : 'فشل الرفع المباشر. الملف أكبر من حد الرفع عبر الخادم.');
+                }
+                setProgress(1, 'الرفع المباشر حُجب — التحويل عبر الخادم…');
+                await putFileViaServer(
+                    presignData.upload_token,
+                    file,
+                    function (pct) { setProgress(pct, 'جاري الرفع عبر الخادم…'); }
+                );
+            }
 
             setProgress(99, 'تأكيد الملف…');
             var completeRes = await fetch(@json($completeRoute), {

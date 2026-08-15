@@ -202,6 +202,9 @@ class AdminLibrariesHubTest extends TestCase
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.materials.presign'));
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.materials.proxy'));
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.videos.index'));
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.videos.presign'));
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.videos.proxy'));
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('instructor.libraries.videos.proxy'));
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.curriculum.index'));
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.libraries.curriculum.course'));
     }
@@ -317,6 +320,31 @@ class AdminLibrariesHubTest extends TestCase
             ->assertRedirect();
 
         $this->assertFalse((bool) $video->fresh()->is_published);
+    }
+
+    public function test_video_create_page_includes_proxy_fallback(): void
+    {
+        $admin = $this->admin();
+        $this->actingAs($admin)
+            ->get(route('admin.libraries.videos.create'))
+            ->assertOk()
+            ->assertSee('presign-upload', false)
+            ->assertSee('proxy-upload', false)
+            ->assertSee('الرفع المباشر حُجب', false);
+    }
+
+    public function test_video_proxy_rejects_invalid_token(): void
+    {
+        $admin = $this->admin();
+        $file = UploadedFile::fake()->create('clip.pdf', 80, 'application/pdf');
+
+        $this->actingAs($admin)
+            ->post(route('admin.libraries.videos.proxy'), [
+                'upload_token' => str_repeat('a', 64),
+                'file' => $file,
+            ], ['Accept' => 'application/json'])
+            ->assertStatus(422)
+            ->assertJson(['ok' => false]);
     }
 
     public function test_admin_can_view_curriculum_course(): void

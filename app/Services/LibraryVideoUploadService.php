@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Services\CloudflareR2;
+use App\Services\CurriculumLibraryR2MultipartService;
+use App\Services\CurriculumLibraryStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -24,13 +27,15 @@ class LibraryVideoUploadService
         @set_time_limit(120);
 
         $diskName = self::uploadDiskName();
-        $disk = Storage::disk($diskName);
-        if (! $disk->providesTemporaryUploadUrls()) {
+        if ($diskName === 'r2' && ! CloudflareR2::isReady()) {
             return response()->json([
                 'direct_upload' => false,
-                'message' => 'التخزين الحالي لا يدعم الرفع المباشر إلى Cloudflare. فعّل قرص R2 في الإعدادات.',
-            ], 503);
+                'message' => CurriculumLibraryStorage::adminStatusMessage()
+                    ?: 'التخزين الحالي لا يدعم الرفع المباشر إلى Cloudflare. فعّل قرص R2 في الإعدادات.',
+            ], 422);
         }
+
+        CloudflareR2::ensureBrowserUploadCors();
 
         $mime = self::normalizeVideoMime((string) ($contentType ?? 'video/mp4'));
         $ext = self::mimeToExt($mime, (string) ($filename ?? ''));
@@ -51,7 +56,7 @@ class LibraryVideoUploadService
         );
 
         try {
-            $signed = $disk->temporaryUploadUrl(
+            $signed = Storage::disk($diskName)->temporaryUploadUrl(
                 $path,
                 now()->addMinutes(100),
                 ['ContentType' => $mime]
@@ -71,7 +76,7 @@ class LibraryVideoUploadService
             'upload_url' => $signed['url'],
             'upload_token' => $token,
             'content_type' => $mime,
-            'headers' => $signed['headers'] ?? [],
+            'headers' => CurriculumLibraryR2MultipartService::filterPresignedUploadHeadersForBrowser($signed['headers'] ?? []),
             'disk' => $diskName,
         ]);
     }
@@ -81,7 +86,7 @@ class LibraryVideoUploadService
         @set_time_limit(120);
 
         $cacheKey = 'library_video_presign:'.$uploadToken;
-        $payload = Cache::pull($cacheKey);
+        $payload = Cache::get($cacheKey);
         if (! is_array($payload) || (int) ($payload['user_id'] ?? 0) !== $userId) {
             return response()->json(['message' => 'انتهت صلاحية رابط الرفع أو أنه غير صالح.'], 422);
         }
@@ -105,6 +110,8 @@ class LibraryVideoUploadService
             return response()->json(['message' => 'الملف المرفوع فارغ.'], 422);
         }
 
+        Cache::forget($cacheKey);
+
         return response()->json([
             'ok' => true,
             'file_path' => $path,
@@ -113,6 +120,53 @@ class LibraryVideoUploadService
             'mime_type' => $mime,
             'duration_seconds' => (int) ($durationSeconds ?? 0),
             'file_size_human' => self::humanBytes($size),
+        ]);
+    }
+
+    public static function proxy(int $userId, string $uploadToken, \Illuminate\Http\UploadedFile $file): JsonResponse
+    {
+        @set_time_limit(300);
+
+        $cacheKey = 'library_video_presign:'.$uploadToken;
+        $payload = Cache::get($cacheKey);
+        if (! is_array($payload) || (int) ($payload['user_id'] ?? 0) !== $userId) {
+            return response()->json(['ok' => false, 'message' => 'انتهت صلاحية رابط الرفع أو أنه غير صالح.'], 422);
+        }
+
+        $path = (string) ($payload['path'] ?? '');
+        $diskName = (string) ($payload['disk'] ?? self::uploadDiskName());
+        if ($path === '' || str_contains($path, '..')) {
+            return response()->json(['ok' => false, 'message' => 'مسار التخزين غير صالح.'], 422);
+        }
+
+        $stream = fopen($file->getRealPath(), 'rb');
+        if ($stream === false) {
+            return response()->json(['ok' => false, 'message' => 'تعذّر قراءة الملف للرفع عبر الخادم.'], 422);
+        }
+
+        try {
+            Storage::disk($diskName)->writeStream($path, $stream);
+        } catch (\Throwable $e) {
+            Log::error('Library video proxy upload failed', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'ok' => false,
+                'message' => CurriculumLibraryStorage::uploadFailureHint($e),
+            ], 503);
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }
+
+        if (! Storage::disk($diskName)->exists($path)) {
+            return response()->json(['ok' => false, 'message' => 'تعذّر حفظ الفيديو على Cloudflare عبر الخادم.'], 422);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'file_path' => $path,
+            'storage_disk' => $diskName,
         ]);
     }
 

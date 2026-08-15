@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\LibraryFolder;
 use App\Models\LibraryVideo;
+use App\Services\CloudflareR2;
 use App\Services\LibraryVideoUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -79,6 +80,7 @@ class VideoLibraryController extends Controller
             'uploadDisk' => LibraryVideoUploadService::uploadDiskName(),
             'presignRoute' => route('instructor.libraries.videos.presign'),
             'completeRoute' => route('instructor.libraries.videos.complete'),
+            'proxyRoute' => route('instructor.libraries.videos.proxy'),
             'storeRoute' => route('instructor.libraries.videos.store'),
             'indexRoute' => route('instructor.libraries.videos.index'),
         ]);
@@ -143,6 +145,7 @@ class VideoLibraryController extends Controller
             'uploadDisk' => LibraryVideoUploadService::uploadDiskName(),
             'presignRoute' => route('instructor.libraries.videos.presign'),
             'completeRoute' => route('instructor.libraries.videos.complete'),
+            'proxyRoute' => route('instructor.libraries.videos.proxy'),
             'storeRoute' => route('instructor.libraries.videos.update', $libraryVideo),
             'indexRoute' => route('instructor.libraries.videos.index'),
         ]);
@@ -262,10 +265,26 @@ class VideoLibraryController extends Controller
             'filename' => ['nullable', 'string', 'max:255'],
         ]);
 
+        CloudflareR2::ensureBrowserUploadCors([$request->getSchemeAndHttpHost()]);
+
         return LibraryVideoUploadService::presign(
             (int) $request->user()->id,
             $request->input('content_type'),
             $request->input('filename')
+        );
+    }
+
+    public function proxyUpload(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'upload_token' => ['required', 'string', 'size:64'],
+            'file' => ['required', 'file', 'max:204800'],
+        ]);
+
+        return LibraryVideoUploadService::proxy(
+            (int) $request->user()->id,
+            $validated['upload_token'],
+            $request->file('file')
         );
     }
 

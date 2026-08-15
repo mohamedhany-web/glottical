@@ -31,4 +31,17 @@ class FileUploadSecurityMiddlewareTest extends TestCase
         $this->assertTrue($called);
         $this->assertSame('ok', $response->getContent());
     }
+
+    public function test_generic_file_field_allows_library_videos(): void
+    {
+        $middleware = new FileUploadSecurityMiddleware(new SecurityService);
+        $mimes = new \ReflectionMethod($middleware, 'getAllowedMimes');
+        $allowed = $mimes->invoke($middleware, 'file');
+        $this->assertContains('video/mp4', $allowed);
+        $this->assertContains('mp4', $allowed);
+
+        $size = new \ReflectionMethod($middleware, 'getMaxSize');
+        $max = $size->invoke($middleware, Request::create('/admin/libraries/videos/proxy-upload', 'POST'), 'file');
+        $this->assertGreaterThanOrEqual(200 * 1024 * 1024, $max);
+    }
 }
