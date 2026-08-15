@@ -78,6 +78,10 @@ class FileUploadSecurityMiddleware
                 'jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf',
             ],
             'intro_video' => ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'mp4', 'webm', 'ogg', 'mov'],
+            'animation_video' => [
+                'video/mp4', 'video/webm', 'application/mp4', 'application/octet-stream',
+                'mp4', 'webm',
+            ],
         ];
 
         if (isset($exactMap[$fieldName])) {
@@ -158,6 +162,12 @@ class FileUploadSecurityMiddleware
     private function getMaxSize(Request $request, string $fieldName): int
     {
         $maxBytes = (int) config('upload_limits.max_upload_bytes', 40 * 1024 * 1024);
+
+        if (strcasecmp($fieldName, 'animation_video') === 0) {
+            $appCap = (int) config('curriculum_presentation.animation_video_max_bytes', 500 * 1024 * 1024);
+
+            return min($this->phpIniUploadMaxBytes(), $appCap > 0 ? $appCap : 500 * 1024 * 1024);
+        }
 
         $sizeMap = [
             'video' => 524288000,   // 500 MB

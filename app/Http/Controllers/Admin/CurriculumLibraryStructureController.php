@@ -7,12 +7,14 @@ use App\Models\CurriculumLibraryItem;
 use App\Models\CurriculumLibraryMaterial;
 use App\Models\CurriculumLibrarySection;
 use App\Models\CurriculumPresentationDerivative;
+use App\Services\CloudflareR2;
 use App\Services\CurriculumLibraryR2MultipartService;
 use App\Services\CurriculumLibraryStorage;
 use App\Services\CurriculumPresentationConversionService;
 use Illuminate\Filesystem\AwsS3V3Adapter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -487,6 +489,8 @@ class CurriculumLibraryStructureController extends Controller
             ], CurriculumLibraryStorage::isR2Ready() ? 503 : 422);
         }
 
+        CloudflareR2::ensureBrowserUploadCors([$request->getSchemeAndHttpHost()]);
+
         $maxBytes = (int) config('upload_limits.curriculum_material_max_bytes', 150 * 1024 * 1024);
 
         $validated = $request->validate([
@@ -569,6 +573,93 @@ class CurriculumLibraryStructureController extends Controller
     }
 
     /**
+     * احتياطي عند فشل CORS: المتصفح يرسل الملف لنفس أصل الموقع ثم الخادم يكتبه على R2.
+     */
+    public function proxyMaterialUpload(Request $request, CurriculumLibraryItem $item, CurriculumLibrarySection $section): JsonResponse
+    {
+        $this->assertSectionBelongs($item, $section);
+        @set_time_limit(180);
+
+        if (! CurriculumLibraryStorage::supportsDirectUpload()) {
+            return response()->json([
+                'ok' => false,
+                'message' => CurriculumLibraryStorage::adminStatusMessage()
+                    ?: 'الرفع الموثوق غير متاح حالياً.',
+            ], 503);
+        }
+
+        $maxKb = (int) config('upload_limits.curriculum_material_max_kb', 150 * 1024);
+        $validated = $request->validate([
+            'upload_token' => ['required', 'string', 'size:64'],
+            'file' => ['required', 'file', 'max:'.$maxKb],
+        ]);
+
+        $cacheKey = 'curriculum_library_mat_presign:'.$validated['upload_token'];
+        $payload = Cache::get($cacheKey);
+        if (! is_array($payload)
+            || (int) ($payload['curriculum_library_item_id'] ?? 0) !== (int) $item->id
+            || (int) ($payload['curriculum_library_section_id'] ?? 0) !== (int) $section->id
+            || (int) ($payload['user_id'] ?? 0) !== (int) auth()->id()) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'انتهت صلاحية رابط الرفع أو أنه غير صالح.',
+            ], 422);
+        }
+
+        $path = (string) ($payload['path'] ?? '');
+        $diskName = (string) ($payload['disk'] ?? 'r2');
+        $maxBytes = (int) ($payload['max_bytes'] ?? config('upload_limits.curriculum_material_max_bytes', 150 * 1024 * 1024));
+        if ($path === '' || str_contains($path, '..') || $diskName !== 'r2' || ! str_starts_with($path, 'curriculum-library/materials/')) {
+            return response()->json(['ok' => false, 'message' => 'مسار التخزين غير صالح.'], 422);
+        }
+
+        /** @var UploadedFile $file */
+        $file = $request->file('file');
+        if ($file->getSize() > $maxBytes) {
+            return response()->json(['ok' => false, 'message' => 'حجم الملف يتجاوز الحد المسموح.'], 422);
+        }
+
+        $source = $file->getRealPath() ?: $file->getPathname();
+        if (! is_string($source) || $source === '' || ! is_readable($source)) {
+            return response()->json(['ok' => false, 'message' => 'تعذّر قراءة الملف للرفع عبر الخادم.'], 422);
+        }
+
+        try {
+            $stored = $file->storeAs(dirname($path), basename($path), $diskName);
+            if (! is_string($stored) || $stored === '') {
+                throw new \RuntimeException('Empty storage path after proxy write.');
+            }
+            $path = $stored;
+        } catch (Throwable $e) {
+            Log::error('Curriculum material proxy upload failed', [
+                'item_id' => $item->id,
+                'section_id' => $section->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'ok' => false,
+                'message' => CurriculumLibraryStorage::uploadFailureHint($e),
+            ], 503);
+        }
+
+        $size = $this->r2ObjectSize($diskName, $path);
+        if ($size === null && (int) $file->getSize() > 0) {
+            $size = (int) $file->getSize();
+        }
+        if ($size === null || $size <= 0) {
+            return response()->json(['ok' => false, 'message' => 'تعذّر حفظ الملف على Cloudflare عبر الخادم.'], 422);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'file_path' => $path,
+            'storage_disk' => $diskName,
+            'file_size' => $size,
+        ]);
+    }
+
+    /**
      * بعد PUT الناجح إلى R2: إنشاء سجل المادة في قاعدة البيانات.
      */
     public function completeMaterialDirectUpload(Request $request, CurriculumLibraryItem $item, CurriculumLibrarySection $section)
@@ -638,6 +729,8 @@ class CurriculumLibraryStructureController extends Controller
         if (! CurriculumLibraryStorage::supportsDirectUpload()) {
             return response()->json(['message' => 'الرفع الموثوق غير متاح حالياً.'], 503);
         }
+
+        CloudflareR2::ensureBrowserUploadCors([$request->getSchemeAndHttpHost()]);
 
         $maxBytes = (int) config('upload_limits.curriculum_material_max_bytes', 150 * 1024 * 1024);
         $validated = $request->validate([
@@ -983,6 +1076,35 @@ class CurriculumLibraryStructureController extends Controller
     }
 
     /**
+     * حجم الكائن على R2 بدون الاعتماد على HeadObject/exists — غالباً يفشل على البكت الخاص.
+     */
+    private function r2ObjectSize(string $diskName, string $path): ?int
+    {
+        $disk = Storage::disk($diskName);
+
+        try {
+            $size = (int) $disk->size($path);
+            if ($size > 0) {
+                return $size;
+            }
+        } catch (Throwable) {
+        }
+
+        try {
+            $contents = $disk->get($path);
+            if (is_string($contents) && $contents !== '') {
+                return strlen($contents);
+            }
+            if ($contents === '') {
+                return 0;
+            }
+        } catch (Throwable) {
+        }
+
+        return null;
+    }
+
+    /**
      * التحقق من الملف على R2 وإنشاء سجل المادة.
      */
     private function persistCurriculumMaterialFromR2Path(
@@ -1001,13 +1123,12 @@ class CurriculumLibraryStructureController extends Controller
         }
 
         $disk = Storage::disk($diskName);
-        if (! $disk->exists($path)) {
+        $size = $this->r2ObjectSize($diskName, $path);
+        if ($size === null) {
             return response()->json([
                 'message' => 'الملف غير ظاهر بعد على التخزين. انتظر قليلاً ثم أعد المحاولة.',
             ], 422);
         }
-
-        $size = (int) $disk->size($path);
         if ($size <= 0) {
             try {
                 $disk->delete($path);

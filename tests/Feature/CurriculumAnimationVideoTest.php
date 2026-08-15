@@ -28,6 +28,10 @@ class CurriculumAnimationVideoTest extends TestCase
             'driver' => 'local',
             'root' => storage_path('framework/testing/r2-animation'),
             'url' => 'https://cdn.example.com',
+            'key' => 'test-key',
+            'secret' => 'test-secret',
+            'bucket' => 'test-bucket',
+            'endpoint' => 'https://r2.example.com',
         ]);
         Config::set('app.url', 'https://app.muallimx.test');
         Config::set('app.key', 'base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=');
@@ -224,7 +228,7 @@ class CurriculumAnimationVideoTest extends TestCase
 
         $controller = $this->app->make(\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class);
 
-        $video1 = UploadedFile::fake()->create('export.mp4', 1200, 'video/mp4');
+        $video1 = UploadedFile::fake()->createWithContent('export.mp4', str_repeat('m', 2048));
         $request1 = Request::create(
             '/admin/curriculum-library/items/'.$item->id.'/materials/'.$material->id.'/animation-video',
             'POST',
@@ -247,7 +251,7 @@ class CurriculumAnimationVideoTest extends TestCase
         );
         $firstVideoPath = $material->animation_video_path;
 
-        $video2 = UploadedFile::fake()->create('export-v2.webm', 800, 'video/webm');
+        $video2 = UploadedFile::fake()->createWithContent('export-v2.webm', str_repeat('w', 2048));
         $request2 = Request::create(
             '/admin/curriculum-library/items/'.$item->id.'/materials/'.$material->id.'/animation-video',
             'POST',

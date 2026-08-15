@@ -193,8 +193,8 @@
         }
         return attempt(1);
     }
-    function putWithProgressRetry(url, body, contentType, extraHeaders, onProgress) {
-        var max = 6;
+    function putWithProgressRetry(url, body, contentType, extraHeaders, onProgress, maxTries) {
+        var max = maxTries || 6;
         function tryLoad(n) {
             return new Promise(function (resolve, reject) {
                 var xhr = new XMLHttpRequest();
@@ -314,6 +314,46 @@
         }
         return tryProxy(1);
     }
+    function postFileProxyWithProgressRetry(proxyUrl, csrf, uploadToken, file, onProgress) {
+        var max = 4;
+        function tryProxy(n) {
+            return new Promise(function (resolve, reject) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', proxyUrl, true);
+                xhr.timeout = 0;
+                xhr.setRequestHeader('X-CSRF-TOKEN', csrf);
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.upload.onprogress = function (ev) {
+                    if (ev.lengthComputable && onProgress) onProgress(ev.loaded / ev.total);
+                };
+                function retryOrReject(httpErr) {
+                    if (n < max) {
+                        backoffUploadAttempt(n).then(function () { tryProxy(n + 1).then(resolve, reject); });
+                    } else if (httpErr) reject(httpErr);
+                    else reject(new Error('network'));
+                }
+                xhr.onload = function () {
+                    var data = {};
+                    try { data = JSON.parse(xhr.responseText || '{}'); } catch (eParse) { data = {}; }
+                    if (xhr.status >= 200 && xhr.status < 300 && data.ok) {
+                        resolve(data);
+                        return;
+                    }
+                    if ((xhr.status === 0 || (xhr.status >= 502 && xhr.status <= 504) || xhr.status === 408) && n < max) {
+                        retryOrReject(null);
+                    } else reject(new Error(data.message || ('HTTP ' + xhr.status)));
+                };
+                xhr.onerror = function () { retryOrReject(null); };
+                xhr.onabort = function () { retryOrReject(null); };
+                var fd = new FormData();
+                fd.append('upload_token', uploadToken);
+                fd.append('file', file);
+                xhr.send(fd);
+            });
+        }
+        return tryProxy(1);
+    }
     function humanUploadError(err) {
         if (!err || !err.message) return 'تعذّر إكمال الرفع. تحقق من الاتصال ثم أعد المحاولة.';
         var m = String(err.message);
@@ -397,8 +437,21 @@
                 file,
                 presign.content_type || file.type || 'application/octet-stream',
                 presign.headers || {},
-                function (p) { setProgress(wrap, true, p, 'جاري رفع الملف…'); }
-            ).then(function () { return presign; });
+                function (p) { setProgress(wrap, true, p, 'جاري رفع الملف…'); },
+                2
+            ).catch(function (err) {
+                if (!cfg.proxy) throw err;
+                var mm = err && err.message ? String(err.message) : '';
+                if (mm !== 'network' && mm.indexOf('HTTP ') !== 0) throw err;
+                setPhase(wrap, 'الرفع المباشر حُجب — التحويل عبر الخادم…');
+                return postFileProxyWithProgressRetry(
+                    cfg.proxy,
+                    cfg.csrf,
+                    presign.upload_token,
+                    file,
+                    function (p) { setProgress(wrap, true, p, 'جاري الرفع عبر الخادم…'); }
+                );
+            }).then(function () { return presign; });
         })
         .then(function (presign) {
             setPhase(wrap, 'جاري الإنهاء…');

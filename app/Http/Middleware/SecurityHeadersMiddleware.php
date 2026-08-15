@@ -48,7 +48,12 @@ class SecurityHeadersMiddleware
             return;
         }
 
-        $jitsiDomain = LiveSetting::getJitsiDomain();
+        $jitsiDomain = '';
+        try {
+            $jitsiDomain = LiveSetting::getJitsiDomain();
+        } catch (\Throwable) {
+            $jitsiDomain = '';
+        }
         $jitsiOrigin = $jitsiDomain !== '' ? ' https://'.$jitsiDomain : '';
 
         // فواتيرك: الإطارات والنماذج والسكربتات الديناميكية من نطاقهم (blob: لمسار احتياطي fetch→Blob على صفحة الدفع)
@@ -73,10 +78,12 @@ class SecurityHeadersMiddleware
             'https://cdnjs.cloudflare.com '.
             'https://cdn.jsdelivr.net; '.
             "img-src 'self' data: https: blob:; ".
+            "media-src 'self' https: blob:; ".
             "connect-src 'self' https: ws: wss:; ".
             "frame-src 'self' ".
             'https://iframe.mediadelivery.net '.
             'https://player.mediadelivery.net '.
+            'https://view.officeapps.live.com '.
             $jitsiOrigin.
             $fawaterkCsp.'; '.
             "object-src 'none'; ".

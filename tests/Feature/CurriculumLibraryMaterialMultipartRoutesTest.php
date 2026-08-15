@@ -17,6 +17,7 @@ class CurriculumLibraryMaterialMultipartRoutesTest extends TestCase
             'admin.curriculum-library.items.materials.multipart-abort',
             'admin.curriculum-library.items.materials.multipart-proxy-part',
             'admin.curriculum-library.items.materials.presign-upload',
+            'admin.curriculum-library.items.materials.proxy-upload',
             'admin.curriculum-library.items.materials.complete-direct',
             'admin.curriculum-library.items.materials.store',
             'admin.curriculum-library.items.materials.conversion-status',
@@ -87,6 +88,11 @@ class CurriculumLibraryMaterialMultipartRoutesTest extends TestCase
         $this->assertStringContainsString('pollActiveConversions', $structure);
         $this->assertStringContainsString('5000', $structure);
         $this->assertStringContainsString('animation-video', $section);
+        $this->assertStringContainsString('proxy-upload', $section);
+        $this->assertStringContainsString('الرفع المباشر حُجب', $structure);
+        $this->assertStringContainsString('postFileProxyWithProgressRetry', $structure);
+        $this->assertStringContainsString('cfg.proxy', $structure);
+        $this->assertStringContainsString('إن حُجب CORS', $section);
     }
 
     public function test_guest_multipart_init_is_not_successful(): void

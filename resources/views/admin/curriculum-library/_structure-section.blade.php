@@ -90,6 +90,7 @@
         $useMatDirect = !empty($materialDirectUpload);
         $clMatCfg = [
             'presign' => route('admin.curriculum-library.items.materials.presign-upload', [$item, $section]),
+            'proxy' => route('admin.curriculum-library.items.materials.proxy-upload', [$item, $section]),
             'complete' => route('admin.curriculum-library.items.materials.complete-direct', [$item, $section]),
             'multipartInit' => route('admin.curriculum-library.items.materials.multipart-init', [$item, $section]),
             'multipartSignPart' => route('admin.curriculum-library.items.materials.multipart-sign-part', [$item, $section]),
@@ -168,7 +169,7 @@
                             </div>
                         </div>
                     @endif
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">يُستنتج نوع الملف من الامتداد. HTML وعروض PowerPoint لا تُحمَّل مهما علّمت «تحميل». الحد الأعلى لهذه المواد في المنصة: <strong class="text-slate-700 dark:text-slate-200">{{ $clMatMaxMb }} ميجابايت</strong>@if(!$useMatDirect && $phpUploadMb !== null)؛ في وضع الرفع عبر الخادم قد لا يُقبل ملفاً أكبر من نحو <strong class="text-slate-700 dark:text-slate-200">{{ $phpUploadMb }} ميجابايت</strong> حسب إعدادات الاستضافة@elseif($useMatDirect)؛ الرفع الافتراضي مناسب للملفات الكبيرة؛ الملفات فوق نحو {{ (int) round((int) config('upload_limits.curriculum_r2_multipart_threshold_bytes', 12 * 1024 * 1024) / 1024 / 1024) }} ميجابايت تُجزّأ تلقائياً لاستقرار أفضل@endif. استخدم ZIP عندما يناسب المحتوى.</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">يُستنتج نوع الملف من الامتداد. HTML وعروض PowerPoint لا تُحمَّل مهما علّمت «تحميل». الحد الأعلى لهذه المواد في المنصة: <strong class="text-slate-700 dark:text-slate-200">{{ $clMatMaxMb }} ميجابايت</strong>@if(!$useMatDirect && $phpUploadMb !== null)؛ في وضع الرفع عبر الخادم قد لا يُقبل ملفاً أكبر من نحو <strong class="text-slate-700 dark:text-slate-200">{{ $phpUploadMb }} ميجابايت</strong> حسب إعدادات الاستضافة@elseif($useMatDirect)؛ الرفع يحاول Cloudflare مباشرة، وإن حُجب CORS يكتمل تلقائياً عبر الخادم. الملفات فوق نحو {{ (int) round((int) config('upload_limits.curriculum_r2_multipart_threshold_bytes', 12 * 1024 * 1024) / 1024 / 1024) }} ميجابايت تُجزّأ تلقائياً لاستقرار أفضل@endif. استخدم ZIP عندما يناسب المحتوى.</p>
                     <div class="flex flex-wrap items-center gap-3">
                         <button type="submit" data-cl-mat-main-submit class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black shadow-lg shadow-indigo-500/25 transition-colors">
                             <i class="fas fa-upload text-xs"></i> رفع
