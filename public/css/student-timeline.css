@@ -6587,7 +6587,12 @@ button.st-chip {
   border-color: transparent;
 }
 .st-family-hero__actions .st-pill--outline {
-  border-color: rgba(255,255,255,.45);
+  background: rgba(255, 255, 255, .14);
+  border: 1.5px solid rgba(255, 255, 255, .7);
+  color: #fff;
+}
+.st-family-hero__actions .st-pill--outline:hover {
+  background: rgba(255, 255, 255, .24);
   color: #fff;
 }
 .st-family-hero__trust {
