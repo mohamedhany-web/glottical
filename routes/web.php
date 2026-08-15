@@ -1532,6 +1532,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/tutor-applications', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'hub'])->name('tutor-applications.hub');
         Route::get('/tutor-applications/list', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'index'])->name('tutor-applications.index');
         Route::get('/tutor-applications/activated', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'activated'])->name('tutor-applications.activated');
+        Route::get('/tutor-applications/{tutorApplication}/files/{kind}', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'file'])
+            ->where('kind', 'photo|id|certificate|video')
+            ->name('tutor-applications.file');
         Route::get('/tutor-applications/{tutorApplication}', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'show'])->name('tutor-applications.show');
         Route::post('/tutor-applications/{tutorApplication}/approve', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'approve'])->name('tutor-applications.approve');
         Route::post('/tutor-applications/{tutorApplication}/activate', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'activate'])->name('tutor-applications.activate');

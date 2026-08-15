@@ -275,4 +275,62 @@ class TutorApplyFlowTest extends TestCase
 
         $this->assertTrue($user->fresh()->canAccessInstructorPanel());
     }
+
+    public function test_admin_application_photo_is_served_through_authenticated_file_route(): void
+    {
+        Storage::fake('public');
+        config(['filesystems.public_media_disk' => 'public']);
+
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $photo = UploadedFile::fake()->image('toqa.jpg', 200, 200);
+        $photoPath = \App\Services\TutorApplicationStorage::storePhoto($photo);
+
+        $application = TutorApplication::create([
+            'full_name' => 'Toqa Omar',
+            'email' => 'toqa@example.com',
+            'city' => 'October gardens - Giza',
+            'headline' => 'معلمة',
+            'photo_path' => $photoPath,
+            'status' => TutorApplication::STATUS_PENDING,
+        ]);
+
+        $fileUrl = route('admin.tutor-applications.file', [$application, 'photo']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.tutor-applications.show', $application))
+            ->assertOk()
+            ->assertSee($fileUrl, false)
+            ->assertDontSee('r2.dev', false);
+
+        $this->actingAs($admin)
+            ->get($fileUrl)
+            ->assertOk()
+            ->assertHeader('content-type', 'image/jpeg')
+            ->assertStreamedContent(Storage::disk('public')->get($photoPath));
+
+        $this->post('/logout');
+
+        $this->get($fileUrl)->assertRedirect();
+    }
+
+    public function test_media_proxy_streams_application_photo_from_cloud_disk_without_redirect(): void
+    {
+        Storage::fake('r2');
+        config([
+            'filesystems.public_media_disk' => 'r2',
+            'filesystems.r2_public_url' => 'https://pub-example.r2.dev',
+        ]);
+
+        $path = 'tutor-applications/photos/toqa.jpg';
+        Storage::disk('r2')->put($path, 'fake-jpeg-bytes');
+
+        $this->get('/media/'.$path)
+            ->assertOk()
+            ->assertStreamedContent('fake-jpeg-bytes');
+    }
 }

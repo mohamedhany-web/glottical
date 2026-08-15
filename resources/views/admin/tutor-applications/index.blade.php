@@ -129,8 +129,8 @@
                         <tr class="transition hover:bg-[#f7f8fa]">
                             <td class="px-5 py-3">
                                 <div class="flex items-center gap-3">
-                                    @if($app->photoUrl())
-                                        <img src="{{ $app->photoUrl() }}" alt="" class="size-10 rounded-xl border border-line object-cover">
+                                    @if($app->photo_path)
+                                        <img src="{{ route('admin.tutor-applications.file', [$app, 'photo']) }}" alt="" class="size-10 rounded-xl border border-line object-cover">
                                     @else
                                         <span class="inline-flex size-10 items-center justify-center rounded-xl bg-canvas-muted font-bold text-muted">{{ mb_substr($app->full_name, 0, 1) }}</span>
                                     @endif

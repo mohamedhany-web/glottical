@@ -24,21 +24,47 @@ class TutorApplicationStorage
         return PublicMediaStorage::resolvedDisk();
     }
 
-    public static function publicUrl(?string $path): ?string
+    public static function storedRelativePath(?string $path): ?string
     {
         if (! is_string($path) || trim($path) === '') {
             return null;
         }
 
-        $path = trim($path);
-        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
-            return $path;
+        $value = trim(str_replace('\\', '/', $path));
+
+        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+            $urlPath = parse_url($value, PHP_URL_PATH);
+            if (! is_string($urlPath) || $urlPath === '') {
+                return null;
+            }
+            $value = $urlPath;
         }
 
-        return PublicStorageUrl::fromPathStable(
-            PublicMediaStorage::normalizePath($path),
-            self::resolvedDisk()
-        );
+        $value = ltrim($value, '/');
+        foreach (['storage/', 'media/', 'public/'] as $prefix) {
+            if (str_starts_with($value, $prefix)) {
+                $value = substr($value, strlen($prefix));
+            }
+        }
+
+        if (preg_match('#(tutor-applications/.+)$#', $value, $m)) {
+            return PublicMediaStorage::normalizePath($m[1]);
+        }
+
+        $value = PublicMediaStorage::normalizePath($value);
+
+        return $value !== '' ? $value : null;
+    }
+
+    public static function publicUrl(?string $path): ?string
+    {
+        $relative = self::storedRelativePath($path);
+        if ($relative === null) {
+            return null;
+        }
+
+        // ملفات التقديم على R2 الخاص — لا نستخدم رابط CDN العام لأنه يرجع 404.
+        return PublicStorageUrl::localWebUrl($relative);
     }
 
     public static function storePhoto(UploadedFile $file, ?string $oldPath = null): string
@@ -95,7 +121,7 @@ class TutorApplicationStorage
             Storage::disk('public')->makeDirectory($directory);
             $stored = $file->storeAs($directory, $name, 'public');
         } else {
-            $stored = Storage::disk($disk)->putFileAs($directory, $file, $name, ['visibility' => 'public']);
+            $stored = Storage::disk($disk)->putFileAs($directory, $file, $name);
         }
 
         if (! is_string($stored) || $stored === '') {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\StorageFileController;
 use App\Models\TutorApplication;
 use App\Models\User;
 use App\Services\TutorApplicationActivationService;
@@ -11,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\Response;
 
 class TutorApplicationController extends Controller
 {
@@ -114,6 +116,24 @@ class TutorApplicationController extends Controller
             'application' => $tutorApplication,
             'applyUrl' => $applyUrl,
         ]);
+    }
+
+    public function file(TutorApplication $tutorApplication, string $kind): Response
+    {
+        $path = match ($kind) {
+            'photo' => $tutorApplication->photo_path,
+            'id' => $tutorApplication->id_document_path,
+            'certificate' => $tutorApplication->certificate_path,
+            'video' => $tutorApplication->intro_video_path,
+            default => abort(404),
+        };
+
+        $relative = TutorApplicationStorage::storedRelativePath($path);
+        if ($relative === null) {
+            abort(404);
+        }
+
+        return app(StorageFileController::class)->show(request(), $relative);
     }
 
     public function approve(TutorApplication $tutorApplication): RedirectResponse

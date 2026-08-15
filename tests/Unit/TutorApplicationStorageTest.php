@@ -36,5 +36,32 @@ class TutorApplicationStorageTest extends TestCase
 
         $this->assertTrue(TutorApplicationStorage::isPdf($idPath));
         $this->assertFalse(TutorApplicationStorage::isPdf($photoPath));
+
+        config(['app.url' => 'https://glottical.com']);
+        $url = TutorApplicationStorage::publicUrl($photoPath);
+        $this->assertNotNull($url);
+        $this->assertStringContainsString('/media/tutor-applications/photos/', $url);
+        $this->assertStringNotContainsString('r2.dev', $url);
+    }
+
+    public function test_public_url_normalizes_storage_prefix_and_full_urls(): void
+    {
+        config(['app.url' => 'https://glottical.com', 'filesystems.r2_public_url' => 'https://pub-example.r2.dev']);
+
+        $this->assertSame(
+            'tutor-applications/photos/toqa.jpg',
+            TutorApplicationStorage::storedRelativePath('storage/tutor-applications/photos/toqa.jpg')
+        );
+        $this->assertSame(
+            'tutor-applications/photos/toqa.jpg',
+            TutorApplicationStorage::storedRelativePath('https://glottical.com/storage/tutor-applications/photos/toqa.jpg')
+        );
+        $this->assertSame(
+            'tutor-applications/photos/toqa.jpg',
+            TutorApplicationStorage::storedRelativePath('https://pub-example.r2.dev/tutor-applications/photos/toqa.jpg')
+        );
+
+        $url = TutorApplicationStorage::publicUrl('https://pub-example.r2.dev/tutor-applications/photos/toqa.jpg');
+        $this->assertStringContainsString('/media/tutor-applications/photos/toqa.jpg', (string) $url);
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\PublicStorageUrl;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -33,6 +32,10 @@ class StorageFileController extends Controller
                 'webp' => 'image/webp',
                 'svg' => 'image/svg+xml',
                 'pdf' => 'application/pdf',
+                'mp4' => 'video/mp4',
+                'webm' => 'video/webm',
+                'mov' => 'video/quicktime',
+                'm4v' => 'video/mp4',
                 default => 'application/octet-stream',
             };
         };
@@ -49,13 +52,13 @@ class StorageFileController extends Controller
             return $headers;
         };
 
-        // 1) الملف المحلي أولاً — صور البروفايل تُحفظ غالباً على public حتى مع تفعيل R2 لوسائط أخرى
+        // 1) الملف المحلي أولاً — عبر قرص public (يشمل Storage::fake في الاختبارات)
         $localResponse = $this->serveLocalPublicFile($path, $mimeFromExtension, $headersFor);
         if ($localResponse !== null) {
             return $localResponse;
         }
 
-        // 2) السحابة — فقط إن كان الملف موجوداً فعلياً (لا نولّد روابط موقّعة لملفات غير موجودة)
+        // 2) السحابة — نمرّر الملف عبر Laravel. التحويل إلى رابط R2 العام يفشل بـ 404 عندما يكون الـ bucket خاصاً.
         foreach (['r2', 's3'] as $cloudDisk) {
             try {
                 $disk = Storage::disk($cloudDisk);
@@ -63,16 +66,20 @@ class StorageFileController extends Controller
                     continue;
                 }
 
-                $directUrl = PublicStorageUrl::cloudDirectUrl($cloudDisk, $path);
-                if ($directUrl !== null && ! PublicStorageUrl::isApplicationProxyUrl($directUrl)) {
-                    return redirect()->away($directUrl, 302, [
-                        'Cache-Control' => 'public, max-age=604800',
-                    ]);
+                $mimeType = $mimeFromExtension($path);
+                $headers = $headersFor($mimeType, $path);
+
+                $stream = $disk->readStream($path);
+                if (is_resource($stream)) {
+                    return response()->stream(function () use ($stream): void {
+                        fpassthru($stream);
+                        if (is_resource($stream)) {
+                            fclose($stream);
+                        }
+                    }, 200, $headers);
                 }
 
-                $mimeType = $mimeFromExtension($path);
-
-                return response($disk->get($path), 200, $headersFor($mimeType, $path));
+                return response($disk->get($path), 200, $headers);
             } catch (\Throwable $e) {
                 if (config('app.debug')) {
                     Log::warning('Storage cloud read failed', [
@@ -97,6 +104,26 @@ class StorageFileController extends Controller
      */
     private function serveLocalPublicFile(string $path, callable $mimeFromExtension, callable $headersFor): ?Response
     {
+        try {
+            $disk = Storage::disk('public');
+            if ($disk->exists($path)) {
+                $mimeType = $mimeFromExtension($path);
+                $headers = $headersFor($mimeType, $path);
+                $stream = $disk->readStream($path);
+                if (is_resource($stream)) {
+                    return response()->stream(function () use ($stream): void {
+                        fpassthru($stream);
+                        if (is_resource($stream)) {
+                            fclose($stream);
+                        }
+                    }, 200, $headers);
+                }
+
+                return response($disk->get($path), 200, $headers);
+            }
+        } catch (\Throwable) {
+        }
+
         $basePath = storage_path('app/public');
         $filePath = $basePath.DIRECTORY_SEPARATOR.str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
 

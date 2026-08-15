@@ -11,6 +11,15 @@
     if (! $direct && $application->introVideoFileUrl()) {
         $direct = $application->introVideoFileUrl();
     }
+    $photoFileUrl = $application->photo_path
+        ? route('admin.tutor-applications.file', [$application, 'photo'])
+        : null;
+    $idFileUrl = $application->id_document_path
+        ? route('admin.tutor-applications.file', [$application, 'id'])
+        : null;
+    $certificateFileUrl = $application->certificate_path
+        ? route('admin.tutor-applications.file', [$application, 'certificate'])
+        : null;
     $genderLabel = match ($application->gender) {
         'male' => 'ذكر',
         'female' => 'أنثى',
@@ -71,8 +80,10 @@
         <div class="space-y-5">
             <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
                 <div class="flex items-start gap-4">
-                    @if($application->photoUrl())
-                        <img src="{{ $application->photoUrl() }}" alt="" class="size-20 rounded-2xl border border-line object-cover">
+                    @if($photoFileUrl)
+                        <a href="{{ $photoFileUrl }}" target="_blank" rel="noopener" class="shrink-0">
+                            <img src="{{ $photoFileUrl }}" alt="" class="size-20 rounded-2xl border border-line object-cover">
+                        </a>
                     @else
                         <span class="inline-flex size-20 items-center justify-center rounded-2xl bg-canvas-muted text-xl font-bold text-muted">{{ mb_substr($application->full_name, 0, 1) }}</span>
                     @endif
@@ -183,9 +194,9 @@
             <article class="rounded-2xl border border-line bg-surface p-5 shadow-soft space-y-4">
                 <h3 class="text-base font-semibold text-ink">المستندات المرفوعة</h3>
                 @foreach([
-                    ['label' => 'الصورة الشخصية', 'url' => $application->photoUrl(), 'pdf' => false],
-                    ['label' => 'البطاقة / الجواز', 'url' => $application->idDocumentUrl(), 'pdf' => $application->idDocumentIsPdf()],
-                    ['label' => 'الشهادة / الإجازة', 'url' => $application->certificateUrl(), 'pdf' => $application->certificateIsPdf()],
+                    ['label' => 'الصورة الشخصية', 'url' => $photoFileUrl, 'pdf' => false],
+                    ['label' => 'البطاقة / الجواز', 'url' => $idFileUrl, 'pdf' => $application->idDocumentIsPdf()],
+                    ['label' => 'الشهادة / الإجازة', 'url' => $certificateFileUrl, 'pdf' => $application->certificateIsPdf()],
                 ] as $doc)
                     <div>
                         <p class="mb-1.5 text-xs font-medium text-muted">{{ $doc['label'] }}</p>
