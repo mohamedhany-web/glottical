@@ -213,7 +213,7 @@ return [
     'no_messages_yet' => 'No messages',
     'start_chat_hint' => 'Start the conversation with a short message',
     'no_threads' => 'No chats yet',
-    'no_threads_hint' => 'A chat opens automatically when you are assigned a private-lesson teacher.',
+    'no_threads_hint' => 'A chat opens automatically after you are placed with a teacher or join their class.',
     'quick_links' => 'Shortcuts',
     'back_to_timeline' => 'Back to timeline',
     'open_private_lessons' => 'Open private lessons',

@@ -11,6 +11,7 @@ use App\Models\TutoringGroupBooking;
 use App\Models\User;
 use App\Services\OneToOneAvailabilityService;
 use App\Services\OneToOneSessionService;
+use App\Services\PrivateCoursesCoreService;
 use App\Services\StudentEntitlementService;
 use App\Services\TutoringGroupAvailabilityService;
 use App\Services\TutoringGroupOrchestrationService;
@@ -535,6 +536,15 @@ class PlacementController extends Controller
             });
         } catch (\InvalidArgumentException $e) {
             return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        if (PrivateCoursesCoreService::threadsReady()) {
+            PrivateCoursesCoreService::ensureThread(
+                (int) $entitlement->user_id,
+                (int) $booking->instructor_id,
+                null,
+                'تواصل مع المعلم'
+            );
         }
 
         return redirect()

@@ -138,7 +138,7 @@ class TutoringClassService
         bool $countSeat = true,
         ?string $notes = null,
     ): TutoringCohortEnrollment {
-        return DB::transaction(function () use ($cohort, $user, $orderId, $entitlementId, $countSeat, $notes) {
+        $enrollment = DB::transaction(function () use ($cohort, $user, $orderId, $entitlementId, $countSeat, $notes) {
             $existing = TutoringCohortEnrollment::query()
                 ->where('tutoring_group_cohort_id', $cohort->id)
                 ->where('user_id', $user->id)
@@ -193,6 +193,19 @@ class TutoringClassService
 
             return $enrollment;
         });
+
+        $cohort->loadMissing('tutoringGroup');
+        $instructorId = (int) ($cohort->tutoringGroup?->instructor_id ?? 0);
+        if ($instructorId > 0 && PrivateCoursesCoreService::threadsReady()) {
+            PrivateCoursesCoreService::ensureThread(
+                (int) $user->id,
+                $instructorId,
+                null,
+                'مجتمع الفصل · '.$cohort->title
+            );
+        }
+
+        return $enrollment;
     }
 
     public static function cancelEnrollment(TutoringCohortEnrollment $enrollment, bool $releaseSeat = true): TutoringCohortEnrollment

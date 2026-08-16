@@ -236,7 +236,15 @@
             </ol>
         </section>
 
-        @if($instructorName && Route::has('student.private-messages.index'))
+        @php $instructorUser = $cohort->tutoringGroup?->instructor; @endphp
+        @if($instructorName && $instructorUser && Route::has('student.private-messages.with'))
+            <a href="{{ route('student.private-messages.with', $instructorUser) }}" class="st-event-card st-event-card--purple st-class-teacher-link">
+                <img class="st-event-card__mask" src="{{ $eventMasks[0] }}" alt="" width="120" height="120">
+                <p class="st-event-card__kicker">{{ __('student_timeline.teacher') }}</p>
+                <h3>{{ $instructorName }}</h3>
+                <p class="st-event-card__sub">{{ __('student_timeline.open_chats') }}</p>
+            </a>
+        @elseif($instructorName && Route::has('student.private-messages.index'))
             <a href="{{ route('student.private-messages.index') }}" class="st-event-card st-event-card--purple st-class-teacher-link">
                 <img class="st-event-card__mask" src="{{ $eventMasks[0] }}" alt="" width="120" height="120">
                 <p class="st-event-card__kicker">{{ __('student_timeline.teacher') }}</p>

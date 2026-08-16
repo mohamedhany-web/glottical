@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Instructor;
 use App\Http\Controllers\Controller;
 use App\Models\PrivateLessonMessage;
 use App\Models\PrivateLessonThread;
+use App\Models\User;
 use App\Services\PrivateCoursesCoreService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,6 +16,8 @@ class PrivateMessagesController extends Controller
 {
     public function index(Request $request): View
     {
+        PrivateCoursesCoreService::syncThreadsForInstructor((int) Auth::id());
+
         $q = trim((string) $request->query('q', ''));
 
         $threads = PrivateLessonThread::query()
@@ -40,6 +43,26 @@ class PrivateMessagesController extends Controller
             'threads' => $threads,
             'searchQuery' => $q,
         ]);
+    }
+
+    public function openWith(User $student): RedirectResponse
+    {
+        $instructor = Auth::user();
+        abort_unless($student->isStudent(), 404);
+        abort_unless(
+            in_array((int) $student->id, PrivateCoursesCoreService::studentIdsForInstructor((int) $instructor->id), true),
+            403,
+            'لا يمكنك مراسلة هذا الطالب إلا إذا كان مُسكَّناً أو منضماً لفصلك.'
+        );
+
+        $thread = PrivateCoursesCoreService::ensureThread(
+            (int) $student->id,
+            (int) $instructor->id,
+            null,
+            'تواصل مع المعلم'
+        );
+
+        return redirect()->route('instructor.private-messages.show', $thread);
     }
 
     public function show(PrivateLessonThread $thread): View

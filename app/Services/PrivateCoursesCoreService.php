@@ -3,24 +3,188 @@
 namespace App\Services;
 
 use App\Models\Notification;
+use App\Models\OneToOneSession;
 use App\Models\PrivateLessonMessage;
 use App\Models\PrivateLessonThread;
 use App\Models\StudentInstructorAssignment;
 use App\Models\StudentReception;
+use App\Models\TutoringCohortEnrollment;
+use App\Models\TutoringGroup;
+use App\Models\TutoringGroupBooking;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * خدمات كورسات بريفيت: تواصل طالب↔معلم + استقبال + إشعار التسكين.
  */
 class PrivateCoursesCoreService
 {
+    public static function threadsReady(): bool
+    {
+        return Schema::hasTable('private_lesson_threads')
+            && Schema::hasTable('private_lesson_messages');
+    }
+
+    /**
+     * معلمو الطالب من التسكين / الفصل / التعيين — لفتح المحادثة حتى بدون assignment قديم.
+     *
+     * @return array<int, int>
+     */
+    public static function instructorIdsForStudent(int $studentId): array
+    {
+        $ids = collect();
+
+        if (Schema::hasTable('one_to_one_sessions')) {
+            $ids = $ids->merge(
+                OneToOneSession::query()
+                    ->where('student_id', $studentId)
+                    ->where('status', '!=', OneToOneSession::STATUS_CANCELLED)
+                    ->pluck('instructor_id')
+            );
+        }
+
+        if (Schema::hasTable('tutoring_cohort_enrollments')) {
+            $ids = $ids->merge(
+                TutoringCohortEnrollment::query()
+                    ->where('user_id', $studentId)
+                    ->where('status', TutoringCohortEnrollment::STATUS_ACTIVE)
+                    ->with('cohort.tutoringGroup')
+                    ->get()
+                    ->map(fn (TutoringCohortEnrollment $row) => $row->cohort?->tutoringGroup?->instructor_id)
+            );
+        }
+
+        if (Schema::hasTable('student_instructor_assignments')) {
+            $ids = $ids->merge(
+                StudentInstructorAssignment::query()
+                    ->where('student_id', $studentId)
+                    ->where('status', StudentInstructorAssignment::STATUS_ACTIVE)
+                    ->pluck('instructor_id')
+            );
+        }
+
+        if (Schema::hasTable('tutoring_group_bookings')) {
+            $ids = $ids->merge(
+                TutoringGroupBooking::query()
+                    ->where('user_id', $studentId)
+                    ->whereIn('status', [
+                        TutoringGroupBooking::STATUS_PENDING,
+                        TutoringGroupBooking::STATUS_CONFIRMED,
+                    ])
+                    ->pluck('instructor_id')
+            );
+        }
+
+        return $ids
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public static function studentIdsForInstructor(int $instructorId): array
+    {
+        $ids = collect();
+
+        if (Schema::hasTable('one_to_one_sessions')) {
+            $ids = $ids->merge(
+                OneToOneSession::query()
+                    ->where('instructor_id', $instructorId)
+                    ->where('status', '!=', OneToOneSession::STATUS_CANCELLED)
+                    ->pluck('student_id')
+            );
+        }
+
+        if (Schema::hasTable('tutoring_groups') && Schema::hasTable('tutoring_cohort_enrollments')) {
+            $groupIds = TutoringGroup::query()->where('instructor_id', $instructorId)->pluck('id');
+            $cohortIds = \App\Models\TutoringGroupCohort::query()
+                ->whereIn('tutoring_group_id', $groupIds)
+                ->pluck('id');
+            $ids = $ids->merge(
+                TutoringCohortEnrollment::query()
+                    ->whereIn('tutoring_group_cohort_id', $cohortIds)
+                    ->where('status', TutoringCohortEnrollment::STATUS_ACTIVE)
+                    ->pluck('user_id')
+            );
+        }
+
+        if (Schema::hasTable('student_instructor_assignments')) {
+            $ids = $ids->merge(
+                StudentInstructorAssignment::query()
+                    ->where('instructor_id', $instructorId)
+                    ->where('status', StudentInstructorAssignment::STATUS_ACTIVE)
+                    ->pluck('student_id')
+            );
+        }
+
+        if (Schema::hasTable('tutoring_group_bookings')) {
+            $ids = $ids->merge(
+                TutoringGroupBooking::query()
+                    ->where('instructor_id', $instructorId)
+                    ->whereIn('status', [
+                        TutoringGroupBooking::STATUS_PENDING,
+                        TutoringGroupBooking::STATUS_CONFIRMED,
+                    ])
+                    ->pluck('user_id')
+            );
+        }
+
+        return $ids
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    public static function studentCanMessageInstructor(int $studentId, int $instructorId): bool
+    {
+        return in_array($instructorId, self::instructorIdsForStudent($studentId), true);
+    }
+
+    public static function syncThreadsForStudent(int $studentId): void
+    {
+        if (! self::threadsReady() || $studentId < 1) {
+            return;
+        }
+
+        foreach (self::instructorIdsForStudent($studentId) as $instructorId) {
+            if ($instructorId === $studentId) {
+                continue;
+            }
+            self::ensureThread($studentId, $instructorId, null, 'تواصل مع المعلم');
+        }
+    }
+
+    public static function syncThreadsForInstructor(int $instructorId): void
+    {
+        if (! self::threadsReady() || $instructorId < 1) {
+            return;
+        }
+
+        foreach (self::studentIdsForInstructor($instructorId) as $studentId) {
+            if ($studentId === $instructorId) {
+                continue;
+            }
+            self::ensureThread($studentId, $instructorId, null, 'تواصل مع المعلم');
+        }
+    }
+
     public static function ensureThread(
         int $studentId,
         int $instructorId,
         ?int $assignmentId = null,
         ?string $subject = null
     ): PrivateLessonThread {
+        if (! self::threadsReady()) {
+            throw new \InvalidArgumentException('محادثات المعلمين غير مفعّلة بعد.');
+        }
+
         $thread = PrivateLessonThread::query()
             ->where('student_id', $studentId)
             ->where('instructor_id', $instructorId)
@@ -39,7 +203,7 @@ class PrivateCoursesCoreService
             'student_id' => $studentId,
             'instructor_id' => $instructorId,
             'student_instructor_assignment_id' => $assignmentId,
-            'subject' => $subject ?: 'تواصل كورسات بريفيت',
+            'subject' => $subject ?: 'تواصل مع المعلم',
             'status' => PrivateLessonThread::STATUS_OPEN,
             'admin_visible' => true,
         ]);
@@ -240,7 +404,9 @@ class PrivateCoursesCoreService
 
         $assignment->save();
 
-        self::ensureThread($student->id, $instructor->id, $assignment->id);
+        if (self::threadsReady()) {
+            self::ensureThread($student->id, $instructor->id, $assignment->id);
+        }
         self::ensureReception($student->id, $instructor->id, 'assignment');
     }
 }

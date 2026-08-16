@@ -201,7 +201,9 @@
                 @if(Route::has('calendar'))
                     <a href="{{ route('calendar') }}" class="st-pill st-pill--outline st-pill--block">{{ __('student.calendar_title') }}</a>
                 @endif
-                @if(Route::has('student.private-messages.index'))
+                @if($oneToOneSession->instructor && Route::has('student.private-messages.with'))
+                    <a href="{{ route('student.private-messages.with', $oneToOneSession->instructor) }}" class="st-pill st-pill--outline st-pill--block">{{ __('student_timeline.open_chats') }}</a>
+                @elseif(Route::has('student.private-messages.index'))
                     <a href="{{ route('student.private-messages.index') }}" class="st-pill st-pill--outline st-pill--block">{{ __('student_timeline.nav_feed') }}</a>
                 @endif
             </div>

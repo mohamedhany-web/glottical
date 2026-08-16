@@ -59,6 +59,10 @@ class ClassFeedService
             $type = 'question';
         }
 
+        if (! self::tablesReady()) {
+            throw new \InvalidArgumentException('مجتمع الفصل غير جاهز بعد. تحتاج الإدارة تشغيل جداول المنشورات.');
+        }
+
         $post = ClassFeedPost::create([
             'tutoring_group_cohort_id' => $cohort->id,
             'user_id' => $user->id,
@@ -83,6 +87,10 @@ class ClassFeedService
 
     public static function addComment(ClassFeedPost $post, User $user, string $body): ClassFeedComment
     {
+        if (! self::tablesReady()) {
+            throw new \InvalidArgumentException('مجتمع الفصل غير جاهز بعد.');
+        }
+
         $body = trim($body);
         $max = (int) config('school_game.feed.max_body', 1000);
         if ($body === '' || mb_strlen($body) > $max) {

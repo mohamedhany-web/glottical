@@ -922,6 +922,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         // كورسات بريفيت — محاضرات خاصة + رسائل مع المعلم
         Route::get('/private-lectures', [\App\Http\Controllers\Student\PrivateLecturesController::class, 'index'])->name('student.private-lectures.index');
         Route::get('/private-messages', [\App\Http\Controllers\Student\PrivateLecturesController::class, 'messagesIndex'])->name('student.private-messages.index');
+        Route::get('/private-messages/with/{instructor}', [\App\Http\Controllers\Student\PrivateLecturesController::class, 'openWith'])->name('student.private-messages.with');
         Route::get('/private-messages/{thread}', [\App\Http\Controllers\Student\PrivateLecturesController::class, 'messages'])->name('student.private-messages.show');
         Route::post('/private-messages/{thread}', [\App\Http\Controllers\Student\PrivateLecturesController::class, 'sendMessage'])->name('student.private-messages.send');
 
@@ -2185,6 +2186,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/class-feed/{post}/pin', [\App\Http\Controllers\Student\ClassFeedController::class, 'pin'])->name('class-feed.pin');
 
         Route::get('/private-messages', [\App\Http\Controllers\Instructor\PrivateMessagesController::class, 'index'])->name('private-messages.index');
+        Route::get('/private-messages/with/{student}', [\App\Http\Controllers\Instructor\PrivateMessagesController::class, 'openWith'])->name('private-messages.with');
         Route::get('/private-messages/{thread}', [\App\Http\Controllers\Instructor\PrivateMessagesController::class, 'show'])->name('private-messages.show');
         Route::post('/private-messages/{thread}', [\App\Http\Controllers\Instructor\PrivateMessagesController::class, 'send'])->name('private-messages.send');
 

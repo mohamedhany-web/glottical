@@ -46,13 +46,21 @@ class ClassFeedController extends Controller
             'is_pinned' => 'nullable|boolean',
         ]);
 
-        ClassFeedService::createPost(
-            $cohort,
-            $request->user(),
-            $data['body'],
-            $data['post_type'] ?? 'question',
-            (bool) ($request->boolean('is_pinned')),
-        );
+        try {
+            ClassFeedService::createPost(
+                $cohort,
+                $request->user(),
+                $data['body'],
+                $data['post_type'] ?? 'question',
+                (bool) ($request->boolean('is_pinned')),
+            );
+        } catch (\InvalidArgumentException|\Illuminate\Validation\ValidationException $e) {
+            $message = $e instanceof \Illuminate\Validation\ValidationException
+                ? $e->getMessage()
+                : $e->getMessage();
+
+            return $this->backToCommunity($request, $cohort)->with('error', $message);
+        }
 
         return $this->backToCommunity($request, $cohort)
             ->with('success', 'تم نشر مشاركتك في مجتمع الفصل.');
@@ -67,7 +75,12 @@ class ClassFeedController extends Controller
             'body' => 'required|string|max:1000',
         ]);
 
-        ClassFeedService::addComment($post, $request->user(), $data['body']);
+        try {
+            ClassFeedService::addComment($post, $request->user(), $data['body']);
+        } catch (\InvalidArgumentException|\Illuminate\Validation\ValidationException $e) {
+            return $this->backToCommunity($request, $post->cohort)
+                ->with('error', $e->getMessage());
+        }
 
         return $this->backToCommunity($request, $post->cohort)
             ->with('success', 'تم إضافة التعليق.');

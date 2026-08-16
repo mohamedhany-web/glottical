@@ -251,7 +251,7 @@ class OneToOneSessionService
 
         $seriesId = $dates->count() > 1 ? (string) Str::uuid() : null;
 
-        return DB::transaction(function () use ($student, $instructor, $dates, $entitlement, $duration, $bookedBy, $notes, $seriesId, $requireAvailability) {
+        $created = DB::transaction(function () use ($student, $instructor, $dates, $entitlement, $duration, $bookedBy, $notes, $seriesId, $requireAvailability) {
             $maxNumber = (int) OneToOneSession::query()
                 ->where('student_id', $student->id)
                 ->max('session_number');
@@ -333,6 +333,17 @@ class OneToOneSessionService
 
             return $created;
         });
+
+        if (PrivateCoursesCoreService::threadsReady()) {
+            PrivateCoursesCoreService::ensureThread(
+                (int) $student->id,
+                (int) $instructor->id,
+                null,
+                'تواصل مع المعلم'
+            );
+        }
+
+        return $created;
     }
 
     /**
