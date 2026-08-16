@@ -31,7 +31,7 @@
 
     @include('admin.partials.workflow-guide', [
         'title' => 'معالج التسكين',
-        'body' => 'للحصص الفردية يُفضّل التثبيت الشهري (موعدان أسبوعياً) بدل حجز حصة بحصة — أخف على الطالب والمعلم.',
+                        'body' => 'للحصص الفردية يُفضّل التثبيت الشهري: حدد عدد الأسابيع ومواعيد كل أسبوع بدل حجز حصة بحصة.',
         'steps' => [
             'اختر الطالب والباقة (الرصيد يجب أن يكفي عدد الحصص).',
             'للفردي: ثبّت شهرياً، أو احجز عدة مواعيد، أو حصة واحدة.',
@@ -147,7 +147,7 @@
                                 <input type="radio" name="booking_style" value="monthly" class="mt-1" {{ old('booking_style', 'monthly') === 'monthly' ? 'checked' : '' }}>
                                 <span>
                                     <span class="block text-sm font-semibold text-ink">تثبيت شهري</span>
-                                    <span class="mt-0.5 block text-[11px] text-muted">موعدان أسبوعياً يتكرران 4 أسابيع</span>
+                                    <span class="mt-0.5 block text-[11px] text-muted">أنت تختار عدد الأسابيع ومواعيد كل أسبوع</span>
                                 </span>
                             </label>
                             <label class="flex cursor-pointer items-start gap-2 rounded-xl border border-line bg-canvas/50 p-3 has-[:checked]:border-accent has-[:checked]:bg-accent-soft/40">
@@ -185,13 +185,49 @@
                     </div>
 
                     <div id="monthlyPanel" class="md:col-span-2 space-y-3">
+                        @php
+                            $oldWeeks = (int) old('weeks', 4);
+                            $oldWeeklyPerWeek = (int) old('weekly_per_week', 2);
+                            $oldWeeklyPerWeek = max(1, min(7, $oldWeeklyPerWeek ?: 2));
+                            $oldWeeks = max(1, min(16, $oldWeeks ?: 4));
+                            $dayLabels = $dayLabels ?? \App\Services\OneToOneAvailabilityService::dayLabels();
+                        @endphp
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="{{ $label }}" for="weeksInput">عدد الأسابيع</label>
+                                <input type="number" name="weeks" id="weeksInput" class="{{ $field }}" dir="ltr"
+                                       min="1" max="16" step="1" value="{{ $oldWeeks }}" inputmode="numeric">
+                                <div class="mt-2 flex flex-wrap gap-1.5" id="weeksPresets">
+                                    @foreach([1, 2, 4, 6, 8, 12, 16] as $w)
+                                        <button type="button" data-weeks="{{ $w }}"
+                                                class="inline-flex h-8 items-center rounded-lg border border-line bg-canvas px-2.5 text-xs font-semibold text-ink-soft hover:border-accent/40 hover:text-accent {{ (int) $oldWeeks === (int) $w ? 'border-accent bg-accent-soft/50 text-accent' : '' }}">
+                                            {{ $w }} أسبوع
+                                        </button>
+                                    @endforeach
+                                </div>
+                                <p class="mt-1.5 text-[11px] text-muted">من أسبوع واحد حتى 16 أسبوعاً.</p>
+                            </div>
+                            <div>
+                                <label class="{{ $label }}" for="weeklyPerWeekInput">مواعيد كل أسبوع</label>
+                                <input type="number" name="weekly_per_week" id="weeklyPerWeekInput" class="{{ $field }}" dir="ltr"
+                                       min="1" max="7" step="1" value="{{ $oldWeeklyPerWeek }}" inputmode="numeric">
+                                <div class="mt-2 flex flex-wrap gap-1.5" id="weeklyPerWeekPresets">
+                                    @foreach([1, 2, 3, 4, 5] as $n)
+                                        <button type="button" data-weekly="{{ $n }}"
+                                                class="inline-flex h-8 items-center rounded-lg border border-line bg-canvas px-2.5 text-xs font-semibold text-ink-soft hover:border-accent/40 hover:text-accent {{ (int) $oldWeeklyPerWeek === (int) $n ? 'border-accent bg-accent-soft/50 text-accent' : '' }}">
+                                            {{ $n }} {{ $n === 1 ? 'موعد' : 'مواعيد' }}
+                                        </button>
+                                    @endforeach
+                                </div>
+                                <p class="mt-1.5 text-[11px] text-muted">موعد واحد في اليوم… حتى 7 أيام.</p>
+                            </div>
+                        </div>
                         <p class="text-xs text-muted">اليوم والساعة بتوقيت المعلم. تقدر تكتبهم يدوياً بعد واتساب حتى لو الجدول فاضي.</p>
-                        <div class="grid gap-3 sm:grid-cols-2">
-                            @php $dayLabels = $dayLabels ?? \App\Services\OneToOneAvailabilityService::dayLabels(); @endphp
-                            @foreach([0, 1, 2, 3] as $wi)
-                                <div class="rounded-xl border border-line p-3 space-y-2">
-                                    <label class="{{ $label }}" for="weeklySlot{{ $wi }}">الموعد الأسبوعي {{ $wi + 1 }} {{ $wi === 0 ? '*' : '(اختياري)' }}</label>
-                                    <select id="weeklySlot{{ $wi }}" class="{{ $field }}" {{ $wi === 0 ? '' : '' }}>
+                        <div class="grid gap-3 sm:grid-cols-2" id="weeklySlotsGrid">
+                            @foreach(range(0, 6) as $wi)
+                                <div class="weekly-slot-card rounded-xl border border-line p-3 space-y-2 {{ $wi >= $oldWeeklyPerWeek ? 'hidden' : '' }}" data-weekly-index="{{ $wi }}">
+                                    <label class="{{ $label }}" for="weeklySlot{{ $wi }}">الموعد الأسبوعي {{ $wi + 1 }} {{ $wi === 0 ? '*' : '(اختياري إن لم تحتاجه)' }}</label>
+                                    <select id="weeklySlot{{ $wi }}" class="{{ $field }}">
                                         <option value="">من جدول التوافر إن وُجد…</option>
                                     </select>
                                     <div class="grid grid-cols-2 gap-2">
@@ -206,15 +242,7 @@
                                 </div>
                             @endforeach
                         </div>
-                        <div class="max-w-xs">
-                            <label class="{{ $label }}" for="weeksSelect">عدد الأسابيع</label>
-                            <select name="weeks" id="weeksSelect" class="{{ $field }}">
-                                @foreach([4, 3, 2, 5, 6, 8] as $w)
-                                    <option value="{{ $w }}" @selected((string) old('weeks', 4) === (string) $w)>{{ $w }} أسابيع ≈ {{ $w * 2 }} حصة بموعدين</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <p id="monthlyHint" class="text-xs text-muted">سيُولَّد الجدول تلقائياً مثل الفصل ويُحجز من الرصيد دفعة واحدة.</p>
+                        <p id="monthlyHint" class="text-xs text-muted">سيُولَّد الجدول تلقائياً ويُحجز من الرصيد دفعة واحدة.</p>
                     </div>
 
                     <div id="multiPanel" class="md:col-span-2 hidden">
@@ -321,13 +349,17 @@
   var groupSearch = document.getElementById('groupSearch');
   var slotSelect = document.getElementById('slotSelect');
   var multiSlotSelect = document.getElementById('multiSlotSelect');
-  var weeklySlotEls = [0, 1, 2, 3].map(function (i) {
+  var weeklySlotEls = [0, 1, 2, 3, 4, 5, 6].map(function (i) {
     return {
+      index: i,
+      wrap: document.querySelector('[data-weekly-index="' + i + '"]'),
       select: document.getElementById('weeklySlot' + i),
       day: document.getElementById('weeklyDay' + i),
       time: document.getElementById('weeklyTime' + i)
     };
   });
+  var weeksInput = document.getElementById('weeksInput');
+  var weeklyPerWeekInput = document.getElementById('weeklyPerWeekInput');
   var weeklySlot0 = weeklySlotEls[0].select;
   var monthlyPanel = document.getElementById('monthlyPanel');
   var multiPanel = document.getElementById('multiPanel');
@@ -397,6 +429,65 @@
     var opt = instructorSelect.options[instructorSelect.selectedIndex];
     var tz = opt && opt.getAttribute('data-timezone');
     if (tz) timezoneSelect.value = tz;
+  }
+
+  function clampInt(value, min, max, fallback) {
+    var n = parseInt(value, 10);
+    if (isNaN(n)) return fallback;
+    return Math.max(min, Math.min(max, n));
+  }
+
+  function filledWeeklyCount() {
+    return weeklySlotEls.filter(function (row) {
+      return row.wrap && !row.wrap.classList.contains('hidden')
+        && row.day && row.day.value && row.time && row.time.value;
+    }).length;
+  }
+
+  function markPreset(group, attr, value) {
+    if (!group) return;
+    group.querySelectorAll('button').forEach(function (btn) {
+      var on = String(btn.getAttribute(attr)) === String(value);
+      btn.classList.toggle('border-accent', on);
+      btn.classList.toggle('bg-accent-soft/50', on);
+      btn.classList.toggle('text-accent', on);
+    });
+  }
+
+  function updateMonthlyPreview() {
+    if (!monthlyHint) return;
+    var weeks = clampInt(weeksInput && weeksInput.value, 1, 16, 4);
+    var planned = clampInt(weeklyPerWeekInput && weeklyPerWeekInput.value, 1, 7, 2);
+    var filled = filledWeeklyCount();
+    var perWeek = filled > 0 ? filled : planned;
+    var total = perWeek * weeks;
+    if (total > 40) {
+      monthlyHint.textContent = 'الحد في الحجز الواحد 40 حصة. قلّل الأسابيع أو المواعيد الأسبوعية (الآن ' + total + ').';
+      monthlyHint.className = 'text-xs text-danger';
+      return;
+    }
+    monthlyHint.innerHTML = 'سيُحجز <strong>' + total + '</strong> حصة = '
+      + perWeek + ' موعد/أسبوع × ' + weeks + ' أسبوع'
+      + (filled ? '' : ' — عبّئ اليوم والساعة لكل موعد.');
+    monthlyHint.className = filled ? 'text-xs text-emerald-700' : 'text-xs text-muted';
+  }
+
+  function syncWeeklySlotVisibility() {
+    var n = clampInt(weeklyPerWeekInput && weeklyPerWeekInput.value, 1, 7, 2);
+    if (weeklyPerWeekInput) weeklyPerWeekInput.value = String(n);
+    weeklySlotEls.forEach(function (row, i) {
+      if (!row.wrap) return;
+      var show = i < n;
+      row.wrap.classList.toggle('hidden', !show);
+      if (!show) {
+        if (row.select) row.select.value = '';
+        if (row.day) row.day.value = '';
+        if (row.time) row.time.value = '';
+      }
+    });
+    markPreset(document.getElementById('weeklyPerWeekPresets'), 'data-weekly', n);
+    updateMonthlyPreview();
+    refreshSubmit();
   }
 
   function syncPanels() {
@@ -505,12 +596,7 @@
       setOptions(row.select, opts, i === 0 ? 'من جدول التوافر…' : 'اختياري — من الجدول…');
       if (row.select) row.select.disabled = false;
     });
-    if (monthlyHint) {
-      monthlyHint.textContent = opts.length
-        ? 'اختياري: اختر من نوافذ المعلم أو اكتب اليوم والساعة بتوقيته.'
-        : 'لا نوافذ في الجدول — اكتب اليوم والساعة بتوقيت المعلم بعد واتساب.';
-      monthlyHint.className = opts.length ? 'text-xs text-emerald-700' : 'text-xs text-amber-700';
-    }
+    updateMonthlyPreview();
   }
 
   function loadSlots() {
@@ -644,11 +730,53 @@
   weeklySlotEls.forEach(function (row) {
     if (row.select) row.select.addEventListener('change', function () {
       syncWeeklyHidden(row.select, row.day, row.time);
+      updateMonthlyPreview();
       refreshSubmit();
     });
-    if (row.day) row.day.addEventListener('change', refreshSubmit);
-    if (row.time) row.time.addEventListener('input', refreshSubmit);
+    if (row.day) row.day.addEventListener('change', function () {
+      updateMonthlyPreview();
+      refreshSubmit();
+    });
+    if (row.time) row.time.addEventListener('input', function () {
+      updateMonthlyPreview();
+      refreshSubmit();
+    });
   });
+  if (weeksInput) {
+    weeksInput.addEventListener('input', function () {
+      var weeks = clampInt(weeksInput.value, 1, 16, 4);
+      markPreset(document.getElementById('weeksPresets'), 'data-weeks', weeks);
+      updateMonthlyPreview();
+    });
+    weeksInput.addEventListener('change', function () {
+      weeksInput.value = String(clampInt(weeksInput.value, 1, 16, 4));
+      markPreset(document.getElementById('weeksPresets'), 'data-weeks', weeksInput.value);
+      updateMonthlyPreview();
+    });
+  }
+  if (weeklyPerWeekInput) {
+    weeklyPerWeekInput.addEventListener('input', syncWeeklySlotVisibility);
+    weeklyPerWeekInput.addEventListener('change', syncWeeklySlotVisibility);
+  }
+  var weeksPresets = document.getElementById('weeksPresets');
+  if (weeksPresets) {
+    weeksPresets.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-weeks]');
+      if (!btn || !weeksInput) return;
+      weeksInput.value = btn.getAttribute('data-weeks');
+      markPreset(weeksPresets, 'data-weeks', weeksInput.value);
+      updateMonthlyPreview();
+    });
+  }
+  var weeklyPresets = document.getElementById('weeklyPerWeekPresets');
+  if (weeklyPresets) {
+    weeklyPresets.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-weekly]');
+      if (!btn || !weeklyPerWeekInput) return;
+      weeklyPerWeekInput.value = btn.getAttribute('data-weekly');
+      syncWeeklySlotVisibility();
+    });
+  }
   document.querySelectorAll('input[name="booking_style"]').forEach(function (el) {
     el.addEventListener('change', syncPanels);
   });
@@ -658,6 +786,7 @@
   if (mode === 'private' && instructorSelect && instructorSelect.value) loadSlots();
   if (mode === 'group' && groupSelect && groupSelect.value) loadSlots();
   syncPanels();
+  syncWeeklySlotVisibility();
   refreshSubmit();
 })();
 </script>

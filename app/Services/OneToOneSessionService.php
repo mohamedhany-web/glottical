@@ -19,6 +19,8 @@ class OneToOneSessionService
 
     public const MAX_WEEKLY_PATTERN_SLOTS = 7;
 
+    public const MAX_SERIES_WEEKS = 16;
+
     public const MAX_SESSIONS_PER_BOOKING = 40;
 
     /**
@@ -114,7 +116,7 @@ class OneToOneSessionService
     }
 
     /**
-     * تثبيت شهري: موعد أو موعدان أسبوعياً يتكرران لعدد أسابيع (افتراضي 4).
+     * تثبيت شهري: مواعيد أسبوعية (حتى 7) تتكرر لعدد أسابيع (حتى 16).
      *
      * @param  array<int, array{day_of_week:int,time:string}>  $weeklySlots  ISO 1=Mon…7=Sun + H:i
      * @return \Illuminate\Support\Collection<int, OneToOneSession>
@@ -130,7 +132,7 @@ class OneToOneSessionService
         ?Carbon $from = null,
         bool $requireAvailability = true
     ) {
-        $weeks = max(1, min(8, $weeks));
+        $weeks = max(1, min(self::MAX_SERIES_WEEKS, $weeks));
         $normalized = collect($weeklySlots)
             ->map(function ($row) {
                 $day = (int) ($row['day_of_week'] ?? 0);
@@ -339,7 +341,7 @@ class OneToOneSessionService
      */
     public static function expandWeeklyPattern(array $weeklySlots, int $weeks, Carbon $from, ?string $timezone = null): array
     {
-        $weeks = max(1, min(8, $weeks));
+        $weeks = max(1, min(self::MAX_SERIES_WEEKS, $weeks));
         $clockTz = \App\Support\AppTimezone::normalize($timezone) ?? \App\Support\AppTimezone::academy();
         $cursor = $from->copy()->timezone($clockTz)->startOfDay();
         $hardEnd = $cursor->copy()->addWeeks($weeks)->endOfDay();

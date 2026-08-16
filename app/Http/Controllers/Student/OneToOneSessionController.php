@@ -89,7 +89,7 @@ class OneToOneSessionController extends Controller
             'scheduled_at' => ['nullable', 'date', 'after:now'],
             'scheduled_ats' => ['nullable', 'array', 'max:40'],
             'scheduled_ats.*' => ['date', 'after:now'],
-            'weeks' => ['nullable', 'integer', 'min:1', 'max:8'],
+            'weeks' => ['nullable', 'integer', 'min:1', 'max:16'],
             'weekly_slots' => ['nullable', 'array', 'max:7'],
             'weekly_slots.*.day_of_week' => ['nullable', 'integer', 'min:1', 'max:7'],
             'weekly_slots.*.time' => ['nullable', 'string', 'max:8'],
