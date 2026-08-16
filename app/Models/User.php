@@ -1263,10 +1263,14 @@ class User extends Authenticatable
     }
 
     /**
-     * وصول كامل لمكتبة المناهج التفاعلية عبر باقة تتضمن المكتبات.
+     * وصول كامل لمكتبة المناهج التفاعلية: باقة مكتبات للطالب، أو معلم معتمد شغّال.
      */
     public function hasCurriculumLibraryAccess(): bool
     {
+        if ($this->isAcademyWorkingInstructor()) {
+            return true;
+        }
+
         return \App\Services\LibraryFolderAccessService::hasAnyLibraryEntitlement($this);
     }
 

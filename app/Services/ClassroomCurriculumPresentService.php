@@ -172,7 +172,7 @@ class ClassroomCurriculumPresentService
 
         $groups = [];
         foreach ($itemsQuery->get() as $item) {
-            if (! $item->isAccessibleByStudent($host)) {
+            if (! $item->isAccessibleByViewer($host)) {
                 continue;
             }
 
@@ -301,7 +301,7 @@ class ClassroomCurriculumPresentService
             abort(403, 'ليس لديك صلاحية عرض هذا المنهج.');
         }
 
-        if (! $item->isAccessibleByStudent($host)) {
+        if (! $item->isAccessibleByViewer($host)) {
             abort(403, 'هذا المنهج غير متاح لحسابك.');
         }
 

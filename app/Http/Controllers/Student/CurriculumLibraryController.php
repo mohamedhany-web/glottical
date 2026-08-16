@@ -20,7 +20,7 @@ class CurriculumLibraryController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $hasFullAccess = $user && \App\Services\LibraryFolderAccessService::hasAnyLibraryEntitlement($user);
+        $hasFullAccess = $user && $user->hasCurriculumLibraryAccess();
         $usedFreePreview = $user ? CurriculumLibraryPreviewOpen::hasUsedFreePreview($user->id) : false;
 
         $query = CurriculumLibraryItem::active()
@@ -58,7 +58,7 @@ class CurriculumLibraryController extends Controller
     public function show(Request $request, CurriculumLibraryItem $item)
     {
         $user = Auth::user();
-        $hasFullAccess = $user && \App\Services\LibraryFolderAccessService::hasAnyLibraryEntitlement($user);
+        $hasFullAccess = $user && $user->hasCurriculumLibraryAccess();
 
         if (! $item->is_active) {
             abort(404);
@@ -66,7 +66,7 @@ class CurriculumLibraryController extends Controller
 
         $item->load('category');
 
-        if (! $item->isAccessibleByStudent($user)) {
+        if (! $item->isAccessibleByViewer($user)) {
             abort(403, 'هذا المنهج غير متاح لحسابك.');
         }
 
@@ -95,7 +95,7 @@ class CurriculumLibraryController extends Controller
         }
 
         $user = Auth::user();
-        if (! $item->isAccessibleByStudent($user)) {
+        if (! $item->isAccessibleByViewer($user)) {
             abort(403, 'هذا المنهج غير متاح لحسابك.');
         }
 
@@ -133,7 +133,7 @@ class CurriculumLibraryController extends Controller
         }
 
         $user = Auth::user();
-        if (! $item->isAccessibleByStudent($user)) {
+        if (! $item->isAccessibleByViewer($user)) {
             abort(403, 'هذا المنهج غير متاح لحسابك.');
         }
 
@@ -170,7 +170,7 @@ class CurriculumLibraryController extends Controller
         }
 
         $user = Auth::user();
-        if (! $item->isAccessibleByStudent($user)) {
+        if (! $item->isAccessibleByViewer($user)) {
             abort(403, 'هذا المنهج غير متاح لحسابك.');
         }
 
@@ -228,6 +228,7 @@ class CurriculumLibraryController extends Controller
 
         return view('student.curriculum-library.presentation', [
             'item' => $item,
+            'itemShowUrl' => $this->manahijItemShowUrl($item),
             'presentationTitle' => $file->label ?: 'عرض تفاعلي (PowerPoint)',
             'mode' => $payload['mode'],
             'manifestUrl' => $payload['manifestUrl'],
@@ -251,7 +252,7 @@ class CurriculumLibraryController extends Controller
         }
 
         $user = Auth::user();
-        if (! $item->isAccessibleByStudent($user)) {
+        if (! $item->isAccessibleByViewer($user)) {
             abort(403, 'هذا المنهج غير متاح لحسابك.');
         }
 
@@ -286,7 +287,7 @@ class CurriculumLibraryController extends Controller
         }
 
         $user = Auth::user();
-        if (! $item->isAccessibleByStudent($user)) {
+        if (! $item->isAccessibleByViewer($user)) {
             abort(403, 'هذا المنهج غير متاح لحسابك.');
         }
 
@@ -325,7 +326,7 @@ class CurriculumLibraryController extends Controller
         }
 
         $user = Auth::user();
-        if (! $item->isAccessibleByStudent($user)) {
+        if (! $item->isAccessibleByViewer($user)) {
             abort(403, 'هذا المنهج غير متاح لحسابك.');
         }
 
@@ -388,6 +389,7 @@ class CurriculumLibraryController extends Controller
 
         return view('student.curriculum-library.presentation', [
             'item' => $item,
+            'itemShowUrl' => $this->manahijItemShowUrl($item),
             'presentationTitle' => $material->displayTitle(),
             'mode' => $payload['mode'],
             'manifestUrl' => $payload['manifestUrl'],
@@ -599,7 +601,7 @@ class CurriculumLibraryController extends Controller
         }
 
         $user = Auth::user();
-        if (! $item->isAccessibleByStudent($user)) {
+        if (! $item->isAccessibleByViewer($user)) {
             abort(403, 'هذا المنهج غير متاح لحسابك.');
         }
 
@@ -621,7 +623,7 @@ class CurriculumLibraryController extends Controller
         }
 
         $user = Auth::user();
-        if (! $item->isAccessibleByStudent($user)) {
+        if (! $item->isAccessibleByViewer($user)) {
             abort(403, 'هذا المنهج غير متاح لحسابك.');
         }
     }
@@ -636,7 +638,7 @@ class CurriculumLibraryController extends Controller
 
     protected function previewOrSubscriptionGate($user, CurriculumLibraryItem $item): ?\Illuminate\Http\RedirectResponse
     {
-        $hasFullAccess = $user && \App\Services\LibraryFolderAccessService::hasAnyLibraryEntitlement($user);
+        $hasFullAccess = $user && $user->hasCurriculumLibraryAccess();
         if ($hasFullAccess) {
             return null;
         }
@@ -647,6 +649,16 @@ class CurriculumLibraryController extends Controller
         }
 
         return null;
+    }
+
+    protected function manahijItemShowUrl(CurriculumLibraryItem $item): string
+    {
+        $user = Auth::user();
+        if ($user && $user->isAcademyWorkingInstructor() && \Illuminate\Support\Facades\Route::has('instructor.libraries.curriculum.show')) {
+            return route('instructor.libraries.curriculum.show', $item);
+        }
+
+        return route('curriculum-library.show', $item);
     }
 
     protected function packagesUpsellUrl(): string

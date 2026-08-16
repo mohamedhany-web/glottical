@@ -122,6 +122,36 @@
                 </div>
             </div>
 
+            @if($user->isAcademyWorkingInstructor())
+            <div class="rounded-2xl p-5 sm:p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center text-sky-600">
+                        <i class="fas fa-folder-open text-sm"></i>
+                    </span>
+                    مكتباتك وملفات الطلاب
+                </h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">ارفع الماتريال من هنا لطلابك فقط. مناهج الأكاديمية للعرض دون رفع.</p>
+                <div class="space-y-2 text-sm">
+                    <a href="{{ route('instructor.libraries.materials.index') }}" class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/40 hover:border-[#0B3D91]/40">
+                        <span class="font-semibold text-slate-800 dark:text-slate-100"><i class="fas fa-file-upload ml-2 text-sky-600"></i>رفع الماتريال</span>
+                        <i class="fas fa-chevron-left text-slate-400 text-xs"></i>
+                    </a>
+                    <a href="{{ route('instructor.libraries.curriculum.index') }}" class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/40 hover:border-[#0B3D91]/40">
+                        <span class="font-semibold text-slate-800 dark:text-slate-100"><i class="fas fa-book-open ml-2 text-violet-600"></i>عرض مناهج الأكاديمية</span>
+                        <i class="fas fa-chevron-left text-slate-400 text-xs"></i>
+                    </a>
+                    <a href="{{ route('instructor.courses.index') }}" class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/40 hover:border-[#0B3D91]/40">
+                        <span class="font-semibold text-slate-800 dark:text-slate-100"><i class="fas fa-layer-group ml-2 text-amber-600"></i>بناء منهج كورساتك</span>
+                        <i class="fas fa-chevron-left text-slate-400 text-xs"></i>
+                    </a>
+                    <a href="{{ route('instructor.libraries.videos.index') }}" class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/40 hover:border-[#0B3D91]/40">
+                        <span class="font-semibold text-slate-800 dark:text-slate-100"><i class="fas fa-video ml-2 text-rose-600"></i>مكتبة الفيديو</span>
+                        <i class="fas fa-chevron-left text-slate-400 text-xs"></i>
+                    </a>
+                </div>
+            </div>
+            @endif
+
             <div class="rounded-2xl p-5 sm:p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
                 <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
                     <span class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600">

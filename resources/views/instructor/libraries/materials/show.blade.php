@@ -65,15 +65,25 @@
                         <td class="px-4 py-3 text-xs">{{ $m->themeLabel('ar') }} · {{ $m->experience_mode ?: 'download' }}</td>
                         <td class="px-4 py-3">{{ $m->is_visible_to_student ? 'ظاهر' : 'مخفي' }}</td>
                         <td class="px-4 py-3 text-end">
-                            @if($canManage ?? true)
-                            <form method="POST" action="{{ route('instructor.libraries.materials.destroy', [$folder, $m]) }}" onsubmit="return confirm('حذف الملف؟')">
-                                @csrf
-                                @method('DELETE')
-                                <button class="text-rose-600 font-semibold">حذف</button>
-                            </form>
-                            @else
-                                —
-                            @endif
+                            <div class="flex flex-wrap items-center justify-end gap-3">
+                                @if($m->file_path)
+                                    @php
+                                        $mode = $m->experience_mode ?: \App\Support\FamilyLibraryThemes::detectExperienceMode($m->file_name, $m->content_theme);
+                                        $canPlay = \App\Support\FamilyLibraryThemes::isPlayableInPlatform($m->file_name, $mode);
+                                    @endphp
+                                    @if($canPlay)
+                                        <a href="{{ route('instructor.libraries.materials.experience', [$folder, $m]) }}" class="font-semibold text-[#0B3D91] hover:underline">عرض</a>
+                                    @endif
+                                    <a href="{{ route('instructor.libraries.materials.download', [$folder, $m]) }}" class="font-semibold text-[#0B3D91] hover:underline">تحميل</a>
+                                @endif
+                                @if($canManage ?? true)
+                                    <form method="POST" action="{{ route('instructor.libraries.materials.destroy', [$folder, $m]) }}" onsubmit="return confirm('حذف الملف؟')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="text-rose-600 font-semibold">حذف</button>
+                                    </form>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                 @empty

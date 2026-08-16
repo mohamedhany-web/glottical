@@ -24,7 +24,7 @@
      data-default-pane="{{ $defaultPane }}"
      @if($hasAnimationVideo) data-has-animation-video="1" @endif>
     <div class="flex flex-wrap items-center gap-3">
-        <a href="{{ route('curriculum-library.show', $item) }}" class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 text-sm font-semibold">
+        <a href="{{ $itemShowUrl ?? route('curriculum-library.show', $item) }}" class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 text-sm font-semibold">
             <i class="fas fa-arrow-right"></i> العودة لصفحة المنهج
         </a>
     </div>

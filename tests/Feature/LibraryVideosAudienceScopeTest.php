@@ -109,6 +109,9 @@ class LibraryVideosAudienceScopeTest extends TestCase
             Schema::create('academic_years', function (Blueprint $table) {
                 $table->id();
                 $table->string('name')->nullable();
+                $table->unsignedInteger('order')->default(0);
+                $table->unsignedInteger('level_number')->nullable();
+                $table->boolean('is_active')->default(true);
                 $table->timestamps();
             });
         }
@@ -222,11 +225,22 @@ class LibraryVideosAudienceScopeTest extends TestCase
             ->assertSee('فيديو خاص بمعلمي', false)
             ->assertSee('فيديو عام أكاديمية', false);
 
-        // معلم آخر لا يرى فيديوهات زميله في مكتبته
+        // معلم آخر لا يرى فيديوهات زميله، ويرى فيديوهات الأكاديمية
         $this->actingAs($otherTeacher)
             ->get(route('instructor.libraries.videos.index'))
             ->assertOk()
+            ->assertSee('فيديو عام أكاديمية', false)
             ->assertDontSee('فيديو خاص بمعلمي', false);
+
+        $academy = LibraryVideo::query()->where('title', 'فيديو عام أكاديمية')->first();
+        $this->actingAs($otherTeacher)
+            ->get(route('instructor.libraries.videos.watch', $academy))
+            ->assertOk()
+            ->assertSee('فيديو عام أكاديمية', false);
+
+        $this->actingAs($otherTeacher)
+            ->get(route('instructor.libraries.videos.watch', $private))
+            ->assertForbidden();
     }
 
     public function test_admin_store_forces_general_audience(): void

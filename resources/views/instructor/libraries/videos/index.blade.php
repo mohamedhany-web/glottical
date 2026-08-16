@@ -8,8 +8,8 @@
     <section class="flex flex-wrap items-end justify-between gap-4">
         <div>
             <p class="text-xs font-medium text-slate-500">لوحة المعلم</p>
-            <h2 class="mt-1 text-2xl font-semibold text-slate-900">فيديوهات لطلابك</h2>
-            <p class="mt-1 text-sm text-slate-500">تظهر لطلابك فقط وللإدارة — لا تظهر لمعلمين آخرين ولا للعامة.</p>
+            <h2 class="mt-1 text-2xl font-semibold text-slate-900">مكتبة الفيديو</h2>
+            <p class="mt-1 text-sm text-slate-500">فيديوهات الأكاديمية للعرض، وفيديوهاتك تظهر لطلابك فقط — لا لمعلمين آخرين.</p>
         </div>
         <a href="{{ route('instructor.libraries.videos.create') }}" class="inline-flex h-10 items-center gap-2 rounded-xl bg-[#0B3D91] px-4 text-sm font-semibold text-white">
             <i class="fas fa-plus text-xs"></i> إضافة فيديو
@@ -54,7 +54,41 @@
         @endif
     </article>
 
+    @if(($academyVideos ?? collect())->isNotEmpty())
+    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-100 px-4 py-3">
+            <h3 class="font-semibold text-slate-900">فيديوهات الأكاديمية</h3>
+            <p class="mt-0.5 text-xs text-slate-500">عرض فقط — لا تعديل ولا حذف. لا تظهر فيديوهات معلمين آخرين.</p>
+        </div>
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-50 text-xs text-slate-500">
+                <tr>
+                    <th class="px-4 py-3 text-start">العنوان</th>
+                    <th class="px-4 py-3 text-start">المجلد</th>
+                    <th class="px-4 py-3 text-start">المصدر</th>
+                    <th class="px-4 py-3 text-end">عرض</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($academyVideos as $video)
+                    <tr class="border-t border-slate-100">
+                        <td class="px-4 py-3 font-semibold text-slate-900">{{ $video->title }}</td>
+                        <td class="px-4 py-3 text-slate-600">{{ $video->folder?->displayName() ?: '—' }}</td>
+                        <td class="px-4 py-3">{{ $video->sourceLabel() }}</td>
+                        <td class="px-4 py-3 text-end">
+                            <a href="{{ route('instructor.libraries.videos.watch', $video) }}" class="font-semibold text-[#0B3D91] hover:underline">مشاهدة</a>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </section>
+    @endif
+
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-100 px-4 py-3">
+            <h3 class="font-semibold text-slate-900">فيديوهاتك لطلابك</h3>
+        </div>
         <table class="min-w-full text-sm">
             <thead class="bg-slate-50 text-xs text-slate-500">
                 <tr>
@@ -81,6 +115,7 @@
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex flex-wrap gap-3">
+                                <a href="{{ route('instructor.libraries.videos.watch', $video) }}" class="text-[#0B3D91] hover:underline">مشاهدة</a>
                                 <a href="{{ route('instructor.libraries.videos.edit', $video) }}" class="text-[#0B3D91] hover:underline">تعديل</a>
                                 <form method="POST" action="{{ route('instructor.libraries.videos.destroy', $video) }}" onsubmit="return confirm('حذف الفيديو؟')">
                                     @csrf

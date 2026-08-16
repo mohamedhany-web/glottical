@@ -2,6 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\CurriculumLibraryCategory;
+use App\Models\CurriculumLibraryItem;
+use App\Models\CurriculumLibraryMaterial;
+use App\Models\CurriculumLibrarySection;
 use App\Models\InstructorProfile;
 use App\Models\TutorApplication;
 use App\Models\User;
@@ -95,6 +99,101 @@ class InstructorCurriculumLibraryGateTest extends TestCase
             $table->text('notes')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('curriculum_library_categories', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('slug')->nullable();
+            $table->text('description')->nullable();
+            $table->unsignedInteger('order')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->boolean('is_restricted')->default(false);
+            $table->timestamps();
+        });
+
+        Schema::create('curriculum_library_items', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('category_id')->nullable();
+            $table->string('title');
+            $table->string('slug')->unique();
+            $table->text('description')->nullable();
+            $table->longText('content')->nullable();
+            $table->string('grade_level')->nullable();
+            $table->string('subject')->nullable();
+            $table->string('language', 8)->nullable();
+            $table->string('item_type')->nullable();
+            $table->json('meta')->nullable();
+            $table->unsignedInteger('order')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->boolean('is_free_preview')->default(false);
+            $table->timestamps();
+        });
+
+        Schema::create('curriculum_library_category_user', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('category_id');
+            $table->unsignedBigInteger('user_id');
+            $table->timestamps();
+        });
+
+        Schema::create('curriculum_library_item_files', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('curriculum_library_item_id');
+            $table->string('file_type')->nullable();
+            $table->string('label')->nullable();
+            $table->string('path')->nullable();
+            $table->string('storage_disk')->nullable();
+            $table->unsignedInteger('order')->default(0);
+            $table->timestamps();
+        });
+
+        Schema::create('curriculum_library_sections', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('curriculum_library_item_id');
+            $table->unsignedBigInteger('parent_id')->nullable();
+            $table->string('title')->nullable();
+            $table->text('description')->nullable();
+            $table->unsignedInteger('order')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('curriculum_library_materials', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('curriculum_library_section_id')->nullable();
+            $table->string('title')->nullable();
+            $table->string('path')->nullable();
+            $table->string('storage_disk', 32)->nullable();
+            $table->string('original_name')->nullable();
+            $table->string('file_kind', 20)->default('other');
+            $table->boolean('view_in_platform')->default(true);
+            $table->boolean('allow_download')->default(false);
+            $table->unsignedInteger('order')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+    }
+
+    private function makeActivatedInstructor(): User
+    {
+        $teacher = User::factory()->create([
+            'role' => 'instructor',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+        InstructorProfile::create([
+            'user_id' => $teacher->id,
+            'status' => InstructorProfile::STATUS_APPROVED,
+        ]);
+        TutorApplication::create([
+            'user_id' => $teacher->id,
+            'full_name' => $teacher->name,
+            'email' => $teacher->email,
+            'status' => TutorApplication::STATUS_ACTIVATED,
+            'activated_at' => now(),
+        ]);
+
+        return $teacher->fresh();
     }
 
     public function test_new_registrant_cannot_open_curriculum_library(): void
@@ -124,27 +223,132 @@ class InstructorCurriculumLibraryGateTest extends TestCase
 
     public function test_activated_instructor_can_open_curriculum_library(): void
     {
-        $teacher = User::factory()->create([
+        $teacher = $this->makeActivatedInstructor();
+        $item = CurriculumLibraryItem::query()->create([
+            'title' => 'منهج تفاعلي للمعلم',
+            'slug' => 'manahij-teacher-'.uniqid(),
+            'is_active' => true,
+        ]);
+
+        $this->assertTrue($teacher->isAcademyWorkingInstructor());
+        $this->assertTrue($teacher->hasCurriculumLibraryAccess());
+
+        $this->actingAs($teacher)
+            ->get(route('instructor.libraries.curriculum.index'))
+            ->assertOk()
+            ->assertSee('منهج تفاعلي للمعلم', false);
+
+        $this->actingAs($teacher)
+            ->get(route('instructor.libraries.curriculum.show', $item))
+            ->assertOk()
+            ->assertSee('منهج تفاعلي للمعلم', false);
+    }
+
+    public function test_activated_instructor_sees_restricted_manahij_without_allowlist(): void
+    {
+        $teacher = $this->makeActivatedInstructor();
+        $category = CurriculumLibraryCategory::query()->create([
+            'name' => 'قسم خاص',
+            'slug' => 'restricted-'.uniqid(),
+            'is_active' => true,
+            'is_restricted' => true,
+        ]);
+        $item = CurriculumLibraryItem::query()->create([
+            'category_id' => $category->id,
+            'title' => 'منهج مقيّد للمعلمين',
+            'slug' => 'restricted-item-'.uniqid(),
+            'is_active' => true,
+        ]);
+
+        $this->assertFalse($item->isAccessibleByStudent($teacher));
+        $this->assertTrue($item->isAccessibleByViewer($teacher));
+
+        $this->actingAs($teacher)
+            ->get(route('instructor.libraries.curriculum.index'))
+            ->assertOk()
+            ->assertSee('منهج مقيّد للمعلمين', false);
+    }
+
+    public function test_activated_instructor_can_open_manahij_files_without_package(): void
+    {
+        $teacher = $this->makeActivatedInstructor();
+        $item = CurriculumLibraryItem::query()->create([
+            'title' => 'منهج شرائح',
+            'slug' => 'manahij-slides-'.uniqid(),
+            'is_active' => true,
+        ]);
+        $section = CurriculumLibrarySection::query()->create([
+            'curriculum_library_item_id' => $item->id,
+            'title' => 'قسم',
+            'is_active' => true,
+        ]);
+        $material = CurriculumLibraryMaterial::query()->create([
+            'curriculum_library_section_id' => $section->id,
+            'title' => 'عرض HTML',
+            'path' => 'missing.html',
+            'storage_disk' => 'public',
+            'file_kind' => 'html',
+            'view_in_platform' => true,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($teacher)
+            ->get(route('curriculum-library.material.html', [$item, $material]))
+            ->assertStatus(404);
+    }
+
+    public function test_student_cannot_open_instructor_manahij_index(): void
+    {
+        $student = User::factory()->create([
+            'role' => 'student',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $this->actingAs($student)
+            ->get(route('instructor.libraries.curriculum.index'))
+            ->assertRedirect();
+    }
+
+    public function test_new_registrant_cannot_stream_manahij_files(): void
+    {
+        $newbie = User::factory()->create([
             'role' => 'instructor',
             'is_active' => true,
             'password' => Hash::make('password'),
         ]);
         InstructorProfile::create([
-            'user_id' => $teacher->id,
-            'status' => InstructorProfile::STATUS_APPROVED,
+            'user_id' => $newbie->id,
+            'status' => InstructorProfile::STATUS_DRAFT,
         ]);
         TutorApplication::create([
-            'user_id' => $teacher->id,
-            'full_name' => $teacher->name,
-            'email' => $teacher->email,
-            'status' => TutorApplication::STATUS_ACTIVATED,
-            'activated_at' => now(),
+            'user_id' => $newbie->id,
+            'full_name' => $newbie->name,
+            'email' => $newbie->email,
+            'status' => TutorApplication::STATUS_DRAFT,
         ]);
 
-        $this->assertTrue($teacher->fresh()->isAcademyWorkingInstructor());
+        $item = CurriculumLibraryItem::query()->create([
+            'title' => 'منهج مغلق',
+            'slug' => 'manahij-closed-'.uniqid(),
+            'is_active' => true,
+        ]);
+        $section = CurriculumLibrarySection::query()->create([
+            'curriculum_library_item_id' => $item->id,
+            'title' => 'قسم',
+            'is_active' => true,
+        ]);
+        $material = CurriculumLibraryMaterial::query()->create([
+            'curriculum_library_section_id' => $section->id,
+            'title' => 'عرض',
+            'path' => 'missing.html',
+            'file_kind' => 'html',
+            'view_in_platform' => true,
+            'is_active' => true,
+        ]);
 
-        $this->actingAs($teacher)
-            ->get(route('instructor.libraries.curriculum.index'))
-            ->assertOk();
+        $this->actingAs($newbie)
+            ->get(route('curriculum-library.material.html', [$item, $material]))
+            ->assertForbidden();
     }
 }

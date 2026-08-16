@@ -112,6 +112,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'employee.can' => \App\Http\Middleware\EnsureEmployeeCan::class,
             'rbac.strict.admin' => \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
             'instructor.activated' => \App\Http\Middleware\EnsureInstructorPanelAccess::class,
+            'curriculum.viewer' => \App\Http\Middleware\EnsureCurriculumLibraryViewer::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

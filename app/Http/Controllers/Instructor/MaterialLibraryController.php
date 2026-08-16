@@ -10,9 +10,11 @@ use App\Services\LectureMaterialStorage;
 use App\Support\FamilyLibraryThemes;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * ماتريال فولدرات معلم×سنة — رفع للمعلمين المعتمدين فقط.
@@ -138,6 +140,62 @@ class MaterialLibraryController extends Controller
         $material->delete();
 
         return back()->with('success', 'تم حذف الملف.');
+    }
+
+    public function download(LibraryFolder $folder, LectureMaterial $material): StreamedResponse
+    {
+        $this->assertCanViewMaterial($folder, $material);
+
+        return LectureMaterialStorage::download($material);
+    }
+
+    public function experience(LibraryFolder $folder, LectureMaterial $material): View
+    {
+        $this->assertCanViewMaterial($folder, $material);
+
+        $mode = $material->experience_mode
+            ?: FamilyLibraryThemes::detectExperienceMode($material->file_name, $material->content_theme);
+        abort_unless(
+            FamilyLibraryThemes::isPlayableInPlatform($material->file_name, $mode),
+            404,
+            'هذا الملف لا يُشغَّل داخل المنصة.'
+        );
+
+        return view('instructor.libraries.materials.experience', [
+            'material' => $material,
+            'folder' => $folder,
+            'frameUrl' => route('instructor.libraries.materials.experience.raw', [$folder, $material]),
+            'isGame' => $mode === FamilyLibraryThemes::MODE_PLAY
+                || ($material->content_theme === FamilyLibraryThemes::GAMES),
+        ]);
+    }
+
+    public function experienceRaw(LibraryFolder $folder, LectureMaterial $material): Response
+    {
+        $this->assertCanViewMaterial($folder, $material);
+
+        $mode = $material->experience_mode
+            ?: FamilyLibraryThemes::detectExperienceMode($material->file_name, $material->content_theme);
+        abort_unless(
+            FamilyLibraryThemes::isPlayableInPlatform($material->file_name, $mode),
+            404
+        );
+
+        $html = LectureMaterialStorage::getContents($material);
+        abort_unless(is_string($html) && $html !== '', 404, 'تعذر تحميل المحتوى.');
+
+        return response($html, 200, [
+            'Content-Type' => 'text/html; charset=UTF-8',
+            'Content-Security-Policy' => "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; img-src * data: blob:; media-src * data: blob: https:; style-src * 'unsafe-inline'; font-src * data:;",
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    private function assertCanViewMaterial(LibraryFolder $folder, LectureMaterial $material): void
+    {
+        $this->assertCanViewFolder($folder);
+        abort_unless((int) $material->library_folder_id === (int) $folder->id, 404);
     }
 
     private function assertCanViewFolder(LibraryFolder $folder): void

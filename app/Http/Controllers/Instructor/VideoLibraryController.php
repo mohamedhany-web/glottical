@@ -17,7 +17,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
- * فيديوهات المعلم لطلابه فقط — لا تظهر لمعلمين آخرين ولا للعامة.
+ * فيديوهات المعلم لطلابه + فيديوهات الأكاديمية للعرض فقط.
  */
 class VideoLibraryController extends Controller
 {
@@ -45,6 +45,15 @@ class VideoLibraryController extends Controller
             ->paginate(24)
             ->withQueryString();
 
+        $academyVideos = LibraryVideo::query()
+            ->published()
+            ->general()
+            ->whereNull('instructor_id')
+            ->with(['folder:id,name_ar,name_en'])
+            ->ordered()
+            ->limit(48)
+            ->get();
+
         $folders = LibraryFolder::query()
             ->ofKind(LibraryFolder::KIND_VIDEOS)
             ->where('instructor_id', $user->id)
@@ -57,7 +66,7 @@ class VideoLibraryController extends Controller
             ? AcademicYear::query()->ordered()->get(['id', 'name'])
             : collect();
 
-        return view('instructor.libraries.videos.index', compact('videos', 'folders', 'years'));
+        return view('instructor.libraries.videos.index', compact('videos', 'academyVideos', 'folders', 'years'));
     }
 
     public function create(): View
@@ -127,6 +136,29 @@ class VideoLibraryController extends Controller
         return redirect()
             ->route('instructor.libraries.videos.index')
             ->with('success', 'تم إضافة الفيديو — يظهر لطلابك فقط (والإدارة).');
+    }
+
+    public function watch(LibraryVideo $libraryVideo): View
+    {
+        $this->assertCanWatch($libraryVideo);
+
+        $url = $libraryVideo->getUrl();
+        abort_unless($url, 404, 'رابط الفيديو غير متوفر حالياً');
+
+        $embedUrl = VideoHelper::getEmbedUrl($url);
+        $directUrl = $embedUrl ? null : (VideoHelper::getDirectVideoUrl($url) ?: $url);
+        $source = VideoHelper::getVideoSource($url);
+        $thumbnail = VideoHelper::getThumbnail($url);
+
+        return view('instructor.libraries.videos.watch', [
+            'libraryVideo' => $libraryVideo,
+            'embedUrl' => $embedUrl,
+            'directUrl' => $directUrl,
+            'source' => $source,
+            'thumbnail' => $thumbnail,
+            'isOwn' => $libraryVideo->isTeacherPrivate()
+                && (int) $libraryVideo->instructor_id === (int) request()->user()->id,
+        ]);
     }
 
     public function edit(LibraryVideo $libraryVideo): View
@@ -321,6 +353,26 @@ class VideoLibraryController extends Controller
             'is_published' => ['nullable', 'boolean'],
             'clear_file' => ['nullable', 'boolean'],
         ]);
+    }
+
+    private function assertCanWatch(LibraryVideo $video): void
+    {
+        $user = request()->user();
+        if ($video->isTeacherPrivate()) {
+            abort_unless(
+                (int) $video->instructor_id === (int) $user->id,
+                403,
+                'هذا الفيديو ليس لك.'
+            );
+
+            return;
+        }
+
+        abort_unless(
+            $video->is_published && ($video->audience === LibraryVideo::AUDIENCE_GENERAL || $video->audience === null),
+            403,
+            'هذا الفيديو غير متاح للعرض.'
+        );
     }
 
     private function assertOwnsVideo(LibraryVideo $video): void

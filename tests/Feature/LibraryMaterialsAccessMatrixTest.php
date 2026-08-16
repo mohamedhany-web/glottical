@@ -3,10 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\AcademicYear;
+use App\Models\InstructorProfile;
 use App\Models\LectureMaterial;
 use App\Models\LibraryFolder;
 use App\Models\LibraryVideo;
 use App\Models\StudentServiceEntitlement;
+use App\Models\TutorApplication;
 use App\Models\User;
 use App\Services\LibraryFolderAccessService;
 use App\Services\StudentTeacherLinkService;
@@ -14,6 +16,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Tests\Support\BuildsFeatureSchema;
 use Tests\TestCase;
 
@@ -35,6 +38,7 @@ class LibraryMaterialsAccessMatrixTest extends TestCase
                 $table->id();
                 $table->string('name');
                 $table->unsignedInteger('order')->default(0);
+                $table->unsignedInteger('level_number')->nullable();
                 $table->boolean('is_active')->default(true);
                 $table->timestamps();
             });
@@ -139,6 +143,17 @@ class LibraryMaterialsAccessMatrixTest extends TestCase
         } elseif (! Schema::hasColumn('student_service_entitlements', 'tutoring_group_id')) {
             Schema::table('student_service_entitlements', function (Blueprint $table) {
                 $table->foreignId('tutoring_group_id')->nullable();
+            });
+        }
+
+        if (! Schema::hasTable('academic_year_instructors')) {
+            Schema::create('academic_year_instructors', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('academic_year_id');
+                $table->foreignId('instructor_id');
+                $table->text('assigned_courses')->nullable();
+                $table->text('notes')->nullable();
+                $table->timestamps();
             });
         }
     }
@@ -387,5 +402,78 @@ class LibraryMaterialsAccessMatrixTest extends TestCase
                 ->where('title', 'ملف يظهر للإدارة')
                 ->exists()
         );
+    }
+
+    public function test_activated_instructor_can_open_academy_materials_and_download(): void
+    {
+        $teacher = User::factory()->create([
+            'role' => 'instructor',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+        InstructorProfile::create([
+            'user_id' => $teacher->id,
+            'status' => InstructorProfile::STATUS_APPROVED,
+        ]);
+        TutorApplication::create([
+            'user_id' => $teacher->id,
+            'full_name' => $teacher->name,
+            'email' => $teacher->email,
+            'status' => TutorApplication::STATUS_ACTIVATED,
+            'activated_at' => now(),
+        ]);
+        $other = User::factory()->create(['role' => 'instructor', 'is_active' => true]);
+
+        $academy = LibraryFolder::create([
+            'instructor_id' => null,
+            'kind' => LibraryFolder::KIND_MATERIALS,
+            'name_ar' => 'مجلد أكاديمية ظاهر',
+            'slug' => 'academy-visible',
+            'is_active' => true,
+            'requires_library_entitlement' => true,
+            'color' => 'blue',
+            'sort_order' => 0,
+        ]);
+        $foreign = LibraryFolder::create([
+            'instructor_id' => $other->id,
+            'kind' => LibraryFolder::KIND_MATERIALS,
+            'name_ar' => 'مجلد معلم آخر مخفي',
+            'slug' => 'other-hidden',
+            'is_active' => true,
+            'requires_library_entitlement' => false,
+            'color' => 'blue',
+            'sort_order' => 0,
+        ]);
+
+        Storage::fake('public');
+        Storage::disk('public')->put('lecture-materials/folders/'.$academy->id.'/demo.txt', 'ok');
+
+        $material = LectureMaterial::create([
+            'library_folder_id' => $academy->id,
+            'title' => 'ملف أكاديمية للعرض',
+            'file_name' => 'demo.txt',
+            'file_path' => 'lecture-materials/folders/'.$academy->id.'/demo.txt',
+            'storage_disk' => 'public',
+            'is_visible_to_student' => true,
+        ]);
+
+        $this->actingAs($teacher)
+            ->get(route('instructor.libraries.materials.index'))
+            ->assertOk()
+            ->assertSee('مجلد أكاديمية ظاهر', false)
+            ->assertDontSee('مجلد معلم آخر مخفي', false);
+
+        $this->actingAs($teacher)
+            ->get(route('instructor.libraries.materials.show', $academy))
+            ->assertOk()
+            ->assertSee('ملف أكاديمية للعرض', false);
+
+        $this->actingAs($teacher)
+            ->get(route('instructor.libraries.materials.download', [$academy, $material]))
+            ->assertOk();
+
+        $this->actingAs($teacher)
+            ->get(route('instructor.libraries.materials.show', $foreign))
+            ->assertForbidden();
     }
 }

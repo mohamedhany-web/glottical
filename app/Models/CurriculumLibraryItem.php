@@ -95,6 +95,16 @@ class CurriculumLibraryItem extends Model
         return $user && $category->restrictedUsers()->where('users.id', $user->id)->exists();
     }
 
+    /** طالب حسب القيود، أو معلم معتمد يرى كل مناهج الأكاديمية النشطة. */
+    public function isAccessibleByViewer(?User $user): bool
+    {
+        if ($user && $user->isAcademyWorkingInstructor()) {
+            return true;
+        }
+
+        return $this->isAccessibleByStudent($user);
+    }
+
     public function files()
     {
         return $this->hasMany(CurriculumLibraryItemFile::class, 'curriculum_library_item_id')->orderBy('order')->orderBy('id');

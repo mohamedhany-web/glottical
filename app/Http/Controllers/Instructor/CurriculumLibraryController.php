@@ -3,17 +3,16 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
-use App\Models\AcademicSubject;
-use App\Models\AcademicYear;
 use App\Models\AdvancedCourse;
-use App\Models\CourseSection;
 use App\Models\CurriculumItem;
+use App\Models\CurriculumLibraryCategory;
+use App\Models\CurriculumLibraryItem;
+use App\Models\CurriculumLibrarySection;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 /**
- * مكتبة المناهج للمعلم المعتمد فقط (قراءة) — مخفية عن المسجّلين الجدد غير المفعّلين.
+ * مناهج X للمعلم المعتمد: عرض كامل بدون باقة وبدون رفع.
  */
 class CurriculumLibraryController extends Controller
 {
@@ -31,63 +30,66 @@ class CurriculumLibraryController extends Controller
 
     public function index(Request $request): View
     {
-        $years = AcademicYear::query()
-            ->with([
-                'subjects' => fn ($q) => $q->ordered()->with([
-                    'courses' => fn ($cq) => $cq->orderBy('title')->select('id', 'title', 'academic_subject_id'),
-                ]),
-            ])
-            ->withCount('subjects')
-            ->ordered()
-            ->get();
+        $user = $request->user();
 
-        $subjectsQuery = AcademicSubject::query()
-            ->with(['academicYear:id,name'])
-            ->withCount('courses')
+        $query = CurriculumLibraryItem::query()
+            ->active()
+            ->with('category')
             ->ordered();
 
-        if ($request->filled('year_id')) {
-            $subjectsQuery->where('academic_year_id', (int) $request->year_id);
+        if ($request->filled('category_id')) {
+            $query->where('category_id', (int) $request->category_id);
         }
-        if ($request->filled('search')) {
-            $s = trim((string) $request->search);
-            $subjectsQuery->where('name', 'like', "%{$s}%");
+        if ($request->filled('language') && in_array($request->language, ['ar', 'en', 'fr'], true)) {
+            $query->byLanguage($request->language);
         }
-
-        $subjects = $subjectsQuery->paginate(30, ['*'], 'subjects_page')->withQueryString();
-
-        $coursesQuery = AdvancedCourse::query()
-            ->with(['academicSubject:id,name,academic_year_id', 'academicSubject.academicYear:id,name'])
-            ->withCount(['sections', 'lectures'])
-            ->orderByDesc('id');
-
-        if ($request->filled('year_id') && Schema::hasColumn('advanced_courses', 'academic_subject_id')) {
-            $yearId = (int) $request->year_id;
-            $coursesQuery->whereHas('academicSubject', fn ($q) => $q->where('academic_year_id', $yearId));
-        }
-        if ($request->filled('subject_id')) {
-            $coursesQuery->where('academic_subject_id', (int) $request->subject_id);
-        }
-        if ($request->filled('search')) {
-            $s = trim((string) $request->search);
-            $coursesQuery->where('title', 'like', "%{$s}%");
+        if ($request->filled('q')) {
+            $q = trim((string) $request->q);
+            $query->where(function ($qry) use ($q) {
+                $qry->where('title', 'like', "%{$q}%")
+                    ->orWhere('description', 'like', "%{$q}%")
+                    ->orWhere('subject', 'like', "%{$q}%");
+            });
         }
 
-        $courses = $coursesQuery->paginate(20, ['*'], 'courses_page')->withQueryString();
+        $items = $query->paginate(12)->withQueryString();
+        $categories = CurriculumLibraryCategory::query()->active()->ordered()->get();
 
-        $stats = [
-            'years' => AcademicYear::query()->count(),
-            'subjects' => AcademicSubject::query()->count(),
-            'courses' => AdvancedCourse::query()->count(),
-            'sections' => CourseSection::query()->count(),
-            'items' => CurriculumItem::query()->count(),
-        ];
+        $teachingCourses = collect();
+        if ($user && $user->hasTeachingCourses()) {
+            $ids = $user->teachingAdvancedCourseIds();
+            $teachingCourses = AdvancedCourse::query()
+                ->whereIn('id', $ids)
+                ->with(['academicSubject:id,name,academic_year_id', 'academicSubject.academicYear:id,name'])
+                ->withCount('sections')
+                ->orderBy('title')
+                ->get();
+        }
 
-        return view('instructor.libraries.curriculum.index', compact('years', 'subjects', 'courses', 'stats'));
+        return view('instructor.libraries.curriculum.index', compact('items', 'categories', 'teachingCourses'));
+    }
+
+    public function show(CurriculumLibraryItem $item): View
+    {
+        if (! $item->is_active) {
+            abort(404);
+        }
+
+        $item->load(['category', 'files']);
+        $sectionTree = CurriculumLibrarySection::treeForItem($item);
+
+        return view('instructor.libraries.curriculum.show', compact('item', 'sectionTree'));
     }
 
     public function showCourse(AdvancedCourse $course): View
     {
+        $user = request()->user();
+        abort_unless(
+            $user && $user->teachingAdvancedCourseIds()->contains((int) $course->id),
+            403,
+            'هذا الكورس غير مسند لك.'
+        );
+
         $course->load([
             'academicSubject:id,name,academic_year_id',
             'academicSubject.academicYear:id,name',

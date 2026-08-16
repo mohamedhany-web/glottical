@@ -35,6 +35,7 @@ class Phases234LibrariesPricingSmokeTest extends TestCase
             $table->string('slug')->unique();
             $table->string('icon')->nullable();
             $table->string('color')->nullable();
+            $table->string('content_theme')->nullable();
             $table->unsignedInteger('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
             $table->boolean('requires_library_entitlement')->default(true);
@@ -45,6 +46,7 @@ class Phases234LibrariesPricingSmokeTest extends TestCase
             $table->id();
             $table->string('name');
             $table->unsignedInteger('order')->default(0);
+            $table->unsignedInteger('level_number')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
@@ -88,12 +90,37 @@ class Phases234LibrariesPricingSmokeTest extends TestCase
             $table->timestamps();
         });
 
+        Schema::create('library_videos', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('library_folder_id')->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->string('audience', 32)->default('general');
+            $table->unsignedBigInteger('instructor_id')->nullable();
+            $table->string('title');
+            $table->string('content_theme', 40)->default('general');
+            $table->text('description')->nullable();
+            $table->string('external_url', 2000)->nullable();
+            $table->string('file_path', 1000)->nullable();
+            $table->string('storage_disk', 40)->nullable();
+            $table->boolean('is_published')->default(true);
+            $table->unsignedInteger('sort_order')->default(0);
+            $table->timestamps();
+        });
+
         Schema::create('academic_year_instructors', function (Blueprint $table) {
             $table->id();
             $table->foreignId('academic_year_id');
             $table->foreignId('instructor_id');
             $table->text('assigned_courses')->nullable();
             $table->text('notes')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('student_course_enrollments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id');
+            $table->foreignId('advanced_course_id');
+            $table->string('status')->default('active');
             $table->timestamps();
         });
     }
@@ -144,5 +171,12 @@ class Phases234LibrariesPricingSmokeTest extends TestCase
 
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('instructor.libraries.materials.index'));
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('instructor.lecture-recordings.index'));
+
+        $this->actingAs($teacher)
+            ->get(route('instructor.libraries.materials.index'))
+            ->assertOk();
+        $this->actingAs($teacher)
+            ->get(route('instructor.libraries.videos.index'))
+            ->assertOk();
     }
 }

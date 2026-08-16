@@ -933,32 +933,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/library/lecture-recordings/{lecture}', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'watchLectureRecording'])->name('student.library.lecture-recordings.show');
         Route::get('/my-lectures', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'lectures'])->name('student.lectures.index');
 
-        // مكتبة المناهج التفاعلية (Manahij X) — بجانب مواد/فيديو المكتبة الحالية
+        // مكتبة المناهج التفاعلية (Manahij X) — فهرس/عرض للطلاب فقط
         Route::get('/curriculum-library', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'index'])->name('curriculum-library.index');
         Route::get('/curriculum-library/{item:slug}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'show'])->name('curriculum-library.show');
-        Route::get('/curriculum-library/{item:slug}/m/{material}/download', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'downloadMaterial'])->name('curriculum-library.material.download');
-        Route::get('/curriculum-library/{item:slug}/m/{material}/html', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialHtml'])->name('curriculum-library.material.html');
-        Route::get('/curriculum-library/{item:slug}/m/{material}/pdf', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialPdf'])->name('curriculum-library.material.pdf');
-        Route::get('/curriculum-library/{item:slug}/m/{material}/presentation', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialPresentation'])->name('curriculum-library.material.presentation');
-        Route::get('/curriculum-library/{item:slug}/m/{material}/animation-video', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialAnimationVideo'])->name('curriculum-library.material.animation-video');
-        Route::get('/curriculum-library/{item:slug}/m/{material}/slides/manifest', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialSlidesManifest'])->name('curriculum-library.material.slides.manifest');
-        Route::get('/curriculum-library/{item:slug}/m/{material}/slides/{slide}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialSlideImage'])
-            ->whereNumber('slide')
-            ->name('curriculum-library.material.slides.image');
-        Route::get('/curriculum-library/{item:slug}/m/{material}/slides/{slide}/thumb', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialSlideThumb'])
-            ->whereNumber('slide')
-            ->name('curriculum-library.material.slides.thumb');
-        Route::get('/curriculum-library/{item:slug}/file/{file}/download', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'download'])->name('curriculum-library.file.download');
-        Route::get('/curriculum-library/{item:slug}/file/{file}/view', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewHtml'])->name('curriculum-library.file.view');
-        Route::get('/curriculum-library/{item:slug}/file/{file}/pdf', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewPdf'])->name('curriculum-library.file.pdf');
-        Route::get('/curriculum-library/{item:slug}/file/{file}/presentation', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewPresentation'])->name('curriculum-library.file.presentation');
-        Route::get('/curriculum-library/{item:slug}/file/{file}/slides/manifest', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewFileSlidesManifest'])->name('curriculum-library.file.slides.manifest');
-        Route::get('/curriculum-library/{item:slug}/file/{file}/slides/{slide}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewFileSlideImage'])
-            ->whereNumber('slide')
-            ->name('curriculum-library.file.slides.image');
-        Route::get('/curriculum-library/{item:slug}/file/{file}/slides/{slide}/thumb', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewFileSlideThumb'])
-            ->whereNumber('slide')
-            ->name('curriculum-library.file.slides.thumb');
 
         Route::get('/tutoring-subscriptions', [\App\Http\Controllers\Student\TutoringSubscriptionController::class, 'index'])->name('student.tutoring-subscriptions.index');
         Route::get('/tutoring-subscriptions/{subscription}', [\App\Http\Controllers\Student\TutoringSubscriptionController::class, 'show'])->name('student.tutoring-subscriptions.show');
@@ -999,6 +976,33 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/classroom/{meeting}/curriculum/{sessionId}/thumb/{slide}', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumThumb'])
             ->whereNumber('slide')
             ->name('student.classroom.curriculum.thumb');
+    });
+
+    // ملفات مناهج X (عرض/تحميل/شرائح) — طالب أو معلم معتمد
+    Route::middleware(['curriculum.viewer'])->group(function () {
+        Route::get('/curriculum-library/{item:slug}/m/{material}/download', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'downloadMaterial'])->name('curriculum-library.material.download');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/html', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialHtml'])->name('curriculum-library.material.html');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/pdf', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialPdf'])->name('curriculum-library.material.pdf');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/presentation', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialPresentation'])->name('curriculum-library.material.presentation');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/animation-video', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialAnimationVideo'])->name('curriculum-library.material.animation-video');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/slides/manifest', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialSlidesManifest'])->name('curriculum-library.material.slides.manifest');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/slides/{slide}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialSlideImage'])
+            ->whereNumber('slide')
+            ->name('curriculum-library.material.slides.image');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/slides/{slide}/thumb', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialSlideThumb'])
+            ->whereNumber('slide')
+            ->name('curriculum-library.material.slides.thumb');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/download', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'download'])->name('curriculum-library.file.download');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/view', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewHtml'])->name('curriculum-library.file.view');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/pdf', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewPdf'])->name('curriculum-library.file.pdf');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/presentation', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewPresentation'])->name('curriculum-library.file.presentation');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/slides/manifest', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewFileSlidesManifest'])->name('curriculum-library.file.slides.manifest');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/slides/{slide}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewFileSlideImage'])
+            ->whereNumber('slide')
+            ->name('curriculum-library.file.slides.image');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/slides/{slide}/thumb', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewFileSlideThumb'])
+            ->whereNumber('slide')
+            ->name('curriculum-library.file.slides.thumb');
     });
 
     // دعم المتعلمين والمدربين
@@ -2152,18 +2156,22 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Instructor\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
         Route::get('/api/notifications/unread-count', [\App\Http\Controllers\Instructor\NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
 
-        // مكتبة المناهج — للمعلمين المعتمدين فقط (ليس لكل من يسجّل كمعلم)
+        // مكتبة المناهج التفاعلية — للمعلمين المعتمدين (عرض كامل بدون باقة)
         Route::get('/libraries/curriculum', [\App\Http\Controllers\Instructor\CurriculumLibraryController::class, 'index'])->name('libraries.curriculum.index');
         Route::get('/libraries/curriculum/courses/{course}', [\App\Http\Controllers\Instructor\CurriculumLibraryController::class, 'showCourse'])->name('libraries.curriculum.course');
+        Route::get('/libraries/curriculum/{item:slug}', [\App\Http\Controllers\Instructor\CurriculumLibraryController::class, 'show'])->name('libraries.curriculum.show');
 
-        // مكتبة الماتريال (فولدر معلم×سنة)
+        // مكتبة الماتريال (فولدر معلم×سنة + عرض مجلدات الإدارة)
         Route::get('/libraries/materials', [\App\Http\Controllers\Instructor\MaterialLibraryController::class, 'index'])->name('libraries.materials.index');
         Route::post('/libraries/materials/folders', [\App\Http\Controllers\Instructor\MaterialLibraryController::class, 'storeFolder'])->name('libraries.materials.folders.store');
         Route::get('/libraries/materials/folders/{folder}', [\App\Http\Controllers\Instructor\MaterialLibraryController::class, 'show'])->name('libraries.materials.show');
         Route::post('/libraries/materials/folders/{folder}/upload', [\App\Http\Controllers\Instructor\MaterialLibraryController::class, 'upload'])->name('libraries.materials.upload');
+        Route::get('/libraries/materials/folders/{folder}/materials/{material}/download', [\App\Http\Controllers\Instructor\MaterialLibraryController::class, 'download'])->name('libraries.materials.download');
+        Route::get('/libraries/materials/folders/{folder}/materials/{material}/experience', [\App\Http\Controllers\Instructor\MaterialLibraryController::class, 'experience'])->name('libraries.materials.experience');
+        Route::get('/libraries/materials/folders/{folder}/materials/{material}/experience/raw', [\App\Http\Controllers\Instructor\MaterialLibraryController::class, 'experienceRaw'])->name('libraries.materials.experience.raw');
         Route::delete('/libraries/materials/folders/{folder}/materials/{material}', [\App\Http\Controllers\Instructor\MaterialLibraryController::class, 'destroyMaterial'])->name('libraries.materials.destroy');
 
-        // مكتبة فيديو المعلم → طلابه فقط
+        // مكتبة فيديو المعلم → طلابه + فيديوهات الأكاديمية للعرض
         Route::get('/libraries/videos', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'index'])->name('libraries.videos.index');
         Route::get('/libraries/videos/create', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'create'])->name('libraries.videos.create');
         Route::post('/libraries/videos', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'store'])->name('libraries.videos.store');
@@ -2171,6 +2179,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/libraries/videos/complete-upload', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'completeUpload'])->name('libraries.videos.complete');
         Route::post('/libraries/videos/proxy-upload', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'proxyUpload'])->name('libraries.videos.proxy');
         Route::post('/libraries/videos/folders', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'storeFolder'])->name('libraries.videos.folders.store');
+        Route::get('/libraries/videos/{libraryVideo}/watch', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'watch'])->name('libraries.videos.watch');
         Route::get('/libraries/videos/{libraryVideo}/edit', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'edit'])->name('libraries.videos.edit');
         Route::put('/libraries/videos/{libraryVideo}', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'update'])->name('libraries.videos.update');
         Route::post('/libraries/videos/{libraryVideo}/toggle', [\App\Http\Controllers\Instructor\VideoLibraryController::class, 'togglePublish'])->name('libraries.videos.toggle');
