@@ -160,6 +160,10 @@ class PayPalCheckoutController extends Controller
 
     public function returnFromPaypal(Request $request): RedirectResponse
     {
+        if (! Auth::check()) {
+            return redirect()->guest(route('login'))->with('info', 'يرجى تسجيل الدخول لإكمال تأكيد الدفع.');
+        }
+
         $token = trim((string) $request->query('token', ''));
         if ($token === '') {
             return redirect()->route('orders.index')->with('error', 'لم يصل رقم طلب PayPal.');
@@ -170,7 +174,7 @@ class PayPalCheckoutController extends Controller
             return redirect()->route('orders.index')->with('error', 'لم يُعثر على الطلب المرتبط بـ PayPal.');
         }
 
-        if (Auth::id() && (int) $order->user_id !== (int) Auth::id()) {
+        if ((int) $order->user_id !== (int) Auth::id()) {
             return redirect()->route('orders.index')->with('error', 'طلب غير صالح.');
         }
 
@@ -223,9 +227,15 @@ class PayPalCheckoutController extends Controller
             }
 
             $customId = $paypal->customId($captured);
-            if ($customId && (string) $customId !== (string) $locked->id) {
+            if ((string) $customId !== (string) $locked->id) {
                 throw new RuntimeException('رقم الطلب لا يطابق عملية PayPal.');
             }
+
+            $paypal->assertMatchesOrder(
+                $captured,
+                (float) $locked->amount,
+                $locked->currencyCode() ?: PayPalSettings::currency()
+            );
 
             app(CheckoutController::class)->approveOrderAfterOnlinePaymentPublic(
                 $locked,

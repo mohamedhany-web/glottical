@@ -310,131 +310,49 @@ class CheckoutController extends Controller
                 ->with('error', 'لم يتم إتمام الدفع. يمكنك المحاولة مرة أخرى.');
         }
 
-        DB::beginTransaction();
+        $orderCurrency = $order->currencyCode() ?: KashierSettings::currency();
+        if (! $kashier->paidMatchesOrder($query, (float) $order->amount, $orderCurrency)) {
+            Log::warning('Kashier callback: amount/currency mismatch', [
+                'order_id' => $order->id,
+                'expected' => $order->amount,
+                'expected_currency' => $orderCurrency,
+            ]);
+
+            return redirect()->route('public.courses')->with('error', 'المبلغ المدفوع لا يطابق الطلب. يرجى التواصل مع الدعم.');
+        }
+
         try {
-            $orderTitle = $order->course->title ?? 'كورس';
+            DB::transaction(function () use ($order, $query, $kashier, $orderCurrency) {
+                $locked = Order::query()->whereKey($order->id)->lockForUpdate()->first();
+                if (! $locked || $locked->status !== Order::STATUS_PENDING) {
+                    return;
+                }
 
-            $invoiceNumber = 'INV-'.str_pad(Invoice::count() + 1, 8, '0', STR_PAD_LEFT);
-            $invoice = Invoice::create([
-                'invoice_number' => $invoiceNumber,
-                'user_id' => $order->user_id,
-                'type' => 'course',
-                'description' => 'تسجيل في الكورس: '.$orderTitle,
-                'subtotal' => $order->amount,
-                'tax_amount' => 0,
-                'discount_amount' => 0,
-                'total_amount' => $order->amount,
-                'status' => 'paid',
-                'due_date' => now(),
-                'paid_at' => now(),
-                'notes' => 'دفع عبر كاشير - طلب #'.$order->id,
-                'items' => [
-                    [
-                        'description' => 'الكورس: '.$orderTitle,
-                        'quantity' => 1,
-                        'price' => $order->amount,
-                        'total' => $order->amount,
-                    ],
-                ],
-            ]);
+                $lockedCurrency = $locked->currencyCode() ?: $orderCurrency;
+                if (! $kashier->paidMatchesOrder($query, (float) $locked->amount, $lockedCurrency)) {
+                    throw new \RuntimeException('المبلغ المدفوع لا يطابق الطلب.');
+                }
 
-            $grossK = (float) $order->amount;
-            $splitK = PaymentGatewaySettings::computeFeeSplit($grossK);
-
-            $paymentNumber = 'PAY-'.str_pad(Payment::count() + 1, 8, '0', STR_PAD_LEFT);
-            $payment = Payment::create([
-                'payment_number' => $paymentNumber,
-                'invoice_id' => $invoice->id,
-                'user_id' => $order->user_id,
-                'payment_method' => 'online',
-                'payment_gateway' => 'kashier',
-                'amount' => $grossK,
-                'gateway_fee_amount' => $splitK['fee'],
-                'net_after_gateway_fee' => $splitK['net'],
-                'currency' => 'EGP',
-                'status' => 'completed',
-                'transaction_id' => $query['transactionId'] ?? null,
-                'gateway_response' => $query,
-                'paid_at' => now(),
-                'notes' => 'دفع عبر كاشير - طلب #'.$order->id,
-            ]);
-
-            $transactionNumber = 'TXN-'.str_pad(Transaction::count() + 1, 8, '0', STR_PAD_LEFT);
-            Transaction::create([
-                'transaction_number' => $transactionNumber,
-                'user_id' => $order->user_id,
-                'payment_id' => $payment->id,
-                'invoice_id' => $invoice->id,
-                'expense_id' => null,
-                'subscription_id' => null,
-                'type' => 'credit',
-                'category' => 'course_payment',
-                'amount' => $grossK,
-                'currency' => 'EGP',
-                'description' => 'دفع كورس: '.$orderTitle.' - طلب #'.$order->id,
-                'status' => 'completed',
-                'metadata' => [
-                    'order_id' => $order->id,
-                    'invoice_id' => $invoice->id,
-                    'payment_id' => $payment->id,
-                    'course_id' => $order->advanced_course_id,
-                ],
-            ]);
-
-            if ($splitK['fee'] > 0.0001) {
-                Transaction::create([
-                    'transaction_number' => 'TXN-'.now()->format('YmdHis').'-'.strtoupper(Str::random(4)),
-                    'user_id' => $order->user_id,
-                    'payment_id' => $payment->id,
-                    'invoice_id' => $invoice->id,
-                    'expense_id' => null,
-                    'subscription_id' => null,
-                    'type' => 'debit',
-                    'category' => 'fee',
-                    'amount' => $splitK['fee'],
-                    'currency' => 'EGP',
-                    'description' => 'عمولة بوابة الدفع — دفع #'.$payment->payment_number,
-                    'status' => 'completed',
-                    'metadata' => [
-                        'order_id' => $order->id,
-                        'payment_id' => $payment->id,
-                        'gateway' => 'kashier',
-                    ],
-                ]);
-            }
-
-            $order->update([
-                'status' => Order::STATUS_APPROVED,
-                'approved_at' => now(),
-                'approved_by' => null,
-                'invoice_id' => $invoice->id,
-                'payment_id' => $payment->id,
-            ]);
-
-            if ($order->advanced_course_id) {
-                CourseSubscriptionService::syncEnrollmentFromOrder(
-                    $order,
-                    $invoice->id,
-                    $payment->id,
-                    'online',
-                    (int) $order->user_id
+                $this->approveOrderAfterOnlinePayment(
+                    $locked,
+                    'kashier',
+                    isset($query['transactionId']) ? (string) $query['transactionId'] : null,
+                    $query,
+                    'كاشير'
                 );
-            }
-
-            DB::commit();
+            });
         } catch (\Throwable $e) {
-            DB::rollBack();
             Log::error('Kashier callback: approval failed', [
                 'order_id' => $order->id,
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
 
             return redirect()->route('public.courses')->with('error', 'حدث خطأ أثناء تفعيل الطلب. يرجى التواصل مع الدعم.');
         }
 
-        if ($order->advanced_course_id) {
-            return redirect()->route('public.course.show', $order->advanced_course_id)
+        $fresh = $order->fresh();
+        if ($fresh && $fresh->advanced_course_id) {
+            return redirect()->route('public.course.show', $fresh->advanced_course_id)
                 ->with('success', 'تم الدفع بنجاح! تم تفعيل الكورس على حسابك.');
         }
 

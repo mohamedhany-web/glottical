@@ -41,6 +41,89 @@ class PayPalGatewaySettingsTest extends TestCase
         $this->assertNotSame('test-secret-value', Setting::getValue(PayPalSettings::SECRET_KEY));
     }
 
+    public function test_paypal_rejects_amount_or_currency_mismatch(): void
+    {
+        $paypal = app(PayPalService::class);
+        $paid = [
+            'purchase_units' => [[
+                'payments' => [
+                    'captures' => [[
+                        'amount' => ['value' => '1.00', 'currency_code' => 'USD'],
+                    ]],
+                ],
+            ]],
+        ];
+
+        $this->expectException(\RuntimeException::class);
+        $paypal->assertMatchesOrder($paid, 25.50, 'USD');
+    }
+
+    public function test_paypal_webhook_rejects_missing_signature(): void
+    {
+        PayPalSettings::save([
+            'enabled' => true,
+            'mode' => 'sandbox',
+            'client_id' => 'client',
+            'client_secret' => 'secret',
+            'webhook_id' => 'WH-123',
+            'currency' => 'USD',
+        ]);
+
+        $this->postJson(route('webhooks.paypal'), [
+            'event_type' => 'PAYMENT.CAPTURE.COMPLETED',
+            'resource' => ['id' => 'PAYPAL-ORDER-1'],
+        ])->assertStatus(400);
+    }
+
+    public function test_paypal_webhook_accepts_verified_signature_without_local_order(): void
+    {
+        \Illuminate\Support\Facades\Schema::create('orders', function (\Illuminate\Database\Schema\Blueprint $table) {
+            $table->id();
+            $table->string('paypal_order_id')->nullable();
+            $table->string('status')->nullable();
+            $table->timestamps();
+        });
+
+        PayPalSettings::save([
+            'enabled' => true,
+            'mode' => 'sandbox',
+            'client_id' => 'client',
+            'client_secret' => 'secret',
+            'webhook_id' => 'WH-123',
+            'currency' => 'USD',
+        ]);
+
+        Http::fake([
+            'https://api-m.sandbox.paypal.com/v1/oauth2/token' => Http::response([
+                'access_token' => 'tok_test',
+                'expires_in' => 300,
+            ], 200),
+            'https://api-m.sandbox.paypal.com/v1/notifications/verify-webhook-signature' => Http::response([
+                'verification_status' => 'SUCCESS',
+            ], 200),
+        ]);
+
+        $this->call(
+            'POST',
+            route('webhooks.paypal'),
+            [],
+            [],
+            [],
+            [
+                'HTTP_PAYPAL-AUTH-ALGO' => 'SHA256withRSA',
+                'HTTP_PAYPAL-CERT-URL' => 'https://api.sandbox.paypal.com/v1/notifications/certs/cert',
+                'HTTP_PAYPAL-TRANSMISSION-ID' => 'trx-1',
+                'HTTP_PAYPAL-TRANSMISSION-SIG' => 'sig',
+                'HTTP_PAYPAL-TRANSMISSION-TIME' => '2026-08-17T00:00:00Z',
+                'CONTENT_TYPE' => 'application/json',
+            ],
+            json_encode([
+                'event_type' => 'CHECKOUT.ORDER.APPROVED',
+                'resource' => ['id' => 'PAYPAL-ORDER-MISSING'],
+            ])
+        )->assertOk()->assertJson(['ok' => true, 'message' => 'no matching order']);
+    }
+
     public function test_paypal_create_order_posts_to_sandbox_api(): void
     {
         PayPalSettings::save([

@@ -41,7 +41,33 @@ class PaymentGatewaysHubTest extends TestCase
         $this->assertSame('api-key-test', KashierSettings::apiKey());
         $this->assertSame('secret-value', KashierSettings::secret());
         $this->assertNotSame('secret-value', Setting::getValue(KashierSettings::SECRET_KEY));
+        $this->assertNotSame('api-key-test', Setting::getValue(KashierSettings::API_KEY_KEY));
         $this->assertTrue(PaymentGatewaySettings::blocksManualCheckout());
+        $this->assertTrue(PaymentGatewaySettings::paidMatchesOrder(100.5, 'EGP', 100.50, 'egp'));
+        $this->assertFalse(PaymentGatewaySettings::paidMatchesOrder(100.5, 'EGP', 1.00, 'EGP'));
+    }
+
+    public function test_admin_payment_gateways_page_does_not_echo_kashier_api_key(): void
+    {
+        KashierSettings::save([
+            'enabled' => true,
+            'mode' => 'test',
+            'mid' => 'MID-test',
+            'api_key' => 'kashier-api-secret-value',
+            'secret' => 'secret-value',
+            'currency' => 'EGP',
+        ]);
+
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.payment-gateways.index'))
+            ->assertOk()
+            ->assertDontSee('kashier-api-secret-value', false);
     }
 
     public function test_admin_can_open_payment_gateways_page(): void

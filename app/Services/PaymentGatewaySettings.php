@@ -63,4 +63,19 @@ class PaymentGatewaySettings
 
         return ['fee' => $fee, 'net' => $net];
     }
+
+    public static function paidMatchesOrder(
+        float $orderAmount,
+        string $orderCurrency,
+        float $paidAmount,
+        string $paidCurrency
+    ): bool {
+        $expectedCurrency = strtoupper(trim($orderCurrency));
+        $actualCurrency = strtoupper(trim($paidCurrency));
+        if ($expectedCurrency === '' || $actualCurrency === '' || $expectedCurrency !== $actualCurrency) {
+            return false;
+        }
+
+        return abs(round($orderAmount, 2) - round($paidAmount, 2)) < 0.005;
+    }
 }

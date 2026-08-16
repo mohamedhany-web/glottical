@@ -65,7 +65,23 @@ class KashierSettings
 
     public static function apiKey(): string
     {
-        return trim(self::storedOrEnv(self::API_KEY_KEY, (string) (config('kashier.'.self::mode().'.api_key') ?? '')));
+        $raw = Setting::getValue(self::API_KEY_KEY);
+        if (is_string($raw) && $raw !== '') {
+            try {
+                return trim(Crypt::decryptString($raw));
+            } catch (Throwable) {
+                return trim($raw);
+            }
+        }
+
+        return trim((string) (config('kashier.'.self::mode().'.api_key') ?? ''));
+    }
+
+    public static function hasStoredApiKey(): bool
+    {
+        $raw = Setting::getValue(self::API_KEY_KEY);
+
+        return is_string($raw) && $raw !== '';
     }
 
     public static function secret(): string
@@ -134,8 +150,10 @@ class KashierSettings
         $mid = trim((string) ($data['mid'] ?? ''));
         Setting::setValue(self::MID_KEY, $mid !== '' ? $mid : null);
 
-        $apiKey = trim((string) ($data['api_key'] ?? ''));
-        Setting::setValue(self::API_KEY_KEY, $apiKey !== '' ? $apiKey : null);
+        $apiKey = $data['api_key'] ?? null;
+        if (is_string($apiKey) && trim($apiKey) !== '') {
+            Setting::setValue(self::API_KEY_KEY, Crypt::encryptString(trim($apiKey)));
+        }
 
         $secret = $data['secret'] ?? null;
         if (is_string($secret) && trim($secret) !== '') {

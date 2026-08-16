@@ -27,6 +27,7 @@ Route::post('/webhooks/fawaterak', [\App\Http\Controllers\Webhooks\FawaterakWebh
 
 Route::post('/webhooks/paypal', [\App\Http\Controllers\Webhooks\PayPalWebhookController::class, 'handle'])
     ->name('webhooks.paypal')
+    ->middleware('throttle:120,1')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
 
 /*
@@ -576,7 +577,7 @@ Route::post('/course/{courseId}/checkout/quote', [\App\Http\Controllers\Public\C
 
 // التوجيه لبوابة الدفع كاشير (كورس)
 Route::post('/course/{courseId}/checkout/kashier', [\App\Http\Controllers\Public\CheckoutController::class, 'redirectToKashier'])
-    ->middleware('auth')
+    ->middleware(['auth', 'throttle:20,1'])
     ->name('public.course.checkout.kashier');
 
 Route::post('/course/{courseId}/checkout/fawaterak/prepare', [\App\Http\Controllers\Public\CheckoutController::class, 'fawaterakPrepare'])
@@ -592,7 +593,7 @@ Route::post('/course/{courseId}/checkout/fawaterak/pay', [\App\Http\Controllers\
     ->name('public.course.checkout.fawaterak.pay');
 
 Route::post('/course/{courseId}/checkout/paypal', [\App\Http\Controllers\Public\PayPalCheckoutController::class, 'startCourse'])
-    ->middleware('auth')
+    ->middleware(['auth', 'throttle:20,1'])
     ->name('public.course.checkout.paypal');
 
 // تسجيل مجاني للكورسات المجانية
@@ -601,6 +602,7 @@ Route::post('/course/{courseId}/enroll-free', [\App\Http\Controllers\Public\Chec
     ->name('public.course.enroll.free');
 
 Route::get('/checkout/kashier/callback', [\App\Http\Controllers\Public\CheckoutController::class, 'kashierCallback'])
+    ->middleware('throttle:60,1')
     ->name('public.checkout.kashier.callback');
 
 Route::get('/checkout/fawaterak/{status}', [\App\Http\Controllers\Public\CheckoutController::class, 'fawaterakReturn'])
@@ -609,8 +611,10 @@ Route::get('/checkout/fawaterak/{status}', [\App\Http\Controllers\Public\Checkou
     ->name('public.checkout.fawaterak.return');
 
 Route::get('/checkout/paypal/return', [\App\Http\Controllers\Public\PayPalCheckoutController::class, 'returnFromPaypal'])
+    ->middleware(['auth', 'throttle:30,1'])
     ->name('public.checkout.paypal.return');
 Route::get('/checkout/paypal/cancel', [\App\Http\Controllers\Public\PayPalCheckoutController::class, 'cancel'])
+    ->middleware(['auth', 'throttle:30,1'])
     ->name('public.checkout.paypal.cancel');
 
 // روابط قديمة لمنتج المسارات التعليمية (أُزيل) → الكورسات

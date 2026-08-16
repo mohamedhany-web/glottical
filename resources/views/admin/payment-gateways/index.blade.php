@@ -214,10 +214,11 @@
                         @enderror
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="{{ $label }}" for="paypal_webhook_id">Webhook ID (اختياري)</label>
+                        <label class="{{ $label }}" for="paypal_webhook_id">Webhook ID</label>
                         <input type="text" name="paypal_webhook_id" id="paypal_webhook_id" dir="ltr" autocomplete="off"
                                value="{{ old('paypal_webhook_id', $paypalWebhookId) }}"
                                class="{{ $input }} font-mono" placeholder="WH-...">
+                        <p class="mt-1.5 text-[11px] text-muted">مطلوب للتحقق من توقيع الإشعارات. بدون هذا المعرّف لن يُقبل Webhook PayPal.</p>
                     </div>
                 </div>
 
@@ -295,9 +296,12 @@
                     </div>
                     <div>
                         <label class="{{ $label }}" for="kashier_api_key">API Key</label>
-                        <input type="text" name="kashier_api_key" id="kashier_api_key" dir="ltr" autocomplete="off"
-                               value="{{ old('kashier_api_key', $kashierApiKey) }}"
-                               class="{{ $input }} font-mono">
+                        <input type="password" name="kashier_api_key" id="kashier_api_key" dir="ltr" autocomplete="new-password"
+                               value="" class="{{ $input }} font-mono" placeholder="{{ $kashierHasApiKey ? 'محفوظ — اتركه فارغاً للإبقاء على المفتاح الحالي' : 'الصق API Key هنا' }}">
+                        <p class="mt-1.5 text-[11px] text-muted">يُشفَّر في قاعدة البيانات ولا يُعرض بعد الحفظ.</p>
+                        @error('kashier_api_key')
+                            <p class="mt-1.5 text-xs font-medium text-danger">{{ $message }}</p>
+                        @enderror
                     </div>
                     <div class="sm:col-span-2">
                         <label class="{{ $label }}" for="kashier_secret">Secret</label>

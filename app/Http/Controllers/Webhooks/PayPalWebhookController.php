@@ -9,13 +9,30 @@ use App\Services\PayPalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
 use Throwable;
 
 class PayPalWebhookController extends Controller
 {
     public function handle(Request $request): JsonResponse
     {
-        $payload = $request->all();
+        $raw = $request->getContent();
+        $payload = json_decode($raw, true);
+        if (! is_array($payload)) {
+            return response()->json(['ok' => false, 'message' => 'invalid payload'], 400);
+        }
+
+        try {
+            app(PayPalService::class)->assertValidWebhook($request, $payload);
+        } catch (RuntimeException $e) {
+            Log::warning('PayPal webhook signature rejected', [
+                'error' => $e->getMessage(),
+                'event' => $payload['event_type'] ?? null,
+            ]);
+
+            return response()->json(['ok' => false, 'message' => 'invalid signature'], 400);
+        }
+
         $event = (string) ($payload['event_type'] ?? '');
         Log::info('PayPal webhook received', [
             'event' => $event,
@@ -48,8 +65,9 @@ class PayPalWebhookController extends Controller
         }
 
         try {
-            $remote = app(PayPalService::class)->getOrder($paypalOrderId);
-            if (! app(PayPalService::class)->isOrderPaid($remote)
+            $paypal = app(PayPalService::class);
+            $remote = $paypal->getOrder($paypalOrderId);
+            if (! $paypal->isOrderPaid($remote)
                 && ! in_array($event, ['CHECKOUT.ORDER.APPROVED', 'PAYMENT.CAPTURE.COMPLETED'], true)) {
                 return response()->json(['ok' => true, 'message' => 'not paid yet']);
             }

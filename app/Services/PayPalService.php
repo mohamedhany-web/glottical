@@ -159,6 +159,85 @@ class PayPalService
         return is_string($id) && $id !== '' ? $id : null;
     }
 
+    /**
+     * @return array{amount: float, currency: string}|null
+     */
+    public function capturedMoney(array $paypalOrder): ?array
+    {
+        $value = data_get($paypalOrder, 'purchase_units.0.payments.captures.0.amount.value');
+        $currency = data_get($paypalOrder, 'purchase_units.0.payments.captures.0.amount.currency_code');
+        if ($value === null || $currency === null || $currency === '') {
+            $value = data_get($paypalOrder, 'purchase_units.0.amount.value');
+            $currency = data_get($paypalOrder, 'purchase_units.0.amount.currency_code');
+        }
+        if ($value === null || $currency === null || trim((string) $currency) === '') {
+            return null;
+        }
+
+        return [
+            'amount' => (float) $value,
+            'currency' => strtoupper(trim((string) $currency)),
+        ];
+    }
+
+    public function assertMatchesOrder(array $paypalOrder, float $orderAmount, string $orderCurrency): void
+    {
+        $money = $this->capturedMoney($paypalOrder);
+        if ($money === null || ! PaymentGatewaySettings::paidMatchesOrder(
+            $orderAmount,
+            $orderCurrency,
+            $money['amount'],
+            $money['currency']
+        )) {
+            throw new RuntimeException('مبلغ أو عملة PayPal لا تطابق الطلب.');
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    public function assertValidWebhook(\Illuminate\Http\Request $request, array $payload): void
+    {
+        $webhookId = PayPalSettings::webhookId();
+        if ($webhookId === '') {
+            throw new RuntimeException('Webhook ID غير مضبوط؛ لن يُقبل إشعار PayPal.');
+        }
+
+        $authAlgo = trim((string) $request->header('PAYPAL-AUTH-ALGO', ''));
+        $certUrl = trim((string) $request->header('PAYPAL-CERT-URL', ''));
+        $transmissionId = trim((string) $request->header('PAYPAL-TRANSMISSION-ID', ''));
+        $transmissionSig = trim((string) $request->header('PAYPAL-TRANSMISSION-SIG', ''));
+        $transmissionTime = trim((string) $request->header('PAYPAL-TRANSMISSION-TIME', ''));
+
+        if ($authAlgo === '' || $certUrl === '' || $transmissionId === '' || $transmissionSig === '' || $transmissionTime === '') {
+            throw new RuntimeException('ترويسات توقيع PayPal ناقصة.');
+        }
+
+        $host = strtolower((string) (parse_url($certUrl, PHP_URL_HOST) ?: ''));
+        if ($host === '' || ! str_ends_with($host, '.paypal.com')) {
+            throw new RuntimeException('شهادة توقيع PayPal غير صالحة.');
+        }
+
+        $response = $this->request('post', '/v1/notifications/verify-webhook-signature', [
+            'auth_algo' => $authAlgo,
+            'cert_url' => $certUrl,
+            'transmission_id' => $transmissionId,
+            'transmission_sig' => $transmissionSig,
+            'transmission_time' => $transmissionTime,
+            'webhook_id' => $webhookId,
+            'webhook_event' => $payload,
+        ]);
+
+        if (! $response->successful()) {
+            throw new RuntimeException($this->errorMessage($response, 'فشل التحقق من توقيع PayPal.'));
+        }
+
+        $status = strtoupper((string) $response->json('verification_status', ''));
+        if ($status !== 'SUCCESS') {
+            throw new RuntimeException('توقيع إشعار PayPal غير صالح.');
+        }
+    }
+
     private function accessToken(bool $forceRefresh = false): string
     {
         $clientId = PayPalSettings::clientId();

@@ -49,7 +49,7 @@ class PaymentGatewaysController extends Controller
             'kashierConfigured' => KashierSettings::isConfigured(),
             'kashierMode' => KashierSettings::mode(),
             'kashierMid' => KashierSettings::mid(),
-            'kashierApiKey' => KashierSettings::apiKey(),
+            'kashierHasApiKey' => KashierSettings::hasStoredApiKey() || KashierSettings::apiKey() !== '',
             'kashierHasSecret' => KashierSettings::hasStoredSecret() || KashierSettings::secret() !== '',
             'kashierCurrency' => KashierSettings::currency(),
             'kashierRedirectUrl' => KashierSettings::merchantRedirectUrl(),
@@ -74,8 +74,11 @@ class PaymentGatewaysController extends Controller
         $kashierMid = trim((string) $request->input('kashier_mid', ''));
         $kashierApiKey = trim((string) $request->input('kashier_api_key', ''));
         $kashierSecret = trim((string) $request->input('kashier_secret', ''));
-        if ($kashierEnabled && ($kashierMid === '' || $kashierApiKey === '')) {
-            return back()->withErrors(['kashier_mid' => 'MID و API Key مطلوبان لتفعيل كاشير.'])->withInput();
+        if ($kashierEnabled && $kashierMid === '') {
+            return back()->withErrors(['kashier_mid' => 'MID مطلوب لتفعيل كاشير.'])->withInput();
+        }
+        if ($kashierEnabled && $kashierApiKey === '' && KashierSettings::apiKey() === '') {
+            return back()->withErrors(['kashier_api_key' => 'API Key مطلوب لتفعيل كاشير في أول ربط.'])->withInput();
         }
         if ($kashierEnabled && $kashierSecret === '' && ! KashierSettings::isConfigured()) {
             return back()->withErrors(['kashier_secret' => 'Secret مطلوب لتفعيل كاشير في أول ربط.'])->withInput();
@@ -115,7 +118,7 @@ class PaymentGatewaysController extends Controller
             'enabled' => $kashierEnabled,
             'mode' => (string) $request->input('kashier_mode', 'test'),
             'mid' => $kashierMid,
-            'api_key' => $kashierApiKey,
+            'api_key' => $kashierApiKey !== '' ? $kashierApiKey : null,
             'secret' => $kashierSecret !== '' ? $kashierSecret : null,
             'currency' => (string) $request->input('kashier_currency', 'EGP'),
             'merchant_redirect_url' => $redirectRaw,

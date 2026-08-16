@@ -186,6 +186,16 @@ class KashierService
         return strtoupper((string) ($query['paymentStatus'] ?? '')) === 'SUCCESS';
     }
 
+    public function paidMatchesOrder(array $query, float $orderAmount, string $orderCurrency): bool
+    {
+        return PaymentGatewaySettings::paidMatchesOrder(
+            $orderAmount,
+            $orderCurrency,
+            (float) ($query['amount'] ?? 0),
+            (string) ($query['currency'] ?? '')
+        );
+    }
+
     public function getMid(): string
     {
         return $this->mid;
