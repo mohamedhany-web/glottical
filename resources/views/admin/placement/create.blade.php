@@ -21,7 +21,7 @@
         <div class="min-w-0">
             <p class="text-xs font-medium text-muted">الطلاب والخدمات · التسكين</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">تسكين طالب مع معلم</h2>
-            <p class="mt-1 text-sm text-muted">بعد التنسيق على واتساب: اكتب الموعد بتوقيت منطقة المعلم. الطالب يشوفه بتوقيته تلقائياً.</p>
+            <p class="mt-1 text-sm text-muted">الإدارة تكتب اليوم والساعة بنفسها — جدول المعلم اختياري للمساعدة فقط. الطالب يشوف الموعد بتوقيته تلقائياً.</p>
         </div>
         <a href="{{ route('admin.placement.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
             <i class="fas fa-arrow-right text-xs"></i>
@@ -34,8 +34,8 @@
                         'body' => 'للحصص الفردية يُفضّل التثبيت الشهري: حدد عدد الأسابيع ومواعيد كل أسبوع بدل حجز حصة بحصة.',
         'steps' => [
             'اختر الطالب والباقة (الرصيد يجب أن يكفي عدد الحصص).',
-            'للفردي: ثبّت شهرياً، أو احجز عدة مواعيد، أو حصة واحدة.',
-            'اختر معلماً من جدول توافره فقط.',
+            'للفردي: ثبّت شهرياً واكتب اليوم والساعة هنا — لا يشترط أن يكون المعلم قد ضبط جدوله.',
+            'اختياري: احفظ نفس المواعيد في جدول المعلم لتظهر لاحقاً في القائمة.',
             'راجع الملخص وثبّت التسكين.',
         ],
     ])
@@ -95,7 +95,7 @@
 
                 <div>
                     <label class="{{ $label }}" for="entitlementSelect">الباقة / الرصيد *</label>
-                    <select name="student_service_entitlement_id" id="entitlementSelect" required class="{{ $field }}" disabled>
+                    <select name="student_service_entitlement_id" id="entitlementSelect" required class="{{ $field }}">
                         <option value="">اختر الطالب أولاً…</option>
                     </select>
                     <div id="packageStatus" class="mt-3 rounded-xl border border-line bg-canvas/60 px-3 py-2.5 text-xs text-muted">
@@ -114,7 +114,7 @@
                         2) المجموعة والموعد
                     @endif
                 </h3>
-                <p class="mt-0.5 text-xs text-muted">اكتب الساعة بتوقيت المعلم — أو اختر من جدوله إن كان مضبوطاً</p>
+                    <p class="mt-0.5 text-xs text-muted">اكتب اليوم والساعة بنفسك. قائمة التوافر تظهر فقط إن كان للمعلم جدول محفوظ — وليست شرطاً للتسكين.</p>
             </div>
             <div class="grid grid-cols-1 gap-5 p-4 sm:p-5 md:grid-cols-2">
                 @if($mode === 'private')
@@ -222,13 +222,13 @@
                                 <p class="mt-1.5 text-[11px] text-muted">موعد واحد في اليوم… حتى 7 أيام.</p>
                             </div>
                         </div>
-                        <p class="text-xs text-muted">اليوم والساعة بتوقيت المعلم. تقدر تكتبهم يدوياً بعد واتساب حتى لو الجدول فاضي.</p>
+                        <p class="text-xs text-muted">اليوم والساعة بتوقيت المعلم. اكتبهم يدوياً بعد واتساب — حتى لو القائمة فوق فاضية تماماً.</p>
                         <div class="grid gap-3 sm:grid-cols-2" id="weeklySlotsGrid">
                             @foreach(range(0, 6) as $wi)
                                 <div class="weekly-slot-card rounded-xl border border-line p-3 space-y-2 {{ $wi >= $oldWeeklyPerWeek ? 'hidden' : '' }}" data-weekly-index="{{ $wi }}">
                                     <label class="{{ $label }}" for="weeklySlot{{ $wi }}">الموعد الأسبوعي {{ $wi + 1 }} {{ $wi === 0 ? '*' : '(اختياري إن لم تحتاجه)' }}</label>
                                     <select id="weeklySlot{{ $wi }}" class="{{ $field }}">
-                                        <option value="">من جدول التوافر إن وُجد…</option>
+                                        <option value="">اختياري — من جدول المعلم إن وُجد…</option>
                                     </select>
                                     <div class="grid grid-cols-2 gap-2">
                                         <select name="weekly_slots[{{ $wi }}][day_of_week]" id="weeklyDay{{ $wi }}" class="{{ $field }}">
@@ -243,6 +243,14 @@
                             @endforeach
                         </div>
                         <p id="monthlyHint" class="text-xs text-muted">سيُولَّد الجدول تلقائياً ويُحجز من الرصيد دفعة واحدة.</p>
+                        <label class="flex items-start gap-2 rounded-xl border border-line bg-canvas/50 p-3 text-sm text-ink">
+                            <input type="hidden" name="save_as_teacher_schedule" value="0">
+                            <input type="checkbox" name="save_as_teacher_schedule" value="1" class="mt-1" @checked(old('save_as_teacher_schedule', '1') !== '0')>
+                            <span>
+                                <span class="block font-semibold">احفظ هذه المواعيد في جدول المعلم</span>
+                                <span class="mt-0.5 block text-[11px] text-muted">حتى تظهر لاحقاً في القائمة وتقدر تسكن عليها طلاب تانيين بدون إعادة الكتابة. يمكن تعديل الجدول أيضاً من صفحة المعلم ← تبويب الجدول.</span>
+                            </span>
+                        </label>
                     </div>
 
                     <div id="multiPanel" class="md:col-span-2 hidden">
@@ -317,7 +325,7 @@
         </article>
 
         <div class="flex flex-wrap gap-2">
-            <button type="submit" id="submitBtn" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50" disabled>
+            <button type="submit" id="submitBtn" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white">
                 <i class="fas fa-user-check text-xs"></i>
                 تأكيد التسكين
             </button>
@@ -418,10 +426,10 @@
   function syncWeeklyHidden(selectEl, dayEl, timeEl) {
     if (!selectEl || !dayEl || !timeEl) return;
     var v = selectEl.value || '';
-    if (!v) { dayEl.value = ''; timeEl.value = ''; return; }
+    if (!v) return;
     var parts = v.split('|');
-    dayEl.value = parts[0] || '';
-    timeEl.value = parts[1] || '';
+    if (parts[0]) dayEl.value = parts[0];
+    if (parts[1]) timeEl.value = parts[1];
   }
 
   function applyInstructorTimezone() {
@@ -502,30 +510,14 @@
   }
 
   function refreshSubmit() {
-    var okStudent = !!studentSelect.value;
-    var okEnt = !!entitlementSelect.value;
-    var okTeacherOrGroup = mode === 'private'
-      ? !!instructorSelect.value
-      : !!(groupSelect && groupSelect.value);
-    var okSlot = false;
-    if (mode === 'group') {
-      okSlot = !!(slotSelect && slotSelect.value);
-    } else {
+    if (mode === 'private') {
       var style = bookingStyle();
-      if (style === 'monthly') {
-        okSlot = !!(weeklySlotEls[0].day && weeklySlotEls[0].day.value && weeklySlotEls[0].time && weeklySlotEls[0].time.value);
-      } else if (style === 'multi') {
-        okSlot = !!(multiSlotSelect && multiSlotSelect.selectedOptions && multiSlotSelect.selectedOptions.length > 0)
-          || !!(manualScheduledAt && manualScheduledAt.value);
-      } else {
-        okSlot = !!(slotSelect && slotSelect.value) || !!(manualScheduledAt && manualScheduledAt.value);
-      }
+      if (weeklySlotEls[0].day) weeklySlotEls[0].day.required = style === 'monthly';
+      if (weeklySlotEls[0].time) weeklySlotEls[0].time.required = style === 'monthly';
     }
-    submitBtn.disabled = !(okStudent && okEnt && okSlot && okTeacherOrGroup);
   }
 
   function loadStudentContext() {
-    entitlementSelect.disabled = true;
     setOptions(entitlementSelect, [], 'جارٍ التحقق من الباقة…');
     packageStatus.textContent = 'جارٍ التحقق…';
     packageStatus.className = 'mt-3 rounded-xl border border-line bg-canvas/60 px-3 py-2.5 text-xs text-muted';
@@ -561,7 +553,6 @@
             + (grantUrl ? ' <a class="font-semibold text-accent underline" href="' + grantUrl + (studentSelect.value ? '?user_id=' + studentSelect.value : '') + '">منح رصيد الآن</a>' : '');
           packageStatus.className = 'mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800';
           setOptions(entitlementSelect, [], 'لا يوجد رصيد قابل للحجز');
-          entitlementSelect.disabled = true;
           refreshSubmit();
           return;
         }
@@ -577,7 +568,6 @@
               + (e.expires_at ? ' — حتى ' + e.expires_at : '')
           };
         }), 'اختر الرصيد…');
-        entitlementSelect.disabled = false;
         if (preselectedEntitlement) entitlementSelect.value = preselectedEntitlement;
         refreshSubmit();
       })
@@ -593,8 +583,12 @@
       return { value: w.day_of_week + '|' + w.start_time, label: w.label || (w.day_label + ' · ' + w.start_time) };
     });
     weeklySlotEls.forEach(function (row, i) {
-      setOptions(row.select, opts, i === 0 ? 'من جدول التوافر…' : 'اختياري — من الجدول…');
+      var keepDay = row.day ? row.day.value : '';
+      var keepTime = row.time ? row.time.value : '';
+      setOptions(row.select, opts, i === 0 ? 'اختياري — من جدول المعلم…' : 'اختياري — من الجدول…');
       if (row.select) row.select.disabled = false;
+      if (row.day && keepDay) row.day.value = keepDay;
+      if (row.time && keepTime) row.time.value = keepTime;
     });
     updateMonthlyPreview();
   }
@@ -619,8 +613,12 @@
       if (!instructorSelect.value) {
         setOptions(slotSelect, [], 'اختر معلماً أولاً…');
         weeklySlotEls.forEach(function (row, i) {
+          var keepDay = row.day ? row.day.value : '';
+          var keepTime = row.time ? row.time.value : '';
           setOptions(row.select, [], i === 0 ? 'اختر معلماً أولاً…' : 'اختياري…');
-          if (row.select) row.select.disabled = true;
+          if (row.select) row.select.disabled = false;
+          if (row.day && keepDay) row.day.value = keepDay;
+          if (row.time && keepTime) row.time.value = keepTime;
         });
         refreshSubmit();
         return;
@@ -780,6 +778,21 @@
   document.querySelectorAll('input[name="booking_style"]').forEach(function (el) {
     el.addEventListener('change', syncPanels);
   });
+
+  var placementForm = document.getElementById('placementForm');
+  if (placementForm) {
+    placementForm.addEventListener('submit', function () {
+      if (entitlementSelect) entitlementSelect.disabled = false;
+      if (slotSelect) slotSelect.disabled = false;
+      if (multiSlotSelect) multiSlotSelect.disabled = false;
+      weeklySlotEls.forEach(function (row) {
+        if (row.select) row.select.disabled = false;
+        if (row.day) row.day.disabled = false;
+        if (row.time) row.time.disabled = false;
+      });
+      if (submitBtn) submitBtn.disabled = false;
+    });
+  }
 
   if (studentSelect.value) loadStudentContext();
   applyInstructorTimezone();

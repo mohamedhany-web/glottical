@@ -200,7 +200,6 @@ class PlacementController extends Controller
                     ? $slot['starts_at']->copy()->utc()
                     : Carbon::parse($slot['starts_at'])->utc();
                 $clock = $at->copy()->timezone($clockTz);
-                $viewer = $at->copy()->timezone($viewerTz);
 
                 return [
                     'starts_at' => $at->toIso8601String(),
@@ -295,7 +294,8 @@ class PlacementController extends Controller
             'weekly_per_week' => ['nullable', 'integer', 'min:1', 'max:7'],
             'weekly_slots' => ['nullable', 'array', 'max:7'],
             'weekly_slots.*.day_of_week' => ['nullable', 'integer', 'min:1', 'max:7'],
-            'weekly_slots.*.time' => ['nullable', 'string', 'max:8'],
+            'weekly_slots.*.time' => ['nullable', 'string', 'max:16'],
+            'save_as_teacher_schedule' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -347,8 +347,20 @@ class PlacementController extends Controller
 
         try {
             if ($style === 'monthly') {
+                $clockTz = AppTimezone::resolveInput(
+                    is_string($data['timezone'] ?? null) ? $data['timezone'] : null,
+                    $instructor
+                );
                 $weekly = collect($data['weekly_slots'] ?? [])
-                    ->filter(fn ($row) => ! empty($row['day_of_week']) && ! empty($row['time']))
+                    ->map(function ($row) {
+                        $time = \App\Support\WeeklyScheduleTime::normalize((string) ($row['time'] ?? ''));
+
+                        return [
+                            'day_of_week' => (int) ($row['day_of_week'] ?? 0),
+                            'time' => $time ?? '',
+                        ];
+                    })
+                    ->filter(fn ($row) => $row['day_of_week'] >= 1 && $row['time'] !== '')
                     ->values()
                     ->all();
                 $sessions = OneToOneSessionService::bookMonthlySeriesWithInstructor(
@@ -360,13 +372,27 @@ class PlacementController extends Controller
                     $request->user(),
                     $notes,
                     null,
-                    false
+                    false,
+                    $clockTz
                 );
                 $first = $sessions->first();
 
+                $scheduleNote = '';
+                if ($request->boolean('save_as_teacher_schedule', true)) {
+                    AppTimezone::persistForUser($instructor, $clockTz);
+                    $added = OneToOneAvailabilityService::ensureWindows(
+                        (int) $instructor->id,
+                        $weekly,
+                        OneToOneSession::defaultDurationMinutes()
+                    );
+                    if ($added > 0) {
+                        $scheduleNote = ' وحُفظت المواعيد في جدول المعلم.';
+                    }
+                }
+
                 return redirect()
                     ->route('admin.one-to-one-sessions.index', ['student_id' => $student->id])
-                    ->with('success', 'تم تثبيت '.$sessions->count().' حصص شهرياً مع المعلم'.($first?->series_id ? ' (سلسلة '.$first->series_id.')' : '').'.');
+                    ->with('success', 'تم تثبيت '.$sessions->count().' حصص شهرياً مع المعلم'.($first?->series_id ? ' (سلسلة '.$first->series_id.')' : '').'.'.$scheduleNote);
             }
 
             if ($style === 'multi') {

@@ -7,6 +7,7 @@ use App\Models\OneToOneWeeklyAvailability;
 use App\Models\ServicePackage;
 use App\Models\StudentServiceEntitlement;
 use App\Models\User;
+use App\Services\OneToOneAvailabilityService;
 use App\Services\OneToOneSessionService;
 use App\Services\StudentEntitlementService;
 use Carbon\Carbon;
@@ -356,6 +357,303 @@ class OneToOneMonthlyBookingTest extends TestCase
             $session->scheduled_at->copy()->timezone('America/Los_Angeles')->format('H:i')
         );
         $this->assertSame(OneToOneSession::STATUS_SCHEDULED, $session->status);
+    }
+
+    public function test_admin_monthly_places_without_teacher_availability_and_saves_windows(): void
+    {
+        $student = User::factory()->create([
+            'role' => 'student',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+        $instructor = User::factory()->create([
+            'role' => 'teacher',
+            'is_active' => true,
+            'timezone' => 'Africa/Cairo',
+            'password' => Hash::make('password'),
+        ]);
+        $this->assertSame(0, OneToOneWeeklyAvailability::query()->where('instructor_id', $instructor->id)->count());
+
+        $entitlement = StudentEntitlementService::grantManual(
+            (int) $student->id,
+            ServicePackage::SCOPE_PRIVATE_LESSONS,
+            20,
+            null,
+            90,
+            'admin monthly without windows'
+        );
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $response = $this->withoutMiddleware()->actingAs($admin)->post(route('admin.placement.store'), [
+            'mode' => 'private',
+            'booking_style' => 'monthly',
+            'student_id' => $student->id,
+            'student_service_entitlement_id' => $entitlement->id,
+            'instructor_id' => $instructor->id,
+            'timezone' => 'Africa/Cairo',
+            'weeks' => 8,
+            'weekly_per_week' => 2,
+            'weekly_slots' => [
+                ['day_of_week' => 1, 'time' => '13:00:00'],
+                ['day_of_week' => 2, 'time' => '13:00'],
+            ],
+            'save_as_teacher_schedule' => '1',
+            'notes' => 'تسكين يدوي بدون جدول معلم',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertTrue(session()->has('success'));
+        $this->assertSame(16, OneToOneSession::query()->where('student_id', $student->id)->count());
+        $this->assertTrue(
+            OneToOneSession::query()->where('student_id', $student->id)->get()
+                ->every(fn ($s) => $s->status === OneToOneSession::STATUS_SCHEDULED)
+        );
+        $this->assertSame(2, OneToOneWeeklyAvailability::query()->where('instructor_id', $instructor->id)->count());
+        $this->assertSame(
+            ['13:00', '13:00'],
+            OneToOneWeeklyAvailability::query()
+                ->where('instructor_id', $instructor->id)
+                ->orderBy('day_of_week')
+                ->get()
+                ->map(fn ($r) => substr((string) $r->start_time, 0, 5))
+                ->all()
+        );
+        $this->assertSame(4, StudentEntitlementService::bookableUnitsLeft($entitlement->fresh()));
+    }
+
+    public function test_admin_placement_slots_json_works_with_and_without_windows(): void
+    {
+        [, $instructor] = $this->seedActors(4);
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+        $bareTeacher = User::factory()->create([
+            'role' => 'instructor',
+            'is_active' => true,
+            'timezone' => 'Africa/Cairo',
+            'password' => Hash::make('password'),
+        ]);
+
+        $withWindows = $this->withoutMiddleware()->actingAs($admin)->getJson(
+            route('admin.placement.slots', ['mode' => 'private', 'instructor_id' => $instructor->id])
+        );
+        $withWindows->assertOk()->assertJsonPath('ok', true);
+        $this->assertNotEmpty($withWindows->json('weekly_windows'));
+
+        $without = $this->withoutMiddleware()->actingAs($admin)->getJson(
+            route('admin.placement.slots', ['mode' => 'private', 'instructor_id' => $bareTeacher->id])
+        );
+        $without->assertOk()->assertJsonPath('ok', true);
+        $this->assertSame([], $without->json('weekly_windows'));
+        $this->assertNotEmpty($without->json('empty_hint'));
+    }
+
+    public function test_admin_placement_create_page_lets_admin_type_times_without_teacher_schedule(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $response = $this->actingAs($admin)->withoutMiddleware([
+            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+            \App\Http\Middleware\EnsurePermission::class,
+            \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+            \App\Http\Middleware\CheckActiveStatus::class,
+        ])->get(route('admin.placement.create', ['mode' => 'private']));
+
+        $response->assertOk();
+        $response->assertSee('تأكيد التسكين', false);
+        $response->assertSee('احفظ هذه المواعيد في جدول المعلم', false);
+        $response->assertSee('لا يشترط أن يكون المعلم قد ضبط جدوله', false);
+        $response->assertDontSee('اختر معلماً من جدول توافره فقط', false);
+        $html = $response->getContent();
+        $this->assertDoesNotMatchRegularExpression('/id="submitBtn"[^>]*\sdisabled/', $html);
+        $this->assertDoesNotMatchRegularExpression('/id="entitlementSelect"[^>]*\sdisabled/', $html);
+        $this->assertStringContainsString('if (!v) return;', $html);
+        $this->assertStringNotContainsString("dayEl.value = ''; timeEl.value = '';", $html);
+    }
+
+    public function test_admin_student_context_returns_private_credit(): void
+    {
+        [$student, , $entitlement] = $this->seedActors(6);
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $response = $this->withoutMiddleware()->actingAs($admin)->getJson(
+            route('admin.placement.student-context', ['student_id' => $student->id])
+        );
+
+        $response->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('has_package', true)
+            ->assertJsonPath('private_units', 6);
+        $this->assertSame($entitlement->id, (int) $response->json('bookable_entitlements.0.id'));
+    }
+
+    public function test_admin_monthly_rejects_when_credit_is_not_enough_for_generated_sessions(): void
+    {
+        $student = User::factory()->create(['role' => 'student', 'is_active' => true]);
+        $instructor = User::factory()->create(['role' => 'teacher', 'is_active' => true, 'timezone' => 'Africa/Cairo']);
+        $entitlement = StudentEntitlementService::grantManual(
+            (int) $student->id,
+            ServicePackage::SCOPE_PRIVATE_LESSONS,
+            10,
+            null,
+            90,
+            'short credit'
+        );
+        $admin = User::factory()->create(['role' => 'super_admin', 'is_active' => true]);
+
+        $response = $this->from(route('admin.placement.create'))
+            ->withoutMiddleware()
+            ->actingAs($admin)
+            ->post(route('admin.placement.store'), [
+                'mode' => 'private',
+                'booking_style' => 'monthly',
+                'student_id' => $student->id,
+                'student_service_entitlement_id' => $entitlement->id,
+                'instructor_id' => $instructor->id,
+                'weeks' => 8,
+                'weekly_slots' => [
+                    ['day_of_week' => 1, 'time' => '13:00'],
+                    ['day_of_week' => 2, 'time' => '13:00'],
+                ],
+                'save_as_teacher_schedule' => '0',
+            ]);
+
+        $response->assertRedirect(route('admin.placement.create'));
+        $this->assertTrue(session()->has('error'));
+        $this->assertMatchesRegularExpression('/الرصيد غير كاف/', (string) session('error'));
+        $this->assertSame(0, OneToOneSession::query()->count());
+        $this->assertSame(0, OneToOneWeeklyAvailability::query()->where('instructor_id', $instructor->id)->count());
+        $this->assertSame(10, StudentEntitlementService::bookableUnitsLeft($entitlement->fresh()));
+    }
+
+    public function test_admin_monthly_does_not_save_teacher_windows_when_unchecked(): void
+    {
+        $student = User::factory()->create(['role' => 'student', 'is_active' => true]);
+        $instructor = User::factory()->create(['role' => 'teacher', 'is_active' => true, 'timezone' => 'Africa/Cairo']);
+        $entitlement = StudentEntitlementService::grantManual(
+            (int) $student->id,
+            ServicePackage::SCOPE_PRIVATE_LESSONS,
+            4,
+            null,
+            90,
+            'no persist'
+        );
+        $admin = User::factory()->create(['role' => 'super_admin', 'is_active' => true]);
+
+        $this->withoutMiddleware()->actingAs($admin)->post(route('admin.placement.store'), [
+            'mode' => 'private',
+            'booking_style' => 'monthly',
+            'student_id' => $student->id,
+            'student_service_entitlement_id' => $entitlement->id,
+            'instructor_id' => $instructor->id,
+            'weeks' => 1,
+            'weekly_slots' => [
+                ['day_of_week' => 1, 'time' => '13:00'],
+            ],
+            'save_as_teacher_schedule' => '0',
+        ])->assertRedirect();
+
+        $this->assertSame(1, OneToOneSession::query()->where('student_id', $student->id)->count());
+        $this->assertSame(0, OneToOneWeeklyAvailability::query()->where('instructor_id', $instructor->id)->count());
+    }
+
+    public function test_admin_still_blocks_overlapping_times_for_the_same_teacher(): void
+    {
+        [$student, $instructor, $entitlement] = $this->seedActors(8);
+        $other = User::factory()->create(['role' => 'student', 'is_active' => true]);
+        $otherCredit = StudentEntitlementService::grantManual(
+            (int) $other->id,
+            ServicePackage::SCOPE_PRIVATE_LESSONS,
+            8,
+            null,
+            90,
+            'second student'
+        );
+        $admin = User::factory()->create(['role' => 'super_admin', 'is_active' => true]);
+
+        $payload = [
+            'mode' => 'private',
+            'booking_style' => 'monthly',
+            'instructor_id' => $instructor->id,
+            'weeks' => 4,
+            'weekly_slots' => [
+                ['day_of_week' => 1, 'time' => '18:00'],
+                ['day_of_week' => 3, 'time' => '18:00'],
+            ],
+            'save_as_teacher_schedule' => '0',
+        ];
+
+        $this->withoutMiddleware()->actingAs($admin)->post(route('admin.placement.store'), $payload + [
+            'student_id' => $student->id,
+            'student_service_entitlement_id' => $entitlement->id,
+        ])->assertRedirect();
+        $this->assertSame(8, OneToOneSession::query()->where('student_id', $student->id)->count());
+
+        $this->from(route('admin.placement.create'))
+            ->withoutMiddleware()
+            ->actingAs($admin)
+            ->post(route('admin.placement.store'), $payload + [
+                'student_id' => $other->id,
+                'student_service_entitlement_id' => $otherCredit->id,
+            ])
+            ->assertRedirect(route('admin.placement.create'));
+
+        $this->assertMatchesRegularExpression('/متعارض/', (string) session('error'));
+        $this->assertSame(0, OneToOneSession::query()->where('student_id', $other->id)->count());
+        $this->assertSame(8, StudentEntitlementService::bookableUnitsLeft($otherCredit->fresh()));
+    }
+
+    public function test_student_can_book_after_admin_sets_teacher_windows(): void
+    {
+        $student = User::factory()->create(['role' => 'student', 'is_active' => true]);
+        $instructor = User::factory()->create(['role' => 'instructor', 'is_active' => true, 'timezone' => 'Africa/Cairo']);
+        StudentEntitlementService::grantManual(
+            (int) $student->id,
+            ServicePackage::SCOPE_PRIVATE_LESSONS,
+            8,
+            null,
+            90,
+            'after admin windows'
+        );
+
+        $this->assertSame(0, OneToOneWeeklyAvailability::query()->where('instructor_id', $instructor->id)->count());
+        $this->assertSame(2, OneToOneAvailabilityService::ensureWindows((int) $instructor->id, [
+            ['day_of_week' => 1, 'time' => '18:00'],
+            ['day_of_week' => 3, 'time' => '18:00'],
+        ], 50));
+        $this->assertSame(0, OneToOneAvailabilityService::ensureWindows((int) $instructor->id, [
+            ['day_of_week' => 1, 'time' => '18:00'],
+            ['day_of_week' => 3, 'time' => '18:00'],
+        ], 50));
+
+        $this->actingAs($student)->post(
+            route('student.one-to-one-sessions.book-instructor', $instructor),
+            [
+                'booking_style' => 'monthly',
+                'weeks' => 4,
+                'weekly_slots' => [
+                    ['day_of_week' => 1, 'time' => '18:00'],
+                    ['day_of_week' => 3, 'time' => '18:00'],
+                ],
+            ]
+        )->assertRedirect(route('student.one-to-one-sessions.index'));
+
+        $this->assertSame(8, OneToOneSession::query()->where('student_id', $student->id)->count());
+        $this->assertSame(2, OneToOneWeeklyAvailability::query()->where('instructor_id', $instructor->id)->count());
     }
 
     public function test_admin_can_delete_registered_monthly_placement_and_restore_credit(): void

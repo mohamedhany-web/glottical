@@ -265,7 +265,7 @@
                 <div class="flex items-center justify-between gap-3">
                     <div>
                         <h3 class="text-base font-semibold text-ink">توفر الحصص الخاصة (1:1)</h3>
-                        <p class="text-xs text-muted mt-1">نفس تحكم المعلم — من الإدارة مباشرة.</p>
+                        <p class="text-xs text-muted mt-1">الإدارة تضبط مواعيد المعلم من هنا حتى لو المعلم لم يفتح حسابه. التسكين يمكن أن يستخدم هذه النوافذ أو يكتب اليوم والساعة يدوياً.</p>
                     </div>
                     <button type="button" @click="addSlot(1)" class="text-xs font-semibold text-accent">+ نافذة</button>
                 </div>

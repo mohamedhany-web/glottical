@@ -130,20 +130,20 @@ class OneToOneSessionService
         ?User $bookedBy = null,
         ?string $notes = null,
         ?Carbon $from = null,
-        bool $requireAvailability = true
+        bool $requireAvailability = true,
+        ?string $timezone = null
     ) {
         $weeks = max(1, min(self::MAX_SERIES_WEEKS, $weeks));
         $normalized = collect($weeklySlots)
             ->map(function ($row) {
                 $day = (int) ($row['day_of_week'] ?? 0);
-                $time = trim((string) ($row['time'] ?? ''));
-                if (strlen($time) === 8) {
-                    $time = substr($time, 0, 5);
-                }
+                $time = \App\Support\WeeklyScheduleTime::normalize((string) ($row['time'] ?? ''));
 
-                return ['day_of_week' => $day, 'time' => $time];
+                return $day >= 1 && $day <= 7 && $time !== null
+                    ? ['day_of_week' => $day, 'time' => $time]
+                    : null;
             })
-            ->filter(fn ($row) => $row['day_of_week'] >= 1 && $row['day_of_week'] <= 7 && preg_match('/^\d{2}:\d{2}$/', $row['time']))
+            ->filter()
             ->unique(fn ($row) => $row['day_of_week'].'|'.$row['time'])
             ->values();
 
@@ -159,7 +159,7 @@ class OneToOneSessionService
             $normalized->all(),
             $weeks,
             $from,
-            \App\Support\AppTimezone::forUser($instructor)
+            $timezone ?? \App\Support\AppTimezone::forUser($instructor)
         );
 
         if (count($dates) < 1) {
@@ -350,8 +350,8 @@ class OneToOneSessionService
 
         foreach ($weeklySlots as $slot) {
             $day = (int) ($slot['day_of_week'] ?? 0);
-            $time = (string) ($slot['time'] ?? '');
-            if ($day < 1 || $day > 7 || ! preg_match('/^\d{2}:\d{2}$/', $time)) {
+            $time = \App\Support\WeeklyScheduleTime::normalize((string) ($slot['time'] ?? ''));
+            if ($day < 1 || $day > 7 || $time === null) {
                 continue;
             }
             $byKey[$day.'|'.$time] = ['day_of_week' => $day, 'time' => $time, 'hits' => []];

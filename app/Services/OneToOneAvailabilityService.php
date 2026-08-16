@@ -63,6 +63,56 @@ class OneToOneAvailabilityService
     }
 
     /**
+     * أضف نوافذ أسبوعية للمعلم دون مسح الجدول الحالي (تسكين الإدارة).
+     *
+     * @param  array<int, array{day_of_week?:mixed,time?:mixed,start_time?:mixed}>  $weeklySlots
+     */
+    public static function ensureWindows(int $instructorId, array $weeklySlots, ?int $durationMinutes = null): int
+    {
+        $durationMinutes = max(30, min(180, $durationMinutes ?: (int) config('private_lessons.lesson_duration_minutes', 50)));
+        $created = 0;
+
+        foreach ($weeklySlots as $slot) {
+            $day = (int) ($slot['day_of_week'] ?? 0);
+            $time = WeeklyScheduleTime::normalize((string) ($slot['time'] ?? $slot['start_time'] ?? ''));
+            if ($day < 1 || $day > 7 || $time === null) {
+                continue;
+            }
+
+            $already = self::rulesForInstructor($instructorId)->contains(function ($rule) use ($day, $time) {
+                if ((int) $rule->day_of_week !== $day) {
+                    return false;
+                }
+                $start = is_string($rule->start_time)
+                    ? substr($rule->start_time, 0, 5)
+                    : $rule->start_time->format('H:i');
+
+                return WeeklyScheduleTime::normalize($start) === $time;
+            });
+            if ($already) {
+                continue;
+            }
+
+            $endMins = WeeklyScheduleTime::toMinutes($time) + $durationMinutes;
+            $end = $endMins >= (24 * 60)
+                ? '00:00'
+                : sprintf('%02d:%02d', intdiv($endMins, 60), $endMins % 60);
+
+            OneToOneWeeklyAvailability::create([
+                'instructor_id' => $instructorId,
+                'day_of_week' => $day,
+                'start_time' => $time.':00',
+                'end_time' => $end.':00',
+                'slot_duration_minutes' => $durationMinutes,
+                'is_active' => true,
+            ]);
+            $created++;
+        }
+
+        return $created;
+    }
+
+    /**
      * Weekly H:i rules are interpreted in the instructor's timezone (academy default), returned as UTC instants.
      *
      * @return Collection<int, array{starts_at: Carbon, ends_at: Carbon, label: string}>
