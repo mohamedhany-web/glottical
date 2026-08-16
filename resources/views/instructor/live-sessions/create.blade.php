@@ -80,6 +80,7 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        @include('partials.timezone-select', ['value' => old('timezone', auth()->user()?->timezoneCode())])
                         <div>
                             <label for="scheduled_at" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">موعد البث <span class="text-red-500">*</span></label>
                             <input type="datetime-local" name="scheduled_at" id="scheduled_at" value="{{ old('scheduled_at') }}" required

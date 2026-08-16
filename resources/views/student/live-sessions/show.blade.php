@@ -80,7 +80,7 @@
                 <i class="fas fa-calendar text-amber-600 mt-0.5"></i>
                 <div>
                     <p class="text-xs font-semibold text-gray-500 dark:text-slate-400 mb-0.5">الموعد المجدول</p>
-                    <p class="font-semibold text-gray-900 dark:text-slate-100">{{ $liveSession->scheduled_at?->format('Y/m/d — H:i') ?? '—' }}</p>
+                    <p class="font-semibold text-gray-900 dark:text-slate-100"><x-app-datetime :at="$liveSession->scheduled_at" pattern="Y/m/d — H:i" /></p>
                 </div>
             </div>
             <div class="flex items-start gap-3 p-4 rounded-xl bg-gray-50 dark:bg-slate-700/40 border border-gray-100 dark:border-slate-600">

@@ -126,7 +126,7 @@ function updateStatus(status) {
                             @if($lecture->scheduled_at)
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white/10 border border-white/15">
                                     <i class="fas fa-calendar"></i>
-                                    {{ $lecture->scheduled_at->format('Y/m/d H:i') }}
+                                    <x-app-datetime :at="$lecture->scheduled_at" pattern="Y/m/d H:i" />
                                 </span>
                             @endif
                         </div>
@@ -230,7 +230,7 @@ function updateStatus(status) {
                             <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">التاريخ والوقت</label>
                             <div class="flex items-center gap-2 text-slate-800 dark:text-slate-100 font-black">
                                 <i class="fas fa-calendar-alt text-sky-600"></i>
-                                {{ $lecture->scheduled_at->format('Y/m/d H:i') }}
+                                <x-app-datetime :at="$lecture->scheduled_at" pattern="Y/m/d H:i" />
                             </div>
                         </div>
                         <div>

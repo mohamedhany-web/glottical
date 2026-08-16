@@ -80,12 +80,12 @@
                 @endphp
                 <div class="px-5 py-4 flex flex-wrap items-center justify-between gap-3">
                     <div class="min-w-0">
-                        <p class="text-lg font-black text-[#0B3D91] tabular-nums">{{ $slot->scheduled_at?->format('g:i A') }}</p>
+                        <p class="text-lg font-black text-[#0B3D91] tabular-nums"><x-app-datetime :at="$slot->scheduled_at" pattern="g:i A" /></p>
                         <p class="font-bold text-gray-900 dark:text-white">
                             {{ $slot->course->title ?? 'Private lesson' }}
                             <span class="text-gray-500 font-semibold">— {{ $slot->student->name ?? '—' }}</span>
                         </p>
-                        <p class="text-xs text-gray-500 mt-0.5">{{ $dur }} {{ $isRtl ? 'دقيقة' : 'min' }}@if($end) · {{ $slot->scheduled_at?->format('g:i A') }}–{{ $end->format('g:i A') }}@endif</p>
+                        <p class="text-xs text-gray-500 mt-0.5">{{ $dur }} {{ $isRtl ? 'دقيقة' : 'min' }}@if($end) · <x-app-datetime :at="$slot->scheduled_at" pattern="g:i A" />–<x-app-datetime :at="$end" pattern="g:i A" />@endif</p>
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 px-3 py-1 text-xs font-extrabold">🟢 Upcoming</span>
@@ -133,7 +133,7 @@
                             <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ $session->course->title ?? '—' }}</td>
                             <td class="px-4 py-3 text-gray-500">{{ $session->session_number }}</td>
                             <td class="px-4 py-3"><span class="px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-xs font-medium">{{ $session->statusLabel() }}</span></td>
-                            <td class="px-4 py-3 text-xs text-gray-500">{{ $session->scheduled_at?->format('Y-m-d H:i') ?? '—' }}</td>
+                            <td class="px-4 py-3 text-xs text-gray-500">@if($session->scheduled_at)<x-app-datetime :at="$session->scheduled_at" pattern="Y-m-d H:i" />@else — @endif</td>
                             <td class="px-4 py-3">
                                 <a href="{{ route('instructor.one-to-one-sessions.show', $session) }}" class="text-sky-600 dark:text-sky-400 font-semibold hover:underline">{{ $isRtl ? 'إدارة' : 'Manage' }}</a>
                             </td>

@@ -6,8 +6,7 @@
 @php
     $locale = app()->getLocale();
     $user = auth()->user();
-    $avatarUrl = ($user?->profile_image_url)
-        ?: asset('img/student-timeline/avatar.png');
+    $avatarUrl = $user?->avatarDisplayUrl() ?? \App\Models\User::placeholderAvatarUrl();
 @endphp
 
 @include('partials.student-timeline-top', [

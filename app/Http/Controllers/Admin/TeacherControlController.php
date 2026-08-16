@@ -15,6 +15,7 @@ use App\Services\OneToOneSessionService;
 use App\Services\TutoringGroupAvailabilityService;
 use App\Services\TutoringGroupOrchestrationService;
 use App\Support\WeeklyScheduleTime;
+use App\Support\AppTimezone;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -330,7 +331,15 @@ class TeacherControlController extends Controller
     {
         $this->assertTeacher($teacher);
 
-        $data = $request->validate(WeeklyScheduleTime::slotTimeRules(240, true));
+        $data = $request->validate(array_merge(
+            WeeklyScheduleTime::slotTimeRules(240, true),
+            ['timezone' => AppTimezone::inputRules()]
+        ));
+
+        AppTimezone::persistForUser(
+            $teacher,
+            is_string($data['timezone'] ?? null) ? $data['timezone'] : null
+        );
 
         TutoringGroupAvailabilityService::syncRules((int) $teacher->id, $data['slots'] ?? []);
 
@@ -343,7 +352,15 @@ class TeacherControlController extends Controller
     {
         $this->assertTeacher($teacher);
 
-        $data = $request->validate(WeeklyScheduleTime::slotTimeRules(180));
+        $data = $request->validate(array_merge(
+            WeeklyScheduleTime::slotTimeRules(180),
+            ['timezone' => AppTimezone::inputRules()]
+        ));
+
+        AppTimezone::persistForUser(
+            $teacher,
+            is_string($data['timezone'] ?? null) ? $data['timezone'] : null
+        );
 
         OneToOneAvailabilityService::syncRules((int) $teacher->id, $data['slots'] ?? []);
 
@@ -359,13 +376,15 @@ class TeacherControlController extends Controller
 
         $data = $request->validate([
             'scheduled_at' => ['required', 'date'],
+            'timezone' => AppTimezone::inputRules(),
             'force' => ['nullable', 'boolean'],
         ]);
+        $data = AppTimezone::shiftRequestDateTime($request, $data, 'scheduled_at', mustBeFuture: false, fallbackUser: $teacher);
 
         try {
             $this->adminScheduleOrReschedule(
                 $session,
-                Carbon::parse($data['scheduled_at']),
+                $data['scheduled_at'],
                 $request->user(),
                 ! $request->boolean('force')
             );

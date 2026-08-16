@@ -97,17 +97,18 @@ class TutoringGroupAvailabilityService
             ->with('tutoringGroup:id,type')
             ->get(['id', 'tutoring_group_id', 'starts_at', 'ends_at']);
 
-        $academy = AppTimezone::academy();
+        $clockTz = AppTimezone::forInstructorId((int) $group->instructor_id);
+        $viewerTz = AppTimezone::forUser(auth()->user());
         $slots = collect();
-        $cursor = $from->copy()->timezone($academy)->startOfDay();
-        $endDay = $to->copy()->timezone($academy)->endOfDay();
+        $cursor = $from->copy()->timezone($clockTz)->startOfDay();
+        $endDay = $to->copy()->timezone($clockTz)->endOfDay();
 
         while ($cursor->lte($endDay)) {
             $dayRules = $rules->where('day_of_week', $cursor->isoWeekday());
             foreach ($dayRules as $rule) {
                 $ruleDuration = (int) ($rule->slot_duration_minutes ?: $duration);
-                $windowStart = AppTimezone::wallClockToUtc($cursor->toDateString(), $rule->startTimeString(), $academy);
-                $windowEnd = WeeklyScheduleTime::windowEndUtc($cursor->toDateString(), $rule->startTimeString(), $rule->endTimeString(), $academy);
+                $windowStart = AppTimezone::wallClockToUtc($cursor->toDateString(), $rule->startTimeString(), $clockTz);
+                $windowEnd = WeeklyScheduleTime::windowEndUtc($cursor->toDateString(), $rule->startTimeString(), $rule->endTimeString(), $clockTz);
                 $slotStart = $windowStart->copy();
 
                 while ($slotStart->copy()->addMinutes($ruleDuration)->lte($windowEnd)) {
@@ -133,7 +134,7 @@ class TutoringGroupAvailabilityService
                         }
 
                         if ($available) {
-                            $local = $slotStart->copy()->timezone($academy);
+                            $local = $slotStart->copy()->timezone($viewerTz);
                             $slots->push([
                                 'starts_at' => $slotStart->copy()->utc()->toIso8601String(),
                                 'ends_at' => $slotEnd->copy()->utc()->toIso8601String(),
@@ -163,9 +164,20 @@ class TutoringGroupAvailabilityService
             throw new InvalidArgumentException('هذه المجموعة غير متاحة للحجز حالياً.');
         }
 
-        $starts = Carbon::parse($data['starts_at']);
-        $allowed = self::availableSlots($group, $starts->copy()->startOfDay(), $starts->copy()->endOfDay())
-            ->first(fn ($s) => Carbon::parse($s['starts_at'])->equalTo($starts));
+        $starts = AppTimezone::parseAppointmentInput((string) $data['starts_at'])
+            ?? Carbon::parse($data['starts_at'])->utc();
+        $clockTz = AppTimezone::forInstructorId((int) $group->instructor_id);
+        $allowed = self::availableSlots(
+            $group,
+            $starts->copy()->timezone($clockTz)->startOfDay()->utc(),
+            $starts->copy()->timezone($clockTz)->endOfDay()->utc()
+        )->first(function ($s) use ($starts) {
+            $slotStart = $s['starts_at'] instanceof Carbon
+                ? $s['starts_at']->copy()->utc()
+                : Carbon::parse($s['starts_at'])->utc();
+
+            return $slotStart->equalTo($starts->copy()->utc());
+        });
 
         if (! $allowed) {
             throw new InvalidArgumentException('هذا الموعد لم يعد متاحاً. اختر موعداً آخر.');

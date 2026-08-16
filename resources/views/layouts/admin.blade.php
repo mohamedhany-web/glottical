@@ -535,6 +535,7 @@
 </div>
 
 @stack('scripts')
+@include('partials.timezone-sync')
 
 <script>
   document.addEventListener('click', function (e) {

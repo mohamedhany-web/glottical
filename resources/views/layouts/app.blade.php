@@ -658,5 +658,6 @@ function themeManager() {
     </div>
 
     @stack('scripts')
+    @include('partials.timezone-sync')
 </body>
 </html>

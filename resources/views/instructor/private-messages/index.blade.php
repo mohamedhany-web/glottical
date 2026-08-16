@@ -6,7 +6,7 @@
 @section('content')
 @php
     $isRtl = app()->getLocale() === 'ar';
-    $avatarFallback = asset('img/student-timeline/avatar.png');
+    $avatarFallback = \App\Models\User::placeholderAvatarUrl();
 @endphp
 
 <div class="space-y-5">

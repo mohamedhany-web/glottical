@@ -61,7 +61,7 @@
                         @endif
                     </div>
                     <div><span class="text-slate-500">الكورس:</span> <span class="font-semibold text-slate-800 dark:text-white mr-2">{{ $liveSession->course?->title ?? 'جلسة عامة' }}</span></div>
-                    <div><span class="text-slate-500">الموعد:</span> <span class="font-semibold text-slate-800 dark:text-white mr-2">{{ $liveSession->scheduled_at?->format('Y/m/d H:i') ?? '—' }}</span></div>
+                    <div><span class="text-slate-500">الموعد:</span> <span class="font-semibold text-slate-800 dark:text-white mr-2">@if($liveSession->scheduled_at)<x-app-datetime :at="$liveSession->scheduled_at" pattern="Y/m/d H:i" />@else — @endif</span></div>
                     <div><span class="text-slate-500">المدة:</span> <span class="font-semibold text-slate-800 dark:text-white mr-2">{{ $liveSession->duration_for_humans }}</span></div>
                     <div><span class="text-slate-500">الحد الأقصى:</span> <span class="font-semibold text-slate-800 dark:text-white mr-2">{{ $liveSession->max_participants }} مشارك</span></div>
                     <div><span class="text-slate-500">السيرفر:</span> <span class="font-semibold text-slate-800 dark:text-white mr-2">{{ $liveSession->server?->name ?? 'افتراضي' }}</span></div>

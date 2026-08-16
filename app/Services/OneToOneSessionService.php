@@ -152,7 +152,12 @@ class OneToOneSessionService
         }
 
         $from = ($from?->copy() ?? now()->addHour())->startOfMinute();
-        $dates = self::expandWeeklyPattern($normalized->all(), $weeks, $from);
+        $dates = self::expandWeeklyPattern(
+            $normalized->all(),
+            $weeks,
+            $from,
+            \App\Support\AppTimezone::forUser($instructor)
+        );
 
         if (count($dates) < 1) {
             throw new \InvalidArgumentException('تعذر توليد مواعيد من النمط الأسبوعي خلال الفترة المحددة.');
@@ -190,7 +195,14 @@ class OneToOneSessionService
         }
 
         $dates = collect($scheduledAts)
-            ->map(fn ($at) => $at instanceof Carbon ? $at->copy() : Carbon::parse((string) $at))
+            ->map(function ($at) {
+                if ($at instanceof Carbon) {
+                    return $at->copy()->utc();
+                }
+
+                return \App\Support\AppTimezone::parseAppointmentInput((string) $at)
+                    ?? Carbon::parse((string) $at)->utc();
+            })
             ->filter(fn (Carbon $at) => $at->gt(now()))
             ->unique(fn (Carbon $at) => $at->format('Y-m-d H:i'))
             ->sortBy(fn (Carbon $at) => $at->timestamp)
@@ -308,11 +320,11 @@ class OneToOneSessionService
      * @param  array<int, array{day_of_week:int,time:string}>  $weeklySlots
      * @return array<int, Carbon>
      */
-    public static function expandWeeklyPattern(array $weeklySlots, int $weeks, Carbon $from): array
+    public static function expandWeeklyPattern(array $weeklySlots, int $weeks, Carbon $from, ?string $timezone = null): array
     {
         $weeks = max(1, min(8, $weeks));
-        $academy = \App\Support\AppTimezone::academy();
-        $cursor = $from->copy()->timezone($academy)->startOfDay();
+        $clockTz = \App\Support\AppTimezone::normalize($timezone) ?? \App\Support\AppTimezone::academy();
+        $cursor = $from->copy()->timezone($clockTz)->startOfDay();
         $hardEnd = $cursor->copy()->addWeeks($weeks)->endOfDay();
         $neededPerPattern = $weeks;
         $byKey = [];
@@ -342,7 +354,7 @@ class OneToOneSessionService
                 if (count($meta['hits']) >= $neededPerPattern) {
                     continue;
                 }
-                $at = \App\Support\AppTimezone::wallClockToUtc($dayCursor->toDateString(), $meta['time'], $academy);
+                $at = \App\Support\AppTimezone::wallClockToUtc($dayCursor->toDateString(), $meta['time'], $clockTz);
                 if ($at->gt($from)) {
                     $byKey[$key]['hits'][] = $at;
                 }

@@ -6,6 +6,8 @@ use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use DateTimeZone;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 /**
@@ -39,6 +41,7 @@ class AppTimezone
             'America/Chicago' => 'أمريكا — شيكاغو (America/Chicago)',
             'America/Denver' => 'أمريكا — دنفر (America/Denver)',
             'America/Los_Angeles' => 'أمريكا — لوس أنجلوس (America/Los_Angeles)',
+            'America/Phoenix' => 'أمريكا — فينيكس (America/Phoenix)',
             'America/Toronto' => 'كندا — تورونتو (America/Toronto)',
             'Australia/Sydney' => 'أستراليا — سيدني (Australia/Sydney)',
             'UTC' => 'UTC',
@@ -62,6 +65,51 @@ class AppTimezone
         }
 
         return self::academy();
+    }
+
+    /**
+     * منطقة ساعة المعلم لحجز النوافذ الأسبوعية (fallback: الأكاديمية).
+     */
+    public static function forInstructorId(int $instructorId): string
+    {
+        $user = User::query()->find($instructorId);
+
+        return self::forUser($user);
+    }
+
+    /**
+     * @return array<int, string|\Closure>
+     */
+    public static function inputRules(bool $required = false): array
+    {
+        return [
+            $required ? 'required' : 'nullable',
+            'string',
+            'max:64',
+            function (string $attribute, mixed $value, \Closure $fail): void {
+                if ($value === null || $value === '') {
+                    return;
+                }
+                if (! self::isValid((string) $value)) {
+                    $fail('منطقة زمنية غير صالحة.');
+                }
+            },
+        ];
+    }
+
+    public static function resolveInput(?string $requested, ?User $user = null): string
+    {
+        return self::normalize($requested) ?? self::forUser($user);
+    }
+
+    public static function persistForUser(User $user, ?string $timezone): string
+    {
+        $tz = self::resolveInput($timezone, $user);
+        if ((string) $user->timezone !== $tz) {
+            $user->forceFill(['timezone' => $tz])->save();
+        }
+
+        return $tz;
     }
 
     public static function normalize(?string $timezone): ?string
@@ -96,7 +144,81 @@ class AppTimezone
             return $datetime->copy()->timezone($tz)->utc();
         }
 
-        return Carbon::parse($datetime, $tz)->utc();
+        return Carbon::parse(str_replace('T', ' ', trim($datetime)), $tz)->utc();
+    }
+
+    /**
+     * datetime-local (بدون منطقة) أو لحظة مطلقة (ISO مع Z/offset).
+     */
+    public static function parseAppointmentInput(?string $value, ?string $timezone = null): ?Carbon
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('/(?:[zZ]|[+-]\d{2}:?\d{2})$/', $value)) {
+            return Carbon::parse($value)->utc();
+        }
+
+        // قيم القوائم القديمة: "Y-m-d H:i:s" مخزّنة أصلاً كـ UTC (بدون T).
+        if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $value)) {
+            return Carbon::parse($value, 'UTC')->utc();
+        }
+
+        return self::parseLocalToUtc($value, $timezone);
+    }
+
+    /**
+     * قيمة حقل datetime-local بتوقيت المنطقة المختارة.
+     */
+    public static function datetimeLocalValue(?CarbonInterface $datetime, ?string $timezone = null): string
+    {
+        if (! $datetime) {
+            return '';
+        }
+
+        $tz = self::normalize($timezone) ?? self::academy();
+
+        return $datetime->copy()->timezone($tz)->format('Y-m-d\TH:i');
+    }
+
+    /**
+     * تفسير موعد من النموذج حسب المنطقة المختارة (أو منطقة المستخدم).
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    public static function shiftRequestDateTime(
+        Request $request,
+        array $validated,
+        string $field = 'scheduled_at',
+        bool $mustBeFuture = false,
+        ?User $fallbackUser = null,
+    ): array {
+        if (empty($validated[$field])) {
+            return $validated;
+        }
+
+        $tz = self::resolveInput(
+            is_string($request->input('timezone')) ? $request->input('timezone') : null,
+            $fallbackUser ?? $request->user()
+        );
+        $parsed = self::parseAppointmentInput((string) $validated[$field], $tz);
+        if (! $parsed) {
+            return $validated;
+        }
+
+        if ($mustBeFuture && $parsed->lte(now())) {
+            throw ValidationException::withMessages([
+                $field => 'الموعد يجب أن يكون في المستقبل حسب المنطقة الزمنية المختارة.',
+            ]);
+        }
+
+        $validated[$field] = $parsed;
+        unset($validated['timezone']);
+
+        return $validated;
     }
 
     /**

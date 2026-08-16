@@ -7,7 +7,10 @@
 @php
     $scheduledAtValue = old('scheduled_at');
     if ($scheduledAtValue === null && $lecture->scheduled_at) {
-        $scheduledAtValue = $lecture->scheduled_at->format('Y-m-d\TH:i');
+        $scheduledAtValue = \App\Support\AppTimezone::datetimeLocalValue(
+            $lecture->scheduled_at,
+            old('timezone', auth()->user()?->timezoneCode())
+        );
     }
     $platforms = [
         'bunny' => 'Bunny.net',
@@ -123,6 +126,11 @@
             </div>
             <div class="p-5 sm:p-6">
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+                    @include('partials.timezone-select', [
+                        'value' => old('timezone', auth()->user()?->timezoneCode()),
+                        'class' => $fieldClass,
+                        'labelClass' => $labelClass,
+                    ])
                     <div>
                         <label for="scheduled_at" class="{{ $labelClass }}">تاريخ ووقت المحاضرة <span class="text-rose-600">*</span></label>
                         <input type="datetime-local" name="scheduled_at" id="scheduled_at" value="{{ $scheduledAtValue }}" required

@@ -92,13 +92,14 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                @include('partials.timezone-select', ['value' => old('timezone', auth()->user()?->timezoneCode())])
                 <!-- التاريخ والوقت -->
                 <div>
                     <label for="scheduled_at" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                         التاريخ والوقت <span class="text-rose-500">*</span>
                     </label>
                     <input type="datetime-local" name="scheduled_at" id="scheduled_at" 
-                           value="{{ old('scheduled_at', $lecture->scheduled_at->format('Y-m-d\TH:i')) }}" required
+                           value="{{ old('scheduled_at', \App\Support\AppTimezone::datetimeLocalValue($lecture->scheduled_at, old('timezone', auth()->user()?->timezoneCode()))) }}" required
                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white">
                     @error('scheduled_at')
                         <p class="mt-1 text-sm text-rose-500">{{ $message }}</p>

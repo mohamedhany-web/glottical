@@ -214,6 +214,26 @@
                             @enderror
                         </div>
                         <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ app()->getLocale() === 'ar' ? 'المنطقة الزمنية' : 'Timezone' }}</label>
+                            @php
+                                $tzOptions = \App\Support\AppTimezone::commonZones();
+                                $tzCurrent = old('timezone', $user->timezone ?: \App\Support\AppTimezone::academy());
+                                if ($tzCurrent && ! array_key_exists($tzCurrent, $tzOptions)) {
+                                    $tzOptions = [$tzCurrent => $tzCurrent] + $tzOptions;
+                                }
+                            @endphp
+                            <select name="timezone" data-timezone-select required
+                                    class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-colors">
+                                @foreach ($tzOptions as $tzId => $tzLabel)
+                                    <option value="{{ $tzId }}" @selected($tzCurrent === $tzId)>{{ $tzLabel }}</option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs text-slate-500 mt-1">{{ app()->getLocale() === 'ar' ? 'ساعات التوفر والمواعيد هتتحسب حسب المنطقة دي. لو المقابلة في أمريكا اختار نيويورك أو لوس أنجلوس.' : 'Availability and appointments use this timezone. Choose a US zone for meetings in America.' }}</p>
+                            @error('timezone')
+                                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="md:col-span-2">
                             <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ __('instructor.bio_optional') }}</label>
                             <textarea name="bio" rows="4" placeholder="{{ __('instructor.bio_placeholder_short') }}"
                                       class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-colors">{{ old('bio', $user->bio) }}</textarea>

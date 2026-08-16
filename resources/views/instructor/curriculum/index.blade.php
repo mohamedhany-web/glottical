@@ -210,6 +210,10 @@
                 <input type="hidden" name="course_lesson_id" value="">
                 <input type="hidden" name="duration_minutes" id="lectureDuration" value="60">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    @include('partials.timezone-select', [
+                        'value' => old('timezone', auth()->user()?->timezoneCode()),
+                        'class' => 'w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100',
+                    ])
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">التاريخ والوقت <span class="text-red-500">*</span></label>
                         <input type="datetime-local" name="scheduled_at" id="lectureScheduledAt" required
@@ -964,9 +968,15 @@ async function editLectureFromCurriculum(lectureId, sectionId) {
         document.getElementById('lectureDescription').value = lecture.description || '';
         // تحويل التاريخ
         if (lecture.scheduled_at) {
-            const scheduledDate = new Date(lecture.scheduled_at);
-            scheduledDate.setMinutes(scheduledDate.getMinutes() - scheduledDate.getTimezoneOffset());
-            document.getElementById('lectureScheduledAt').value = scheduledDate.toISOString().slice(0, 16);
+            var tzEl = document.querySelector('[data-timezone-select]');
+            var tz = tzEl && tzEl.value ? tzEl.value : 'UTC';
+            if (window.glotticalDateTimeLocal) {
+                document.getElementById('lectureScheduledAt').value = window.glotticalDateTimeLocal(lecture.scheduled_at, tz);
+            } else {
+                const scheduledDate = new Date(lecture.scheduled_at);
+                scheduledDate.setMinutes(scheduledDate.getMinutes() - scheduledDate.getTimezoneOffset());
+                document.getElementById('lectureScheduledAt').value = scheduledDate.toISOString().slice(0, 16);
+            }
         }
         
         document.getElementById('lectureDuration').value = lecture.duration_minutes || 60;

@@ -10,7 +10,7 @@ use App\Models\User;
 use App\Services\OneToOneAvailabilityService;
 use App\Services\OneToOneSessionService;
 use App\Services\StudentEntitlementService;
-use Carbon\Carbon;
+use App\Support\AppTimezone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -79,9 +79,11 @@ class OneToOneSessionController extends Controller
         $data = $request->validate([
             'student_service_entitlement_id' => ['required', 'exists:student_service_entitlements,id'],
             'instructor_id' => ['required', 'exists:users,id'],
-            'scheduled_at' => ['nullable', 'date', 'after:now'],
+            'scheduled_at' => ['nullable', 'date'],
+            'timezone' => AppTimezone::inputRules(),
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
+        $data = AppTimezone::shiftRequestDateTime($request, $data, 'scheduled_at', mustBeFuture: true);
 
         $entitlement = StudentServiceEntitlement::query()->with('user')->findOrFail($data['student_service_entitlement_id']);
         $instructor = User::query()->findOrFail($data['instructor_id']);
@@ -109,7 +111,7 @@ class OneToOneSessionController extends Controller
             try {
                 OneToOneSessionService::scheduleSession(
                     $session,
-                    Carbon::parse($data['scheduled_at']),
+                    $data['scheduled_at'],
                     OneToOneSession::defaultDurationMinutes(),
                     $request->user(),
                     true

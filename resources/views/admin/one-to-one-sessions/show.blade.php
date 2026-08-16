@@ -32,7 +32,7 @@
                 <dt class="text-slate-500">{{ __('student.one_to_one_appointment') }}</dt>
                 <dd class="font-semibold">
                     @if($session->scheduled_at)
-                        {{ $session->scheduled_at->format('Y-m-d H:i') }}
+                        <x-app-datetime :at="$session->scheduled_at" />
                         ({{ (int) $session->duration_minutes }} {{ __('student.minutes') }})
                     @else
                         {{ __('student.one_to_one_pending_schedule') }}

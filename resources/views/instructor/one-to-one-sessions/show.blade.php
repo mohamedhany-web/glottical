@@ -22,7 +22,7 @@
         @if($session->status === \App\Models\OneToOneSession::STATUS_SCHEDULED && $session->classroomMeeting)
             @php $m = $session->classroomMeeting; @endphp
             <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 p-4 space-y-3">
-                <p class="font-bold text-emerald-900 dark:text-emerald-100">الموعد: {{ $session->scheduled_at?->format('Y-m-d H:i') }}</p>
+                <p class="font-bold text-emerald-900 dark:text-emerald-100">الموعد: <x-app-datetime :at="$session->scheduled_at" /></p>
                 <div class="flex flex-wrap gap-2">
                     <a href="{{ route('instructor.classroom.show', $m) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 text-white text-sm font-bold">إعدادات الغرفة</a>
                     @if(!$m->ended_at)
@@ -41,11 +41,13 @@
             </div>
             <form method="POST" action="{{ route('instructor.one-to-one-sessions.schedule', $session) }}" class="space-y-4 border-t border-slate-100 dark:border-slate-700 pt-4">
                 @csrf
+                @php $tzCurrent = old('timezone', auth()->user()?->timezoneCode()); @endphp
+                @include('partials.timezone-select', ['value' => $tzCurrent, 'class' => 'w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5'])
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">تاريخ ووقت الحصة</label>
                     <input type="datetime-local" name="scheduled_at" required
                            class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5"
-                           min="{{ now()->addHour()->format('Y-m-d\TH:i') }}">
+                           min="{{ now()->timezone($tzCurrent)->addHour()->format('Y-m-d\TH:i') }}">
                     @error('scheduled_at')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
                 <div>

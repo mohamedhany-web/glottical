@@ -8,7 +8,7 @@
     $isRtl = app()->getLocale() === 'ar';
     $student = $thread->student;
     $name = $student?->name ?: ($isRtl ? 'طالب' : 'Student');
-    $avatarFallback = asset('img/student-timeline/avatar.png');
+    $avatarFallback = \App\Models\User::placeholderAvatarUrl();
     $avatar = ($student && $student->profile_image) ? $student->profile_image_url : $avatarFallback;
     $messages = $thread->messages->where('is_internal_note', false)->values();
     $meId = (int) auth()->id();

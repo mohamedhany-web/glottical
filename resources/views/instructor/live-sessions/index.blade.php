@@ -67,7 +67,7 @@
                 </div>
                 <h3 class="font-bold text-slate-800 dark:text-white truncate">{{ $session->title }}</h3>
                 <div class="flex items-center gap-4 mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    <span><i class="fas fa-calendar ml-1"></i>{{ $session->scheduled_at?->format('Y/m/d H:i') ?? '—' }}</span>
+                    <span><i class="fas fa-calendar ml-1"></i>@if($session->scheduled_at)<x-app-datetime :at="$session->scheduled_at" pattern="Y/m/d H:i" />@else — @endif</span>
                     <span><i class="fas fa-users ml-1"></i>{{ $session->attendance_count }} حاضر</span>
                     @if($session->duration_minutes)
                         <span><i class="fas fa-clock ml-1"></i>{{ $session->duration_for_humans }}</span>

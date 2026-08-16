@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\OneToOneSession;
 use App\Models\StudentInstructorAssignment;
 use App\Services\OneToOneSessionService;
-use Carbon\Carbon;
+use App\Support\AppTimezone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -17,9 +17,9 @@ class OneToOneSessionController extends Controller
     public function index(Request $request): View
     {
         $instructorId = $request->user()->id;
-        $tz = config('app.timezone');
-        $todayStart = now($tz)->startOfDay();
-        $todayEnd = now($tz)->endOfDay();
+        $tz = $request->user()->timezoneCode();
+        $todayStart = now($tz)->startOfDay()->utc();
+        $todayEnd = now($tz)->endOfDay()->utc();
 
         $sessions = OneToOneSession::query()
             ->where('instructor_id', $instructorId)
@@ -119,14 +119,16 @@ class OneToOneSessionController extends Controller
         abort_unless($oneToOneSession->instructor_id === auth()->id(), 403);
 
         $data = $request->validate([
-            'scheduled_at' => ['required', 'date', 'after:now'],
+            'scheduled_at' => ['required', 'date'],
             'duration_minutes' => ['nullable', 'integer', 'in:50'],
+            'timezone' => AppTimezone::inputRules(),
         ]);
+        $data = AppTimezone::shiftRequestDateTime($request, $data, 'scheduled_at', mustBeFuture: true);
 
         try {
             OneToOneSessionService::scheduleSession(
                 $oneToOneSession,
-                Carbon::parse($data['scheduled_at']),
+                $data['scheduled_at'],
                 (int) ($data['duration_minutes'] ?? OneToOneSession::defaultDurationMinutes()),
                 $request->user(),
                 requireAvailability: true

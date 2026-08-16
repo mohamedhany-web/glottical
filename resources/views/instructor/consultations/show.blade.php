@@ -26,7 +26,7 @@
         @if($consultation->status === \App\Models\ConsultationRequest::STATUS_SCHEDULED && $consultation->classroomMeeting)
             @php $m = $consultation->classroomMeeting; $joinUrl = url('classroom/join/'.$m->code); @endphp
             <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 p-4 space-y-3">
-                <p class="font-bold text-emerald-900 dark:text-emerald-100">الموعد: {{ $consultation->scheduled_at?->format('Y-m-d H:i') }}</p>
+                <p class="font-bold text-emerald-900 dark:text-emerald-100">الموعد: <x-app-datetime :at="$consultation->scheduled_at" /></p>
                 <p class="text-xs break-all text-emerald-800 dark:text-emerald-200">رابط الضيوف: {{ $joinUrl }}</p>
                 <div class="flex flex-wrap gap-2">
                     <a href="{{ route('instructor.classroom.show', $m) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 text-white text-sm font-bold">إعدادات الغرفة</a>

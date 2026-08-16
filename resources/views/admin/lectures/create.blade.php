@@ -80,6 +80,11 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    @include('partials.timezone-select', [
+                        'value' => old('timezone', auth()->user()?->timezoneCode()),
+                        'class' => $fieldClass,
+                        'labelClass' => $labelClass,
+                    ])
                     <div>
                         <label class="{{ $labelClass }}" for="scheduled_at">تاريخ ووقت المحاضرة <span class="text-rose-600">*</span></label>
                         <input type="datetime-local" name="scheduled_at" id="scheduled_at" value="{{ old('scheduled_at') }}" required

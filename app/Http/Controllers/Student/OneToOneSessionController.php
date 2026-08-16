@@ -7,6 +7,7 @@ use App\Models\OneToOneSession;
 use App\Models\User;
 use App\Services\OneToOneAvailabilityService;
 use App\Services\OneToOneSessionService;
+use App\Support\AppTimezone;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -61,7 +62,7 @@ class OneToOneSessionController extends Controller
         try {
             OneToOneSessionService::scheduleSession(
                 $oneToOneSession,
-                Carbon::parse($data['scheduled_at']),
+                AppTimezone::parseAppointmentInput((string) $data['scheduled_at']) ?? Carbon::parse($data['scheduled_at']),
                 (int) ($oneToOneSession->duration_minutes ?? \App\Models\OneToOneSession::defaultDurationMinutes()),
                 $request->user(),
                 requireAvailability: true
@@ -137,7 +138,7 @@ class OneToOneSessionController extends Controller
             $session = OneToOneSessionService::bookStandaloneWithInstructor(
                 $request->user(),
                 $instructor,
-                Carbon::parse($data['scheduled_at'])
+                AppTimezone::parseAppointmentInput((string) $data['scheduled_at']) ?? Carbon::parse($data['scheduled_at'])
             );
         } catch (\InvalidArgumentException $e) {
             return back()->withInput()->withErrors(['scheduled_at' => $e->getMessage()]);

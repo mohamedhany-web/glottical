@@ -1,5 +1,27 @@
 {{-- كشف وحفظ المنطقة الزمنية من المتصفح --}}
 <script>
+window.glotticalDateTimeLocal = function (iso, timeZone) {
+    try {
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return '';
+        var parts = new Intl.DateTimeFormat('en-CA', {
+            timeZone: timeZone || 'UTC',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hourCycle: 'h23'
+        }).formatToParts(d);
+        var get = function (type) {
+            var part = parts.find(function (p) { return p.type === type; });
+            return part ? part.value : '';
+        };
+        return get('year') + '-' + get('month') + '-' + get('day') + 'T' + get('hour') + ':' + get('minute');
+    } catch (e) {
+        return '';
+    }
+};
 (function () {
     try {
         var tz = (Intl.DateTimeFormat().resolvedOptions().timeZone || '').trim();

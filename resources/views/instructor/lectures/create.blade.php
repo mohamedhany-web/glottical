@@ -231,6 +231,7 @@
                     {{ __('instructor.date_time') }}
                 </h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    @include('partials.timezone-select', ['value' => old('timezone', auth()->user()?->timezoneCode())])
                     <div>
                         <label for="scheduled_at" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.date_time') }} <span class="text-red-500">*</span></label>
                         <input type="datetime-local" name="scheduled_at" id="scheduled_at" value="{{ old('scheduled_at') }}" required

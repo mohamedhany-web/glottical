@@ -9,6 +9,7 @@ use App\Models\CourseLesson;
 use App\Models\TeamsAttendanceFile;
 use App\Models\User;
 use App\Services\TeamsAttendanceImportService;
+use App\Support\AppTimezone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -62,6 +63,7 @@ class LectureController extends Controller
             'recording_url' => 'nullable|url',
             'video_platform' => 'nullable|in:bunny',
             'scheduled_at' => 'required|date',
+            'timezone' => AppTimezone::inputRules(),
             'duration_minutes' => 'required|integer|min:1',
             'notes' => 'nullable|string',
             'has_attendance_tracking' => 'boolean',
@@ -77,6 +79,9 @@ class LectureController extends Controller
         } else {
             $validated['video_platform'] = null;
         }
+
+        $validated = AppTimezone::shiftRequestDateTime($request, $validated, 'scheduled_at');
+        unset($validated['timezone']);
 
         $lecture = Lecture::create($validated);
 
@@ -114,6 +119,7 @@ class LectureController extends Controller
             'recording_url' => 'nullable|url',
             'video_platform' => 'nullable|in:bunny',
             'scheduled_at' => 'required|date',
+            'timezone' => AppTimezone::inputRules(),
             'duration_minutes' => 'required|integer|min:1',
             'status' => 'required|in:scheduled,in_progress,completed,cancelled',
             'notes' => 'nullable|string',
@@ -132,6 +138,8 @@ class LectureController extends Controller
         }
 
         $validated['course_lesson_id'] = $validated['course_lesson_id'] ?? null;
+        $validated = AppTimezone::shiftRequestDateTime($request, $validated, 'scheduled_at');
+        unset($validated['timezone']);
         $lecture->update($validated);
 
         return redirect()->route('admin.lectures.by-course', $lecture->course_id)

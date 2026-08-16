@@ -40,7 +40,7 @@
                 <h2 class="font-bold text-slate-800 dark:text-white mb-4"><i class="fas fa-info-circle text-blue-500 ml-2"></i>تفاصيل الجلسة</h2>
                 <div class="grid sm:grid-cols-2 gap-4 text-sm">
                     <div><span class="text-slate-500 dark:text-slate-400">الكورس:</span> <span class="font-semibold text-slate-800 dark:text-white mr-2">{{ $liveSession->course?->title ?? 'جلسة عامة' }}</span></div>
-                    <div><span class="text-slate-500 dark:text-slate-400">الموعد:</span> <span class="font-semibold text-slate-800 dark:text-white mr-2">{{ $liveSession->scheduled_at?->format('Y/m/d H:i') }}</span></div>
+                    <div><span class="text-slate-500 dark:text-slate-400">الموعد:</span> <span class="font-semibold text-slate-800 dark:text-white mr-2"><x-app-datetime :at="$liveSession->scheduled_at" pattern="Y/m/d H:i" /></span></div>
                     <div><span class="text-slate-500 dark:text-slate-400">المدة:</span> <span class="font-semibold text-slate-800 dark:text-white mr-2">{{ $liveSession->duration_for_humans }}</span></div>
                     <div><span class="text-slate-500 dark:text-slate-400">الحد الأقصى:</span> <span class="font-semibold text-slate-800 dark:text-white mr-2">{{ $liveSession->max_participants }}</span></div>
                 </div>

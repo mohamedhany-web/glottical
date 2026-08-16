@@ -10,7 +10,7 @@ use App\Models\AgreementPayment;
 use App\Models\InstructorAgreement;
 use App\Models\Notification;
 use App\Models\WalletTransaction;
-use Carbon\Carbon;
+use App\Support\AppTimezone;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -152,10 +152,18 @@ class ConsultationController extends Controller
 
         $data = $request->validate([
             'scheduled_at' => ['required', 'date'],
+            'timezone' => AppTimezone::inputRules(),
             'duration_minutes' => ['nullable', 'integer', 'min:15', 'max:480'],
         ]);
+        $data = AppTimezone::shiftRequestDateTime(
+            $request,
+            $data,
+            'scheduled_at',
+            mustBeFuture: true,
+            fallbackUser: $consultation->instructor
+        );
 
-        $scheduledAt = Carbon::parse($data['scheduled_at']);
+        $scheduledAt = $data['scheduled_at'];
         $duration = (int) ($data['duration_minutes'] ?? $consultation->duration_minutes);
 
         $meeting = ClassroomMeeting::create([

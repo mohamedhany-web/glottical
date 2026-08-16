@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
 use App\Services\TutoringGroupAvailabilityService;
+use App\Support\AppTimezone;
 use App\Support\WeeklyScheduleTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,7 +35,15 @@ class TutorWorkScheduleController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
-        $data = $request->validate(WeeklyScheduleTime::slotTimeRules(240, true));
+        $data = $request->validate(array_merge(
+            WeeklyScheduleTime::slotTimeRules(240, true),
+            ['timezone' => AppTimezone::inputRules()]
+        ));
+
+        AppTimezone::persistForUser(
+            $request->user(),
+            is_string($data['timezone'] ?? null) ? $data['timezone'] : null
+        );
 
         TutoringGroupAvailabilityService::syncRules(
             $request->user()->id,

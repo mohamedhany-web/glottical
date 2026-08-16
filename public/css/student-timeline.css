@@ -294,6 +294,12 @@ html.st-ltr .st-events {
   border: 2px solid rgba(255,255,255,.35);
   flex-shrink: 0;
 }
+img.st-rail__avatar[src*="avatar-placeholder"],
+img.st-settings-hero__avatar[src*="avatar-placeholder"],
+.st-profile-photo img[src*="avatar-placeholder"] {
+  object-fit: contain;
+  background: #0B3D91;
+}
 .st-rail__who {
   display: none;
   flex-direction: column;

@@ -99,6 +99,11 @@
         <h3 class="font-bold text-slate-900 mb-3">جدولة الاستشارة وإنشاء غرفة Classroom</h3>
         <form method="POST" action="{{ route('admin.consultations.schedule', $consultation) }}" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             @csrf
+            @include('partials.timezone-select', [
+                'value' => old('timezone', $consultation->instructor?->timezoneCode() ?? auth()->user()?->timezoneCode()),
+                'class' => 'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm',
+                'labelClass' => 'block text-xs font-semibold text-slate-600 mb-1',
+            ])
             <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">موعد البدء</label>
                 <input type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at') }}" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" required>
@@ -117,7 +122,7 @@
     @if($consultation->status === \App\Models\ConsultationRequest::STATUS_SCHEDULED && $consultation->classroomMeeting)
     <div class="rounded-2xl bg-emerald-50 border border-emerald-200 p-6">
         <h3 class="font-bold text-emerald-900 mb-2">الغرفة جاهزة</h3>
-        <p class="text-sm text-emerald-800 mb-2">الموعد: {{ $consultation->scheduled_at?->format('Y-m-d H:i') }}</p>
+        <p class="text-sm text-emerald-800 mb-2">الموعد: <x-app-datetime :at="$consultation->scheduled_at" /></p>
         <p class="text-xs font-mono break-all">{{ url('classroom/join/'.$consultation->classroomMeeting->code) }}</p>
     </div>
     @endif

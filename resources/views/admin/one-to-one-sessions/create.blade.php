@@ -131,12 +131,19 @@
                 </div>
 
                 <div class="md:col-span-2">
+                    @include('partials.timezone-select', [
+                        'value' => old('timezone', auth()->user()?->timezoneCode()),
+                        'class' => $field,
+                        'labelClass' => $label,
+                    ])
+                </div>
+                <div class="md:col-span-2">
                     <label class="{{ $label }}" for="scheduledAt">الموعد (اختياري)</label>
                     <input type="datetime-local" name="scheduled_at" id="scheduledAt"
-                           min="{{ now()->format('Y-m-d\TH:i') }}"
+                           min="{{ now()->timezone(auth()->user()?->timezoneCode() ?? 'Africa/Cairo')->format('Y-m-d\TH:i') }}"
                            value="{{ old('scheduled_at') }}"
                            class="{{ $field }}" dir="ltr">
-                    <p class="mt-1 text-[11px] text-muted">اتركه فارغاً ليختار الطالب أو المعلم الموعد لاحقاً. عند تحديده يتحقق النظام من جدول المعلم وينشئ غرفة Live.</p>
+                    <p class="mt-1 text-[11px] text-muted">الساعة حسب المنطقة الزمنية فوق. اتركه فارغاً ليختار الطالب أو المعلم الموعد لاحقاً.</p>
                 </div>
             </div>
         </article>
@@ -201,7 +208,11 @@
   bindSearch(instructorSearch, instructorSelect);
 
   function toLocalInput(value) {
-    // "YYYY-MM-DD HH:mm:ss" -> "YYYY-MM-DDTHH:mm"
+    var tzEl = document.getElementById('timezoneSelect');
+    var tz = tzEl && tzEl.value ? tzEl.value : 'UTC';
+    if (window.glotticalDateTimeLocal && /[zZ]|[+-]\d{2}:?\d{2}$/.test(String(value))) {
+      return window.glotticalDateTimeLocal(value, tz);
+    }
     if (!value) return '';
     var s = String(value).replace(' ', 'T');
     return s.length >= 16 ? s.slice(0, 16) : s;

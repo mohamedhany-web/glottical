@@ -10,6 +10,7 @@ use App\Models\AttendanceRecord;
 use App\Models\TeamsAttendanceFile;
 use App\Services\LectureMaterialStorage;
 use App\Services\TeamsAttendanceImportService;
+use App\Support\AppTimezone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -112,6 +113,7 @@ class LectureController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'scheduled_at' => 'required|date',
+            'timezone' => AppTimezone::inputRules(),
             'duration_minutes' => 'required|integer|min:15|max:480',
             'min_watch_percent_to_unlock_next' => 'nullable|integer|min:0|max:100',
             'teams_registration_link' => 'nullable|url',
@@ -138,6 +140,8 @@ class LectureController extends Controller
             'duration_minutes.min' => 'مدة المحاضرة يجب أن تكون 15 دقيقة على الأقل',
             'duration_minutes.max' => 'مدة المحاضرة يجب ألا تتجاوز 480 دقيقة (8 ساعات)',
         ]);
+        $validated = AppTimezone::shiftRequestDateTime($request, $validated, 'scheduled_at');
+        unset($validated['timezone']);
         
         // التحقق من أن الكورس يخص هذا المدرب
         $course = AdvancedCourse::where('id', $validated['course_id'])
@@ -349,6 +353,7 @@ class LectureController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'scheduled_at' => 'required|date',
+            'timezone' => AppTimezone::inputRules(),
             'duration_minutes' => 'required|integer|min:15|max:480',
             'min_watch_percent_to_unlock_next' => 'nullable|integer|min:0|max:100',
             'teams_registration_link' => 'nullable|url',
@@ -407,6 +412,9 @@ class LectureController extends Controller
         } else {
             $validated['video_platform'] = null;
         }
+
+        $validated = AppTimezone::shiftRequestDateTime($request, $validated, 'scheduled_at');
+        unset($validated['timezone']);
         
         $lecture->update($validated);
         $lecture->min_watch_percent_to_unlock_next = $validated['min_watch_percent_to_unlock_next'];

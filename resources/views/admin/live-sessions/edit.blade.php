@@ -35,8 +35,15 @@
                 </select>
             </div>
             <div>
+                @include('partials.timezone-select', [
+                    'value' => old('timezone', auth()->user()?->timezoneCode()),
+                    'class' => 'w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white',
+                    'labelClass' => 'block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1',
+                ])
+            </div>
+            <div>
                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">موعد البث <span class="text-red-500">*</span></label>
-                <input type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at', $liveSession->scheduled_at?->format('Y-m-d\TH:i')) }}" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                <input type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at', \App\Support\AppTimezone::datetimeLocalValue($liveSession->scheduled_at, old('timezone', auth()->user()?->timezoneCode()))) }}" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
             </div>
             <div>
                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">سيرفر البث</label>

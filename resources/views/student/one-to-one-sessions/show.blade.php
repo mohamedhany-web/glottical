@@ -31,7 +31,7 @@
                 <dt class="text-slate-500">{{ __('student.one_to_one_appointment') }}</dt>
                 <dd class="font-bold">
                     @if($session->scheduled_at)
-                        {{ $session->scheduled_at->format('Y-m-d H:i') }}
+                        <x-app-datetime :at="$session->scheduled_at" />
                         <span class="text-slate-500 font-normal">({{ (int) $session->duration_minutes }} {{ __('student.minutes') }})</span>
                     @else
                         {{ __('student.one_to_one_pending_schedule') }}
@@ -58,7 +58,7 @@
                                 <div class="flex flex-wrap gap-2">
                                     @foreach($daySlots as $slot)
                                         <label class="cursor-pointer">
-                                            <input type="radio" name="scheduled_at" value="{{ $slot['starts_at']->copy()->utc()->format('Y-m-d H:i:s') }}" class="peer sr-only" required>
+                                            <input type="radio" name="scheduled_at" value="{{ $slot['starts_at']->copy()->utc()->toIso8601String() }}" class="peer sr-only" required>
                                             <span class="inline-flex px-3 py-2 rounded-lg border border-violet-200 dark:border-violet-700 text-sm font-semibold text-violet-900 dark:text-violet-100 peer-checked:bg-violet-600 peer-checked:text-white peer-checked:border-violet-600 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition">
                                                 {{ $slot['starts_at']->copy()->timezone($viewerTz)->format('H:i') }}
                                             </span>

@@ -14,6 +14,7 @@ use App\Services\OneToOneSessionService;
 use App\Services\StudentEntitlementService;
 use App\Services\TutoringGroupAvailabilityService;
 use App\Services\TutoringGroupOrchestrationService;
+use App\Support\AppTimezone;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -183,37 +184,29 @@ class PlacementController extends Controller
                 return response()->json(['ok' => false, 'message' => 'اختر معلماً أولاً.'], 422);
             }
 
+            $instructor = User::query()->find($instructorId);
+            $clockTz = AppTimezone::forUser($instructor);
+            $viewerTz = AppTimezone::forUser($request->user());
             $duration = OneToOneSession::defaultDurationMinutes();
             $slots = OneToOneAvailabilityService::availableSlots(
                 $instructorId,
                 now()->addHour(),
                 now()->addWeeks(5),
                 $duration
-            )->take(120)->map(fn ($slot) => [
-                'starts_at' => $slot['starts_at'] instanceof Carbon
-                    ? $slot['starts_at']->format('Y-m-d H:i:s')
-                    : (string) $slot['starts_at'],
-                'label' => $slot['label'] ?? null,
-                'day_of_week' => $slot['starts_at'] instanceof Carbon
-                    ? (int) $slot['starts_at']->dayOfWeekIso
-                    : (int) Carbon::parse($slot['starts_at'])->dayOfWeekIso,
-                'time' => $slot['starts_at'] instanceof Carbon
-                    ? $slot['starts_at']->format('H:i')
-                    : Carbon::parse($slot['starts_at'])->format('H:i'),
-            ])->values();
+            )->take(120)->map(function ($slot) use ($clockTz, $viewerTz) {
+                $at = $slot['starts_at'] instanceof Carbon
+                    ? $slot['starts_at']->copy()->utc()
+                    : Carbon::parse($slot['starts_at'])->utc();
+                $clock = $at->copy()->timezone($clockTz);
+                $viewer = $at->copy()->timezone($viewerTz);
 
-            // Build labels if service didn't include them
-            $slots = $slots->map(function (array $slot) {
-                $at = Carbon::parse($slot['starts_at']);
-                if (empty($slot['label'])) {
-                    $slot['label'] = $at->locale('ar')->translatedFormat('D j M · H:i');
-                }
-                $slot['starts_at'] = $at->format('Y-m-d H:i:s');
-                $slot['day_of_week'] = (int) $at->dayOfWeekIso;
-                $slot['time'] = $at->format('H:i');
-
-                return $slot;
-            });
+                return [
+                    'starts_at' => $at->toIso8601String(),
+                    'label' => $viewer->locale('ar')->translatedFormat('D j M · g:i A'),
+                    'day_of_week' => (int) $clock->dayOfWeekIso,
+                    'time' => $clock->format('H:i'),
+                ];
+            })->values();
 
             $dayLabels = OneToOneAvailabilityService::dayLabels();
             $weeklyWindows = OneToOneAvailabilityService::rulesForInstructor($instructorId)
@@ -252,17 +245,20 @@ class PlacementController extends Controller
             return response()->json(['ok' => false, 'message' => 'اختر مجموعة أولاً.'], 422);
         }
 
-        $group = TutoringGroup::query()->active()->findOrFail($groupId);
+        $group = TutoringGroup::query()->active()->with('instructor:id,name,timezone')->findOrFail($groupId);
+        $viewerTz = AppTimezone::forUser($request->user());
         $slots = TutoringGroupAvailabilityService::availableSlots(
             $group,
             now()->addHour(),
             now()->addDays(21)
-        )->take(48)->map(fn ($slot) => [
-            'starts_at' => $slot['starts_at'] instanceof Carbon
-                ? $slot['starts_at']->format('Y-m-d H:i:s')
-                : (string) ($slot['starts_at'] ?? ''),
-            'label' => $slot['label'] ?? Carbon::parse($slot['starts_at'])->locale('ar')->translatedFormat('D j M · H:i'),
-        ])->values();
+        )->take(48)->map(function ($slot) use ($viewerTz) {
+            $at = Carbon::parse($slot['starts_at'])->utc();
+
+            return [
+                'starts_at' => $at->toIso8601String(),
+                'label' => $at->copy()->timezone($viewerTz)->locale('ar')->translatedFormat('D j M · g:i A'),
+            ];
+        })->values();
 
         return response()->json([
             'ok' => true,
@@ -286,7 +282,8 @@ class PlacementController extends Controller
             'student_service_entitlement_id' => ['required', 'integer', 'exists:student_service_entitlements,id'],
             'instructor_id' => ['nullable', 'integer', 'exists:users,id'],
             'tutoring_group_id' => ['nullable', 'integer', 'exists:tutoring_groups,id'],
-            'scheduled_at' => ['nullable', 'date', 'after:now'],
+            'scheduled_at' => ['nullable', 'date'],
+            'timezone' => AppTimezone::inputRules(),
             'scheduled_ats' => ['nullable', 'array', 'max:40'],
             'scheduled_ats.*' => ['date', 'after:now'],
             'weeks' => ['nullable', 'integer', 'min:1', 'max:8'],
@@ -391,7 +388,7 @@ class PlacementController extends Controller
             $sessions = OneToOneSessionService::bookMultipleWithInstructor(
                 $student,
                 $instructor,
-                [$data['scheduled_at']],
+                [AppTimezone::parseAppointmentInput((string) $data['scheduled_at']) ?? $data['scheduled_at']],
                 $entitlement,
                 $request->user(),
                 $notes
@@ -441,7 +438,8 @@ class PlacementController extends Controller
                     throw new \InvalidArgumentException('المستخدم المحدد ليس معلماً.');
                 }
 
-                $startsAt = Carbon::parse($data['scheduled_at']);
+                $startsAt = AppTimezone::parseAppointmentInput((string) $data['scheduled_at'])
+                    ?? Carbon::parse($data['scheduled_at'])->utc();
                 $endsAt = $startsAt->copy()->addMinutes(max(30, (int) ($group->duration_minutes ?: 60)));
 
                 $allowed = TutoringGroupAvailabilityService::availableSlots(
@@ -450,10 +448,10 @@ class PlacementController extends Controller
                     $startsAt->copy()->addDay()
                 )->contains(function ($slot) use ($startsAt) {
                     $slotStart = $slot['starts_at'] instanceof Carbon
-                        ? $slot['starts_at']
-                        : Carbon::parse($slot['starts_at']);
+                        ? $slot['starts_at']->copy()->utc()
+                        : Carbon::parse($slot['starts_at'])->utc();
 
-                    return $slotStart->format('Y-m-d H:i') === $startsAt->format('Y-m-d H:i');
+                    return $slotStart->equalTo($startsAt->copy()->utc());
                 });
 
                 if (! $allowed) {

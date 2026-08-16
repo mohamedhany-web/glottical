@@ -289,7 +289,7 @@ class AppServiceProvider extends ServiceProvider
             ]);
         });
 
-        View::composer(['layouts.student-dashboard', 'layouts.student-timeline', 'layouts.auth-atheer', 'auth.register', 'auth.login'], function ($view) {
+        View::composer(['layouts.student-dashboard', 'layouts.student-timeline', 'layouts.auth-atheer', 'auth.register', 'auth.login', 'layouts.app', 'layouts.admin'], function ($view) {
             $view->with([
                 'viewerTimezone' => AppTimezone::forUser(Auth::user()),
                 'academyTimezone' => AppTimezone::academy(),

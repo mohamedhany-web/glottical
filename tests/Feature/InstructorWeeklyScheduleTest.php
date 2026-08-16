@@ -150,6 +150,30 @@ class InstructorWeeklyScheduleTest extends TestCase
         $this->assertSame(4, OneToOneWeeklyAvailability::query()->where('instructor_id', $instructor->id)->count());
     }
 
+    public function test_instructor_http_saves_america_timezone_with_windows(): void
+    {
+        $instructor = $this->makeInstructor();
+
+        $this->withoutMiddleware(EnsureInstructorPanelAccess::class)
+            ->actingAs($instructor)
+            ->post(route('instructor.one-to-one-availability.update'), [
+                'timezone' => 'America/New_York',
+                'slots' => [
+                    ['day_of_week' => 1, 'start_time' => '18:00', 'end_time' => '19:00', 'slot_duration_minutes' => 50],
+                ],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertSame('America/New_York', $instructor->fresh()->timezone);
+
+        $from = Carbon::parse('2026-08-17 00:00:00', 'UTC');
+        $to = Carbon::parse('2026-08-18 06:00:00', 'UTC');
+        $slots = OneToOneAvailabilityService::availableSlots($instructor->id, $from, $to, 50);
+        $this->assertTrue($slots->isNotEmpty());
+        $this->assertSame('18:00', $slots->first()['starts_at']->copy()->timezone('America/New_York')->format('H:i'));
+    }
+
     public function test_group_schedule_saves_four_windows(): void
     {
         $instructor = $this->makeInstructor();

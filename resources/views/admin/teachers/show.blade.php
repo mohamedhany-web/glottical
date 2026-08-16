@@ -142,6 +142,12 @@
         <div class="grid gap-5 xl:grid-cols-2">
             <form method="POST" action="{{ route('admin.teachers.sync-work-schedule', $teacher) }}" class="space-y-4 rounded-2xl border border-line bg-surface p-5 shadow-soft" x-data="teacherSlots(@js($workSlotsFlat))">
                 @csrf
+                @include('partials.timezone-select', [
+                    'value' => old('timezone', $teacher->timezoneCode()),
+                    'class' => $field,
+                    'labelClass' => $label,
+                    'label' => 'توقيت ساعات هذا المعلم',
+                ])
                 <div class="flex items-center justify-between gap-3">
                     <div>
                         <h3 class="text-base font-semibold text-ink">جدول مجموعات التدريس</h3>
@@ -191,6 +197,12 @@
 
             <form method="POST" action="{{ route('admin.teachers.sync-oto-availability', $teacher) }}" class="space-y-4 rounded-2xl border border-line bg-surface p-5 shadow-soft" x-data="teacherSlots(@js($otoSlotsFlat))">
                 @csrf
+                @include('partials.timezone-select', [
+                    'value' => old('timezone', $teacher->timezoneCode()),
+                    'class' => $field,
+                    'labelClass' => $label,
+                    'label' => 'توقيت ساعات هذا المعلم',
+                ])
                 <div class="flex items-center justify-between gap-3">
                     <div>
                         <h3 class="text-base font-semibold text-ink">توفر الحصص الخاصة (1:1)</h3>
@@ -258,12 +270,18 @@
                                 <div class="text-xs text-muted">#{{ $session->id }}</div>
                             </td>
                             <td class="px-4 py-3">{{ $session->statusLabel() }}</td>
-                            <td class="px-4 py-3 tabular-nums">{{ $session->scheduled_at?->format('Y-m-d H:i') ?: '—' }}</td>
+                            <td class="px-4 py-3 tabular-nums">@if($session->scheduled_at)<x-app-datetime :at="$session->scheduled_at" pattern="Y-m-d H:i" />@else — @endif</td>
                             <td class="px-4 py-3">
                                 @if(in_array($session->status, [\App\Models\OneToOneSession::STATUS_PENDING, \App\Models\OneToOneSession::STATUS_SCHEDULED], true))
                                     <form method="POST" action="{{ route('admin.teachers.sessions.schedule', [$teacher, $session]) }}" class="flex flex-wrap gap-2 mb-2">
                                         @csrf
-                                        <input type="datetime-local" name="scheduled_at" required class="h-9 rounded-lg border border-line px-2 text-xs" value="{{ optional($session->scheduled_at)->format('Y-m-d\TH:i') }}">
+                                        @php $schedTz = old('timezone', $teacher->timezoneCode()); @endphp
+                                        <select name="timezone" data-timezone-select class="h-9 rounded-lg border border-line px-2 text-xs max-w-[11rem]">
+                                            @foreach(\App\Support\AppTimezone::commonZones() as $tzId => $tzLabel)
+                                                <option value="{{ $tzId }}" @selected($schedTz === $tzId)>{{ $tzLabel }}</option>
+                                            @endforeach
+                                        </select>
+                                        <input type="datetime-local" name="scheduled_at" required class="h-9 rounded-lg border border-line px-2 text-xs" value="{{ old('scheduled_at', \App\Support\AppTimezone::datetimeLocalValue($session->scheduled_at, $schedTz)) }}">
                                         <label class="inline-flex items-center gap-1 text-[11px] text-muted">
                                             <input type="checkbox" name="force" value="1"> تجاوز التوفر
                                         </label>

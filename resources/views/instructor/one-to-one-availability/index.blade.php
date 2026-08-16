@@ -170,6 +170,12 @@
         <form method="POST" action="{{ route('instructor.one-to-one-availability.update') }}"
               class="xl:col-span-7 o1a-panel p-5 sm:p-6 space-y-5">
             @csrf
+            @include('partials.timezone-select', [
+                'value' => old('timezone', auth()->user()?->timezoneCode()),
+                'class' => 'o1a-field',
+                'labelClass' => 'block text-[11px] font-bold text-[color:var(--o1a-muted)] mb-1.5',
+                'label' => $isRtl ? 'توقيت الساعات دي' : 'Timezone for these hours',
+            ])
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h2 class="text-base font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'تحرير النوافذ' : 'Edit windows' }}</h2>

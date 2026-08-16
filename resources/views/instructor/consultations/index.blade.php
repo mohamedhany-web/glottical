@@ -52,7 +52,7 @@
                             <td class="px-4 py-3 font-semibold text-slate-900 dark:text-white">{{ $r->student->name ?? '—' }}</td>
                             <td class="px-4 py-3">{{ number_format($r->price_amount, 2) }} ج.م</td>
                             <td class="px-4 py-3"><span class="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-xs">{{ $r->statusLabel() }}</span></td>
-                            <td class="px-4 py-3 text-xs text-slate-500">{{ $r->scheduled_at?->format('Y-m-d H:i') ?? '—' }}</td>
+                            <td class="px-4 py-3 text-xs text-slate-500">@if($r->scheduled_at)<x-app-datetime :at="$r->scheduled_at" pattern="Y-m-d H:i" />@else — @endif</td>
                             <td class="px-4 py-3"><a href="{{ route('instructor.consultations.show', $r) }}" class="text-sky-600 font-semibold hover:underline">تفاصيل</a></td>
                         </tr>
                     @empty

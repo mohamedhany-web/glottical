@@ -6,8 +6,7 @@
 @php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
-    $avatarUrl = $user->profile_image_url
-        ?: asset('img/student-timeline/avatar.png');
+    $avatarUrl = $user->avatarDisplayUrl();
 
     $roleKey = match ($user->role ?? '') {
         'teacher' => 'role_teacher',
@@ -146,8 +145,8 @@
                 </select>
                 <small class="st-field__hint" style="opacity:.75;display:block;margin-top:.35rem">
                     {{ app()->getLocale() === 'ar'
-                        ? 'تُعرض مواعيد الحصص والفصول بتوقيتك. المعلمون يدخلون المواعيد بتوقيت مصر.'
-                        : 'Class times are shown in your timezone. Teachers schedule in Egypt time.' }}
+                        ? 'تُعرض مواعيد الحصص والفصول بتوقيتك. عند تحديد موعد يمكنك اختيار توقيت البلد (مصر أو أمريكا أو غيرها).'
+                        : 'Class times are shown in your timezone. When scheduling, pick the country timezone the clock should use (Egypt, US, etc.).' }}
                 </small>
                 @error('timezone')<small class="st-field__err">{{ $message }}</small>@enderror
             </label>

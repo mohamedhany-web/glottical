@@ -11,6 +11,7 @@ use App\Models\LiveSessionReport;
 use App\Models\IntegrationSetting;
 use App\Models\LiveSetting;
 use App\Models\SessionAttendance;
+use App\Support\AppTimezone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -67,12 +68,15 @@ class LiveSessionController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'course_id' => 'nullable|exists:advanced_courses,id',
-            'scheduled_at' => 'required|date|after:now',
+            'scheduled_at' => 'required|date',
+            'timezone' => AppTimezone::inputRules(),
             'max_participants' => 'nullable|integer|min:2|max:500',
             'is_recorded' => 'boolean',
             'allow_chat' => 'boolean',
             'password' => 'nullable|string|max:50',
         ]);
+        $validated = AppTimezone::shiftRequestDateTime($request, $validated, 'scheduled_at', mustBeFuture: true);
+        unset($validated['timezone']);
 
         $validated['instructor_id'] = auth()->id();
         $validated['is_recorded'] = $request->boolean('is_recorded');

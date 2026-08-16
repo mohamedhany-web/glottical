@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
 use App\Services\OneToOneAvailabilityService;
+use App\Support\AppTimezone;
 use App\Support\WeeklyScheduleTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,7 +35,15 @@ class OneToOneAvailabilityController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
-        $data = $request->validate(WeeklyScheduleTime::slotTimeRules(180));
+        $data = $request->validate(array_merge(
+            WeeklyScheduleTime::slotTimeRules(180),
+            ['timezone' => AppTimezone::inputRules()]
+        ));
+
+        AppTimezone::persistForUser(
+            $request->user(),
+            is_string($data['timezone'] ?? null) ? $data['timezone'] : null
+        );
 
         OneToOneAvailabilityService::syncRules(
             $request->user()->id,

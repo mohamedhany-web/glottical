@@ -273,6 +273,19 @@ class User extends Authenticatable
         return $base.(str_contains($base, '?') ? '&' : '?').'v='.$ts;
     }
 
+    public static function placeholderAvatarUrl(): string
+    {
+        return asset('img/student-timeline/avatar-placeholder.svg');
+    }
+
+    /**
+     * صورة الحساب إن وُجدت، وإلا أيقونة عامة — بدون صورة التصميم الافتراضية.
+     */
+    public function avatarDisplayUrl(): string
+    {
+        return $this->profile_image_url ?: self::placeholderAvatarUrl();
+    }
+
     /**
      * هل هذا المستخدم مشمول بإلزام المصادقة الثنائية عند تفعيل الخيار من إعدادات النظام (.env أو لوحة التحكم).
      * يقتصر على المدير العام والأدمن فقط — لا يشمل المدربين ولا بقية الأدوار.

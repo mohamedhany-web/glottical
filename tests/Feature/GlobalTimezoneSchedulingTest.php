@@ -68,6 +68,115 @@ class GlobalTimezoneSchedulingTest extends TestCase
         $this->assertSame('11:00', $slot['starts_at']->copy()->timezone('America/New_York')->format('H:i'));
     }
 
+    public function test_one_to_one_slots_use_instructor_america_wall_clock(): void
+    {
+        $instructor = User::factory()->create([
+            'role' => 'instructor',
+            'is_active' => true,
+            'timezone' => 'America/New_York',
+        ]);
+        OneToOneWeeklyAvailability::create([
+            'instructor_id' => $instructor->id,
+            'day_of_week' => 1,
+            'start_time' => '18:00:00',
+            'end_time' => '19:00:00',
+            'slot_duration_minutes' => 50,
+            'is_active' => true,
+        ]);
+
+        $from = Carbon::parse('2026-01-12 00:00:00', 'UTC');
+        $to = Carbon::parse('2026-01-13 05:00:00', 'UTC');
+        $slots = OneToOneAvailabilityService::availableSlots($instructor->id, $from, $to, 50);
+
+        $this->assertTrue($slots->isNotEmpty());
+        $slot = $slots->first();
+        $this->assertSame('23:00', $slot['starts_at']->copy()->utc()->format('H:i'));
+        $this->assertSame('18:00', $slot['starts_at']->copy()->timezone('America/New_York')->format('H:i'));
+        $this->assertTrue(
+            OneToOneAvailabilityService::isSlotAvailable($instructor->id, $slot['starts_at'], 50)
+        );
+
+        $cairoEvening = AppTimezone::wallClockToUtc('2026-01-12', '18:00', 'Africa/Cairo');
+        $this->assertFalse(
+            OneToOneAvailabilityService::isSlotAvailable($instructor->id, $cairoEvening, 50)
+        );
+    }
+
+    public function test_expand_weekly_pattern_honors_los_angeles_clock(): void
+    {
+        $from = Carbon::parse('2026-01-10 12:00:00', 'UTC');
+        $dates = \App\Services\OneToOneSessionService::expandWeeklyPattern(
+            [['day_of_week' => 1, 'time' => '18:00']],
+            1,
+            $from,
+            'America/Los_Angeles'
+        );
+
+        $this->assertNotEmpty($dates);
+        $first = $dates[0];
+        $this->assertSame('18:00', $first->copy()->timezone('America/Los_Angeles')->format('H:i'));
+        $this->assertSame('02:00', $first->copy()->utc()->format('H:i'));
+    }
+
+    public function test_egypt_student_sees_new_york_slot_in_cairo_clock(): void
+    {
+        $utc = AppTimezone::wallClockToUtc('2026-01-12', '18:00', 'America/New_York');
+        $this->assertSame('2026-01-13 01:00', AppTimezone::formatFor($utc, 'Africa/Cairo', 'Y-m-d H:i'));
+
+        $parts = AppTimezone::dualLabel($utc, 'America/New_York', 'en', 'g:i A');
+        $this->assertSame('6:00 PM', $parts['primary']);
+        $this->assertNotNull($parts['secondary']);
+        $this->assertStringContainsString('بتوقيت مصر', $parts['secondary']);
+    }
+
+    public function test_instructor_http_schedules_datetime_local_in_new_york(): void
+    {
+        $instructor = User::factory()->create([
+            'role' => 'instructor',
+            'is_active' => true,
+            'timezone' => 'America/New_York',
+            'password' => Hash::make('password'),
+        ]);
+        $student = User::factory()->create([
+            'role' => 'student',
+            'is_active' => true,
+            'timezone' => 'Africa/Cairo',
+            'password' => Hash::make('password'),
+        ]);
+        OneToOneWeeklyAvailability::create([
+            'instructor_id' => $instructor->id,
+            'day_of_week' => 1,
+            'start_time' => '18:00:00',
+            'end_time' => '19:00:00',
+            'slot_duration_minutes' => 50,
+            'is_active' => true,
+        ]);
+        $session = \App\Models\OneToOneSession::create([
+            'instructor_id' => $instructor->id,
+            'student_id' => $student->id,
+            'session_number' => 1,
+            'duration_minutes' => 50,
+            'status' => \App\Models\OneToOneSession::STATUS_PENDING,
+        ]);
+
+        $this->withoutMiddleware(\App\Http\Middleware\EnsureInstructorPanelAccess::class)
+            ->actingAs($instructor)
+            ->post(route('instructor.one-to-one-sessions.schedule', $session), [
+                'scheduled_at' => '2026-01-12T18:00',
+                'timezone' => 'America/New_York',
+                'duration_minutes' => 50,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $scheduled = $session->fresh()->scheduled_at;
+        $this->assertNotNull($scheduled);
+        $this->assertSame('23:00', $scheduled->copy()->utc()->format('H:i'));
+        $this->assertSame('18:00', $scheduled->copy()->timezone('America/New_York')->format('H:i'));
+        $this->assertSame('01:00', $scheduled->copy()->timezone('Africa/Cairo')->format('H:i'));
+        $this->assertSame(\App\Models\OneToOneSession::STATUS_SCHEDULED, $session->fresh()->status);
+    }
+
     public function test_timezone_sync_sets_blank_user_timezone(): void
     {
         $student = User::factory()->create([
@@ -162,6 +271,17 @@ class GlobalTimezoneSchedulingTest extends TestCase
             });
         }
 
+        if (! Schema::hasTable('advanced_courses')) {
+            Schema::create('advanced_courses', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('instructor_id')->nullable();
+                $table->string('title')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->string('delivery_type')->nullable();
+                $table->timestamps();
+            });
+        }
+
         if (! Schema::hasTable('one_to_one_weekly_availability')) {
             Schema::create('one_to_one_weekly_availability', function (Blueprint $table) {
                 $table->id();
@@ -180,9 +300,17 @@ class GlobalTimezoneSchedulingTest extends TestCase
                 $table->id();
                 $table->foreignId('instructor_id');
                 $table->foreignId('student_id')->nullable();
+                $table->unsignedInteger('session_number')->default(1);
                 $table->timestamp('scheduled_at')->nullable();
                 $table->unsignedInteger('duration_minutes')->default(50);
-                $table->string('status')->default('scheduled');
+                $table->string('status')->default('pending_schedule');
+                $table->unsignedBigInteger('classroom_meeting_id')->nullable();
+                $table->unsignedBigInteger('booked_by_user_id')->nullable();
+                $table->unsignedBigInteger('student_service_entitlement_id')->nullable();
+                $table->unsignedBigInteger('advanced_course_id')->nullable();
+                $table->unsignedBigInteger('student_course_enrollment_id')->nullable();
+                $table->text('notes')->nullable();
+                $table->string('series_id', 36)->nullable();
                 $table->timestamps();
             });
         }

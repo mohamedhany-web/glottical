@@ -245,16 +245,20 @@
             </p>
             @if($bookableSlots->isNotEmpty())
               @php
+                $clockTz = \App\Support\AppTimezone::forUser($profile->user);
+                $viewerTz = \App\Support\AppTimezone::forUser(auth()->user());
                 $weeklyOpts = $bookableSlots
-                    ->map(function ($slot) {
+                    ->map(function ($slot) use ($clockTz, $viewerTz) {
                         $starts = is_array($slot) ? ($slot['starts_at'] ?? null) : ($slot->starts_at ?? null);
                         if (! $starts instanceof \Carbon\Carbon) {
                             return null;
                         }
+                        $clock = $starts->copy()->timezone($clockTz);
+                        $viewer = $starts->copy()->timezone($viewerTz);
                         return [
-                            'day' => (int) $starts->dayOfWeekIso,
-                            'time' => $starts->format('H:i'),
-                            'label' => $starts->translatedFormat('l — g:i A'),
+                            'day' => (int) $clock->dayOfWeekIso,
+                            'time' => $clock->format('H:i'),
+                            'label' => $viewer->locale(app()->getLocale())->translatedFormat('l — g:i A'),
                         ];
                     })
                     ->filter()
@@ -348,8 +352,8 @@
                         $starts = is_array($slot) ? ($slot['starts_at'] ?? null) : ($slot->starts_at ?? null);
                         $label = is_array($slot) ? ($slot['label'] ?? null) : ($slot->label ?? null);
                         if ($starts instanceof \Carbon\Carbon) {
-                          $value = $starts->toDateTimeString();
-                          $label = $label ?: $starts->translatedFormat('D j M — g:i A');
+                          $value = $starts->copy()->utc()->toIso8601String();
+                          $label = $label ?: $starts->copy()->timezone($viewerTz)->locale(app()->getLocale())->translatedFormat('D j M — g:i A');
                         } else {
                           continue;
                         }
@@ -372,8 +376,8 @@
                         $starts = is_array($slot) ? ($slot['starts_at'] ?? null) : ($slot->starts_at ?? null);
                         $label = is_array($slot) ? ($slot['label'] ?? null) : ($slot->label ?? null);
                         if ($starts instanceof \Carbon\Carbon) {
-                          $value = $starts->toDateTimeString();
-                          $label = $label ?: $starts->translatedFormat('D j M — g:i A');
+                          $value = $starts->copy()->utc()->toIso8601String();
+                          $label = $label ?: $starts->copy()->timezone($viewerTz)->locale(app()->getLocale())->translatedFormat('D j M — g:i A');
                         } else {
                           continue;
                         }

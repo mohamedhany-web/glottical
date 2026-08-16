@@ -8,6 +8,7 @@ use App\Models\LiveServer;
 use App\Models\LiveSetting;
 use App\Models\AdvancedCourse;
 use App\Models\User;
+use App\Support\AppTimezone;
 use Illuminate\Http\Request;
 
 class LiveSessionController extends Controller
@@ -72,7 +73,8 @@ class LiveSessionController extends Controller
             'course_id'        => 'nullable|exists:advanced_courses,id',
             'instructor_id'    => 'required|exists:users,id',
             'server_id'        => 'nullable|exists:live_servers,id',
-            'scheduled_at'     => 'required|date|after:now',
+            'scheduled_at'     => 'required|date',
+            'timezone'         => AppTimezone::inputRules(),
             'max_participants' => 'nullable|integer|min:2|max:1000',
             'is_recorded'      => 'boolean',
             'allow_chat'       => 'boolean',
@@ -82,6 +84,8 @@ class LiveSessionController extends Controller
             'video_off_on_join' => 'boolean',
             'password'         => 'nullable|string|max:50',
         ]);
+        $validated = AppTimezone::shiftRequestDateTime($request, $validated, 'scheduled_at', mustBeFuture: true);
+        unset($validated['timezone']);
 
         $validated['is_recorded'] = $request->boolean('is_recorded');
         $validated['allow_chat'] = $request->boolean('allow_chat', true);
@@ -129,6 +133,7 @@ class LiveSessionController extends Controller
             'instructor_id'    => 'required|exists:users,id',
             'server_id'        => 'nullable|exists:live_servers,id',
             'scheduled_at'     => 'required|date',
+            'timezone'         => AppTimezone::inputRules(),
             'max_participants' => 'nullable|integer|min:2|max:1000',
             'is_recorded'      => 'boolean',
             'allow_chat'       => 'boolean',
@@ -138,6 +143,8 @@ class LiveSessionController extends Controller
             'video_off_on_join' => 'boolean',
             'password'         => 'nullable|string|max:50',
         ]);
+        $validated = AppTimezone::shiftRequestDateTime($request, $validated, 'scheduled_at', mustBeFuture: false);
+        unset($validated['timezone']);
 
         $validated['is_recorded'] = $request->boolean('is_recorded');
         $validated['allow_chat'] = $request->boolean('allow_chat', true);

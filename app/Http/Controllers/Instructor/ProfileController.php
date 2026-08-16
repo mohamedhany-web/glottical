@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AdvancedCourse;
 use App\Models\StudentCourseEnrollment;
 use App\Services\UserProfileImageStorage;
+use App\Support\AppTimezone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -36,6 +37,7 @@ class ProfileController extends Controller
             'current_password' => 'nullable|string',
             'password' => 'nullable|string|min:8|confirmed',
             'profile_image' => 'nullable|image|max:'.config('upload_limits.max_upload_kb'),
+            'timezone' => AppTimezone::inputRules(true),
         ], [
             'name.required' => 'الاسم مطلوب',
             'phone.required' => 'رقم الهاتف مطلوب',
@@ -58,6 +60,7 @@ class ProfileController extends Controller
             'name' => $request->name,
             'phone' => $request->phone,
             'bio' => $request->bio,
+            'timezone' => AppTimezone::resolveInput($request->input('timezone'), $user),
         ];
 
         if ($request->filled('email')) {
