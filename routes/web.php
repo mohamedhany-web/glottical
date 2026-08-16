@@ -1822,11 +1822,14 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/placement', [\App\Http\Controllers\Admin\PlacementController::class, 'store'])->name('placement.store');
         Route::get('/placement/student-context', [\App\Http\Controllers\Admin\PlacementController::class, 'studentContext'])->name('placement.student-context');
         Route::get('/placement/slots', [\App\Http\Controllers\Admin\PlacementController::class, 'slots'])->name('placement.slots');
+        Route::delete('/placement/private/{oneToOneSession}', [\App\Http\Controllers\Admin\PlacementController::class, 'destroyPrivate'])->name('placement.destroy-private');
+        Route::delete('/placement/group/{tutoringGroupBooking}', [\App\Http\Controllers\Admin\PlacementController::class, 'destroyGroup'])->name('placement.destroy-group');
 
         Route::get('/one-to-one-sessions', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'index'])->name('one-to-one-sessions.index');
         Route::get('/one-to-one-sessions/create', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'create'])->name('one-to-one-sessions.create');
         Route::post('/one-to-one-sessions', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'store'])->name('one-to-one-sessions.store');
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'show'])->name('one-to-one-sessions.show');
+        Route::delete('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'destroy'])->name('one-to-one-sessions.destroy');
 
         Route::get('/accounting/instructor-accounts', [\App\Http\Controllers\Admin\InstructorAccountController::class, 'index'])->name('accounting.instructor-accounts.index');
         Route::get('/accounting/instructor-accounts/{instructor}', [\App\Http\Controllers\Admin\InstructorAccountController::class, 'show'])->name('accounting.instructor-accounts.show');

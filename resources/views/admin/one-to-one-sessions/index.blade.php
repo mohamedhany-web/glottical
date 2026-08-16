@@ -94,7 +94,20 @@
                                 <span class="px-2 py-0.5 rounded-md bg-slate-100 text-xs font-semibold">{{ $session->statusLabel() }}</span>
                             </td>
                             <td class="px-4 py-3">
-                                <a href="{{ route('admin.one-to-one-sessions.show', $session) }}" class="text-sky-600 font-semibold hover:underline">{{ __('public.view_details') }}</a>
+                                <div class="flex flex-wrap items-center gap-3">
+                                    <a href="{{ route('admin.one-to-one-sessions.show', $session) }}" class="text-sky-600 font-semibold hover:underline">{{ __('public.view_details') }}</a>
+                                    @if($session->isOpenPlacement())
+                                        <form method="POST" action="{{ route('admin.one-to-one-sessions.destroy', $session) }}"
+                                              onsubmit="return confirm(@json($session->series_id ? 'حذف التسكين؟ سيتم إلغاء كل الحصص غير المكتملة في هذه السلسلة وإرجاع الرصيد المحجوز.' : 'حذف هذا التسكين؟ سيُلغى الموعد ويُعاد الرصيد المحجوز.'));">
+                                            @csrf
+                                            @method('DELETE')
+                                            @if($session->series_id)
+                                                <input type="hidden" name="series" value="1">
+                                            @endif
+                                            <button type="submit" class="text-xs font-semibold text-rose-600 hover:underline">حذف التسكين</button>
+                                        </form>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty

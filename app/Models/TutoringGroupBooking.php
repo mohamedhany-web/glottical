@@ -103,6 +103,11 @@ class TutoringGroupBooking extends Model
         return $query->whereIn('status', [self::STATUS_PENDING, self::STATUS_CONFIRMED]);
     }
 
+    public function isOpenPlacement(): bool
+    {
+        return in_array($this->status, [self::STATUS_PENDING, self::STATUS_CONFIRMED], true);
+    }
+
     public function statusLabel(): string
     {
         return match ($this->status) {

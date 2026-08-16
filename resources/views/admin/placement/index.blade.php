@@ -23,7 +23,7 @@
             'تأكد أن للطالب باقة نشطة أو رصيد قابل للحجز يكفي عدد الحصص.',
             'حدّث جداول توافر المعلم 1:1.',
             'من «تسكين جديد» اختر تثبيتاً شهرياً أو عدة مواعيد مع نفس المعلم.',
-            'راجع الحصص المجدولة من قائمة 1:1.',
+            'راجع الحصص المجدولة من قائمة 1:1، أو احذف التسكين المسجّل من القائمة أدناه.',
         ],
     ])
 
@@ -54,13 +54,20 @@
             </div>
             <div class="divide-y divide-line">
                 @forelse($recentPrivate as $session)
-                    <a href="{{ route('admin.one-to-one-sessions.show', $session) }}" class="flex items-center justify-between gap-3 py-3 text-sm hover:bg-slate-50/60">
-                        <div class="min-w-0">
+                    <div class="flex items-center justify-between gap-3 py-3 text-sm">
+                        <a href="{{ route('admin.one-to-one-sessions.show', $session) }}" class="min-w-0 flex-1 hover:bg-slate-50/60 rounded-lg px-1 py-0.5">
                             <p class="truncate font-medium text-ink">{{ $session->student?->name }} ← {{ $session->instructor?->name }}</p>
                             <p class="text-xs text-muted">{{ $session->statusLabel() }} · {{ optional($session->scheduled_at ?? $session->created_at)->format('Y-m-d H:i') }}</p>
-                        </div>
-                        <i class="fas fa-chevron-left text-xs text-muted"></i>
-                    </a>
+                        </a>
+                        @if($session->isOpenPlacement())
+                            <form method="POST" action="{{ route('admin.placement.destroy-private', $session) }}" class="shrink-0"
+                                  onsubmit="return confirm(@json($session->series_id ? 'حذف التسكين؟ سيتم إلغاء كل الحصص غير المكتملة في هذا التسكين وإرجاع الرصيد المحجوز.' : 'حذف هذا التسكين؟ سيُلغى الموعد ويُعاد الرصيد المحجوز.'));">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-xs font-medium text-danger hover:underline">حذف التسكين</button>
+                            </form>
+                        @endif
+                    </div>
                 @empty
                     <p class="py-6 text-center text-sm text-muted">لا تسكين 1:1 بعد</p>
                 @endforelse
@@ -74,13 +81,20 @@
             </div>
             <div class="divide-y divide-line">
                 @forelse($recentGroups as $booking)
-                    <a href="{{ route('admin.tutoring-group-bookings.show', $booking) }}" class="flex items-center justify-between gap-3 py-3 text-sm hover:bg-slate-50/60">
-                        <div class="min-w-0">
+                    <div class="flex items-center justify-between gap-3 py-3 text-sm">
+                        <a href="{{ route('admin.tutoring-group-bookings.show', $booking) }}" class="min-w-0 flex-1 hover:bg-slate-50/60 rounded-lg px-1 py-0.5">
                             <p class="truncate font-medium text-ink">{{ $booking->user?->name }} · {{ $booking->tutoringGroup?->title }}</p>
                             <p class="text-xs text-muted">{{ $booking->statusLabel() }} · {{ optional($booking->starts_at)->format('Y-m-d H:i') }}</p>
-                        </div>
-                        <i class="fas fa-chevron-left text-xs text-muted"></i>
-                    </a>
+                        </a>
+                        @if($booking->isOpenPlacement())
+                            <form method="POST" action="{{ route('admin.placement.destroy-group', $booking) }}" class="shrink-0"
+                                  onsubmit="return confirm('حذف تسكين المجموعة؟ سيُلغى الحجز ويُعاد الرصيد المحجوز.');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-xs font-medium text-danger hover:underline">حذف التسكين</button>
+                            </form>
+                        @endif
+                    </div>
                 @empty
                     <p class="py-6 text-center text-sm text-muted">لا حجوزات مجموعات بعد</p>
                 @endforelse

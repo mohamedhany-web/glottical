@@ -123,6 +123,11 @@ class OneToOneSession extends Model
         return self::statusLabels()[$this->status] ?? $this->status;
     }
 
+    public function isOpenPlacement(): bool
+    {
+        return in_array($this->status, [self::STATUS_PENDING, self::STATUS_SCHEDULED], true);
+    }
+
     public function joinUrl(): ?string
     {
         $meeting = $this->classroomMeeting;

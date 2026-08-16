@@ -147,4 +147,27 @@ class OneToOneSessionController extends Controller
             'dayLabels' => OneToOneAvailabilityService::dayLabels(),
         ]);
     }
+
+    public function destroy(Request $request, OneToOneSession $oneToOneSession): RedirectResponse
+    {
+        try {
+            $count = OneToOneSessionService::cancelSession(
+                $oneToOneSession,
+                $request->boolean('series'),
+                'حذف التسكين من لوحة الإدارة'
+            );
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        if ($count < 1) {
+            return back()->with('error', 'لا يوجد تسكين قائم للحذف.');
+        }
+
+        return redirect()
+            ->route('admin.one-to-one-sessions.index')
+            ->with('success', $count > 1
+                ? 'تم حذف التسكين وإلغاء '.$count.' حصص. الرصيد المحجوز عاد للطالب.'
+                : 'تم حذف التسكين وإرجاع الرصيد المحجوز.');
+    }
 }

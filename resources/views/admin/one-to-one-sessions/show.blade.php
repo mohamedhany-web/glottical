@@ -76,6 +76,32 @@
             </div>
             @endif
         </dl>
+        @if($session->isOpenPlacement())
+            <div class="flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+                @if($session->series_id)
+                    <form method="POST" action="{{ route('admin.one-to-one-sessions.destroy', $session) }}"
+                          onsubmit="return confirm('حذف التسكين كاملاً؟ سيتم إلغاء كل الحصص غير المكتملة في هذه السلسلة وإرجاع الرصيد المحجوز.');">
+                        @csrf
+                        @method('DELETE')
+                        <input type="hidden" name="series" value="1">
+                        <button type="submit" class="inline-flex h-10 items-center rounded-xl border border-rose-200 bg-rose-50 px-4 text-sm font-medium text-rose-700 hover:bg-rose-100">حذف التسكين كاملاً</button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.one-to-one-sessions.destroy', $session) }}"
+                          onsubmit="return confirm('إلغاء هذه الحصة فقط؟ باقي حصص التسكين تبقى كما هي.');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="inline-flex h-10 items-center rounded-xl border border-slate-200 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50">إلغاء هذه الحصة فقط</button>
+                    </form>
+                @else
+                    <form method="POST" action="{{ route('admin.one-to-one-sessions.destroy', $session) }}"
+                          onsubmit="return confirm('حذف هذا التسكين؟ سيُلغى الموعد ويُعاد الرصيد المحجوز.');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="inline-flex h-10 items-center rounded-xl border border-rose-200 bg-rose-50 px-4 text-sm font-medium text-rose-700 hover:bg-rose-100">حذف التسكين</button>
+                    </form>
+                @endif
+            </div>
+        @endif
     </div>
 
     <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6 space-y-4">

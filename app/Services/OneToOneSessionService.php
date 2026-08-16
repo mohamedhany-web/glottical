@@ -470,6 +470,85 @@ class OneToOneSessionService
         ]);
     }
 
+    /**
+     * إلغاء حصة 1:1 — يعيد الرصيد المحجوز. مع $entireSeries تُلغى باقي حصص التسكين الشهري غير المكتملة.
+     *
+     * @return int عدد الحصص التي أُلغيت
+     */
+    public static function cancelSession(OneToOneSession $session, bool $entireSeries = false, ?string $reason = null): int
+    {
+        return (int) DB::transaction(function () use ($session, $entireSeries, $reason) {
+            $session = OneToOneSession::query()
+                ->lockForUpdate()
+                ->findOrFail($session->id);
+
+            if ($session->status === OneToOneSession::STATUS_COMPLETED) {
+                throw new \InvalidArgumentException('لا يمكن حذف تسكين لحصة مكتملة.');
+            }
+
+            $query = OneToOneSession::query()
+                ->whereIn('status', [OneToOneSession::STATUS_PENDING, OneToOneSession::STATUS_SCHEDULED]);
+
+            if ($entireSeries && filled($session->series_id)) {
+                $query->where('series_id', $session->series_id);
+            } else {
+                $query->whereKey($session->id);
+            }
+
+            $rows = $query->with(['classroomMeeting', 'student'])->lockForUpdate()->get();
+            if ($rows->isEmpty()) {
+                return 0;
+            }
+
+            foreach ($rows as $row) {
+                $notes = $row->notes;
+                if ($reason) {
+                    $notes = trim(($notes ? $notes."\n" : '').$reason);
+                }
+                $row->update([
+                    'status' => OneToOneSession::STATUS_CANCELLED,
+                    'notes' => $notes,
+                ]);
+                if ($row->classroomMeeting && ! $row->classroomMeeting->ended_at) {
+                    $row->classroomMeeting->update(['ended_at' => now()]);
+                }
+            }
+
+            $first = $rows->first();
+            $count = $rows->count();
+            if ($first?->student_id) {
+                Notification::create([
+                    'user_id' => $first->student_id,
+                    'sender_id' => null,
+                    'title' => 'تم حذف التسكين',
+                    'message' => $count > 1
+                        ? ('تم إلغاء '.$count.' حصص فردية وإرجاع الرصيد المحجوز.')
+                        : 'تم إلغاء حصتك الفردية وإرجاع الرصيد المحجوز.',
+                    'type' => 'general',
+                    'priority' => 'normal',
+                    'audience' => 'student',
+                    'action_url' => route('student.one-to-one-sessions.index'),
+                    'action_text' => 'عرض الحصص',
+                ]);
+            }
+            if ($first?->instructor_id) {
+                Notification::create([
+                    'user_id' => $first->instructor_id,
+                    'sender_id' => null,
+                    'title' => 'أُلغي تسكين 1:1',
+                    'message' => 'الطالب: '.($first->student?->name ?? 'طالب').($count > 1 ? ' — '.$count.' حصص' : ''),
+                    'type' => 'general',
+                    'priority' => 'normal',
+                    'audience' => 'instructor',
+                    'action_url' => route('instructor.one-to-one-sessions.index'),
+                    'action_text' => 'عرض الجدول',
+                ]);
+            }
+
+            return $count;
+        });
+    }
+
     public static function markCompleted(OneToOneSession $session): void
     {
         DB::transaction(function () use ($session) {

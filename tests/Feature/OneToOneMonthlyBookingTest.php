@@ -305,4 +305,117 @@ class OneToOneMonthlyBookingTest extends TestCase
         $this->assertTrue(session()->has('success') || $response->isRedirect());
         $this->assertSame(8, OneToOneSession::query()->where('student_id', $student->id)->count());
     }
+
+    public function test_admin_can_delete_registered_monthly_placement_and_restore_credit(): void
+    {
+        [$student, $instructor, $entitlement] = $this->seedActors(10);
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $sessions = OneToOneSessionService::bookMonthlySeriesWithInstructor(
+            $student,
+            $instructor,
+            [
+                ['day_of_week' => 1, 'time' => '18:00'],
+                ['day_of_week' => 3, 'time' => '18:00'],
+            ],
+            4,
+            $entitlement,
+            $admin
+        );
+
+        $this->assertSame(2, StudentEntitlementService::bookableUnitsLeft($entitlement->fresh()));
+
+        $response = $this->actingAs($admin)->withoutMiddleware([
+            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+            \App\Http\Middleware\EnsurePermission::class,
+            \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+            \App\Http\Middleware\CheckActiveStatus::class,
+        ])->delete(route('admin.placement.destroy-private', $sessions->first()));
+
+        $response->assertRedirect(route('admin.placement.index'));
+        $this->assertSame(
+            8,
+            OneToOneSession::query()
+                ->where('student_id', $student->id)
+                ->where('status', OneToOneSession::STATUS_CANCELLED)
+                ->count()
+        );
+        $this->assertSame(10, StudentEntitlementService::bookableUnitsLeft($entitlement->fresh()));
+        $this->assertTrue(
+            $sessions->every(fn ($s) => filled($s->fresh()->classroomMeeting?->ended_at))
+        );
+    }
+
+    public function test_admin_can_cancel_one_session_in_a_series_without_removing_the_rest(): void
+    {
+        [$student, $instructor, $entitlement] = $this->seedActors(10);
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $sessions = OneToOneSessionService::bookMonthlySeriesWithInstructor(
+            $student,
+            $instructor,
+            [
+                ['day_of_week' => 1, 'time' => '18:00'],
+                ['day_of_week' => 3, 'time' => '18:00'],
+            ],
+            4,
+            $entitlement,
+            $admin
+        );
+
+        $response = $this->actingAs($admin)->withoutMiddleware([
+            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+            \App\Http\Middleware\EnsurePermission::class,
+            \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+            \App\Http\Middleware\CheckActiveStatus::class,
+        ])->delete(route('admin.one-to-one-sessions.destroy', $sessions->first()));
+
+        $response->assertRedirect(route('admin.one-to-one-sessions.index'));
+        $this->assertSame(1, OneToOneSession::query()->where('status', OneToOneSession::STATUS_CANCELLED)->count());
+        $this->assertSame(7, OneToOneSession::query()->where('status', OneToOneSession::STATUS_SCHEDULED)->count());
+        $this->assertSame(3, StudentEntitlementService::bookableUnitsLeft($entitlement->fresh()));
+    }
+
+    public function test_admin_cannot_delete_completed_placement(): void
+    {
+        [$student, $instructor, $entitlement] = $this->seedActors(2);
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $sessions = OneToOneSessionService::bookMonthlySeriesWithInstructor(
+            $student,
+            $instructor,
+            [
+                ['day_of_week' => 1, 'time' => '18:00'],
+            ],
+            1,
+            $entitlement,
+            $admin
+        );
+        $session = $sessions->first();
+        OneToOneSessionService::markCompleted($session);
+
+        $response = $this->actingAs($admin)->from(route('admin.placement.index'))->withoutMiddleware([
+            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+            \App\Http\Middleware\EnsurePermission::class,
+            \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+            \App\Http\Middleware\CheckActiveStatus::class,
+        ])->delete(route('admin.placement.destroy-private', $session));
+
+        $response->assertRedirect(route('admin.placement.index'));
+        $this->assertSame(OneToOneSession::STATUS_COMPLETED, $session->fresh()->status);
+        $this->assertSame(1, (int) $entitlement->fresh()->units_used);
+        $this->assertSame(1, StudentEntitlementService::bookableUnitsLeft($entitlement->fresh()));
+    }
 }

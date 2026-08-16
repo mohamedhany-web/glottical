@@ -45,11 +45,13 @@ class PlacementController extends Controller
 
         $recentPrivate = OneToOneSession::query()
             ->with(['student:id,name', 'instructor:id,name'])
+            ->where('status', '!=', OneToOneSession::STATUS_CANCELLED)
             ->orderByDesc('created_at')
             ->limit(8)
             ->get();
         $recentGroups = TutoringGroupBooking::query()
             ->with(['user:id,name', 'instructor:id,name', 'tutoringGroup:id,title'])
+            ->where('status', '!=', TutoringGroupBooking::STATUS_CANCELLED)
             ->orderByDesc('created_at')
             ->limit(8)
             ->get();
@@ -491,5 +493,44 @@ class PlacementController extends Controller
         return redirect()
             ->route('admin.tutoring-group-bookings.show', $booking)
             ->with('success', 'تم تسكين الطالب في المجموعة وإنشاء غرفة Live.');
+    }
+
+    public function destroyPrivate(OneToOneSession $oneToOneSession): RedirectResponse
+    {
+        try {
+            $count = OneToOneSessionService::cancelSession(
+                $oneToOneSession,
+                filled($oneToOneSession->series_id),
+                'حذف التسكين من لوحة الإدارة'
+            );
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        if ($count < 1) {
+            return back()->with('error', 'لا يوجد تسكين قائم للحذف.');
+        }
+
+        return redirect()
+            ->route('admin.placement.index')
+            ->with('success', $count > 1
+                ? 'تم حذف التسكين وإلغاء '.$count.' حصص. الرصيد المحجوز عاد للطالب.'
+                : 'تم حذف التسكين وإرجاع الرصيد المحجوز.');
+    }
+
+    public function destroyGroup(TutoringGroupBooking $tutoringGroupBooking): RedirectResponse
+    {
+        if (! $tutoringGroupBooking->isOpenPlacement()) {
+            return back()->with('error', 'لا يمكن حذف تسكين مكتمل أو ملغى.');
+        }
+
+        TutoringGroupOrchestrationService::cancelBooking(
+            $tutoringGroupBooking,
+            'حذف التسكين من لوحة الإدارة'
+        );
+
+        return redirect()
+            ->route('admin.placement.index')
+            ->with('success', 'تم حذف تسكين المجموعة وإرجاع الرصيد المحجوز.');
     }
 }

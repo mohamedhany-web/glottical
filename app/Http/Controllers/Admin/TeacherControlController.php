@@ -422,10 +422,10 @@ class TeacherControlController extends Controller
             return back()->with('error', 'لا يمكن إلغاء حصة مكتملة.');
         }
 
-        $session->loadMissing('classroomMeeting');
-        $session->update(['status' => OneToOneSession::STATUS_CANCELLED]);
-        if ($session->classroomMeeting && ! $session->classroomMeeting->ended_at) {
-            $session->classroomMeeting->update(['ended_at' => now()]);
+        try {
+            OneToOneSessionService::cancelSession($session, false, 'إلغاء من مركز تحكم المعلم');
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
         }
 
         return redirect()
