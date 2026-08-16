@@ -134,6 +134,17 @@ class AppTimezone
     }
 
     /**
+     * تسمية مقروءة للمنطقة (مصر — القاهرة) مع الإبقاء على المعرّف إن لم تُعرف.
+     */
+    public static function label(?string $timezone): string
+    {
+        $tz = self::normalize($timezone) ?? self::academy();
+        $zones = self::commonZones();
+
+        return $zones[$tz] ?? $tz;
+    }
+
+    /**
      * تفسير تاريخ/وقت محلي في منطقة معيّنة ثم إرجاعه كـ UTC.
      */
     public static function parseLocalToUtc(string|CarbonInterface $datetime, ?string $timezone = null): Carbon
@@ -280,7 +291,7 @@ class AppTimezone
 
         if ($viewer !== $academy) {
             $academyTime = self::formatFor($datetime, $academy, $pattern, $locale);
-            $secondary = 'بتوقيتك ('.$viewer.') · '.$academyTime.' بتوقيت مصر';
+            $secondary = 'بتوقيت '.self::label($viewer).' · '.$academyTime.' بتوقيت مصر';
         }
 
         return [

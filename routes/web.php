@@ -923,7 +923,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             ->name('student.schedule.join');
         Route::get('/library', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'libraryHome'])->name('student.library.home');
         Route::get('/library/files', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'files'])->name('student.library.files');
-        Route::get('/library/curriculum', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'curriculum'])->name('student.library.curriculum');
+        Route::get('/library/curriculum', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'index'])->name('student.library.curriculum');
         Route::get('/library/materials', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'materials'])->name('student.library.materials');
         Route::get('/library/materials/{material}/download', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'downloadMaterial'])->name('student.library.materials.download');
         Route::get('/library/materials/{material}/experience', [\App\Http\Controllers\Student\StudentHomeExtrasController::class, 'experienceMaterial'])->name('student.library.materials.experience');
@@ -1192,6 +1192,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         // مركز تحكم المعلم (بيانات + جدول + 1:1 + حجوزات)
         Route::get('/teachers', [\App\Http\Controllers\Admin\TeacherControlController::class, 'index'])->name('teachers.index');
         Route::get('/teachers/{teacher}', [\App\Http\Controllers\Admin\TeacherControlController::class, 'show'])->name('teachers.show');
+        Route::get('/teachers/{teacher}/calendar-events', [\App\Http\Controllers\Admin\TeacherControlController::class, 'calendarEvents'])->name('teachers.calendar-events');
         Route::put('/teachers/{teacher}/profile', [\App\Http\Controllers\Admin\TeacherControlController::class, 'updateProfile'])->name('teachers.update-profile');
         Route::post('/teachers/{teacher}/work-schedule', [\App\Http\Controllers\Admin\TeacherControlController::class, 'syncWorkSchedule'])->name('teachers.sync-work-schedule');
         Route::post('/teachers/{teacher}/one-to-one-availability', [\App\Http\Controllers\Admin\TeacherControlController::class, 'syncOneToOneAvailability'])->name('teachers.sync-oto-availability');

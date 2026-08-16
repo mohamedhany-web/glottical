@@ -7084,3 +7084,75 @@ button.st-chip {
   .st-pres-office,
   .st-pres-office__frame { min-height: 62vh; }
 }
+
+/* حصة 1:1 — تفاصيل الطالب */
+.st-oto-facts {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.st-oto-facts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--st-line);
+}
+.st-oto-facts > div:last-child { border-bottom: 0; padding-bottom: 0; }
+.st-oto-facts dt {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--st-muted);
+}
+.st-oto-facts dd {
+  margin: 0;
+  text-align: end;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--st-ink-strong);
+}
+.st-slot-day { margin-bottom: 14px; }
+.st-slot-day__label {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 900;
+  color: #0B3D91;
+}
+.st-slot-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.st-slot-chip {
+  cursor: pointer;
+  margin: 0;
+}
+.st-slot-chip input { position: absolute; opacity: 0; pointer-events: none; }
+.st-slot-chip span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--st-line);
+  background: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--st-ink);
+}
+.st-slot-chip input:focus-visible + span {
+  box-shadow: 0 0 0 3px rgba(11, 61, 145, .18);
+}
+.st-slot-chip input:checked + span {
+  background: #0B3D91;
+  border-color: #0B3D91;
+  color: #fff;
+}
+.st-slot-chip:hover span {
+  border-color: rgba(11, 61, 145, .35);
+}
+.st-oto-form .st-pill { margin-top: 8px; }

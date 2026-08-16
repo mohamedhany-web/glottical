@@ -88,7 +88,7 @@ class PlacementController extends Controller
             ->whereIn('role', ['instructor', 'teacher'])
             ->where('is_active', true)
             ->orderBy('name')
-            ->get(['id', 'name', 'email']);
+            ->get(['id', 'name', 'email', 'timezone']);
 
         $groups = TutoringGroup::query()
             ->active()
@@ -109,6 +109,7 @@ class PlacementController extends Controller
                 ? route('admin.student-entitlements.create')
                 : null,
             'durationMinutes' => OneToOneSession::defaultDurationMinutes(),
+            'dayLabels' => OneToOneAvailabilityService::dayLabels(),
         ]);
     }
 
@@ -188,14 +189,13 @@ class PlacementController extends Controller
 
             $instructor = User::query()->find($instructorId);
             $clockTz = AppTimezone::forUser($instructor);
-            $viewerTz = AppTimezone::forUser($request->user());
             $duration = OneToOneSession::defaultDurationMinutes();
             $slots = OneToOneAvailabilityService::availableSlots(
                 $instructorId,
                 now()->addHour(),
                 now()->addWeeks(5),
                 $duration
-            )->take(120)->map(function ($slot) use ($clockTz, $viewerTz) {
+            )->take(120)->map(function ($slot) use ($clockTz) {
                 $at = $slot['starts_at'] instanceof Carbon
                     ? $slot['starts_at']->copy()->utc()
                     : Carbon::parse($slot['starts_at'])->utc();
@@ -204,7 +204,7 @@ class PlacementController extends Controller
 
                 return [
                     'starts_at' => $at->toIso8601String(),
-                    'label' => $viewer->locale('ar')->translatedFormat('D j M · g:i A'),
+                    'label' => $clock->locale('ar')->translatedFormat('D j M · g:i A').' · '.AppTimezone::label($clockTz),
                     'day_of_week' => (int) $clock->dayOfWeekIso,
                     'time' => $clock->format('H:i'),
                 ];
@@ -236,8 +236,10 @@ class PlacementController extends Controller
                 'slots' => $slots,
                 'weekly_windows' => $weeklyWindows,
                 'day_labels' => $dayLabels,
+                'timezone' => $clockTz,
+                'timezone_label' => AppTimezone::label($clockTz),
                 'empty_hint' => $slots->isEmpty()
-                    ? 'لا مواعيد متاحة لهذا المعلم خلال الأسابيع القادمة. تأكد من ضبط جدول توافره 1:1.'
+                    ? 'لا نوافذ في جدول التوافر — اكتب الموعد يدوياً بتوقيت المعلم بعد التنسيق على واتساب.'
                     : null,
             ]);
         }
@@ -285,6 +287,7 @@ class PlacementController extends Controller
             'instructor_id' => ['nullable', 'integer', 'exists:users,id'],
             'tutoring_group_id' => ['nullable', 'integer', 'exists:tutoring_groups,id'],
             'scheduled_at' => ['nullable', 'date'],
+            'manual_scheduled_at' => ['nullable', 'date'],
             'timezone' => AppTimezone::inputRules(),
             'scheduled_ats' => ['nullable', 'array', 'max:40'],
             'scheduled_ats.*' => ['date', 'after:now'],
@@ -354,7 +357,9 @@ class PlacementController extends Controller
                     (int) ($data['weeks'] ?? 4),
                     $entitlement,
                     $request->user(),
-                    $notes
+                    $notes,
+                    null,
+                    false
                 );
                 $first = $sessions->first();
 
@@ -365,16 +370,25 @@ class PlacementController extends Controller
 
             if ($style === 'multi') {
                 $ats = $data['scheduled_ats'] ?? [];
+                if (count($ats) < 1 && ! empty($data['manual_scheduled_at'])) {
+                    $ats = [$data['manual_scheduled_at']];
+                }
                 if (count($ats) < 1) {
                     return back()->withInput()->with('error', 'اختر موعداً واحداً على الأقل.');
                 }
+                $clockTz = AppTimezone::resolveInput(
+                    is_string($data['timezone'] ?? null) ? $data['timezone'] : null,
+                    $instructor
+                );
+                $parsedAts = collect($ats)->map(fn ($at) => AppTimezone::parseAppointmentInput((string) $at, $clockTz) ?? $at)->all();
                 $sessions = OneToOneSessionService::bookMultipleWithInstructor(
                     $student,
                     $instructor,
-                    $ats,
+                    $parsedAts,
                     $entitlement,
                     $request->user(),
-                    $notes
+                    $notes,
+                    false
                 );
                 $first = $sessions->first();
 
@@ -383,17 +397,23 @@ class PlacementController extends Controller
                     ->with('success', 'تم حجز '.$sessions->count().' حصص مع نفس المعلم.');
             }
 
-            if (empty($data['scheduled_at'])) {
-                return back()->withInput()->with('error', 'اختر موعداً.');
+            $rawAt = $data['scheduled_at'] ?? $data['manual_scheduled_at'] ?? null;
+            if (empty($rawAt)) {
+                return back()->withInput()->with('error', 'اكتب الموعد بتوقيت المعلم أو اختر من الجدول إن وُجد.');
             }
 
+            $clockTz = AppTimezone::resolveInput(
+                is_string($data['timezone'] ?? null) ? $data['timezone'] : null,
+                $instructor
+            );
             $sessions = OneToOneSessionService::bookMultipleWithInstructor(
                 $student,
                 $instructor,
-                [AppTimezone::parseAppointmentInput((string) $data['scheduled_at']) ?? $data['scheduled_at']],
+                [AppTimezone::parseAppointmentInput((string) $rawAt, $clockTz) ?? $rawAt],
                 $entitlement,
                 $request->user(),
-                $notes
+                $notes,
+                false
             );
             $session = $sessions->first();
         } catch (\InvalidArgumentException $e) {

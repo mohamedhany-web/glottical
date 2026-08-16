@@ -66,7 +66,7 @@ class OneToOneSessionController extends Controller
                 ->whereIn('role', ['instructor', 'teacher'])
                 ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name', 'email']),
+                ->get(['id', 'name', 'email', 'timezone']),
             'selectedEntitlementId' => $selectedEntitlementId,
             'slotsUrl' => route('admin.placement.slots'),
             'placementUrl' => route('admin.placement.create', ['mode' => 'private']),
@@ -83,10 +83,10 @@ class OneToOneSessionController extends Controller
             'timezone' => AppTimezone::inputRules(),
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
-        $data = AppTimezone::shiftRequestDateTime($request, $data, 'scheduled_at', mustBeFuture: true);
 
         $entitlement = StudentServiceEntitlement::query()->with('user')->findOrFail($data['student_service_entitlement_id']);
         $instructor = User::query()->findOrFail($data['instructor_id']);
+        $data = AppTimezone::shiftRequestDateTime($request, $data, 'scheduled_at', mustBeFuture: true, fallbackUser: $instructor);
         if (! $instructor->isInstructor()) {
             return back()->withInput()->with('error', 'المستخدم المحدد ليس معلماً.');
         }
@@ -114,7 +114,7 @@ class OneToOneSessionController extends Controller
                     $data['scheduled_at'],
                     OneToOneSession::defaultDurationMinutes(),
                     $request->user(),
-                    true
+                    false
                 );
             } catch (\InvalidArgumentException $e) {
                 $session->delete();

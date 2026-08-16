@@ -11,7 +11,9 @@ use App\Models\CurriculumLibrarySection;
 use App\Models\CurriculumPresentationDerivative;
 use App\Services\CurriculumPresentationViewerService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -21,38 +23,70 @@ class CurriculumLibraryController extends Controller
     {
         $user = Auth::user();
         $hasFullAccess = $user && $user->hasCurriculumLibraryAccess();
-        $usedFreePreview = $user ? CurriculumLibraryPreviewOpen::hasUsedFreePreview($user->id) : false;
+        $usedFreePreview = $user
+            && Schema::hasTable('curriculum_library_preview_opens')
+            && CurriculumLibraryPreviewOpen::hasUsedFreePreview($user->id);
 
-        $query = CurriculumLibraryItem::active()
-            ->with('category')
-            ->ordered()
+        $base = CurriculumLibraryItem::active()
             ->where(function ($q) use ($user) {
                 $q->whereNull('curriculum_library_items.category_id')
                     ->orWhereHas('category', fn ($cq) => $cq->accessibleByStudent($user));
             });
 
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
+        $categoryId = (int) $request->query('category_id', 0);
+        $grade = trim((string) $request->query('grade', ''));
+        $subject = trim((string) $request->query('subject', ''));
+        $searchQuery = trim((string) $request->query('q', ''));
+
+        $query = (clone $base)->with('category')->withCount(['sections', 'files'])->ordered();
+
+        if ($categoryId > 0) {
+            $query->where('category_id', $categoryId);
+        }
+        if ($grade !== '') {
+            $query->where('grade_level', $grade);
+        }
+        if ($subject !== '') {
+            $query->where('subject', $subject);
         }
         if ($request->filled('language') && in_array($request->language, ['ar', 'en', 'fr'], true)) {
             $query->byLanguage($request->language);
         }
-        if ($request->filled('q')) {
-            $q = $request->q;
-            $query->where(function ($qry) use ($q) {
-                $qry->where('title', 'like', "%{$q}%")
-                    ->orWhere('description', 'like', "%{$q}%")
-                    ->orWhere('subject', 'like', "%{$q}%");
+        if ($searchQuery !== '') {
+            $query->where(function ($qry) use ($searchQuery) {
+                $qry->where('title', 'like', '%'.$searchQuery.'%')
+                    ->orWhere('description', 'like', '%'.$searchQuery.'%')
+                    ->orWhere('subject', 'like', '%'.$searchQuery.'%')
+                    ->orWhere('grade_level', 'like', '%'.$searchQuery.'%');
             });
         }
-        $items = $query->paginate(12)->withQueryString();
+
+        $items = $query->get();
         $categories = \App\Models\CurriculumLibraryCategory::active()
             ->ordered()
             ->accessibleByStudent($user)
             ->get();
-        $packagesUrl = $this->packagesUpsellUrl();
 
-        return view('student.curriculum-library.index', compact('items', 'categories', 'hasFullAccess', 'usedFreePreview', 'packagesUrl'));
+        $filterSource = (clone $base)->get(['category_id', 'grade_level', 'subject']);
+        $grades = $filterSource->pluck('grade_level')->filter(fn ($v) => filled($v))->unique()->sort()->values();
+        $subjects = $filterSource->pluck('subject')->filter(fn ($v) => filled($v))->unique()->sort()->values();
+
+        return view('student.library.curriculum', [
+            'items' => $items,
+            'grouped' => $this->groupUploadedCurricula($items),
+            'categories' => $categories,
+            'grades' => $grades,
+            'subjects' => $subjects,
+            'categoryId' => $categoryId,
+            'grade' => $grade,
+            'subject' => $subject,
+            'searchQuery' => $searchQuery,
+            'hasFilters' => $categoryId > 0 || $grade !== '' || $subject !== '' || $searchQuery !== '',
+            'hasFullAccess' => $hasFullAccess,
+            'usedFreePreview' => $usedFreePreview,
+            'packagesUrl' => $this->packagesUpsellUrl(),
+            'locale' => app()->getLocale(),
+        ]);
     }
 
     public function show(Request $request, CurriculumLibraryItem $item)
@@ -659,6 +693,39 @@ class CurriculumLibraryController extends Controller
         }
 
         return route('curriculum-library.show', $item);
+    }
+
+    /**
+     * @param  Collection<int, CurriculumLibraryItem>  $items
+     * @return Collection<int, array{id: int, name: ?string, order: int, items_count: int, grades: Collection}>
+     */
+    private function groupUploadedCurricula(Collection $items): Collection
+    {
+        return $items
+            ->groupBy(fn (CurriculumLibraryItem $item) => $item->category_id ?? 0)
+            ->map(function (Collection $categoryItems, $categoryKey) {
+                $category = $categoryItems->first()?->category;
+                $grades = $categoryItems
+                    ->groupBy(fn (CurriculumLibraryItem $item) => filled($item->grade_level) ? $item->grade_level : '')
+                    ->map(function (Collection $gradeItems, $gradeKey) {
+                        return [
+                            'name' => $gradeKey !== '' ? (string) $gradeKey : null,
+                            'items' => $gradeItems->values(),
+                        ];
+                    })
+                    ->sortBy(fn (array $group) => $group['name'] === null ? 'zzz' : mb_strtolower((string) $group['name']))
+                    ->values();
+
+                return [
+                    'id' => (int) $categoryKey,
+                    'name' => $category?->name,
+                    'order' => (int) ($category?->order ?? 9999),
+                    'items_count' => $categoryItems->count(),
+                    'grades' => $grades,
+                ];
+            })
+            ->sortBy(fn (array $group) => $group['id'] === 0 ? 999999 : $group['order'])
+            ->values();
     }
 
     protected function packagesUpsellUrl(): string

@@ -35,6 +35,7 @@ class AppTimezoneTest extends TestCase
         $parts = AppTimezone::dualLabel($utc, 'America/New_York', 'en', 'g:i A');
         $this->assertSame('11:00 AM', $parts['primary']);
         $this->assertNotNull($parts['secondary']);
+        $this->assertStringContainsString('بتوقيت', $parts['secondary']);
         $this->assertStringContainsString('بتوقيت مصر', $parts['secondary']);
     }
 

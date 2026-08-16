@@ -5,33 +5,35 @@
 @section('content')
 @php
     $locale = $locale ?? app()->getLocale();
-    $courses = $courses ?? collect();
+    $items = $items ?? collect();
     $grouped = $grouped ?? collect();
-    $years = $years ?? collect();
+    $categories = $categories ?? collect();
+    $grades = $grades ?? collect();
     $subjects = $subjects ?? collect();
-    $instructors = $instructors ?? collect();
-    $yearId = (int) ($yearId ?? 0);
-    $subjectId = (int) ($subjectId ?? 0);
-    $instructorId = (int) ($instructorId ?? 0);
+    $categoryId = (int) ($categoryId ?? 0);
+    $grade = (string) ($grade ?? '');
+    $subject = (string) ($subject ?? '');
     $searchQuery = $searchQuery ?? '';
     $hasFilters = (bool) ($hasFilters ?? false);
     $packagesUrl = $packagesUrl ?? route('dashboard');
-    $coursesEmpty = method_exists($courses, 'isEmpty') ? $courses->isEmpty() : collect($courses)->isEmpty();
-    $courseCount = collect($courses)->count();
+    $hasFullAccess = (bool) ($hasFullAccess ?? false);
+    $usedFreePreview = (bool) ($usedFreePreview ?? false);
+    $itemsEmpty = method_exists($items, 'isEmpty') ? $items->isEmpty() : collect($items)->isEmpty();
+    $itemCount = collect($items)->count();
     $tones = ['blue', 'pink', 'orange', 'purple', 'green'];
     $cardIndex = 0;
-    $currQuery = function (array $override = []) use ($searchQuery, $yearId, $subjectId, $instructorId) {
-        $year = array_key_exists('year', $override) ? (int) $override['year'] : $yearId;
-        $subject = array_key_exists('subject', $override) ? (int) $override['subject'] : $subjectId;
-        $instructor = array_key_exists('instructor', $override) ? (int) $override['instructor'] : $instructorId;
+    $currQuery = function (array $override = []) use ($searchQuery, $categoryId, $grade, $subject) {
+        $cat = array_key_exists('category_id', $override) ? (int) $override['category_id'] : $categoryId;
+        $g = array_key_exists('grade', $override) ? (string) $override['grade'] : $grade;
+        $s = array_key_exists('subject', $override) ? (string) $override['subject'] : $subject;
         $q = array_key_exists('q', $override) ? (string) $override['q'] : $searchQuery;
 
         return array_filter([
             'lang' => request('lang') ?: null,
             'q' => $q !== '' ? $q : null,
-            'year' => $year > 0 ? $year : null,
-            'subject' => $subject > 0 ? $subject : null,
-            'instructor' => $instructor > 0 ? $instructor : null,
+            'category_id' => $cat > 0 ? $cat : null,
+            'grade' => $g !== '' ? $g : null,
+            'subject' => $s !== '' ? $s : null,
         ], fn ($value) => $value !== null && $value !== '');
     };
 @endphp
@@ -49,28 +51,35 @@
 @if(session('success'))
     <div class="st-flash st-flash--ok">{{ session('success') }}</div>
 @endif
+@if(session('error'))
+    <div class="st-flash st-flash--err">{{ session('error') }}</div>
+@endif
 
 <section class="st-msg-intro">
     <div>
         <h2>{{ __('student_timeline.lib_curriculum_title') }}</h2>
-        <p>{{ __('student_timeline.lib_curriculum_hint') }}</p>
+        <p>
+            {{ __('student_timeline.lib_curriculum_hint') }}
+            @if(! $hasFullAccess)
+                <br><span class="text-amber-700 font-semibold text-xs">{{ __('student_timeline.lib_manahij_preview_note') }}</span>
+            @else
+                <br><span class="text-emerald-700 font-semibold text-xs">{{ __('student_timeline.lib_manahij_full_note') }}</span>
+            @endif
+        </p>
     </div>
     <div class="st-msg-intro__actions">
         <a href="{{ route('student.library.home') }}" class="st-pill st-pill--outline">{{ __('student_timeline.family_library_title') }}</a>
-        <a href="{{ route('student.library.materials') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_library_materials') }}</a>
+        <a href="{{ route('student.library.files') }}" class="st-pill st-pill--outline">{{ __('student_timeline.lib_files_title') }}</a>
     </div>
 </section>
 
-@if($years->isNotEmpty())
-    <section class="st-theme-strip" aria-label="{{ __('student_timeline.lib_curriculum_year') }}">
-        <a href="{{ route('student.library.curriculum', $currQuery(['year' => 0, 'subject' => 0])) }}"
-           class="st-theme-chip {{ $yearId === 0 ? 'is-active' : '' }}">{{ __('student_timeline.lib_curriculum_all_years') }}</a>
-        @foreach($years as $year)
-            <a href="{{ route('student.library.curriculum', $currQuery([
-                    'year' => $year->id,
-                    'subject' => $yearId === (int) $year->id ? $subjectId : 0,
-                ])) }}"
-               class="st-theme-chip {{ $yearId === (int) $year->id ? 'is-active' : '' }}">{{ $year->name }}</a>
+@if($categories->isNotEmpty())
+    <section class="st-theme-strip" aria-label="{{ __('student_timeline.lib_manahij_all_categories') }}">
+        <a href="{{ route('student.library.curriculum', $currQuery(['category_id' => 0, 'grade' => ''])) }}"
+           class="st-theme-chip {{ $categoryId === 0 ? 'is-active' : '' }}">{{ __('student_timeline.lib_manahij_all_categories') }}</a>
+        @foreach($categories as $cat)
+            <a href="{{ route('student.library.curriculum', $currQuery(['category_id' => $cat->id])) }}"
+               class="st-theme-chip {{ $categoryId === (int) $cat->id ? 'is-active' : '' }}">{{ $cat->name }}</a>
         @endforeach
     </section>
 @endif
@@ -79,26 +88,26 @@
     @if(request('lang'))
         <input type="hidden" name="lang" value="{{ request('lang') }}">
     @endif
-    @if($yearId > 0)
-        <input type="hidden" name="year" value="{{ $yearId }}">
+    @if($categoryId > 0)
+        <input type="hidden" name="category_id" value="{{ $categoryId }}">
     @endif
     <label class="sr-only" for="lib-curriculum-q">{{ __('student_timeline.lib_curriculum_search') }}</label>
     <input id="lib-curriculum-q" type="search" name="q" value="{{ $searchQuery }}" placeholder="{{ __('student_timeline.lib_curriculum_search') }}">
+    @if($grades->isNotEmpty())
+        <label class="sr-only" for="lib-curriculum-grade">{{ __('student_timeline.lib_curriculum_grade') }}</label>
+        <select id="lib-curriculum-grade" name="grade" class="st-lib-search__select" onchange="this.form.submit()">
+            <option value="">{{ __('student_timeline.lib_curriculum_all_grades') }}</option>
+            @foreach($grades as $gradeOption)
+                <option value="{{ $gradeOption }}" @selected($grade === (string) $gradeOption)>{{ $gradeOption }}</option>
+            @endforeach
+        </select>
+    @endif
     @if($subjects->isNotEmpty())
         <label class="sr-only" for="lib-curriculum-subject">{{ __('student_timeline.lib_curriculum_subject') }}</label>
         <select id="lib-curriculum-subject" name="subject" class="st-lib-search__select" onchange="this.form.submit()">
             <option value="">{{ __('student_timeline.lib_curriculum_all_subjects') }}</option>
-            @foreach($subjects as $subject)
-                <option value="{{ $subject->id }}" @selected($subjectId === (int) $subject->id)>{{ $subject->name }}</option>
-            @endforeach
-        </select>
-    @endif
-    @if($instructors->count() > 1)
-        <label class="sr-only" for="lib-curriculum-instructor">{{ __('student_timeline.lib_curriculum_teacher') }}</label>
-        <select id="lib-curriculum-instructor" name="instructor" class="st-lib-search__select" onchange="this.form.submit()">
-            <option value="">{{ __('student_timeline.lib_curriculum_all_teachers') }}</option>
-            @foreach($instructors as $instructor)
-                <option value="{{ $instructor->id }}" @selected($instructorId === (int) $instructor->id)>{{ $instructor->name }}</option>
+            @foreach($subjects as $subjectOption)
+                <option value="{{ $subjectOption }}" @selected($subject === (string) $subjectOption)>{{ $subjectOption }}</option>
             @endforeach
         </select>
     @endif
@@ -108,9 +117,9 @@
     @endif
 </form>
 
-<p class="st-lib-count">{{ trans_choice('student_timeline.lib_curriculum_courses_count', $courseCount, ['count' => $courseCount]) }}</p>
+<p class="st-lib-count">{{ trans_choice('student_timeline.lib_curriculum_courses_count', $itemCount, ['count' => $itemCount]) }}</p>
 
-@if($coursesEmpty)
+@if($itemsEmpty)
     <div class="st-empty-panel">
         <h3>{{ __('student_timeline.lib_curriculum_empty_title') }}</h3>
         <p>{{ $hasFilters ? __('student_timeline.lib_curriculum_empty_filter_hint') : __('student_timeline.lib_curriculum_empty_hint') }}</p>
@@ -118,13 +127,7 @@
             @if($hasFilters)
                 <a href="{{ route('student.library.curriculum', array_filter(['lang' => request('lang') ?: null])) }}" class="st-pill st-pill--solid">{{ __('student_timeline.lib_curriculum_clear_filters') }}</a>
             @endif
-            @if(Route::has('student.learn.index'))
-                <a href="{{ route('student.learn.index') }}" class="st-pill st-pill--solid">{{ __('student_timeline.nav_learn') }}</a>
-            @endif
-            @if(Route::has('my-courses.index'))
-                <a href="{{ route('my-courses.index') }}" class="st-pill st-pill--outline">{{ __('student_timeline.my_classes') }}</a>
-            @endif
-            <a href="{{ $packagesUrl }}" class="st-pill st-pill--outline">{{ __('student_timeline.lib_browse_packages') }}</a>
+            <a href="{{ route('student.library.home') }}" class="st-pill st-pill--outline">{{ __('student_timeline.family_library_title') }}</a>
         </div>
     </div>
 @else
@@ -132,50 +135,49 @@
         <section class="st-curr-group" aria-label="{{ $group['name'] ?: __('student_timeline.lib_curriculum_uncategorized') }}">
             <header class="st-curr-group__head">
                 <h3>{{ $group['name'] ?: __('student_timeline.lib_curriculum_uncategorized') }}</h3>
-                <span class="st-curr-group__count">{{ trans_choice('student_timeline.lib_curriculum_courses_count', $group['courses_count'], ['count' => $group['courses_count']]) }}</span>
+                <span class="st-curr-group__count">{{ trans_choice('student_timeline.lib_curriculum_courses_count', $group['items_count'], ['count' => $group['items_count']]) }}</span>
             </header>
-            @foreach($group['subjects'] as $subjectGroup)
-                <h4 class="st-curr-group__subject">{{ $subjectGroup['name'] ?: __('student_timeline.lib_curriculum_uncategorized') }}</h4>
+            @foreach($group['grades'] as $gradeGroup)
+                @if($gradeGroup['name'])
+                    <h4 class="st-curr-group__subject">{{ $gradeGroup['name'] }}</h4>
+                @endif
                 <div class="st-curriculum-grid">
-                    @foreach($subjectGroup['courses'] as $course)
+                    @foreach($gradeGroup['items'] as $item)
                         @php
                             $tone = $tones[$cardIndex % count($tones)];
                             $cardIndex++;
-                            $teacherName = $course->instructor->name ?? $course->teacher->name ?? null;
-                            $yearName = $course->academicYear->name ?? $course->academicSubject?->academicYear?->name ?? null;
-                            $subjectName = $course->academicSubject->name ?? null;
-                            $sectionsCount = (int) ($course->sections_count ?? 0);
-                            $itemsCount = (int) ($course->curriculum_items_count ?? 0);
-                            $lecturesCount = (int) ($course->lectures_count ?? 0);
-                            $learnUrl = Route::has('my-courses.learn') ? route('my-courses.learn', $course) : (Route::has('my-courses.show') ? route('my-courses.show', $course) : null);
+                            $isLocked = (! $hasFullAccess) && $usedFreePreview;
+                            $href = $isLocked ? $packagesUrl : route('curriculum-library.show', $item);
+                            $sectionsCount = (int) ($item->sections_count ?? 0);
+                            $filesCount = (int) ($item->files_count ?? 0);
                         @endphp
                         <article class="st-curriculum-card st-curriculum-card--{{ $tone }}">
                             <div class="st-curriculum-card__top">
                                 <span class="st-lib-badge st-lib-badge--academy">{{ __('student_timeline.lib_badge_curriculum') }}</span>
-                                @if($teacherName)
-                                    <span class="st-lib-badge st-lib-badge--teacher">{{ $teacherName }}</span>
+                                @if($item->is_free_preview)
+                                    <span class="st-lib-badge st-lib-badge--teacher">{{ __('student_timeline.lib_manahij_free') }}</span>
+                                @elseif($isLocked)
+                                    <span class="st-lib-badge"><i class="fas fa-lock"></i> {{ __('student_timeline.lib_manahij_locked') }}</span>
                                 @endif
                             </div>
-                            <h3>{{ $course->title }}</h3>
+                            <h3>{{ $item->title }}</h3>
                             <p class="st-curriculum-card__meta">
-                                @if($yearName){{ $yearName }}@endif
-                                @if($yearName && $subjectName) · @endif
-                                @if($subjectName){{ $subjectName }}@endif
+                                @if($item->category){{ $item->category->name }}@endif
+                                @if($item->category && $item->subject) · @endif
+                                @if($item->subject){{ $item->subject }}@endif
+                                @if($item->grade_level) · {{ $item->grade_level }}@endif
                             </p>
+                            @if($item->description)
+                                <p class="text-sm text-slate-600 mt-2 line-clamp-2">{{ \Illuminate\Support\Str::limit($item->description, 100) }}</p>
+                            @endif
                             <ul class="st-curriculum-card__stats">
                                 <li><i class="fas fa-layer-group" aria-hidden="true"></i> {{ trans_choice('student_timeline.lib_curriculum_sections_count', $sectionsCount, ['count' => $sectionsCount]) }}</li>
-                                <li><i class="fas fa-list" aria-hidden="true"></i> {{ trans_choice('student_timeline.lib_curriculum_items_count', $itemsCount, ['count' => $itemsCount]) }}</li>
-                                <li><i class="fas fa-chalkboard" aria-hidden="true"></i> {{ trans_choice('student_timeline.lib_curriculum_lectures_count', $lecturesCount, ['count' => $lecturesCount]) }}</li>
+                                <li><i class="fas fa-file" aria-hidden="true"></i> {{ trans_choice('student_timeline.lib_curriculum_files_count', $filesCount, ['count' => $filesCount]) }}</li>
                             </ul>
                             <div class="st-curriculum-card__foot">
-                                @if($learnUrl)
-                                    <a href="{{ $learnUrl }}" class="st-pill st-pill--solid">
-                                        <i class="fas fa-play" aria-hidden="true"></i>
-                                        {{ __('student_timeline.lib_curriculum_open') }}
-                                    </a>
-                                @endif
-                                <a href="{{ route('student.library.materials', ['course' => $course->id]) }}" class="st-pill st-pill--outline">
-                                    {{ __('student_timeline.nav_library_materials') }}
+                                <a href="{{ $href }}" class="st-pill st-pill--solid">
+                                    <i class="fas fa-book-open" aria-hidden="true"></i>
+                                    {{ $isLocked ? __('student_timeline.lib_browse_packages') : __('student_timeline.lib_curriculum_open') }}
                                 </a>
                             </div>
                         </article>
@@ -191,9 +193,9 @@
 <div class="st-events__top">
     <h2>{{ __('student_timeline.library_links') }}</h2>
 </div>
-<a href="{{ route('student.library.materials') }}" class="st-event-card st-event-card--blue">
-    <h3>{{ __('student_timeline.nav_library_materials') }}</h3>
-    <p class="st-event-card__sub">{{ __('student_timeline.family_materials_side') }}</p>
+<a href="{{ route('student.library.files') }}" class="st-event-card st-event-card--blue">
+    <h3>{{ __('student_timeline.lib_files_title') }}</h3>
+    <p class="st-event-card__sub">{{ __('student_timeline.lib_files_hub_hint') }}</p>
 </a>
 <a href="{{ route('student.library.videos') }}" class="st-event-card st-event-card--pink">
     <h3>{{ __('student_timeline.nav_library_videos') }}</h3>

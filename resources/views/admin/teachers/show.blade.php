@@ -3,12 +3,25 @@
 @section('title', 'تحكم: '.$teacher->name)
 @section('page_title', 'تحكم المعلم')
 
+@push('styles')
+@if(($tab ?? '') === 'calendar')
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.css' rel='stylesheet' />
+<style>
+    .fc { direction: rtl; }
+    .fc-toolbar { flex-direction: row-reverse; }
+    .fc-button-group { flex-direction: row-reverse; }
+    .fc-event { cursor: pointer; border-radius: 4px; padding: 2px 4px; }
+</style>
+@endif
+@endpush
+
 @section('content')
 @php
     $field = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
     $label = 'mb-1.5 block text-xs font-medium text-muted';
     $tabs = [
         'profile' => 'البيانات',
+        'calendar' => 'التقويم',
         'schedule' => 'الجدول',
         'sessions' => 'الحصص 1:1',
         'bookings' => 'الحجوزات',
@@ -135,6 +148,52 @@
                     @endif
                 </ul>
             </aside>
+        </div>
+    @endif
+
+    @if($tab === 'calendar')
+        @php
+            $teacherTz = $teacher->timezoneCode();
+            $calendarEvents = $calendarEvents ?? collect();
+        @endphp
+        <div class="space-y-4">
+            <div class="rounded-2xl border border-line bg-surface p-5 shadow-soft">
+                <h3 class="text-base font-semibold text-ink">تقويم حصص {{ $teacher->name }}</h3>
+                <p class="mt-1 text-sm text-muted">
+                    الأوقات تظهر بتوقيت المعلم:
+                    <strong class="text-ink">{{ \App\Support\AppTimezone::label($teacherTz) }}</strong>
+                    — نفس الساعة اللي بيشوفها في تقويمه.
+                </p>
+            </div>
+            <div class="grid gap-5 lg:grid-cols-4">
+                <div class="lg:col-span-3 rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                    <div id="teacherCalendar"></div>
+                    <div class="mt-4 pt-4 border-t border-line flex flex-wrap gap-3 text-xs text-muted">
+                        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-[#7c3aed] inline-block"></span> 1:1</span>
+                        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-[#0B3D91] inline-block"></span> مجموعة</span>
+                        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-[#F5B800] inline-block"></span> فصل</span>
+                        <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-600 inline-block"></span> استشارة</span>
+                    </div>
+                </div>
+                <div class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                    <h4 class="text-sm font-semibold text-ink mb-3">القادمة بتوقيت المعلم</h4>
+                    <div class="space-y-2 max-h-[28rem] overflow-y-auto">
+                        @forelse($calendarEvents->filter(fn ($e) => ($e->start_date ?? now()) >= now())->take(12) as $event)
+                            <a href="{{ $event->url ?? '#' }}" class="block rounded-xl border border-line p-3 hover:border-accent">
+                                <div class="text-sm font-semibold text-ink truncate">{{ $event->title }}</div>
+                                <div class="text-xs text-muted mt-1">
+                                    <x-app-datetime :at="$event->start_date" :timezone="$teacherTz" pattern="D j M · g:i A" />
+                                </div>
+                            </a>
+                        @empty
+                            <p class="text-sm text-muted py-6 text-center">لا حصص قادمة</p>
+                        @endforelse
+                    </div>
+                    @if(Route::has('admin.placement.create'))
+                        <a href="{{ route('admin.placement.create', ['mode' => 'private']) }}" class="mt-3 inline-flex h-9 items-center rounded-xl bg-accent px-3 text-xs font-bold text-white">تسكين موعد</a>
+                    @endif
+                </div>
+            </div>
         </div>
     @endif
 
@@ -270,7 +329,7 @@
                                 <div class="text-xs text-muted">#{{ $session->id }}</div>
                             </td>
                             <td class="px-4 py-3">{{ $session->statusLabel() }}</td>
-                            <td class="px-4 py-3 tabular-nums">@if($session->scheduled_at)<x-app-datetime :at="$session->scheduled_at" pattern="Y-m-d H:i" />@else — @endif</td>
+                            <td class="px-4 py-3 tabular-nums">@if($session->scheduled_at)<x-app-datetime :at="$session->scheduled_at" :timezone="$teacher->timezoneCode()" pattern="D j M · g:i A" />@else — @endif</td>
                             <td class="px-4 py-3">
                                 @if(in_array($session->status, [\App\Models\OneToOneSession::STATUS_PENDING, \App\Models\OneToOneSession::STATUS_SCHEDULED], true))
                                     <form method="POST" action="{{ route('admin.teachers.sessions.schedule', [$teacher, $session]) }}" class="flex flex-wrap gap-2 mb-2">
@@ -343,7 +402,7 @@
                         <tr class="border-t border-line">
                             <td class="px-4 py-3 font-semibold">{{ $booking->user->name ?? '—' }}</td>
                             <td class="px-4 py-3">{{ $booking->tutoringGroup->title ?? '—' }}</td>
-                            <td class="px-4 py-3 tabular-nums">{{ $booking->starts_at?->format('Y-m-d H:i') ?: '—' }}</td>
+                            <td class="px-4 py-3 tabular-nums">@if($booking->starts_at)<x-app-datetime :at="$booking->starts_at" :timezone="$teacher->timezoneCode()" pattern="D j M · g:i A" />@else — @endif</td>
                             <td class="px-4 py-3">{{ $booking->statusLabel() }}</td>
                             <td class="px-4 py-3">
                                 <form method="POST" action="{{ route('admin.teachers.bookings.status', [$teacher, $booking]) }}" class="flex flex-wrap gap-2 items-center">
@@ -419,6 +478,45 @@
 @endsection
 
 @push('scripts')
+@if(($tab ?? '') === 'calendar')
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/locales/ar.js'></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var el = document.getElementById('teacherCalendar');
+    if (!el) return;
+    var calendar = new FullCalendar.Calendar(el, {
+        locale: 'ar',
+        direction: 'rtl',
+        timeZone: @json($teacher->timezoneCode()),
+        initialView: 'timeGridWeek',
+        headerToolbar: {
+            right: 'prev,next today',
+            center: 'title',
+            left: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        buttonText: { today: 'اليوم', month: 'شهر', week: 'أسبوع', day: 'يوم' },
+        events: {
+            url: @json(route('admin.teachers.calendar-events', $teacher)),
+            failure: function () { alert('تعذر تحميل تقويم المعلم'); }
+        },
+        eventClick: function (info) {
+            if (info.event.url) {
+                window.location.href = info.event.url;
+                info.jsEvent.preventDefault();
+            }
+        },
+        height: 'auto',
+        contentHeight: 560,
+        firstDay: 6,
+        navLinks: true,
+        nowIndicator: true,
+        dayMaxEvents: 4
+    });
+    calendar.render();
+});
+</script>
+@endif
 <script>
 function teacherSlots(initial) {
     return {

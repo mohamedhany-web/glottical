@@ -127,7 +127,8 @@ class OneToOneSessionService
         ?\App\Models\StudentServiceEntitlement $entitlement = null,
         ?User $bookedBy = null,
         ?string $notes = null,
-        ?Carbon $from = null
+        ?Carbon $from = null,
+        bool $requireAvailability = true
     ) {
         $weeks = max(1, min(8, $weeks));
         $normalized = collect($weeklySlots)
@@ -169,7 +170,8 @@ class OneToOneSessionService
             $dates,
             $entitlement,
             $bookedBy,
-            trim(($notes ?? '')."\nتثبيت شهري: ".$normalized->count().' موعد/أسبوع × '.$weeks.' أسابيع')
+            trim(($notes ?? '')."\nتثبيت شهري: ".$normalized->count().' موعد/أسبوع × '.$weeks.' أسابيع'),
+            $requireAvailability
         );
     }
 
@@ -185,7 +187,8 @@ class OneToOneSessionService
         array $scheduledAts,
         ?\App\Models\StudentServiceEntitlement $entitlement = null,
         ?User $bookedBy = null,
-        ?string $notes = null
+        ?string $notes = null,
+        bool $requireAvailability = true
     ) {
         if (! $student->isStudent()) {
             throw new \InvalidArgumentException('الحجز متاح للطلاب فقط.');
@@ -231,7 +234,13 @@ class OneToOneSessionService
 
         $duration = OneToOneSession::defaultDurationMinutes();
         foreach ($dates as $at) {
-            if (! OneToOneAvailabilityService::isSlotAvailable((int) $instructor->id, $at, $duration)) {
+            $endsAt = $at->copy()->addMinutes($duration);
+            if (OneToOneAvailabilityService::hasConflict((int) $instructor->id, $at, $endsAt)) {
+                throw new \InvalidArgumentException(
+                    'الموعد '.$at->copy()->timezone(\App\Support\AppTimezone::forUser($instructor))->format('Y-m-d H:i').' متعارض مع حصة أخرى عند هذا المعلم.'
+                );
+            }
+            if ($requireAvailability && ! OneToOneAvailabilityService::isSlotAvailable((int) $instructor->id, $at, $duration)) {
                 throw new \InvalidArgumentException(
                     'الموعد '.$at->format('Y-m-d H:i').' غير متاح عند هذا المعلم.'
                 );
@@ -240,7 +249,7 @@ class OneToOneSessionService
 
         $seriesId = $dates->count() > 1 ? (string) Str::uuid() : null;
 
-        return DB::transaction(function () use ($student, $instructor, $dates, $entitlement, $duration, $bookedBy, $notes, $seriesId) {
+        return DB::transaction(function () use ($student, $instructor, $dates, $entitlement, $duration, $bookedBy, $notes, $seriesId, $requireAvailability) {
             $maxNumber = (int) OneToOneSession::query()
                 ->where('student_id', $student->id)
                 ->max('session_number');
@@ -253,8 +262,16 @@ class OneToOneSessionService
 
             $created = collect();
             foreach ($dates as $i => $scheduledAt) {
-                // Re-check inside transaction against newly created siblings
-                if (! OneToOneAvailabilityService::isSlotAvailable((int) $instructor->id, $scheduledAt, $duration)) {
+                if ($requireAvailability && ! OneToOneAvailabilityService::isSlotAvailable((int) $instructor->id, $scheduledAt, $duration)) {
+                    throw new \InvalidArgumentException(
+                        'تعارض في الموعد '.$scheduledAt->format('Y-m-d H:i').' بعد بدء الحجز.'
+                    );
+                }
+                if (! $requireAvailability && OneToOneAvailabilityService::hasConflict(
+                    (int) $instructor->id,
+                    $scheduledAt,
+                    $scheduledAt->copy()->addMinutes($duration)
+                )) {
                     throw new \InvalidArgumentException(
                         'تعارض في الموعد '.$scheduledAt->format('Y-m-d H:i').' بعد بدء الحجز.'
                     );
@@ -279,7 +296,7 @@ class OneToOneSessionService
                     $scheduledAt,
                     $duration,
                     $bookedBy ?? $student,
-                    requireAvailability: true,
+                    requireAvailability: $requireAvailability,
                     notify: $seriesId === null
                 );
                 $created->push($session->fresh(['instructor', 'classroomMeeting']));
@@ -406,6 +423,19 @@ class OneToOneSessionService
             $session->student_service_entitlement_id = $entitlement->id;
         }
 
+        if ($scheduledAt->lte(now())) {
+            throw new \InvalidArgumentException('الموعد يجب أن يكون في المستقبل.');
+        }
+
+        if (OneToOneAvailabilityService::hasConflict(
+            (int) $session->instructor_id,
+            $scheduledAt,
+            $scheduledAt->copy()->addMinutes($durationMinutes),
+            $session->status === OneToOneSession::STATUS_SCHEDULED ? $session->id : null
+        )) {
+            throw new \InvalidArgumentException('هذا الموعد متعارض مع حصة أخرى عند المعلم.');
+        }
+
         if ($requireAvailability && ! OneToOneAvailabilityService::isSlotAvailable(
             (int) $session->instructor_id,
             $scheduledAt,
@@ -439,7 +469,17 @@ class OneToOneSessionService
         ]);
 
         $joinUrl = url('classroom/join/'.$meeting->code);
-        $when = $scheduledAt->format('Y-m-d H:i');
+        $session->loadMissing(['student', 'instructor']);
+        $studentWhen = \App\Support\AppTimezone::formatFor(
+            $scheduledAt,
+            \App\Support\AppTimezone::forUser($session->student),
+            'D j M · g:i A'
+        );
+        $instructorWhen = \App\Support\AppTimezone::formatFor(
+            $scheduledAt,
+            \App\Support\AppTimezone::forUser($session->instructor),
+            'D j M · g:i A'
+        );
 
         if (! $notify) {
             return;
@@ -449,7 +489,7 @@ class OneToOneSessionService
             'user_id' => $session->student_id,
             'sender_id' => $scheduledBy?->id,
             'title' => 'تم جدولة حصتك الفردية',
-            'message' => 'موعد الحصة: '.$when.' — رابط الدخول: '.$joinUrl,
+            'message' => 'موعد الحصة بتوقيتك: '.$studentWhen.' — رابط الدخول: '.$joinUrl,
             'type' => 'reminder',
             'priority' => 'high',
             'audience' => 'student',
@@ -461,7 +501,7 @@ class OneToOneSessionService
             'user_id' => $session->instructor_id,
             'sender_id' => $scheduledBy?->id,
             'title' => 'حصة 1:1 مجدولة',
-            'message' => 'الطالب: '.$studentName.' — الموعد: '.$when,
+            'message' => 'الطالب: '.$studentName.' — الموعد بتوقيتك: '.$instructorWhen,
             'type' => 'reminder',
             'priority' => 'normal',
             'audience' => 'instructor',

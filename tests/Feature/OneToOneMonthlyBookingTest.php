@@ -306,6 +306,58 @@ class OneToOneMonthlyBookingTest extends TestCase
         $this->assertSame(8, OneToOneSession::query()->where('student_id', $student->id)->count());
     }
 
+    public function test_admin_places_manual_time_without_teacher_availability_windows(): void
+    {
+        $student = User::factory()->create([
+            'role' => 'student',
+            'is_active' => true,
+            'timezone' => 'America/Los_Angeles',
+            'password' => Hash::make('password'),
+        ]);
+        $instructor = User::factory()->create([
+            'role' => 'instructor',
+            'is_active' => true,
+            'timezone' => 'Africa/Cairo',
+            'password' => Hash::make('password'),
+        ]);
+        $entitlement = StudentEntitlementService::grantManual(
+            (int) $student->id,
+            ServicePackage::SCOPE_PRIVATE_LESSONS,
+            3,
+            null,
+            90,
+            'manual placement credit'
+        );
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $response = $this->withoutMiddleware()->actingAs($admin)->post(route('admin.placement.store'), [
+            'mode' => 'private',
+            'booking_style' => 'single',
+            'student_id' => $student->id,
+            'student_service_entitlement_id' => $entitlement->id,
+            'instructor_id' => $instructor->id,
+            'timezone' => 'Africa/Cairo',
+            'manual_scheduled_at' => '2026-08-20T12:00',
+            'notes' => 'واتساب',
+        ]);
+
+        $response->assertRedirect();
+        $session = OneToOneSession::query()->where('student_id', $student->id)->first();
+        $this->assertNotNull($session);
+        $this->assertNotNull($session->scheduled_at);
+        $this->assertSame('12:00', $session->scheduled_at->copy()->timezone('Africa/Cairo')->format('H:i'));
+        $this->assertNotSame('12:00', $session->scheduled_at->copy()->utc()->format('H:i'));
+        $this->assertSame(
+            Carbon::parse('2026-08-20 12:00:00', 'Africa/Cairo')->timezone('America/Los_Angeles')->format('H:i'),
+            $session->scheduled_at->copy()->timezone('America/Los_Angeles')->format('H:i')
+        );
+        $this->assertSame(OneToOneSession::STATUS_SCHEDULED, $session->status);
+    }
+
     public function test_admin_can_delete_registered_monthly_placement_and_restore_credit(): void
     {
         [$student, $instructor, $entitlement] = $this->seedActors(10);

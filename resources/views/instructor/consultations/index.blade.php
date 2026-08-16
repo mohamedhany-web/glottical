@@ -27,7 +27,7 @@
                     <a href="{{ route('instructor.calendar') }}"
                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-indigo-700 hover:bg-white/90 border border-white/20 font-extrabold transition-colors">
                         <i class="fas fa-calendar-alt"></i>
-                        <span>تقويم الاستشارات</span>
+                        <span>تقويمي</span>
                     </a>
                 @endif
             </div>

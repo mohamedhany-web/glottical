@@ -14,9 +14,11 @@ use App\Services\OneToOneAvailabilityService;
 use App\Services\OneToOneSessionService;
 use App\Services\TutoringGroupAvailabilityService;
 use App\Services\TutoringGroupOrchestrationService;
+use App\Services\TeachingCalendarService;
 use App\Support\WeeklyScheduleTime;
 use App\Support\AppTimezone;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -124,7 +126,7 @@ class TeacherControlController extends Controller
         $this->assertTeacher($teacher);
 
         $tab = (string) $request->query('tab', 'profile');
-        if (! in_array($tab, ['profile', 'schedule', 'sessions', 'bookings', 'courses'], true)) {
+        if (! in_array($tab, ['profile', 'calendar', 'schedule', 'sessions', 'bookings', 'courses'], true)) {
             $tab = 'profile';
         }
 
@@ -273,6 +275,17 @@ class TeacherControlController extends Controller
             'oto_windows' => $otoRules->count(),
         ];
 
+        $calendarEvents = collect();
+        if ($tab === 'calendar') {
+            $calendarEvents = TeachingCalendarService::withAdminLinks(
+                TeachingCalendarService::forInstructor(
+                    $teacher,
+                    now()->subMonths(1),
+                    now()->addMonths(3)
+                )
+            );
+        }
+
         return view('admin.teachers.show', compact(
             'teacher',
             'tab',
@@ -289,8 +302,24 @@ class TeacherControlController extends Controller
             'groups',
             'instructors',
             'application',
-            'stats'
+            'stats',
+            'calendarEvents'
         ));
+    }
+
+    public function calendarEvents(Request $request, User $teacher): JsonResponse
+    {
+        $this->assertTeacher($teacher);
+
+        $events = TeachingCalendarService::withAdminLinks(
+            TeachingCalendarService::forInstructor(
+                $teacher,
+                $request->get('start'),
+                $request->get('end')
+            )
+        );
+
+        return response()->json(TeachingCalendarService::toFullCalendar($events));
     }
 
     public function updateProfile(Request $request, User $teacher): RedirectResponse

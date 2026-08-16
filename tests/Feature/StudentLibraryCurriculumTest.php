@@ -2,15 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\AcademicSubject;
-use App\Models\AcademicYear;
-use App\Models\AdvancedCourse;
-use App\Models\CourseSection;
-use App\Models\CurriculumItem;
-use App\Models\Lecture;
+use App\Models\CurriculumLibraryCategory;
+use App\Models\CurriculumLibraryItem;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Tests\Support\BuildsFeatureSchema;
@@ -24,289 +19,170 @@ class StudentLibraryCurriculumTest extends TestCase
     {
         parent::setUp();
         $this->buildFeatureSchema();
-        $this->buildExtra();
+        $this->buildCurriculumLibrarySchema();
     }
 
-    protected function buildExtra(): void
+    protected function buildCurriculumLibrarySchema(): void
     {
-        Schema::create('academic_years', function (Blueprint $table) {
+        Schema::create('curriculum_library_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('slug')->nullable();
+            $table->text('description')->nullable();
             $table->unsignedInteger('order')->default(0);
             $table->boolean('is_active')->default(true);
+            $table->boolean('is_restricted')->default(false);
             $table->timestamps();
         });
 
-        Schema::create('academic_subjects', function (Blueprint $table) {
+        Schema::create('curriculum_library_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('academic_year_id')->nullable();
-            $table->string('name');
-            $table->unsignedInteger('order')->default(0);
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
-
-        Schema::create('advanced_courses', function (Blueprint $table) {
-            $table->id();
+            $table->unsignedBigInteger('category_id')->nullable();
             $table->string('title');
-            $table->foreignId('academic_year_id')->nullable();
-            $table->foreignId('academic_subject_id')->nullable();
-            $table->foreignId('instructor_id')->nullable();
-            $table->string('status')->default('published');
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
-
-        Schema::create('student_course_enrollments', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id');
-            $table->foreignId('advanced_course_id');
-            $table->string('status')->default('active');
-            $table->unsignedInteger('progress')->default(0);
-            $table->timestamp('enrolled_at')->nullable();
-            $table->timestamp('activated_at')->nullable();
-            $table->timestamp('expires_at')->nullable();
-            $table->string('access_type')->nullable();
-            $table->string('enrollment_type')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('course_sections', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('advanced_course_id');
-            $table->foreignId('parent_id')->nullable();
-            $table->string('title');
+            $table->string('slug')->unique();
+            $table->text('description')->nullable();
+            $table->longText('content')->nullable();
+            $table->string('grade_level')->nullable();
+            $table->string('subject')->nullable();
+            $table->string('language', 8)->nullable();
+            $table->string('item_type')->nullable();
+            $table->json('meta')->nullable();
             $table->unsignedInteger('order')->default(0);
             $table->boolean('is_active')->default(true);
+            $table->boolean('is_free_preview')->default(false);
             $table->timestamps();
         });
 
-        Schema::create('curriculum_items', function (Blueprint $table) {
+        Schema::create('curriculum_library_category_user', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('course_section_id');
-            $table->string('item_type');
-            $table->unsignedBigInteger('item_id');
+            $table->unsignedBigInteger('category_id');
+            $table->unsignedBigInteger('user_id');
+            $table->timestamps();
+        });
+
+        Schema::create('curriculum_library_item_files', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('curriculum_library_item_id');
+            $table->string('file_type')->nullable();
+            $table->string('label')->nullable();
+            $table->string('path')->nullable();
+            $table->string('storage_disk')->nullable();
             $table->unsignedInteger('order')->default(0);
-            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
 
-        Schema::create('lectures', function (Blueprint $table) {
+        Schema::create('curriculum_library_sections', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('curriculum_library_item_id');
+            $table->unsignedBigInteger('parent_id')->nullable();
             $table->string('title')->nullable();
-            $table->foreignId('course_id')->nullable();
-            $table->foreignId('instructor_id')->nullable();
+            $table->unsignedInteger('order')->default(0);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
 
-        if (! Schema::hasTable('student_service_entitlements')) {
-            Schema::create('student_service_entitlements', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('user_id');
-                $table->boolean('includes_libraries')->default(false);
-                $table->string('status')->default('active');
-                $table->timestamp('starts_at')->nullable();
-                $table->timestamp('expires_at')->nullable();
-                $table->timestamps();
-            });
-        }
+        Schema::create('curriculum_library_preview_opens', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('curriculum_library_item_id');
+            $table->timestamp('opened_at')->nullable();
+        });
     }
 
     public function test_curriculum_route_registered(): void
     {
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('student.library.curriculum'));
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('curriculum-library.index'));
     }
 
-    public function test_student_sees_only_enrolled_course_curriculum(): void
+    public function test_student_sees_uploaded_curricula_not_enrolled_courses(): void
     {
         $student = User::factory()->create([
             'role' => 'student',
             'is_active' => true,
             'password' => Hash::make('password'),
         ]);
-        $other = User::factory()->create([
-            'role' => 'student',
-            'is_active' => true,
-            'password' => Hash::make('password'),
-        ]);
-        $teacher = User::factory()->create([
-            'role' => 'instructor',
-            'is_active' => true,
-        ]);
 
-        $year = AcademicYear::create(['name' => 'سنة 1', 'order' => 1, 'is_active' => true]);
-        $subject = AcademicSubject::create([
-            'academic_year_id' => $year->id,
+        $arabic = CurriculumLibraryCategory::query()->create([
             'name' => 'عربي',
+            'slug' => 'arabic',
             'order' => 1,
             'is_active' => true,
         ]);
-
-        $mine = AdvancedCourse::query()->create([
-            'title' => 'منهجي الظاهر',
-            'academic_year_id' => $year->id,
-            'academic_subject_id' => $subject->id,
-            'instructor_id' => $teacher->id,
-            'status' => 'published',
-            'is_active' => true,
-        ]);
-        $otherCourse = AdvancedCourse::query()->create([
-            'title' => 'منهج طالب آخر',
-            'academic_year_id' => $year->id,
-            'academic_subject_id' => $subject->id,
-            'instructor_id' => $teacher->id,
-            'status' => 'published',
+        $qeraa = CurriculumLibraryCategory::query()->create([
+            'name' => 'قرائية',
+            'slug' => 'qeraa',
+            'order' => 2,
             'is_active' => true,
         ]);
 
-        DB::table('student_course_enrollments')->insert([
-            'user_id' => $student->id,
-            'advanced_course_id' => $mine->id,
-            'status' => 'active',
-            'activated_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-        DB::table('student_course_enrollments')->insert([
-            'user_id' => $other->id,
-            'advanced_course_id' => $otherCourse->id,
-            'status' => 'active',
-            'activated_at' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $section = CourseSection::query()->create([
-            'advanced_course_id' => $mine->id,
-            'title' => 'وحدة 1',
+        CurriculumLibraryItem::query()->create([
+            'category_id' => $arabic->id,
+            'title' => 'منهج النحو المرفوع',
+            'slug' => 'nahw-uploaded',
+            'subject' => 'لغة عربية',
+            'grade_level' => 'المستوى الأول',
+            'language' => 'ar',
+            'is_active' => true,
             'order' => 1,
+        ]);
+        CurriculumLibraryItem::query()->create([
+            'category_id' => $qeraa->id,
+            'title' => 'منهج القرائية المرفوع',
+            'slug' => 'qeraa-uploaded',
+            'subject' => 'قرائية',
+            'grade_level' => 'المبتدئ',
+            'language' => 'ar',
             'is_active' => true,
-        ]);
-        $lectureId = DB::table('lectures')->insertGetId([
-            'title' => 'درس 1',
-            'course_id' => $mine->id,
-            'instructor_id' => $teacher->id,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-        CurriculumItem::query()->create([
-            'course_section_id' => $section->id,
-            'item_type' => Lecture::class,
-            'item_id' => $lectureId,
             'order' => 1,
-            'is_active' => true,
+        ]);
+        CurriculumLibraryItem::query()->create([
+            'category_id' => $arabic->id,
+            'title' => 'منهج مخفي',
+            'slug' => 'hidden-item',
+            'is_active' => false,
+            'order' => 9,
         ]);
 
-        $this->actingAs($student)
+        $page = $this->actingAs($student)
             ->get(route('student.library.curriculum'))
             ->assertOk()
-            ->assertSee('منهجي الظاهر', false)
-            ->assertDontSee('منهج طالب آخر', false)
-            ->assertSee('المناهج', false);
+            ->assertSee('منهج النحو المرفوع', false)
+            ->assertSee('منهج القرائية المرفوع', false)
+            ->assertDontSee('منهج مخفي', false)
+            ->assertDontSee('كورساتك المسجّل فيها', false)
+            ->assertSee('المناهج التي ترفعها الأكاديمية', false)
+            ->assertSee('عربي', false)
+            ->assertSee('قرائية', false);
+
+        $html = $page->getContent();
+        $this->assertLessThan(
+            strpos($html, 'منهج القرائية المرفوع'),
+            strpos($html, 'منهج النحو المرفوع'),
+            'Arabic category should appear before qeraa'
+        );
+
+        $this->actingAs($student)
+            ->get(route('student.library.curriculum', ['category_id' => $arabic->id]))
+            ->assertOk()
+            ->assertSee('منهج النحو المرفوع', false)
+            ->assertDontSee('منهج القرائية المرفوع', false);
+
+        $this->actingAs($student)
+            ->get(route('student.library.curriculum', ['grade' => 'المبتدئ']))
+            ->assertOk()
+            ->assertSee('منهج القرائية المرفوع', false)
+            ->assertDontSee('منهج النحو المرفوع', false);
+
+        $this->actingAs($student)
+            ->get(route('curriculum-library.index'))
+            ->assertOk()
+            ->assertSee('منهج النحو المرفوع', false);
 
         $this->actingAs($student)
             ->get(route('student.library.home'))
             ->assertOk()
             ->assertSee(route('student.library.curriculum', [], false), false);
-    }
-
-    public function test_curriculum_is_grouped_by_year_and_subject(): void
-    {
-        $student = User::factory()->create([
-            'role' => 'student',
-            'is_active' => true,
-            'password' => Hash::make('password'),
-        ]);
-        $teacherA = User::factory()->create(['role' => 'instructor', 'is_active' => true, 'name' => 'معلم أول']);
-        $teacherB = User::factory()->create(['role' => 'instructor', 'is_active' => true, 'name' => 'معلم ثان']);
-
-        $yearOne = AcademicYear::create(['name' => 'السنة الأولى', 'order' => 1, 'is_active' => true]);
-        $yearTwo = AcademicYear::create(['name' => 'السنة الثانية', 'order' => 2, 'is_active' => true]);
-        $arabic = AcademicSubject::create([
-            'academic_year_id' => $yearOne->id,
-            'name' => 'اللغة العربية',
-            'order' => 1,
-            'is_active' => true,
-        ]);
-        $math = AcademicSubject::create([
-            'academic_year_id' => $yearTwo->id,
-            'name' => 'الرياضيات',
-            'order' => 1,
-            'is_active' => true,
-        ]);
-
-        $arabicCourse = AdvancedCourse::query()->create([
-            'title' => 'منهج العربي',
-            'academic_year_id' => $yearOne->id,
-            'academic_subject_id' => $arabic->id,
-            'instructor_id' => $teacherA->id,
-            'status' => 'published',
-            'is_active' => true,
-        ]);
-        $mathCourse = AdvancedCourse::query()->create([
-            'title' => 'منهج الرياضيات',
-            'academic_year_id' => $yearTwo->id,
-            'academic_subject_id' => $math->id,
-            'instructor_id' => $teacherB->id,
-            'status' => 'published',
-            'is_active' => true,
-        ]);
-        $looseCourse = AdvancedCourse::query()->create([
-            'title' => 'كورس حر',
-            'status' => 'published',
-            'is_active' => true,
-        ]);
-
-        foreach ([$arabicCourse, $mathCourse, $looseCourse] as $course) {
-            DB::table('student_course_enrollments')->insert([
-                'user_id' => $student->id,
-                'advanced_course_id' => $course->id,
-                'status' => 'active',
-                'activated_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        $page = $this->actingAs($student)
-            ->get(route('student.library.curriculum'))
-            ->assertOk()
-            ->assertSee('كل السنوات', false)
-            ->assertSee('السنة الأولى', false)
-            ->assertSee('السنة الثانية', false)
-            ->assertSee('اللغة العربية', false)
-            ->assertSee('الرياضيات', false)
-            ->assertSee('منهج العربي', false)
-            ->assertSee('منهج الرياضيات', false)
-            ->assertSee('كورس حر', false)
-            ->assertSee('بدون تصنيف', false);
-
-        $html = $page->getContent();
-        $this->assertLessThan(
-            strpos($html, 'منهج الرياضيات'),
-            strpos($html, 'منهج العربي'),
-            'Year 1 course should appear before year 2'
-        );
-
-        $this->actingAs($student)
-            ->get(route('student.library.curriculum', ['year' => $yearOne->id]))
-            ->assertOk()
-            ->assertSee('منهج العربي', false)
-            ->assertSee('اللغة العربية', false)
-            ->assertDontSee('منهج الرياضيات', false)
-            ->assertDontSee('كورس حر', false);
-
-        $this->actingAs($student)
-            ->get(route('student.library.curriculum', ['subject' => $math->id]))
-            ->assertOk()
-            ->assertSee('منهج الرياضيات', false)
-            ->assertDontSee('منهج العربي', false);
-
-        $this->actingAs($student)
-            ->get(route('student.library.curriculum', ['instructor' => $teacherA->id]))
-            ->assertOk()
-            ->assertSee('منهج العربي', false)
-            ->assertDontSee('منهج الرياضيات', false);
     }
 
     public function test_guest_cannot_open_curriculum_library(): void

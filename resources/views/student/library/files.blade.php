@@ -40,7 +40,7 @@
     <div class="st-msg-intro__actions">
         <a href="{{ route('student.library.home') }}" class="st-pill st-pill--outline">{{ __('student_timeline.family_library_title') }}</a>
         <a href="{{ route('student.library.materials') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_library_materials') }}</a>
-        <a href="{{ route('curriculum-library.index') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_library_manahij') }}</a>
+        <a href="{{ route('student.library.curriculum') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_library_curriculum') }}</a>
     </div>
 </section>
 

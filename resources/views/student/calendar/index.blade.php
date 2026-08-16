@@ -51,7 +51,9 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold text-gray-900">{{ __('student.calendar_title') }}</h1>
-                    <p class="text-sm text-gray-500 mt-1">{{ __('student.calendar_subtitle') }}</p>
+                    <p class="text-sm text-gray-500 mt-1">{{ __('student.calendar_subtitle') }}
+                        · بتوقيتك: <strong>{{ \App\Support\AppTimezone::label($viewerTz ?? auth()->user()?->timezoneCode()) }}</strong>
+                    </p>
                 </div>
                 <div class="text-sm text-gray-600 flex items-center gap-2">
                     <i class="fas fa-calendar-alt text-sky-500"></i>
@@ -88,6 +90,14 @@
                             <div class="legend-color bg-emerald-600"></div>
                             <span>استشارة مدفوعة</span>
                         </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background:#7c3aed"></div>
+                            <span>حصة خاصة</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background:#0B3D91"></div>
+                            <span>مجموعة</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -112,10 +122,7 @@
                                         <div class="text-sm font-bold text-gray-900 truncate">{{ $event->title }}</div>
                                         <div class="text-xs text-gray-500 mt-1">
                                             <i class="fas fa-calendar text-sky-500"></i>
-                                            {{ $event->start_date->format('d/m/Y') }}
-                                            @if(!$event->is_all_day)
-                                                {{ $event->start_date->format('h:i A') }}
-                                            @endif
+                                            <x-app-datetime :at="$event->start_date" :timezone="$viewerTz ?? auth()->user()?->timezoneCode()" pattern="D j M · g:i A" />
                                         </div>
                                         <div class="text-xs mt-1 
                                             @if($event->type == 'exam') text-red-600

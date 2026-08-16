@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Assignment;
 use App\Models\CalendarEvent;
-use App\Models\ConsultationRequest;
 use App\Models\Exam;
 use App\Models\Lecture;
 use App\Models\LectureAssignment;
+use App\Support\AppTimezone;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,7 +35,9 @@ class CalendarController extends Controller
             'upcoming' => $events->where('start_date', '>=', now())->count(),
         ];
 
-        return view('student.calendar.index', compact('events', 'stats'));
+        $viewerTz = AppTimezone::forUser($user);
+
+        return view('student.calendar.index', compact('events', 'stats', 'viewerTz'));
     }
 
     /**
@@ -239,23 +241,12 @@ class CalendarController extends Controller
             ]);
         }
 
-        // 6. استشارات مدفوعة (مجدولة)
-        foreach (ConsultationRequest::calendarItemsForUser(
+        foreach (\App\Services\TeachingCalendarService::lessonsForStudent(
             $user,
             $startDate ?? now()->subMonths(1),
-            $endDate ?? now()->addMonths(3),
-            'student'
-        ) as $cEvent) {
-            $events->push($cEvent);
-        }
-
-        foreach (\App\Models\OneToOneSession::calendarItemsForUser(
-            $user,
-            $startDate ?? now()->subMonths(1),
-            $endDate ?? now()->addMonths(3),
-            'student'
-        ) as $oEvent) {
-            $events->push($oEvent);
+            $endDate ?? now()->addMonths(3)
+        ) as $lessonEvent) {
+            $events->push($lessonEvent);
         }
 
         // ترتيب الأحداث حسب التاريخ
@@ -276,6 +267,9 @@ class CalendarController extends Controller
             'deadline' => '#DC2626',
             'review' => '#10B981',
             'personal' => '#6366F1',
+            'one_to_one' => '#7c3aed',
+            'group' => '#0B3D91',
+            'class' => '#F5B800',
             default => '#6B7280',
         };
     }

@@ -118,6 +118,47 @@ class GlobalTimezoneSchedulingTest extends TestCase
         $this->assertSame('02:00', $first->copy()->utc()->format('H:i'));
     }
 
+    public function test_cairo_noon_converts_for_pacific_student_and_calendar_iso(): void
+    {
+        $instructor = User::factory()->create([
+            'role' => 'instructor',
+            'is_active' => true,
+            'timezone' => 'Africa/Cairo',
+        ]);
+        $student = User::factory()->create([
+            'role' => 'student',
+            'is_active' => true,
+            'timezone' => 'America/Los_Angeles',
+        ]);
+
+        $utc = AppTimezone::wallClockToUtc('2026-01-15', '12:00', 'Africa/Cairo');
+        $this->assertSame('10:00', $utc->format('H:i'));
+        $this->assertSame('12:00', AppTimezone::formatFor($utc, 'Africa/Cairo', 'H:i'));
+        $this->assertSame('02:00', AppTimezone::formatFor($utc, 'America/Los_Angeles', 'H:i'));
+
+        $session = \App\Models\OneToOneSession::create([
+            'instructor_id' => $instructor->id,
+            'student_id' => $student->id,
+            'session_number' => 1,
+            'duration_minutes' => 50,
+            'status' => \App\Models\OneToOneSession::STATUS_SCHEDULED,
+            'scheduled_at' => $utc,
+        ]);
+
+        $payload = \App\Services\TeachingCalendarService::toFullCalendar(
+            \App\Services\TeachingCalendarService::forInstructor($instructor, $utc->copy()->subDay(), $utc->copy()->addDay())
+        );
+        $this->assertNotEmpty($payload);
+        $this->assertStringContainsString('T10:00:00', $payload[0]['start']);
+
+        $studentPayload = \App\Services\TeachingCalendarService::toFullCalendar(
+            \App\Services\TeachingCalendarService::lessonsForStudent($student, $utc->copy()->subDay(), $utc->copy()->addDay())
+        );
+        $this->assertNotEmpty($studentPayload);
+        $this->assertSame($payload[0]['start'], $studentPayload[0]['start']);
+        $this->assertSame('one_to_one_'.$session->id, $payload[0]['id']);
+    }
+
     public function test_egypt_student_sees_new_york_slot_in_cairo_clock(): void
     {
         $utc = AppTimezone::wallClockToUtc('2026-01-12', '18:00', 'America/New_York');

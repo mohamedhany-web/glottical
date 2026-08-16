@@ -81,6 +81,13 @@
                 <span class="ins-icon"><i class="fas fa-th-large"></i></span>
                 <span class="flex-1 truncate">{{ __('instructor.dashboard') }}</span>
             </a>
+            @if(Route::has('instructor.calendar'))
+            <a href="{{ route('instructor.calendar') }}" @click="{{ $closeSidebar }}"
+               class="ins-nav {{ request()->routeIs('instructor.calendar') || request()->routeIs('instructor.calendar.events') ? 'active' : '' }}">
+                <span class="ins-icon"><i class="fas fa-calendar-alt"></i></span>
+                <span class="flex-1 truncate">تقويمي</span>
+            </a>
+            @endif
 
             <div class="ins-nav-group mt-2">
                 <span><i class="fas fa-video text-[9px] opacity-50"></i> تدريس مباشر</span>
@@ -157,14 +164,6 @@
                 <span class="flex-1 truncate">استشارات الطلاب</span>
             </a>
             @endif
-            @if(Route::has('instructor.calendar'))
-            <a href="{{ route('instructor.calendar') }}" @click="{{ $closeSidebar }}"
-               class="ins-nav {{ request()->routeIs('instructor.calendar') || request()->routeIs('instructor.calendar.events') ? 'active' : '' }}">
-                <span class="ins-icon"><i class="fas fa-calendar-alt"></i></span>
-                <span class="flex-1 truncate">تقويم الاستشارات</span>
-            </a>
-            @endif
-
             <div class="ins-nav-group mt-2">
                 <span><i class="fas fa-book-open text-[9px] opacity-50"></i> {{ $hasTeachingCourses ? 'الكورسات والأدوات' : 'الأدوات' }}</span>
             </div>

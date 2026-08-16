@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
-use App\Models\ConsultationRequest;
-use App\Models\OneToOneSession;
+use App\Services\TeachingCalendarService;
+use App\Support\AppTimezone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -18,53 +18,30 @@ class CalendarController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $events = ConsultationRequest::calendarItemsForUser(
+        $events = TeachingCalendarService::forInstructor(
             $user,
             now()->subMonths(1),
-            now()->addMonths(3),
-            'instructor'
-        )->merge(OneToOneSession::calendarItemsForUser(
-            $user,
-            now()->subMonths(1),
-            now()->addMonths(3),
-            'instructor'
-        ));
+            now()->addMonths(3)
+        );
+        $viewerTz = AppTimezone::forUser($user);
 
         $stats = [
             'total' => $events->count(),
-            'upcoming' => $events->where('start_date', '>=', now())->count(),
+            'upcoming' => $events->filter(fn ($event) => ($event->start_date ?? now()) >= now())->count(),
         ];
 
-        return view('instructor.calendar.index', compact('events', 'stats'));
+        return view('instructor.calendar.index', compact('events', 'stats', 'viewerTz'));
     }
 
     public function getEvents(Request $request)
     {
         $user = Auth::user();
-        $start = $request->get('start');
-        $end = $request->get('end');
+        $events = TeachingCalendarService::forInstructor(
+            $user,
+            $request->get('start'),
+            $request->get('end')
+        );
 
-        $events = ConsultationRequest::calendarItemsForUser($user, $start, $end, 'instructor')
-            ->merge(OneToOneSession::calendarItemsForUser($user, $start, $end, 'instructor'));
-
-        $calendarEvents = $events->map(function ($event) {
-            return [
-                'id' => $event->calendar_id,
-                'title' => $event->title,
-                'start' => $event->start_date->toIso8601String(),
-                'end' => $event->end_date ? $event->end_date->toIso8601String() : null,
-                'allDay' => $event->is_all_day ?? false,
-                'color' => $event->color ?? '#059669',
-                'type' => $event->type,
-                'url' => $event->url ?? null,
-                'description' => $event->description ?? null,
-                'extendedProps' => [
-                    'priority' => $event->priority ?? 'high',
-                    'location' => $event->location ?? null,
-                ],
-            ];
-        });
-
-        return response()->json($calendarEvents);
+        return response()->json(TeachingCalendarService::toFullCalendar($events));
     }
 }

@@ -115,6 +115,7 @@
                             @endphp
                             <option value="{{ $instructor->id }}"
                                     data-search="{{ e($iSearch) }}"
+                                    data-timezone="{{ e($instructor->timezoneCode()) }}"
                                     @selected((string) old('instructor_id') === (string) $instructor->id)>
                                 {{ $instructor->name }} — {{ $instructor->email }}
                             </option>
@@ -132,9 +133,11 @@
 
                 <div class="md:col-span-2">
                     @include('partials.timezone-select', [
-                        'value' => old('timezone', auth()->user()?->timezoneCode()),
+                        'value' => old('timezone'),
                         'class' => $field,
                         'labelClass' => $label,
+                        'label' => 'توقيت المعلم',
+                        'hint' => 'الساعة حسب منطقة المعلم. تتحدد تلقائياً عند اختيار المعلم.',
                     ])
                 </div>
                 <div class="md:col-span-2">
@@ -143,7 +146,7 @@
                            min="{{ now()->timezone(auth()->user()?->timezoneCode() ?? 'Africa/Cairo')->format('Y-m-d\TH:i') }}"
                            value="{{ old('scheduled_at') }}"
                            class="{{ $field }}" dir="ltr">
-                    <p class="mt-1 text-[11px] text-muted">الساعة حسب المنطقة الزمنية فوق. اتركه فارغاً ليختار الطالب أو المعلم الموعد لاحقاً.</p>
+                    <p class="mt-1 text-[11px] text-muted">الساعة حسب توقيت المعلم فوق. لو الجدول فاضي بعد واتساب اكتب الموعد مباشرة.</p>
                 </div>
             </div>
         </article>
@@ -266,8 +269,16 @@
   }
 
   if (instructorSelect) {
-    instructorSelect.addEventListener('change', loadSlots);
-    if (instructorSelect.value) loadSlots();
+    instructorSelect.addEventListener('change', function () {
+      var opt = instructorSelect.options[instructorSelect.selectedIndex];
+      var tz = opt && opt.getAttribute('data-timezone');
+      var tzEl = document.getElementById('timezoneSelect');
+      if (tz && tzEl) tzEl.value = tz;
+      loadSlots();
+    });
+    if (instructorSelect.value) {
+      instructorSelect.dispatchEvent(new Event('change'));
+    }
   }
 
   if (slotSelect && scheduledAt) {

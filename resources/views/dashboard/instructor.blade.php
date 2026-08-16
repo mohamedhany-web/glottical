@@ -71,7 +71,7 @@
                         {{ __('instructor.welcome') }}، {{ auth()->user()->name }}
                     </h1>
                     <p class="mt-1.5 text-sm text-[color:var(--ins-muted)] dark:text-gray-400 max-w-xl">
-                        {{ $isRtl ? 'التدريس المباشر أولاً — مجموعات وحصص فردية وبث، ثم الكورسات والواجبات.' : 'Live teaching first — groups, 1:1, and broadcasts; then courses and grading.' }}
+                        {{ $isRtl ? 'ابدأ من التقويم — كل حصصك بتوقيتك، ثم المجموعات والبث والكورسات.' : 'Start from your calendar — every class in your timezone, then groups, live, and courses.' }}
                     </p>
                     <p class="mt-2 text-xs text-[color:var(--ins-muted)] flex items-center gap-2">
                         <i class="fas fa-calendar-day opacity-60"></i>
@@ -79,6 +79,12 @@
                     </p>
                 </div>
                 <div class="flex flex-wrap gap-2">
+                    @if(Route::has('instructor.calendar'))
+                    <a href="{{ route('instructor.calendar') }}"
+                       class="inline-flex h-10 items-center gap-2 rounded-xl bg-[#F5B800] px-4 text-sm font-bold text-[#072A66] hover:brightness-105">
+                        <i class="fas fa-calendar-alt text-xs"></i> {{ $isRtl ? 'تقويمي' : 'My calendar' }}
+                    </a>
+                    @endif
                     <a href="{{ route('instructor.lectures.create') }}"
                        class="inline-flex h-10 items-center gap-2 rounded-xl bg-[#0B3D91] px-4 text-sm font-bold text-white hover:brightness-110">
                         <i class="fas fa-video text-xs"></i> {{ __('instructor.add_lecture') }}
@@ -101,7 +107,7 @@
                     <h2 class="mt-1 text-xl font-black truncate">{{ $upcomingTutoringBooking->tutoringGroup?->title ?? ($isRtl ? 'حصة مجموعة' : 'Group session') }}</h2>
                     <p class="mt-1 text-sm text-white/75">
                         <i class="far fa-clock ml-1"></i>
-                        {{ $upcomingTutoringBooking->starts_at?->timezone(config('app.timezone'))->format('Y-m-d H:i') }}
+                        <x-app-datetime :at="$upcomingTutoringBooking->starts_at" pattern="D j M · g:i A" />
                         @if($upcomingTutoringBooking->user)
                             · {{ $upcomingTutoringBooking->user->name }}
                         @endif
@@ -141,6 +147,15 @@
 
     {{-- Quick actions --}}
     <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        @if(Route::has('instructor.calendar'))
+        <a href="{{ route('instructor.calendar') }}" class="ins-action ins-action--gold">
+            <span class="ins-action__icon"><i class="fas fa-calendar-alt"></i></span>
+            <div>
+                <p class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'تقويمي' : 'My calendar' }}</p>
+                <p class="text-[11px] text-[color:var(--ins-muted)] mt-0.5">{{ $isRtl ? 'جدول الحصص بتوقيتك' : 'Classes in your timezone' }}</p>
+            </div>
+        </a>
+        @endif
         @if(Route::has('instructor.tutoring-bookings.index'))
         <a href="{{ route('instructor.tutoring-bookings.index') }}" class="ins-action ins-action--gold">
             <span class="ins-action__icon"><i class="fas fa-users"></i></span>

@@ -32,7 +32,7 @@
         'crumbs' => [
             ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
             ['label' => __('student_timeline.family_library_title'), 'url' => route('student.library.home')],
-            ['label' => __('student_timeline.lib_manahij_title'), 'url' => route('curriculum-library.index')],
+            ['label' => __('student_timeline.nav_library_curriculum'), 'url' => route('student.library.curriculum')],
             ['label' => $item->title, 'url' => $backUrl],
             ['label' => $pt, 'url' => null],
         ],

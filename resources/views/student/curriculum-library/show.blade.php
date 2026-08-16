@@ -1,6 +1,6 @@
 @extends('layouts.student-timeline')
 
-@section('title', $item->title.' — '.__('student_timeline.lib_manahij_title'))
+@section('title', $item->title.' — '.__('student_timeline.nav_library_curriculum'))
 
 @section('content')
 @php
@@ -16,7 +16,7 @@
     'crumbs' => [
         ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
         ['label' => __('student_timeline.family_library_title'), 'url' => route('student.library.home')],
-        ['label' => __('student_timeline.lib_manahij_title'), 'url' => route('curriculum-library.index')],
+        ['label' => __('student_timeline.nav_library_curriculum'), 'url' => route('student.library.curriculum')],
         ['label' => $item->title, 'url' => null],
     ],
 ])
@@ -43,7 +43,7 @@
         </p>
     </div>
     <div class="st-msg-intro__actions">
-        <a href="{{ route('curriculum-library.index') }}" class="st-pill st-pill--outline">{{ __('student_timeline.lib_manahij_title') }}</a>
+        <a href="{{ route('student.library.curriculum') }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_library_curriculum') }}</a>
         <a href="{{ route('student.library.files') }}" class="st-pill st-pill--outline">{{ __('student_timeline.lib_files_title') }}</a>
     </div>
 </section>
@@ -103,7 +103,7 @@
     <div class="st-empty-panel">
         <h3>لا يوجد محتوى لهذا المنهج بعد</h3>
         <p>لم تُرفع أقسام أو مواد لهذا المنهج. راجع هيكل المنهج من لوحة الإدارة بعد رفع الملفات إلى التخزين.</p>
-        <a href="{{ route('curriculum-library.index') }}" class="st-pill st-pill--solid">العودة للمناهج</a>
+        <a href="{{ route('student.library.curriculum') }}" class="st-pill st-pill--solid">العودة للمناهج</a>
     </div>
 @endif
 @endsection

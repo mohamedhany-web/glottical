@@ -21,7 +21,7 @@
         <div class="min-w-0">
             <p class="text-xs font-medium text-muted">الطلاب والخدمات · التسكين</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">تسكين طالب مع معلم</h2>
-            <p class="mt-1 text-sm text-muted">يتحقق من الباقة وتوافر وقت المعلم قبل تثبيت الموعد</p>
+            <p class="mt-1 text-sm text-muted">بعد التنسيق على واتساب: اكتب الموعد بتوقيت منطقة المعلم. الطالب يشوفه بتوقيته تلقائياً.</p>
         </div>
         <a href="{{ route('admin.placement.index') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
             <i class="fas fa-arrow-right text-xs"></i>
@@ -114,7 +114,7 @@
                         2) المجموعة والموعد
                     @endif
                 </h3>
-                <p class="mt-0.5 text-xs text-muted">المواعيد تظهر فقط من جدول توافر المعلم</p>
+                <p class="mt-0.5 text-xs text-muted">اكتب الساعة بتوقيت المعلم — أو اختر من جدوله إن كان مضبوطاً</p>
             </div>
             <div class="grid grid-cols-1 gap-5 p-4 sm:p-5 md:grid-cols-2">
                 @if($mode === 'private')
@@ -132,6 +132,7 @@
                                 @endphp
                                 <option value="{{ $instructor->id }}"
                                         data-search="{{ e($iSearch) }}"
+                                        data-timezone="{{ e($instructor->timezoneCode()) }}"
                                         @selected((string) old('instructor_id') === (string) $instructor->id)>
                                     {{ $instructor->name }} — {{ $instructor->email }}
                                 </option>
@@ -166,24 +167,42 @@
                         </div>
                     </div>
 
+                    <div class="md:col-span-2 grid gap-4 sm:grid-cols-2">
+                        @include('partials.timezone-select', [
+                            'value' => old('timezone'),
+                            'class' => $field,
+                            'labelClass' => $label,
+                            'label' => 'توقيت المعلم (مقاطعة الحصة)',
+                            'hint' => 'الساعة اللي هتكتبها هتتحسب بتوقيت المعلم. الطالب في ولاية تانية هيشوف المعادل بتوقيته.',
+                        ])
+                        <div>
+                            <label class="{{ $label }}" for="manualScheduledAt">الموعد بتوقيت المعلم</label>
+                            <input type="datetime-local" name="manual_scheduled_at" id="manualScheduledAt"
+                                   value="{{ old('manual_scheduled_at') }}"
+                                   class="{{ $field }}" dir="ltr">
+                            <p class="mt-1 text-[11px] text-muted">مثال: المعلم قال 12 ظهر مصر → اكتب 12:00 والمنطقة مصر.</p>
+                        </div>
+                    </div>
+
                     <div id="monthlyPanel" class="md:col-span-2 space-y-3">
+                        <p class="text-xs text-muted">اليوم والساعة بتوقيت المعلم. تقدر تكتبهم يدوياً بعد واتساب حتى لو الجدول فاضي.</p>
                         <div class="grid gap-3 sm:grid-cols-2">
-                            <div>
-                                <label class="{{ $label }}" for="weeklySlot0">الموعد الأسبوعي 1 *</label>
-                                <select name="weekly_slots[0][combo]" id="weeklySlot0" class="{{ $field }}" disabled>
-                                    <option value="">اختر المعلم أولاً…</option>
-                                </select>
-                                <input type="hidden" name="weekly_slots[0][day_of_week]" id="weeklyDay0" value="{{ old('weekly_slots.0.day_of_week') }}">
-                                <input type="hidden" name="weekly_slots[0][time]" id="weeklyTime0" value="{{ old('weekly_slots.0.time') }}">
-                            </div>
-                            @foreach([1, 2, 3] as $wi)
-                                <div>
-                                    <label class="{{ $label }}" for="weeklySlot{{ $wi }}">الموعد الأسبوعي {{ $wi + 1 }} (اختياري)</label>
-                                    <select name="weekly_slots[{{ $wi }}][combo]" id="weeklySlot{{ $wi }}" class="{{ $field }}" disabled>
-                                        <option value="">اختياري…</option>
+                            @php $dayLabels = $dayLabels ?? \App\Services\OneToOneAvailabilityService::dayLabels(); @endphp
+                            @foreach([0, 1, 2, 3] as $wi)
+                                <div class="rounded-xl border border-line p-3 space-y-2">
+                                    <label class="{{ $label }}" for="weeklySlot{{ $wi }}">الموعد الأسبوعي {{ $wi + 1 }} {{ $wi === 0 ? '*' : '(اختياري)' }}</label>
+                                    <select id="weeklySlot{{ $wi }}" class="{{ $field }}" {{ $wi === 0 ? '' : '' }}>
+                                        <option value="">من جدول التوافر إن وُجد…</option>
                                     </select>
-                                    <input type="hidden" name="weekly_slots[{{ $wi }}][day_of_week]" id="weeklyDay{{ $wi }}" value="{{ old('weekly_slots.'.$wi.'.day_of_week') }}">
-                                    <input type="hidden" name="weekly_slots[{{ $wi }}][time]" id="weeklyTime{{ $wi }}" value="{{ old('weekly_slots.'.$wi.'.time') }}">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <select name="weekly_slots[{{ $wi }}][day_of_week]" id="weeklyDay{{ $wi }}" class="{{ $field }}">
+                                            <option value="">اليوم</option>
+                                            @foreach($dayLabels as $dayNum => $dayName)
+                                                <option value="{{ $dayNum }}" @selected((string) old('weekly_slots.'.$wi.'.day_of_week') === (string) $dayNum)>{{ $dayName }}</option>
+                                            @endforeach
+                                        </select>
+                                        <input type="time" name="weekly_slots[{{ $wi }}][time]" id="weeklyTime{{ $wi }}" class="{{ $field }}" dir="ltr" value="{{ old('weekly_slots.'.$wi.'.time') }}">
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
@@ -207,11 +226,11 @@
                     </div>
 
                     <div id="singlePanel" class="md:col-span-2 hidden">
-                        <label class="{{ $label }}" for="slotSelect">الموعد المتاح *</label>
+                        <label class="{{ $label }}" for="slotSelect">من جدول التوافر (اختياري)</label>
                         <select name="scheduled_at" id="slotSelect" class="{{ $field }}" disabled>
-                            <option value="">اختر المعلم لتحميل المواعيد…</option>
+                            <option value="">إن كان للمعلم جدول — اختر لملء الحقل فوق</option>
                         </select>
-                        <p id="slotsHint" class="mt-2 text-xs text-muted">المواعيد تُسحب من جدول توافر المعلم فقط.</p>
+                        <p id="slotsHint" class="mt-2 text-xs text-muted">اختياري. التسكين الأساسي بالساعة المكتوبة بتوقيت المعلم.</p>
                     </div>
                 @else
                     <div>
@@ -318,6 +337,8 @@
   var packageStatus = document.getElementById('packageStatus');
   var slotsHint = document.getElementById('slotsHint');
   var submitBtn = document.getElementById('submitBtn');
+  var timezoneSelect = document.getElementById('timezoneSelect');
+  var manualScheduledAt = document.getElementById('manualScheduledAt');
   var preselectedEntitlement = @json((string) old('student_service_entitlement_id', $selectedEntitlementId ?: ''));
 
   function bookingStyle() {
@@ -371,14 +392,21 @@
     timeEl.value = parts[1] || '';
   }
 
+  function applyInstructorTimezone() {
+    if (!instructorSelect || !timezoneSelect) return;
+    var opt = instructorSelect.options[instructorSelect.selectedIndex];
+    var tz = opt && opt.getAttribute('data-timezone');
+    if (tz) timezoneSelect.value = tz;
+  }
+
   function syncPanels() {
     if (mode !== 'private') return;
     var style = bookingStyle();
     if (monthlyPanel) monthlyPanel.classList.toggle('hidden', style !== 'monthly');
     if (multiPanel) multiPanel.classList.toggle('hidden', style !== 'multi');
     if (singlePanel) singlePanel.classList.toggle('hidden', style !== 'single');
-    if (slotSelect) slotSelect.required = style === 'single';
-    if (weeklySlot0) weeklySlot0.required = style === 'monthly';
+    if (slotSelect) slotSelect.required = false;
+    if (weeklySlot0) weeklySlot0.required = false;
     refreshSubmit();
   }
 
@@ -394,11 +422,12 @@
     } else {
       var style = bookingStyle();
       if (style === 'monthly') {
-        okSlot = !!(weeklySlot0 && weeklySlot0.value);
+        okSlot = !!(weeklySlotEls[0].day && weeklySlotEls[0].day.value && weeklySlotEls[0].time && weeklySlotEls[0].time.value);
       } else if (style === 'multi') {
-        okSlot = !!(multiSlotSelect && multiSlotSelect.selectedOptions && multiSlotSelect.selectedOptions.length > 0);
+        okSlot = !!(multiSlotSelect && multiSlotSelect.selectedOptions && multiSlotSelect.selectedOptions.length > 0)
+          || !!(manualScheduledAt && manualScheduledAt.value);
       } else {
-        okSlot = !!(slotSelect && slotSelect.value);
+        okSlot = !!(slotSelect && slotSelect.value) || !!(manualScheduledAt && manualScheduledAt.value);
       }
     }
     submitBtn.disabled = !(okStudent && okEnt && okSlot && okTeacherOrGroup);
@@ -473,13 +502,13 @@
       return { value: w.day_of_week + '|' + w.start_time, label: w.label || (w.day_label + ' · ' + w.start_time) };
     });
     weeklySlotEls.forEach(function (row, i) {
-      setOptions(row.select, opts, i === 0 ? 'اختر الموعد الأسبوعي…' : 'اختياري — موعد إضافي…');
-      if (row.select) row.select.disabled = opts.length === 0;
+      setOptions(row.select, opts, i === 0 ? 'من جدول التوافر…' : 'اختياري — من الجدول…');
+      if (row.select) row.select.disabled = false;
     });
     if (monthlyHint) {
       monthlyHint.textContent = opts.length
-        ? 'اختر موعدين من نوافذ المعلم — سيُولَّد الجدول لعدد الأسابيع المحدد.'
-        : 'لا نوافذ أسبوعية لهذا المعلم. اضبط جدول توافر 1:1 أولاً.';
+        ? 'اختياري: اختر من نوافذ المعلم أو اكتب اليوم والساعة بتوقيته.'
+        : 'لا نوافذ في الجدول — اكتب اليوم والساعة بتوقيت المعلم بعد واتساب.';
       monthlyHint.className = opts.length ? 'text-xs text-emerald-700' : 'text-xs text-amber-700';
     }
   }
@@ -565,6 +594,10 @@
           }
         }
 
+        if (data.timezone && timezoneSelect) {
+          timezoneSelect.value = data.timezone;
+        }
+
         if (!slots.length) {
           setOptions(slotSelect, [], 'لا مواعيد متاحة');
           if (slotsHint) {
@@ -593,23 +626,35 @@
   studentSelect.addEventListener('change', loadStudentContext);
   entitlementSelect.addEventListener('change', refreshSubmit);
   if (instructorSelect) instructorSelect.addEventListener('change', function () {
+    applyInstructorTimezone();
     if (mode === 'private') loadSlots();
     else refreshSubmit();
   });
   if (groupSelect) groupSelect.addEventListener('change', loadSlots);
-  if (slotSelect) slotSelect.addEventListener('change', refreshSubmit);
+  if (slotSelect) slotSelect.addEventListener('change', function () {
+    if (slotSelect.value && manualScheduledAt && window.glotticalDateTimeLocal) {
+      var tz = timezoneSelect && timezoneSelect.value ? timezoneSelect.value : 'Africa/Cairo';
+      var local = window.glotticalDateTimeLocal(slotSelect.value, tz);
+      if (local) manualScheduledAt.value = local;
+    }
+    refreshSubmit();
+  });
   if (multiSlotSelect) multiSlotSelect.addEventListener('change', refreshSubmit);
+  if (manualScheduledAt) manualScheduledAt.addEventListener('input', refreshSubmit);
   weeklySlotEls.forEach(function (row) {
     if (row.select) row.select.addEventListener('change', function () {
       syncWeeklyHidden(row.select, row.day, row.time);
       refreshSubmit();
     });
+    if (row.day) row.day.addEventListener('change', refreshSubmit);
+    if (row.time) row.time.addEventListener('input', refreshSubmit);
   });
   document.querySelectorAll('input[name="booking_style"]').forEach(function (el) {
     el.addEventListener('change', syncPanels);
   });
 
   if (studentSelect.value) loadStudentContext();
+  applyInstructorTimezone();
   if (mode === 'private' && instructorSelect && instructorSelect.value) loadSlots();
   if (mode === 'group' && groupSelect && groupSelect.value) loadSlots();
   syncPanels();
