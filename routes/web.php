@@ -1539,6 +1539,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/tutor-applications', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'hub'])->name('tutor-applications.hub');
         Route::get('/tutor-applications/list', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'index'])->name('tutor-applications.index');
         Route::get('/tutor-applications/activated', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'activated'])->name('tutor-applications.activated');
+        Route::post('/tutor-applications/hire-manually', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'hireManually'])
+            ->middleware('throttle:20,1')
+            ->name('tutor-applications.hire-manually');
         Route::get('/tutor-applications/{tutorApplication}/files/{kind}', [\App\Http\Controllers\Admin\TutorApplicationController::class, 'file'])
             ->where('kind', 'photo|id|certificate|video')
             ->name('tutor-applications.file');

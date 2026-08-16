@@ -102,6 +102,44 @@ class TutorApplicationController extends Controller
         return view('admin.tutor-applications.activated', compact('applications'));
     }
 
+    public function hireManually(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email', 'max:190'],
+            'full_name' => ['required', 'string', 'max:160'],
+            'phone' => ['nullable', 'string', 'max:40'],
+        ], [
+            'email.required' => 'البريد الإلكتروني مطلوب.',
+            'email.email' => 'صيغة البريد غير صحيحة.',
+            'full_name.required' => 'الاسم الكامل مطلوب.',
+        ]);
+
+        try {
+            $result = TutorApplicationActivationService::hireManuallyByEmail(
+                $request->user(),
+                $data['email'],
+                $data['full_name'],
+                $data['phone'] ?? null
+            );
+        } catch (InvalidArgumentException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        $message = $result['created']
+            ? 'تم توظيف المعلم يدوياً وإرسال بيانات الدخول إلى '.$result['user']->email
+            : 'تم تفعيل حساب المعلم الموجود وإرسال إشعار إلى '.$result['user']->email;
+
+        if (! $result['mail_sent']) {
+            $message .= ' — تعذر إرسال البريد، انسخ كلمة المرور من الشاشة إن وُجدت.';
+        }
+
+        return redirect()
+            ->route('admin.tutor-applications.activated')
+            ->with('success', $message)
+            ->with('hired_email', $result['user']->email)
+            ->with('hired_password', $result['password']);
+    }
+
     public function show(TutorApplication $tutorApplication): View
     {
         $tutorApplication->load([

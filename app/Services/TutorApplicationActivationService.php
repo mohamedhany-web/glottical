@@ -2,11 +2,15 @@
 
 namespace App\Services;
 
+use App\Mail\ManualInstructorHiredMail;
 use App\Models\InstructorProfile;
 use App\Models\Notification;
 use App\Models\TutorApplication;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class TutorApplicationActivationService
@@ -102,6 +106,130 @@ class TutorApplicationActivationService
                 'password' => null,
             ];
         });
+    }
+
+    /**
+     * توظيف معلم مباشرة بالإيميل دون مسار التقديم العام.
+     *
+     * @return array{user: User, application: TutorApplication, password: ?string, created: bool, mail_sent: bool}
+     */
+    public static function hireManuallyByEmail(User $admin, string $email, string $name, ?string $phone = null): array
+    {
+        $email = strtolower(trim($email));
+        $name = trim($name);
+        $phone = self::normalizePhone($phone);
+
+        if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException('أدخل بريداً إلكترونياً صحيحاً.');
+        }
+        if ($name === '') {
+            throw new InvalidArgumentException('الاسم الكامل مطلوب.');
+        }
+
+        $existing = User::query()->where('email', $email)->first();
+        if ($existing) {
+            if (! $existing->isInstructor()) {
+                throw new InvalidArgumentException('هذا البريد مرتبط بحساب قائم ('.$existing->role.'). لا يمكن تحويله من هنا.');
+            }
+
+            $latest = $existing->latestTutorApplication();
+            if ($latest && $latest->isActivated()) {
+                throw new InvalidArgumentException('هذا المعلم مفعّل مسبقاً.');
+            }
+        }
+
+        if ($phone) {
+            $phoneTaken = User::query()
+                ->where('phone', $phone)
+                ->when($existing, fn ($q) => $q->where('id', '!=', $existing->id))
+                ->exists();
+            if ($phoneTaken) {
+                throw new InvalidArgumentException('رقم الجوال مسجّل مسبقاً على حساب آخر.');
+            }
+        }
+
+        $plainPassword = $existing ? null : Str::password(12);
+
+        $result = DB::transaction(function () use ($admin, $email, $name, $phone, $existing, $plainPassword) {
+            if ($existing) {
+                $user = $existing;
+                $user->forceFill([
+                    'name' => $name ?: $user->name,
+                    'phone' => $phone ?: $user->phone,
+                    'role' => 'instructor',
+                    'is_active' => true,
+                ])->save();
+            } else {
+                $user = User::create([
+                    'name' => $name,
+                    'email' => $email,
+                    'phone' => $phone,
+                    'password' => $plainPassword,
+                    'role' => 'instructor',
+                    'is_active' => true,
+                ]);
+            }
+
+            $application = $user->latestTutorApplication();
+            if (! $application) {
+                $application = TutorApplication::create([
+                    'user_id' => $user->id,
+                    'full_name' => $name,
+                    'email' => $email,
+                    'phone' => $phone,
+                    'headline' => 'معلم معيَّن يدوياً',
+                    'status' => TutorApplication::STATUS_APPROVED,
+                    'admin_notes' => 'توظيف يدوي بالإيميل',
+                    'reviewed_at' => now(),
+                    'reviewed_by' => $admin->id,
+                ]);
+            } else {
+                $application->update([
+                    'full_name' => $name,
+                    'email' => $email,
+                    'phone' => $phone ?: $application->phone,
+                    'status' => TutorApplication::STATUS_APPROVED,
+                    'admin_notes' => trim((string) $application->admin_notes."\nتوظيف يدوي بالإيميل"),
+                    'reviewed_at' => $application->reviewed_at ?? now(),
+                    'reviewed_by' => $application->reviewed_by ?? $admin->id,
+                ]);
+            }
+
+            $activated = self::activate($application->fresh(), $admin);
+
+            return [
+                'user' => $activated['user'],
+                'created' => $existing === null,
+            ];
+        });
+
+        $application = $result['user']->latestTutorApplication();
+        $mailSent = self::sendHireMail($result['user'], $plainPassword);
+
+        return [
+            'user' => $result['user'],
+            'application' => $application,
+            'password' => $plainPassword,
+            'created' => $result['created'],
+            'mail_sent' => $mailSent,
+        ];
+    }
+
+    private static function sendHireMail(User $user, ?string $password): bool
+    {
+        try {
+            Mail::to($user->email)->send(new ManualInstructorHiredMail($user, $password));
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::warning('Manual instructor hire email failed', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 
     private static function normalizePhone(?string $phone): ?string
