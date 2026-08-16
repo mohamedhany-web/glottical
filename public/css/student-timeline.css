@@ -7156,3 +7156,162 @@ button.st-chip {
   border-color: rgba(11, 61, 145, .35);
 }
 .st-oto-form .st-pill { margin-top: 8px; }
+
+/* تقويم الطالب — FullCalendar داخل لوحة الجدول الزمني */
+.st-fc {
+  padding: 14px 16px 16px;
+  overflow: hidden;
+}
+.st-fc #calendar {
+  min-height: 420px;
+}
+.st-fc .fc {
+  font-family: inherit;
+}
+.st-fc .fc a {
+  text-decoration: none;
+  color: inherit;
+}
+.st-fc .fc table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.st-fc .fc th,
+.st-fc .fc td {
+  border-color: var(--st-line, #ebebeb);
+  vertical-align: top;
+}
+.st-fc .fc-theme-standard td,
+.st-fc .fc-theme-standard th,
+.st-fc .fc-theme-standard .fc-scrollgrid {
+  border-color: var(--st-line, #ebebeb);
+}
+.st-fc .fc .fc-toolbar {
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.st-fc .fc .fc-toolbar-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #0B3D91;
+  letter-spacing: -0.02em;
+}
+.st-fc .fc .fc-button {
+  background: #0B3D91 !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  text-transform: none !important;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 6px 12px;
+  color: #fff !important;
+  line-height: 1.2;
+}
+.st-fc .fc .fc-button:hover {
+  background: #072A66 !important;
+}
+.st-fc .fc .fc-button-primary:not(:disabled).fc-button-active,
+.st-fc .fc .fc-button-primary:not(:disabled):active {
+  background: #F5B800 !important;
+  color: #072A66 !important;
+}
+.st-fc .fc .fc-button:disabled {
+  opacity: .45;
+}
+.st-fc .fc .fc-button-group {
+  gap: 4px;
+}
+.st-fc .fc .fc-button-group > .fc-button {
+  border-radius: 10px !important;
+  margin: 0;
+}
+.st-fc .fc .fc-col-header-cell-cushion {
+  color: #0B3D91;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 8px 4px;
+}
+.st-fc .fc .fc-daygrid-day-number {
+  color: var(--st-ink, #212525);
+  font-weight: 800;
+  font-size: 12px;
+  padding: 6px 8px;
+}
+.st-fc .fc .fc-day-today {
+  background: rgba(245, 184, 0, .14) !important;
+}
+.st-fc .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  background: #0B3D91;
+  color: #fff;
+  border-radius: 999px;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 4px 6px;
+}
+.st-fc .fc .fc-event {
+  border: 0 !important;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 1px 5px;
+  cursor: pointer;
+  line-height: 1.35;
+}
+.st-fc .fc .fc-daygrid-event {
+  white-space: normal;
+}
+.st-fc .fc .fc-timegrid-now-indicator-line {
+  border-color: #EF4444;
+}
+.st-fc .fc .fc-more-link {
+  font-weight: 800;
+  color: #0B3D91;
+}
+.st-fc .fc .fc-popover {
+  border-radius: 12px;
+  border-color: var(--st-line, #ebebeb);
+  box-shadow: 0 12px 28px rgba(11, 61, 145, .14);
+}
+.st-fc__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--st-line, #ebebeb);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--st-muted, #6b7280);
+}
+.st-fc__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.st-fc__legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+@media (max-width: 768px) {
+  .st-fc .fc .fc-toolbar.fc-header-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .st-fc .fc .fc-toolbar-chunk {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .st-fc .fc .fc-toolbar-title {
+    font-size: 1rem;
+  }
+}

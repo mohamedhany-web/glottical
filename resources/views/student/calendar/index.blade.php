@@ -1,252 +1,176 @@
-@extends('layouts.app')
+@extends('layouts.student-timeline')
 
-@section('title', __('student.calendar_title'))
-
-@push('styles')
-<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.css' rel='stylesheet' />
-<style>
-    .fc {
-        direction: rtl;
-    }
-    .fc-toolbar {
-        flex-direction: row-reverse;
-    }
-    .fc-button-group {
-        flex-direction: row-reverse;
-    }
-    .fc-event {
-        cursor: pointer;
-        border-radius: 4px;
-        padding: 2px 4px;
-    }
-    .fc-daygrid-event {
-        white-space: normal;
-        font-size: 0.85rem;
-    }
-    .event-legend {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-        margin-top: 1rem;
-    }
-    .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.875rem;
-    }
-    .legend-color {
-        width: 16px;
-        height: 16px;
-        border-radius: 4px;
-    }
-</style>
-@endpush
+@section('title', __('student_timeline.calendar'))
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-6">
-    <div class="w-full px-4 sm:px-6 lg:px-8">
-        <!-- الهيدر -->
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 p-5 sm:p-6">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">{{ __('student.calendar_title') }}</h1>
-                    <p class="text-sm text-gray-500 mt-1">{{ __('student.calendar_subtitle') }}
-                        · بتوقيتك: <strong>{{ \App\Support\AppTimezone::label($viewerTz ?? auth()->user()?->timezoneCode()) }}</strong>
-                    </p>
-                </div>
-                <div class="text-sm text-gray-600 flex items-center gap-2">
-                    <i class="fas fa-calendar-alt text-sky-500"></i>
-                    <span>{{ __('student.total_events') }}: <strong>{{ $stats['total'] ?? 0 }}</strong></span>
-                </div>
-            </div>
+@php
+    $locale = app()->getLocale();
+    $isRtl = $locale === 'ar';
+    $viewerTz = $viewerTz ?? auth()->user()?->timezoneCode() ?? \App\Support\AppTimezone::academy();
+    $upcoming = $upcoming ?? collect();
+    $typeLabels = $typeLabels ?? [];
+    $eventTones = $eventTones ?? [];
+    $next = $upcoming->first();
+    $nextType = $next->type ?? null;
+    $joinTypes = ['one_to_one', 'class', 'group', 'lecture', 'consultation'];
+@endphp
+
+@include('partials.student-timeline-top', [
+    'locale' => $locale,
+    'pageTitle' => __('student_timeline.calendar'),
+    'crumbs' => [
+        ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+        ['label' => __('student_timeline.calendar'), 'url' => null],
+    ],
+])
+
+@if($next)
+    <section class="st-join-hero" aria-label="{{ __('student_timeline.calendar_upcoming') }}">
+        <div class="st-join-hero__copy">
+            <p class="st-join-hero__kicker">{{ $typeLabels[$nextType] ?? __('student.other_events') }}</p>
+            <h2 class="st-join-hero__title">{{ $next->title }}</h2>
+            <p class="st-join-hero__meta">
+                <x-app-datetime :at="$next->start_date" :timezone="$viewerTz" :pattern="$isRtl ? 'l، d M · g:i A' : 'D, M j · g:i A'" />
+                · {{ \App\Support\AppTimezone::label($viewerTz) }}
+            </p>
         </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <!-- التقويم الرئيسي -->
-            <div class="lg:col-span-3">
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 md:p-6">
-                    <div id="calendar" class="calendar-container"></div>
-                    
-                    <!-- مفتاح الألوان -->
-                    <div class="event-legend mt-4 pt-4 border-t border-gray-200">
-                        <div class="legend-item">
-                            <div class="legend-color bg-red-500"></div>
-                            <span>{{ __('student.legend_exams') }}</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color bg-sky-500"></div>
-                            <span>{{ __('student.legend_lectures') }}</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color bg-amber-500"></div>
-                            <span>{{ __('student.legend_assignments') }}</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color bg-emerald-500"></div>
-                            <span>{{ __('student.other_events') }}</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color bg-emerald-600"></div>
-                            <span>استشارة مدفوعة</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color" style="background:#7c3aed"></div>
-                            <span>حصة خاصة</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color" style="background:#0B3D91"></div>
-                            <span>مجموعة</span>
-                        </div>
-                    </div>
-                </div>
+        @if(! empty($next->url))
+            <div class="st-join-hero__actions">
+                <a href="{{ $next->url }}" class="st-pill st-pill--solid st-pill--lg">
+                    {{ in_array($nextType, $joinTypes, true) ? __('student_timeline.join_now') : __('student_timeline.calendar_open') }}
+                </a>
             </div>
+        @endif
+    </section>
+@endif
 
-            <!-- الشريط الجانبي -->
-            <div class="lg:col-span-1 space-y-6">
-                <!-- الأحداث القادمة -->
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 md:p-6">
-                    <h3 class="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <i class="fas fa-clock text-sky-500"></i>
-                        <span>الأحداث القادمة</span>
-                    </h3>
-                    
-                    <div class="space-y-3 max-h-96 overflow-y-auto">
-                        @forelse($events->where('start_date', '>=', now())->take(10) as $event)
-                            <div class="p-3 rounded-lg border border-gray-200 hover:border-sky-500 transition-colors cursor-pointer"
-                                 onclick="window.location.href='{{ $event->url ?? '#' }}'">
-                                <div class="flex items-start gap-2 mb-2">
-                                    <div class="w-3 h-3 rounded-full mt-1.5 flex-shrink-0" 
-                                         style="background-color: {{ $event->color ?? '#6B7280' }}"></div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="text-sm font-bold text-gray-900 truncate">{{ $event->title }}</div>
-                                        <div class="text-xs text-gray-500 mt-1">
-                                            <i class="fas fa-calendar text-sky-500"></i>
-                                            <x-app-datetime :at="$event->start_date" :timezone="$viewerTz ?? auth()->user()?->timezoneCode()" pattern="D j M · g:i A" />
-                                        </div>
-                                        <div class="text-xs mt-1 
-                                            @if($event->type == 'exam') text-red-600
-                                            @elseif($event->type == 'lecture') text-blue-600
-                                            @elseif($event->type == 'assignment') text-yellow-600
-                                            @else text-gray-600
-                                            @endif font-semibold">
-                                            @if($event->type == 'exam') 
-                                                <i class="fas fa-clipboard-check"></i> امتحان
-                                            @elseif($event->type == 'lecture') 
-                                                <i class="fas fa-chalkboard-teacher"></i> محاضرة
-                                            @elseif($event->type == 'assignment') 
-                                                <i class="fas fa-tasks"></i> واجب
-                                            @else 
-                                                <i class="fas fa-calendar-alt"></i> حدث
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="text-center py-8 text-gray-500">
-                                <i class="fas fa-calendar-times text-3xl mb-2 opacity-30"></i>
-                                <p class="text-sm">لا توجد أحداث قادمة</p>
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
+<section class="st-stats st-stats--classes" aria-label="{{ __('student_timeline.calendar') }}">
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.calendar_upcoming') }}</p>
+        <p class="st-stat-card__value">{{ $stats['upcoming'] ?? $upcoming->count() }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.cal_exam') }}</p>
+        <p class="st-stat-card__value">{{ $stats['exams'] ?? 0 }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.cal_lecture') }}</p>
+        <p class="st-stat-card__value">{{ $stats['lectures'] ?? 0 }}</p>
+    </article>
+    <article class="st-stat-card">
+        <p class="st-stat-card__label">{{ __('student_timeline.cal_assignment') }}</p>
+        <p class="st-stat-card__value">{{ $stats['assignments'] ?? 0 }}</p>
+    </article>
+</section>
 
-                <!-- إحصائيات -->
-                <div class="bg-sky-500 rounded-xl p-4 md:p-6 text-white border border-sky-600">
-                    <h3 class="text-lg font-black mb-4 flex items-center gap-2">
-                        <i class="fas fa-chart-pie"></i>
-                        <span>إحصائيات</span>
-                    </h3>
-                    
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between bg-white/20 rounded-lg p-3">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-clipboard-check"></i>
-                                <span class="text-sm font-semibold">الامتحانات</span>
-                            </div>
-                            <span class="text-lg font-black">{{ $stats['exams'] ?? 0 }}</span>
-                        </div>
-                        <div class="flex items-center justify-between bg-white/20 rounded-lg p-3">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-chalkboard-teacher"></i>
-                                <span class="text-sm font-semibold">المحاضرات</span>
-                            </div>
-                            <span class="text-lg font-black">{{ $stats['lectures'] ?? 0 }}</span>
-                        </div>
-                        <div class="flex items-center justify-between bg-white/20 rounded-lg p-3">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-tasks"></i>
-                                <span class="text-sm font-semibold">الواجبات</span>
-                            </div>
-                            <span class="text-lg font-black">{{ $stats['assignments'] ?? 0 }}</span>
-                        </div>
-                        <div class="flex items-center justify-between bg-white/20 rounded-lg p-3">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-arrow-up"></i>
-                                <span class="text-sm font-semibold">القادمة</span>
-                            </div>
-                            <span class="text-lg font-black">{{ $stats['upcoming'] ?? 0 }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<section class="st-msg-intro">
+    <div>
+        <h2>{{ __('student.calendar_title') }}</h2>
+        <p>{{ __('student_timeline.calendar_hint') }} · {{ __('student_timeline.oto_your_clock') }}: {{ \App\Support\AppTimezone::label($viewerTz) }}</p>
     </div>
+</section>
+
+<section class="st-panel st-fc" aria-label="{{ __('student_timeline.calendar') }}">
+    <div id="calendar"></div>
+    <div class="st-fc__legend">
+        <span><i style="background:#EF4444"></i> {{ __('student_timeline.cal_exam') }}</span>
+        <span><i style="background:#3B82F6"></i> {{ __('student_timeline.cal_lecture') }}</span>
+        <span><i style="background:#F59E0B"></i> {{ __('student_timeline.cal_assignment') }}</span>
+        <span><i style="background:#7c3aed"></i> {{ __('student_timeline.cal_private') }}</span>
+        <span><i style="background:#F5B800"></i> {{ __('student_timeline.cal_class') }}</span>
+        <span><i style="background:#0B3D91"></i> {{ __('student_timeline.cal_group') }}</span>
+        <span><i style="background:#059669"></i> {{ __('student_timeline.cal_consult') }}</span>
+    </div>
+</section>
+@endsection
+
+@section('events')
+@php
+    $locale = app()->getLocale();
+    $isRtl = $locale === 'ar';
+    $viewerTz = $viewerTz ?? auth()->user()?->timezoneCode() ?? \App\Support\AppTimezone::academy();
+    $upcoming = $upcoming ?? collect();
+    $typeLabels = $typeLabels ?? [];
+    $eventTones = $eventTones ?? [];
+@endphp
+<div class="st-events__top">
+    <h2>{{ __('student_timeline.calendar_upcoming') }}</h2>
+</div>
+@forelse($upcoming->take(10) as $event)
+    @php
+        $href = $event->url ?? null;
+        $tone = $eventTones[$event->type ?? ''] ?? 'blue';
+    @endphp
+    @if($href)
+        <a href="{{ $href }}" class="st-event-card st-event-card--{{ $tone }}">
+            <p class="st-event-card__kicker">{{ $typeLabels[$event->type ?? ''] ?? __('student.other_events') }}</p>
+            <h3>{{ $event->title }}</h3>
+            <p class="st-event-card__sub">
+                <x-app-datetime :at="$event->start_date" :timezone="$viewerTz" :pattern="$isRtl ? 'D j M · g:i A' : 'D, M j · g:i A'" />
+            </p>
+        </a>
+    @else
+        <article class="st-event-card st-event-card--{{ $tone }}">
+            <p class="st-event-card__kicker">{{ $typeLabels[$event->type ?? ''] ?? __('student.other_events') }}</p>
+            <h3>{{ $event->title }}</h3>
+            <p class="st-event-card__sub">
+                <x-app-datetime :at="$event->start_date" :timezone="$viewerTz" :pattern="$isRtl ? 'D j M · g:i A' : 'D, M j · g:i A'" />
+            </p>
+        </article>
+    @endif
+@empty
+    <p class="st-events__empty">{{ __('student_timeline.calendar_empty_upcoming') }}</p>
+@endforelse
+<div class="st-events__see">
+    <a href="{{ route('dashboard') }}">{{ __('student_timeline.school_gate') }}</a>
 </div>
 @endsection
 
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.css" rel="stylesheet">
+@endpush
+
 @push('scripts')
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/locales/ar.js'></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.js"></script>
+@if(app()->getLocale() === 'ar')
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/locales/ar.js"></script>
+@endif
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendar');
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        locale: 'ar',
-        direction: 'rtl',
-        timeZone: @json(auth()->user()?->timezoneCode() ?? \App\Support\AppTimezone::academy()),
+document.addEventListener('DOMContentLoaded', function () {
+    var el = document.getElementById('calendar');
+    if (!el) return;
+    var isRtl = @json(app()->getLocale() === 'ar');
+    var calendar = new FullCalendar.Calendar(el, {
+        locale: isRtl ? 'ar' : 'en',
+        direction: isRtl ? 'rtl' : 'ltr',
+        timeZone: @json($viewerTz ?? auth()->user()?->timezoneCode() ?? \App\Support\AppTimezone::academy()),
         initialView: 'dayGridMonth',
         headerToolbar: {
-            right: 'prev,next today',
-            center: 'title',
-            left: 'dayGridMonth,timeGridWeek,timeGridDay'
+            start: 'title',
+            center: '',
+            end: 'today dayGridMonth,timeGridWeek,timeGridDay prev,next'
         },
         buttonText: {
-            today: 'اليوم',
-            month: 'شهر',
-            week: 'أسبوع',
-            day: 'يوم'
+            today: @json(__('student_timeline.calendar_today')),
+            month: @json(__('student_timeline.calendar_month')),
+            week: @json(__('student_timeline.calendar_week')),
+            day: @json(__('student_timeline.calendar_day'))
         },
-        events: {
-            url: '{{ route("calendar.events") }}',
-            failure: function() {
-                alert('حدث خطأ في تحميل الأحداث');
-            }
-        },
-        eventClick: function(info) {
+        events: @json(route('calendar.events')),
+        eventClick: function (info) {
             if (info.event.url) {
-                window.open(info.event.url, '_self');
                 info.jsEvent.preventDefault();
+                window.location.href = info.event.url;
             }
-        },
-        eventMouseEnter: function(info) {
-            info.el.style.cursor = 'pointer';
-        },
-        eventContent: function(arg) {
-            return {
-                html: '<div class="fc-event-title">' + arg.event.title + '</div>'
-            };
         },
         height: 'auto',
-        contentHeight: 600,
-        firstDay: 6, // السبت كأول يوم
-        weekends: true,
+        contentHeight: 560,
+        firstDay: 6,
         navLinks: true,
+        nowIndicator: true,
         dayMaxEvents: 3,
         moreLinkClick: 'popover'
     });
-    
     calendar.render();
 });
 </script>

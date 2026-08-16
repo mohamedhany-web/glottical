@@ -11,6 +11,7 @@
         ['route' => 'dashboard', 'match' => ['dashboard', 'student.school.*'], 'label' => __('student_timeline.nav_home'), 'icon' => 'home.svg'],
         ['route' => 'student.learn.index', 'match' => ['student.learn.*'], 'label' => __('student_timeline.nav_learn'), 'icon' => 'lessons.svg', 'ui' => 'show_private_lessons'],
         ['route' => 'student.classes.index', 'match' => ['student.classes.*'], 'label' => __('student_timeline.nav_classes'), 'icon' => 'classes.svg', 'ui' => 'show_classes'],
+        ['route' => 'calendar', 'match' => ['calendar', 'calendar.events'], 'label' => __('student_timeline.calendar'), 'fa' => 'fas fa-calendar-alt'],
         ['route' => 'student.private-messages.index', 'match' => ['student.private-messages.*'], 'label' => __('student_timeline.nav_feed'), 'icon' => 'community.svg'],
         ['route' => 'student.private-lectures.index', 'match' => ['student.private-lectures.*', 'student.one-to-one-sessions.*'], 'label' => __('student_timeline.nav_lessons'), 'icon' => 'lessons.svg', 'ui' => 'show_private_lessons'],
         ['route' => 'student.service-entitlements.index', 'match' => ['student.service-entitlements.*'], 'label' => __('student_timeline.nav_progress'), 'icon' => 'credits.svg', 'ui' => 'show_entitlements'],
@@ -47,7 +48,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-oto-1">
+    <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-cal-1">
     <script>
         (function () {
             try {

@@ -36,8 +36,37 @@ class CalendarController extends Controller
         ];
 
         $viewerTz = AppTimezone::forUser($user);
+        $upcoming = $events
+            ->filter(fn ($event) => ($event->start_date ?? now()) >= now())
+            ->sortBy('start_date')
+            ->values();
 
-        return view('student.calendar.index', compact('events', 'stats', 'viewerTz'));
+        $typeLabels = [
+            'exam' => __('student_timeline.cal_exam'),
+            'lecture' => __('student_timeline.cal_lecture'),
+            'assignment' => __('student_timeline.cal_assignment'),
+            'one_to_one' => __('student_timeline.cal_private'),
+            'class' => __('student_timeline.cal_class'),
+            'group' => __('student_timeline.cal_group'),
+            'consultation' => __('student_timeline.cal_consult'),
+        ];
+        $eventTones = [
+            'exam' => 'pink',
+            'lecture' => 'blue',
+            'assignment' => 'orange',
+            'one_to_one' => 'purple',
+            'class' => 'purple',
+            'consultation' => 'green',
+        ];
+
+        return view('student.calendar.index', compact(
+            'events',
+            'stats',
+            'viewerTz',
+            'upcoming',
+            'typeLabels',
+            'eventTones'
+        ));
     }
 
     /**
