@@ -6,6 +6,7 @@ use App\Models\ConsultationRequest;
 use App\Models\OneToOneSession;
 use App\Models\OneToOneWeeklyAvailability;
 use App\Support\AppTimezone;
+use App\Support\WeeklyScheduleTime;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
@@ -44,28 +45,18 @@ class OneToOneAvailabilityService
      */
     public static function syncRules(int $instructorId, array $rows): void
     {
+        $default = (int) config('private_lessons.lesson_duration_minutes', 50);
+        $normalized = WeeklyScheduleTime::normalizeRows($rows, 180, $default);
+
         OneToOneWeeklyAvailability::query()->where('instructor_id', $instructorId)->delete();
 
-        foreach ($rows as $row) {
-            $day = (int) ($row['day_of_week'] ?? 0);
-            $start = trim((string) ($row['start_time'] ?? ''));
-            $end = trim((string) ($row['end_time'] ?? ''));
-            if ($day < 1 || $day > 7 || $start === '' || $end === '') {
-                continue;
-            }
-
-            $default = (int) config('private_lessons.lesson_duration_minutes', 50);
-            $duration = max(30, min(180, (int) ($row['slot_duration_minutes'] ?? $default)));
-            if ($start >= $end) {
-                continue;
-            }
-
+        foreach ($normalized as $row) {
             OneToOneWeeklyAvailability::create([
                 'instructor_id' => $instructorId,
-                'day_of_week' => $day,
-                'start_time' => strlen($start) === 5 ? $start.':00' : $start,
-                'end_time' => strlen($end) === 5 ? $end.':00' : $end,
-                'slot_duration_minutes' => $duration,
+                'day_of_week' => $row['day_of_week'],
+                'start_time' => $row['start_time'].':00',
+                'end_time' => $row['end_time'].':00',
+                'slot_duration_minutes' => $row['slot_duration_minutes'],
                 'is_active' => true,
             ]);
         }
@@ -102,7 +93,7 @@ class OneToOneAvailabilityService
                 $slotDuration = (int) ($rule->slot_duration_minutes ?: $durationMinutes);
 
                 $windowStart = AppTimezone::wallClockToUtc($cursor->toDateString(), $startStr, $academy);
-                $windowEnd = AppTimezone::wallClockToUtc($cursor->toDateString(), $endStr, $academy);
+                $windowEnd = WeeklyScheduleTime::windowEndUtc($cursor->toDateString(), $startStr, $endStr, $academy);
                 $slotStart = $windowStart->copy();
 
                 while ($slotStart->copy()->addMinutes($slotDuration)->lte($windowEnd)) {
@@ -155,7 +146,7 @@ class OneToOneAvailabilityService
             $startStr = is_string($rule->start_time) ? substr($rule->start_time, 0, 5) : $rule->start_time->format('H:i');
             $endStr = is_string($rule->end_time) ? substr($rule->end_time, 0, 5) : $rule->end_time->format('H:i');
             $windowStart = AppTimezone::wallClockToUtc($localStart->toDateString(), $startStr, $academy);
-            $windowEnd = AppTimezone::wallClockToUtc($localStart->toDateString(), $endStr, $academy);
+            $windowEnd = WeeklyScheduleTime::windowEndUtc($localStart->toDateString(), $startStr, $endStr, $academy);
 
             if ($startsAt->copy()->utc()->gte($windowStart) && $endsAt->copy()->utc()->lte($windowEnd)) {
                 return true;

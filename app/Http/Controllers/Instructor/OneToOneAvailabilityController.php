@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
 use App\Services\OneToOneAvailabilityService;
+use App\Support\WeeklyScheduleTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -33,13 +34,7 @@ class OneToOneAvailabilityController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
-        $data = $request->validate([
-            'slots' => ['nullable', 'array'],
-            'slots.*.day_of_week' => ['required', 'integer', 'between:1,7'],
-            'slots.*.start_time' => ['required', 'date_format:H:i'],
-            'slots.*.end_time' => ['required', 'date_format:H:i'],
-            'slots.*.slot_duration_minutes' => ['nullable', 'integer', 'min:30', 'max:180'],
-        ]);
+        $data = $request->validate(WeeklyScheduleTime::slotTimeRules(180));
 
         OneToOneAvailabilityService::syncRules(
             $request->user()->id,

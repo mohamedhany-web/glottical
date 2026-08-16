@@ -17,6 +17,10 @@ class OneToOneSessionService
 {
     public const SESSIONS_PER_MONTH = 4;
 
+    public const MAX_WEEKLY_PATTERN_SLOTS = 7;
+
+    public const MAX_SESSIONS_PER_BOOKING = 40;
+
     /**
      * إنشاء حصص بانتظار الجدولة حسب رصيد الباقة (أو حد أقصى للعرض).
      */
@@ -143,8 +147,8 @@ class OneToOneSessionService
         if ($normalized->isEmpty()) {
             throw new \InvalidArgumentException('اختر موعداً أسبوعياً واحداً على الأقل (يوم + وقت).');
         }
-        if ($normalized->count() > 3) {
-            throw new \InvalidArgumentException('الحد الأقصى 3 مواعيد أسبوعية للتثبيت الشهري.');
+        if ($normalized->count() > self::MAX_WEEKLY_PATTERN_SLOTS) {
+            throw new \InvalidArgumentException('الحد الأقصى '.self::MAX_WEEKLY_PATTERN_SLOTS.' مواعيد أسبوعية للتثبيت الشهري.');
         }
 
         $from = ($from?->copy() ?? now()->addHour())->startOfMinute();
@@ -195,8 +199,8 @@ class OneToOneSessionService
         if ($dates->isEmpty()) {
             throw new \InvalidArgumentException('اختر موعداً واحداً على الأقل في المستقبل.');
         }
-        if ($dates->count() > 24) {
-            throw new \InvalidArgumentException('الحد الأقصى 24 حصة في الحجز الواحد.');
+        if ($dates->count() > self::MAX_SESSIONS_PER_BOOKING) {
+            throw new \InvalidArgumentException('الحد الأقصى '.self::MAX_SESSIONS_PER_BOOKING.' حصة في الحجز الواحد.');
         }
 
         if (! $entitlement) {

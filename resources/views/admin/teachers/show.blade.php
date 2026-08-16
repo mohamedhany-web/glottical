@@ -149,7 +149,7 @@
                     </div>
                     <button type="button" @click="addSlot(1)" class="text-xs font-semibold text-accent">+ نافذة</button>
                 </div>
-                <template x-for="(slot, idx) in slots" :key="idx">
+                <template x-for="(slot, idx) in slots" :key="slot._uid">
                     <div class="grid gap-2 md:grid-cols-6 items-end border border-line rounded-xl p-3">
                         <div>
                             <label class="{{ $label }}">اليوم</label>
@@ -161,11 +161,11 @@
                         </div>
                         <div>
                             <label class="{{ $label }}">من</label>
-                            <input type="time" class="{{ $field }}" x-model="slot.start_time" :name="`slots[${idx}][start_time]`">
+                            <input type="time" step="60" class="{{ $field }}" x-model="slot.start_time" :name="`slots[${idx}][start_time]`">
                         </div>
                         <div>
                             <label class="{{ $label }}">إلى</label>
-                            <input type="time" class="{{ $field }}" x-model="slot.end_time" :name="`slots[${idx}][end_time]`">
+                            <input type="time" step="60" class="{{ $field }}" x-model="slot.end_time" :name="`slots[${idx}][end_time]`">
                         </div>
                         <div>
                             <label class="{{ $label }}">المدة</label>
@@ -198,7 +198,7 @@
                     </div>
                     <button type="button" @click="addSlot(1)" class="text-xs font-semibold text-accent">+ نافذة</button>
                 </div>
-                <template x-for="(slot, idx) in slots" :key="idx">
+                <template x-for="(slot, idx) in slots" :key="slot._uid">
                     <div class="grid gap-2 md:grid-cols-5 items-end border border-line rounded-xl p-3">
                         <div>
                             <label class="{{ $label }}">اليوم</label>
@@ -210,11 +210,11 @@
                         </div>
                         <div>
                             <label class="{{ $label }}">من</label>
-                            <input type="time" class="{{ $field }}" x-model="slot.start_time" :name="`slots[${idx}][start_time]`">
+                            <input type="time" step="60" class="{{ $field }}" x-model="slot.start_time" :name="`slots[${idx}][start_time]`">
                         </div>
                         <div>
                             <label class="{{ $label }}">إلى</label>
-                            <input type="time" class="{{ $field }}" x-model="slot.end_time" :name="`slots[${idx}][end_time]`">
+                            <input type="time" step="60" class="{{ $field }}" x-model="slot.end_time" :name="`slots[${idx}][end_time]`">
                         </div>
                         <div>
                             <label class="{{ $label }}">المدة</label>
@@ -404,12 +404,17 @@
 <script>
 function teacherSlots(initial) {
     return {
-        slots: Array.isArray(initial) ? initial.map(function (s) { return Object.assign({}, s); }) : [],
+        slots: Array.isArray(initial) ? initial.map(function (s, i) {
+            var row = Object.assign({}, s);
+            row._uid = i + 1;
+            return row;
+        }) : [],
         addSlot: function (day) {
             this.slots.push({
+                _uid: Date.now() + Math.random(),
                 day_of_week: day || 1,
-                start_time: '09:00',
-                end_time: '12:00',
+                start_time: '16:00',
+                end_time: '22:00',
                 slot_duration_minutes: 60,
                 applies_to: 'both',
                 note: ''

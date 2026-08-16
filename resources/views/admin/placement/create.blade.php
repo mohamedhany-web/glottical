@@ -176,14 +176,16 @@
                                 <input type="hidden" name="weekly_slots[0][day_of_week]" id="weeklyDay0" value="{{ old('weekly_slots.0.day_of_week') }}">
                                 <input type="hidden" name="weekly_slots[0][time]" id="weeklyTime0" value="{{ old('weekly_slots.0.time') }}">
                             </div>
-                            <div>
-                                <label class="{{ $label }}" for="weeklySlot1">الموعد الأسبوعي 2 (مستحسن)</label>
-                                <select name="weekly_slots[1][combo]" id="weeklySlot1" class="{{ $field }}" disabled>
-                                    <option value="">اختياري…</option>
-                                </select>
-                                <input type="hidden" name="weekly_slots[1][day_of_week]" id="weeklyDay1" value="{{ old('weekly_slots.1.day_of_week') }}">
-                                <input type="hidden" name="weekly_slots[1][time]" id="weeklyTime1" value="{{ old('weekly_slots.1.time') }}">
-                            </div>
+                            @foreach([1, 2, 3] as $wi)
+                                <div>
+                                    <label class="{{ $label }}" for="weeklySlot{{ $wi }}">الموعد الأسبوعي {{ $wi + 1 }} (اختياري)</label>
+                                    <select name="weekly_slots[{{ $wi }}][combo]" id="weeklySlot{{ $wi }}" class="{{ $field }}" disabled>
+                                        <option value="">اختياري…</option>
+                                    </select>
+                                    <input type="hidden" name="weekly_slots[{{ $wi }}][day_of_week]" id="weeklyDay{{ $wi }}" value="{{ old('weekly_slots.'.$wi.'.day_of_week') }}">
+                                    <input type="hidden" name="weekly_slots[{{ $wi }}][time]" id="weeklyTime{{ $wi }}" value="{{ old('weekly_slots.'.$wi.'.time') }}">
+                                </div>
+                            @endforeach
                         </div>
                         <div class="max-w-xs">
                             <label class="{{ $label }}" for="weeksSelect">عدد الأسابيع</label>
@@ -300,12 +302,14 @@
   var groupSearch = document.getElementById('groupSearch');
   var slotSelect = document.getElementById('slotSelect');
   var multiSlotSelect = document.getElementById('multiSlotSelect');
-  var weeklySlot0 = document.getElementById('weeklySlot0');
-  var weeklySlot1 = document.getElementById('weeklySlot1');
-  var weeklyDay0 = document.getElementById('weeklyDay0');
-  var weeklyTime0 = document.getElementById('weeklyTime0');
-  var weeklyDay1 = document.getElementById('weeklyDay1');
-  var weeklyTime1 = document.getElementById('weeklyTime1');
+  var weeklySlotEls = [0, 1, 2, 3].map(function (i) {
+    return {
+      select: document.getElementById('weeklySlot' + i),
+      day: document.getElementById('weeklyDay' + i),
+      time: document.getElementById('weeklyTime' + i)
+    };
+  });
+  var weeklySlot0 = weeklySlotEls[0].select;
   var monthlyPanel = document.getElementById('monthlyPanel');
   var multiPanel = document.getElementById('multiPanel');
   var singlePanel = document.getElementById('singlePanel');
@@ -468,10 +472,10 @@
     var opts = (windows || []).map(function (w) {
       return { value: w.day_of_week + '|' + w.start_time, label: w.label || (w.day_label + ' · ' + w.start_time) };
     });
-    setOptions(weeklySlot0, opts, 'اختر الموعد الأسبوعي…');
-    setOptions(weeklySlot1, opts, 'اختياري — موعد ثانٍ…');
-    if (weeklySlot0) weeklySlot0.disabled = opts.length === 0;
-    if (weeklySlot1) weeklySlot1.disabled = opts.length === 0;
+    weeklySlotEls.forEach(function (row, i) {
+      setOptions(row.select, opts, i === 0 ? 'اختر الموعد الأسبوعي…' : 'اختياري — موعد إضافي…');
+      if (row.select) row.select.disabled = opts.length === 0;
+    });
     if (monthlyHint) {
       monthlyHint.textContent = opts.length
         ? 'اختر موعدين من نوافذ المعلم — سيُولَّد الجدول لعدد الأسابيع المحدد.'
@@ -499,10 +503,10 @@
     if (mode === 'private') {
       if (!instructorSelect.value) {
         setOptions(slotSelect, [], 'اختر معلماً أولاً…');
-        setOptions(weeklySlot0, [], 'اختر معلماً أولاً…');
-        setOptions(weeklySlot1, [], 'اختياري…');
-        if (weeklySlot0) weeklySlot0.disabled = true;
-        if (weeklySlot1) weeklySlot1.disabled = true;
+        weeklySlotEls.forEach(function (row, i) {
+          setOptions(row.select, [], i === 0 ? 'اختر معلماً أولاً…' : 'اختياري…');
+          if (row.select) row.select.disabled = true;
+        });
         refreshSubmit();
         return;
       }
@@ -595,13 +599,11 @@
   if (groupSelect) groupSelect.addEventListener('change', loadSlots);
   if (slotSelect) slotSelect.addEventListener('change', refreshSubmit);
   if (multiSlotSelect) multiSlotSelect.addEventListener('change', refreshSubmit);
-  if (weeklySlot0) weeklySlot0.addEventListener('change', function () {
-    syncWeeklyHidden(weeklySlot0, weeklyDay0, weeklyTime0);
-    refreshSubmit();
-  });
-  if (weeklySlot1) weeklySlot1.addEventListener('change', function () {
-    syncWeeklyHidden(weeklySlot1, weeklyDay1, weeklyTime1);
-    refreshSubmit();
+  weeklySlotEls.forEach(function (row) {
+    if (row.select) row.select.addEventListener('change', function () {
+      syncWeeklyHidden(row.select, row.day, row.time);
+      refreshSubmit();
+    });
   });
   document.querySelectorAll('input[name="booking_style"]').forEach(function (el) {
     el.addEventListener('change', syncPanels);

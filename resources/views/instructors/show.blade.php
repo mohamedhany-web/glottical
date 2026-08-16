@@ -268,7 +268,7 @@
                     <input type="radio" name="booking_style" value="monthly" checked>
                     <span>
                       <strong>{{ $isRtl ? 'تثبيت شهري (موصى به)' : 'Monthly lock (recommended)' }}</strong>
-                      <small>{{ $isRtl ? 'اختر موعدين أسبوعياً لمدة 4 أسابيع' : 'Pick up to 2 weekly times for 4 weeks' }}</small>
+                      <small>{{ $isRtl ? 'اختر حتى 7 مواعيد أسبوعياً لمدة تصل إلى 8 أسابيع' : 'Pick up to 7 weekly times for up to 8 weeks' }}</small>
                     </span>
                   </label>
                   <label class="gl-tp-choice">
@@ -306,6 +306,26 @@
                     </select>
                     <input type="hidden" name="weekly_slots[1][day_of_week]" id="glTpW1Day">
                     <input type="hidden" name="weekly_slots[1][time]" id="glTpW1Time">
+                  </label>
+                  <label class="gl-tp-field">{{ $isRtl ? 'الموعد الأسبوعي 3' : 'Weekly slot 3' }}
+                    <select id="glTpW2">
+                      <option value="">{{ $isRtl ? 'اختياري…' : 'Optional…' }}</option>
+                      @foreach($weeklyOpts as $opt)
+                        <option value="{{ $opt['day'] }}|{{ $opt['time'] }}">{{ $opt['label'] }}</option>
+                      @endforeach
+                    </select>
+                    <input type="hidden" name="weekly_slots[2][day_of_week]" id="glTpW2Day">
+                    <input type="hidden" name="weekly_slots[2][time]" id="glTpW2Time">
+                  </label>
+                  <label class="gl-tp-field">{{ $isRtl ? 'الموعد الأسبوعي 4' : 'Weekly slot 4' }}
+                    <select id="glTpW3">
+                      <option value="">{{ $isRtl ? 'اختياري…' : 'Optional…' }}</option>
+                      @foreach($weeklyOpts as $opt)
+                        <option value="{{ $opt['day'] }}|{{ $opt['time'] }}">{{ $opt['label'] }}</option>
+                      @endforeach
+                    </select>
+                    <input type="hidden" name="weekly_slots[3][day_of_week]" id="glTpW3Day">
+                    <input type="hidden" name="weekly_slots[3][time]" id="glTpW3Time">
                   </label>
                   <label class="gl-tp-field">{{ $isRtl ? 'عدد الأسابيع' : 'Weeks' }}
                     <select name="weeks">
@@ -376,9 +396,13 @@
                 var w0 = document.getElementById('glTpW0');
                 var w0Day = document.getElementById('glTpW0Day');
                 var w0Time = document.getElementById('glTpW0Time');
-                var w1 = document.getElementById('glTpW1');
-                var w1Day = document.getElementById('glTpW1Day');
-                var w1Time = document.getElementById('glTpW1Time');
+                var weeklyCombos = [0, 1, 2, 3].map(function (i) {
+                  return {
+                    sel: document.getElementById('glTpW' + i),
+                    day: document.getElementById('glTpW' + i + 'Day'),
+                    time: document.getElementById('glTpW' + i + 'Time')
+                  };
+                });
                 function syncCombo(sel, dayEl, timeEl) {
                   if (!sel || !dayEl || !timeEl) return;
                   var v = sel.value || '';
@@ -396,11 +420,11 @@
                 form.querySelectorAll('input[name="booking_style"]').forEach(function (el) {
                   el.addEventListener('change', sync);
                 });
-                if (w0) w0.addEventListener('change', function () { syncCombo(w0, w0Day, w0Time); });
-                if (w1) w1.addEventListener('change', function () { syncCombo(w1, w1Day, w1Time); });
+                weeklyCombos.forEach(function (row) {
+                  if (row.sel) row.sel.addEventListener('change', function () { syncCombo(row.sel, row.day, row.time); });
+                });
                 form.addEventListener('submit', function () {
-                  syncCombo(w0, w0Day, w0Time);
-                  syncCombo(w1, w1Day, w1Time);
+                  weeklyCombos.forEach(function (row) { syncCombo(row.sel, row.day, row.time); });
                 });
                 sync();
               })();

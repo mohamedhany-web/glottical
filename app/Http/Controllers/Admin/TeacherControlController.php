@@ -14,6 +14,7 @@ use App\Services\OneToOneAvailabilityService;
 use App\Services\OneToOneSessionService;
 use App\Services\TutoringGroupAvailabilityService;
 use App\Services\TutoringGroupOrchestrationService;
+use App\Support\WeeklyScheduleTime;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -329,15 +330,7 @@ class TeacherControlController extends Controller
     {
         $this->assertTeacher($teacher);
 
-        $data = $request->validate([
-            'slots' => ['nullable', 'array'],
-            'slots.*.day_of_week' => ['required', 'integer', 'between:1,7'],
-            'slots.*.start_time' => ['required', 'date_format:H:i'],
-            'slots.*.end_time' => ['required', 'date_format:H:i'],
-            'slots.*.slot_duration_minutes' => ['nullable', 'integer', 'min:30', 'max:240'],
-            'slots.*.applies_to' => ['nullable', 'in:individual,collective,both'],
-            'slots.*.note' => ['nullable', 'string', 'max:255'],
-        ]);
+        $data = $request->validate(WeeklyScheduleTime::slotTimeRules(240, true));
 
         TutoringGroupAvailabilityService::syncRules((int) $teacher->id, $data['slots'] ?? []);
 
@@ -350,13 +343,7 @@ class TeacherControlController extends Controller
     {
         $this->assertTeacher($teacher);
 
-        $data = $request->validate([
-            'slots' => ['nullable', 'array'],
-            'slots.*.day_of_week' => ['required', 'integer', 'between:1,7'],
-            'slots.*.start_time' => ['required', 'date_format:H:i'],
-            'slots.*.end_time' => ['required', 'date_format:H:i'],
-            'slots.*.slot_duration_minutes' => ['nullable', 'integer', 'min:30', 'max:180'],
-        ]);
+        $data = $request->validate(WeeklyScheduleTime::slotTimeRules(180));
 
         OneToOneAvailabilityService::syncRules((int) $teacher->id, $data['slots'] ?? []);
 

@@ -180,7 +180,7 @@
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h2 class="text-base font-extrabold text-[#0B1220] dark:text-white">تحرير النوافذ</h2>
-                    <p class="mt-1 text-xs text-[color:var(--tws-muted)]">أضف يوم ووقت ومدة الحصة ونوع المجموعة.</p>
+                    <p class="mt-1 text-xs text-[color:var(--tws-muted)]">أضف يوم ووقت ومدة الحصة. لا يوجد حد عند 3 نوافذ — مدّد «إلى» لو عايز مواعيد أكتر في نفس اليوم.</p>
                 </div>
                 <button type="button" @click="addSlot()"
                         class="inline-flex h-10 items-center gap-2 rounded-xl border border-[#F5B800] bg-[#FFF6D6] px-4 text-sm font-extrabold text-[#072A66] hover:brightness-105">
@@ -190,7 +190,7 @@
             </div>
 
             <div class="space-y-3">
-                <template x-for="(slot, index) in slots" :key="index">
+                <template x-for="(slot, index) in slots" :key="slot._uid">
                     <div class="tws-slot-card">
                         <div class="flex items-center justify-between gap-2 mb-3">
                             <span class="text-[11px] font-extrabold text-[#0B3D91] dark:text-blue-300">
@@ -213,11 +213,11 @@
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-[color:var(--tws-muted)] mb-1.5">من</label>
-                                <input type="time" :name="'slots['+index+'][start_time]'" x-model="slot.start_time" class="tws-field" required>
+                                <input type="time" step="60" :name="'slots['+index+'][start_time]'" x-model="slot.start_time" class="tws-field" required>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-[color:var(--tws-muted)] mb-1.5">إلى</label>
-                                <input type="time" :name="'slots['+index+'][end_time]'" x-model="slot.end_time" class="tws-field" required>
+                                <input type="time" step="60" :name="'slots['+index+'][end_time]'" x-model="slot.end_time" class="tws-field" required>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-[color:var(--tws-muted)] mb-1.5">المدة (د)</label>
@@ -232,6 +232,10 @@
                                 </select>
                             </div>
                         </div>
+                        <p class="mt-3 text-[11px] font-bold" :class="slotYield(slot) > 0 ? 'text-[#0B3D91] dark:text-blue-300' : 'text-rose-600'">
+                            <span x-show="slotYield(slot) > 0" x-text="'تنتج ' + slotYield(slot) + ' مواعيد في هذا اليوم'"></span>
+                            <span x-show="slotYield(slot) < 1">لن يُقبل موعد: مدّد «إلى» ليغطي مدة الحصة (حتى منتصف الليل استخدم 00:00).</span>
+                        </p>
                     </div>
                 </template>
             </div>
@@ -308,13 +312,40 @@
 <script>
 function tutorWorkForm() {
     const existing = @json($existingSlots);
+    let uid = 1;
+    const withIds = (existing.length ? existing : [{ day_of_week: '1', start_time: '16:00', end_time: '22:00', slot_duration_minutes: '60', applies_to: 'both' }])
+        .map(function (slot) {
+            slot._uid = uid++;
+            return slot;
+        });
     return {
-        slots: existing.length ? existing : [{ day_of_week: '1', start_time: '09:00', end_time: '12:00', slot_duration_minutes: '60', applies_to: 'both' }],
+        slots: withIds,
+        nextUid: uid,
         addSlot() {
-            this.slots.push({ day_of_week: '1', start_time: '09:00', end_time: '12:00', slot_duration_minutes: '60', applies_to: 'both' });
+            this.slots.push({
+                _uid: this.nextUid++,
+                day_of_week: '1',
+                start_time: '16:00',
+                end_time: '22:00',
+                slot_duration_minutes: '60',
+                applies_to: 'both'
+            });
         },
         removeSlot(i) {
             this.slots.splice(i, 1);
+        },
+        minutes(t) {
+            if (!t) return 0;
+            const p = String(t).split(':');
+            return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0);
+        },
+        slotYield(slot) {
+            let start = this.minutes(slot.start_time);
+            let end = this.minutes(slot.end_time);
+            if (end === 0 && start > 0) end = 24 * 60;
+            const duration = parseInt(slot.slot_duration_minutes, 10) || 60;
+            if (end <= start || duration < 1) return 0;
+            return Math.floor((end - start) / duration);
         }
     };
 }

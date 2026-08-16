@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TutorWorkSchedule;
 use App\Models\User;
 use App\Services\TutoringGroupAvailabilityService;
+use App\Support\WeeklyScheduleTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -125,16 +126,10 @@ class TutorWorkScheduleController extends Controller
 
     public function sync(Request $request): RedirectResponse
     {
-        $data = $request->validate([
-            'instructor_id' => ['required', 'exists:users,id'],
-            'slots' => ['nullable', 'array'],
-            'slots.*.day_of_week' => ['required', 'integer', 'between:1,7'],
-            'slots.*.start_time' => ['required', 'date_format:H:i'],
-            'slots.*.end_time' => ['required', 'date_format:H:i'],
-            'slots.*.slot_duration_minutes' => ['nullable', 'integer', 'min:30', 'max:240'],
-            'slots.*.applies_to' => ['nullable', 'in:individual,collective,both'],
-            'slots.*.note' => ['nullable', 'string', 'max:255'],
-        ]);
+        $data = $request->validate(array_merge(
+            ['instructor_id' => ['required', 'exists:users,id']],
+            WeeklyScheduleTime::slotTimeRules(240, true)
+        ));
 
         TutoringGroupAvailabilityService::syncRules(
             (int) $data['instructor_id'],

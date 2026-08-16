@@ -173,7 +173,7 @@
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h2 class="text-base font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'تحرير النوافذ' : 'Edit windows' }}</h2>
-                    <p class="mt-1 text-xs text-[color:var(--o1a-muted)]">{{ $isRtl ? 'أضف يوم ووقت ومدة الحصة الفردية.' : 'Add day, time, and session length.' }}</p>
+                    <p class="mt-1 text-xs text-[color:var(--o1a-muted)]">{{ $isRtl ? 'أضف يوماً ووقتاً ومدة الحصة. لا يوجد حد عند 3 نوافذ — مدّد «إلى» لو عايز مواعيد أكتر في نفس اليوم.' : 'Add day, time, and session length. No 3-window cap — extend “to” for more slots that day.' }}</p>
                 </div>
                 <button type="button" @click="addSlot()"
                         class="inline-flex h-10 items-center gap-2 rounded-xl border border-[#F5B800] bg-[#FFF6D6] px-4 text-sm font-extrabold text-[#072A66] hover:brightness-105">
@@ -183,7 +183,7 @@
             </div>
 
             <div class="space-y-3">
-                <template x-for="(slot, index) in slots" :key="index">
+                <template x-for="(slot, index) in slots" :key="slot._uid">
                     <div class="o1a-slot-card">
                         <div class="flex items-center justify-between gap-2 mb-3">
                             <span class="text-[11px] font-extrabold text-[#0B3D91] dark:text-blue-300">
@@ -206,17 +206,21 @@
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-[color:var(--o1a-muted)] mb-1.5">{{ __('student.one_to_one_from') }}</label>
-                                <input type="time" :name="'slots['+index+'][start_time]'" x-model="slot.start_time" class="o1a-field" required>
+                                <input type="time" step="60" :name="'slots['+index+'][start_time]'" x-model="slot.start_time" class="o1a-field" required>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-[color:var(--o1a-muted)] mb-1.5">{{ __('student.one_to_one_to') }}</label>
-                                <input type="time" :name="'slots['+index+'][end_time]'" x-model="slot.end_time" class="o1a-field" required>
+                                <input type="time" step="60" :name="'slots['+index+'][end_time]'" x-model="slot.end_time" class="o1a-field" required>
                             </div>
                             <div class="col-span-2 lg:col-span-4 lg:max-w-xs">
                                 <label class="block text-[11px] font-bold text-[color:var(--o1a-muted)] mb-1.5">{{ __('student.minutes') }}</label>
                                 <input type="number" :name="'slots['+index+'][slot_duration_minutes]'" x-model="slot.slot_duration_minutes" min="30" max="180" step="15" class="o1a-field">
                             </div>
                         </div>
+                        <p class="mt-3 text-[11px] font-bold" :class="slotYield(slot) > 0 ? 'text-[#0B3D91] dark:text-blue-300' : 'text-rose-600'">
+                            <span x-show="slotYield(slot) > 0" x-text="'{{ __('student.one_to_one_slot_yields', ['count' => '__N__']) }}'.replace('__N__', slotYield(slot))"></span>
+                            <span x-show="slotYield(slot) < 1">{{ __('student.one_to_one_slot_yields_zero') }}</span>
+                        </p>
                     </div>
                 </template>
             </div>
@@ -275,13 +279,39 @@
 <script>
 function availabilityForm() {
     const existing = @json($existingSlots);
+    let uid = 1;
+    const withIds = (existing.length ? existing : [{ day_of_week: '1', start_time: '16:00', end_time: '22:00', slot_duration_minutes: '50' }])
+        .map(function (slot) {
+            slot._uid = uid++;
+            return slot;
+        });
     return {
-        slots: existing.length ? existing : [{ day_of_week: '1', start_time: '09:00', end_time: '12:00', slot_duration_minutes: '50' }],
+        slots: withIds,
+        nextUid: uid,
         addSlot() {
-            this.slots.push({ day_of_week: '1', start_time: '09:00', end_time: '12:00', slot_duration_minutes: '50' });
+            this.slots.push({
+                _uid: this.nextUid++,
+                day_of_week: '1',
+                start_time: '16:00',
+                end_time: '22:00',
+                slot_duration_minutes: '50'
+            });
         },
         removeSlot(i) {
             this.slots.splice(i, 1);
+        },
+        minutes(t) {
+            if (!t) return 0;
+            const p = String(t).split(':');
+            return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0);
+        },
+        slotYield(slot) {
+            let start = this.minutes(slot.start_time);
+            let end = this.minutes(slot.end_time);
+            if (end === 0 && start > 0) end = 24 * 60;
+            const duration = parseInt(slot.slot_duration_minutes, 10) || 50;
+            if (end <= start || duration < 1) return 0;
+            return Math.floor((end - start) / duration);
         }
     };
 }

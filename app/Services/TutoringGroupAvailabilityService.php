@@ -7,6 +7,7 @@ use App\Models\TutoringGroup;
 use App\Models\TutoringGroupBooking;
 use App\Models\TutoringGroupCohort;
 use App\Support\AppTimezone;
+use App\Support\WeeklyScheduleTime;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -46,22 +47,18 @@ class TutoringGroupAvailabilityService
      */
     public static function syncRules(int $instructorId, array $slots): void
     {
-        DB::transaction(function () use ($instructorId, $slots) {
+        $normalized = WeeklyScheduleTime::normalizeRows($slots, 240, 60);
+
+        DB::transaction(function () use ($instructorId, $normalized) {
             TutorWorkSchedule::query()->where('instructor_id', $instructorId)->delete();
 
-            foreach ($slots as $slot) {
-                $start = $slot['start_time'];
-                $end = $slot['end_time'];
-                if ($end <= $start) {
-                    continue;
-                }
-
+            foreach ($normalized as $slot) {
                 TutorWorkSchedule::create([
                     'instructor_id' => $instructorId,
-                    'day_of_week' => (int) $slot['day_of_week'],
-                    'start_time' => $start,
-                    'end_time' => $end,
-                    'slot_duration_minutes' => (int) ($slot['slot_duration_minutes'] ?? 60),
+                    'day_of_week' => $slot['day_of_week'],
+                    'start_time' => $slot['start_time'],
+                    'end_time' => $slot['end_time'],
+                    'slot_duration_minutes' => $slot['slot_duration_minutes'],
                     'applies_to' => $slot['applies_to'] ?? TutorWorkSchedule::APPLIES_BOTH,
                     'is_active' => true,
                     'note' => $slot['note'] ?? null,
@@ -110,7 +107,7 @@ class TutoringGroupAvailabilityService
             foreach ($dayRules as $rule) {
                 $ruleDuration = (int) ($rule->slot_duration_minutes ?: $duration);
                 $windowStart = AppTimezone::wallClockToUtc($cursor->toDateString(), $rule->startTimeString(), $academy);
-                $windowEnd = AppTimezone::wallClockToUtc($cursor->toDateString(), $rule->endTimeString(), $academy);
+                $windowEnd = WeeklyScheduleTime::windowEndUtc($cursor->toDateString(), $rule->startTimeString(), $rule->endTimeString(), $academy);
                 $slotStart = $windowStart->copy();
 
                 while ($slotStart->copy()->addMinutes($ruleDuration)->lte($windowEnd)) {
