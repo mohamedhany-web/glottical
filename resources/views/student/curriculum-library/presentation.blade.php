@@ -1,14 +1,17 @@
-@extends('layouts.app')
-
 @php
     $pt = $presentationTitle ?? 'عرض تفاعلي';
     $mode = $mode ?? 'office';
     $hasAnimationVideo = !empty($hasAnimationVideo) && !empty($animationVideoUrl);
     $isNative = $mode === 'native' && !empty($manifestUrl);
     $defaultPane = $hasAnimationVideo ? 'animation' : ($isNative ? 'slides' : 'office');
+    $viewer = auth()->user();
+    $useStudentChrome = $viewer && $viewer->isStudent();
+    $backUrl = $itemShowUrl ?? route('curriculum-library.show', $item);
 @endphp
 
-@section('title', $pt . ' - ' . $item->title)
+@extends($useStudentChrome ? 'layouts.student-timeline' : 'layouts.app')
+
+@section('title', $pt.' — '.$item->title)
 @section('header', $item->title)
 @section('enable-content-protection', ($isNative || $hasAnimationVideo) ? 'true' : '')
 
@@ -16,103 +19,118 @@
     @if($isNative)
         <link rel="stylesheet" href="{{ vasset('css/curriculum-slide-player.css') }}">
     @endif
+    @unless($useStudentChrome)
+        <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-pres-1">
+    @endunless
 @endpush
 
 @section('content')
-<div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-4"
+@if($useStudentChrome)
+    @include('partials.student-timeline-top', [
+        'locale' => app()->getLocale(),
+        'pageTitle' => $pt,
+        'crumbs' => [
+            ['label' => __('student_timeline.school_gate'), 'url' => route('dashboard')],
+            ['label' => __('student_timeline.family_library_title'), 'url' => route('student.library.home')],
+            ['label' => __('student_timeline.lib_manahij_title'), 'url' => route('curriculum-library.index')],
+            ['label' => $item->title, 'url' => $backUrl],
+            ['label' => $pt, 'url' => null],
+        ],
+    ])
+@endif
+
+<div class="st-pres"
      data-mx-presentation-root
      data-default-pane="{{ $defaultPane }}"
      @if($hasAnimationVideo) data-has-animation-video="1" @endif>
-    <div class="flex flex-wrap items-center gap-3">
-        <a href="{{ $itemShowUrl ?? route('curriculum-library.show', $item) }}" class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 text-sm font-semibold">
-            <i class="fas fa-arrow-right"></i> العودة لصفحة المنهج
-        </a>
-    </div>
-    <div class="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
-            <div>
-                <h1 class="text-lg font-black text-slate-800">{{ $pt }}</h1>
-                <p class="text-xs text-slate-500 mt-1">العرض داخل المنصة فقط؛ التحميل غير متاح لهذا النوع.</p>
-            </div>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-100">
-                <i class="fas fa-lock ml-1.5 text-[10px]"></i> بدون تحميل
-            </span>
-        </div>
 
+    @unless($useStudentChrome)
+        <p class="st-pres-back">
+            <a href="{{ $backUrl }}"><i class="fas fa-arrow-right" aria-hidden="true"></i> العودة لصفحة المنهج</a>
+        </p>
+    @endunless
+
+    <section class="st-xp-head">
+        <div>
+            <p class="st-xp-kicker">{{ __('student_timeline.lib_manahij_title') }}</p>
+            <h2>{{ $pt }}</h2>
+            <p>العرض داخل المنصة فقط؛ التحميل غير متاح لهذا النوع.</p>
+        </div>
+        <div class="st-xp-actions">
+            <span class="st-pres-lock"><i class="fas fa-lock" aria-hidden="true"></i> بدون تحميل</span>
+            <a href="{{ $backUrl }}" class="st-pill st-pill--outline">{{ $useStudentChrome ? __('student_timeline.lib_manahij_title') : 'رجوع للمنهج' }}</a>
+        </div>
+    </section>
+
+    <section class="st-cl-panel st-pres-panel" aria-label="{{ $pt }}">
         @if($hasAnimationVideo)
-            <div class="px-4 pt-4 flex flex-wrap items-center gap-2" role="tablist" aria-label="وضع العرض">
+            <div class="st-pres-tabs" role="tablist" aria-label="وضع العرض">
                 <button type="button"
                         data-mx-pane-btn="animation"
-                        class="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black border transition
-                               bg-indigo-600 text-white border-indigo-600"
+                        class="st-pill st-pill--solid"
                         aria-selected="true">
-                    <i class="fas fa-film"></i> العرض بالحركات
+                    <i class="fas fa-film" aria-hidden="true"></i> العرض بالحركات
                 </button>
                 <button type="button"
                         data-mx-pane-btn="slides"
-                        class="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black border transition
-                               bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                        class="st-pill st-pill--outline"
                         aria-selected="false">
-                    <i class="fas fa-images"></i> تصفح الشرائح
+                    <i class="fas fa-images" aria-hidden="true"></i> تصفح الشرائح
                 </button>
             </div>
-            <p data-mx-animation-hint class="px-4 pt-2 text-[11px] text-slate-500 leading-relaxed">
+            <p data-mx-animation-hint class="st-pres-hint">
                 فيديو الحركات يحافظ على حركات PowerPoint والصوت والتوقيت كما صُدّر من الملف الأصلي.
                 للتنقل بين الشرائح يدوياً استخدم وضع «تصفح الشرائح».
             </p>
         @endif
 
-        <div class="p-4 bg-slate-50">
-            @if($hasAnimationVideo)
-                <div id="mx-animation-pane"
-                     data-mx-pane="animation"
-                     class="{{ $defaultPane === 'animation' ? '' : 'hidden' }}"
-                     @if($defaultPane !== 'animation') hidden aria-hidden="true" @endif>
-                    <div class="relative w-full max-w-5xl mx-auto rounded-xl overflow-hidden bg-black aspect-video shadow-sm border border-slate-200">
-                        <video id="mx-animation-video"
-                               class="w-full h-full"
-                               controls
-                               playsinline
-                               controlslist="nodownload"
-                               disablepictureinpicture
-                               preload="metadata"
-                               src="{{ $animationVideoUrl }}">
-                            متصفحك لا يدعم تشغيل الفيديو.
-                        </video>
-                    </div>
-                    <p class="mt-2 text-[11px] text-slate-500 text-center">
-                        إذا تعذّر تشغيل الفيديو سيتم التحويل تلقائياً إلى تصفح الشرائح.
-                    </p>
+        @if($hasAnimationVideo)
+            <div id="mx-animation-pane"
+                 data-mx-pane="animation"
+                 class="{{ $defaultPane === 'animation' ? '' : 'hidden' }}"
+                 @if($defaultPane !== 'animation') hidden aria-hidden="true" @endif>
+                <div class="st-pres-stage">
+                    <video id="mx-animation-video"
+                           class="st-pres-video"
+                           controls
+                           playsinline
+                           controlslist="nodownload"
+                           disablepictureinpicture
+                           preload="metadata"
+                           src="{{ $animationVideoUrl }}">
+                        متصفحك لا يدعم تشغيل الفيديو.
+                    </video>
                 </div>
+                <p class="st-pres-hint st-pres-hint--center">إذا تعذّر تشغيل الفيديو سيتم التحويل تلقائياً إلى تصفح الشرائح.</p>
+            </div>
+        @endif
+
+        <div id="mx-slides-pane"
+             data-mx-pane="slides"
+             class="{{ ($hasAnimationVideo && $defaultPane === 'animation') ? 'hidden' : '' }}"
+             @if($hasAnimationVideo && $defaultPane === 'animation') hidden aria-hidden="true" @endif>
+            @if($isNative)
+                @include('student.curriculum-library._slide-player', [
+                    'manifestUrl' => $manifestUrl,
+                    'slideCount' => $slideCount ?? null,
+                    'slideWidth' => $slideWidth ?? null,
+                    'slideHeight' => $slideHeight ?? null,
+                    'playerConfig' => $playerConfig ?? [],
+                ])
             @endif
 
-            <div id="mx-slides-pane"
-                 data-mx-pane="slides"
-                 class="{{ ($hasAnimationVideo && $defaultPane === 'animation') ? 'hidden' : '' }}"
-                 @if($hasAnimationVideo && $defaultPane === 'animation') hidden aria-hidden="true" @endif>
-                @if($isNative)
-                    @include('student.curriculum-library._slide-player', [
-                        'manifestUrl' => $manifestUrl,
-                        'slideCount' => $slideCount ?? null,
-                        'slideWidth' => $slideWidth ?? null,
-                        'slideHeight' => $slideHeight ?? null,
-                        'playerConfig' => $playerConfig ?? [],
-                    ])
-                @endif
-
-                <div id="mx-office-fallback"
-                     class="{{ $isNative ? 'hidden' : '' }}"
-                     data-mx-office-fallback
-                     @if($isNative) hidden aria-hidden="true" @endif>
-                    @include('student.curriculum-library._office-fallback', [
-                        'canUseOfficeViewer' => $canUseOfficeViewer ?? false,
-                        'embedUrl' => $embedUrl ?? null,
-                        'publicUrl' => $isNative ? null : ($publicUrl ?? null),
-                    ])
-                </div>
+            <div id="mx-office-fallback"
+                 class="{{ $isNative ? 'hidden' : '' }}"
+                 data-mx-office-fallback
+                 @if($isNative) hidden aria-hidden="true" @endif>
+                @include('student.curriculum-library._office-fallback', [
+                    'canUseOfficeViewer' => $canUseOfficeViewer ?? false,
+                    'embedUrl' => $embedUrl ?? null,
+                    'publicUrl' => $isNative ? null : ($publicUrl ?? null),
+                ])
             </div>
         </div>
-    </div>
+    </section>
 </div>
 @endsection
 
@@ -142,12 +160,9 @@
                 document.querySelectorAll('[data-mx-pane-btn]').forEach(function (btn) {
                     var on = btn.getAttribute('data-mx-pane-btn') === pane;
                     btn.setAttribute('aria-selected', on ? 'true' : 'false');
-                    btn.classList.toggle('bg-indigo-600', on);
-                    btn.classList.toggle('text-white', on);
-                    btn.classList.toggle('border-indigo-600', on);
-                    btn.classList.toggle('bg-white', !on);
-                    btn.classList.toggle('text-slate-700', !on);
-                    btn.classList.toggle('border-slate-200', !on);
+                    btn.classList.toggle('is-active', on);
+                    btn.classList.toggle('st-pill--solid', on);
+                    btn.classList.toggle('st-pill--outline', !on);
                 });
                 var hint = document.querySelector('[data-mx-animation-hint]');
                 if (hint) {

@@ -48,7 +48,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-lib-fix4">
+    <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-pres-1">
     <script>
         (function () {
             try {
@@ -59,6 +59,15 @@
             } catch (e) {}
         })();
     </script>
+    @php
+        $showContentProtection = ! empty(trim((string) ($__env->yieldContent('enable-content-protection') ?? '')));
+    @endphp
+    @if($showContentProtection)
+        <script>
+            window.Laravel = { user: { name: '{{ auth()->check() ? auth()->user()->name : "زائر" }}' } };
+        </script>
+        <script src="{{ versioned_asset('js/platform-protection.js') }}"></script>
+    @endif
     @stack('styles')
 </head>
 <body class="st-dash">
