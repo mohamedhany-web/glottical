@@ -25,6 +25,10 @@ Route::post('/webhooks/fawaterak', [\App\Http\Controllers\Webhooks\FawaterakWebh
     ->name('webhooks.fawaterak')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
 
+Route::post('/webhooks/paypal', [\App\Http\Controllers\Webhooks\PayPalWebhookController::class, 'handle'])
+    ->name('webhooks.paypal')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
+
 /*
 |--------------------------------------------------------------------------
 | Glottical Whiteboard (أصول اللوحة) — تمرير عبر Laravel
@@ -504,6 +508,12 @@ Route::get('/service-packages/{servicePackage}/checkout/fawaterak/methods', [\Ap
 Route::post('/service-packages/{servicePackage}/checkout/fawaterak/pay', [\App\Http\Controllers\Public\ServicePackageCheckoutController::class, 'fawaterakPay'])
     ->middleware(['auth', 'throttle:30,1'])
     ->name('public.service-packages.fawaterak.pay');
+Route::post('/service-packages/{servicePackage}/checkout/paypal', [\App\Http\Controllers\Public\PayPalCheckoutController::class, 'startPackage'])
+    ->middleware(['auth', 'throttle:20,1'])
+    ->name('public.service-packages.paypal');
+Route::post('/service-packages/custom/orders/{order}/paypal', [\App\Http\Controllers\Public\PayPalCheckoutController::class, 'startExistingOrder'])
+    ->middleware(['auth', 'throttle:20,1'])
+    ->name('public.service-packages.custom.paypal');
 Route::get('/groups/courses', [\App\Http\Controllers\Public\GroupsController::class, 'groupCourses'])->name('public.groups.courses');
 Route::get('/groups/one-to-one', [\App\Http\Controllers\Public\GroupsController::class, 'oneToOneCourses'])->name('public.groups.one-to-one');
 Route::redirect('/teachers', '/instructors', 301);
@@ -581,6 +591,10 @@ Route::post('/course/{courseId}/checkout/fawaterak/pay', [\App\Http\Controllers\
     ->middleware('auth')
     ->name('public.course.checkout.fawaterak.pay');
 
+Route::post('/course/{courseId}/checkout/paypal', [\App\Http\Controllers\Public\PayPalCheckoutController::class, 'startCourse'])
+    ->middleware('auth')
+    ->name('public.course.checkout.paypal');
+
 // تسجيل مجاني للكورسات المجانية
 Route::post('/course/{courseId}/enroll-free', [\App\Http\Controllers\Public\CheckoutController::class, 'enrollFree'])
     ->middleware('auth')
@@ -593,6 +607,11 @@ Route::get('/checkout/fawaterak/{status}', [\App\Http\Controllers\Public\Checkou
     ->middleware('auth')
     ->where('status', 'success|fail|pending')
     ->name('public.checkout.fawaterak.return');
+
+Route::get('/checkout/paypal/return', [\App\Http\Controllers\Public\PayPalCheckoutController::class, 'returnFromPaypal'])
+    ->name('public.checkout.paypal.return');
+Route::get('/checkout/paypal/cancel', [\App\Http\Controllers\Public\PayPalCheckoutController::class, 'cancel'])
+    ->name('public.checkout.paypal.cancel');
 
 // روابط قديمة لمنتج المسارات التعليمية (أُزيل) → الكورسات
 Route::redirect('/learning-paths', '/courses', 301);
@@ -1590,6 +1609,14 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         Route::get('/system-settings', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'edit'])->name('system-settings.edit');
         Route::put('/system-settings', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'update'])->name('system-settings.update');
+        Route::get('/payment-gateways', [\App\Http\Controllers\Admin\PaymentGatewaysController::class, 'index'])->name('payment-gateways.index');
+        Route::put('/payment-gateways', [\App\Http\Controllers\Admin\PaymentGatewaysController::class, 'update'])->name('payment-gateways.update');
+        Route::post('/payment-gateways/paypal/test', [\App\Http\Controllers\Admin\PaymentGatewaysController::class, 'testPaypal'])
+            ->middleware('throttle:8,1')
+            ->name('payment-gateways.paypal.test');
+        Route::post('/system-settings/paypal/test', [\App\Http\Controllers\Admin\PaymentGatewaysController::class, 'testPaypal'])
+            ->middleware('throttle:8,1')
+            ->name('system-settings.paypal.test');
         Route::post('/system-settings/two-factor/enable-request', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'requestTwoFactorEnable'])
             ->middleware('throttle:10,1')
             ->name('system-settings.two-factor.enable-request');

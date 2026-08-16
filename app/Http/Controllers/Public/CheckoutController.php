@@ -16,6 +16,7 @@ use App\Services\FawaterakApiService;
 use App\Services\FawaterakService;
 use App\Services\InstructorCoursePercentageService;
 use App\Services\KashierService;
+use App\Services\KashierSettings;
 use App\Services\OrderWalletAndCouponFinalizer;
 use App\Services\PaymentGatewaySettings;
 use App\Services\CourseSubscriptionService;
@@ -91,6 +92,10 @@ class CheckoutController extends Controller
             : $fawaterakIframe->isConfigured();
         $fawaterakUseGateway = $fawaterakGatewayOn && $fawaterakReady;
         $fawaterakMisconfigured = $fawaterakGatewayOn && ! $fawaterakReady;
+        $paypalUseGateway = \App\Services\PayPalSettings::isReady();
+        $paypalMisconfigured = \App\Services\PayPalSettings::isMisconfigured();
+        $kashierUseGateway = KashierSettings::isReady();
+        $kashierMisconfigured = KashierSettings::isMisconfigured();
         $platformLogoUrl = AdminPanelBranding::logoPublicUrl();
 
         $studentWallet = Wallet::where('user_id', Auth::id())->first();
@@ -102,6 +107,10 @@ class CheckoutController extends Controller
             'fawaterakUseGateway',
             'fawaterakMisconfigured',
             'fawaterakIntegration',
+            'paypalUseGateway',
+            'paypalMisconfigured',
+            'kashierUseGateway',
+            'kashierMisconfigured',
             'platformLogoUrl',
             'studentWalletBalance'
         ));
@@ -151,10 +160,98 @@ class CheckoutController extends Controller
     /**
      * التوجيه لبوابة الدفع كاشير (كورس)
      */
-    public function redirectToKashier($courseId)
+    public function redirectToKashier(Request $request, $courseId)
     {
-        return redirect()->route('orders.index')
-            ->with('info', 'تم تعطيل بوابة الدفع أونلاين حالياً. يرجى إكمال الطلب بالطريقة اليدوية ورفع إيصال الدفع.');
+        if (! Auth::check()) {
+            return redirect()->guest(route('login'))->with('info', 'يرجى تسجيل الدخول أولاً لإتمام عملية الشراء');
+        }
+
+        if (! KashierSettings::isReady()) {
+            return back()->with('error', 'بوابة كاشير غير مفعّلة أو بيانات الاتصال ناقصة.');
+        }
+
+        $course = AdvancedCourse::where('id', $courseId)->where('is_active', true)->firstOrFail();
+
+        if (Auth::user()->isEnrolledIn($course->id)) {
+            return redirect()->route('public.course.show', $course->id)
+                ->with('info', 'أنت مسجل بالفعل في هذا الكورس');
+        }
+
+        $request->validate([
+            'coupon_code' => 'nullable|string|max:64',
+            'wallet_credit' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|in:EGP,USD,egp,usd',
+        ]);
+
+        $pricing = CourseCheckoutPricingService::resolve(
+            Auth::user(),
+            $course,
+            $request->input('coupon_code'),
+            (float) $request->input('wallet_credit', 0),
+            null,
+            'EGP'
+        );
+
+        if (! $pricing['ok']) {
+            return back()->with('error', $pricing['message']);
+        }
+
+        if ($pricing['final_amount'] < 0.01) {
+            return back()->with('error', 'المبلغ المتبقي صفر — استخدم طريقة الدفع الأخرى أو راجع الكوبون/المحفظة.');
+        }
+
+        $payload = [
+            'coupon_id' => $pricing['coupon_id'],
+            'original_amount' => $pricing['original_amount'],
+            'discount_amount' => $pricing['discount_amount'],
+            'wallet_credit_amount' => $pricing['wallet_credit_amount'],
+            'amount' => $pricing['final_amount'],
+            'currency' => 'EGP',
+            'billing_mode' => $course->billing_mode ?? CourseSubscriptionService::BILLING_ONE_TIME,
+            'payment_method' => 'online',
+            'payment_proof' => null,
+            'wallet_id' => null,
+            'status' => Order::STATUS_PENDING,
+            'auto_renew' => $course->isMonthlyBilling() && $request->boolean('auto_renew'),
+        ];
+
+        $existing = Order::query()
+            ->where('user_id', Auth::id())
+            ->where('advanced_course_id', $course->id)
+            ->where('status', Order::STATUS_PENDING)
+            ->first();
+
+        if ($existing) {
+            if ($existing->payment_method !== 'online' || $existing->payment_proof !== null) {
+                return redirect()->route('public.course.show', $course->id)
+                    ->with('info', 'لديك طلب قيد المراجعة لهذا الكورس.');
+            }
+            $existing->update($payload);
+            $order = $existing->fresh();
+        } else {
+            $order = Order::create(array_merge($payload, [
+                'user_id' => Auth::id(),
+                'advanced_course_id' => $course->id,
+            ]));
+        }
+
+        try {
+            $sessionUrl = app(KashierService::class)->getHppUrl(
+                (string) $order->id,
+                (float) $order->amount,
+                $this->getKashierCallbackUrl(),
+                KashierSettings::currency(),
+                Auth::user()->email,
+                (string) Auth::id(),
+                (string) ($course->title ?? 'كورس')
+            );
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->with('error', $e->getMessage() ?: 'تعذّر فتح صفحة كاشير. راجع بيانات الاتصال.');
+        }
+
+        return redirect()->away($sessionUrl);
     }
 
     /**
@@ -162,8 +259,8 @@ class CheckoutController extends Controller
      */
     private function getKashierCallbackUrl(): string
     {
-        $configured = config('kashier.merchant_redirect_url');
-        if (! empty($configured)) {
+        $configured = KashierSettings::merchantRedirectUrl();
+        if ($configured !== '') {
             return rtrim($configured, '/');
         }
 
@@ -175,8 +272,10 @@ class CheckoutController extends Controller
      */
     public function kashierCallback(Request $request)
     {
-        return redirect()->route('orders.index')
-            ->with('info', 'تم تعطيل بوابة الدفع أونلاين. يمكنك متابعة حالة طلباتك من هذه الصفحة.');
+        if (! KashierSettings::isConfigured()) {
+            return redirect()->route('orders.index')
+                ->with('info', 'بوابة كاشير غير مربوطة حالياً. يمكنك متابعة حالة طلباتك من هذه الصفحة.');
+        }
 
         $kashier = app(KashierService::class);
         $query = $request->query();
@@ -1087,8 +1186,8 @@ class CheckoutController extends Controller
             return redirect()->route('login')->with('error', 'يجب تسجيل الدخول أولاً');
         }
 
-        if (PaymentGatewaySettings::isFawaterakEnabled()) {
-            return back()->with('error', 'الدفع اليدوي غير متاح حين تكون بوابة الدفع الإلكترونية (فواتيرك) مفعّلة من إعدادات النظام.');
+        if (PaymentGatewaySettings::blocksManualCheckout()) {
+            return back()->with('error', 'الدفع اليدوي غير متاح حين تكون بوابة دفع إلكترونية مفعّلة من إعدادات النظام.');
         }
 
         $course = AdvancedCourse::where('id', $courseId)

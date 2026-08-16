@@ -69,6 +69,7 @@ class ServicePackageCheckoutController extends Controller
             : collect();
 
         [$fawaterakUseGateway, $fawaterakMisconfigured, $fawaterakIntegration] = $this->fawaterakFlags();
+        [$paypalUseGateway, $paypalMisconfigured] = $this->paypalFlags();
 
         return view('public.service-packages', [
             'planMatrix' => $planMatrix,
@@ -85,6 +86,8 @@ class ServicePackageCheckoutController extends Controller
             'fawaterakUseGateway' => $fawaterakUseGateway,
             'fawaterakMisconfigured' => $fawaterakMisconfigured,
             'fawaterakIntegration' => $fawaterakIntegration,
+            'paypalUseGateway' => $paypalUseGateway,
+            'paypalMisconfigured' => $paypalMisconfigured,
         ]);
     }
 
@@ -98,12 +101,15 @@ class ServicePackageCheckoutController extends Controller
 
         $servicePackage->load(['academicYear:id,name', 'academicSubject:id,name']);
         [$fawaterakUseGateway, $fawaterakMisconfigured, $fawaterakIntegration] = $this->fawaterakFlags();
+        [$paypalUseGateway, $paypalMisconfigured] = $this->paypalFlags();
 
         return view('public.service-package-checkout', [
             'package' => $servicePackage,
             'fawaterakUseGateway' => $fawaterakUseGateway,
             'fawaterakMisconfigured' => $fawaterakMisconfigured,
             'fawaterakIntegration' => $fawaterakIntegration,
+            'paypalUseGateway' => $paypalUseGateway,
+            'paypalMisconfigured' => $paypalMisconfigured,
         ]);
     }
 
@@ -187,6 +193,7 @@ class ServicePackageCheckoutController extends Controller
         abort_unless($order->status === Order::STATUS_PENDING && $order->payment_method === 'online', 404);
 
         [$fawaterakUseGateway, $fawaterakMisconfigured, $fawaterakIntegration] = $this->fawaterakFlags();
+        [$paypalUseGateway, $paypalMisconfigured] = $this->paypalFlags();
         $request->session()->put('fawaterak_order_id', $order->id);
 
         $isRtl = app()->getLocale() === 'ar';
@@ -197,9 +204,12 @@ class ServicePackageCheckoutController extends Controller
             'fawaterakUseGateway' => $fawaterakUseGateway,
             'fawaterakMisconfigured' => $fawaterakMisconfigured,
             'fawaterakIntegration' => $fawaterakIntegration,
+            'paypalUseGateway' => $paypalUseGateway,
+            'paypalMisconfigured' => $paypalMisconfigured,
             'prepareRoute' => route('public.service-packages.custom.fawaterak.prepare', $order),
             'methodsRoute' => route('public.service-packages.custom.fawaterak.methods', $order),
             'payRoute' => route('public.service-packages.custom.fawaterak.pay', $order),
+            'paypalRoute' => route('public.service-packages.custom.paypal', $order),
         ]);
     }
 
@@ -367,6 +377,17 @@ class ServicePackageCheckoutController extends Controller
             : $iframe->isConfigured();
 
         return [$gatewayOn && $ready, $gatewayOn && ! $ready, $integration];
+    }
+
+    /**
+     * @return array{0: bool, 1: bool}
+     */
+    private function paypalFlags(): array
+    {
+        return [
+            \App\Services\PayPalSettings::isReady(),
+            \App\Services\PayPalSettings::isMisconfigured(),
+        ];
     }
 
     private function fawaterakGateJson(): ?JsonResponse

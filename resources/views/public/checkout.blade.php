@@ -14,6 +14,11 @@
     $fawaterakActive = !empty($fawaterakUseGateway);
     $fawaterakMis = !empty($fawaterakMisconfigured);
     $fawaterakIntegration = $fawaterakIntegration ?? 'iframe';
+    $paypalActive = !empty($paypalUseGateway);
+    $paypalMis = !empty($paypalMisconfigured);
+    $kashierActive = !empty($kashierUseGateway);
+    $kashierMis = !empty($kashierMisconfigured);
+    $anyOnlineGateway = $fawaterakActive || $paypalActive || $kashierActive;
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -192,7 +197,7 @@
                                     </div>
                                 </div>
 
-                            @if($fawaterakMis)
+                            @if($fawaterakMis && ! $paypalActive && ! $kashierActive)
           <div class="gl-ck-alert gl-ck-alert--err">
                                         <i class="fas fa-exclamation-triangle"></i>
             <div>
@@ -201,6 +206,14 @@
             </div>
                                 </div>
           <a href="{{ route('orders.index') }}" class="btn-acad-ghost"><i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}"></i> {{ $isRtl ? 'رجوع' : 'Back' }}</a>
+                            @elseif($paypalMis && ! $fawaterakActive && ! $kashierActive)
+          <div class="gl-ck-alert gl-ck-alert--err">
+                                        <i class="fas fa-exclamation-triangle"></i>
+            <div>
+              <strong>{{ $isRtl ? 'إعدادات PayPal غير مكتملة' : 'PayPal settings incomplete' }}</strong>
+              <p style="margin:.35rem 0 0;font-weight:600">{{ $isRtl ? 'تم تفعيل PayPal من إعدادات النظام لكن بيانات الاتصال ناقصة.' : 'PayPal is enabled but connection credentials are missing.' }}</p>
+            </div>
+                                </div>
                             @elseif($fawaterakActive && $fawaterakIntegration === 'api')
           <div class="gl-ck-alert gl-ck-alert--sky"><i class="fas fa-lock"></i><div><strong>{{ $isRtl ? 'الدفع الإلكتروني' : 'Online payment' }}</strong><p style="margin:.25rem 0 0">{{ $isRtl ? 'اختر وسيلة الدفع ثم تابع.' : 'Choose a payment method and continue.' }}</p></div></div>
           <div id="fawaterk-api-error" class="hidden gl-ck-alert gl-ck-alert--err"></div>
@@ -217,7 +230,51 @@
           <div id="fawaterk-checkout-error" class="hidden gl-ck-alert gl-ck-alert--err"></div>
           <div id="fawaterkDivId"></div>
           <a href="{{ route('orders.index') }}" class="btn-acad-ghost" style="margin-top:1rem"><i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}"></i> {{ $isRtl ? 'رجوع' : 'Back' }}</a>
-                            @else
+                            @endif
+
+                            @if($kashierMis && ! $anyOnlineGateway && ! $fawaterakMis && ! $paypalMis)
+          <div class="gl-ck-alert gl-ck-alert--err">
+                                        <i class="fas fa-exclamation-triangle"></i>
+            <div>
+              <strong>{{ $isRtl ? 'إعدادات كاشير غير مكتملة' : 'Kashier settings incomplete' }}</strong>
+              <p style="margin:.35rem 0 0;font-weight:600">{{ $isRtl ? 'تم تفعيل كاشير من إدارة النظام لكن بيانات الاتصال ناقصة.' : 'Kashier is enabled but connection credentials are missing.' }}</p>
+            </div>
+                                </div>
+                            @endif
+
+                            @if($paypalActive)
+          @if($fawaterakActive)
+          <p style="margin:1.1rem 0 .65rem;font:800 .8rem Tajawal,sans-serif;color:#5B6577;text-align:center">{{ $isRtl ? 'أو' : 'or' }}</p>
+          @endif
+          <form method="POST" action="{{ route('public.course.checkout.paypal', $course->id) }}" id="paypal-checkout-form">
+            @csrf
+            <input type="hidden" name="coupon_code" id="paypal_coupon_code" value="">
+            <input type="hidden" name="wallet_credit" id="paypal_wallet_credit" value="0">
+            <input type="hidden" name="currency" id="paypal_currency" value="EGP">
+            <button type="submit" class="btn-acad-primary" style="width:100%;background:#003087">
+              <i class="fab fa-paypal"></i>
+              {{ $isRtl ? 'الدفع عبر PayPal' : 'Pay with PayPal' }}
+            </button>
+          </form>
+                            @endif
+
+                            @if($kashierActive)
+          @if($fawaterakActive || $paypalActive)
+          <p style="margin:1.1rem 0 .65rem;font:800 .8rem Tajawal,sans-serif;color:#5B6577;text-align:center">{{ $isRtl ? 'أو' : 'or' }}</p>
+          @endif
+          <form method="POST" action="{{ route('public.course.checkout.kashier', $course->id) }}" id="kashier-checkout-form">
+            @csrf
+            <input type="hidden" name="coupon_code" id="kashier_coupon_code" value="">
+            <input type="hidden" name="wallet_credit" id="kashier_wallet_credit" value="0">
+            <input type="hidden" name="currency" id="kashier_currency" value="EGP">
+            <button type="submit" class="btn-acad-primary" style="width:100%;background:#00B0B5">
+              <i class="fas fa-university"></i>
+              {{ $isRtl ? 'الدفع عبر كاشير' : 'Pay with Kashier' }}
+            </button>
+          </form>
+                            @endif
+
+                            @if(! $anyOnlineGateway && ! $fawaterakMis && ! $paypalMis && ! $kashierMis)
           <div class="gl-ck-alert gl-ck-alert--info"><i class="fas fa-circle-info"></i><div><strong>{{ $isRtl ? 'الدفع اليدوي' : 'Manual payment' }}</strong><p style="margin:.25rem 0 0">{{ $isRtl ? 'ارفع إيصال التحويل — يُراجع الطلب ثم يُفعَّل.' : 'Upload your transfer receipt — we review, then activate.' }}</p></div></div>
           <form action="{{ route('public.course.checkout.complete', $course->id) }}" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true" x-data="{paymentMethod:'bank_transfer'}" id="manual-checkout-form">
                                     @csrf
@@ -322,5 +379,40 @@
 
 @include('partials.landing.footer')
 @include('public.partials.checkout-scripts')
+@if(!empty($paypalUseGateway))
+<script>
+(function(){
+    var form = document.getElementById('paypal-checkout-form');
+    if (!form) return;
+    form.addEventListener('submit', function(){
+        var c = document.getElementById('checkout_coupon_code');
+        var w = document.getElementById('checkout_wallet_credit');
+        var cur = document.getElementById('checkout_currency');
+        var pc = document.getElementById('paypal_coupon_code');
+        var pw = document.getElementById('paypal_wallet_credit');
+        var pcur = document.getElementById('paypal_currency');
+        if (pc) pc.value = c ? (c.value || '').trim() : '';
+        if (pw) pw.value = w && w.value !== '' ? w.value : '0';
+        if (pcur) pcur.value = cur && cur.value === 'USD' ? 'USD' : 'EGP';
+    });
+})();
+</script>
+@endif
+@if(!empty($kashierUseGateway))
+<script>
+(function(){
+    var form = document.getElementById('kashier-checkout-form');
+    if (!form) return;
+    form.addEventListener('submit', function(){
+        var c = document.getElementById('checkout_coupon_code');
+        var w = document.getElementById('checkout_wallet_credit');
+        var kc = document.getElementById('kashier_coupon_code');
+        var kw = document.getElementById('kashier_wallet_credit');
+        if (kc) kc.value = c ? (c.value || '').trim() : '';
+        if (kw) kw.value = w && w.value !== '' ? w.value : '0';
+    });
+})();
+</script>
+@endif
 </body>
 </html>

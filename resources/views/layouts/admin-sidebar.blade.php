@@ -521,7 +521,7 @@
 
             @endif
 
-            @if($isFull || $u->hasPermission('manage.users') || $u->hasPermission('manage.notifications') || $u->hasPermission('view.activity-log') || $u->hasPermission('view.statistics') || $u->hasPermission('manage.email-broadcasts') || $u->hasPermission('manage.performance') || $u->hasPermission('manage.two-factor-logs'))
+            @if($isFull || $u->hasPermission('manage.users') || $u->hasPermission('manage.notifications') || $u->hasPermission('view.activity-log') || $u->hasPermission('view.statistics') || $u->hasPermission('manage.email-broadcasts') || $u->hasPermission('manage.performance') || $u->hasPermission('manage.two-factor-logs') || $u->hasPermission('manage.system-settings'))
             <li class="sidebar-section-label">النظام</li>
             {{-- إدارة النظام --}}
             @php
@@ -534,7 +534,8 @@
                     || request()->routeIs('admin.activity-log*')
                     || request()->routeIs('admin.two-factor-logs.*')
                     || request()->routeIs('admin.statistics.*')
-                    || request()->routeIs('admin.performance.*');
+                    || request()->routeIs('admin.performance.*')
+                    || request()->routeIs('admin.payment-gateways.*');
             @endphp
             <li x-data="{ open: {{ $systemManagementOpen ? 'true' : 'false' }} }">
                 <button type="button" @click="open = !open" class="sidebar-group-btn">
@@ -547,6 +548,9 @@
                 <ul x-show="open" x-cloak class="mt-1 mr-3 space-y-0.5 border-r border-white/10 pr-3">
                     @if($isFull || $u->hasPermission('manage.users'))
                     <li><a href="{{ route('admin.users.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.users*') ? 'active' : '' }}"><i class="fas fa-users"></i><span>{{ __('admin.users') }}</span></a></li>
+                    @endif
+                    @if($isFull || $u->hasPermission('manage.system-settings'))
+                    <li><a href="{{ route('admin.payment-gateways.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.payment-gateways.*') ? 'active' : '' }}"><i class="fas fa-credit-card"></i><span>بوابات الدفع</span></a></li>
                     @endif
                     @if($isFull || $u->hasPermission('manage.notifications'))
                     <li><a href="{{ route('admin.notifications.index') }}" class="sidebar-sub-link {{ $systemNotificationsActive ? 'active' : '' }}"><i class="fas fa-bell"></i><span>{{ __('admin.notifications') }}</span></a></li>

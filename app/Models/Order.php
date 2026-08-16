@@ -33,6 +33,7 @@ class Order extends Model
         'invoice_id',
         'payment_id',
         'fawaterak_invoice_id',
+        'paypal_order_id',
         'status',
         'notes',
         'approved_at',

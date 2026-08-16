@@ -85,6 +85,7 @@ return [
         'support-inquiry-categories' => ['manage.support-tickets'],
         'support-tickets' => ['manage.support-tickets'],
         'system-settings' => ['manage.system-settings'],
+        'payment-gateways' => ['manage.system-settings'],
         'tasks' => ['manage.tasks', 'view.tasks'],
         'tutoring-groups' => ['manage.tutoring-groups'],
         'tutoring-group-bookings' => ['manage.tutoring-groups'],

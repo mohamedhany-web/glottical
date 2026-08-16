@@ -88,6 +88,7 @@ return [
             'title' => 'إدارة النظام (مجموعة)',
             'items' => [
                 ['label' => 'المستخدمون', 'permissions' => ['manage.users']],
+                ['label' => 'بوابات الدفع', 'permissions' => ['manage.system-settings']],
                 ['label' => 'الطلبات', 'permissions' => ['manage.orders']],
                 ['label' => 'الإشعارات', 'permissions' => ['manage.notifications']],
                 ['label' => 'إشعارات الموظفين', 'permissions' => ['manage.notifications']],

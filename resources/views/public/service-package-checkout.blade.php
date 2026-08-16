@@ -8,6 +8,8 @@
   $fawaterakActive = !empty($fawaterakUseGateway);
   $fawaterakMis = !empty($fawaterakMisconfigured);
   $fawaterakIntegration = $fawaterakIntegration ?? 'iframe';
+  $paypalActive = !empty($paypalUseGateway);
+  $paypalMis = !empty($paypalMisconfigured);
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -175,7 +177,7 @@
           <h2>{{ $isRtl ? 'بيانات الدفع' : 'Payment details' }}</h2>
         </div>
         <div class="gl-co-card__body">
-          @if($fawaterakMis)
+          @if($fawaterakMis && ! $paypalActive)
             <div class="gl-co-alert gl-co-alert--err" style="display:flex;gap:.65rem;align-items:flex-start">
               <i class="fas fa-exclamation-triangle" style="margin-top:.2rem"></i>
               <div>
@@ -212,7 +214,28 @@
             </div>
             <div id="fawaterk-checkout-error" class="hidden gl-co-alert gl-co-alert--err"></div>
             <div id="fawaterkDivId"></div>
-          @else
+          @endif
+
+          @if($paypalActive)
+            @if($fawaterakActive)
+              <p style="margin:1rem 0 .65rem;text-align:center;font:800 .8rem Tajawal,sans-serif;color:#5B6577">{{ $isRtl ? 'أو' : 'or' }}</p>
+            @endif
+            <form method="POST" action="{{ route('public.service-packages.paypal', $package) }}">
+              @csrf
+              <button type="submit" class="sana-btn sana-btn--yellow" style="width:100%;justify-content:center;background:#003087;color:#fff;border:0">
+                <i class="fab fa-paypal"></i>
+                {{ $isRtl ? 'الدفع عبر PayPal' : 'Pay with PayPal' }} · {{ $package->formattedPrice() }}
+              </button>
+            </form>
+          @elseif(! $fawaterakActive && $paypalMis)
+            <div class="gl-co-alert gl-co-alert--err" style="display:flex;gap:.65rem;align-items:flex-start">
+              <i class="fas fa-exclamation-triangle" style="margin-top:.2rem"></i>
+              <div>
+                <strong>{{ $isRtl ? 'إعدادات PayPal غير مكتملة' : 'PayPal settings incomplete' }}</strong>
+                <p class="gl-co-hint" style="margin:.35rem 0 0">{{ $isRtl ? 'تم تفعيل PayPal لكن بيانات الاتصال ناقصة في إعدادات النظام.' : 'PayPal is enabled but connection data is missing in system settings.' }}</p>
+              </div>
+            </div>
+          @elseif(! $fawaterakActive && ! $fawaterakMis)
             <div class="gl-co-alert gl-co-alert--info" style="display:flex;gap:.65rem;align-items:flex-start">
               <i class="fas fa-circle-info" style="margin-top:.2rem"></i>
               <div>

@@ -7,6 +7,8 @@
   $fawaterakActive = !empty($fawaterakUseGateway);
   $fawaterakMis = !empty($fawaterakMisconfigured);
   $fawaterakIntegration = $fawaterakIntegration ?? 'iframe';
+  $paypalActive = !empty($paypalUseGateway);
+  $paypalMis = !empty($paypalMisconfigured);
   $amountLabel = '$'.number_format((float) $order->amount, 2).' USD';
   if (($order->custom_package_data['currency'] ?? 'USD') === 'EGP') {
       $amountLabel = number_format((float) $order->amount, 2).' EGP';
@@ -79,7 +81,7 @@
           <strong>{{ $amountLabel }}</strong>
         </div>
 
-        @if($fawaterakMis)
+        @if($fawaterakMis && ! $paypalActive)
           <div class="gl-co-alert gl-co-alert--err">{{ $isRtl ? 'تم تفعيل فواتيرك لكن الربط غير مكتمل على الخادم.' : 'Fawaterak is enabled but server credentials are incomplete.' }}</div>
         @elseif($fawaterakActive && $fawaterakIntegration === 'api')
           <div class="gl-co-alert gl-co-alert--sky" style="display:flex;gap:.65rem"><i class="fas fa-lock"></i><div><strong>{{ $isRtl ? 'اختر وسيلة الدفع' : 'Choose a payment method' }}</strong></div></div>
@@ -98,7 +100,22 @@
           <div class="gl-co-alert gl-co-alert--sky" style="display:flex;gap:.65rem"><i class="fas fa-lock"></i><div><strong>{{ $isRtl ? 'ادفع عبر فواتيرك' : 'Pay with Fawaterak' }}</strong></div></div>
           <div id="fawaterk-checkout-error" class="hidden gl-co-alert gl-co-alert--err"></div>
           <div id="fawaterkDivId"></div>
-        @else
+        @endif
+
+        @if($paypalActive)
+          @if($fawaterakActive)
+            <p style="margin:1rem 0 .65rem;text-align:center;font:800 .8rem Tajawal,sans-serif;color:#5B6577">{{ $isRtl ? 'أو' : 'or' }}</p>
+          @endif
+          <form method="POST" action="{{ $paypalRoute ?? route('public.service-packages.custom.paypal', $order) }}">
+            @csrf
+            <button type="submit" class="sana-btn sana-btn--yellow" style="width:100%;justify-content:center;background:#003087;color:#fff;border:0">
+              <i class="fab fa-paypal"></i>
+              {{ $isRtl ? 'الدفع عبر PayPal' : 'Pay with PayPal' }}
+            </button>
+          </form>
+        @elseif(! $fawaterakActive && $paypalMis)
+          <div class="gl-co-alert gl-co-alert--err">{{ $isRtl ? 'تم تفعيل PayPal لكن بيانات الاتصال ناقصة.' : 'PayPal is enabled but credentials are missing.' }}</div>
+        @elseif(! $fawaterakActive && ! $fawaterakMis)
           <div class="gl-co-alert gl-co-alert--info">{{ $isRtl ? 'بوابة فواتيرك غير مفعّلة.' : 'Fawaterak is not enabled.' }}</div>
         @endif
 

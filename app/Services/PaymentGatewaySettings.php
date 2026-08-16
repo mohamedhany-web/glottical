@@ -16,6 +16,22 @@ class PaymentGatewaySettings
         return Setting::getValue(self::SETTING_KEY) === '1';
     }
 
+    public static function isPaypalEnabled(): bool
+    {
+        return PayPalSettings::isEnabled();
+    }
+
+    public static function isKashierEnabled(): bool
+    {
+        return KashierSettings::isEnabled();
+    }
+
+    /** أي بوابة أونلاين مفعّلة تمنع الدفع اليدوي من صفحة إتمام الطلب. */
+    public static function blocksManualCheckout(): bool
+    {
+        return self::isFawaterakEnabled() || PayPalSettings::isEnabled() || KashierSettings::isEnabled();
+    }
+
     /**
      * نسبة العمولة كنسبة مئوية (مثلاً 2.5 تساوي 2.5 بالمئة من المبلغ المحصّل).
      */

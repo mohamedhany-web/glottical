@@ -23,14 +23,18 @@ class KashierService
 
     public function __construct()
     {
-        $this->mode = config('kashier.mode', 'test');
-        $config = config("kashier.{$this->mode}", config('kashier.test'));
-        $this->mid = $config['mid'] ?? '';
-        $this->apiKey = $config['api_key'] ?? '';
-        $this->secret = $config['secret'] ?? '';
-        $this->apiBaseUrl = rtrim($config['api_base_url'] ?? 'https://api.kashier.io', '/');
-        $this->currency = config('kashier.currency', 'EGP');
-        $this->allowedMethods = config('kashier.allowed_methods', 'card,wallet,bank_installments');
+        $this->mode = KashierSettings::mode();
+        $this->mid = KashierSettings::mid();
+        $this->apiKey = KashierSettings::apiKey();
+        $this->secret = KashierSettings::secret();
+        $this->apiBaseUrl = KashierSettings::apiBaseUrl();
+        $this->currency = KashierSettings::currency();
+        $this->allowedMethods = KashierSettings::allowedMethods();
+    }
+
+    public function isConfigured(): bool
+    {
+        return KashierSettings::isConfigured();
     }
 
     /**

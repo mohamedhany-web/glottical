@@ -19,7 +19,10 @@
             <p class="text-xs font-medium text-muted">لوحة التحكم · إعدادات المنصة</p>
             <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">مركز إعدادات النظام</h2>
             <p class="mt-2 text-sm leading-7 text-muted">
-                ضبط الفوتر والسوشيال، شعار اللوحة، بوابة الدفع، و<span class="font-medium text-ink">المصادقة الثنائية لحسابات الأدمن</span>.
+                ضبط الفوتر والسوشيال، شعار اللوحة، و<span class="font-medium text-ink">المصادقة الثنائية لحسابات الأدمن</span>.
+                بوابات الدفع (فواتيرك وPayPal وكاشير) تُدار من
+                <a href="{{ route('admin.payment-gateways.index') }}" class="font-medium text-accent underline">مركز بوابات الدفع</a>
+                في إدارة النظام.
                 اترك أي حقل فوتر فارغاً واحفظ لاستعادة الافتراضي لهذا الحقل.
             </p>
         </div>
@@ -38,22 +41,15 @@
             <p class="mt-1 text-sm font-semibold text-ink">{{ $adminPanelLogoUrl ? 'مرفوع' : 'افتراضي (G)' }}</p>
         </article>
         <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
-            <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $fawaterakGatewayEnabled ? 'bg-accent-soft text-accent' : 'bg-canvas-muted text-muted' }}">
+            <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $onlineGatewaysEnabledCount > 0 ? 'bg-accent-soft text-accent' : 'bg-canvas-muted text-muted' }}">
                 <i class="fas fa-credit-card text-sm"></i>
             </div>
-            <p class="mt-3 text-xs text-muted">بوابة فواتيرك</p>
+            <p class="mt-3 text-xs text-muted">بوابات الدفع</p>
             <p class="mt-1">
-                <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold {{ $fawaterakGatewayEnabled ? 'bg-accent-soft text-accent' : 'bg-canvas-muted text-muted' }}">
-                    {{ $fawaterakGatewayEnabled ? 'مفعّل' : 'معطّل' }}
-                </span>
+                <a href="{{ route('admin.payment-gateways.index') }}" class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold {{ $onlineGatewaysEnabledCount > 0 ? 'bg-accent-soft text-accent' : 'bg-canvas-muted text-muted' }}">
+                    {{ $onlineGatewaysEnabledCount > 0 ? $onlineGatewaysEnabledCount.' مفعّلة' : 'إدارة التفعيل' }}
+                </a>
             </p>
-        </article>
-        <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
-            <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $fawaterakEnvConfigured ? 'bg-accent-soft text-accent' : 'bg-metal/15 text-metal' }}">
-                <i class="fas fa-key text-sm"></i>
-            </div>
-            <p class="mt-3 text-xs text-muted">مفاتيح API</p>
-            <p class="mt-1 text-sm font-semibold text-ink">{{ $fawaterakEnvConfigured ? 'مضبوطة' : 'غير مكتملة' }}</p>
         </article>
         <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
             <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $adminTwoFactorRequired ? 'bg-accent-soft text-accent' : 'bg-canvas-muted text-muted' }}">
@@ -237,61 +233,27 @@
             </div>
         </article>
 
-        {{-- Payment --}}
         <article class="{{ $panel }}">
             <div class="{{ $sectionHead }}">
                 <span class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-credit-card text-sm"></i></span>
                 <div class="min-w-0 flex-1">
-                    <h3 class="text-base font-semibold text-ink">بوابة الدفع — فواتيرك (IFrame)</h3>
-                    <p class="mt-0.5 text-xs leading-6 text-muted">عند التفعيل تُعرض بوابة الدفع فقط دون رفع إيصال يدوي.</p>
+                    <h3 class="text-base font-semibold text-ink">بوابات الدفع</h3>
+                    <p class="mt-0.5 text-xs leading-6 text-muted">تشغيل وإيقاف فواتيرك وPayPal وكاشير صار من صفحة مستقلة تحت إدارة النظام.</p>
                 </div>
-                @if($fawaterakGatewayEnabled)
-                    <span class="inline-flex items-center gap-1.5 rounded-lg bg-accent-soft px-2.5 py-1 text-xs font-semibold text-accent">مفعّل</span>
-                @else
-                    <span class="inline-flex items-center gap-1.5 rounded-lg border border-line bg-canvas px-2.5 py-1 text-xs font-medium text-muted">معطّل</span>
-                @endif
             </div>
             <div class="{{ $sectionBody }}">
-                <input type="hidden" name="fawaterak_gateway_enabled" value="0">
-                <label class="flex cursor-pointer items-start gap-3">
-                    <input type="checkbox" name="fawaterak_gateway_enabled" value="1" class="mt-1 rounded border-line text-accent focus:ring-accent"
-                           @checked((string) old('fawaterak_gateway_enabled', $fawaterakGatewayEnabled ? '1' : '0') === '1')>
-                    <span class="text-sm leading-7 text-muted">
-                        <span class="mb-0.5 block font-semibold text-ink">تفعيل الدفع عبر فواتيرك</span>
-                        يظهر إطار الدفع الرسمي على صفحة إتمام طلب الكورس، ويُعطّل التحويل اليدوي ورفع الإيصال.
-                    </span>
-                </label>
-
-                <div class="rounded-xl border px-4 py-3 text-xs leading-7 sm:text-sm {{ $fawaterakEnvConfigured ? 'border-accent/20 bg-accent-soft text-accent' : 'border-metal/30 bg-canvas text-ink' }}">
-                    @if($fawaterakEnvConfigured)
-                        <i class="fas fa-check-circle ms-1"></i>
-                        مفاتيح API مضبوطة في البيئة (<code class="rounded bg-surface px-1 text-[11px]" dir="ltr">FAWATERAK_VENDOR_KEY</code> /
-                        <code class="rounded bg-surface px-1 text-[11px]" dir="ltr">FAWATERAK_PROVIDER_KEY</code>).
-                    @else
-                        <i class="fas fa-exclamation-triangle ms-1 text-metal"></i>
-                        أضف المفاتيح في <code class="rounded bg-surface px-1 text-[11px]" dir="ltr">.env</code> ثم
-                        <code class="rounded bg-surface px-1 text-[11px]" dir="ltr">php artisan config:clear</code>.
-                    @endif
-                </div>
-
-                <p class="text-xs leading-6 text-muted">
-                    في لوحة فواتيرك: <strong class="text-ink">Integrations → Fawaterak</strong> — سجّل نطاقات الـ IFrame بصيغة HTTPS بدون شرطة مائلة في النهاية.
+                <p class="text-sm leading-7 text-muted">
+                    حالياً:
+                    فواتيرك {{ $fawaterakGatewayEnabled ? 'مفعّلة' : 'موقوفة' }}،
+                    PayPal {{ $paypalGatewayEnabled ? 'مفعّل' : 'موقوف' }}،
+                    كاشير {{ $kashierGatewayEnabled ? 'مفعّل' : 'موقوف' }}.
                 </p>
-
-                <div class="border-t border-line pt-4">
-                    <label for="payment_gateway_fee_percent" class="mb-1.5 block text-sm font-semibold text-ink">عمولة بوابة الدفع (تقديرية %)</label>
-                    <p class="mb-2 text-xs leading-6 text-muted">نسبة من مبلغ العميل تُسجَّل كعمولة في المحاسبة. اتركها فارغة أو 0 لإيقافها.</p>
-                    <input type="text" name="payment_gateway_fee_percent" id="payment_gateway_fee_percent" inputmode="decimal"
-                           value="{{ old('payment_gateway_fee_percent', $paymentGatewayFeePercent) }}"
-                           class="{{ $input }} max-w-xs font-mono" dir="ltr" placeholder="مثال: 2.5">
-                    @error('payment_gateway_fee_percent')
-                        <p class="mt-1.5 text-sm text-danger">{{ $message }}</p>
-                    @enderror
-                </div>
+                <a href="{{ route('admin.payment-gateways.index') }}" class="btn-press inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white shadow-soft transition hover:bg-accent/90">
+                    <i class="fas fa-sliders-h"></i>
+                    فتح مركز بوابات الدفع
+                </a>
             </div>
         </article>
-
-        <div class="sticky bottom-4 z-10 flex flex-wrap items-center gap-3">
             <button type="submit" class="btn-press inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-medium text-white shadow-soft transition hover:bg-accent/90">
                 <i class="fas fa-save"></i>
                 حفظ كل الإعدادات
