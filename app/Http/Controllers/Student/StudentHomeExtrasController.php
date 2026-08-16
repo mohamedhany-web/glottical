@@ -17,6 +17,7 @@ use App\Helpers\VideoHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
@@ -283,52 +284,141 @@ class StudentHomeExtrasController extends Controller
         $user = $request->user();
         $locale = app()->getLocale();
         $q = trim((string) $request->query('q', ''));
+        $yearId = (int) $request->query('year', 0);
+        $subjectId = (int) $request->query('subject', 0);
+        $instructorId = (int) $request->query('instructor', 0);
+
         $courses = collect();
+        $years = collect();
+        $subjects = collect();
+        $instructors = collect();
+        $grouped = collect();
 
         if (Schema::hasTable('student_course_enrollments') && Schema::hasTable('advanced_courses')) {
-            $coursesQuery = $user->activeCourses()
-                ->with([
-                    'academicYear:id,name',
-                    'academicSubject:id,name,academic_year_id',
-                    'instructor:id,name',
-                ])
-                ->withCount([
-                    'sections',
-                    'lectures',
-                ]);
-
-            if ($q !== '') {
-                $coursesQuery->where(function ($inner) use ($q) {
-                    $inner->where('advanced_courses.title', 'like', '%'.$q.'%')
-                        ->orWhereHas('academicSubject', fn ($sq) => $sq->where('name', 'like', '%'.$q.'%'))
-                        ->orWhereHas('instructor', fn ($iq) => $iq->where('name', 'like', '%'.$q.'%'));
-                });
+            $yearColumns = ['id', 'name'];
+            if (Schema::hasTable('academic_years') && Schema::hasColumn('academic_years', 'order')) {
+                $yearColumns[] = 'order';
+            }
+            $subjectColumns = ['id', 'name', 'academic_year_id'];
+            if (Schema::hasTable('academic_subjects') && Schema::hasColumn('academic_subjects', 'order')) {
+                $subjectColumns[] = 'order';
             }
 
-            $courses = $coursesQuery->paginate(12)->withQueryString();
+            $with = [
+                'academicYear:'.implode(',', $yearColumns),
+                'academicSubject:'.implode(',', $subjectColumns),
+                'instructor:id,name',
+            ];
+            if (Schema::hasTable('academic_years')) {
+                $with['academicSubject.academicYear'] = static fn ($rel) => $rel->select($yearColumns);
+            }
 
-            // عدّ عناصر المنهج لكل كورس (إن وُجدت الجداول)
-            if (Schema::hasTable('curriculum_items') && Schema::hasTable('course_sections') && $courses->isNotEmpty()) {
-                $courseIds = $courses->getCollection()->pluck('id');
+            $all = $user->activeCourses()
+                ->with($with)
+                ->withCount(['sections', 'lectures'])
+                ->get();
+
+            if (Schema::hasTable('curriculum_items') && Schema::hasTable('course_sections') && $all->isNotEmpty()) {
                 $itemCounts = DB::table('curriculum_items as ci')
                     ->join('course_sections as cs', 'cs.id', '=', 'ci.course_section_id')
-                    ->whereIn('cs.advanced_course_id', $courseIds)
+                    ->whereIn('cs.advanced_course_id', $all->pluck('id'))
                     ->when(Schema::hasColumn('curriculum_items', 'is_active'), fn ($query) => $query->where('ci.is_active', true))
                     ->groupBy('cs.advanced_course_id')
                     ->selectRaw('cs.advanced_course_id as course_id, count(*) as items_count')
                     ->pluck('items_count', 'course_id');
 
-                $courses->getCollection()->transform(function ($course) use ($itemCounts) {
+                $all->transform(function ($course) use ($itemCounts) {
                     $course->curriculum_items_count = (int) ($itemCounts[$course->id] ?? 0);
 
                     return $course;
                 });
             }
+
+            $years = $all->map(fn ($course) => $this->studentCurriculumYear($course))
+                ->filter()
+                ->unique('id')
+                ->sortBy(fn ($year) => [(int) ($year->order ?? 0), mb_strtolower((string) $year->name)])
+                ->values();
+
+            $subjects = $all->pluck('academicSubject')
+                ->filter()
+                ->unique('id')
+                ->sortBy(fn ($subject) => [
+                    (int) ($subject->academic_year_id ?? 0),
+                    (int) ($subject->order ?? 0),
+                    mb_strtolower((string) $subject->name),
+                ])
+                ->values();
+
+            $instructors = $all->pluck('instructor')
+                ->filter()
+                ->unique('id')
+                ->sortBy(fn ($instructor) => mb_strtolower((string) $instructor->name))
+                ->values();
+
+            if ($yearId > 0 && $subjectId > 0) {
+                $selectedSubject = $subjects->firstWhere('id', $subjectId);
+                if ($selectedSubject && (int) ($selectedSubject->academic_year_id ?? 0) !== $yearId) {
+                    $subjectId = 0;
+                }
+            }
+
+            $needle = $q !== '' ? mb_strtolower($q) : '';
+            $filtered = $all->filter(function ($course) use ($needle, $yearId, $subjectId, $instructorId) {
+                if ($needle !== '') {
+                    $hay = mb_strtolower(trim(implode(' ', [
+                        (string) $course->title,
+                        (string) ($course->academicSubject->name ?? ''),
+                        (string) ($course->instructor->name ?? ''),
+                    ])));
+                    if (! str_contains($hay, $needle)) {
+                        return false;
+                    }
+                }
+                if ($yearId > 0) {
+                    $year = $this->studentCurriculumYear($course);
+                    if (! $year || (int) $year->id !== $yearId) {
+                        return false;
+                    }
+                }
+                if ($subjectId > 0 && (int) ($course->academic_subject_id ?? 0) !== $subjectId) {
+                    return false;
+                }
+                if ($instructorId > 0 && (int) ($course->instructor_id ?? 0) !== $instructorId) {
+                    return false;
+                }
+
+                return true;
+            })->sortBy(function ($course) {
+                $year = $this->studentCurriculumYear($course);
+
+                return sprintf(
+                    '%06d-%06d-%s',
+                    (int) ($year->order ?? 9999),
+                    (int) ($course->academicSubject->order ?? 9999),
+                    mb_strtolower((string) $course->title)
+                );
+            })->values();
+
+            $courses = $filtered;
+            $grouped = $this->groupStudentCurriculumCourses($filtered);
         }
+
+        $subjectsForSelect = $yearId > 0
+            ? $subjects->filter(fn ($subject) => (int) ($subject->academic_year_id ?? 0) === $yearId)->values()
+            : $subjects;
 
         return view('student.library.curriculum', [
             'courses' => $courses,
+            'grouped' => $grouped,
+            'years' => $years,
+            'subjects' => $subjectsForSelect,
+            'instructors' => $instructors,
+            'yearId' => $yearId,
+            'subjectId' => $subjectId,
+            'instructorId' => $instructorId,
             'searchQuery' => $q,
+            'hasFilters' => $yearId > 0 || $subjectId > 0 || $instructorId > 0 || $q !== '',
             'locale' => $locale,
             'hasLibraryEntitlement' => LibraryFolderAccessService::hasAnyLibraryEntitlement($user),
             'packagesUrl' => Route::has('public.service-packages.index')
@@ -990,5 +1080,56 @@ class StudentHomeExtrasController extends Controller
             'filter' => $filter,
             'nextJoinable' => $nextJoinable,
         ]);
+    }
+
+    private function studentCurriculumYear(mixed $course): mixed
+    {
+        return $course->academicYear ?: $course->academicSubject?->academicYear;
+    }
+
+    /**
+     * @return Collection<int, array{id: int, name: ?string, order: int, courses_count: int, subjects: Collection}>
+     */
+    private function groupStudentCurriculumCourses(Collection $courses): Collection
+    {
+        return $courses
+            ->groupBy(function ($course) {
+                $year = $this->studentCurriculumYear($course);
+
+                return $year?->id ?? 0;
+            })
+            ->map(function (Collection $yearCourses, $yearKey) {
+                $year = $this->studentCurriculumYear($yearCourses->first());
+                $subjects = $yearCourses
+                    ->groupBy(fn ($course) => $course->academic_subject_id ?? 0)
+                    ->map(function (Collection $subjectCourses, $subjectKey) {
+                        $subject = $subjectCourses->first()?->academicSubject;
+
+                        return [
+                            'id' => (int) $subjectKey,
+                            'name' => $subject?->name,
+                            'order' => (int) ($subject?->order ?? 9999),
+                            'courses' => $subjectCourses->values(),
+                        ];
+                    })
+                    ->sortBy(function (array $group) {
+                        if ($group['id'] === 0) {
+                            return 'zzz';
+                        }
+
+                        return sprintf('%06d-%s', $group['order'], mb_strtolower((string) ($group['name'] ?? '')));
+                    })
+                    ->values();
+
+                return [
+                    'id' => (int) $yearKey,
+                    'name' => $year?->name,
+                    'order' => (int) ($year?->order ?? 9999),
+                    'courses_count' => $yearCourses->count(),
+                    'subjects' => $subjects,
+                ];
+            })
+            ->sortBy(fn (array $group) => $group['id'] === 0 ? 999999 : $group['order'])
+            ->values();
     }
 }

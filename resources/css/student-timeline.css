@@ -3431,13 +3431,21 @@ html[dir="rtl"] .st-chat__bubble.is-theirs { border-bottom-right-radius: 14px; b
   gap: 10px;
   margin: 0 0 12px;
 }
-.st-lib-search input {
+.st-lib-search input,
+.st-lib-search__select {
   flex: 1;
   min-height: 44px;
   border-radius: 14px;
   border: 1px solid rgba(11, 61, 145, .15);
   padding: 0 14px;
   font: inherit;
+  background: #fff;
+}
+.st-lib-search__select {
+  flex: 0 1 180px;
+  min-width: 140px;
+  color: #0B3D91;
+  font-weight: 700;
 }
 .st-lib-count {
   margin: 0 0 14px;
@@ -3497,6 +3505,39 @@ html[dir="rtl"] .st-chat__bubble.is-theirs { border-bottom-right-radius: 14px; b
   flex-wrap: wrap;
   gap: 8px;
   padding-top: 8px;
+}
+.st-curr-group {
+  margin: 0 0 28px;
+}
+.st-curr-group__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(11, 61, 145, .12);
+}
+.st-curr-group__head h3 {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: #0B3D91;
+}
+.st-curr-group__count {
+  font-size: .78rem;
+  font-weight: 700;
+  color: #5B6577;
+  white-space: nowrap;
+}
+.st-curr-group__subject {
+  margin: 16px 0 10px;
+  font-size: .92rem;
+  font-weight: 800;
+  color: #0B3D91;
+}
+.st-curr-group__subject:first-of-type {
+  margin-top: 6px;
 }
 @media (max-width: 768px) {
   .st-curriculum-grid { grid-template-columns: 1fr; }

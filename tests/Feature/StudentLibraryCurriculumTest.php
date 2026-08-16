@@ -210,6 +210,105 @@ class StudentLibraryCurriculumTest extends TestCase
             ->assertSee(route('student.library.curriculum', [], false), false);
     }
 
+    public function test_curriculum_is_grouped_by_year_and_subject(): void
+    {
+        $student = User::factory()->create([
+            'role' => 'student',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+        $teacherA = User::factory()->create(['role' => 'instructor', 'is_active' => true, 'name' => 'معلم أول']);
+        $teacherB = User::factory()->create(['role' => 'instructor', 'is_active' => true, 'name' => 'معلم ثان']);
+
+        $yearOne = AcademicYear::create(['name' => 'السنة الأولى', 'order' => 1, 'is_active' => true]);
+        $yearTwo = AcademicYear::create(['name' => 'السنة الثانية', 'order' => 2, 'is_active' => true]);
+        $arabic = AcademicSubject::create([
+            'academic_year_id' => $yearOne->id,
+            'name' => 'اللغة العربية',
+            'order' => 1,
+            'is_active' => true,
+        ]);
+        $math = AcademicSubject::create([
+            'academic_year_id' => $yearTwo->id,
+            'name' => 'الرياضيات',
+            'order' => 1,
+            'is_active' => true,
+        ]);
+
+        $arabicCourse = AdvancedCourse::query()->create([
+            'title' => 'منهج العربي',
+            'academic_year_id' => $yearOne->id,
+            'academic_subject_id' => $arabic->id,
+            'instructor_id' => $teacherA->id,
+            'status' => 'published',
+            'is_active' => true,
+        ]);
+        $mathCourse = AdvancedCourse::query()->create([
+            'title' => 'منهج الرياضيات',
+            'academic_year_id' => $yearTwo->id,
+            'academic_subject_id' => $math->id,
+            'instructor_id' => $teacherB->id,
+            'status' => 'published',
+            'is_active' => true,
+        ]);
+        $looseCourse = AdvancedCourse::query()->create([
+            'title' => 'كورس حر',
+            'status' => 'published',
+            'is_active' => true,
+        ]);
+
+        foreach ([$arabicCourse, $mathCourse, $looseCourse] as $course) {
+            DB::table('student_course_enrollments')->insert([
+                'user_id' => $student->id,
+                'advanced_course_id' => $course->id,
+                'status' => 'active',
+                'activated_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        $page = $this->actingAs($student)
+            ->get(route('student.library.curriculum'))
+            ->assertOk()
+            ->assertSee('كل السنوات', false)
+            ->assertSee('السنة الأولى', false)
+            ->assertSee('السنة الثانية', false)
+            ->assertSee('اللغة العربية', false)
+            ->assertSee('الرياضيات', false)
+            ->assertSee('منهج العربي', false)
+            ->assertSee('منهج الرياضيات', false)
+            ->assertSee('كورس حر', false)
+            ->assertSee('بدون تصنيف', false);
+
+        $html = $page->getContent();
+        $this->assertLessThan(
+            strpos($html, 'منهج الرياضيات'),
+            strpos($html, 'منهج العربي'),
+            'Year 1 course should appear before year 2'
+        );
+
+        $this->actingAs($student)
+            ->get(route('student.library.curriculum', ['year' => $yearOne->id]))
+            ->assertOk()
+            ->assertSee('منهج العربي', false)
+            ->assertSee('اللغة العربية', false)
+            ->assertDontSee('منهج الرياضيات', false)
+            ->assertDontSee('كورس حر', false);
+
+        $this->actingAs($student)
+            ->get(route('student.library.curriculum', ['subject' => $math->id]))
+            ->assertOk()
+            ->assertSee('منهج الرياضيات', false)
+            ->assertDontSee('منهج العربي', false);
+
+        $this->actingAs($student)
+            ->get(route('student.library.curriculum', ['instructor' => $teacherA->id]))
+            ->assertOk()
+            ->assertSee('منهج العربي', false)
+            ->assertDontSee('منهج الرياضيات', false);
+    }
+
     public function test_guest_cannot_open_curriculum_library(): void
     {
         $this->get(route('student.library.curriculum'))->assertRedirect();
