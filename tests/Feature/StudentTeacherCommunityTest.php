@@ -89,6 +89,21 @@ class StudentTeacherCommunityTest extends TestCase
             ->assertRedirect();
 
         $this->assertSame(2, PrivateLessonMessage::query()->where('private_lesson_thread_id', $thread->id)->count());
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $instructor->id,
+            'sender_id' => $student->id,
+            'type' => 'general',
+            'target_type' => 'individual',
+            'audience' => 'instructor',
+        ]);
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $student->id,
+            'sender_id' => $instructor->id,
+            'type' => 'general',
+            'target_type' => 'individual',
+            'audience' => 'student',
+        ]);
     }
 
     public function test_class_enrollment_opens_teacher_chat_and_community_posts(): void

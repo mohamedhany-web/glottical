@@ -13,6 +13,7 @@ use App\Models\TutoringGroup;
 use App\Models\TutoringGroupBooking;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -317,28 +318,38 @@ class PrivateCoursesCoreService
         $preview = \Illuminate\Support\Str::limit(trim((string) $message->body), 160);
         $isAr = app()->getLocale() === 'ar';
 
-        Notification::create([
-            'user_id' => $recipientId,
-            'sender_id' => $sender->id,
-            'title' => $isAr
-                ? ('رسالة جديدة من '.$sender->name)
-                : ('New message from '.$sender->name),
-            'message' => $preview !== ''
-                ? $preview
-                : ($isAr ? 'لديك رسالة جديدة في المحادثة الخاصة.' : 'You have a new private message.'),
-            'type' => 'message',
-            'action_url' => $actionUrl,
-            'action_text' => $isAr ? 'افتح المحادثة' : 'Open chat',
-            'priority' => 'high',
-            'target_type' => PrivateLessonThread::class,
-            'target_id' => $thread->id,
-            'audience' => $audience,
-            'is_read' => false,
-            'data' => [
-                'kind' => 'private_lesson_message',
-                'message_id' => $message->id,
-            ],
-        ]);
+        // `notifications.type` / `target_type` are MySQL ENUMs — `message` and class names truncate and 500.
+        try {
+            Notification::create([
+                'user_id' => $recipientId,
+                'sender_id' => $sender->id,
+                'title' => $isAr
+                    ? ('رسالة جديدة من '.$sender->name)
+                    : ('New message from '.$sender->name),
+                'message' => $preview !== ''
+                    ? $preview
+                    : ($isAr ? 'لديك رسالة جديدة في المحادثة الخاصة.' : 'You have a new private message.'),
+                'type' => 'general',
+                'action_url' => $actionUrl,
+                'action_text' => $isAr ? 'افتح المحادثة' : 'Open chat',
+                'priority' => 'high',
+                'target_type' => 'individual',
+                'target_id' => $thread->id,
+                'audience' => $audience,
+                'is_read' => false,
+                'data' => [
+                    'kind' => 'private_lesson_message',
+                    'message_id' => $message->id,
+                    'thread_id' => $thread->id,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('private lesson message notification failed', [
+                'thread_id' => $thread->id,
+                'recipient_id' => $recipientId,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     public static function ensureReception(int $studentId, ?int $instructorId = null, string $source = 'assignment'): StudentReception
@@ -380,10 +391,15 @@ class PrivateCoursesCoreService
                 'title' => '🎉 New Student Assigned',
                 'message' => $student->name.' has been assigned to you for private lessons. Review schedule, lesson count, and parent notes.',
                 'type' => 'assignment',
-                'target_type' => StudentInstructorAssignment::class,
+                'target_type' => 'individual',
                 'target_id' => $assignment->id,
                 'is_read' => false,
                 'priority' => 'high',
+                'audience' => 'instructor',
+                'data' => [
+                    'kind' => 'private_lesson_assignment',
+                    'assignment_id' => $assignment->id,
+                ],
             ]);
             $assignment->instructor_notified_at = now();
         }
@@ -394,10 +410,15 @@ class PrivateCoursesCoreService
                 'title' => 'Your private teacher is ready',
                 'message' => 'Teacher «'.$instructor->name.'» has been assigned for your Private Lessons. You can message them and join upcoming sessions.',
                 'type' => 'assignment',
-                'target_type' => StudentInstructorAssignment::class,
+                'target_type' => 'individual',
                 'target_id' => $assignment->id,
                 'is_read' => false,
                 'priority' => 'high',
+                'audience' => 'student',
+                'data' => [
+                    'kind' => 'private_lesson_assignment',
+                    'assignment_id' => $assignment->id,
+                ],
             ]);
             $assignment->student_notified_at = now();
         }

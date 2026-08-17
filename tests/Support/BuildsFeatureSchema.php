@@ -97,6 +97,8 @@ trait BuildsFeatureSchema
             $table->string('audience')->nullable();
             $table->string('action_url')->nullable();
             $table->string('action_text')->nullable();
+            $table->string('target_type')->nullable();
+            $table->unsignedBigInteger('target_id')->nullable();
             $table->timestamp('read_at')->nullable();
             $table->boolean('is_read')->default(false);
             $table->json('data')->nullable();

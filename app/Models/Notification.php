@@ -233,6 +233,7 @@ class Notification extends Model
     {
         $icons = [
             'general' => 'fas fa-info-circle',
+            'message' => 'fas fa-comment',
             'course' => 'fas fa-graduation-cap',
             'exam' => 'fas fa-clipboard-check',
             'assignment' => 'fas fa-tasks',
