@@ -28,15 +28,26 @@ class ClassroomJoinController extends Controller
 
         $meeting = ClassroomMeeting::where('code', $code)->first();
         $roomName = $meeting
-            ? $meeting->jitsiRoomName()
+            ? $meeting->liveRoomName()
             : ClassroomMeeting::canonicalRoomName($code);
-        $jitsiDomain = LiveSetting::getJitsiDomain();
         $joinUrl = url('classroom/join/'.$code);
         $maxParticipants = (int) ($meeting?->max_participants ?? 25);
         $meetingEnded = (bool) ($meeting && $meeting->ended_at);
         $meetingNotStarted = (bool) ($meeting && ! $meeting->started_at && ! $meeting->ended_at);
+        $livekitConfigured = app(\App\Services\LiveKitTokenService::class)->isConfigured();
+        $livekitHost = LiveSetting::getLiveKitHost();
 
-        return view('classroom.join', compact('code', 'roomName', 'meeting', 'jitsiDomain', 'joinUrl', 'maxParticipants', 'meetingEnded', 'meetingNotStarted'));
+        return view('classroom.join', compact(
+            'code',
+            'roomName',
+            'meeting',
+            'joinUrl',
+            'maxParticipants',
+            'meetingEnded',
+            'meetingNotStarted',
+            'livekitConfigured',
+            'livekitHost'
+        ));
     }
 
     public function enter(Request $request, string $code)
@@ -113,6 +124,11 @@ class ClassroomJoinController extends Controller
             'active_participants' => $newCount,
             'max_participants' => $maxParticipants,
             'allow_participant_whiteboard' => $meeting->allowsParticipantWhiteboard(),
+            'livekit' => app(\App\Services\LiveMeetingProvider::class)->classroomGuestPayload(
+                $meeting->liveRoomName(),
+                $token,
+                $displayName
+            ),
         ]);
     }
 

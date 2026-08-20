@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Models\ClassroomMeeting;
-use App\Models\LiveSetting;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
@@ -138,31 +137,33 @@ class AcademicSupervisionController extends Controller
                 ->with('error', 'انتهت مدة الاجتماع.');
         }
 
-        $jitsiDomain = LiveSetting::getJitsiDomain();
-        $isDemoJitsi = (strpos($jitsiDomain, 'meet.jit.si') !== false);
+        $meetingPayload = app(\App\Services\LiveMeetingProvider::class)->classroomPayload(
+            $meeting->liveRoomName(),
+            $supervisor,
+            false
+        );
         $meetingEndsAt = $meeting->started_at ? $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes) : null;
         $useInstructorRoutes = false;
         $user = $supervisor;
         $academicObserverMode = true;
         $academicObserverExitUrl = route('employee.academic-supervision.show', $student);
-        $jitsiDisplayName = 'مشرف: '.$supervisor->name;
         $subscriptionFeatureMenuItems = [];
         $subscriptionPackageLabel = null;
 
-        return view('student.classroom.room', compact(
-            'meeting',
-            'jitsiDomain',
-            'user',
-            'isDemoJitsi',
-            'maxDurationMinutes',
-            'effectiveDurationMinutes',
-            'meetingEndsAt',
-            'useInstructorRoutes',
-            'academicObserverMode',
-            'academicObserverExitUrl',
-            'jitsiDisplayName',
-            'subscriptionFeatureMenuItems',
-            'subscriptionPackageLabel'
+        return view('student.classroom.room', array_merge(
+            compact(
+                'meeting',
+                'user',
+                'maxDurationMinutes',
+                'effectiveDurationMinutes',
+                'meetingEndsAt',
+                'useInstructorRoutes',
+                'academicObserverMode',
+                'academicObserverExitUrl',
+                'subscriptionFeatureMenuItems',
+                'subscriptionPackageLabel'
+            ),
+            $meetingPayload
         ));
     }
 

@@ -1,155 +1,132 @@
-@extends('layouts.app')
+@extends('layouts.student-timeline')
 
 @section('title', 'جلسات البث المباشر')
-@section('header', 'جلسات البث المباشر')
 
 @section('content')
-<div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-    {{-- رأس الصفحة --}}
-    <div class="bg-white dark:bg-slate-800/95 rounded-xl p-5 sm:p-6 border border-gray-200 dark:border-slate-700 shadow-sm">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="min-w-0">
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1 flex items-center gap-2 flex-wrap">
-                    <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 shrink-0">
-                        <i class="fas fa-broadcast-tower"></i>
-                    </span>
-                    <span>جلسات البث المباشر</span>
-                </h1>
-                <p class="text-sm text-gray-500 dark:text-slate-400">الجلسات المباشرة والمجدولة المتاحة لك وفق كورساتك</p>
+<section class="st-join-hero" aria-label="جلسات البث المباشر">
+    <div class="st-join-hero__copy">
+        <p class="st-join-hero__kicker">Live · LiveKit</p>
+        <h1 class="st-join-hero__title">جلسات البث المباشر</h1>
+        <p class="st-join-hero__meta">الجلسات المباشرة والمجدولة المتاحة لك وفق كورساتك</p>
+    </div>
+    <div class="st-join-hero__actions">
+        @if(Route::has('my-courses.index'))
+        <a href="{{ route('my-courses.index') }}" class="st-pill st-pill--outline st-pill--lg">
+            <i class="fas fa-book-open"></i> كورساتي
+        </a>
+        @endif
+        @if(Route::has('student.live-recordings.index'))
+        <a href="{{ route('student.live-recordings.index') }}" class="st-pill st-pill--solid st-pill--lg">
+            <i class="fas fa-play-circle"></i> التسجيلات
+        </a>
+        @endif
+    </div>
+</section>
+
+@if(session('success'))
+    <div class="rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900 px-4 py-3 text-sm font-medium mb-4">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+    <div class="rounded-xl border border-red-200 bg-red-50 text-red-900 px-4 py-3 text-sm font-medium mb-4">{{ session('error') }}</div>
+@endif
+
+<div class="flex flex-wrap gap-2 mb-5">
+    <a href="{{ route('student.live-sessions.index') }}" class="st-pill {{ !request('status') ? 'st-pill--solid' : 'st-pill--outline' }}">الكل</a>
+    <a href="{{ route('student.live-sessions.index', ['status' => 'live']) }}" class="st-pill {{ request('status') === 'live' ? 'st-pill--solid' : 'st-pill--outline' }}">مباشر</a>
+    <a href="{{ route('student.live-sessions.index', ['status' => 'scheduled']) }}" class="st-pill {{ request('status') === 'scheduled' ? 'st-pill--solid' : 'st-pill--outline' }}">مجدولة</a>
+</div>
+
+@if($liveSessions->count() > 0 && (!request('status') || request('status') === 'live'))
+<div class="space-y-3 mb-6">
+    <h2 class="text-sm font-bold text-[var(--st-muted)] uppercase tracking-wide flex items-center gap-2 m-0">
+        <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+        مباشر الآن
+    </h2>
+    @foreach($liveSessions as $live)
+    <div class="st-class-card" style="min-height:auto;padding:18px 20px;flex-direction:row;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-2 flex-wrap">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">
+                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                    مباشر
+                </span>
+                @if($live->course)
+                    <span class="text-xs text-[var(--st-muted)] truncate">{{ $live->course->title }}</span>
+                @endif
             </div>
-            <div class="flex flex-wrap items-center gap-2 shrink-0">
-                <a href="{{ route('my-courses.index') }}" class="inline-flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
-                    <i class="fas fa-book-open"></i>
-                    كورساتي
-                </a>
-                <a href="{{ route('student.live-recordings.index') }}" class="inline-flex items-center justify-center gap-2 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-200 px-4 py-2.5 rounded-xl text-sm font-semibold hover:border-sky-300 dark:hover:border-sky-600 transition-colors">
-                    <i class="fas fa-play-circle text-sky-600"></i>
-                    التسجيلات
-                </a>
-            </div>
+            <h3 class="font-black text-[var(--st-ink-strong)] text-lg m-0">{{ $live->title }}</h3>
+            <p class="text-sm text-[var(--st-ink)] mt-1 mb-0">
+                <i class="fas fa-chalkboard-teacher text-[var(--st-blue)] ml-1"></i>{{ $live->instructor?->name ?? '—' }}
+                @if($live->started_at)
+                    <span class="text-[var(--st-muted)] mx-2">•</span>
+                    <span class="text-[var(--st-muted)]">بدأ {{ $live->started_at->diffForHumans() }}</span>
+                @endif
+            </p>
         </div>
+        <form method="POST" action="{{ route('student.live-sessions.join', $live) }}" class="shrink-0 m-0">
+            @csrf
+            <button type="submit" class="st-pill st-pill--solid st-pill--lg">
+                <i class="fas fa-video"></i> انضم الآن
+            </button>
+        </form>
     </div>
+    @endforeach
+</div>
+@endif
 
-    @if(session('success'))
-        <div class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200 px-4 py-3 text-sm font-medium">{{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-        <div class="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-200 px-4 py-3 text-sm font-medium">{{ session('error') }}</div>
-    @endif
+@if(request('status') !== 'live')
+<div>
+    <h2 class="text-sm font-bold text-[var(--st-muted)] uppercase tracking-wide mb-3">
+        {{ request('status') === 'scheduled' ? 'الجلسات المجدولة' : 'الجلسات القادمة' }}
+    </h2>
 
-    {{-- فلاتر --}}
-    <div class="flex flex-wrap gap-2">
-        <a href="{{ route('student.live-sessions.index') }}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {{ !request('status') ? 'bg-sky-500 text-white shadow-sm' : 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:border-sky-300' }}">الكل</a>
-        <a href="{{ route('student.live-sessions.index', ['status' => 'live']) }}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {{ request('status') === 'live' ? 'bg-red-600 text-white shadow-sm' : 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:border-red-300' }}">مباشر</a>
-        <a href="{{ route('student.live-sessions.index', ['status' => 'scheduled']) }}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors {{ request('status') === 'scheduled' ? 'bg-sky-500 text-white shadow-sm' : 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:border-sky-300' }}">مجدولة</a>
-    </div>
+    @php
+        $listSessions = $sessions->filter(fn ($s) => $s->status !== 'live');
+    @endphp
 
-    {{-- مباشر الآن --}}
-    @if($liveSessions->count() > 0 && (!request('status') || request('status') === 'live'))
+    @if($listSessions->isEmpty())
+        <div class="st-class-card items-center justify-center text-center p-10" style="min-height:180px;">
+            <i class="fas fa-calendar-alt text-4xl text-[var(--st-muted)] mb-4"></i>
+            <p class="font-bold text-[var(--st-ink-strong)] m-0">لا توجد جلسات مجدولة {{ request('status') === 'scheduled' ? 'حالياً' : 'في هذه الصفحة' }}</p>
+            <p class="text-sm text-[var(--st-muted)] mt-1">ستُعرض الجلسات عند جدولتها من قبل المدرب</p>
+        </div>
+    @else
     <div class="space-y-3">
-        <h2 class="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide flex items-center gap-2">
-            <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            مباشر الآن
-        </h2>
-        @foreach($liveSessions as $live)
-        <div class="bg-white dark:bg-slate-800/95 rounded-xl border border-red-200 dark:border-red-900/50 shadow-sm p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4 ring-1 ring-red-100/80 dark:ring-red-900/30">
-            <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-2 flex-wrap">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 text-xs font-bold">
-                        <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
-                        مباشر
-                    </span>
-                    @if($live->course)
-                        <span class="text-xs text-gray-500 dark:text-slate-400 truncate max-w-full">{{ $live->course->title }}</span>
-                    @endif
+        @foreach($sessions as $session)
+        @if($session->status !== 'live')
+        <a href="{{ route('student.live-sessions.show', $session) }}" class="st-class-card no-underline text-inherit" style="min-height:auto;padding:18px 20px;display:block;">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-sky-100 text-sky-800 text-xs font-semibold">مجدولة</span>
+                        @if($session->course)
+                            <span class="text-xs text-[var(--st-muted)] truncate">{{ $session->course->title }}</span>
+                        @endif
+                    </div>
+                    <h3 class="font-black text-[var(--st-ink-strong)] text-lg m-0">{{ $session->title }}</h3>
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-[var(--st-ink)]">
+                        <span><i class="fas fa-chalkboard-teacher text-[var(--st-blue)] ml-1"></i>{{ $session->instructor?->name ?? '—' }}</span>
+                        <span><i class="fas fa-calendar ml-1 text-[var(--st-muted)]"></i>{{ $session->scheduled_at?->format('Y/m/d') }}</span>
+                        <span><i class="fas fa-clock ml-1 text-[var(--st-muted)]"></i>{{ $session->scheduled_at?->format('H:i') }}</span>
+                    </div>
                 </div>
-                <h3 class="font-bold text-gray-900 dark:text-slate-100 text-lg">{{ $live->title }}</h3>
-                <p class="text-sm text-gray-600 dark:text-slate-400 mt-1">
-                    <i class="fas fa-chalkboard-teacher text-sky-600 ml-1"></i>{{ $live->instructor?->name ?? '—' }}
-                    @if($live->started_at)
-                        <span class="text-gray-300 dark:text-slate-600 mx-2">•</span>
-                        <span class="text-gray-500">بدأ {{ $live->started_at->diffForHumans() }}</span>
-                    @endif
-                </p>
+                <span class="st-pill st-pill--outline shrink-0">التفاصيل <i class="fas fa-chevron-left text-xs opacity-70"></i></span>
             </div>
-            <form method="POST" action="{{ route('student.live-sessions.join', $live) }}" class="shrink-0">
-                @csrf
-                <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold shadow-md shadow-red-500/20 transition-colors">
-                    <i class="fas fa-video"></i>
-                    انضم الآن
-                </button>
-            </form>
-        </div>
+        </a>
+        @endif
         @endforeach
     </div>
     @endif
-
-    {{-- جلسات مجدولة (مخفية عند اختيار فلتر «مباشر» فقط) --}}
-    @if(request('status') !== 'live')
-    <div>
-        <h2 class="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide mb-3">
-            {{ request('status') === 'scheduled' ? 'الجلسات المجدولة' : 'الجلسات القادمة' }}
-        </h2>
-
-        @php
-            $listSessions = $sessions->filter(fn ($s) => $s->status !== 'live');
-        @endphp
-
-        @if($listSessions->isEmpty())
-            <div class="bg-white dark:bg-slate-800/95 rounded-xl border border-gray-200 dark:border-slate-700 p-10 text-center shadow-sm">
-                <i class="fas fa-calendar-alt text-4xl text-gray-300 dark:text-slate-600 mb-4"></i>
-                <p class="font-medium text-gray-700 dark:text-slate-300">لا توجد جلسات مجدولة {{ request('status') === 'scheduled' ? 'حالياً' : 'في هذه الصفحة' }}</p>
-                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">ستُعرض الجلسات عند جدولتها من قبل المدرب</p>
-                <a href="{{ route('my-courses.index') }}" class="inline-flex items-center gap-2 mt-4 text-sky-600 dark:text-sky-400 hover:text-sky-700 font-semibold text-sm">
-                    <i class="fas fa-book-open"></i> تصفح كورساتي
-                </a>
-            </div>
-        @else
-        <div class="space-y-3">
-            @foreach($sessions as $session)
-            @if($session->status !== 'live')
-            <a href="{{ route('student.live-sessions.show', $session) }}" class="block bg-white dark:bg-slate-800/95 rounded-xl border border-gray-200 dark:border-slate-700 p-5 shadow-sm hover:border-sky-300 dark:hover:border-sky-600 hover:shadow transition-all">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-2 mb-2 flex-wrap">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-sky-100 dark:bg-sky-900/40 text-sky-800 dark:text-sky-200 text-xs font-semibold">مجدولة</span>
-                            @if($session->course)
-                                <span class="text-xs text-gray-500 dark:text-slate-400 truncate">{{ $session->course->title }}</span>
-                            @endif
-                        </div>
-                        <h3 class="font-bold text-gray-900 dark:text-slate-100 text-lg">{{ $session->title }}</h3>
-                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-gray-600 dark:text-slate-400">
-                            <span><i class="fas fa-chalkboard-teacher text-sky-600 ml-1"></i>{{ $session->instructor?->name ?? '—' }}</span>
-                            <span><i class="fas fa-calendar ml-1 text-gray-400"></i>{{ $session->scheduled_at?->format('Y/m/d') }}</span>
-                            <span><i class="fas fa-clock ml-1 text-gray-400"></i>{{ $session->scheduled_at?->format('H:i') }}</span>
-                        </div>
-                        @if($session->description)
-                            <p class="text-sm text-gray-500 dark:text-slate-400 mt-2 line-clamp-2">{{ Str::limit($session->description, 120) }}</p>
-                        @endif
-                    </div>
-                    <div class="shrink-0 flex items-center gap-2">
-                        <span class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 text-sm font-semibold">
-                            التفاصيل
-                            <i class="fas fa-chevron-left text-xs opacity-70"></i>
-                        </span>
-                    </div>
-                </div>
-            </a>
-            @endif
-            @endforeach
-        </div>
-        @endif
-    </div>
-    @elseif($liveSessions->isEmpty())
-        <div class="bg-white dark:bg-slate-800/95 rounded-xl border border-gray-200 dark:border-slate-700 p-10 text-center shadow-sm">
-            <i class="fas fa-broadcast-tower text-4xl text-gray-300 dark:text-slate-600 mb-4"></i>
-            <p class="font-medium text-gray-700 dark:text-slate-300">لا توجد جلسات مباشرة حالياً</p>
-            <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">عند بدء المدرب للبث ستظهر الجلسة أعلاه</p>
-        </div>
-    @endif
-
-    @if($sessions->hasPages())
-        <div class="pt-2">{{ $sessions->links() }}</div>
-    @endif
 </div>
+@elseif($liveSessions->isEmpty())
+    <div class="st-class-card items-center justify-center text-center p-10" style="min-height:180px;">
+        <i class="fas fa-broadcast-tower text-4xl text-[var(--st-muted)] mb-4"></i>
+        <p class="font-bold text-[var(--st-ink-strong)] m-0">لا توجد جلسات مباشرة حالياً</p>
+        <p class="text-sm text-[var(--st-muted)] mt-1">عند بدء المدرب للبث ستظهر الجلسة أعلاه</p>
+    </div>
+@endif
+
+@if($sessions->hasPages())
+    <div class="pt-4">{{ $sessions->links() }}</div>
+@endif
 @endsection

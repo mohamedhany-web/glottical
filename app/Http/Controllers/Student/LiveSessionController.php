@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\LiveSession;
-use App\Models\LiveSetting;
 use App\Models\SessionAttendance;
 use App\Support\ShareAnnotationSanitizer;
 use Illuminate\Http\Request;
@@ -100,12 +99,11 @@ class LiveSessionController extends Controller
             ]);
         }
 
-        $jitsiDomain = $liveSession->server?->normalized_domain ?: LiveSetting::getJitsiDomain();
         $allowStudentWhiteboard = $liveSession->allowsStudentWhiteboard();
         $meeting = app(\App\Services\LiveMeetingProvider::class)->roomPayload($liveSession, $user, false);
 
         return view('student.live-sessions.room', array_merge(
-            compact('liveSession', 'jitsiDomain', 'user', 'allowStudentWhiteboard'),
+            compact('liveSession', 'user', 'allowStudentWhiteboard'),
             $meeting
         ));
     }

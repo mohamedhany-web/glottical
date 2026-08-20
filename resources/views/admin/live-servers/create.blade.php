@@ -13,21 +13,19 @@
         <div class="grid md:grid-cols-2 gap-5">
             <div class="md:col-span-2">
                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">اسم السيرفر <span class="text-red-500">*</span></label>
-                <input type="text" name="name" value="{{ old('name') }}" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="مثال: Jitsi Server 1">
+                <input type="text" name="name" value="{{ old('name') }}" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="مثال: LiveKit Primary">
                 @error('name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
             <div>
                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">النطاق (Domain) <span class="text-red-500">*</span></label>
-                <input type="text" name="domain" value="{{ old('domain') }}" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="live.Glottical.com">
+                <input type="text" name="domain" value="{{ old('domain') }}" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="live.glottical.com">
                 @error('domain')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
             <div>
                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">نوع المنصة <span class="text-red-500">*</span></label>
-                <select name="provider" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
-                    <option value="livekit" {{ old('provider', 'livekit') === 'livekit' ? 'selected' : '' }}>LiveKit</option>
-                    <option value="jitsi" {{ old('provider') === 'jitsi' ? 'selected' : '' }}>Jitsi Meet</option>
-                    <option value="custom" {{ old('provider') === 'custom' ? 'selected' : '' }}>مخصص</option>
-                </select>
+                <input type="hidden" name="provider" value="livekit">
+                <div class="w-full rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white px-3 py-2 font-semibold text-cyan-700 dark:text-cyan-300">LiveKit</div>
+                <p class="text-xs text-slate-500 mt-1">المنصة تعمل عبر LiveKit فقط.</p>
             </div>
             <div>
                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">عنوان IP (اختياري)</label>

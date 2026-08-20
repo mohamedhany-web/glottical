@@ -20,7 +20,7 @@ class LiveKitTokenService
     public function wsUrl(?LiveServer $server = null): string
     {
         if ($server && $server->provider === 'livekit') {
-            $host = LiveSetting::normalizeJitsiDomain((string) $server->domain);
+            $host = LiveSetting::normalizeLiveHost((string) $server->domain);
             if ($host !== '') {
                 return 'wss://'.$host;
             }
@@ -39,7 +39,7 @@ class LiveKitTokenService
     public function publicHost(?LiveServer $server = null): string
     {
         if ($server && $server->provider === 'livekit') {
-            $host = LiveSetting::normalizeJitsiDomain((string) $server->domain);
+            $host = LiveSetting::normalizeLiveHost((string) $server->domain);
             if ($host !== '') {
                 return $host;
             }
@@ -53,6 +53,24 @@ class LiveKitTokenService
      */
     public function createJoinToken(string $roomName, User $user, array $grants = []): string
     {
+        $identity = 'user-'.$user->id;
+        $name = trim((string) ($user->name ?: $user->email ?: $identity));
+
+        return $this->createIdentityToken($roomName, $identity, $name, array_merge($grants, [
+            'metadata' => [
+                'user_id' => $user->id,
+                'role' => $user->role ?? null,
+            ],
+        ]));
+    }
+
+    /**
+     * توكن LiveKit لهوية نصية (ضيف classroom / مشارك بدون User).
+     *
+     * @param  array{canPublish?: bool, canSubscribe?: bool, canPublishData?: bool, roomAdmin?: bool, hidden?: bool, metadata?: array<string, mixed>}  $grants
+     */
+    public function createIdentityToken(string $roomName, string $identity, string $displayName, array $grants = []): string
+    {
         if (! $this->isConfigured()) {
             throw new InvalidArgumentException('مفاتيح LiveKit غير مضبوطة في ملف البيئة.');
         }
@@ -62,8 +80,8 @@ class LiveKitTokenService
         $ttl = max(300, (int) config('livekit.livekit.token_ttl', 21600));
         $now = time();
 
-        $identity = 'user-'.$user->id;
-        $name = trim((string) ($user->name ?: $user->email ?: $identity));
+        $identity = trim($identity) !== '' ? trim($identity) : ('guest-'.bin2hex(random_bytes(6)));
+        $name = trim($displayName) !== '' ? trim($displayName) : $identity;
 
         $video = [
             'roomJoin' => true,
@@ -82,6 +100,8 @@ class LiveKitTokenService
             $video['hidden'] = true;
         }
 
+        $meta = $grants['metadata'] ?? ['identity' => $identity];
+
         $payload = [
             'iss' => $apiKey,
             'sub' => $identity,
@@ -89,10 +109,7 @@ class LiveKitTokenService
             'exp' => $now + $ttl,
             'name' => $name,
             'video' => $video,
-            'metadata' => json_encode([
-                'user_id' => $user->id,
-                'role' => $user->role ?? null,
-            ], JSON_UNESCAPED_UNICODE),
+            'metadata' => json_encode($meta, JSON_UNESCAPED_UNICODE),
         ];
 
         return $this->encodeJwt($payload, $apiSecret);

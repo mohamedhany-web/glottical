@@ -113,17 +113,13 @@
 
     <div class="room-body">
         <div id="mx-video-stack" class="relative flex-1 min-h-0 flex flex-col">
-            @if(($provider ?? 'jitsi') === 'livekit')
-                @include('partials.livekit-room', [
-                    'livekitUrl' => $livekitUrl,
-                    'livekitToken' => $livekitToken,
-                    'user' => $user,
-                    'lkRole' => 'host',
-                    'lkLeaveUrl' => route('instructor.live-sessions.show', $liveSession),
-                ])
-            @else
-                <main id="mx-live-broadcast-root" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة البث — Glottical"></main>
-            @endif
+            @include('partials.livekit-room', [
+                'livekitUrl' => $livekitUrl,
+                'livekitToken' => $livekitToken,
+                'user' => $user,
+                'lkRole' => 'host',
+                'lkLeaveUrl' => route('instructor.live-sessions.show', $liveSession),
+            ])
             @include('partials.mx-share-annotation-overlay', [
                 'mxAnnRole' => 'viewer_poll',
                 'mxAnnPollUrl' => route('instructor.live-sessions.share-annotations', $liveSession),
@@ -132,66 +128,8 @@
     </div>
 
     @include('partials.mx-muallimx-excalidraw-popup')
-    @if(($provider ?? 'jitsi') !== 'livekit')
-    @include('partials.jitsi-iframe-media-allow')
-    <script src="https://{{ $jitsiDomain }}/external_api.js"></script>
     <script>
-        /* ══════════════════════════════════════════════
-           غرفة البث (Glottical) — Jitsi
-        ══════════════════════════════════════════════ */
-        const domain   = '{{ $jitsiDomain }}';
-        const jitsiRoot = document.querySelector('#mx-live-broadcast-root');
-        if (typeof muallimxEnsureJitsiIframeMediaAllow === 'function') {
-            muallimxEnsureJitsiIframeMediaAllow(jitsiRoot);
-        }
-        const options = {
-            roomName: '{{ $liveSession->room_name }}',
-            parentNode: jitsiRoot,
-            width: '100%',
-            height: '100%',
-            userInfo: {
-                displayName: '{{ $user->name }} (مدرب)',
-                email: '{{ $user->email }}'
-            },
-            configOverwrite: {
-                prejoinConfig: { enabled: false },
-                prejoinPageEnabled: false,
-                enableLobby: false,
-                requireDisplayName: false,
-                enableWelcomePage: false,
-                disableDeepLinking: true,
-                startWithAudioMuted: true,
-                startWithVideoMuted: true,
-                enableNoisyMicDetection: false,
-                @if(!$liveSession->allow_chat)
-                disableChat: true,
-                @endif
-            },
-            interfaceConfigOverwrite: {
-                APP_NAME: 'Glottical',
-                NATIVE_APP_NAME: 'Glottical',
-                PROVIDER_NAME: 'Glottical',
-                JITSI_WATERMARK_LINK: '',
-                HIDE_DEEP_LINKING_LOGO: true,
-                TOOLBAR_BUTTONS: [
-                    'microphone', 'camera', 'desktop', 'chat',
-                    'raisehand', 'participants-pane', 'tileview',
-                    'fullscreen', 'hangup', 'settings',
-                    'select-background',
-                ],
-                SHOW_JITSI_WATERMARK: false,
-                SHOW_WATERMARK_FOR_GUESTS: false,
-                SHOW_BRAND_WATERMARK: false,
-                SHOW_POWERED_BY: false,
-                MOBILE_APP_PROMO: false,
-                DEFAULT_BACKGROUND: '#0f172a',
-                DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
-                FILM_STRIP_MAX_HEIGHT: 120,
-            }
-        };
-        const api = new JitsiMeetExternalAPI(domain, options);
-
-        /* ══════════════════════════════════════════════
+/* ══════════════════════════════════════════════
            TIMER
         ══════════════════════════════════════════════ */
         const startTime = new Date('{{ $liveSession->started_at->toISOString() }}');
@@ -206,7 +144,7 @@
 
         /* ══════════════════════════════════════════════
            LOCAL SCREEN + MIC RECORDING
-           (لا يحتاج مشاركة شاشة في Jitsi)
+           (تسجيل محلي عبر المتصفح)
         ══════════════════════════════════════════════ */
         let recordStream   = null;
         let recordRecorder = null;
@@ -407,22 +345,9 @@
         }
 
         /* ══════════════════════════════════════════════
-           JITSI EVENTS
-        ══════════════════════════════════════════════ */
-        api.addEventListener('videoConferenceJoined', function() {
-            startAutoAudioRecording();
-        });
-
-        // لو انقطع الاتصال أو أُنهيت الجلسة من واجهة البث
-        api.addEventListener('videoConferenceLeft', function() {
-            stopLocalRecording();
-            stopAndUploadAutoAudio();
-            try {
-                var payload = new FormData();
-                payload.append('_token', '{{ csrf_token() }}');
-                navigator.sendBeacon('{{ route("instructor.live-sessions.leave-presence", $liveSession) }}', payload);
-            } catch (e) {}
-        });
+           
+        // بدء تسجيل الصوت تلقائياً مع LiveKit
+        startAutoAudioRecording();
 
         window.addEventListener('pagehide', function() {
             try {
@@ -432,7 +357,7 @@
             } catch (e) {}
         });
 
-        /* ══════════════════════════════════════════════
+/* ══════════════════════════════════════════════
            إنهاء البث - حفظ التسجيل أولاً
         ══════════════════════════════════════════════ */
         async function handleEndSession(e) {
@@ -468,6 +393,6 @@
             }
         });
     </script>
-    @endif
+
 </body>
 </html>

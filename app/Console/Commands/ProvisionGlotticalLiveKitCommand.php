@@ -15,11 +15,11 @@ class ProvisionGlotticalLiveKitCommand extends Command
                             {--ip=187.124.36.228 : VPS IP}
                             {--set-default : Mark LiveKit server as default provider}';
 
-    protected $description = 'Register Glottical LiveKit live server and set platform defaults (keeps Muallimx/Jitsi server row)';
+    protected $description = 'Register Glottical LiveKit live server and set platform defaults';
 
     public function handle(LiveKitTokenService $tokens): int
     {
-        $domain = LiveSetting::normalizeJitsiDomain((string) $this->option('domain'));
+        $domain = LiveSetting::normalizeLiveHost((string) $this->option('domain'));
         $ip = (string) $this->option('ip');
 
         $this->info("VPS target: {$ip}");
@@ -42,14 +42,13 @@ class ProvisionGlotticalLiveKitCommand extends Command
             'ip_address' => $ip,
             'status' => 'active',
             'max_participants' => $server->max_participants ?: 200,
-            'notes' => 'Glottical LiveKit on shared VPS — do not remove live.muallimx.com Jitsi server',
+            'notes' => 'Glottical LiveKit on shared VPS',
         ]);
         $server->save();
 
         if ($this->option('set-default') || true) {
             LiveSetting::set('live_provider', 'livekit');
             LiveSetting::set('livekit_host', $domain);
-            LiveSetting::set('jitsi_domain', $domain);
             $this->info('Default live provider => livekit / '.$domain);
         }
 

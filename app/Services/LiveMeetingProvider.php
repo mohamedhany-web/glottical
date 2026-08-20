@@ -7,6 +7,9 @@ use App\Models\LiveSetting;
 use App\Models\LiveSession;
 use App\Models\User;
 
+/**
+ * مزوّد غرف البث لمنصة Glottical — LiveKit فقط.
+ */
 class LiveMeetingProvider
 {
     public function __construct(
@@ -15,29 +18,22 @@ class LiveMeetingProvider
 
     public function defaultProvider(): string
     {
-        return \App\Models\LiveSetting::getLiveProvider();
+        return 'livekit';
     }
 
     public function resolveProvider(?LiveServer $server = null): string
     {
-        if ($server && in_array($server->provider, ['livekit', 'jitsi'], true)) {
-            return $server->provider;
-        }
-
-        return $this->defaultProvider();
+        return 'livekit';
     }
 
     public function usesLiveKit(?LiveServer $server = null): bool
     {
-        return $this->resolveProvider($server) === 'livekit';
+        return true;
     }
 
     /**
-     * بيانات الغرفة لواجهات Blade (LiveKit أو Jitsi).
-     *
      * @return array{
      *   provider: string,
-     *   jitsiDomain: string,
      *   livekitUrl: string|null,
      *   livekitToken: string|null,
      *   livekitHost: string|null,
@@ -46,25 +42,15 @@ class LiveMeetingProvider
      */
     public function roomPayload(LiveSession $session, User $user, bool $isHost = false): array
     {
-        $server = $session->server;
-        $provider = $this->resolveProvider($server);
-        $jitsiDomain = $server?->normalized_domain ?: LiveSetting::getJitsiDomain();
+        $server = $session->server ?: $this->preferredLiveKitServer();
 
         $payload = [
-            'provider' => $provider,
-            'jitsiDomain' => $jitsiDomain,
-            'livekitUrl' => null,
+            'provider' => 'livekit',
+            'livekitUrl' => $this->liveKit->wsUrl($server),
             'livekitToken' => null,
-            'livekitHost' => null,
+            'livekitHost' => $this->liveKit->publicHost($server),
             'livekitConfigured' => $this->liveKit->isConfigured(),
         ];
-
-        if ($provider !== 'livekit') {
-            return $payload;
-        }
-
-        $payload['livekitUrl'] = $this->liveKit->wsUrl($server);
-        $payload['livekitHost'] = $this->liveKit->publicHost($server);
 
         if ($this->liveKit->isConfigured()) {
             $payload['livekitToken'] = $this->liveKit->createJoinToken(
@@ -75,6 +61,69 @@ class LiveMeetingProvider
                     'canSubscribe' => true,
                     'canPublishData' => true,
                     'roomAdmin' => $isHost,
+                ]
+            );
+        }
+
+        return $payload;
+    }
+
+    /**
+     * @return array{provider: string, livekitUrl: string|null, livekitToken: string|null, livekitHost: string|null, livekitConfigured: bool, roomName: string}
+     */
+    public function classroomPayload(string $roomName, User $user, bool $isHost = false): array
+    {
+        $server = $this->preferredLiveKitServer();
+        $payload = [
+            'provider' => 'livekit',
+            'livekitUrl' => $this->liveKit->wsUrl($server),
+            'livekitToken' => null,
+            'livekitHost' => $this->liveKit->publicHost($server),
+            'livekitConfigured' => $this->liveKit->isConfigured(),
+            'roomName' => $roomName,
+        ];
+
+        if ($this->liveKit->isConfigured()) {
+            $payload['livekitToken'] = $this->liveKit->createJoinToken(
+                $roomName,
+                $user,
+                [
+                    'canPublish' => true,
+                    'canSubscribe' => true,
+                    'canPublishData' => true,
+                    'roomAdmin' => $isHost,
+                ]
+            );
+        }
+
+        return $payload;
+    }
+
+    /**
+     * @return array{provider: string, livekitUrl: string|null, livekitToken: string|null, livekitHost: string|null, livekitConfigured: bool, roomName: string}
+     */
+    public function classroomGuestPayload(string $roomName, string $guestToken, string $displayName): array
+    {
+        $server = $this->preferredLiveKitServer();
+        $payload = [
+            'provider' => 'livekit',
+            'livekitUrl' => $this->liveKit->wsUrl($server),
+            'livekitToken' => null,
+            'livekitHost' => $this->liveKit->publicHost($server),
+            'livekitConfigured' => $this->liveKit->isConfigured(),
+            'roomName' => $roomName,
+        ];
+
+        if ($this->liveKit->isConfigured()) {
+            $payload['livekitToken'] = $this->liveKit->createIdentityToken(
+                $roomName,
+                'guest-'.substr(hash('sha256', $guestToken), 0, 16),
+                $displayName,
+                [
+                    'canPublish' => true,
+                    'canSubscribe' => true,
+                    'canPublishData' => true,
+                    'metadata' => ['guest' => true, 'display_name' => $displayName],
                 ]
             );
         }

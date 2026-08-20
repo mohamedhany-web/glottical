@@ -27,7 +27,7 @@
             display: flex;
             flex-direction: column;
         }
-        #jitsi-container {
+        #meeting-video-root {
             width: 100%;
             flex: 1;
             min-height: 0;
@@ -39,7 +39,7 @@
             flex: 1 1 auto;
             min-height: 0;
         }
-        #jitsi-container iframe { width: 100% !important; height: 100% !important; border: none; }
+        #meeting-video-root iframe { width: 100% !important; height: 100% !important; border: none; }
         #meeting-stage { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; width: 100%; }
         #wb-popup { z-index: 140; }
         /* عدم خلط display مع Tailwind: عند الإغلاق لا يبقى flex يتعارض مع hidden */
@@ -371,66 +371,24 @@
     </script>
 
     <div class="room-body">
-    {{-- بوابة إذن الميكروفون/الكاميرا قبل تحميل Jitsi (تحل مشكلة بعض الأجهزة التي لا تُظهر الطلب تلقائياً) --}}
-    <div id="permission-gate" class="absolute inset-0 z-20 bg-slate-950/95 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="w-full max-w-xl rounded-2xl border border-slate-700 bg-slate-900/95 shadow-2xl p-6 sm:p-7 text-center">
-            <div class="w-14 h-14 mx-auto rounded-2xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center mb-4">
-                <i class="fas fa-microphone-lines text-xl"></i>
-            </div>
-            <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">السماح بالميكروفون والكاميرا</h2>
-            <p class="text-slate-300 text-sm leading-7 mb-5">
-                قبل دخول الاجتماع، اضغط على الزر التالي للسماح بالوصول إلى
-                <strong class="text-white">الميكروفون والكاميرا</strong>.
-                هذا يساعد في حل مشكلة الأجهزة التي لا يظهر فيها طلب الإذن تلقائياً.
-            </p>
-            <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                <button type="button" id="btn-request-media"
-                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold transition-colors">
-                    <i class="fas fa-shield-check"></i>
-                    طلب الأذونات والدخول
-                </button>
-                <button type="button" id="btn-join-without-media"
-                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-100 font-semibold transition-colors">
-                    <i class="fas fa-arrow-left"></i>
-                    دخول بدون تفعيل الأجهزة
-                </button>
-            </div>
-            <p id="permission-help" class="mt-4 text-xs text-slate-400"></p>
-        </div>
-    </div>
-
-    {{-- تنبيه: الخادم التجريبي للاختبار فقط — يُقطع بعد 5 دقائق --}}
-    @if(!empty($isDemoJitsi))
-    <div class="bg-amber-500/15 border-b border-amber-500/40 px-4 py-2 flex items-center justify-between gap-3 text-amber-800 dark:text-amber-200 text-sm flex-shrink-0">
-        <span class="flex items-center gap-2">
-            <i class="fas fa-exclamation-triangle"></i>
-            <strong>للاختبار فقط:</strong> استخدام خادم الاجتماعات التجريبي قد يقطع المكالمة بعد 5 دقائق. للإنتاج استخدم خادم الاجتماعات الخاص بك من إعدادات نظام اللايف.
-        </span>
-        <button type="button" onclick="this.parentElement.remove()" class="text-amber-600 hover:text-amber-800 p-1" aria-label="إغلاق"><i class="fas fa-times"></i></button>
-    </div>
-    @endif
 
     {{-- منطقة الاجتماع --}}
     <div id="meeting-stage" class="flex-1 min-h-0 relative w-full">
-        <main id="jitsi-container" class="flex-1 min-h-0 relative w-full" role="application" aria-label="غرفة الاجتماع">
-            <div id="jitsi-loading" class="flex flex-col items-center justify-center h-full text-slate-400 text-sm gap-3">
-                <i class="fas fa-spinner fa-spin text-2xl text-cyan-400"></i>
-                <span>جاري تحميل غرفة الاجتماع…</span>
-            </div>
-            <div id="jitsi-error" class="hidden flex-col items-center justify-center h-full p-6 text-center max-w-lg mx-auto" style="display: none;">
-                <i class="fas fa-exclamation-triangle text-amber-500 text-4xl mb-3"></i>
-                <p class="font-bold text-slate-200 mb-2">لا يمكن تحميل غرفة الاجتماع</p>
-                <p class="text-slate-400 text-sm mb-3">المتصفح لم يستطع الاتصال بـ <strong class="text-slate-300">{{ $jitsiDomain }}</strong>.</p>
-                <ul class="text-right text-slate-400 text-sm mb-4 list-none space-y-1">
-                    <li>• النطاق يجب أن يكون <strong class="text-slate-300">النطاق الصحيح لخادم الاجتماعات</strong> (مثلاً <code class="bg-slate-700 px-1 rounded">meet.glottical.com</code> وليس بالضرورة الموقع الرئيسي).</li>
-                    <li>• جرّب فتح <a href="https://{{ $jitsiDomain }}/external_api.js" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">هذا الرابط</a> في تاب جديد — إن لم يُحمّل، فخادم الاجتماعات غير متاح من جهازك أو غير مضبوط على هذا النطاق.</li>
-                    <li>• إن كان خادم الاجتماعات على نطاق فرعي (مثل meet.glottical.com)، حدّث النطاق من: <strong>لوحة الإدارة → سيرفرات البث</strong> ثم «استخدام كنطاق افتراضي» للسيرفر الصحيح.</li>
-                </ul>
-                <a href="https://{{ $jitsiDomain }}/{{ $meeting->room_name }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold transition-colors">
-                    <i class="fas fa-external-link-alt"></i> فتح الغرفة في نافذة جديدة
-                </a>
-            </div>
-        </main>
+        @if(!empty($livekitConfigured) && !empty($livekitToken) && !empty($livekitUrl))
+            @include('partials.livekit-room', [
+                'livekitUrl' => $livekitUrl,
+                'livekitToken' => $livekitToken,
+                'user' => $user,
+                'lkRole' => (!empty($useInstructorRoutes) || (($user->id ?? null) === ($meeting->user_id ?? null))) ? 'host' : 'participant',
+                'lkLeaveUrl' => $roomExitUrl ?? url('/'),
+            ])
+        @else
+            <main id="meeting-video-root" class="flex-1 min-h-0 relative w-full flex flex-col items-center justify-center gap-3 p-8 text-center text-slate-300" role="application" aria-label="غرفة الاجتماع">
+                <i class="fas fa-exclamation-triangle text-amber-400 text-3xl"></i>
+                <p class="font-bold text-white">إعدادات LiveKit غير مكتملة</p>
+                <p class="text-sm text-slate-400">اضبط مفاتيح LiveKit ونطاق السيرفر من لوحة الإدارة → سيرفرات البث.</p>
+            </main>
+        @endif
         @unless(!empty($academicObserverMode))
         @include('partials.mx-share-annotation-overlay', [
             'mxAnnRole' => 'viewer_poll',
@@ -489,7 +447,6 @@
         <span id="mx-upload-chip-text" class="truncate">رفع التسجيل</span>
     </button>
 
-    @include('partials.jitsi-iframe-media-allow')
     @php
         $mxBp = rtrim((string) request()->getBasePath(), '/');
         $mxP = $mxBp !== '' ? $mxBp : '';
@@ -547,13 +504,6 @@
     {{-- Glottical Whiteboard: تحميل ديناميكي + أكثر من مسار (Laravel ثم ملفات public المباشرة) --}}
     <script>
         (function() {
-            var jitsiDomain = '{{ $jitsiDomain }}';
-            var roomName = '{{ $meeting->room_name }}';
-            var userName = {!! json_encode($jitsiDisplayName ?? $user->name) !!};
-            var userEmail = {!! json_encode($user->email ?? '') !!};
-            var container = document.getElementById('jitsi-container');
-            var loadingEl = document.getElementById('jitsi-loading');
-            var errorEl = document.getElementById('jitsi-error');
             var meetingEndsAt = {!! json_encode(optional($meetingEndsAt)->toIso8601String()) !!};
             var timerChip = document.getElementById('meeting-timer-chip');
             var timerChipMobile = document.getElementById('meeting-timer-chip-mobile');
@@ -1005,8 +955,7 @@
             }
 
             function showError() {
-                if (loadingEl) loadingEl.classList.add('hidden');
-                if (errorEl) { errorEl.style.display = 'flex'; errorEl.classList.add('flex'); }
+                console.error('Classroom room media error');
             }
 
             function setRecordDdOpen(open) {
@@ -2217,119 +2166,11 @@
                 return 'تعذر الوصول للكاميرا أو الميكروفون. جرّب مرة أخرى أو تحقق من إعدادات المتصفح.';
             }
 
-            async function requestMediaPermission() {
-                if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
-                    setPermissionHelp('المتصفح لا يدعم طلب الأذونات تلقائياً. سنحاول الدخول مباشرة.', true);
-                    hidePermissionGate();
-                    initJitsi();
-                    return;
-                }
 
-                // على غير HTTPS قد يفشل طلب الإذن (عدا localhost)
-                if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-                    setPermissionHelp('المتصفح يشترط HTTPS لطلب إذن الميكروفون والكاميرا.', true);
-                    hidePermissionGate();
-                    initJitsi();
-                    return;
-                }
-
-                try {
-                    if (requestMediaBtn) {
-                        requestMediaBtn.disabled = true;
-                        requestMediaBtn.classList.add('opacity-70', 'cursor-not-allowed');
-                    }
-                    setPermissionHelp('جاري طلب الإذن من المتصفح...', false);
-
-                    var stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-                    stream.getTracks().forEach(function(track) { track.stop(); });
-
-                    setPermissionHelp('تم منح الإذن بنجاح. جاري فتح الاجتماع...', false);
-                    hidePermissionGate();
-                    initJitsi();
-                } catch (err) {
-                    console.error('Media permission error:', err);
-                    setPermissionHelp(mapMediaErrorToArabic(err), true);
-                    if (requestMediaBtn) {
-                        requestMediaBtn.disabled = false;
-                        requestMediaBtn.classList.remove('opacity-70', 'cursor-not-allowed');
-                    }
-                }
-            }
-
-            function initJitsi() {
-                if (typeof JitsiMeetExternalAPI === 'undefined') {
-                    showError();
-                    return;
-                }
-                try {
-                    container.innerHTML = '';
-                    if (typeof muallimxEnsureJitsiIframeMediaAllow === 'function') {
-                        muallimxEnsureJitsiIframeMediaAllow(container);
-                    }
-                    var options = {
-                        roomName: roomName,
-                        parentNode: container,
-                        width: '100%',
-                        height: '100%',
-                        userInfo: { displayName: userName, email: userEmail },
-                        configOverwrite: {
-                            prejoinConfig: { enabled: false },
-                            prejoinPageEnabled: false,
-                            enableLobby: false,
-                            requireDisplayName: false,
-                            enableWelcomePage: false,
-                            disableDeepLinking: true,
-                            enableRecording: true,
-                            startWithAudioMuted: true,
-                            startWithVideoMuted: true,
-                            disableAudioLevels: false,
-                            enableNoisyMicDetection: false,
-                        },
-                        interfaceConfigOverwrite: {
-                            APP_NAME: 'Glottical Classroom',
-                            NATIVE_APP_NAME: 'Glottical Classroom',
-                            PROVIDER_NAME: 'Glottical',
-                            JITSI_WATERMARK_LINK: '',
-                            HIDE_DEEP_LINKING_LOGO: true,
-                            TOOLBAR_BUTTONS: [
-                                'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
-                                'fodeviceselection', 'hangup', 'chat', 'recording',
-                                'raisehand', 'invite', 'tileview', 'videoquality', 'filmstrip',
-                                'whiteboard'
-                            ],
-                            SHOW_JITSI_WATERMARK: false,
-                            SHOW_WATERMARK_FOR_GUESTS: false,
-                            SHOW_BRAND_WATERMARK: false,
-                            SHOW_POWERED_BY: false,
-                            MOBILE_APP_PROMO: false,
-                            DEFAULT_BACKGROUND: '#0f172a',
-                            DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
-                            FILM_STRIP_MAX_HEIGHT: 100,
-                        }
-                    };
-                    api = new JitsiMeetExternalAPI(jitsiDomain, options);
-
-                    if (loadingEl) loadingEl.classList.add('hidden');
-                    setTimeout(resizeWbCanvas, 300);
-                    setTimeout(resizeWbCanvas, 1200);
-
-                    api.addEventListener('readyToClose', function() {
-                        if (isRecording) {
-                            stopBrowserRecording();
-                        }
-                        window.location.href = roomExitUrl;
-                    });
-
-                    api.addEventListener('videoConferenceJoined', function() {
-                        hasJoinedConference = true;
-                        resizeWbCanvas();
-                        setTimeout(resizeWbCanvas, 500);
-                    });
-                } catch (e) {
-                    console.error('Jitsi init error:', e);
-                    showError();
-                }
-            }
+            var hasJoinedConference = true;
+            var api = null;
+            var permissionGate = document.getElementById('permission-gate');
+            if (permissionGate) permissionGate.classList.add('hidden');
 
             function tickMeetingTimer() {
                 if (!meetingEndsAt || (!timerChip && !timerChipMobile)) return;
@@ -2360,25 +2201,6 @@
             setInterval(tickMeetingTimer, 1000);
             tickMeetingTimer();
 
-            var script = document.createElement('script');
-            script.src = 'https://' + jitsiDomain + '/external_api.js';
-            script.async = false;
-            script.onload = function() {
-                if (requestMediaBtn) {
-                    requestMediaBtn.addEventListener('click', requestMediaPermission);
-                }
-                if (joinWithoutMediaBtn) {
-                    joinWithoutMediaBtn.addEventListener('click', function() {
-                        hidePermissionGate();
-                        initJitsi();
-                    });
-                }
-            };
-            script.onerror = function() {
-                console.error('Failed to load Jitsi external_api.js from ' + script.src);
-                showError();
-            };
-            document.head.appendChild(script);
 
             @unless(!empty($academicObserverMode))
             function attachCurriculumPresenter() {

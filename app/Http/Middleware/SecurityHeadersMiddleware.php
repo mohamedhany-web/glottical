@@ -23,7 +23,7 @@ class SecurityHeadersMiddleware
             $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
             $response->headers->set('X-XSS-Protection', '1; mode=block');
             $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-            // لا تضبط microphone=/camera=() — ذلك يمنع المتصفح من منح الإذن حتى داخل iframe جيتسي (يظهر خطأ Jitsi «Error obtaining microphone permission»).
+            // لا تضبط microphone=/camera=() — ذلك يمنع المتصفح من منح إذن الميكروفون/الكاميرا لغرف LiveKit.
             $response->headers->set('Permissions-Policy', 'geolocation=()');
 
             $this->applyContentSecurityPolicy($response, $request);
@@ -48,13 +48,13 @@ class SecurityHeadersMiddleware
             return;
         }
 
-        $jitsiDomain = '';
+        $liveHost = '';
         try {
-            $jitsiDomain = LiveSetting::getJitsiDomain();
+            $liveHost = LiveSetting::getLiveKitHost();
         } catch (\Throwable) {
-            $jitsiDomain = '';
+            $liveHost = '';
         }
-        $jitsiOrigin = $jitsiDomain !== '' ? ' https://'.$jitsiDomain : '';
+        $liveOrigin = $liveHost !== '' ? ' https://'.$liveHost : '';
 
         // فواتيرك: الإطارات والنماذج والسكربتات الديناميكية من نطاقهم (blob: لمسار احتياطي fetch→Blob على صفحة الدفع)
         $fawaterkCsp = ' https://app.fawaterk.com https://staging.fawaterk.com https://*.fawaterk.com https://fawaterk.com https://www.fawaterk.com https://*.fawaterak.xyz';
@@ -66,7 +66,7 @@ class SecurityHeadersMiddleware
             'https://cdnjs.cloudflare.com '.
             'https://unpkg.com '.
             'https://fonts.googleapis.com'.
-            $jitsiOrigin.
+            $liveOrigin.
             $fawaterkCsp.'; '.
             "style-src 'self' 'unsafe-inline' ".
             'https://fonts.googleapis.com '.
@@ -84,7 +84,7 @@ class SecurityHeadersMiddleware
             'https://iframe.mediadelivery.net '.
             'https://player.mediadelivery.net '.
             'https://view.officeapps.live.com '.
-            $jitsiOrigin.
+            $liveOrigin.
             $fawaterkCsp.'; '.
             "object-src 'none'; ".
             "base-uri 'self'; ".

@@ -1,8 +1,8 @@
 # تشغيل LiveKit لـ Glottical على VPS 187.124.36.228
 
 ## الهدف
-- `live.muallimx.com` يبقى لـ Jitsi / Muallimx دون تغيير.
-- `live.glottical.com` يصبح نطاق LiveKit لمنصة Glottical على **نفس** الـ VPS.
+- `live.glottical.com` هو نطاق LiveKit لمنصة Glottical.
+- كل غرف البث وClassroom تعمل عبر LiveKit فقط.
 
 ## 1) DNS (Hostinger — dns.hostinger.com)
 في لوحة DNS لنطاق `glottical.com` أضف:
@@ -25,13 +25,11 @@ sudo bash scripts/setup-live-glottical-livekit.sh
 السكربت:
 - يضيف nginx لـ `live.glottical.com` → `127.0.0.1:7880`
 - يصدر شهادة Let's Encrypt
-- يضيف مفتاح Glottical إلى `livekit.yaml` **بدون حذف** مفاتيح Muallimx
-- لا يلمس إعدادات `live.muallimx.com`
+- يضبط مفاتيح LiveKit في `livekit.yaml`
 
 ## 3) منصة Glottical
 في `.env` (محلياً وعلى الإنتاج):
 ```
-LIVE_PROVIDER=livekit
 LIVEKIT_URL=wss://live.glottical.com
 LIVEKIT_PUBLIC_HOST=live.glottical.com
 LIVEKIT_HTTP_URL=http://187.124.36.228:7880
@@ -48,9 +46,9 @@ php artisan livekit:provision-glottical --set-default
 ## 4) تحقق
 - `curl -I https://live.glottical.com/` → 200
 - `curl http://187.124.36.228:7880/` → `OK`
-- غرفة بث معلم/طالب تحمّل LiveKit (وليس `external_api.js` من Jitsi)
+- غرفة بث معلم/طالب وClassroom تحمّل عميل LiveKit من jsDelivr
 
 ## ملاحظات
-- LiveKit يعمل حالياً على المنفذ `7880` على الـ VPS (تم التحقق).
+- LiveKit يعمل حالياً على المنفذ `7880` على الـ VPS.
 - بدون سجل DNS + شهادة SSL لن يعمل `wss://live.glottical.com` من المتصفح على HTTPS.
-- إن احتجت تنفيذ السكربت من هنا، أرسل مستخدم/كلمة مرور SSH أو مفتاحاً خاصاً للـ VPS.
+- من لوحة الإدارة → سيرفرات البث: أضف سيرفر LiveKit واضغط «استخدام كنطاق افتراضي».

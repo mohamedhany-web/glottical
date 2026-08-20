@@ -1,6 +1,6 @@
 /**
  * Glottical Classroom — in-meeting curriculum presenter (host picker + shared stage).
- * Syncs via HTTP Cache polling (Jitsi). Optional LiveKit DataChannel hooks remain no-ops if absent.
+ * Syncs via HTTP Cache polling. Optional LiveKit DataChannel hooks remain no-ops if absent.
  * window.MxClassroomCurriculumPresenter.attach(api, config)
  */
 (function (global) {
@@ -277,7 +277,7 @@
       });
     }
 
-    /* Guests poll Cache-backed state over HTTP (Jitsi has no data channel). */
+    /* Guests poll Cache-backed state over HTTP. */
     if (! this.isHost || this.config.pollAsHost) {
       this._startPoll();
     }

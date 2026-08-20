@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\ClassroomMeeting;
 use App\Models\ClassroomMeetingReport;
 use App\Models\IntegrationSetting;
-use App\Models\LiveSetting;
 use App\Models\TutoringGroupBooking;
 use App\Services\ClassroomCurriculumPresentService;
 use App\Services\TutoringGroupOrchestrationService;
@@ -267,24 +266,28 @@ class ClassroomController extends Controller
                     : 'انتهت مدة الاجتماع المسموح بها.');
         }
 
-        $jitsiDomain = LiveSetting::getJitsiDomain();
-        $isDemoJitsi = (strpos($jitsiDomain, 'meet.jit.si') !== false);
+        $meetingPayload = app(\App\Services\LiveMeetingProvider::class)->classroomPayload(
+            $meeting->liveRoomName(),
+            $user,
+            true
+        );
         $meetingEndsAt = $meeting->started_at ? $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes) : null;
         $useInstructorRoutes = request()->routeIs('instructor.*');
         $subscriptionFeatureMenuItems = [];
         $subscriptionPackageLabel = null;
 
-        return view('student.classroom.room', compact(
-            'meeting',
-            'jitsiDomain',
-            'user',
-            'isDemoJitsi',
-            'maxDurationMinutes',
-            'effectiveDurationMinutes',
-            'meetingEndsAt',
-            'useInstructorRoutes',
-            'subscriptionFeatureMenuItems',
-            'subscriptionPackageLabel'
+        return view('student.classroom.room', array_merge(
+            compact(
+                'meeting',
+                'user',
+                'maxDurationMinutes',
+                'effectiveDurationMinutes',
+                'meetingEndsAt',
+                'useInstructorRoutes',
+                'subscriptionFeatureMenuItems',
+                'subscriptionPackageLabel'
+            ),
+            $meetingPayload
         ));
     }
 
@@ -505,7 +508,7 @@ class ClassroomController extends Controller
     }
 
     /**
-     * حجز التدريس 1:1 يبقى على Classroom/Jitsi (ليس LiveSession/LiveKit).
+     * حجز التدريس 1:1 يبقى على Classroom/LiveKit (وليس جلسات البث الجماعي LiveSession).
      * عند إنهاء غرفة مربوطة بحجز مؤكد: خصم الرصيد مرة واحدة.
      */
     private function completeLinkedTutoringBookingIfNeeded(ClassroomMeeting $meeting): bool

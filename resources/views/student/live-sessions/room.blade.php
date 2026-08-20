@@ -5,211 +5,280 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $liveSession->title }} — بث مباشر</title>
+    @include('partials.favicon-links')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-live-1">
     <style>
-        * { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
-        body { margin: 0; padding: 0; background: #0c1222; overflow: hidden; height: 100vh; }
-        #mx-live-broadcast-root { width: 100%; flex: 1; min-height: 0; background: #0f172a; position: relative; }
-        .room-body { position: relative; display: flex; flex-direction: column; height: calc(100vh - 72px); }
-        #mx-live-broadcast-root iframe { width: 100% !important; height: 100% !important; border: none; }
-
-        /* Session ended overlay */
+        :root {
+            --st-bg: #f8f9fa;
+            --st-ink: #4f4f4f;
+            --st-ink-strong: #212523;
+            --st-muted: #979797;
+            --st-blue: #0997d9;
+            --st-brand: #0B3D91;
+            --st-gold: #F5B800;
+            --st-line: #ebebeb;
+            --st-nav: #071226;
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Cairo', 'Tajawal', 'Poppins', system-ui, sans-serif;
+            background: var(--st-bg);
+            color: var(--st-ink);
+            overflow: hidden;
+        }
+        .st-live-shell {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            background:
+                radial-gradient(1200px 420px at 100% -10%, rgba(9,151,217,.12), transparent 55%),
+                radial-gradient(900px 380px at 0% 0%, rgba(11,61,145,.10), transparent 50%),
+                var(--st-bg);
+        }
+        .st-live-top {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, var(--st-brand) 0%, var(--st-blue) 100%);
+            color: #fff;
+            box-shadow: 0 10px 28px rgba(11, 61, 145, .22);
+        }
+        .st-live-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 800;
+        }
+        .st-live-brand__mark {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            background: rgba(255,255,255,.16);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--st-gold);
+        }
+        .st-live-meta { min-width: 0; }
+        .st-live-meta__kicker {
+            margin: 0;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            opacity: .85;
+        }
+        .st-live-meta__title {
+            margin: 2px 0 0;
+            font-size: clamp(0.95rem, 2vw, 1.15rem);
+            font-weight: 900;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: min(52vw, 420px);
+        }
+        .st-live-meta__sub {
+            margin: 2px 0 0;
+            font-size: 12px;
+            font-weight: 600;
+            opacity: .9;
+        }
+        .st-live-live-dot {
+            width: 9px; height: 9px;
+            border-radius: 999px;
+            background: #ef4444;
+            box-shadow: 0 0 0 0 rgba(239,68,68,.55);
+            animation: stLivePulse 1.4s infinite;
+            display: inline-block;
+        }
+        @keyframes stLivePulse {
+            0% { box-shadow: 0 0 0 0 rgba(239,68,68,.55); }
+            70% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+            100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+        }
+        .st-live-actions { display: inline-flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .st-live-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 40px;
+            padding: 0 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 800;
+            border: 0;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .st-live-pill--gold { background: var(--st-gold); color: #072A66; }
+        .st-live-pill--ghost {
+            background: transparent;
+            color: #fff;
+            border: 1.5px solid rgba(255,255,255,.65);
+        }
+        .st-live-pill--warn {
+            background: rgba(245,184,0,.2);
+            color: #fff7d6;
+            border: 1px solid rgba(245,184,0,.45);
+        }
+        .st-live-body {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+        }
+        .st-live-stage {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid var(--st-line);
+            background: #0f172a;
+            box-shadow: 0 14px 36px rgba(7, 18, 38, .12);
+            position: relative;
+        }
+        #lk-room-shell { background: #0b1220 !important; }
+        #lk-stage { background: linear-gradient(180deg, #0b1220, #111827); }
+        .lk-btn {
+            border-radius: 999px !important;
+            font-family: inherit !important;
+            font-weight: 800 !important;
+        }
+        .lk-btn-danger { background: #ce6262 !important; border-color: #ce6262 !important; }
         #mx-session-ended {
             display: none;
             position: fixed; inset: 0; z-index: 9999;
-            background: rgba(10,17,32,0.95);
+            background: rgba(248,249,250,.96);
             flex-direction: column; align-items: center; justify-content: center;
-            gap: 16px;
-            backdrop-filter: blur(8px);
+            gap: 14px; backdrop-filter: blur(8px);
+            padding: 24px; text-align: center;
         }
         #mx-session-ended.show { display: flex; }
-        #mx-session-ended .mx-icon { font-size: 56px; color: #f87171; }
-        #mx-session-ended h2 { color: #f1f5f9; font-size: 20px; font-weight: 700; margin: 0; }
-        #mx-session-ended p  { color: #94a3b8; font-size: 14px; margin: 0; }
+        #mx-session-ended .mx-icon {
+            width: 72px; height: 72px; border-radius: 20px;
+            display: grid; place-items: center;
+            background: linear-gradient(135deg, var(--st-brand), var(--st-blue));
+            color: var(--st-gold); font-size: 28px;
+        }
+        #mx-session-ended h2 { color: var(--st-ink-strong); font-size: 1.35rem; font-weight: 900; margin: 0; }
+        #mx-session-ended p { color: var(--st-muted); font-size: 14px; margin: 0; font-weight: 600; }
         #mx-redir-bar {
-            width: 200px; height: 4px; background: rgba(148,163,184,0.2);
-            border-radius: 2px; overflow: hidden;
+            width: 220px; height: 5px; background: #e5e7eb;
+            border-radius: 999px; overflow: hidden;
         }
         #mx-redir-fill {
-            height: 100%; background: #38bdf8; border-radius: 2px;
+            height: 100%; background: linear-gradient(90deg, var(--st-brand), var(--st-blue));
             width: 0; transition: width 5s linear;
+        }
+        @media (max-width: 640px) {
+            .st-live-meta__title { max-width: 42vw; }
+            .st-live-body { padding: 8px; }
         }
     </style>
 </head>
-<body class="bg-slate-950">
-
-    {{-- Session ended overlay --}}
+<body>
     <div id="mx-session-ended">
         <div class="mx-icon"><i class="fas fa-broadcast-tower"></i></div>
         <h2>انتهت الجلسة</h2>
         <p>قام المدرب بإنهاء البث المباشر</p>
         <div id="mx-redir-bar"><div id="mx-redir-fill"></div></div>
-        <p style="font-size:12px;color:#64748b;">سيتم توجيهك تلقائياً...</p>
-        <a href="{{ route('student.live-sessions.index') }}"
-           class="mt-2 inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-semibold">
+        <p style="font-size:12px;">سيتم توجيهك تلقائياً...</p>
+        <a href="{{ route('student.live-sessions.index') }}" class="st-live-pill st-live-pill--gold">
             <i class="fas fa-arrow-left"></i> العودة الآن
         </a>
     </div>
 
-    {{-- شريط Glottical العلوي --}}
-    <header class="h-[72px] bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex items-center justify-between px-4 sm:px-6 shadow-lg">
-        <div class="flex items-center gap-4">
-            <a href="{{ route('student.live-sessions.index') }}" class="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-                <span class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
-                    <i class="fas fa-broadcast-tower text-lg"></i>
-                </span>
-                <span class="font-bold text-white hidden sm:inline">Glottical</span>
-            </a>
-            <span class="w-px h-6 bg-slate-600 hidden sm:block"></span>
-            <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50"></span>
-                <span class="text-white font-semibold text-sm">{{ $liveSession->title }}</span>
-                @if($liveSession->instructor)
-                <span class="text-slate-400 text-xs hidden sm:inline">{{ $liveSession->instructor->name }}</span>
-                @endif
+    <div class="st-live-shell">
+        <header class="st-live-top">
+            <div class="flex items-center gap-3 min-w-0">
+                <a href="{{ route('student.live-sessions.index') }}" class="st-live-brand">
+                    <span class="st-live-brand__mark"><i class="fas fa-broadcast-tower"></i></span>
+                    <span class="hidden sm:inline">{{ config('app.name') }}</span>
+                </a>
+                <div class="st-live-meta">
+                    <p class="st-live-meta__kicker"><span class="st-live-live-dot"></span> بث مباشر</p>
+                    <h1 class="st-live-meta__title">{{ $liveSession->title }}</h1>
+                    @if($liveSession->instructor)
+                        <p class="st-live-meta__sub hidden sm:block">{{ $liveSession->instructor->name }}</p>
+                    @endif
+                </div>
             </div>
-        </div>
-        <div class="flex items-center gap-2">
-            <div id="mx-student-wb-wrap" class="{{ ($allowStudentWhiteboard ?? false) ? '' : 'hidden' }}">
-                <button type="button" id="btn-mx-share-draw"
-                        class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-amber-600/25 hover:bg-amber-600/35 text-amber-100 text-sm font-semibold transition-colors border border-amber-500/40"
-                        title="رسم فوق ما يظهر في الاجتماع (يُرى لدى المدرب فوق نفس العرض)">
-                    <i class="fas fa-pen-fancy text-amber-300"></i>
-                    <span class="hidden sm:inline">رسم فوق البث</span>
-                </button>
+            <div class="st-live-actions">
+                <div id="mx-student-wb-wrap" class="{{ ($allowStudentWhiteboard ?? false) ? '' : 'hidden' }}">
+                    <button type="button" id="btn-mx-share-draw" class="st-live-pill st-live-pill--warn" title="رسم فوق ما يظهر في الاجتماع">
+                        <i class="fas fa-pen-fancy"></i>
+                        <span class="hidden sm:inline">رسم فوق البث</span>
+                    </button>
+                </div>
+                <form method="POST" action="{{ route('student.live-sessions.leave', $liveSession) }}" class="inline m-0">
+                    @csrf
+                    <button type="submit" class="st-live-pill st-live-pill--ghost">
+                        <i class="fas fa-sign-out-alt"></i> مغادرة
+                    </button>
+                </form>
             </div>
-            <form method="POST" action="{{ route('student.live-sessions.leave', $liveSession) }}" class="inline">
-                @csrf
-                <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-colors border border-slate-600">
-                    <i class="fas fa-sign-out-alt"></i> مغادرة
-                </button>
-            </form>
-        </div>
-    </header>
+        </header>
 
-    <div class="room-body">
-        <div id="mx-video-stack" class="relative flex-1 min-h-0 flex flex-col">
-            @if(($provider ?? 'jitsi') === 'livekit')
-                @include('partials.livekit-room', [
-                    'livekitUrl' => $livekitUrl,
-                    'livekitToken' => $livekitToken,
-                    'user' => $user,
-                    'lkRole' => 'participant',
-                    'lkLeaveUrl' => route('student.live-sessions.leave', $liveSession),
+        <div class="st-live-body">
+            <div id="mx-video-stack" class="st-live-stage">
+                @if(!empty($livekitConfigured) && !empty($livekitToken) && !empty($livekitUrl))
+                    @include('partials.livekit-room', [
+                        'livekitUrl' => $livekitUrl,
+                        'livekitToken' => $livekitToken,
+                        'user' => $user,
+                        'lkRole' => 'participant',
+                        'lkLeaveUrl' => route('student.live-sessions.index'),
+                    ])
+                @else
+                    <div class="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center text-slate-200">
+                        <i class="fas fa-exclamation-triangle text-amber-400 text-3xl"></i>
+                        <p class="font-bold text-lg">إعدادات البث غير مكتملة</p>
+                        <p class="text-sm text-slate-400 max-w-md">تحقق من مفاتيح LiveKit في إعدادات السيرفر ونطاق البث من لوحة الإدارة → سيرفرات البث.</p>
+                        <a href="{{ route('student.live-sessions.index') }}" class="st-live-pill st-live-pill--gold mt-2">العودة للجلسات</a>
+                    </div>
+                @endif
+                @include('partials.mx-share-annotation-overlay', [
+                    'mxAnnRole' => 'student_emit',
+                    'mxAnnPostUrl' => route('student.live-sessions.share-annotation', $liveSession),
                 ])
-            @else
-                <main id="mx-live-broadcast-root" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة البث — Glottical"></main>
-            @endif
-            @include('partials.mx-share-annotation-overlay', [
-                'mxAnnRole' => 'student_emit',
-                'mxAnnPostUrl' => route('student.live-sessions.share-annotation', $liveSession),
-            ])
+            </div>
         </div>
     </div>
 
-    @if(($provider ?? 'jitsi') !== 'livekit')
-    @include('partials.jitsi-iframe-media-allow')
-    <script src="https://{{ $jitsiDomain }}/external_api.js"></script>
     <script>
-        const domain    = '{{ $jitsiDomain }}';
-        const indexUrl  = '{{ route("student.live-sessions.index") }}';
-        const jitsiRoot = document.querySelector('#mx-live-broadcast-root');
-        if (typeof muallimxEnsureJitsiIframeMediaAllow === 'function') {
-            muallimxEnsureJitsiIframeMediaAllow(jitsiRoot);
-        }
-
-        const options = {
-            roomName: '{{ $liveSession->room_name }}',
-            parentNode: jitsiRoot,
-            width: '100%',
-            height: '100%',
-            userInfo: {
-                displayName: '{{ $user->name }}',
-                email: '{{ $user->email }}'
-            },
-            configOverwrite: {
-                prejoinConfig: { enabled: false },
-                prejoinPageEnabled: false,
-                enableLobby: false,
-                requireDisplayName: false,
-                enableWelcomePage: false,
-                disableDeepLinking: true,
-                startWithAudioMuted: {{ $liveSession->mute_on_join ? 'true' : 'false' }},
-                startWithVideoMuted: {{ $liveSession->video_off_on_join ? 'true' : 'false' }},
-                enableNoisyMicDetection: false,
-                @if(!$liveSession->allow_chat)
-                disableChat: true,
-                @endif
-            },
-            interfaceConfigOverwrite: {
-                APP_NAME: 'Glottical',
-                NATIVE_APP_NAME: 'Glottical',
-                PROVIDER_NAME: 'Glottical',
-                JITSI_WATERMARK_LINK: '',
-                HIDE_DEEP_LINKING_LOGO: true,
-                TOOLBAR_BUTTONS: [
-                    'microphone',
-                    'camera',
-                    @if($liveSession->allow_screen_share)
-                    'desktop',
-                    @endif
-                    @if($liveSession->allow_chat)
-                    'chat',
-                    @endif
-                    'raisehand',
-                    'participants-pane',
-                    'tileview',
-                    'fullscreen',
-                    'settings',
-                    'hangup',
-                ],
-                TOOLBAR_ALWAYS_VISIBLE: true,
-                SHOW_JITSI_WATERMARK: false,
-                SHOW_WATERMARK_FOR_GUESTS: false,
-                SHOW_BRAND_WATERMARK: false,
-                SHOW_POWERED_BY: false,
-                MOBILE_APP_PROMO: false,
-                DEFAULT_BACKGROUND: '#0f172a',
-                DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
-                FILM_STRIP_MAX_HEIGHT: 120,
-            }
-        };
-
-        const api = new JitsiMeetExternalAPI(domain, options);
-
-        /* ══════════════════════════════════════════════
-           إعادة التوجيه عند انتهاء الجلسة
-        ══════════════════════════════════════════════ */
-        function showSessionEndedAndRedirect() {
-            var overlay = document.getElementById('mx-session-ended');
-            var fill    = document.getElementById('mx-redir-fill');
-            overlay.classList.add('show');
-            // شريط التقدم
-            setTimeout(function() { fill.style.width = '100%'; }, 100);
-            // توجيه تلقائي بعد 5 ثوانٍ
-            setTimeout(function() {
-                window.location.href = indexUrl;
-            }, 5500);
-        }
-
-        // عند مغادرة الطالب نفسه
-        api.addEventListener('readyToClose', function() {
-            window.location.href = indexUrl;
-        });
-
-        // عند إنهاء المعلم للجلسة أو قطع الاتصال
-        api.addEventListener('videoConferenceLeft', function() {
-            showSessionEndedAndRedirect();
-        });
-
         (function () {
+            var indexUrl = @json(route('student.live-sessions.index'));
+            var statusUrl = @json(route('student.live-sessions.status', $liveSession));
             var wrap = document.getElementById('mx-student-wb-wrap');
             var drawBtn = document.getElementById('btn-mx-share-draw');
-            var statusUrl = '{{ route("student.live-sessions.status", $liveSession) }}';
+
+            function showSessionEndedAndRedirect() {
+                var overlay = document.getElementById('mx-session-ended');
+                var fill = document.getElementById('mx-redir-fill');
+                if (!overlay) {
+                    window.location.href = indexUrl;
+                    return;
+                }
+                overlay.classList.add('show');
+                setTimeout(function () { if (fill) fill.style.width = '100%'; }, 100);
+                setTimeout(function () { window.location.href = indexUrl; }, 5500);
+            }
+
             function applyAllow(on) {
                 if (typeof window.__mxShareAnnSetAllowed === 'function') {
                     window.__mxShareAnnSetAllowed(!!on);
@@ -218,10 +287,12 @@
                 if (on) wrap.classList.remove('hidden');
                 else wrap.classList.add('hidden');
             }
+
             if (drawBtn && typeof window.__mxShareAnnOpenToolbar === 'function') {
                 drawBtn.addEventListener('click', function () { window.__mxShareAnnOpenToolbar(); });
             }
             applyAllow({{ ($allowStudentWhiteboard ?? false) ? 'true' : 'false' }});
+
             setInterval(function () {
                 fetch(statusUrl, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(function (r) { return r.ok ? r.json() : null; })
@@ -239,6 +310,5 @@
             }, 12000);
         })();
     </script>
-    @endif
 </body>
 </html>

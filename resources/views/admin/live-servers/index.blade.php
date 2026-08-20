@@ -13,10 +13,10 @@
         </a>
     </div>
 
-    @if($defaultJitsiDomain ?? null)
+    @if($defaultLiveHost ?? null)
     <div class="bg-slate-100 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600 px-4 py-2 text-sm text-slate-600 dark:text-slate-300">
         <i class="fas fa-link text-cyan-500 ml-1"></i>
-        <strong>النطاق الافتراضي الحالي لـ Jitsi:</strong> <code class="bg-slate-200 dark:bg-slate-600 px-1.5 py-0.5 rounded">{{ $defaultJitsiDomain }}</code>
+        <strong>نطاق LiveKit الافتراضي:</strong> <code class="bg-slate-200 dark:bg-slate-600 px-1.5 py-0.5 rounded">{{ $defaultLiveHost }}</code>
     </div>
     @endif
 
@@ -29,7 +29,7 @@
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         @forelse($servers as $server)
-        @php $isDefault = ($defaultJitsiDomain ?? '') && trim($defaultJitsiDomain) === trim($server->domain); $loadCount = $server->active_sessions_count; $loadPct = $server->max_participants > 0 ? min(100, (int) round(($loadCount / $server->max_participants) * 100)) : 0; @endphp
+        @php $isDefault = ($defaultLiveHost ?? '') && trim($defaultLiveHost) === trim($server->domain); $loadCount = $server->active_sessions_count; $loadPct = $server->max_participants > 0 ? min(100, (int) round(($loadCount / $server->max_participants) * 100)) : 0; @endphp
         <div class="bg-white dark:bg-slate-800 rounded-xl border {{ $isDefault ? 'border-cyan-500 ring-1 ring-cyan-500/30' : 'border-slate-200 dark:border-slate-700' }} p-5 space-y-4">
             <div class="flex items-start justify-between">
                 <div>

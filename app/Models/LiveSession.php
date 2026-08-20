@@ -147,11 +147,11 @@ class LiveSession extends Model
         $this->update(['status' => 'cancelled']);
     }
 
-    public function getJitsiUrl(): string
+    public function getLiveRoomUrl(): string
     {
-        $domain = $this->server?->normalized_domain ?: LiveSetting::getJitsiDomain();
+        $domain = $this->server?->normalized_domain ?: LiveSetting::getLiveKitHost();
 
-        return "https://{$domain}/{$this->room_name}";
+        return 'https://'.$domain.'/'.$this->room_name;
     }
 
     public function getAttendeeCount(): int

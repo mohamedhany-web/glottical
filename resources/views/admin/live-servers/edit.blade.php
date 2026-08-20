@@ -28,18 +28,10 @@
             </div>
             <div>
                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">النوع</label>
-                <select name="provider" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
-                    <option value="livekit" {{ $liveServer->provider === 'livekit' ? 'selected' : '' }}>LiveKit</option>
-                    <option value="jitsi" {{ $liveServer->provider === 'jitsi' ? 'selected' : '' }}>Jitsi Meet</option>
-                    <option value="custom" {{ $liveServer->provider === 'custom' ? 'selected' : '' }}>مخصص</option>
-                </select>
+                <input type="hidden" name="provider" value="livekit">
+                <div class="w-full rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white px-3 py-2 font-semibold text-cyan-700 dark:text-cyan-300">LiveKit</div>
+                <p class="text-xs text-slate-500 mt-1">المنصة تعمل عبر LiveKit فقط.</p>
             </div>
-            @if($liveServer->provider === 'jitsi')
-            <div class="md:col-span-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 p-4 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                <p class="font-semibold text-slate-800 dark:text-slate-100 mb-1"><i class="fas fa-info-circle text-blue-500 ml-1"></i> شعار «Jitsi» داخل الاجتماع</p>
-                <p>إن بقيت كلمة أو شعار Jitsi ظاهرة رغم إعدادات المنصة، فالسبب أن <strong>خادم Jitsi</strong> (وليس Laravel) يحدد ذلك من ملف الواجهة على السيرفر. على هذا السيرفر عدّل <code class="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">interface_config.js</code> أو نسخة Docker <code class="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">custom-interface_config.js</code> واضبط متغيرات العلامة إلى <code class="text-xs bg-slate-200 dark:bg-slate-700 px-1 rounded">false</code> ثم أعد تحميل الواجهة.</p>
-            </div>
-            @endif
             <div>
                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">الحالة</label>
                 <select name="status" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">

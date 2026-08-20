@@ -18,10 +18,10 @@
         </div>
     </div>
 
-    @if($defaultJitsiDomain ?? null)
+    @if($defaultLiveHost ?? null)
     <div class="bg-slate-100 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600 px-4 py-2 text-sm text-slate-600 dark:text-slate-300">
         <i class="fas fa-link text-cyan-500 ml-1"></i>
-        <strong>النطاق الافتراضي:</strong> <code class="bg-slate-200 dark:bg-slate-600 px-1.5 py-0.5 rounded">{{ $defaultJitsiDomain }}</code>
+        <strong>نطاق LiveKit الافتراضي:</strong> <code class="bg-slate-200 dark:bg-slate-600 px-1.5 py-0.5 rounded">{{ $defaultLiveHost }}</code>
     </div>
     @endif
 
@@ -40,7 +40,7 @@
     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-5" id="servers-grid">
         @forelse($servers as $server)
         @php
-            $isDefault = ($defaultJitsiDomain ?? '') && trim($defaultJitsiDomain) === trim($server->domain);
+            $isDefault = ($defaultLiveHost ?? '') && trim($defaultLiveHost) === trim($server->domain);
             $loadCount = $server->active_sessions_count;
             $loadPct = $server->max_participants > 0 ? min(100, (int) round(($loadCount / $server->max_participants) * 100)) : 0;
             $hasPanel = $server->control_panel_url !== '';

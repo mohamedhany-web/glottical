@@ -49,12 +49,12 @@ class LiveServer extends Model
     /** النطاق بعد إزالة البروتوكول والـ slash النهائية. */
     public function getNormalizedDomainAttribute(): string
     {
-        return LiveSetting::normalizeJitsiDomain((string) $this->domain);
+        return LiveSetting::normalizeLiveHost((string) $this->domain);
     }
 
-    /** تطبيع الدومين أثناء الحفظ لتفادي أي مشاكل embed. */
+    /** تطبيع الدومين أثناء الحفظ. */
     public function setDomainAttribute($value): void
     {
-        $this->attributes['domain'] = LiveSetting::normalizeJitsiDomain((string) $value);
+        $this->attributes['domain'] = LiveSetting::normalizeLiveHost((string) $value);
     }
 }
