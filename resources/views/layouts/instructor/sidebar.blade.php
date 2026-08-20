@@ -29,9 +29,9 @@
 {{-- SnowUI Sidebar: brand + favorites fixed; dashboards/pages scroll --}}
 <div class="su-brand">
     @if($user->profile_image)
-        <img src="{{ $user->profile_image_url }}" alt="">
+        <img src="{{ $user->profile_image_url }}" alt="" width="24" height="24" style="width:24px;height:24px;max-width:24px;max-height:24px;border-radius:999px;object-fit:cover;flex-shrink:0;display:block">
     @else
-        <img src="{{ versioned_asset('images/instructor-panel/avatar-byewind.png') }}" alt="" class="su-brand__avatar">
+        <img src="{{ versioned_asset('images/instructor-panel/avatar-byewind.png') }}" alt="" width="24" height="24" class="su-brand__avatar" style="width:24px;height:24px;max-width:24px;max-height:24px;border-radius:999px;object-fit:cover;flex-shrink:0;display:block">
     @endif
     <span class="su-brand__name">{{ config('app.name') }}</span>
     <template x-if="isNarrow">

@@ -44,10 +44,32 @@
             $ipCssRel = 'css/instructor-panel.css';
             $ipCssFile = public_path($ipCssRel);
             $ipCssVer = is_file($ipCssFile) ? (string) filemtime($ipCssFile) : (string) time();
+            $ipBase = rtrim((string) request()->getBasePath(), '/');
+            $ipCssRoot = ($ipBase !== '' ? $ipBase : '').'/'.$ipCssRel.'?v='.$ipCssVer;
         @endphp
-        {{-- مسار نسبي + asset مطلق: يتجنّب كسر التصميم عند خطأ APP_URL أو كاش قديم --}}
+        {{-- عدة مسارات: نسبي / asset / basePath — لو فشل واحد يشتغل التاني --}}
         <link rel="stylesheet" href="{{ versioned_asset($ipCssRel) }}">
         <link rel="stylesheet" href="{{ asset($ipCssRel) }}?v={{ $ipCssVer }}">
+        <link rel="stylesheet" href="{{ $ipCssRoot }}">
+        {{-- Critical fallback: يمنع صورة البروفايل من ملء الشاشة لو CSS الخارجي فشل --}}
+        <style id="ip-critical">
+            body.ip-body .ip-shell{display:flex!important;position:fixed!important;inset:0!important;width:100%!important;height:100dvh!important;max-height:100dvh!important;overflow:hidden!important;background:#fff!important;z-index:1!important}
+            body.ip-body .ip-nav{width:212px!important;flex:0 0 212px!important;max-width:min(280px,86vw)!important;align-self:stretch!important;overflow-x:hidden!important;overflow-y:auto!important;background:#fff!important;border-inline-end:1px solid rgba(28,28,28,.12)!important;box-sizing:border-box!important;padding:16px!important;z-index:40}
+            body.ip-body .ip-main{flex:1 1 auto!important;min-width:0!important;min-height:0!important;height:100%!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;background:#fff!important}
+            body.ip-body .ip-topbar{flex:0 0 68px!important;height:68px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;padding:0 16px!important;border-bottom:1px solid rgba(28,28,28,.1)!important;background:#fff!important}
+            body.ip-body .ip-content{flex:1 1 auto!important;min-height:0!important;min-width:0!important;overflow-x:hidden!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;padding:20px!important;background:#fff!important}
+            body.ip-body .su-brand{display:flex!important;align-items:center!important;gap:8px!important;padding:8px!important;flex-shrink:0!important}
+            body.ip-body .su-brand img,
+            body.ip-body .su-brand__avatar{width:24px!important;height:24px!important;max-width:24px!important;max-height:24px!important;border-radius:999px!important;object-fit:cover!important;flex-shrink:0!important;display:block!important}
+            body.ip-body .su-brand__name{font-size:14px!important;font-weight:600!important;color:#1c1c1c!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+            body.ip-body .ip-rail--desk{display:none!important}
+            @media (min-width:1280px){body.ip-body .ip-rail--desk{display:flex!important;flex-direction:column!important;width:280px!important;flex:0 0 280px!important;overflow-y:auto!important;border-inline-start:1px solid rgba(28,28,28,.1)!important;padding:16px!important;background:#fff!important}}
+            @media (max-width:1023px){
+                body.ip-body .ip-nav{position:fixed!important;inset-block:0!important;inset-inline-start:0!important;transform:translateX(-110%);transition:transform .2s ease;box-shadow:none}
+                html[dir="rtl"] body.ip-body .ip-nav{transform:translateX(110%)}
+                body.ip-body .ip-nav.is-open{transform:translateX(0)!important;box-shadow:0 0 0 1px rgba(28,28,28,.12)}
+            }
+        </style>
     @endif
 
     @php
