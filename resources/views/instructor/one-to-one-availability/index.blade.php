@@ -1,85 +1,10 @@
 @extends('layouts.app')
 
-@section('title', __('student.one_to_one_availability_title'))
-
-@push('styles')
-<style>
-    .o1a { --o1a-blue:#0B3D91; --o1a-dark:#072A66; --o1a-gold:#F5B800; --o1a-canvas:#F4F7FC; --o1a-line:#E8EEF8; --o1a-muted:#5B6577; }
-    .o1a-panel {
-        background: #fff;
-        border: 1px solid var(--o1a-line);
-        border-radius: 18px;
-    }
-    .dark .o1a-panel { background: #111827; border-color: #1f2937; }
-    .o1a-chip {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 6px 12px; border-radius: 999px;
-        font-size: 11px; font-weight: 800;
-        background: #EEF3FB; color: var(--o1a-blue);
-    }
-    .o1a-field {
-        width: 100%;
-        height: 42px;
-        border-radius: 12px;
-        border: 1px solid var(--o1a-line);
-        background: #fff;
-        padding: 0 12px;
-        font-size: 13px;
-        font-weight: 600;
-        color: #0B1220;
-        outline: none;
-        transition: border-color .15s, box-shadow .15s;
-    }
-    .o1a-field:focus {
-        border-color: var(--o1a-blue);
-        box-shadow: 0 0 0 3px rgba(11,61,145,.12);
-    }
-    .dark .o1a-field {
-        background: #0f172a;
-        border-color: #334155;
-        color: #f1f5f9;
-    }
-    .o1a-slot-card {
-        border: 1px solid var(--o1a-line);
-        background: var(--o1a-canvas);
-        border-radius: 16px;
-        padding: 14px;
-    }
-    .dark .o1a-slot-card { background: #0f172a; border-color: #1f2937; }
-    .o1a-day {
-        border: 1px solid var(--o1a-line);
-        border-radius: 16px;
-        background: #fff;
-        min-height: 140px;
-        display: flex;
-        flex-direction: column;
-    }
-    .dark .o1a-day { background: #111827; border-color: #1f2937; }
-    .o1a-day.has-slots { border-color: rgba(11,61,145,.28); }
-    .o1a-day__head {
-        padding: 10px 12px;
-        border-bottom: 1px solid var(--o1a-line);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-    }
-    .dark .o1a-day__head { border-bottom-color: #1f2937; }
-    .o1a-pill {
-        display: inline-flex; align-items: center; gap: 4px;
-        padding: 6px 8px; border-radius: 10px;
-        font-size: 11px; font-weight: 700;
-        background: #EEF3FB; color: var(--o1a-blue);
-        line-height: 1.3;
-    }
-    .o1a-pill--soft { background: #F4F7FC; color: var(--o1a-muted); }
-    .dark .o1a-pill { background: #132445; color: #bfdbfe; }
-</style>
-@endpush
+@section('title', __('instructor.o1a_title'))
+@section('page_title', __('instructor.o1a_title'))
 
 @section('content')
 @php
-    $isRtl = app()->getLocale() === 'ar';
     $windowsCount = $rules->count();
     $daysWithSlots = $grouped->filter(fn ($g) => $g['rules']->isNotEmpty())->count();
     $existingSlots = $rules->map(function ($r) {
@@ -92,16 +17,16 @@
     })->values();
 @endphp
 
-<div class="o1a w-full space-y-5" x-data="availabilityForm()">
+<div class="su-page" x-data="availabilityForm()">
     @if(session('success'))
-        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-300">
-            <i class="fas fa-check-circle {{ $isRtl ? 'ml-1' : 'mr-1' }}"></i>{{ session('success') }}
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#15803d;font-size:13px">
+            <i class="fas fa-check-circle" aria-hidden="true"></i> {{ session('success') }}
         </div>
     @endif
 
     @if($errors->any())
-        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-300">
-            <ul class="list-disc pe-5 space-y-1">
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#b91c1c;font-size:13px">
+            <ul style="margin:0;padding-inline-start:18px">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -109,169 +34,168 @@
         </div>
     @endif
 
-    <section class="o1a-panel overflow-hidden">
-        <div class="relative px-5 py-5 sm:px-6 sm:py-6">
-            <div class="absolute inset-y-0 {{ $isRtl ? 'left-0' : 'right-0' }} w-40 sm:w-56 pointer-events-none opacity-90"
-                 style="background: radial-gradient(ellipse at center, rgba(245,184,0,0.22), transparent 70%);"></div>
-            <div class="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-                <div class="min-w-0">
-                    <span class="o1a-chip mb-3">
-                        <i class="fas fa-user-graduate text-[10px]"></i>
-                        {{ $isRtl ? 'تدريس مباشر · حصص فردية' : 'Live teaching · 1:1' }}
-                    </span>
-                    <h1 class="font-heading text-2xl sm:text-[28px] font-black tracking-tight text-[#0B1220] dark:text-white leading-tight">
-                        {{ __('student.one_to_one_availability_title') }}
-                    </h1>
-                    <p class="mt-1.5 text-sm text-[color:var(--o1a-muted)] dark:text-gray-400 max-w-2xl">
-                        {{ __('student.one_to_one_availability_sub') }}
-                    </p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    @if(Route::has('instructor.tutor-work-schedule.index'))
-                        <a href="{{ route('instructor.tutor-work-schedule.index') }}"
-                           class="inline-flex h-10 items-center gap-2 rounded-xl border border-[color:var(--o1a-line)] dark:border-gray-600 bg-white dark:bg-gray-800 px-4 text-sm font-bold text-[#0B1220] dark:text-white hover:border-[#0B3D91]/40">
-                            <i class="fas fa-users text-xs text-[#0B3D91]"></i>
-                            {{ $isRtl ? 'جدول المجموعات' : 'Group schedule' }}
-                        </a>
-                    @endif
-                    @if(Route::has('instructor.one-to-one-sessions.index'))
-                        <a href="{{ route('instructor.one-to-one-sessions.index') }}"
-                           class="inline-flex h-10 items-center gap-2 rounded-xl bg-[#0B3D91] px-4 text-sm font-bold text-white hover:brightness-110">
-                            <i class="fas fa-chalkboard-teacher text-xs"></i>
-                            {{ __('student.one_to_one_sessions_instructor_nav') }}
-                        </a>
-                    @endif
-                </div>
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <div class="su-chip-row" style="margin-bottom:8px">
+                <span class="su-chip su-soft-1">
+                    <i class="fas fa-user-graduate" aria-hidden="true"></i>
+                    {{ __('instructor.o1a_chip') }}
+                </span>
+            </div>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-calendar-check su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.o1a_title') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.o1a_subtitle') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            @if(Route::has('instructor.tutor-work-schedule.index'))
+                <a href="{{ route('instructor.tutor-work-schedule.index') }}" class="su-btn">
+                    <i class="fas fa-users" aria-hidden="true"></i>
+                    {{ __('instructor.o1a_group_schedule') }}
+                </a>
+            @endif
+            @if(Route::has('instructor.one-to-one-sessions.index'))
+                <a href="{{ route('instructor.one-to-one-sessions.index') }}" class="su-btn su-btn--primary">
+                    <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
+                    {{ __('instructor.o1o_title') }}
+                </a>
+            @endif
+        </div>
+    </div>
+
+    <section class="su-kpi-row" style="margin-bottom:20px">
+        <div class="su-kpi su-kpi--1">
+            <div class="su-kpi__l">{{ __('instructor.o1a_windows') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v" x-text="slots.length">{{ $windowsCount }}</div>
+                <div class="su-kpi__d"><i class="fas fa-window-maximize" aria-hidden="true"></i></div>
+            </div>
+        </div>
+        <div class="su-kpi su-kpi--2">
+            <div class="su-kpi__l">{{ __('instructor.o1a_active_days') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($daysWithSlots) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-calendar-day" aria-hidden="true"></i></div>
+            </div>
+        </div>
+        <div class="su-kpi su-kpi--4">
+            <div class="su-kpi__l">{{ __('instructor.o1a_saved') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($windowsCount) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-save" aria-hidden="true"></i></div>
+            </div>
+        </div>
+        <div class="su-kpi su-kpi--3">
+            <div class="su-kpi__l">{{ __('instructor.tws_hint_label') }}</div>
+            <div class="su-kpi__row">
+                <div style="font-size:12px;line-height:1.4;color:var(--su-ink-40);padding-top:4px">{{ __('instructor.o1a_hint') }}</div>
             </div>
         </div>
     </section>
 
-    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="o1a-panel px-4 py-4">
-            <p class="text-[11px] font-bold text-[color:var(--o1a-muted)]">{{ $isRtl ? 'نوافذ التوفر' : 'Windows' }}</p>
-            <p class="mt-1 text-2xl font-black text-[#0B3D91] dark:text-blue-300 tabular-nums" x-text="slots.length">{{ $windowsCount }}</p>
-        </div>
-        <div class="o1a-panel px-4 py-4">
-            <p class="text-[11px] font-bold text-[color:var(--o1a-muted)]">{{ $isRtl ? 'أيام مفعّلة' : 'Active days' }}</p>
-            <p class="mt-1 text-2xl font-black text-[#0B1220] dark:text-white tabular-nums">{{ $daysWithSlots }}</p>
-        </div>
-        <div class="o1a-panel px-4 py-4">
-            <p class="text-[11px] font-bold text-[color:var(--o1a-muted)]">{{ $isRtl ? 'محفوظ حالياً' : 'Saved' }}</p>
-            <p class="mt-1 text-2xl font-black text-[#8A6A00] tabular-nums">{{ $windowsCount }}</p>
-        </div>
-        <div class="o1a-panel px-4 py-4 flex items-center">
-            <p class="text-xs text-[color:var(--o1a-muted)] leading-relaxed">
-                {{ __('student.one_to_one_availability_hint') }}
-            </p>
-        </div>
-    </section>
-
-    <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
-        <form method="POST" action="{{ route('instructor.one-to-one-availability.update') }}"
-              class="xl:col-span-7 o1a-panel p-5 sm:p-6 space-y-5">
+    <div class="su-page-grid">
+        <form method="POST" action="{{ route('instructor.one-to-one-availability.update') }}" class="su-card" style="display:flex;flex-direction:column;gap:16px">
             @csrf
             @include('partials.timezone-select', [
                 'value' => old('timezone', auth()->user()?->timezoneCode()),
-                'class' => 'o1a-field',
-                'labelClass' => 'block text-[11px] font-bold text-[color:var(--o1a-muted)] mb-1.5',
-                'label' => $isRtl ? 'توقيت الساعات دي' : 'Timezone for these hours',
+                'class' => 'su-select',
+                'labelClass' => 'block text-[12px] font-medium mb-1.5',
+                'label' => __('instructor.o1a_timezone'),
             ])
-            <div class="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                    <h2 class="text-base font-extrabold text-[#0B1220] dark:text-white">{{ $isRtl ? 'تحرير النوافذ' : 'Edit windows' }}</h2>
-                    <p class="mt-1 text-xs text-[color:var(--o1a-muted)]">{{ $isRtl ? 'أضف يوماً ووقتاً ومدة الحصة. لا يوجد حد عند 3 نوافذ — مدّد «إلى» لو عايز مواعيد أكتر في نفس اليوم.' : 'Add day, time, and session length. No 3-window cap — extend “to” for more slots that day.' }}</p>
+
+            <div style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px">
+                <div class="min-w-0">
+                    <h2 class="su-card__title" style="margin:0">{{ __('instructor.o1a_edit_windows') }}</h2>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.o1a_edit_hint') }}</p>
                 </div>
-                <button type="button" @click="addSlot()"
-                        class="inline-flex h-10 items-center gap-2 rounded-xl border border-[#F5B800] bg-[#FFF6D6] px-4 text-sm font-extrabold text-[#072A66] hover:brightness-105">
-                    <i class="fas fa-plus text-xs"></i>
-                    {{ __('student.one_to_one_add_slot') }}
+                <button type="button" @click="addSlot()" class="su-btn su-btn--primary" style="height:36px">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    {{ __('instructor.o1a_add_slot') }}
                 </button>
             </div>
 
-            <div class="space-y-3">
+            <div style="display:flex;flex-direction:column;gap:12px">
                 <template x-for="(slot, index) in slots" :key="slot._uid">
-                    <div class="o1a-slot-card">
-                        <div class="flex items-center justify-between gap-2 mb-3">
-                            <span class="text-[11px] font-extrabold text-[#0B3D91] dark:text-blue-300">
-                                {{ $isRtl ? 'نافذة' : 'Slot' }} <span x-text="index + 1"></span>
+                    <div class="su-card su-soft-1" style="padding:14px">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px">
+                            <span class="su-chip su-soft-2">
+                                {{ __('instructor.o1a_slot') }} <span x-text="index + 1"></span>
                             </span>
-                            <button type="button" @click="removeSlot(index)" x-show="slots.length > 1"
-                                    class="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20">
-                                <i class="fas fa-trash text-[10px]"></i>
-                                {{ __('student.one_to_one_remove_slot') }}
+                            <button type="button" @click="removeSlot(index)" x-show="slots.length > 1" class="su-btn" style="height:32px;color:#b91c1c">
+                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                {{ __('instructor.o1a_remove_slot') }}
                             </button>
                         </div>
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                            <div class="col-span-2">
-                                <label class="block text-[11px] font-bold text-[color:var(--o1a-muted)] mb-1.5">{{ __('student.one_to_one_day') }}</label>
-                                <select :name="'slots['+index+'][day_of_week]'" x-model="slot.day_of_week" class="o1a-field" required>
+                        <div class="su-form-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));align-items:start">
+                            <div class="su-field" style="grid-column:span 2">
+                                <label>{{ __('instructor.o1a_day') }}</label>
+                                <select :name="'slots['+index+'][day_of_week]'" x-model="slot.day_of_week" class="su-select" required>
                                     @foreach($dayLabels as $day => $label)
                                         <option value="{{ $day }}">{{ $label }}</option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-[color:var(--o1a-muted)] mb-1.5">{{ __('student.one_to_one_from') }}</label>
-                                <input type="time" step="60" :name="'slots['+index+'][start_time]'" x-model="slot.start_time" class="o1a-field" required>
+                            <div class="su-field">
+                                <label>{{ __('instructor.o1a_from') }}</label>
+                                <input type="time" step="60" :name="'slots['+index+'][start_time]'" x-model="slot.start_time" class="su-input" required>
                             </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-[color:var(--o1a-muted)] mb-1.5">{{ __('student.one_to_one_to') }}</label>
-                                <input type="time" step="60" :name="'slots['+index+'][end_time]'" x-model="slot.end_time" class="o1a-field" required>
+                            <div class="su-field">
+                                <label>{{ __('instructor.o1a_to') }}</label>
+                                <input type="time" step="60" :name="'slots['+index+'][end_time]'" x-model="slot.end_time" class="su-input" required>
                             </div>
-                            <div class="col-span-2 lg:col-span-4 lg:max-w-xs">
-                                <label class="block text-[11px] font-bold text-[color:var(--o1a-muted)] mb-1.5">{{ __('student.minutes') }}</label>
-                                <input type="number" :name="'slots['+index+'][slot_duration_minutes]'" x-model="slot.slot_duration_minutes" min="30" max="180" step="15" class="o1a-field">
+                            <div class="su-field" style="grid-column:span 2;max-width:220px">
+                                <label>{{ __('instructor.o1o_minutes') }}</label>
+                                <input type="number" :name="'slots['+index+'][slot_duration_minutes]'" x-model="slot.slot_duration_minutes" min="30" max="180" step="15" class="su-input">
                             </div>
                         </div>
-                        <p class="mt-3 text-[11px] font-bold" :class="slotYield(slot) > 0 ? 'text-[#0B3D91] dark:text-blue-300' : 'text-rose-600'">
-                            <span x-show="slotYield(slot) > 0" x-text="'{{ __('student.one_to_one_slot_yields', ['count' => '__N__']) }}'.replace('__N__', slotYield(slot))"></span>
-                            <span x-show="slotYield(slot) < 1">{{ __('student.one_to_one_slot_yields_zero') }}</span>
+                        <p style="margin:12px 0 0;font-size:11px;font-weight:600" :style="slotYield(slot) > 0 ? 'color:var(--su-ink)' : 'color:#b91c1c'">
+                            <span x-show="slotYield(slot) > 0" x-text="yieldLabel(slotYield(slot))"></span>
+                            <span x-show="slotYield(slot) < 1">{{ __('instructor.o1a_yield_zero') }}</span>
                         </p>
                     </div>
                 </template>
             </div>
 
-            <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-[color:var(--o1a-line)] dark:border-gray-700">
-                <p class="text-[11px] text-[color:var(--o1a-muted)]">
-                    <i class="fas fa-info-circle {{ $isRtl ? 'ml-1' : 'mr-1' }} opacity-70"></i>
-                    {{ $isRtl ? 'الحفظ يستبدل الجدول الحالي بالكامل.' : 'Saving replaces the current schedule.' }}
+            <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-top:12px;border-top:0.5px solid var(--su-line)">
+                <p style="margin:0;font-size:11px;color:var(--su-ink-40)">
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
+                    {{ __('instructor.o1a_save_hint') }}
                 </p>
-                <button type="submit"
-                        class="inline-flex h-11 items-center gap-2 rounded-xl bg-[#0B3D91] px-5 text-sm font-extrabold text-white hover:brightness-110 shadow-[0_12px_28px_-16px_rgba(11,61,145,.55)]">
-                    <i class="fas fa-save text-xs"></i>
-                    {{ __('student.one_to_one_save_schedule') }}
+                <button type="submit" class="su-btn su-btn--primary">
+                    <i class="fas fa-save" aria-hidden="true"></i>
+                    {{ __('instructor.o1a_save') }}
                 </button>
             </div>
         </form>
 
-        <aside class="xl:col-span-5 space-y-4">
-            <div class="o1a-panel p-5 sm:p-6">
-                <div class="flex items-center justify-between gap-2 mb-4">
-                    <h2 class="text-base font-extrabold text-[#0B1220] dark:text-white">{{ __('student.one_to_one_current_schedule') }}</h2>
-                    <span class="o1a-chip">{{ $isRtl ? 'محفوظ' : 'Saved' }}</span>
+        <aside>
+            <div class="su-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:16px">
+                    <h2 class="su-card__title" style="margin:0">{{ __('instructor.o1a_current_schedule') }}</h2>
+                    <span class="su-chip su-soft-1">{{ __('instructor.o1a_saved_chip') }}</span>
                 </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3">
+                <div style="display:flex;flex-direction:column;gap:10px">
                     @foreach($grouped as $dayGroup)
                         @php $has = $dayGroup['rules']->isNotEmpty(); @endphp
-                        <div class="o1a-day {{ $has ? 'has-slots' : '' }}">
-                            <div class="o1a-day__head">
-                                <span class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ $dayGroup['label'] }}</span>
+                        <div class="su-card" style="padding:0;overflow:hidden{{ $has ? ';border-color:rgba(11,61,145,.25)' : '' }}">
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-bottom:0.5px solid var(--su-line)">
+                                <span style="font-size:13px;font-weight:600;color:var(--su-ink)">{{ $dayGroup['label'] }}</span>
                                 @if($has)
-                                    <span class="text-[10px] font-bold text-[#0B3D91] tabular-nums">{{ $dayGroup['rules']->count() }}</span>
+                                    <span class="su-chip su-soft-1 tabular-nums">{{ $dayGroup['rules']->count() }}</span>
                                 @else
-                                    <span class="text-[10px] font-bold text-[color:var(--o1a-muted)]">{{ $isRtl ? 'فارغ' : 'Empty' }}</span>
+                                    <span style="font-size:10px;color:var(--su-ink-40)">{{ __('instructor.o1a_empty_day') }}</span>
                                 @endif
                             </div>
-                            <div class="p-2.5 flex flex-wrap gap-1.5 flex-1 content-start">
+                            <div style="padding:10px;display:flex;flex-wrap:wrap;gap:6px;min-height:48px;align-content:flex-start">
                                 @forelse($dayGroup['rules'] as $rule)
-                                    <span class="o1a-pill">
-                                        <i class="far fa-clock text-[9px] opacity-70"></i>
+                                    <span class="su-chip su-soft-1">
+                                        <i class="far fa-clock" aria-hidden="true"></i>
                                         {{ substr((string) $rule->start_time, 0, 5) }}–{{ substr((string) $rule->end_time, 0, 5) }}
-                                        · {{ (int) $rule->slot_duration_minutes }} {{ __('student.minutes') }}
+                                        · {{ (int) $rule->slot_duration_minutes }} {{ __('instructor.o1o_minutes') }}
                                     </span>
                                 @empty
-                                    <span class="o1a-pill o1a-pill--soft w-full justify-center py-4">{{ $isRtl ? 'لا نوافذ في هذا اليوم' : 'No windows this day' }}</span>
+                                    <span class="su-chip" style="width:100%;justify-content:center;padding:12px">{{ __('instructor.o1a_no_windows') }}</span>
                                 @endforelse
                             </div>
                         </div>
@@ -285,6 +209,7 @@
 <script>
 function availabilityForm() {
     const existing = @json($existingSlots);
+    const yieldTpl = @json(__('instructor.o1a_yield'));
     let uid = 1;
     const withIds = (existing.length ? existing : [{ day_of_week: '1', start_time: '16:00', end_time: '22:00', slot_duration_minutes: '50' }])
         .map(function (slot) {
@@ -318,6 +243,9 @@ function availabilityForm() {
             const duration = parseInt(slot.slot_duration_minutes, 10) || 50;
             if (end <= start || duration < 1) return 0;
             return Math.floor((end - start) / duration);
+        },
+        yieldLabel(n) {
+            return String(yieldTpl).replace(':count', n);
         }
     };
 }

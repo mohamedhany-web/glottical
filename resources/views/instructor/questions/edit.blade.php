@@ -1,250 +1,151 @@
 @extends('layouts.app')
 
-@section('title', 'تعديل السؤال - ' . config('app.name'))
-@section('header', 'تعديل السؤال')
-
-@push('styles')
-<style>
-    .form-section {
-        background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
-        border: 2px solid rgba(44, 169, 189, 0.1);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .form-section:hover {
-        border-color: rgba(44, 169, 189, 0.3);
-        box-shadow: 0 8px 16px rgba(44, 169, 189, 0.1);
-    }
-
-    .form-input {
-        border: 2px solid rgba(44, 169, 189, 0.2);
-        transition: all 0.3s;
-    }
-
-    .form-input:focus {
-        border-color: #2CA9BD;
-        box-shadow: 0 0 0 4px rgba(44, 169, 189, 0.1);
-    }
-</style>
-@endpush
+@section('title', __('instructor.edit_question') . ' - ' . config('app.name'))
+@section('page_title', __('instructor.edit_question'))
 
 @section('content')
-<div class="space-y-6">
-    <!-- الهيدر -->
-    <div class="bg-gradient-to-r from-[#2CA9BD]/10 via-[#65DBE4]/10 to-[#2CA9BD]/10 rounded-2xl p-6 border-2 border-[#2CA9BD]/20 shadow-lg">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h1 class="text-2xl sm:text-3xl font-black text-[#1C2C39] mb-2">تعديل السؤال</h1>
-                <p class="text-sm sm:text-base text-[#1F3A56] font-medium">تعديل معلومات السؤال</p>
-            </div>
-            <a href="{{ route('instructor.question-banks.show', $question->questionBank) }}" 
-               class="inline-flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 transform hover:scale-105">
-                <i class="fas fa-arrow-right"></i>
-                <span>العودة</span>
+@php
+    $isRtl = app()->getLocale() === 'ar';
+@endphp
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.question-banks.index') }}">{{ __('instructor.question_banks') }}</a>
+                <span>/</span>
+                <a href="{{ route('instructor.question-banks.show', $question->questionBank) }}">{{ Str::limit($question->questionBank->title ?? '', 40) }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ __('common.edit') }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-edit su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.edit_question') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.edit_question_sub') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.question-banks.show', $question->questionBank) }}" class="su-btn">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.back') }}
             </a>
         </div>
     </div>
 
-    <!-- نموذج تعديل السؤال -->
     <form action="{{ route('instructor.questions.update', $question) }}" method="POST">
         @csrf
         @method('PUT')
-        
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <!-- المحتوى الرئيسي -->
-            <div class="xl:col-span-2 space-y-6">
-                <!-- معلومات السؤال -->
-                <div class="form-section rounded-2xl overflow-hidden">
-                    <div class="px-6 py-4 border-b-2 border-[#2CA9BD]/20 bg-gradient-to-r from-[#2CA9BD]/5 to-[#65DBE4]/5">
-                        <h3 class="text-lg font-black text-[#1C2C39]">معلومات السؤال</h3>
-                    </div>
-                    <div class="p-6 space-y-6">
-                        <!-- نوع السؤال -->
-                        <div>
-                            <label class="block text-sm font-bold text-[#1C2C39] mb-2">
-                                نوع السؤال <span class="text-red-500">*</span>
-                            </label>
-                            <select name="type" id="question_type" required onchange="updateQuestionForm()"
-                                    class="form-input w-full px-4 py-3 rounded-xl focus:outline-none">
-                                <option value="multiple_choice" {{ $question->type == 'multiple_choice' ? 'selected' : '' }}>اختيار متعدد</option>
-                                <option value="true_false" {{ $question->type == 'true_false' ? 'selected' : '' }}>صح أو خطأ</option>
+        <div class="su-detail-grid">
+            <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+                <section class="su-card">
+                    <h2 class="su-card__title"><i class="fas fa-question-circle" aria-hidden="true"></i> {{ __('instructor.question_info') }}</h2>
+                    <div class="su-form-grid" style="grid-template-columns:1fr">
+                        <div class="su-field">
+                            <label for="question_type">{{ __('instructor.question_type') }} <span style="color:#b91c1c">*</span></label>
+                            <select name="type" id="question_type" required onchange="updateQuestionForm()" class="su-select">
+                                <option value="multiple_choice" {{ $question->type == 'multiple_choice' ? 'selected' : '' }}>{{ __('instructor.type_multiple_choice') }}</option>
+                                <option value="true_false" {{ $question->type == 'true_false' ? 'selected' : '' }}>{{ __('instructor.type_true_false') }}</option>
                             </select>
                         </div>
-
-                        <!-- نص السؤال -->
-                        <div>
-                            <label class="block text-sm font-bold text-[#1C2C39] mb-2">
-                                نص السؤال <span class="text-red-500">*</span>
-                            </label>
-                            <textarea name="question" rows="4" required
-                                      class="form-input w-full px-4 py-3 rounded-xl focus:outline-none"
-                                      placeholder="اكتب نص السؤال هنا...">{{ old('question', $question->question) }}</textarea>
-                            @error('question')
-                                <p class="mt-1 text-sm text-red-600 font-medium">{{ $message }}</p>
-                            @enderror
+                        <div class="su-field">
+                            <label>{{ __('instructor.question_text') }} <span style="color:#b91c1c">*</span></label>
+                            <textarea name="question" rows="4" required class="su-input" style="min-height:110px;resize:vertical"
+                                      placeholder="{{ __('instructor.question_text_ph') }}">{{ old('question', $question->question) }}</textarea>
+                            @error('question')<p class="su-field-error">{{ $message }}</p>@enderror
                         </div>
-
-                        <!-- الخيارات (لاختيار متعدد) -->
-                        <div id="options_field" style="display: {{ $question->type == 'multiple_choice' ? 'block' : 'none' }};">
-                            <label class="block text-sm font-bold text-[#1C2C39] mb-2">
-                                الخيارات (كل خيار في سطر)
-                            </label>
-                            <textarea name="options_text" rows="4"
-                                      class="form-input w-full px-4 py-3 rounded-xl focus:outline-none"
-                                      placeholder="الخيار الأول&#10;الخيار الثاني&#10;الخيار الثالث&#10;الخيار الرابع">@if($question->options && is_array($question->options)){{ implode("\n", $question->options) }}@endif</textarea>
+                        <div class="su-field" id="options_field" style="display: {{ $question->type == 'multiple_choice' ? 'block' : 'none' }};">
+                            <label>{{ __('instructor.options_one_per_line') }}</label>
+                            <textarea name="options_text" rows="4" class="su-input" style="min-height:100px;resize:vertical"
+                                      placeholder="{{ __('instructor.options_ph') }}">@if($question->options && is_array($question->options)){{ implode("\n", $question->options) }}@endif</textarea>
                         </div>
-
-                        <!-- الإجابة الصحيحة - ديناميكي حسب النوع -->
-                        <div id="correct_answer_field">
-                            <label class="block text-sm font-bold text-[#1C2C39] mb-2">
-                                الإجابة الصحيحة <span class="text-red-500">*</span>
-                            </label>
-                            
+                        <div class="su-field" id="correct_answer_field">
+                            <label>{{ __('instructor.correct_answer') }} <span style="color:#b91c1c">*</span></label>
                             @php
                                 $correctAnswer = is_array($question->correct_answer) ? $question->correct_answer : [$question->correct_answer];
-                                $correctAnswerValue = is_array($question->correct_answer) ? implode("\n", $question->correct_answer) : $question->correct_answer;
                                 $normalizedCorrectAnswers = $question->normalizeMultipleChoiceCorrectAnswers();
                             @endphp
-                            
-                            <!-- لاختيار متعدد -->
                             <div id="correct_answer_multiple_choice" style="display: {{ $question->type == 'multiple_choice' ? 'block' : 'none' }};">
-                                <select name="correct_answer" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none">
-                                    <option value="">اختر الإجابة الصحيحة</option>
+                                <select name="correct_answer" class="su-select">
+                                    <option value="">{{ __('instructor.choose_correct_answer') }}</option>
                                     @if($question->options && is_array($question->options))
                                         @foreach($question->options as $optionIndex => $option)
                                             <option value="{{ $option }}" {{ in_array((int)$optionIndex, $normalizedCorrectAnswers, true) ? 'selected' : '' }}>{{ $option }}</option>
                                         @endforeach
                                     @endif
                                 </select>
-                                <p class="mt-1 text-xs text-gray-500">سيتم تحديث الخيارات تلقائياً عند تعديل الخيارات أعلاه</p>
+                                <p style="margin:6px 0 0;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.options_update_hint') }}</p>
                             </div>
-                            
-                            <!-- لصح أو خطأ -->
                             <div id="correct_answer_true_false" style="display: {{ $question->type == 'true_false' ? 'block' : 'none' }};">
-                                <select name="correct_answer" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none">
-                                    <option value="">اختر الإجابة</option>
-                                    <option value="صح" {{ in_array('صح', $correctAnswer) ? 'selected' : '' }}>صح</option>
-                                    <option value="خطأ" {{ in_array('خطأ', $correctAnswer) ? 'selected' : '' }}>خطأ</option>
+                                <select name="correct_answer" class="su-select">
+                                    <option value="">{{ __('instructor.choose_type') }}</option>
+                                    <option value="صح" {{ in_array('صح', $correctAnswer) ? 'selected' : '' }}>{{ __('instructor.true_answer') }}</option>
+                                    <option value="خطأ" {{ in_array('خطأ', $correctAnswer) ? 'selected' : '' }}>{{ __('instructor.false_answer') }}</option>
                                 </select>
                             </div>
-                            
-                            @error('correct_answer')
-                                <p class="mt-1 text-sm text-red-600 font-medium">{{ $message }}</p>
-                            @enderror
+                            @error('correct_answer')<p class="su-field-error">{{ $message }}</p>@enderror
                         </div>
-
-                        <!-- الشرح -->
-                        <div>
-                            <label class="block text-sm font-bold text-[#1C2C39] mb-2">
-                                شرح الإجابة
-                            </label>
-                            <textarea name="explanation" rows="3"
-                                      class="form-input w-full px-4 py-3 rounded-xl focus:outline-none"
-                                      placeholder="شرح الإجابة الصحيحة...">{{ old('explanation', $question->explanation) }}</textarea>
+                        <div class="su-field">
+                            <label>{{ __('instructor.explanation') }}</label>
+                            <textarea name="explanation" rows="3" class="su-input" style="min-height:80px;resize:vertical"
+                                      placeholder="{{ __('instructor.explanation') }}…">{{ old('explanation', $question->explanation) }}</textarea>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <!-- إعدادات السؤال -->
-                <div class="form-section rounded-2xl overflow-hidden">
-                    <div class="px-6 py-4 border-b-2 border-[#2CA9BD]/20 bg-gradient-to-r from-[#2CA9BD]/5 to-[#65DBE4]/5">
-                        <h3 class="text-lg font-black text-[#1C2C39]">إعدادات السؤال</h3>
-                    </div>
-                    <div class="p-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- النقاط -->
-                            <div>
-                                <label class="block text-sm font-bold text-[#1C2C39] mb-2">
-                                    النقاط <span class="text-red-500">*</span>
-                                </label>
-                                <input type="number" name="points" value="{{ old('points', $question->points) }}" min="0.5" step="0.5" required
-                                       class="form-input w-full px-4 py-3 rounded-xl focus:outline-none">
-                            </div>
-
-                            <!-- مستوى الصعوبة -->
-                            <div>
-                                <label class="block text-sm font-bold text-[#1C2C39] mb-2">
-                                    مستوى الصعوبة <span class="text-red-500">*</span>
-                                </label>
-                                <select name="difficulty_level" required
-                                        class="form-input w-full px-4 py-3 rounded-xl focus:outline-none">
-                                    <option value="easy" {{ $question->difficulty_level == 'easy' ? 'selected' : '' }}>سهل</option>
-                                    <option value="medium" {{ $question->difficulty_level == 'medium' ? 'selected' : '' }}>متوسط</option>
-                                    <option value="hard" {{ $question->difficulty_level == 'hard' ? 'selected' : '' }}>صعب</option>
-                                </select>
-                            </div>
-
-                            <!-- التصنيف -->
-                            <div>
-                                <label class="block text-sm font-bold text-[#1C2C39] mb-2">
-                                    التصنيف
-                                </label>
-                                <select name="category_id"
-                                        class="form-input w-full px-4 py-3 rounded-xl focus:outline-none">
-                                    <option value="">بدون تصنيف</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->id }}" {{ $question->category_id == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                <section class="su-card">
+                    <h2 class="su-card__title"><i class="fas fa-sliders-h" aria-hidden="true"></i> {{ __('instructor.question_settings') }}</h2>
+                    <div class="su-form-grid" style="grid-template-columns:1fr 1fr">
+                        <div class="su-field">
+                            <label>{{ __('instructor.points') }} <span style="color:#b91c1c">*</span></label>
+                            <input type="number" name="points" value="{{ old('points', $question->points) }}" min="0.5" step="0.5" required class="su-input">
+                        </div>
+                        <div class="su-field">
+                            <label>{{ __('instructor.difficulty') }} <span style="color:#b91c1c">*</span></label>
+                            <select name="difficulty_level" required class="su-select">
+                                <option value="easy" {{ $question->difficulty_level == 'easy' ? 'selected' : '' }}>{{ __('instructor.easy') }}</option>
+                                <option value="medium" {{ $question->difficulty_level == 'medium' ? 'selected' : '' }}>{{ __('instructor.medium') }}</option>
+                                <option value="hard" {{ $question->difficulty_level == 'hard' ? 'selected' : '' }}>{{ __('instructor.hard') }}</option>
+                            </select>
+                        </div>
+                        <div class="su-field" style="grid-column:1 / -1">
+                            <label>{{ __('instructor.category_label') }}</label>
+                            <select name="category_id" class="su-select">
+                                <option value="">{{ __('instructor.no_category') }}</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}" {{ $question->category_id == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
-                </div>
+                </section>
             </div>
 
-            <!-- الشريط الجانبي -->
-            <div class="space-y-6">
-                <!-- معلومات سريعة -->
-                <div class="form-section rounded-2xl overflow-hidden">
-                    <div class="px-6 py-4 border-b-2 border-[#2CA9BD]/20 bg-gradient-to-r from-[#2CA9BD]/5 to-[#65DBE4]/5">
-                        <h3 class="text-lg font-black text-[#1C2C39]">معلومات سريعة</h3>
+            <div style="display:flex;flex-direction:column;gap:16px">
+                <section class="su-card">
+                    <h2 class="su-card__title"><i class="fas fa-lightbulb" aria-hidden="true"></i> {{ __('instructor.tips') }}</h2>
+                    <ul class="su-meta-list" style="font-size:13px;color:var(--su-ink-40)">
+                        <li>• {{ __('instructor.tip_edit_question_1') }}</li>
+                        <li>• {{ __('instructor.tip_edit_question_2') }}</li>
+                        <li>• {{ __('instructor.tip_edit_question_3') }}</li>
+                    </ul>
+                </section>
+                <section class="su-card">
+                    <h2 class="su-card__title"><i class="fas fa-toggle-on" aria-hidden="true"></i> {{ __('instructor.status_label') }}</h2>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500">
+                        <input type="checkbox" name="is_active" value="1" {{ old('is_active', $question->is_active) ? 'checked' : '' }}>
+                        <span>{{ __('instructor.question_active') }}</span>
+                    </label>
+                </section>
+                <section class="su-card">
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        <button type="submit" class="su-btn su-btn--primary" style="justify-content:center">
+                            <i class="fas fa-save" aria-hidden="true"></i>
+                            {{ __('instructor.save_changes') }}
+                        </button>
+                        <a href="{{ route('instructor.question-banks.show', $question->questionBank) }}" class="su-btn" style="justify-content:center">
+                            {{ __('common.cancel') }}
+                        </a>
                     </div>
-                    <div class="p-6 space-y-4">
-                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border-2 border-blue-200">
-                            <div class="flex items-center gap-2 mb-2">
-                                <i class="fas fa-info-circle text-blue-600"></i>
-                                <span class="text-sm font-bold text-blue-800">نصائح</span>
-                            </div>
-                            <ul class="mt-2 text-sm text-blue-700 space-y-1.5 font-medium">
-                                <li>• يمكنك تعديل جميع المعلومات</li>
-                                <li>• تأكد من صحة الإجابة الصحيحة</li>
-                                <li>• سيتم تحديث السؤال في جميع الاختبارات</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- إعدادات الحالة -->
-                <div class="form-section rounded-2xl overflow-hidden">
-                    <div class="px-6 py-4 border-b-2 border-[#2CA9BD]/20 bg-gradient-to-r from-[#2CA9BD]/5 to-[#65DBE4]/5">
-                        <h3 class="text-lg font-black text-[#1C2C39]">إعدادات الحالة</h3>
-                    </div>
-                    <div class="p-6">
-                        <label class="flex items-center gap-3 cursor-pointer group">
-                            <input type="checkbox" name="is_active" value="1" {{ old('is_active', $question->is_active) ? 'checked' : '' }}
-                                   class="w-5 h-5 text-[#2CA9BD] bg-gray-100 border-gray-300 rounded focus:ring-[#2CA9BD] focus:ring-2">
-                            <span class="text-sm text-[#1C2C39] font-medium group-hover:text-[#2CA9BD] transition-colors">سؤال نشط</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- أزرار الحفظ -->
-                <div class="form-section rounded-2xl overflow-hidden">
-                    <div class="p-6">
-                        <div class="space-y-3">
-                            <button type="submit" 
-                                    class="w-full bg-gradient-to-r from-[#2CA9BD] to-[#65DBE4] hover:from-[#1F3A56] hover:to-[#2CA9BD] text-white py-3 px-4 rounded-xl font-bold shadow-lg shadow-[#2CA9BD]/30 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                                <i class="fas fa-save ml-2"></i>
-                                حفظ التغييرات
-                            </button>
-                            
-                            <a href="{{ route('instructor.question-banks.show', $question->questionBank) }}" 
-                               class="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 px-4 rounded-xl font-bold transition-all duration-300 block text-center">
-                                إلغاء
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                </section>
             </div>
         </div>
     </form>
@@ -255,8 +156,6 @@
 function updateQuestionForm() {
     const type = document.getElementById('question_type').value;
     const optionsField = document.getElementById('options_field');
-    
-    // إخفاء جميع حقول الإجابة الصحيحة
     const answerFields = ['correct_answer_multiple_choice', 'correct_answer_true_false'];
     answerFields.forEach(fieldId => {
         const field = document.getElementById(fieldId);
@@ -268,8 +167,6 @@ function updateQuestionForm() {
         if (input) input.removeAttribute('required');
         if (textarea) textarea.removeAttribute('required');
     });
-    
-    // عرض الحقل المناسب حسب النوع
     if (type === 'multiple_choice') {
         if (optionsField) optionsField.style.display = 'block';
         const field = document.getElementById('correct_answer_multiple_choice');
@@ -278,7 +175,6 @@ function updateQuestionForm() {
             const select = field.querySelector('select[name="correct_answer"]');
             if (select) select.setAttribute('required', 'required');
         }
-        // تحديث الخيارات عند تغييرها
         const optionsText = document.querySelector('textarea[name="options_text"]');
         if (optionsText) {
             optionsText.addEventListener('input', updateMultipleChoiceOptions);
@@ -299,45 +195,31 @@ function updateQuestionForm() {
 function updateMultipleChoiceOptions() {
     const optionsText = document.querySelector('textarea[name="options_text"]');
     const select = document.querySelector('#correct_answer_multiple_choice select[name="correct_answer"]');
-    
     if (!optionsText || !select) return;
-    
     const options = optionsText.value.split('\n').filter(opt => opt.trim());
-    
-    // حفظ القيمة المحددة حالياً
     const currentValue = select.value;
-    
-    // مسح الخيارات الحالية (ما عدا الخيار الأول)
     while (select.options.length > 1) {
         select.remove(1);
     }
-    
-    // إضافة الخيارات الجديدة
     options.forEach(option => {
         const optionElement = document.createElement('option');
         optionElement.value = option.trim();
         optionElement.textContent = option.trim();
         select.appendChild(optionElement);
     });
-    
-    // استعادة القيمة المحددة إذا كانت موجودة
     if (currentValue && Array.from(select.options).some(opt => opt.value === currentValue)) {
         select.value = currentValue;
     }
 }
 
-// تحديث النموذج عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', function() {
     updateQuestionForm();
-    
-    // تحديث خيارات الاختيار المتعدد عند تغيير نص الخيارات
     const optionsText = document.querySelector('textarea[name="options_text"]');
     if (optionsText) {
         optionsText.addEventListener('input', updateMultipleChoiceOptions);
     }
 });
 
-// معالجة الخيارات عند الإرسال
 document.querySelector('form[action*="questions.update"]')?.addEventListener('submit', function(e) {
     const optionsText = this.querySelector('textarea[name="options_text"]');
     if (optionsText && optionsText.value && document.getElementById('question_type').value === 'multiple_choice') {
@@ -354,8 +236,8 @@ document.querySelector('form[action*="questions.update"]')?.addEventListener('su
 
 @if(session('success'))
     <script>
-        alert('{{ session('success') }}');
-        window.location.href = '{{ route('instructor.question-banks.show', $question->questionBank) }}';
+        alert(@json(session('success')));
+        window.location.href = @json(route('instructor.question-banks.show', $question->questionBank));
     </script>
 @endif
 @endsection

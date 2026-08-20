@@ -37,7 +37,7 @@
             <p class="st-join-hero__kicker">{{ __('student_timeline.booking_next') }}</p>
             <h2 class="st-join-hero__title">{{ $upcoming->tutoringGroup?->title ?? __('student_timeline.group_session') }}</h2>
             <p class="st-join-hero__meta">
-                {{ $upcoming->starts_at?->locale($locale)->translatedFormat('D j M · H:i') }}
+                <x-app-datetime :at="$upcoming->starts_at" pattern="D j M · g:i A" />
                 · {{ $upcoming->instructor?->name ?? '—' }}
             </p>
         </div>
@@ -84,8 +84,14 @@
                     </p>
                 </div>
                 <div class="st-order-card__amount">
-                    <strong>{{ $booking->starts_at?->format('H:i') ?: '—' }}</strong>
-                    <span>{{ $booking->starts_at?->format('d/m/Y') }}</span>
+                    <strong>
+                        @if($booking->starts_at)
+                            <x-app-datetime :at="$booking->starts_at" pattern="g:i A" />
+                        @else
+                            —
+                        @endif
+                    </strong>
+                    <span>{{ $booking->starts_at?->timezone(auth()->user()?->timezoneCode() ?? config('platform.academy_timezone'))->format('d/m/Y') }}</span>
                 </div>
             </div>
 

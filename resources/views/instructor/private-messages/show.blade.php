@@ -1,70 +1,94 @@
 @extends('layouts.app')
 
-@section('title', $thread->student?->name ?: (app()->getLocale() === 'ar' ? 'محادثة' : 'Chat'))
-@section('page_title', $thread->student?->name ?: (app()->getLocale() === 'ar' ? 'محادثة' : 'Chat'))
+@section('title', $thread->student?->name ?: __('instructor.pm_chat_fallback'))
+@section('page_title', $thread->student?->name ?: __('instructor.pm_chat_fallback'))
 
 @section('content')
 @php
-    $isRtl = app()->getLocale() === 'ar';
     $student = $thread->student;
-    $name = $student?->name ?: ($isRtl ? 'طالب' : 'Student');
+    $name = $student?->name ?: __('instructor.pm_student_fallback');
     $avatarFallback = \App\Models\User::placeholderAvatarUrl();
     $avatar = ($student && $student->profile_image) ? $student->profile_image_url : $avatarFallback;
     $messages = $thread->messages->where('is_internal_note', false)->values();
     $meId = (int) auth()->id();
 @endphp
 
-<div class="mx-auto max-w-3xl space-y-4">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <a href="{{ route('instructor.private-messages.index') }}" class="text-sm font-bold text-accent hover:underline">
-            ← {{ $isRtl ? 'كل الرسائل' : 'All messages' }}
-        </a>
-        <a href="{{ route('instructor.notifications.index') }}" class="text-sm font-semibold text-muted hover:text-accent">
-            {{ $isRtl ? 'الإشعارات' : 'Notifications' }}
-        </a>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.private-messages.index') }}">{{ __('instructor.pm_all_messages') }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ $name }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-comment-dots su-page-head__ico" aria-hidden="true"></i>
+                {{ $name }}
+            </h1>
+            <p class="su-page-head__sub">{{ $thread->subject ?: __('instructor.pm_private_chat') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.notifications.index') }}" class="su-btn">
+                <i class="fas fa-bell" aria-hidden="true"></i>
+                {{ __('instructor.notifications') }}
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#15803d;font-size:13px">
+            {{ session('success') }}
+        </div>
     @endif
     @if($errors->any())
-        <div class="rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">{{ $errors->first() }}</div>
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#b91c1c;font-size:13px">
+            {{ $errors->first() }}
+        </div>
     @endif
 
-    <article class="overflow-hidden rounded-2xl border border-line bg-white shadow-soft">
-        <header class="flex items-center gap-3 border-b border-line px-4 py-3">
-            <img src="{{ $avatar }}" alt="" class="h-11 w-11 rounded-full object-cover">
-            <div>
-                <h2 class="font-black text-ink">{{ $name }}</h2>
-                <p class="text-xs font-semibold text-muted">{{ $thread->subject ?: ($isRtl ? 'محادثة خاصة' : 'Private chat') }}</p>
+    <section class="su-card su-card--flush" style="padding:0;overflow:hidden">
+        <header style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:0.5px solid var(--su-line)">
+            <img src="{{ $avatar }}" alt="" width="40" height="40" style="width:40px;height:40px;border-radius:12px;object-fit:cover">
+            <div class="min-w-0">
+                <div style="font-size:14px;font-weight:600;color:var(--su-ink)">{{ $name }}</div>
+                <div style="font-size:12px;color:var(--su-ink-40)">{{ $thread->subject ?: __('instructor.pm_private_chat') }}</div>
             </div>
         </header>
 
-        <div class="max-h-[28rem] space-y-3 overflow-y-auto bg-slate-50 px-4 py-4">
+        <div style="max-height:28rem;overflow-y:auto;padding:16px;background:var(--su-bg);display:flex;flex-direction:column;gap:10px">
             @forelse($messages as $msg)
                 @php $mine = (int) $msg->sender_id === $meId; @endphp
-                <div class="flex {{ $mine ? 'justify-end' : 'justify-start' }}">
-                    <div class="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm {{ $mine ? 'bg-[#0B3D91] text-white' : 'bg-white border border-line text-ink' }}">
-                        <p class="text-[11px] font-bold opacity-70 mb-1">
+                <div style="display:flex;{{ $mine ? 'justify-content:flex-end' : 'justify-content:flex-start' }}">
+                    <div style="max-width:85%;border-radius:16px;padding:10px 14px;font-size:13px;{{ $mine ? 'background:var(--su-ink);color:var(--su-bg)' : 'background:var(--su-bg-2);border:0.5px solid var(--su-line);color:var(--su-ink)' }}">
+                        <p style="margin:0 0 4px;font-size:11px;font-weight:600;opacity:.7">
                             {{ $msg->sender->name ?? '' }} · {{ $msg->created_at?->diffForHumans() }}
                         </p>
-                        <p class="whitespace-pre-wrap">{{ $msg->body }}</p>
+                        <p style="margin:0;white-space:pre-wrap">{{ $msg->body }}</p>
                     </div>
                 </div>
             @empty
-                <p class="py-8 text-center text-sm text-muted">{{ $isRtl ? 'لا رسائل بعد — اكتب أول رسالة.' : 'No messages yet — send the first one.' }}</p>
+                <div class="su-empty" style="padding:32px 8px">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                    <p>{{ __('instructor.pm_empty_thread') }}</p>
+                </div>
             @endforelse
         </div>
 
-        <form method="post" action="{{ route('instructor.private-messages.send', $thread) }}" class="border-t border-line p-4 space-y-3">
+        <form method="post" action="{{ route('instructor.private-messages.send', $thread) }}" style="padding:16px;border-top:0.5px solid var(--su-line);display:flex;flex-direction:column;gap:12px">
             @csrf
-            <textarea name="body" rows="3" required maxlength="5000" class="w-full rounded-xl border border-line px-3 py-2 text-sm"
-                      placeholder="{{ $isRtl ? 'اكتب رسالة للطالب…' : 'Write a message…' }}">{{ old('body') }}</textarea>
-            <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-bold text-white">
-                <i class="fas fa-paper-plane text-xs"></i>
-                {{ $isRtl ? 'إرسال' : 'Send' }}
-            </button>
+            <div class="su-field" style="margin:0">
+                <label for="pm-body">{{ __('instructor.pm_write_placeholder') }}</label>
+                <textarea name="body" id="pm-body" rows="3" required maxlength="5000"
+                          class="su-input" style="height:auto;min-height:88px;padding:10px 12px;resize:vertical"
+                          placeholder="{{ __('instructor.pm_write_placeholder') }}">{{ old('body') }}</textarea>
+            </div>
+            <div>
+                <button type="submit" class="su-btn su-btn--primary">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                    {{ __('instructor.pm_send') }}
+                </button>
+            </div>
         </form>
-    </article>
+    </section>
 </div>
 @endsection

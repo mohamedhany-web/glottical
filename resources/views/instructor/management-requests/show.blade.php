@@ -1,56 +1,66 @@
 @extends('layouts.app')
 
 @section('title', __('instructor.request_details_title') . ' - ' . config('app.name'))
-@section('header', __('instructor.request_details_title'))
+@section('page_title', __('instructor.request_details_title'))
 
 @section('content')
-<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+@php
+    $isRtl = app()->getLocale() === 'ar';
+    $chip = match ($request->status) {
+        'pending' => 'su-chip--warn',
+        'approved' => 'su-chip--ok',
+        default => 'su-chip--off',
+    };
+    $label = match ($request->status) {
+        'pending' => __('instructor.pending_review'),
+        'approved' => __('instructor.approved'),
+        default => __('instructor.rejected'),
+    };
+@endphp
+<div class="su-page" style="max-width:48rem">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.management-requests.index') }}">{{ __('instructor.my_requests_to_management') }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ Str::limit($request->subject, 40) }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">{{ $request->subject }}</h1>
+            <div class="su-chip-row">
+                <span class="su-chip {{ $chip }}">{{ $label }}</span>
+                <span class="su-chip su-soft-2">{{ $request->created_at->format('Y-m-d H:i') }}</span>
+            </div>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.management-requests.index') }}" class="su-btn">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.back_to_list') }}
+            </a>
+        </div>
+    </div>
+
     @if(session('success'))
-        <div class="mb-6 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 text-emerald-800 px-4 py-3">
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#15803d;font-size:13px">
             {{ session('success') }}
         </div>
     @endif
 
-    <div class="mb-6">
-        <a href="{{ route('instructor.management-requests.index') }}"
-           class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-semibold">
-            <i class="fas fa-arrow-right"></i>
-            {{ __('instructor.back_to_list') }}
-        </a>
-    </div>
+    <section class="su-card" style="margin-bottom:16px">
+        <h2 class="su-card__title"><i class="fas fa-align-left" aria-hidden="true"></i> {{ __('instructor.request_text_label') }}</h2>
+        <div class="su-prose-body" style="white-space:pre-wrap">{{ $request->message }}</div>
+    </section>
 
-    <div class="bg-white dark:bg-slate-800/95 rounded-2xl shadow-lg overflow-hidden">
-        <div class="px-6 py-5 border-b border-gray-200 bg-gray-50">
-            <h1 class="text-2xl font-black text-gray-900">{{ $request->subject }}</h1>
-            <div class="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-500">
-                <span>{{ __('common.date') }}: {{ $request->created_at->format('Y-m-d H:i') }}</span>
-                @if($request->status == 'pending')
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">{{ __('instructor.pending_review') }}</span>
-                @elseif($request->status == 'approved')
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800">{{ __('instructor.approved') }}</span>
-                @else
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-900/40 text-rose-800">{{ __('instructor.rejected') }}</span>
+    @if($request->admin_reply)
+        <section class="su-card" style="border-color:rgba(59,130,246,.25);background:rgba(59,130,246,.06)">
+            <h2 class="su-card__title"><i class="fas fa-reply" aria-hidden="true"></i> {{ __('instructor.admin_response_label') }}</h2>
+            <div class="su-prose-body" style="white-space:pre-wrap">{{ $request->admin_reply }}</div>
+            <p style="margin:12px 0 0;font-size:12px;color:var(--su-ink-40)">
+                {{ $request->replied_at?->format('Y-m-d H:i') }}
+                @if($request->repliedByUser)
+                    — {{ $request->repliedByUser->name }}
                 @endif
-            </div>
-        </div>
-
-        <div class="px-6 py-6">
-            <h2 class="text-sm font-bold text-gray-500 mb-2">{{ __('instructor.request_text_label') }}</h2>
-            <p class="text-gray-800 whitespace-pre-wrap">{{ $request->message }}</p>
-        </div>
-
-        @if($request->admin_reply)
-            <div class="px-6 py-6 border-t border-gray-200 bg-indigo-50 dark:bg-indigo-900/40">
-                <h2 class="text-sm font-bold text-indigo-800 mb-2">{{ __('instructor.admin_response_label') }}</h2>
-                <p class="text-gray-800 whitespace-pre-wrap">{{ $request->admin_reply }}</p>
-                <p class="text-sm text-gray-500 mt-3">
-                    {{ $request->replied_at?->format('Y-m-d H:i') }}
-                    @if($request->repliedByUser)
-                        — {{ $request->repliedByUser->name }}
-                    @endif
-                </p>
-            </div>
-        @endif
-    </div>
+            </p>
+        </section>
+    @endif
 </div>
 @endsection

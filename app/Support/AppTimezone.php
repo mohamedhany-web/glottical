@@ -17,6 +17,12 @@ class AppTimezone
 {
     public const ACADEMY_DEFAULT = 'Africa/Cairo';
 
+    public const QUALITY_GOOD = 'good';
+
+    public const QUALITY_CAUTION = 'caution';
+
+    public const QUALITY_POOR = 'poor';
+
     /**
      * مناطق شائعة للاختيار في الواجهة.
      *
@@ -37,15 +43,156 @@ class AppTimezone
             'Europe/London' => 'بريطانيا — لندن (Europe/London)',
             'Europe/Paris' => 'فرنسا — باريس (Europe/Paris)',
             'Europe/Berlin' => 'ألمانيا — برلين (Europe/Berlin)',
-            'America/New_York' => 'أمريكا — نيويورك (America/New_York)',
-            'America/Chicago' => 'أمريكا — شيكاغو (America/Chicago)',
-            'America/Denver' => 'أمريكا — دنفر (America/Denver)',
-            'America/Los_Angeles' => 'أمريكا — لوس أنجلوس (America/Los_Angeles)',
+            'America/New_York' => 'أمريكا — شرقي / نيويورك (America/New_York)',
+            'America/Chicago' => 'أمريكا — وسطي / شيكاغو (America/Chicago)',
+            'America/Denver' => 'أمريكا — جبلي / دنفر (America/Denver)',
+            'America/Los_Angeles' => 'أمريكا — هادي / لوس أنجلوس (America/Los_Angeles)',
             'America/Phoenix' => 'أمريكا — فينيكس (America/Phoenix)',
+            'America/Anchorage' => 'أمريكا — ألاسكا (America/Anchorage)',
+            'Pacific/Honolulu' => 'أمريكا — هاواي (Pacific/Honolulu)',
             'America/Toronto' => 'كندا — تورونتو (America/Toronto)',
             'Australia/Sydney' => 'أستراليا — سيدني (Australia/Sydney)',
             'UTC' => 'UTC',
         ];
+    }
+
+    /**
+     * المناطق الأربع الرئيسية في أمريكا (برج التنسيق الزمني).
+     *
+     * @return array<int, array{key: string, tz: string, label: string}>
+     */
+    public static function usMainlandZones(): array
+    {
+        return [
+            ['key' => 'ET', 'tz' => 'America/New_York', 'label' => 'شرقي — نيويورك'],
+            ['key' => 'CT', 'tz' => 'America/Chicago', 'label' => 'وسطي — شيكاغو'],
+            ['key' => 'MT', 'tz' => 'America/Denver', 'label' => 'جبلي — دنفر'],
+            ['key' => 'PT', 'tz' => 'America/Los_Angeles', 'label' => 'الهادي — لوس أنجلوس'],
+        ];
+    }
+
+    /**
+     * ولاية أمريكية → IANA timezone (من أداة التنسيق).
+     *
+     * @return array<string, string>
+     */
+    public static function usStates(): array
+    {
+        return [
+            'ألاباما' => 'America/Chicago',
+            'ألاسكا' => 'America/Anchorage',
+            'أريزونا' => 'America/Phoenix',
+            'أركنساس' => 'America/Chicago',
+            'كاليفورنيا' => 'America/Los_Angeles',
+            'كولورادو' => 'America/Denver',
+            'كونيتيكت' => 'America/New_York',
+            'ديلاوير' => 'America/New_York',
+            'العاصمة واشنطن' => 'America/New_York',
+            'فلوريدا' => 'America/New_York',
+            'جورجيا' => 'America/New_York',
+            'هاواي' => 'Pacific/Honolulu',
+            'آيداهو' => 'America/Denver',
+            'إلينوي' => 'America/Chicago',
+            'إنديانا' => 'America/New_York',
+            'آيوا' => 'America/Chicago',
+            'كنساس' => 'America/Chicago',
+            'كنتاكي' => 'America/New_York',
+            'لويزيانا' => 'America/Chicago',
+            'مين' => 'America/New_York',
+            'ميريلاند' => 'America/New_York',
+            'ماساتشوستس' => 'America/New_York',
+            'ميشيغان' => 'America/New_York',
+            'مينيسوتا' => 'America/Chicago',
+            'ميسيسيبي' => 'America/Chicago',
+            'ميزوري' => 'America/Chicago',
+            'مونتانا' => 'America/Denver',
+            'نبراسكا' => 'America/Chicago',
+            'نيفادا' => 'America/Los_Angeles',
+            'نيوهامبشير' => 'America/New_York',
+            'نيوجيرسي' => 'America/New_York',
+            'نيومكسيكو' => 'America/Denver',
+            'نيويورك' => 'America/New_York',
+            'كارولاينا الشمالية' => 'America/New_York',
+            'داكوتا الشمالية' => 'America/Chicago',
+            'أوهايو' => 'America/New_York',
+            'أوكلاهوما' => 'America/Chicago',
+            'أوريغون' => 'America/Los_Angeles',
+            'بنسلفانيا' => 'America/New_York',
+            'رود آيلاند' => 'America/New_York',
+            'كارولاينا الجنوبية' => 'America/New_York',
+            'داكوتا الجنوبية' => 'America/Chicago',
+            'تينيسي' => 'America/Chicago',
+            'تكساس' => 'America/Chicago',
+            'يوتا' => 'America/Denver',
+            'فيرمونت' => 'America/New_York',
+            'فيرجينيا' => 'America/New_York',
+            'واشنطن' => 'America/Los_Angeles',
+            'فيرجينيا الغربية' => 'America/New_York',
+            'ويسكونسن' => 'America/Chicago',
+            'وايومنغ' => 'America/Denver',
+        ];
+    }
+
+    public static function timezoneForUsState(?string $state): ?string
+    {
+        $state = trim((string) $state);
+        if ($state === '') {
+            return null;
+        }
+
+        $map = self::usStates();
+        if (isset($map[$state])) {
+            return $map[$state];
+        }
+
+        foreach ($map as $name => $tz) {
+            if (strcasecmp($name, $state) === 0) {
+                return $tz;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * جودة الموعد للطالب حسب ساعته المحلية (من برج التنسيق):
+     * good 07–20 · caution 06–07 و 20–22 · poor باقي اليوم.
+     */
+    public static function slotQualityForHour(int $hour24): string
+    {
+        $h = (($hour24 % 24) + 24) % 24;
+        if ($h >= 7 && $h < 20) {
+            return self::QUALITY_GOOD;
+        }
+        if (($h >= 6 && $h < 7) || ($h >= 20 && $h < 22)) {
+            return self::QUALITY_CAUTION;
+        }
+
+        return self::QUALITY_POOR;
+    }
+
+    public static function slotQuality(?CarbonInterface $datetime, ?string $viewerTimezone = null): string
+    {
+        if (! $datetime) {
+            return self::QUALITY_POOR;
+        }
+
+        $tz = self::normalize($viewerTimezone) ?? self::academy();
+        $hour = (int) $datetime->copy()->timezone($tz)->format('G');
+
+        return self::slotQualityForHour($hour);
+    }
+
+    /**
+     * @return array{ar: string, en: string}
+     */
+    public static function qualityLabels(string $quality): array
+    {
+        return match ($quality) {
+            self::QUALITY_GOOD => ['ar' => 'مناسب', 'en' => 'Good'],
+            self::QUALITY_CAUTION => ['ar' => 'حدّي', 'en' => 'Borderline'],
+            default => ['ar' => 'غير مناسب', 'en' => 'Poor'],
+        };
     }
 
     public static function academy(): string

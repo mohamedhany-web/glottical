@@ -1,88 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'جدول عمل المجموعات')
-
-@push('styles')
-<style>
-    .tws { --tws-blue:#0B3D91; --tws-dark:#072A66; --tws-gold:#F5B800; --tws-canvas:#F4F7FC; --tws-line:#E8EEF8; --tws-muted:#5B6577; }
-    .tws-panel {
-        background: #fff;
-        border: 1px solid var(--tws-line);
-        border-radius: 18px;
-    }
-    .dark .tws-panel { background: #111827; border-color: #1f2937; }
-    .tws-chip {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 6px 12px; border-radius: 999px;
-        font-size: 11px; font-weight: 800;
-        background: #EEF3FB; color: var(--tws-blue);
-    }
-    .tws-field {
-        width: 100%;
-        height: 42px;
-        border-radius: 12px;
-        border: 1px solid var(--tws-line);
-        background: #fff;
-        padding: 0 12px;
-        font-size: 13px;
-        font-weight: 600;
-        color: #0B1220;
-        outline: none;
-        transition: border-color .15s, box-shadow .15s;
-    }
-    .tws-field:focus {
-        border-color: var(--tws-blue);
-        box-shadow: 0 0 0 3px rgba(11,61,145,.12);
-    }
-    .dark .tws-field {
-        background: #0f172a;
-        border-color: #334155;
-        color: #f1f5f9;
-    }
-    .tws-slot-card {
-        border: 1px solid var(--tws-line);
-        background: var(--tws-canvas);
-        border-radius: 16px;
-        padding: 14px;
-        transition: border-color .15s;
-    }
-    .dark .tws-slot-card { background: #0f172a; border-color: #1f2937; }
-    .tws-day {
-        border: 1px solid var(--tws-line);
-        border-radius: 16px;
-        background: #fff;
-        min-height: 140px;
-        display: flex;
-        flex-direction: column;
-    }
-    .dark .tws-day { background: #111827; border-color: #1f2937; }
-    .tws-day.has-slots { border-color: rgba(11,61,145,.28); }
-    .tws-day__head {
-        padding: 10px 12px;
-        border-bottom: 1px solid var(--tws-line);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-    }
-    .dark .tws-day__head { border-bottom-color: #1f2937; }
-    .tws-pill {
-        display: inline-flex; align-items: center; gap: 4px;
-        padding: 6px 8px; border-radius: 10px;
-        font-size: 11px; font-weight: 700;
-        background: #EEF3FB; color: var(--tws-blue);
-        line-height: 1.3;
-    }
-    .tws-pill--gold { background: #FFF6D6; color: #8A6A00; }
-    .tws-pill--soft { background: #F4F7FC; color: var(--tws-muted); }
-    .dark .tws-pill { background: #132445; color: #bfdbfe; }
-    .dark .tws-pill--gold { background: #3b2f0a; color: #fde68a; }
-</style>
-@endpush
+@section('title', __('instructor.tws_title'))
+@section('page_title', __('instructor.tws_title'))
 
 @section('content')
 @php
-    $isRtl = app()->getLocale() === 'ar';
     $windowsCount = $rules->count();
     $daysWithSlots = $grouped->filter(fn ($g) => $g['rules']->isNotEmpty())->count();
     $existingSlots = $rules->map(function ($r) {
@@ -96,16 +18,16 @@
     })->values();
 @endphp
 
-<div class="tws w-full space-y-5" x-data="tutorWorkForm()">
+<div class="su-page" x-data="tutorWorkForm()">
     @if(session('success'))
-        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-300">
-            <i class="fas fa-check-circle ml-1"></i>{{ session('success') }}
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#15803d;font-size:13px">
+            <i class="fas fa-check-circle" aria-hidden="true"></i> {{ session('success') }}
         </div>
     @endif
 
     @if($errors->any())
-        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-300">
-            <ul class="list-disc pe-5 space-y-1">
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#b91c1c;font-size:13px">
+            <ul style="margin:0;padding-inline-start:18px">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -113,186 +35,185 @@
         </div>
     @endif
 
-    {{-- Header --}}
-    <section class="tws-panel overflow-hidden">
-        <div class="relative px-5 py-5 sm:px-6 sm:py-6">
-            <div class="absolute inset-y-0 {{ $isRtl ? 'left-0' : 'right-0' }} w-40 sm:w-56 pointer-events-none opacity-90"
-                 style="background: radial-gradient(ellipse at center, rgba(245,184,0,0.22), transparent 70%);"></div>
-            <div class="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-                <div class="min-w-0">
-                    <span class="tws-chip mb-3">
-                        <i class="fas fa-users text-[10px]"></i>
-                        تدريس مباشر · مجموعات
-                    </span>
-                    <h1 class="font-heading text-2xl sm:text-[28px] font-black tracking-tight text-[#0B1220] dark:text-white leading-tight">
-                        جدول عمل المجموعات
-                    </h1>
-                    <p class="mt-1.5 text-sm text-[color:var(--tws-muted)] dark:text-gray-400 max-w-2xl">
-                        نوافذ الأسبوع المتاحة لحجز المجموعات الفردية والجماعية — منفصل عن جدول كورسات 1:1.
-                    </p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    @if(Route::has('instructor.tutoring-bookings.index'))
-                        <a href="{{ route('instructor.tutoring-bookings.index') }}"
-                           class="inline-flex h-10 items-center gap-2 rounded-xl border border-[color:var(--tws-line)] dark:border-gray-600 bg-white dark:bg-gray-800 px-4 text-sm font-bold text-[#0B1220] dark:text-white hover:border-[#0B3D91]/40">
-                            <i class="fas fa-calendar-check text-xs text-[#0B3D91]"></i>
-                            الحجوزات
-                        </a>
-                    @endif
-                    @if(Route::has('instructor.one-to-one-availability.index'))
-                        <a href="{{ route('instructor.one-to-one-availability.index') }}"
-                           class="inline-flex h-10 items-center gap-2 rounded-xl bg-[#0B3D91] px-4 text-sm font-bold text-white hover:brightness-110">
-                            <i class="fas fa-user-graduate text-xs"></i>
-                            جدول 1:1
-                        </a>
-                    @endif
-                </div>
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <div class="su-chip-row" style="margin-bottom:8px">
+                <span class="su-chip su-soft-1">
+                    <i class="fas fa-users" aria-hidden="true"></i>
+                    {{ __('instructor.tws_chip') }}
+                </span>
+            </div>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-calendar-week su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.tws_title') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.tws_subtitle') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            @if(Route::has('instructor.tutoring-bookings.index'))
+                <a href="{{ route('instructor.tutoring-bookings.index') }}" class="su-btn">
+                    <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                    {{ __('instructor.tws_bookings') }}
+                </a>
+            @endif
+            @if(Route::has('instructor.one-to-one-availability.index'))
+                <a href="{{ route('instructor.one-to-one-availability.index') }}" class="su-btn su-btn--primary">
+                    <i class="fas fa-user-graduate" aria-hidden="true"></i>
+                    {{ __('instructor.tws_one_to_one') }}
+                </a>
+            @endif
+        </div>
+    </div>
+
+    <section class="su-kpi-row" style="margin-bottom:20px">
+        <div class="su-kpi su-kpi--1">
+            <div class="su-kpi__l">{{ __('instructor.tws_windows') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v" x-text="slots.length">{{ $windowsCount }}</div>
+                <div class="su-kpi__d"><i class="fas fa-window-maximize" aria-hidden="true"></i></div>
+            </div>
+        </div>
+        <div class="su-kpi su-kpi--2">
+            <div class="su-kpi__l">{{ __('instructor.tws_active_days') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($daysWithSlots) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-calendar-day" aria-hidden="true"></i></div>
+            </div>
+        </div>
+        <div class="su-kpi su-kpi--4">
+            <div class="su-kpi__l">{{ __('instructor.tws_saved') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($windowsCount) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-save" aria-hidden="true"></i></div>
+            </div>
+        </div>
+        <div class="su-kpi su-kpi--3">
+            <div class="su-kpi__l">{{ __('instructor.tws_hint_label') }}</div>
+            <div class="su-kpi__row">
+                <div style="font-size:12px;line-height:1.4;color:var(--su-ink-40);padding-top:4px">{{ __('instructor.tws_replace_hint') }}</div>
             </div>
         </div>
     </section>
 
-    {{-- Stats --}}
-    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="tws-panel px-4 py-4">
-            <p class="text-[11px] font-bold text-[color:var(--tws-muted)]">نوافذ العمل</p>
-            <p class="mt-1 text-2xl font-black text-[#0B3D91] dark:text-blue-300 tabular-nums" x-text="slots.length">{{ $windowsCount }}</p>
-        </div>
-        <div class="tws-panel px-4 py-4">
-            <p class="text-[11px] font-bold text-[color:var(--tws-muted)]">أيام مفعّلة</p>
-            <p class="mt-1 text-2xl font-black text-[#0B1220] dark:text-white tabular-nums">{{ $daysWithSlots }}</p>
-        </div>
-        <div class="tws-panel px-4 py-4">
-            <p class="text-[11px] font-bold text-[color:var(--tws-muted)]">محفوظ حالياً</p>
-            <p class="mt-1 text-2xl font-black text-[#8A6A00] tabular-nums">{{ $windowsCount }}</p>
-        </div>
-        <div class="tws-panel px-4 py-4 flex items-center">
-            <p class="text-xs text-[color:var(--tws-muted)] leading-relaxed">
-                الحفظ يستبدل الجدول بالكامل بالنوافذ المعروضة في النموذج.
-            </p>
-        </div>
-    </section>
-
-    <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
-        {{-- Editor --}}
-        <form method="POST" action="{{ route('instructor.tutor-work-schedule.update') }}"
-              class="xl:col-span-7 tws-panel p-5 sm:p-6 space-y-5">
+    <div class="su-page-grid">
+        <form method="POST" action="{{ route('instructor.tutor-work-schedule.update') }}" class="su-card" style="display:flex;flex-direction:column;gap:16px">
             @csrf
             @include('partials.timezone-select', [
                 'value' => old('timezone', auth()->user()?->timezoneCode()),
-                'class' => 'tws-field',
-                'labelClass' => 'block text-[11px] font-bold text-[color:var(--tws-muted)] mb-1.5',
-                'label' => 'توقيت الساعات دي',
+                'class' => 'su-select',
+                'labelClass' => 'block text-[12px] font-medium mb-1.5',
+                'label' => __('instructor.tws_timezone'),
             ])
-            <div class="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                    <h2 class="text-base font-extrabold text-[#0B1220] dark:text-white">تحرير النوافذ</h2>
-                    <p class="mt-1 text-xs text-[color:var(--tws-muted)]">أضف يوم ووقت ومدة الحصة. لا يوجد حد عند 3 نوافذ — مدّد «إلى» لو عايز مواعيد أكتر في نفس اليوم.</p>
+
+            <div style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px">
+                <div class="min-w-0">
+                    <h2 class="su-card__title" style="margin:0">{{ __('instructor.tws_edit_windows') }}</h2>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.tws_edit_hint') }}</p>
                 </div>
-                <button type="button" @click="addSlot()"
-                        class="inline-flex h-10 items-center gap-2 rounded-xl border border-[#F5B800] bg-[#FFF6D6] px-4 text-sm font-extrabold text-[#072A66] hover:brightness-105">
-                    <i class="fas fa-plus text-xs"></i>
-                    إضافة نافذة
+                <button type="button" @click="addSlot()" class="su-btn su-btn--primary" style="height:36px">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    {{ __('instructor.tws_add_window') }}
                 </button>
             </div>
 
-            <div class="space-y-3">
+            <div style="display:flex;flex-direction:column;gap:12px">
                 <template x-for="(slot, index) in slots" :key="slot._uid">
-                    <div class="tws-slot-card">
-                        <div class="flex items-center justify-between gap-2 mb-3">
-                            <span class="text-[11px] font-extrabold text-[#0B3D91] dark:text-blue-300">
-                                نافذة <span x-text="index + 1"></span>
+                    <div class="su-card su-soft-1" style="padding:14px">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px">
+                            <span class="su-chip su-soft-2">
+                                {{ __('instructor.tws_window') }} <span x-text="index + 1"></span>
                             </span>
-                            <button type="button" @click="removeSlot(index)" x-show="slots.length > 1"
-                                    class="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20">
-                                <i class="fas fa-trash text-[10px]"></i>
-                                حذف
+                            <button type="button" @click="removeSlot(index)" x-show="slots.length > 1" class="su-btn" style="height:32px;color:#b91c1c">
+                                <i class="fas fa-trash" aria-hidden="true"></i>
+                                {{ __('instructor.tws_remove') }}
                             </button>
                         </div>
-                        <div class="grid grid-cols-2 lg:grid-cols-6 gap-3">
-                            <div class="col-span-2 lg:col-span-2">
-                                <label class="block text-[11px] font-bold text-[color:var(--tws-muted)] mb-1.5">اليوم</label>
-                                <select :name="'slots['+index+'][day_of_week]'" x-model="slot.day_of_week" class="tws-field" required>
+                        <div class="su-form-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));align-items:start">
+                            <div class="su-field" style="grid-column:span 2">
+                                <label>{{ __('instructor.tws_day') }}</label>
+                                <select :name="'slots['+index+'][day_of_week]'" x-model="slot.day_of_week" class="su-select" required>
                                     @foreach($dayLabels as $day => $label)
                                         <option value="{{ $day }}">{{ $label }}</option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-[color:var(--tws-muted)] mb-1.5">من</label>
-                                <input type="time" step="60" :name="'slots['+index+'][start_time]'" x-model="slot.start_time" class="tws-field" required>
+                            <div class="su-field">
+                                <label>{{ __('instructor.tws_from') }}</label>
+                                <input type="time" step="60" :name="'slots['+index+'][start_time]'" x-model="slot.start_time" class="su-input" required>
                             </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-[color:var(--tws-muted)] mb-1.5">إلى</label>
-                                <input type="time" step="60" :name="'slots['+index+'][end_time]'" x-model="slot.end_time" class="tws-field" required>
+                            <div class="su-field">
+                                <label>{{ __('instructor.tws_to') }}</label>
+                                <input type="time" step="60" :name="'slots['+index+'][end_time]'" x-model="slot.end_time" class="su-input" required>
                             </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-[color:var(--tws-muted)] mb-1.5">المدة (د)</label>
-                                <input type="number" :name="'slots['+index+'][slot_duration_minutes]'" x-model="slot.slot_duration_minutes" min="30" max="240" step="15" class="tws-field">
+                            <div class="su-field">
+                                <label>{{ __('instructor.tws_duration') }}</label>
+                                <input type="number" :name="'slots['+index+'][slot_duration_minutes]'" x-model="slot.slot_duration_minutes" min="30" max="240" step="15" class="su-input">
                             </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-[color:var(--tws-muted)] mb-1.5">ينطبق على</label>
-                                <select :name="'slots['+index+'][applies_to]'" x-model="slot.applies_to" class="tws-field">
-                                    <option value="both">فردي وجماعي</option>
-                                    <option value="individual">فردي</option>
-                                    <option value="collective">جماعي</option>
+                            <div class="su-field">
+                                <label>{{ __('instructor.tws_applies_to') }}</label>
+                                <select :name="'slots['+index+'][applies_to]'" x-model="slot.applies_to" class="su-select">
+                                    <option value="both">{{ __('instructor.tws_both') }}</option>
+                                    <option value="individual">{{ __('instructor.tws_individual') }}</option>
+                                    <option value="collective">{{ __('instructor.tws_collective') }}</option>
                                 </select>
                             </div>
                         </div>
-                        <p class="mt-3 text-[11px] font-bold" :class="slotYield(slot) > 0 ? 'text-[#0B3D91] dark:text-blue-300' : 'text-rose-600'">
-                            <span x-show="slotYield(slot) > 0" x-text="'تنتج ' + slotYield(slot) + ' مواعيد في هذا اليوم'"></span>
-                            <span x-show="slotYield(slot) < 1">لن يُقبل موعد: مدّد «إلى» ليغطي مدة الحصة (حتى منتصف الليل استخدم 00:00).</span>
+                        <p style="margin:12px 0 0;font-size:11px;font-weight:600" :style="slotYield(slot) > 0 ? 'color:var(--su-ink)' : 'color:#b91c1c'">
+                            <span x-show="slotYield(slot) > 0" x-text="yieldLabel(slotYield(slot))"></span>
+                            <span x-show="slotYield(slot) < 1">{{ __('instructor.tws_yield_zero') }}</span>
                         </p>
                     </div>
                 </template>
             </div>
 
-            <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-[color:var(--tws-line)] dark:border-gray-700">
-                <p class="text-[11px] text-[color:var(--tws-muted)]">
-                    <i class="fas fa-info-circle ml-1 opacity-70"></i>
-                    احفظ بعد الانتهاء لتحديث مواعيد الحجز الظاهرة للطلاب.
+            <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-top:12px;border-top:0.5px solid var(--su-line)">
+                <p style="margin:0;font-size:11px;color:var(--su-ink-40)">
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
+                    {{ __('instructor.tws_save_hint') }}
                 </p>
-                <button type="submit"
-                        class="inline-flex h-11 items-center gap-2 rounded-xl bg-[#0B3D91] px-5 text-sm font-extrabold text-white hover:brightness-110 shadow-[0_12px_28px_-16px_rgba(11,61,145,.55)]">
-                    <i class="fas fa-save text-xs"></i>
-                    حفظ الجدول
+                <button type="submit" class="su-btn su-btn--primary">
+                    <i class="fas fa-save" aria-hidden="true"></i>
+                    {{ __('instructor.tws_save') }}
                 </button>
             </div>
         </form>
 
-        {{-- Week overview --}}
-        <aside class="xl:col-span-5 space-y-4">
-            <div class="tws-panel p-5 sm:p-6">
-                <div class="flex items-center justify-between gap-2 mb-4">
-                    <h2 class="text-base font-extrabold text-[#0B1220] dark:text-white">عرض الأسبوع</h2>
-                    <span class="tws-chip">محفوظ</span>
+        <aside style="display:flex;flex-direction:column;gap:16px">
+            <div class="su-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:16px">
+                    <h2 class="su-card__title" style="margin:0">{{ __('instructor.tws_week_overview') }}</h2>
+                    <span class="su-chip su-soft-1">{{ __('instructor.tws_saved_chip') }}</span>
                 </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3">
+                <div style="display:flex;flex-direction:column;gap:10px">
                     @foreach($grouped as $dayGroup)
                         @php $has = $dayGroup['rules']->isNotEmpty(); @endphp
-                        <div class="tws-day {{ $has ? 'has-slots' : '' }}">
-                            <div class="tws-day__head">
-                                <span class="text-sm font-extrabold text-[#0B1220] dark:text-white">{{ $dayGroup['label'] }}</span>
+                        <div class="su-card" style="padding:0;overflow:hidden{{ $has ? ';border-color:rgba(11,61,145,.25)' : '' }}">
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-bottom:0.5px solid var(--su-line)">
+                                <span style="font-size:13px;font-weight:600;color:var(--su-ink)">{{ $dayGroup['label'] }}</span>
                                 @if($has)
-                                    <span class="text-[10px] font-bold text-[#0B3D91] tabular-nums">{{ $dayGroup['rules']->count() }}</span>
+                                    <span class="su-chip su-soft-1 tabular-nums">{{ $dayGroup['rules']->count() }}</span>
                                 @else
-                                    <span class="text-[10px] font-bold text-[color:var(--tws-muted)]">فارغ</span>
+                                    <span style="font-size:10px;color:var(--su-ink-40)">{{ __('instructor.tws_empty_day') }}</span>
                                 @endif
                             </div>
-                            <div class="p-2.5 flex flex-wrap gap-1.5 flex-1 content-start">
+                            <div style="padding:10px;display:flex;flex-wrap:wrap;gap:6px;min-height:48px;align-content:flex-start">
                                 @forelse($dayGroup['rules'] as $rule)
                                     @php
-                                        $applies = $rule->applies_to === 'individual' ? 'فردي' : ($rule->applies_to === 'collective' ? 'جماعي' : 'الكل');
-                                        $pillClass = $rule->applies_to === 'collective' ? 'tws-pill--gold' : ($rule->applies_to === 'individual' ? 'tws-pill' : 'tws-pill');
+                                        $applies = $rule->applies_to === 'individual'
+                                            ? __('instructor.tws_individual')
+                                            : ($rule->applies_to === 'collective'
+                                                ? __('instructor.tws_collective')
+                                                : __('instructor.tws_applies_all'));
+                                        $chipClass = $rule->applies_to === 'collective' ? 'su-chip--warn' : 'su-soft-1';
                                     @endphp
-                                    <span class="tws-pill {{ $pillClass }}">
-                                        <i class="far fa-clock text-[9px] opacity-70"></i>
+                                    <span class="su-chip {{ $chipClass }}">
+                                        <i class="far fa-clock" aria-hidden="true"></i>
                                         {{ substr((string) $rule->start_time, 0, 5) }}–{{ substr((string) $rule->end_time, 0, 5) }}
-                                        · {{ (int) $rule->slot_duration_minutes }}د
+                                        · {{ (int) $rule->slot_duration_minutes }}{{ __('instructor.tws_min_short') }}
                                         · {{ $applies }}
                                     </span>
                                 @empty
-                                    <span class="tws-pill tws-pill--soft w-full justify-center py-4">لا نوافذ في هذا اليوم</span>
+                                    <span class="su-chip" style="width:100%;justify-content:center;padding:12px">{{ __('instructor.tws_no_windows') }}</span>
                                 @endforelse
                             </div>
                         </div>
@@ -300,14 +221,14 @@
                 </div>
             </div>
 
-            <div class="tws-panel px-5 py-4 flex flex-wrap gap-3 items-center justify-between">
-                <div class="flex flex-wrap gap-2 text-[11px] font-bold">
-                    <span class="tws-pill">فردي / الكل</span>
-                    <span class="tws-pill tws-pill--gold">جماعي</span>
+            <div class="su-card" style="padding:14px 16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px">
+                <div class="su-chip-row" style="margin:0">
+                    <span class="su-chip su-soft-1">{{ __('instructor.tws_individual') }} / {{ __('instructor.tws_applies_all') }}</span>
+                    <span class="su-chip su-chip--warn">{{ __('instructor.tws_collective') }}</span>
                 </div>
                 @if(Route::has('instructor.tutoring-cohorts.index'))
-                    <a href="{{ route('instructor.tutoring-cohorts.index') }}" class="text-xs font-bold text-[#0B3D91] dark:text-blue-300 hover:underline">
-                        الدفعات الجماعية ←
+                    <a href="{{ route('instructor.tutoring-cohorts.index') }}" class="su-btn" style="height:32px">
+                        {{ __('instructor.tws_cohorts_link') }}
                     </a>
                 @endif
             </div>
@@ -318,6 +239,7 @@
 <script>
 function tutorWorkForm() {
     const existing = @json($existingSlots);
+    const yieldTpl = @json(__('instructor.tws_yield'));
     let uid = 1;
     const withIds = (existing.length ? existing : [{ day_of_week: '1', start_time: '16:00', end_time: '22:00', slot_duration_minutes: '60', applies_to: 'both' }])
         .map(function (slot) {
@@ -352,6 +274,9 @@ function tutorWorkForm() {
             const duration = parseInt(slot.slot_duration_minutes, 10) || 60;
             if (end <= start || duration < 1) return 0;
             return Math.floor((end - start) / duration);
+        },
+        yieldLabel(n) {
+            return String(yieldTpl).replace(':count', n);
         }
     };
 }

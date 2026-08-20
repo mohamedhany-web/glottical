@@ -291,6 +291,32 @@
             color:#fff !important;
             box-shadow:0 8px 20px rgba(11,61,145,.28);
         }
+        #free-trial-modal .ft-chip.quality-good{
+            background:#e9f9ef;
+            border-color:rgba(61,220,132,.45);
+        }
+        #free-trial-modal .ft-chip.quality-caution{
+            background:#fff8e6;
+            border-color:rgba(245,184,0,.5);
+        }
+        #free-trial-modal .ft-chip.quality-poor{
+            background:#ffecec;
+            border-color:rgba(255,107,107,.4);
+            opacity:.85;
+        }
+        #free-trial-modal .ft-chip .ft-chip-sub{
+            display:block;
+            font-size:.625rem;
+            font-weight:600;
+            opacity:.75;
+            margin-top:.15rem;
+        }
+        #free-trial-modal .ft-tz-hint{
+            font-size:.75rem;
+            color:#5b6577;
+            margin:.25rem 0 .75rem;
+            line-height:1.6;
+        }
         #free-trial-modal .ft-chip .ft-chip-day{
             display:block;
             font-size:.6875rem;
@@ -495,6 +521,7 @@
 
                 <div>
                     <p class="ft-label">{{ __($a.'.free_trial_pick_time') }}</p>
+                    <p id="ft-tz-hint" class="ft-tz-hint"></p>
                     <div id="ft-times" class="ft-times"></div>
                     <p id="ft-no-times" class="ft-sub hidden">{{ __($a.'.free_trial_no_slots') }}</p>
         </div>
@@ -504,11 +531,22 @@
                         $phoneCountries = config('phone_countries.countries', []);
                         $defaultCountry = collect($phoneCountries)->firstWhere('code', config('phone_countries.default_country', 'SA'))
                             ?: ['dial_code' => '+966', 'name_ar' => 'السعودية', 'name_en' => 'Saudi Arabia', 'placeholder' => '5xxxxxxxx'];
+                        $usStates = \App\Support\AppTimezone::usStates();
                     @endphp
                     <input type="hidden" name="starts_at" id="ft-starts-at" required>
+                    <input type="hidden" name="timezone" id="ft-timezone" value="">
                     <div class="ft-field-wrap">
                         <label for="ft-name" class="ft-label">{{ __($a.'.free_trial_name') }}</label>
                         <input type="text" name="name" id="ft-name" required autocomplete="name" class="ft-field" value="{{ auth()->user()->name ?? '' }}">
+                    </div>
+                    <div class="ft-field-wrap">
+                        <label for="ft-us-state" class="ft-label">{{ $isRtl ? 'ولاية الإقامة (إن كنتم في أمريكا)' : 'US state (if applicable)' }}</label>
+                        <select name="us_state" id="ft-us-state" class="ft-field">
+                            <option value="">{{ $isRtl ? '— اختياري / أو نستخدم توقيت جهازكم —' : '— optional / use device timezone —' }}</option>
+                            @foreach($usStates as $stateName => $stateTz)
+                                <option value="{{ $stateName }}" data-timezone="{{ $stateTz }}">{{ $stateName }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="ft-form-grid">
                         <div class="ft-field-wrap">
@@ -580,6 +618,7 @@
     @include('partials.popup-ad', ['ad' => $popupAd])
 @endif
 
+<script src="{{ asset('js/glottical-timezone.js') }}"></script>
 <script>
 (function(){
     'use strict';
@@ -1013,8 +1052,33 @@
         var slotsByDate = {};
         var selectedDate = null;
         var selectedStart = null;
+        var viewerTz = (window.GlotticalTimezone && GlotticalTimezone.detectTimezone)
+            ? GlotticalTimezone.detectTimezone()
+            : 'Africa/Cairo';
+        var academyTz = 'Africa/Cairo';
         var csrf = document.querySelector('meta[name="csrf-token"]');
         var token = csrf ? csrf.getAttribute('content') : '';
+        var tzInput = document.getElementById('ft-timezone');
+        if (tzInput) tzInput.value = viewerTz;
+
+        function currentViewerTz(){
+            var stateSel = document.getElementById('ft-us-state');
+            if (stateSel && stateSel.value) {
+                var opt = stateSel.options[stateSel.selectedIndex];
+                var fromState = opt ? opt.getAttribute('data-timezone') : '';
+                if (fromState) return fromState;
+            }
+            return viewerTz;
+        }
+
+        function updateTzHint(){
+            var hint = document.getElementById('ft-tz-hint');
+            if (!hint) return;
+            var tz = currentViewerTz();
+            hint.textContent = @json($isRtl)
+                ? ('المواعيد بتوقيتكم (' + tz + ') · الأخضر مناسب · الأصفر حدّي · الأحمر غير ملائم لليوم الدراسي')
+                : ('Times shown in your timezone (' + tz + ') · green = good · amber = borderline · red = poor for school hours');
+        }
 
         function openModal(){
             modal.classList.remove('hidden');
@@ -1051,6 +1115,15 @@
             }
         } catch (e) {}
 
+        var stateSel = document.getElementById('ft-us-state');
+        if (stateSel) {
+            stateSel.addEventListener('change', function(){
+                if (tzInput) tzInput.value = currentViewerTz();
+                updateTzHint();
+                if (!modal.classList.contains('hidden')) loadSlots();
+            });
+        }
+
         function loadSlots(){
             var loadingEl = document.getElementById('ft-loading');
             var calendarEl = document.getElementById('ft-calendar');
@@ -1063,9 +1136,13 @@
                 errorEl.classList.add('hidden');
                 errorEl.textContent = '';
             }
+            var tz = currentViewerTz();
+            if (tzInput) tzInput.value = tz;
+            updateTzHint();
             var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
             var timeoutId = setTimeout(function(){ if (ctrl) ctrl.abort(); }, 15000);
-            fetch(@json(route('public.free-trial.slots')) + '?days=14', {
+            var qs = '?days=14&timezone=' + encodeURIComponent(tz);
+            fetch(@json(route('public.free-trial.slots')) + qs, {
                 headers: { 'Accept': 'application/json' },
                 signal: ctrl ? ctrl.signal : undefined,
                 credentials: 'same-origin'
@@ -1076,6 +1153,7 @@
                 })
                 .then(function(data){
                     slotsByDate = data.slots_by_date || {};
+                    academyTz = data.academy_timezone || academyTz;
                     var datesWrap = document.getElementById('ft-dates');
                     if (!datesWrap) return;
                     datesWrap.innerHTML = '';
@@ -1136,7 +1214,6 @@
             window.addEventListener('resize', sync);
             if (prev) prev.addEventListener('click', function(){ scroller.scrollBy({ left: (@json($isRtl) ? 1 : -1) * Math.max(180, scroller.clientWidth * 0.7), behavior: 'smooth' }); });
             if (next) next.addEventListener('click', function(){ scroller.scrollBy({ left: (@json($isRtl) ? -1 : 1) * Math.max(180, scroller.clientWidth * 0.7), behavior: 'smooth' }); });
-            // Ø³Ø­Ø¨ Ø¨Ø§Ù„Ù…Ø§ÙˆØ³ Ø¹Ù„Ù‰ Ø³Ø·Ø­ Ø§Ù„Ù…ÙƒØªØ¨
             var dragging = false, startX = 0, startLeft = 0;
             scroller.addEventListener('pointerdown', function(e){
                 if (e.pointerType !== 'mouse' || e.button !== 0) return;
@@ -1206,8 +1283,13 @@
             times.forEach(function(slot){
                 var b = document.createElement('button');
                 b.type = 'button';
-                b.className = 'ft-chip';
-                b.textContent = slot.time;
+                var q = slot.quality || 'good';
+                b.className = 'ft-chip quality-' + q;
+                b.title = (slot.quality_label || q) + (slot.time_academy ? (' · مصر ' + slot.time_academy) : '');
+                var sub = slot.time_academy
+                    ? ('<span class="ft-chip-sub">' + (@json($isRtl) ? 'مصر ' : 'Cairo ') + slot.time_academy + '</span>')
+                    : '';
+                b.innerHTML = '<span>' + (slot.time || '') + '</span>' + sub;
                 b.addEventListener('click', function(){
                     selectedStart = slot.starts_at;
                     document.getElementById('ft-starts-at').value = slot.starts_at;
@@ -1239,7 +1321,9 @@
                 phone: document.getElementById('ft-phone').value || null,
                 country_code: document.getElementById('ft-country-code').value || null,
                 goal: document.getElementById('ft-goal').value || null,
-                starts_at: document.getElementById('ft-starts-at').value
+                starts_at: document.getElementById('ft-starts-at').value,
+                timezone: currentViewerTz(),
+                us_state: (document.getElementById('ft-us-state') && document.getElementById('ft-us-state').value) || null
             };
             document.getElementById('ft-submit').disabled = true;
             fetch(@json(route('public.free-trial.book')), {
@@ -1260,7 +1344,12 @@
                 }
                 document.getElementById('ft-calendar').classList.add('hidden');
                 document.getElementById('ft-success').classList.remove('hidden');
-                document.getElementById('ft-success-msg').textContent = (res.body.message || '') + (res.body.booking && res.body.booking.label ? (' — ' + res.body.booking.label) : '');
+                var msg = (res.body.message || '');
+                if (res.body.booking && res.body.booking.label) {
+                    msg += ' — ' + res.body.booking.label;
+                    if (res.body.booking.label_secondary) msg += ' · ' + res.body.booking.label_secondary;
+                }
+                document.getElementById('ft-success-msg').textContent = msg;
             }).catch(function(){
                 err.textContent = 'فشل الاتصال — حاول مجدداً';
                 err.classList.remove('hidden');

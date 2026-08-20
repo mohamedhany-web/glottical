@@ -28,11 +28,13 @@
         default => __('student_timeline.booking_hint_default'),
     };
 
-    $when = $booking->starts_at
-        ? $booking->starts_at->locale($locale)->translatedFormat('D j M Y · H:i')
-        : '—';
+    $whenParts = $booking->starts_at
+        ? \App\Support\AppTimezone::dualLabel($booking->starts_at, auth()->user()?->timezoneCode(), $locale, 'D j M Y · g:i A')
+        : ['primary' => '—', 'secondary' => null];
+    $when = $whenParts['primary'];
+    $whenSecondary = $whenParts['secondary'];
     $ends = $booking->ends_at
-        ? $booking->ends_at->locale($locale)->translatedFormat('H:i')
+        ? \App\Support\AppTimezone::formatFor($booking->ends_at, auth()->user()?->timezoneCode(), 'g:i A', $locale)
         : null;
 @endphp
 
@@ -76,6 +78,9 @@
     <article class="st-stat-card">
         <p class="st-stat-card__label">{{ __('student_timeline.booking_when') }}</p>
         <p class="st-stat-card__value st-stat-card__value--text">{{ $when }}</p>
+        @if(!empty($whenSecondary))
+            <p class="st-stat-card__hint">{{ $whenSecondary }}</p>
+        @endif
         @if($ends)
             <p class="st-stat-card__hint">{{ __('student_timeline.booking_ends_at', ['time' => $ends]) }}</p>
         @endif

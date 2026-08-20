@@ -1,41 +1,82 @@
 @extends('layouts.app')
 
-@section('title', 'تفاصيل الاستشارة')
+@section('title', __('instructor.cons_show_title'))
+@section('page_title', __('instructor.cons_show_title'))
 
 @section('content')
-<div class="w-full max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.consultations.index') }}">{{ __('instructor.cons_title') }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ $consultation->student->name ?? __('instructor.pm_student_fallback') }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-comments su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.cons_show_heading', ['name' => $consultation->student->name ?? __('instructor.pm_student_fallback')]) }}
+            </h1>
+        </div>
+        <div class="su-page-head__actions">
+            <span class="su-chip">{{ $consultation->statusLabel() }}</span>
+            <a href="{{ route('instructor.consultations.index') }}" class="su-btn">
+                <i class="fas fa-arrow-{{ app()->getLocale() === 'ar' ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.cons_back') }}
+            </a>
+        </div>
+    </div>
+
     @if(session('success'))
-        <div class="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 text-sm">{{ session('success') }}</div>
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#15803d;font-size:13px">
+            {{ session('success') }}
+        </div>
     @endif
 
-    <a href="{{ route('instructor.consultations.index') }}" class="text-sm text-sky-600 hover:underline">← القائمة</a>
-
-    <div class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm p-6 space-y-4">
-        <div class="flex justify-between items-start gap-2">
-            <h1 class="text-xl font-black text-slate-900 dark:text-white">استشارة — {{ $consultation->student->name ?? 'طالب' }}</h1>
-            <span class="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-xs font-semibold">{{ $consultation->statusLabel() }}</span>
+    <section class="su-card">
+        <div class="su-meta-list">
+            <div class="su-meta-row">
+                <span class="su-meta-ico su-soft-1"><i class="fas fa-money-bill-wave" aria-hidden="true"></i></span>
+                <span>{{ __('instructor.cons_amount') }}:</span>
+                <strong class="tabular-nums">{{ number_format($consultation->price_amount, 2) }} ج.م</strong>
+            </div>
+            <div class="su-meta-row">
+                <span class="su-meta-ico su-soft-2"><i class="fas fa-clock" aria-hidden="true"></i></span>
+                <span>{{ __('instructor.cons_duration') }}:</span>
+                <strong>{{ (int) $consultation->duration_minutes }} {{ __('instructor.o1o_minutes') }}</strong>
+            </div>
         </div>
-        <dl class="text-sm space-y-2">
-            <div class="flex justify-between border-b border-slate-100 dark:border-slate-700 pb-2"><dt class="text-slate-500">المبلغ</dt><dd class="font-bold">{{ number_format($consultation->price_amount, 2) }} ج.م</dd></div>
-            <div class="flex justify-between border-b border-slate-100 dark:border-slate-700 pb-2"><dt class="text-slate-500">المدة</dt><dd>{{ (int) $consultation->duration_minutes }} دقيقة</dd></div>
-            @if($consultation->student_message)
-            <div><dt class="text-slate-500 mb-1">طلب الطالب</dt><dd class="text-slate-800 dark:text-slate-200 whitespace-pre-line">{{ $consultation->student_message }}</dd></div>
-            @endif
-        </dl>
+
+        @if($consultation->student_message)
+            <div style="margin-top:16px;padding-top:16px;border-top:0.5px solid var(--su-line)">
+                <div style="font-size:12px;font-weight:500;color:var(--su-ink-40);margin-bottom:6px">{{ __('instructor.cons_student_request') }}</div>
+                <p style="margin:0;font-size:13px;color:var(--su-ink);white-space:pre-line">{{ $consultation->student_message }}</p>
+            </div>
+        @endif
 
         @if($consultation->status === \App\Models\ConsultationRequest::STATUS_SCHEDULED && $consultation->classroomMeeting)
             @php $m = $consultation->classroomMeeting; $joinUrl = url('classroom/join/'.$m->code); @endphp
-            <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 p-4 space-y-3">
-                <p class="font-bold text-emerald-900 dark:text-emerald-100">الموعد: <x-app-datetime :at="$consultation->scheduled_at" /></p>
-                <p class="text-xs break-all text-emerald-800 dark:text-emerald-200">رابط الضيوف: {{ $joinUrl }}</p>
-                <div class="flex flex-wrap gap-2">
-                    <a href="{{ route('instructor.classroom.show', $m) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 text-white text-sm font-bold">إعدادات الغرفة</a>
+            <div class="su-card su-soft-3" style="margin-top:20px;padding:16px">
+                <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:var(--su-ink)">
+                    {{ __('instructor.cons_appointment') }}:
+                    <x-app-datetime :at="$consultation->scheduled_at" />
+                </p>
+                <p style="margin:0 0 12px;font-size:12px;color:var(--su-ink-40);word-break:break-all">
+                    {{ __('instructor.cons_guest_link') }}: {{ $joinUrl }}
+                </p>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                    <a href="{{ route('instructor.classroom.show', $m) }}" class="su-btn">
+                        <i class="fas fa-cog" aria-hidden="true"></i>
+                        {{ __('instructor.cons_room_settings') }}
+                    </a>
                     @if(!$m->ended_at)
-                    <a href="{{ route('instructor.classroom.room', $m) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold">دخول الغرفة</a>
+                        <a href="{{ route('instructor.classroom.room', $m) }}" class="su-btn su-btn--ok">
+                            <i class="fas fa-video" aria-hidden="true"></i>
+                            {{ __('instructor.cons_enter_room') }}
+                        </a>
                     @endif
                 </div>
             </div>
         @endif
-    </div>
+    </section>
 </div>
 @endsection

@@ -1,0 +1,16 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="51.5327" height="73.1861" viewBox="0 0 51.5327 73.1861" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Frame">
+<mask id="mask0_0_4247" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="51" height="73">
+<path id="Subtract" fill-rule="evenodd" clip-rule="evenodd" d="M0 15.4084C0 11.4754 0.378417 7.6308 1.10083 3.90899C1.5226 1.73604 3.73336 0.465278 5.87145 1.03818L27.1374 6.73638C29.2638 7.30614 30.5018 9.4875 30.2304 11.6721C30.0783 12.8962 30 14.1431 30 15.4084C30 27.6589 37.3428 38.1944 47.8674 42.8538C49.8535 43.7331 51.084 45.8716 50.5218 47.9696L44.8124 69.2773C44.2359 71.4287 42.0062 72.7072 39.9075 71.9615C16.652 63.6987 0 41.4982 0 15.4084Z" fill="url(#paint0_linear_0_4247)"/>
+</mask>
+<g mask="url(#mask0_0_4247)">
+<path id="Subtract_2" fill-rule="evenodd" clip-rule="evenodd" d="M0 15.4084C0 11.4754 0.378417 7.6308 1.10083 3.90899C1.5226 1.73604 3.73336 0.465278 5.87145 1.03818L27.1374 6.73638C29.2638 7.30614 30.5018 9.4875 30.2304 11.6721C30.0783 12.8962 30 14.1431 30 15.4084C30 27.6589 37.3428 38.1944 47.8674 42.8538C49.8535 43.7331 51.084 45.8716 50.5218 47.9696L44.8124 69.2773C44.2359 71.4287 42.0062 72.7072 39.9075 71.9615C16.652 63.6987 0 41.4982 0 15.4084Z" fill="#7DBBFF"/>
+</g>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_4247" x1="51.5327" y1="0" x2="27.1317" y2="29.4076" gradientUnits="userSpaceOnUse">
+<stop/>
+<stop offset="1"/>
+</linearGradient>
+</defs>
+</svg>

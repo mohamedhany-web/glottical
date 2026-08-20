@@ -1,221 +1,192 @@
 @extends('layouts.app')
 
-@section('title', 'دروس ' . $course->title)
-@section('header', 'دروس ' . $course->title)
+@section('title', __('instructor.lessons_breadcrumb') . ' — ' . $course->title)
+@section('page_title', __('instructor.lessons_manage_title'))
 
 @section('content')
-<div class="space-y-6">
-    <!-- الهيدر -->
-    <div class="rounded-2xl p-5 sm:p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <nav class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
-                    <a href="{{ route('instructor.courses.index') }}" class="hover:text-sky-600 transition-colors">الكورسات</a>
-                    <span>/</span>
-                    <a href="{{ route('instructor.courses.show', $course->id) }}" class="hover:text-sky-600 transition-colors truncate max-w-[180px]">{{ $course->title }}</a>
-                    <span>/</span>
-                    <span class="text-slate-700 dark:text-slate-300 font-medium">الدروس</span>
-                </nav>
-                <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">إدارة دروس الكورس</h1>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-                <a href="{{ route('instructor.courses.lessons.create', $course->id) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-plus"></i>
-                    إضافة درس جديد
-                </a>
-                <a href="{{ route('instructor.courses.show', $course->id) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-arrow-right"></i>
-                    رجوع
-                </a>
-            </div>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.courses.index') }}">{{ __('instructor.courses') }}</a>
+                <span>/</span>
+                <a href="{{ route('instructor.courses.show', $course->id) }}">{{ $course->title }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ __('instructor.lessons_breadcrumb') }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-book-open su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.lessons_manage_title') }}
+            </h1>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.courses.lessons.create', $course->id) }}" class="su-btn su-btn--primary">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                {{ __('instructor.lessons_add') }}
+            </a>
+            <a href="{{ route('instructor.courses.show', $course->id) }}" class="su-btn">
+                <i class="fas fa-arrow-{{ app()->getLocale() === 'ar' ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.back') }}
+            </a>
         </div>
     </div>
 
     @if(session('success'))
-    <div class="rounded-xl p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 text-emerald-800 flex items-center justify-between gap-4">
-        <span class="flex items-center gap-2"><i class="fas fa-check-circle"></i> {{ session('success') }}</span>
-        <button type="button" onclick="this.parentElement.remove()" class="p-1 rounded hover:bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#15803d;font-size:13px">
+            {{ session('success') }}
+        </div>
     @endif
-
     @if(session('error'))
-    <div class="rounded-xl p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 text-red-800 flex items-center justify-between gap-4">
-        <span class="flex items-center gap-2"><i class="fas fa-exclamation-circle"></i> {{ session('error') }}</span>
-        <button type="button" onclick="this.parentElement.remove()" class="p-1 rounded hover:bg-red-100 text-red-600">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#b91c1c;font-size:13px">
+            {{ session('error') }}
+        </div>
     @endif
 
-    <!-- معلومات الكورس -->
-    <div class="rounded-xl p-5 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <section class="su-card" style="margin-bottom:20px">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px">
             <div>
-                <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-1">{{ $course->title }}</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                    <i class="fas fa-book-open text-sky-500"></i>
-                    عدد الدروس: <strong class="text-slate-700 dark:text-slate-300">{{ $lessons->total() }}</strong>
+                <h2 style="margin:0;font-size:16px;font-weight:600;color:var(--su-ink)">{{ $course->title }}</h2>
+                <p style="margin:6px 0 0;font-size:13px;color:var(--su-ink-40)">
+                    <i class="fas fa-book-open" aria-hidden="true"></i>
+                    {{ __('instructor.lessons_count') }}: <strong style="color:var(--su-ink)">{{ $lessons->total() }}</strong>
                 </p>
             </div>
-            <a href="{{ route('instructor.courses.curriculum', $course->id) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 dark:bg-violet-700 hover:bg-violet-600 text-white rounded-xl font-semibold transition-colors shrink-0">
-                <i class="fas fa-sitemap"></i>
-                المنهج الدراسي
+            <a href="{{ route('instructor.courses.curriculum', $course->id) }}" class="su-btn">
+                <i class="fas fa-sitemap" aria-hidden="true"></i>
+                {{ __('instructor.build_curriculum') }}
             </a>
         </div>
-    </div>
+    </section>
 
-    <!-- قائمة الدروس -->
-    <div class="rounded-xl overflow-hidden bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
-            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <i class="fas fa-list text-sky-500"></i>
-                قائمة الدروس
+    <section class="su-card su-card--flush">
+        <div style="padding:14px 16px;border-bottom:0.5px solid var(--su-line)">
+            <h3 class="su-card__title" style="margin:0">
+                <i class="fas fa-list" aria-hidden="true"></i>
+                {{ __('instructor.lessons_list') }}
             </h3>
         </div>
 
         @if($lessons->count() > 0)
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr class="bg-slate-50 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-700">
-                        <th class="text-right py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 w-12">#</th>
-                        <th class="text-right py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400">عنوان الدرس</th>
-                        <th class="text-right py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 w-24">النوع</th>
-                        <th class="text-right py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 w-24">المدة</th>
-                        <th class="text-right py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 w-20">الترتيب</th>
-                        <th class="text-right py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 w-28">الحالة</th>
-                        <th class="text-center py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 w-36">الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody id="lessons-sortable">
-                    @foreach($lessons as $lesson)
-                    <tr data-lesson-id="{{ $lesson->id }}" class="border-b border-slate-100 dark:border-slate-700/80 hover:bg-slate-50 dark:bg-slate-800/50 transition-colors">
-                        <td class="py-3 px-4">
-                            <i class="fas fa-grip-vertical text-slate-400 cursor-move"></i>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center gap-3">
-                                @if($lesson->type === 'video')
-                                    <div class="w-9 h-9 rounded-lg bg-red-50 dark:bg-red-900/30 flex items-center justify-center shrink-0">
-                                        <i class="fas fa-video text-red-500 text-sm"></i>
+            <div class="su-table-wrap" style="border:0;border-radius:0;background:transparent">
+                <table class="su-table">
+                    <thead>
+                        <tr>
+                            <th style="width:40px">#</th>
+                            <th>{{ __('instructor.lessons_col_title') }}</th>
+                            <th>{{ __('instructor.lessons_col_type') }}</th>
+                            <th>{{ __('instructor.lessons_col_duration') }}</th>
+                            <th>{{ __('instructor.lessons_col_order') }}</th>
+                            <th>{{ __('common.status') }}</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="lessons-sortable">
+                        @foreach($lessons as $lesson)
+                            <tr data-lesson-id="{{ $lesson->id }}">
+                                <td><i class="fas fa-grip-vertical" style="color:var(--su-ink-40);cursor:move" aria-hidden="true"></i></td>
+                                <td>
+                                    <div style="display:flex;align-items:center;gap:10px">
+                                        @php
+                                            $icoSoft = match($lesson->type) {
+                                                'video' => 'su-soft-4',
+                                                'text' => 'su-soft-1',
+                                                'document' => 'su-soft-2',
+                                                default => 'su-soft-3',
+                                            };
+                                            $ico = match($lesson->type) {
+                                                'video' => 'fa-video',
+                                                'text' => 'fa-file-alt',
+                                                'document' => 'fa-file-pdf',
+                                                default => 'fa-question-circle',
+                                            };
+                                        @endphp
+                                        <span class="su-list-item__ico {{ $icoSoft }}" style="width:36px;height:36px"><i class="fas {{ $ico }}" aria-hidden="true"></i></span>
+                                        <div>
+                                            <strong style="font-weight:600">{{ $lesson->title }}</strong>
+                                            @if($lesson->is_free)
+                                                <div style="font-size:11px;color:#15803d">{{ __('instructor.free') }}</div>
+                                            @endif
+                                        </div>
                                     </div>
-                                @elseif($lesson->type === 'text')
-                                    <div class="w-9 h-9 rounded-lg bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center shrink-0">
-                                        <i class="fas fa-file-alt text-sky-500 text-sm"></i>
-                                    </div>
-                                @elseif($lesson->type === 'document')
-                                    <div class="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-                                        <i class="fas fa-file-pdf text-amber-500 text-sm"></i>
-                                    </div>
-                                @else
-                                    <div class="w-9 h-9 rounded-lg bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center shrink-0">
-                                        <i class="fas fa-question-circle text-violet-500 text-sm"></i>
-                                    </div>
-                                @endif
-                                <div>
-                                    <div class="font-semibold text-slate-800 dark:text-slate-100">{{ $lesson->title }}</div>
-                                    @if($lesson->is_free)
-                                        <span class="text-xs text-emerald-600 font-medium">مجاني</span>
+                                </td>
+                                <td>
+                                    <span class="su-chip">
+                                        @if($lesson->type === 'video') {{ __('instructor.lessons_type_video') }}
+                                        @elseif($lesson->type === 'text') {{ __('instructor.lessons_type_text') }}
+                                        @elseif($lesson->type === 'document') {{ __('instructor.lessons_type_document') }}
+                                        @else {{ __('instructor.lessons_type_quiz') }}
+                                        @endif
+                                    </span>
+                                </td>
+                                <td class="tabular-nums" style="color:var(--su-ink-40)">
+                                    @if($lesson->duration_minutes)
+                                        {{ __('instructor.lessons_min_short', ['n' => $lesson->duration_minutes]) }}
+                                    @else
+                                        —
                                     @endif
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-3 px-4">
-                            @if($lesson->type === 'video')
-                                <span class="inline-flex px-2 py-0.5 rounded-md text-xs font-medium bg-red-100 text-red-700">فيديو</span>
-                            @elseif($lesson->type === 'text')
-                                <span class="inline-flex px-2 py-0.5 rounded-md text-xs font-medium bg-sky-100 text-sky-700">نص</span>
-                            @elseif($lesson->type === 'document')
-                                <span class="inline-flex px-2 py-0.5 rounded-md text-xs font-medium bg-amber-100 text-amber-700">ملف</span>
-                            @else
-                                <span class="inline-flex px-2 py-0.5 rounded-md text-xs font-medium bg-violet-100 text-violet-700">اختبار</span>
-                            @endif
-                        </td>
-                        <td class="py-3 px-4 text-sm text-slate-600 dark:text-slate-400">
-                            @if($lesson->duration_minutes)
-                                {{ $lesson->duration_minutes }} د
-                            @else
-                                -
-                            @endif
-                        </td>
-                        <td class="py-3 px-4">
-                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 text-sm font-semibold">{{ $lesson->order }}</span>
-                        </td>
-                        <td class="py-3 px-4">
-                            <label class="inline-flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox"
-                                       class="toggle-status w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500"
-                                       data-lesson-id="{{ $lesson->id }}"
-                                       {{ $lesson->is_active ? 'checked' : '' }}>
-                                <span class="text-sm font-medium {{ $lesson->is_active ? 'text-emerald-600' : 'text-slate-500 dark:text-slate-400' }}">
-                                    {{ $lesson->is_active ? 'نشط' : 'غير نشط' }}
-                                </span>
-                            </label>
-                        </td>
-                        <td class="py-3 px-4">
-                            <div class="flex items-center justify-center gap-1">
-                                <a href="{{ route('instructor.courses.lessons.show', [$course->id, $lesson->id]) }}"
-                                   class="p-2 rounded-lg bg-sky-100 hover:bg-sky-200 text-sky-600 transition-colors" title="عرض">
-                                    <i class="fas fa-eye text-sm"></i>
-                                </a>
-                                <a href="{{ route('instructor.courses.lessons.edit', [$course->id, $lesson->id]) }}"
-                                   class="p-2 rounded-lg bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-600 dark:text-slate-400 transition-colors" title="تعديل">
-                                    <i class="fas fa-edit text-sm"></i>
-                                </a>
-                                <button type="button"
-                                        class="delete-lesson p-2 rounded-lg bg-red-50 dark:bg-red-900/30 hover:bg-red-100 text-red-600 transition-colors"
-                                        data-lesson-id="{{ $lesson->id }}"
-                                        data-lesson-title="{{ $lesson->title }}"
-                                        title="حذف">
-                                    <i class="fas fa-trash text-sm"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
-        @if($lessons->hasPages())
-        <div class="px-5 py-4 border-t border-slate-200 dark:border-slate-700">
-            {{ $lessons->links() }}
-        </div>
-        @endif
-        @else
-        <div class="text-center py-16">
-            <div class="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-700/50 flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-book-open text-3xl text-slate-400"></i>
+                                </td>
+                                <td><span class="su-chip">{{ $lesson->order }}</span></td>
+                                <td>
+                                    <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+                                        <input type="checkbox"
+                                               class="toggle-status"
+                                               data-lesson-id="{{ $lesson->id }}"
+                                               {{ $lesson->is_active ? 'checked' : '' }}>
+                                        <span class="{{ $lesson->is_active ? '' : '' }}" style="color:{{ $lesson->is_active ? '#15803d' : 'var(--su-ink-40)' }}">
+                                            {{ $lesson->is_active ? __('instructor.active') : __('instructor.inactive') }}
+                                        </span>
+                                    </label>
+                                </td>
+                                <td style="text-align:end">
+                                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px">
+                                        <a href="{{ route('instructor.courses.lessons.show', [$course->id, $lesson->id]) }}" class="su-icon-link" title="{{ __('common.view') }}"><i class="fas fa-eye" aria-hidden="true"></i></a>
+                                        <a href="{{ route('instructor.courses.lessons.edit', [$course->id, $lesson->id]) }}" class="su-icon-link su-icon-link--ghost" title="{{ __('common.edit') }}"><i class="fas fa-edit" aria-hidden="true"></i></a>
+                                        <button type="button"
+                                                class="delete-lesson su-icon-link"
+                                                style="background:#fee2e2;color:#b91c1c;border:0;cursor:pointer"
+                                                data-lesson-id="{{ $lesson->id }}"
+                                                data-lesson-title="{{ $lesson->title }}"
+                                                title="{{ __('common.delete') }}">
+                                            <i class="fas fa-trash" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
-            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">لا توجد دروس حتى الآن</h3>
-            <p class="text-slate-500 dark:text-slate-400 mb-6">ابدأ بإضافة دروس لهذا الكورس</p>
-            <a href="{{ route('instructor.courses.lessons.create', $course->id) }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                <i class="fas fa-plus"></i>
-                إضافة أول درس
-            </a>
-        </div>
+            @if($lessons->hasPages())
+                <div class="su-pager" style="padding:12px">{{ $lessons->links() }}</div>
+            @endif
+        @else
+            <div class="su-empty">
+                <i class="fas fa-book-open" aria-hidden="true"></i>
+                <p>{{ __('instructor.lessons_empty_title') }}</p>
+                <p style="margin-top:4px;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.lessons_empty_hint') }}</p>
+                <a href="{{ route('instructor.courses.lessons.create', $course->id) }}" class="su-btn su-btn--primary" style="margin-top:12px">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    {{ __('instructor.lessons_add_first') }}
+                </a>
+            </div>
         @endif
-    </div>
+    </section>
 </div>
 
-<!-- Modal تأكيد الحذف -->
 <div id="deleteModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4" role="dialog">
-    <div class="bg-white dark:bg-slate-800/95 rounded-2xl p-6 max-w-md w-full shadow-xl border border-slate-200 dark:border-slate-700">
-        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">تأكيد الحذف</h3>
-        <p class="text-slate-600 dark:text-slate-400 mb-4">هل أنت متأكد من حذف الدرس: <strong id="lesson-title-to-delete" class="text-slate-800 dark:text-slate-100"></strong>؟</p>
-        <p class="text-sm text-red-600 mb-6">هذا الإجراء لا يمكن التراجع عنه.</p>
-        <div class="flex gap-3">
-            <button type="button" id="delete-modal-cancel" class="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                إلغاء
-            </button>
-            <form id="delete-form" method="POST" class="flex-1" style="display: inline;">
+    <div class="su-card" style="max-width:28rem;width:100%">
+        <h3 class="su-card__title">{{ __('instructor.lessons_confirm_delete_title') }}</h3>
+        <p style="margin:8px 0;font-size:13px;color:var(--su-ink-40)">
+            {{ __('instructor.lessons_confirm_delete_body') }}
+            <strong style="color:var(--su-ink)" id="lesson-title-to-delete"></strong>؟
+        </p>
+        <p style="margin:0 0 16px;font-size:12px;color:#b91c1c">{{ __('instructor.lessons_confirm_delete_warn') }}</p>
+        <div style="display:flex;gap:8px">
+            <button type="button" id="delete-modal-cancel" class="su-btn" style="flex:1;justify-content:center">{{ __('instructor.cancel') }}</button>
+            <form id="delete-form" method="POST" style="flex:1">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="w-full px-4 py-2.5 bg-red-600 dark:bg-red-700 hover:bg-red-600 text-white rounded-xl font-semibold transition-colors">
-                    حذف
-                </button>
+                <button type="submit" class="su-btn su-btn--danger" style="width:100%;justify-content:center">{{ __('common.delete') }}</button>
             </form>
         </div>
     </div>
@@ -242,9 +213,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     const label = this.nextElementSibling;
-                    label.textContent = data.is_active ? 'نشط' : 'غير نشط';
-                    label.classList.toggle('text-emerald-600', data.is_active);
-                    label.classList.toggle('text-slate-500 dark:text-slate-400', !data.is_active);
+                    label.textContent = data.is_active ? @json(__('instructor.active')) : @json(__('instructor.inactive'));
+                    label.style.color = data.is_active ? '#15803d' : 'var(--su-ink-40)';
                 }
             })
             .catch(() => {

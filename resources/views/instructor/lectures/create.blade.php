@@ -1,77 +1,20 @@
 @extends('layouts.app')
 
 @section('title', __('instructor.add_new_lecture') . ' - ' . config('app.name'))
-@section('header', __('instructor.add_new_lecture'))
+@section('page_title', __('instructor.add_new_lecture'))
 
 @push('styles')
 <style>
-    .video-preview-container {
-        min-height: 300px;
-        background: #f8fafc;
-        border: 2px dashed #e2e8f0;
-        border-radius: 0.75rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        overflow: hidden;
-    }
-    .video-preview-container.has-video {
-        border: 2px solid #0ea5e9;
-        background: #000;
-    }
-    .video-preview-container iframe,
-    .video-preview-container video {
-        width: 100%;
-        height: 100%;
-        min-height: 300px;
-    }
-    .platform-selector {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-    }
-    .platform-option {
-        padding: 1.5rem;
-        border: 2px solid #e2e8f0;
-        border-radius: 0.75rem;
-        cursor: pointer;
-        transition: all 0.2s;
-        text-align: center;
-        background: white;
-    }
-    .platform-option:hover {
-        border-color: #0ea5e9;
-        background: #f0f9ff;
-    }
-    .platform-option.active {
-        border-color: #0ea5e9;
-        background: #e0f2fe;
-        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
-    }
-    .platform-option i {
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-        display: block;
-    }
-    .video-info-card {
-        background: #f0f9ff;
-        border: 1px solid #bae6fd;
-        border-radius: 0.75rem;
-        padding: 1rem;
-        margin-top: 1rem;
-    }
-    .loading-spinner {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 3px solid #f1f5f9;
-        border-top-color: #0ea5e9;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .su-platform-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:16px; }
+    .su-platform-opt { padding:16px; border:1px solid var(--su-line); border-radius:14px; cursor:pointer; text-align:center; background:var(--su-card); transition:.15s; }
+    .su-platform-opt:hover { border-color:var(--su-accent); }
+    .su-platform-opt.active { border-color:var(--su-accent); background:rgba(11,61,145,.06); box-shadow:0 0 0 3px rgba(11,61,145,.12); }
+    .su-platform-opt i { font-size:1.75rem; display:block; margin-bottom:6px; }
+    .video-preview-container { min-height:300px; background:var(--su-bg); border:1px dashed var(--su-line); border-radius:14px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .video-preview-container.has-video { border-style:solid; background:#000; }
+    .video-preview-container iframe, .video-preview-container video { width:100%; height:100%; min-height:300px; }
+    .loading-spinner { display:inline-block; width:18px; height:18px; border:2px solid var(--su-line); border-top-color:var(--su-accent); border-radius:50%; animation:su-spin .8s linear infinite; }
+    @keyframes su-spin { to { transform:rotate(360deg); } }
 </style>
 @endpush
 
@@ -81,46 +24,41 @@
         'bunny' => __('instructor.paste_bunny'),
         'default' => __('instructor.paste_video'),
     ];
+    $isRtl = app()->getLocale() === 'ar';
 @endphp
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <!-- Header -->
-    <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6 mb-6">
-        <nav class="text-sm text-slate-500 dark:text-slate-400 mb-2">
-            <a href="{{ route('instructor.lectures.index') }}" class="hover:text-sky-600 transition-colors">{{ __('instructor.lectures') }}</a>
-            <span class="mx-2">/</span>
-            <span class="text-slate-700 dark:text-slate-300 font-semibold">{{ __('instructor.add_new_lecture') }}</span>
-        </nav>
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div class="flex flex-wrap items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center shrink-0">
-                    <i class="fas fa-chalkboard-teacher text-lg"></i>
-                </div>
-                <div class="min-w-0">
-                    <h1 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">{{ __('instructor.add_new_lecture') }}</h1>
-                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{{ __('instructor.create_lecture_subtitle') }}</p>
-                </div>
-            </div>
-            <a href="{{ route('instructor.lectures.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                <i class="fas fa-arrow-right"></i>
+<div class="su-page" style="max-width:56rem">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.lectures.index') }}">{{ __('instructor.lectures') }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ __('instructor.add_new_lecture') }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-chalkboard-teacher su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.add_new_lecture') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.create_lecture_subtitle') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.lectures.index') }}" class="su-btn">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
                 {{ __('instructor.back') }}
             </a>
         </div>
     </div>
 
-    <!-- Form -->
     <form action="{{ route('instructor.lectures.store') }}" method="POST" enctype="multipart/form-data"
-          class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"
+          class="su-card"
           x-data="videoPreviewData()">
         @csrf
-        <div class="p-6 sm:p-8 space-y-8">
-            <!-- Basic info -->
-            <div class="space-y-6">
-                <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">{{ __('instructor.basic_info') }}</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="course_id" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.course') }} <span class="text-red-500">*</span></label>
-                        <select name="course_id" id="course_id" required
-                                class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800/95">
+        <div style="display:flex;flex-direction:column;gap:28px">
+            <div>
+                <h2 style="font-size:15px;font-weight:700;margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--su-line)">{{ __('instructor.basic_info') }}</h2>
+                <div class="su-form-grid" style="grid-template-columns:1fr 1fr">
+                    <div class="su-field">
+                        <label for="course_id">{{ __('instructor.course_label') }} <span style="color:#b91c1c">*</span></label>
+                        <select name="course_id" id="course_id" required class="su-select">
                             <option value="">{{ __('instructor.choose_course') }}</option>
                             @foreach($courses as $course)
                                 <option value="{{ $course->id }}" {{ (old('course_id', request('course_id')) == $course->id) ? 'selected' : '' }}>{{ $course->title }}</option>
@@ -130,8 +68,7 @@
                     </div>
                     <div>
                         <label for="course_lesson_id" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.lesson_optional') }}</label>
-                        <select name="course_lesson_id" id="course_lesson_id"
-                                class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800/95">
+                        <select name="course_lesson_id" id="course_lesson_id" class="su-select">
                             <option value="">{{ __('instructor.no_lesson') }}</option>
                             @foreach($lessons as $lesson)
                                 <option value="{{ $lesson->id }}" {{ old('course_lesson_id') == $lesson->id ? 'selected' : '' }}>{{ $lesson->title }}</option>
@@ -144,28 +81,28 @@
                         <label for="title" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.lecture_title') }} <span class="text-red-500">*</span></label>
                         <input type="text" name="title" id="title" value="{{ old('title') }}" required
                                placeholder="{{ __('instructor.lecture_title_placeholder') }}"
-                               class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800/95">
+                               class="su-input">
                         @error('title')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                     </div>
                     <div class="md:col-span-2">
                         <label for="description" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.description') }}</label>
                         <textarea name="description" id="description" rows="3" placeholder="{{ __('instructor.description_placeholder') }}"
-                                  class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800/95 resize-none">{{ old('description') }}</textarea>
+                                  class="su-input" style="min-height:88px;resize:vertical">{{ old('description') }}</textarea>
                         @error('description')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                     </div>
                 </div>
             </div>
 
             <!-- Recording link -->
-            <div class="space-y-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-                <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
+            <div style="padding-top:24px;border-top:1px solid var(--su-line)">
+                <h2 style="font-size:15px;font-weight:700;margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--su-line)">
                     <i class="fas fa-video text-sky-600 ml-1"></i>
                     {{ __('instructor.recording_link_section') }}
                 </h2>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">{{ __('instructor.video_source_question') }} <span class="text-red-500">*</span></label>
-                    <div class="platform-selector">
-                        <div class="platform-option" :class="{ 'active': selectedPlatform === 'bunny' }" @click="selectPlatform('bunny')">
+                    <div class="su-platform-grid">
+                        <div class="su-platform-opt" :class="{ 'active': selectedPlatform === 'bunny' }" @click="selectPlatform('bunny')">
                             <i class="fas fa-cloud text-orange-600"></i>
                             <div class="font-bold text-slate-800 dark:text-slate-100 text-sm mt-1">Bunny.net</div>
                         </div>
@@ -184,10 +121,10 @@
                                    @blur="updatePreview()"
                                    value="{{ old('recording_url') }}"
                                    :placeholder="getPlaceholder()"
-                                   class="flex-1 min-w-[200px] px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800/95">
+                                   class="su-input" style="flex:1;min-width:200px">
                             <button type="button" @click="updatePreview()"
                                     :disabled="!selectedPlatform || !videoUrl || isLoading"
-                                    class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
+                                    class="su-btn su-btn--primary">
                                 <span x-show="!isLoading"><i class="fas fa-search ml-1"></i> {{ __('instructor.read_link') }}</span>
                                 <span x-show="isLoading" class="flex items-center gap-2"><span class="loading-spinner"></span> {{ __('instructor.reading_link') }}</span>
                             </button>
@@ -196,7 +133,7 @@
                         @error('recording_url')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                     </div>
 
-                    <div x-show="videoInfo" class="video-info-card" x-transition>
+                    <div x-show="videoInfo" class="su-card" style="background:var(--su-bg);margin:0" x-transition>
                         <h4 class="font-bold text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-2"><i class="fas fa-info-circle text-sky-600"></i> {{ __('instructor.video_info') }}</h4>
                         <div class="grid grid-cols-2 gap-3 text-sm">
                             <div><span class="font-semibold text-slate-600 dark:text-slate-400">{{ __('instructor.title_label') }}:</span> <span class="text-slate-800 dark:text-slate-100" x-text="videoInfo?.title || '{{ addslashes(__('instructor.not_available')) }}'"></span></div>
@@ -217,7 +154,7 @@
                     </div>
                 </div>
 
-                <div x-show="!selectedPlatform" class="bg-sky-50 dark:bg-sky-900/30 border border-sky-200 rounded-xl p-6 text-center">
+                <div x-show="!selectedPlatform" class="su-empty">
                     <i class="fas fa-hand-point-up text-3xl text-sky-500 mb-2"></i>
                     <p class="font-bold text-slate-800 dark:text-slate-100">{{ __('instructor.choose_video_source_first') }}</p>
                     <p class="text-sm text-slate-600 dark:text-slate-400">{{ __('instructor.choose_platform_hint') }}</p>
@@ -225,8 +162,8 @@
             </div>
 
             <!-- Date & duration -->
-            <div class="space-y-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-                <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
+            <div style="padding-top:24px;border-top:1px solid var(--su-line)">
+                <h2 style="font-size:15px;font-weight:700;margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--su-line)">
                     <i class="fas fa-calendar-alt text-sky-600 ml-1"></i>
                     {{ __('instructor.date_time') }}
                 </h2>
@@ -235,79 +172,79 @@
                     <div>
                         <label for="scheduled_at" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.date_time') }} <span class="text-red-500">*</span></label>
                         <input type="datetime-local" name="scheduled_at" id="scheduled_at" value="{{ old('scheduled_at') }}" required
-                               class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800/95">
+                               class="su-input">
                         @error('scheduled_at')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label for="duration_minutes" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.duration_minutes_label') }} <span class="text-red-500">*</span></label>
                         <input type="number" name="duration_minutes" id="duration_minutes" value="{{ old('duration_minutes', 60) }}" min="15" max="480" required
-                               class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800/95">
+                               class="su-input">
                         @error('duration_minutes')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label for="min_watch_percent_to_unlock_next" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">نسبة المشاهدة المطلوبة لفتح المحاضرة التالية</label>
+                        <label for="min_watch_percent_to_unlock_next">{{ __('instructor.min_watch_percent') }}</label>
                         <input type="number" name="min_watch_percent_to_unlock_next" id="min_watch_percent_to_unlock_next"
                                value="{{ old('min_watch_percent_to_unlock_next', 0) }}" min="0" max="100"
-                               class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800/95"
-                               placeholder="مثال: 80 يعني يجب مشاهدة 80% من هذه المحاضرة لفتح التالية">
-                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">اتركها 0 أو فارغة إذا لم ترغب في قفل المحاضرة التالية على نسبة مشاهدة معينة.</p>
+                               class="su-input"
+                               placeholder="{{ __('instructor.min_watch_percent_ph') }}">
+                        <p style="margin:6px 0 0;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.min_watch_percent_hint') }}</p>
                     </div>
                 </div>
             </div>
 
             <!-- مواد المحاضرة -->
-            <div class="space-y-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-                <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
-                    <i class="fas fa-paperclip text-sky-600 ml-1"></i>
-                    مواد المحاضرة (اختياري)
+            <div style="padding-top:24px;border-top:1px solid var(--su-line)">
+                <h2 style="font-size:15px;font-weight:700;margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--su-line)">
+                    <i class="fas fa-paperclip" aria-hidden="true"></i>
+                    {{ __('instructor.lecture_materials') }}
                 </h2>
-                <p class="text-sm text-slate-600 dark:text-slate-400">يمكنك رفع ملفات (PDF، Word، عروض...) وتحديد ظهورها للطالب.</p>
-                <div id="materials-container" class="space-y-4">
-                    <div class="material-row flex flex-wrap items-end gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700">
-                        <div class="flex-1 min-w-[180px]">
-                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">الملف</label>
-                            <input type="file" name="material_files[]" class="w-full text-sm text-slate-700 dark:text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-sky-100 file:text-sky-700 file:font-semibold file:cursor-pointer hover:file:bg-sky-200" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,.png,.jpg,.jpeg">
+                <p style="margin:0 0 12px;font-size:13px;color:var(--su-ink-40)">{{ __('instructor.lecture_materials_hint') }}</p>
+                <div id="materials-container" style="display:flex;flex-direction:column;gap:12px">
+                    <div class="material-row" style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;padding:14px;border:1px solid var(--su-line);border-radius:14px">
+                        <div style="flex:1;min-width:180px">
+                            <label style="display:block;font-size:12px;margin-bottom:4px">{{ __('instructor.file_label') }}</label>
+                            <input type="file" name="material_files[]" class="su-input" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,.png,.jpg,.jpeg">
                         </div>
-                        <div class="w-48">
-                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">عنوان (اختياري)</label>
-                            <input type="text" name="material_titles[]" placeholder="مثال: ملخص المحاضرة" class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm">
+                        <div style="width:12rem">
+                            <label style="display:block;font-size:12px;margin-bottom:4px">{{ __('instructor.title_optional') }}</label>
+                            <input type="text" name="material_titles[]" placeholder="{{ __('instructor.material_title_ph') }}" class="su-input">
                         </div>
-                        <label class="flex items-center gap-2 pb-2">
+                        <label class="su-chip" style="cursor:pointer">
                             <input type="hidden" name="material_visible[]" value="0">
-                            <input type="checkbox" name="material_visible[]" value="1" checked class="w-4 h-4 text-sky-600 rounded">
-                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">ظاهر للطالب</span>
+                            <input type="checkbox" name="material_visible[]" value="1" checked style="margin-inline-end:6px">
+                            <span>{{ __('instructor.visible_to_student') }}</span>
                         </label>
-                        <button type="button" class="remove-material px-3 py-2 bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400 rounded-lg text-sm font-medium hover:bg-rose-200" style="display:none;"><i class="fas fa-times ml-1"></i> حذف</button>
+                        <button type="button" class="remove-material su-btn" style="display:none;height:32px"><i class="fas fa-times" aria-hidden="true"></i> {{ __('common.delete') }}</button>
                     </div>
                 </div>
-                <button type="button" id="add-material-btn" class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-100 text-sky-700 rounded-xl font-semibold text-sm hover:bg-sky-200 transition-colors">
-                    <i class="fas fa-plus"></i>
-                    إضافة مادة أخرى
+                <button type="button" id="add-material-btn" class="su-btn" style="margin-top:8px">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    {{ __('instructor.add_material') }}
                 </button>
             </div>
 
             <!-- Notes -->
-            <div class="space-y-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-                <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
+            <div style="padding-top:24px;border-top:1px solid var(--su-line)">
+                <h2 style="font-size:15px;font-weight:700;margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--su-line)">
                     <i class="fas fa-sticky-note text-sky-600 ml-1"></i>
                     {{ __('instructor.notes_section') }}
                 </h2>
                 <div>
                     <label for="notes" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.additional_notes') }}</label>
                     <textarea name="notes" id="notes" rows="4" placeholder="{{ __('instructor.notes_placeholder') }}"
-                              class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800/95 resize-none">{{ old('notes') }}</textarea>
+                              class="su-input" style="min-height:88px;resize:vertical">{{ old('notes') }}</textarea>
                     @error('notes')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
             </div>
 
             <!-- Options -->
-            <div class="space-y-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-                <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
+            <div style="padding-top:24px;border-top:1px solid var(--su-line)">
+                <h2 style="font-size:15px;font-weight:700;margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--su-line)">
                     <i class="fas fa-cog text-sky-600 ml-1"></i>
                     {{ __('instructor.options_section') }}
                 </h2>
                 <div class="space-y-3">
-                    <label class="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl cursor-pointer hover:bg-sky-50 dark:bg-sky-900/40 border border-slate-200 dark:border-slate-700 hover:border-sky-200 transition-colors">
+                    <label class="su-chip" style="cursor:pointer;height:auto;padding:14px;width:100%;justify-content:flex-start;gap:12px">
                         <input type="checkbox" name="has_attendance_tracking" value="1" {{ old('has_attendance_tracking', true) ? 'checked' : '' }}
                                class="w-5 h-5 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
                         <div>
@@ -319,13 +256,10 @@
             </div>
         </div>
 
-        <!-- Buttons -->
-        <div class="px-6 sm:px-8 py-5 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-end gap-3">
-            <a href="{{ route('instructor.lectures.index') }}" class="px-6 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                {{ __('common.cancel') }}
-            </a>
-            <button type="submit" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold transition-colors shadow-lg hover:shadow-xl">
-                <i class="fas fa-save ml-2"></i>
+        <div class="su-page-head__actions" style="justify-content:flex-end;border-top:1px solid var(--su-line);padding-top:16px;margin-top:8px">
+            <a href="{{ route('instructor.lectures.index') }}" class="su-btn">{{ __('common.cancel') }}</a>
+            <button type="submit" class="su-btn su-btn--primary">
+                <i class="fas fa-save" aria-hidden="true"></i>
                 {{ __('instructor.save_lecture') }}
             </button>
         </div>

@@ -1,176 +1,95 @@
 @extends('layouts.app')
 
-@section('title', 'تعديل بنك الأسئلة - ' . config('app.name'))
-@section('header', 'تعديل بنك الأسئلة: ' . $questionBank->title)
-
-@push('styles')
-<style>
-    .form-section {
-        background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
-        border: 2px solid rgba(44, 169, 189, 0.1);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .form-section:hover {
-        border-color: rgba(44, 169, 189, 0.3);
-        box-shadow: 0 8px 16px rgba(44, 169, 189, 0.1);
-    }
-
-    .form-input {
-        border: 2px solid rgba(44, 169, 189, 0.2);
-        transition: all 0.3s;
-    }
-
-    .form-input:focus {
-        border-color: #2CA9BD;
-        box-shadow: 0 0 0 4px rgba(44, 169, 189, 0.1);
-    }
-
-    html.dark .form-section {
-        background: linear-gradient(to bottom, #1e293b 0%, #0f172a 100%);
-        border-color: rgba(44, 169, 189, 0.35);
-    }
-    html.dark .form-section:hover {
-        border-color: rgba(44, 169, 189, 0.45);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
-    }
-    html.dark .form-input {
-        background: #1e293b;
-        color: #f1f5f9;
-        border-color: rgba(44, 169, 189, 0.35);
-    }
-    html.dark .form-input:focus {
-        border-color: #2CA9BD;
-        box-shadow: 0 0 0 4px rgba(44, 169, 189, 0.2);
-    }
-</style>
-@endpush
+@section('title', __('instructor.edit_question_bank') . ' - ' . config('app.name'))
+@section('page_title', __('instructor.edit_question_bank'))
 
 @section('content')
-<div class="space-y-6">
-    <!-- الهيدر -->
-    <div class="bg-gradient-to-r from-[#2CA9BD]/10 via-[#65DBE4]/10 to-[#2CA9BD]/10 dark:from-[#2CA9BD]/20 dark:via-slate-800/80 dark:to-slate-900/90 rounded-2xl p-6 border-2 border-[#2CA9BD]/20 dark:border-[#2CA9BD]/35 shadow-lg">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h1 class="text-2xl sm:text-3xl font-black text-[#1C2C39] dark:text-slate-100 mb-2">تعديل بنك الأسئلة</h1>
-                <p class="text-sm sm:text-base text-[#1F3A56] dark:text-slate-400 font-medium">تعديل معلومات بنك الأسئلة</p>
-            </div>
-            <a href="{{ route('instructor.question-banks.show', $questionBank) }}" 
-               class="inline-flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 transform hover:scale-105">
-                <i class="fas fa-arrow-right"></i>
-                <span>العودة</span>
+@php
+    $isRtl = app()->getLocale() === 'ar';
+@endphp
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.question-banks.index') }}">{{ __('instructor.question_banks') }}</a>
+                <span>/</span>
+                <a href="{{ route('instructor.question-banks.show', $questionBank) }}">{{ Str::limit($questionBank->title, 40) }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ __('common.edit') }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-edit su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.edit_question_bank') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.edit_question_bank_sub') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.question-banks.show', $questionBank) }}" class="su-btn">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.back') }}
             </a>
         </div>
     </div>
 
-    <!-- نموذج تعديل بنك الأسئلة -->
     <form action="{{ route('instructor.question-banks.update', $questionBank) }}" method="POST">
         @csrf
         @method('PUT')
-        
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <!-- المحتوى الرئيسي -->
-            <div class="xl:col-span-2 space-y-6">
-                <!-- معلومات أساسية -->
-                <div class="form-section rounded-2xl overflow-hidden">
-                    <div class="px-6 py-4 border-b-2 border-[#2CA9BD]/20 dark:border-[#2CA9BD]/35 bg-gradient-to-r from-[#2CA9BD]/5 to-[#65DBE4]/5 dark:from-slate-800/60 dark:to-slate-800/40">
-                        <h3 class="text-lg font-black text-[#1C2C39] dark:text-slate-100">معلومات بنك الأسئلة</h3>
-                    </div>
-                    <div class="p-6 space-y-6">
-                        <!-- العنوان -->
-                        <div>
-                            <label for="title" class="block text-sm font-bold text-[#1C2C39] dark:text-slate-200 mb-2">
-                                عنوان بنك الأسئلة <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" name="title" id="title" value="{{ old('title', $questionBank->title) }}" required
-                                   class="form-input w-full px-4 py-3 rounded-xl focus:outline-none"
-                                   placeholder="مثال: بنك أسئلة التقييم الصفي">
-                            @error('title')
-                                <p class="mt-1 text-sm text-red-600 font-medium">{{ $message }}</p>
-                            @enderror
+        <div class="su-detail-grid">
+            <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+                <section class="su-card">
+                    <h2 class="su-card__title"><i class="fas fa-info-circle" aria-hidden="true"></i> {{ __('instructor.question_bank_info') }}</h2>
+                    <div class="su-form-grid" style="grid-template-columns:1fr">
+                        <div class="su-field">
+                            <label for="title">{{ __('instructor.title_required') }} <span style="color:#b91c1c">*</span></label>
+                            <input type="text" name="title" id="title" value="{{ old('title', $questionBank->title) }}" required class="su-input"
+                                   placeholder="{{ __('instructor.question_bank_title_placeholder') }}">
+                            @error('title')<p class="su-field-error">{{ $message }}</p>@enderror
                         </div>
-
-                        <!-- الوصف -->
-                        <div>
-                            <label for="description" class="block text-sm font-bold text-[#1C2C39] dark:text-slate-200 mb-2">
-                                وصف بنك الأسئلة
-                            </label>
-                            <textarea name="description" id="description" rows="4"
-                                      class="form-input w-full px-4 py-3 rounded-xl focus:outline-none"
-                                      placeholder="وصف مختصر عن بنك الأسئلة ومحتواه...">{{ old('description', $questionBank->description) }}</textarea>
+                        <div class="su-field">
+                            <label for="description">{{ __('instructor.description') }}</label>
+                            <textarea name="description" id="description" rows="4" class="su-input" style="min-height:100px;resize:vertical"
+                                      placeholder="{{ __('instructor.description_placeholder') }}">{{ old('description', $questionBank->description) }}</textarea>
                         </div>
-
-                        <!-- مستوى الصعوبة -->
-                        <div>
-                            <label for="difficulty" class="block text-sm font-bold text-[#1C2C39] dark:text-slate-200 mb-2">
-                                مستوى الصعوبة العام
-                            </label>
-                            <select name="difficulty" id="difficulty"
-                                    class="form-input w-full px-4 py-3 rounded-xl focus:outline-none">
-                                <option value="">اختياري</option>
-                                <option value="easy" {{ old('difficulty', $questionBank->difficulty) == 'easy' ? 'selected' : '' }}>سهل</option>
-                                <option value="medium" {{ old('difficulty', $questionBank->difficulty) == 'medium' ? 'selected' : '' }}>متوسط</option>
-                                <option value="hard" {{ old('difficulty', $questionBank->difficulty) == 'hard' ? 'selected' : '' }}>صعب</option>
+                        <div class="su-field" style="max-width:16rem">
+                            <label for="difficulty">{{ __('instructor.difficulty') }}</label>
+                            <select name="difficulty" id="difficulty" class="su-select">
+                                <option value="">{{ __('instructor.optional_label') }}</option>
+                                <option value="easy" {{ old('difficulty', $questionBank->difficulty) == 'easy' ? 'selected' : '' }}>{{ __('instructor.easy') }}</option>
+                                <option value="medium" {{ old('difficulty', $questionBank->difficulty) == 'medium' ? 'selected' : '' }}>{{ __('instructor.medium') }}</option>
+                                <option value="hard" {{ old('difficulty', $questionBank->difficulty) == 'hard' ? 'selected' : '' }}>{{ __('instructor.hard') }}</option>
                             </select>
                         </div>
                     </div>
-                </div>
+                </section>
             </div>
 
-            <!-- الشريط الجانبي -->
-            <div class="space-y-6">
-                <!-- معلومات سريعة -->
-                <div class="form-section rounded-2xl overflow-hidden">
-                    <div class="px-6 py-4 border-b-2 border-[#2CA9BD]/20 dark:border-[#2CA9BD]/35 bg-gradient-to-r from-[#2CA9BD]/5 to-[#65DBE4]/5 dark:from-slate-800/60 dark:to-slate-800/40">
-                        <h3 class="text-lg font-black text-[#1C2C39] dark:text-slate-100">معلومات سريعة</h3>
+            <div style="display:flex;flex-direction:column;gap:16px">
+                <section class="su-card">
+                    <h2 class="su-card__title"><i class="fas fa-lightbulb" aria-hidden="true"></i> {{ __('instructor.tips') }}</h2>
+                    <ul class="su-meta-list" style="font-size:13px;color:var(--su-ink-40)">
+                        <li>• {{ __('instructor.tip_edit_bank_1') }}</li>
+                        <li>• {{ __('instructor.tip_edit_bank_2') }}</li>
+                        <li>• {{ __('instructor.tip_edit_bank_3') }}</li>
+                    </ul>
+                </section>
+                <section class="su-card">
+                    <h2 class="su-card__title"><i class="fas fa-toggle-on" aria-hidden="true"></i> {{ __('instructor.status_label') }}</h2>
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500">
+                        <input type="checkbox" name="is_active" value="1" {{ old('is_active', $questionBank->is_active) ? 'checked' : '' }}>
+                        <span>{{ __('instructor.bank_active') }}</span>
+                    </label>
+                </section>
+                <section class="su-card">
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        <button type="submit" class="su-btn su-btn--primary" style="justify-content:center">
+                            <i class="fas fa-save" aria-hidden="true"></i>
+                            {{ __('instructor.save_changes') }}
+                        </button>
+                        <a href="{{ route('instructor.question-banks.show', $questionBank) }}" class="su-btn" style="justify-content:center">
+                            {{ __('common.cancel') }}
+                        </a>
                     </div>
-                    <div class="p-6 space-y-4">
-                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 p-4 rounded-xl border-2 border-blue-200 dark:border-blue-800/60">
-                            <div class="flex items-center gap-2 mb-2">
-                                <i class="fas fa-info-circle text-blue-600 dark:text-blue-400"></i>
-                                <span class="text-sm font-bold text-blue-800 dark:text-blue-300">نصائح</span>
-                            </div>
-                            <ul class="mt-2 text-sm text-blue-700 dark:text-blue-200/90 space-y-1.5 font-medium">
-                                <li>• يمكنك تعديل جميع المعلومات</li>
-                                <li>• الأسئلة الموجودة لن تتأثر</li>
-                                <li>• تأكد من حفظ التغييرات</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- إعدادات الحالة -->
-                <div class="form-section rounded-2xl overflow-hidden">
-                    <div class="px-6 py-4 border-b-2 border-[#2CA9BD]/20 dark:border-[#2CA9BD]/35 bg-gradient-to-r from-[#2CA9BD]/5 to-[#65DBE4]/5 dark:from-slate-800/60 dark:to-slate-800/40">
-                        <h3 class="text-lg font-black text-[#1C2C39] dark:text-slate-100">إعدادات الحالة</h3>
-                    </div>
-                    <div class="p-6">
-                        <label class="flex items-center gap-3 cursor-pointer group">
-                            <input type="checkbox" name="is_active" value="1" 
-                                   {{ old('is_active', $questionBank->is_active) ? 'checked' : '' }}
-                                   class="w-5 h-5 text-[#2CA9BD] bg-gray-100 dark:bg-slate-700 border-gray-300 dark:border-slate-600 rounded focus:ring-[#2CA9BD] focus:ring-2">
-                            <span class="text-sm text-[#1C2C39] dark:text-slate-200 font-medium group-hover:text-[#2CA9BD] transition-colors">بنك نشط</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- أزرار الحفظ -->
-                <div class="form-section rounded-2xl overflow-hidden">
-                    <div class="p-6">
-                        <div class="space-y-3">
-                            <button type="submit" 
-                                    class="w-full bg-gradient-to-r from-[#2CA9BD] to-[#65DBE4] hover:from-[#1F3A56] hover:to-[#2CA9BD] text-white py-3 px-4 rounded-xl font-bold shadow-lg shadow-[#2CA9BD]/30 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                                <i class="fas fa-save ml-2"></i>
-                                حفظ التغييرات
-                            </button>
-                            
-                            <a href="{{ route('instructor.question-banks.show', $questionBank) }}" 
-                               class="w-full bg-gray-300 hover:bg-gray-400 dark:bg-slate-600 dark:hover:bg-slate-500 text-gray-700 dark:text-slate-100 py-3 px-4 rounded-xl font-bold transition-all duration-300 block text-center">
-                                إلغاء
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                </section>
             </div>
         </div>
     </form>

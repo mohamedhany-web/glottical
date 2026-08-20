@@ -7,7 +7,6 @@ use App\Models\Notification;
 use App\Models\StudentTutoringSubscription;
 use App\Models\TutoringGroupBooking;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
@@ -179,12 +178,13 @@ class TutoringGroupOrchestrationService
             : 4;
 
         $title = ($group?->title ?? 'مجموعة').' — '.$booking->starts_at?->format('Y-m-d H:i');
+        $code = ClassroomMeeting::generateCode();
 
         return ClassroomMeeting::create([
             'user_id' => $booking->instructor_id,
             'tutoring_group_booking_id' => $booking->id,
-            'code' => ClassroomMeeting::generateCode(),
-            'room_name' => 'tutoring-'.$booking->id.'-'.Str::lower(Str::random(6)),
+            'code' => $code,
+            'room_name' => ClassroomMeeting::canonicalRoomName($code),
             'title' => $title,
             'scheduled_for' => $booking->starts_at,
             'planned_duration_minutes' => max(30, (int) ($booking->starts_at && $booking->ends_at

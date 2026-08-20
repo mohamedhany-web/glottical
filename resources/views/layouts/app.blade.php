@@ -1,4 +1,4 @@
-@php
+﻿@php
     $appLocale = app()->getLocale();
     $appRtl = $appLocale === 'ar';
 @endphp
@@ -36,6 +36,12 @@
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    @php
+        $useInstructorPanel = auth()->check() && (auth()->user()->isInstructor() || auth()->user()->isTeacher());
+    @endphp
+    @if($useInstructorPanel)
+        <link rel="stylesheet" href="{{ versioned_asset('css/instructor-panel.css') }}">
+    @endif
 
     @php
         $showContentProtection = !empty(trim((string) ($__env->yieldContent('enable-content-protection') ?? '')));
@@ -68,8 +74,22 @@
         html { scroll-behavior: smooth; }
         html.light { color-scheme: light; }
         html.dark { color-scheme: dark; }
+        html:has(body.ip-body) { scroll-behavior: auto; height: 100dvh; max-height: 100dvh; overflow: hidden !important; }
         body { background: #F4F7FC; overflow-x: hidden; }
+        body.ip-body { overflow: hidden !important; height: 100dvh; max-height: 100dvh; margin: 0; }
         .dark body { background: #0B1220; }
+        body.ip-body,
+        body.ip-body .ip-shell,
+        body.ip-body .ip-shell button,
+        body.ip-body .ip-shell input,
+        body.ip-body .ip-shell a,
+        body.ip-body .ip-shell span,
+        body.ip-body .ip-shell p,
+        body.ip-body .ip-shell h1,
+        body.ip-body .ip-shell h2,
+        body.ip-body .ip-shell h3 {
+            font-family: "Inter", "Cairo", "IBM Plex Sans Arabic", system-ui, sans-serif !important;
+        }
 
         /* ── Sidebar ── */
         .app-sidebar {
@@ -370,8 +390,23 @@
 
     @stack('styles')
 </head>
-<body x-data="{ sidebarOpen: window.innerWidth >= 1024 }"
-      x-init="window.addEventListener('resize', () => { sidebarOpen = window.innerWidth >= 1024; })">
+<body class="{{ !empty($useInstructorPanel) ? 'ip-body' : '' }}"
+      x-data="{
+        sidebarOpen: false,
+        railOpen: false,
+        isNarrow: window.innerWidth < 1024,
+        isCompact: window.innerWidth < 1280,
+        init() {
+          const sync = () => {
+            this.isNarrow = window.innerWidth < 1024;
+            this.isCompact = window.innerWidth < 1280;
+            if (!this.isNarrow) this.sidebarOpen = false;
+            if (!this.isCompact) this.railOpen = false;
+          };
+          sync();
+          window.addEventListener('resize', sync);
+        }
+      }">
 
 <script>
 function themeManager() {
@@ -401,6 +436,53 @@ function themeManager() {
 }
 </script>
 
+@if(!empty($useInstructorPanel))
+    {{-- SnowUI instructor shell: nav | main | rail — only .ip-content scrolls --}}
+    <div class="ip-shell">
+        <aside class="ip-nav" :class="{ 'is-open': sidebarOpen && isNarrow }" @keydown.escape.window="if (isNarrow) sidebarOpen = false">
+            @include('layouts.instructor.sidebar')
+        </aside>
+
+        <div x-show="sidebarOpen && isNarrow"
+             x-cloak
+             @click="sidebarOpen = false"
+             class="ip-overlay lg:hidden"></div>
+
+        <div class="ip-main">
+            @include('layouts.instructor.topbar')
+            <main class="ip-content ip-scroll">
+                @if(session('success'))
+                    <div class="mb-4 rounded-[12px] border border-[color:var(--su-line)] bg-[color:var(--su-bg-2)] px-4 py-3 text-sm">{{ session('success') }}</div>
+                @endif
+                @if(session('error'))
+                    <div class="mb-4 rounded-[12px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+                @endif
+                @yield('content')
+            </main>
+        </div>
+
+        <aside class="ip-rail ip-rail--desk ip-scroll hidden xl:flex xl:flex-col">
+            @include('layouts.instructor.rail')
+        </aside>
+
+        <aside x-show="railOpen && isCompact"
+               x-cloak
+               x-transition
+               class="ip-rail ip-rail--drawer fixed inset-y-0 z-50 flex flex-col gap-2 xl:hidden"
+               style="inset-inline-end: 0; width: min(280px, 92vw); background:var(--su-bg); border-inline-start:0.5px solid var(--su-line); padding:16px;">
+            <div class="flex items-center justify-between" style="padding:4px 0 8px">
+                <span class="su-rail-h" style="padding:0">{{ __('instructor.activity_rail') }}</span>
+                <button type="button" class="su-icon-btn" @click="railOpen = false"><i class="fas fa-times text-xs"></i></button>
+            </div>
+            <div style="flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:16px;">
+                @include('layouts.instructor.rail')
+            </div>
+        </aside>
+        <div x-show="railOpen && isCompact" x-cloak @click="railOpen = false" class="ip-overlay xl:hidden"></div>
+    </div>
+    @stack('scripts')
+    @include('partials.timezone-sync')
+@else
     <div class="flex h-screen overflow-hidden">
         @auth
             <aside x-show="sidebarOpen || window.innerWidth >= 1024"
@@ -411,11 +493,7 @@ function themeManager() {
                    x-transition:leave-start="opacity-100 translate-x-0"
                    x-transition:leave-end="opacity-0 translate-x-full"
                    class="app-sidebar flex-shrink-0 fixed lg:static inset-y-0 right-0 z-50 lg:z-auto overflow-y-auto">
-                @if(auth()->user()->isInstructor() || auth()->user()->isTeacher())
-                    @include('layouts.instructor-sidebar')
-                @else
-                    @include('layouts.student-sidebar')
-                @endif
+                @include('layouts.student-sidebar')
             </aside>
 
             <div x-show="sidebarOpen && window.innerWidth < 1024"
@@ -446,66 +524,28 @@ function themeManager() {
                         </div>
 
                         <div class="hidden lg:flex items-center gap-2 ms-2">
-                            @php
-                                $headerIsInstructor = auth()->user()->isInstructor() || auth()->user()->isTeacher();
-                            @endphp
-                            @if($headerIsInstructor)
-                                @php $headerHasCourses = auth()->user()->hasTeachingCourses(); @endphp
-                                @if(Route::has('instructor.private-messages.index'))
-                                    <a href="{{ route('instructor.private-messages.index') }}" class="app-quick-link app-quick-link--gold">
-                                        <i class="fas fa-comments text-[10px]"></i>
-                                        {{ $appRtl ? 'الرسائل' : 'Messages' }}
-                                    </a>
-                                @endif
-                                @if(Route::has('instructor.notifications.index'))
-                                    <a href="{{ route('instructor.notifications.index') }}" class="app-quick-link">
-                                        <i class="fas fa-bell text-[10px]"></i>
-                                        {{ $appRtl ? 'إشعارات' : 'Alerts' }}
-                                    </a>
-                                @endif
-                                @if(Route::has('instructor.tutoring-bookings.index'))
-                                    <a href="{{ route('instructor.tutoring-bookings.index') }}" class="app-quick-link">
-                                        <i class="fas fa-users text-[10px]"></i>
-                                        {{ $appRtl ? 'الحجوزات' : 'Bookings' }}
-                                    </a>
-                                @endif
-                                @if(Route::has('instructor.live-sessions.index'))
-                                    <a href="{{ route('instructor.live-sessions.index') }}" class="app-quick-link">
-                                        <i class="fas fa-broadcast-tower text-[10px]"></i>
-                                        {{ $appRtl ? 'بث مباشر' : 'Live' }}
-                                    </a>
-                                @endif
-                                @if($headerHasCourses)
-                                <a href="{{ route('instructor.courses.index') }}" class="app-quick-link">
-                                    <i class="fas fa-book-open text-[10px]"></i>
-                                    {{ $appRtl ? 'كورساتي' : 'Courses' }}
+                            @if(Route::has('public.groups'))
+                                <a href="{{ route('public.groups') }}" class="app-quick-link app-quick-link--gold">
+                                    <i class="fas fa-users text-[10px]"></i>
+                                    {{ $appRtl ? 'المجموعات' : 'Groups' }}
                                 </a>
-                                @endif
-                            @else
-                                @if(Route::has('public.groups'))
-                                    <a href="{{ route('public.groups') }}" class="app-quick-link app-quick-link--gold">
-                                        <i class="fas fa-users text-[10px]"></i>
-                                        {{ $appRtl ? 'المجموعات' : 'Groups' }}
-                                    </a>
-                                @endif
-                                @if(Route::has('student.live-sessions.index'))
-                                    <a href="{{ route('student.live-sessions.index') }}" class="app-quick-link">
-                                        <i class="fas fa-broadcast-tower text-[10px]"></i>
-                                        {{ $appRtl ? 'بث مباشر' : 'Live' }}
-                                    </a>
-                                @endif
-                                @if(Route::has('public.courses'))
-                                    <a href="{{ route('public.courses') }}" class="app-quick-link">
-                                        <i class="fas fa-book-open text-[10px]"></i>
-                                        {{ $appRtl ? 'الكورسات' : 'Courses' }}
-                                    </a>
-                                @endif
+                            @endif
+                            @if(Route::has('student.live-sessions.index'))
+                                <a href="{{ route('student.live-sessions.index') }}" class="app-quick-link">
+                                    <i class="fas fa-broadcast-tower text-[10px]"></i>
+                                    {{ $appRtl ? 'بث مباشر' : 'Live' }}
+                                </a>
+                            @endif
+                            @if(Route::has('public.courses'))
+                                <a href="{{ route('public.courses') }}" class="app-quick-link">
+                                    <i class="fas fa-book-open text-[10px]"></i>
+                                    {{ $appRtl ? 'الكورسات' : 'Courses' }}
+                                </a>
                             @endif
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2">
-                        {{-- Theme toggle --}}
                         <div x-data="themeManager()" x-init="init()">
                             <button @click="toggle()" type="button" class="h-btn"
                                     :title="dark ? '{{ $appRtl ? 'الوضع النهاري' : 'Light mode' }}' : '{{ $appRtl ? 'الوضع الليلي' : 'Dark mode' }}'">
@@ -515,11 +555,7 @@ function themeManager() {
 
                         @php
                             $currentUser = auth()->user();
-                            $isInstructorLike = $currentUser && ($currentUser->isInstructor() || $currentUser->isTeacher());
-                            $audiences = $isInstructorLike
-                                ? [null, 'instructor', 'teacher']
-                                : [null, 'student'];
-
+                            $audiences = [null, 'student'];
                             $navNotificationsQuery = $currentUser
                                 ? $currentUser->customNotifications()
                                     ->with('sender')
@@ -528,17 +564,14 @@ function themeManager() {
                                         $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
                                     })
                                 : null;
-
                             $navUnreadCount = $navNotificationsQuery
                                 ? (clone $navNotificationsQuery)->where('is_read', false)->count()
                                 : 0;
-
                             $navRecentNotifications = $navNotificationsQuery
                                 ? (clone $navNotificationsQuery)->orderBy('created_at', 'desc')->limit(8)->get()
                                 : collect();
                         @endphp
 
-                        {{-- Notifications --}}
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open" class="h-btn relative">
                                 <i class="fas fa-bell text-sm"></i>
@@ -591,7 +624,6 @@ function themeManager() {
                             </div>
                         </div>
 
-                        {{-- User menu --}}
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                                 <div class="u-avatar flex-shrink-0">
@@ -601,63 +633,34 @@ function themeManager() {
                                         {{ mb_substr(auth()->user()->name, 0, 1) }}
                                     @endif
                                 </div>
-                                <span class="hidden lg:block text-sm font-medium text-gray-700 dark:text-gray-300 max-w-[120px] truncate">{{ auth()->user()->name }}</span>
-                                <i class="fas fa-chevron-down text-[10px] text-gray-400 hidden lg:block transition-transform" :class="{ 'rotate-180': open }"></i>
+                                <i class="fas fa-chevron-down text-[10px] text-gray-400 hidden sm:block"></i>
                             </button>
                             <div x-show="open" @click.away="open = false" x-transition
-                                 class="absolute left-0 mt-2 w-56 dd-menu z-50">
+                                 class="absolute left-0 mt-2 w-56 dd-menu z-50 py-1">
                                 <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                                     <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{{ auth()->user()->name }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{{ auth()->user()->email ?? '—' }}</p>
+                                    <p class="text-xs text-gray-500 truncate">{{ auth()->user()->email }}</p>
                                 </div>
-                                <div class="p-1.5">
-                                    @php
-                                        $profileRoute = (auth()->user()->isInstructor() || auth()->user()->isTeacher() || in_array(strtolower(auth()->user()->role ?? ''), ['instructor', 'teacher'])) ? route('instructor.profile') : route('profile');
-                                    @endphp
-                                    <a href="{{ $profileRoute }}" class="dd-item px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 gap-2.5">
-                                        <i class="fas fa-user text-gray-400 text-xs w-4"></i>
-                                        {{ $appRtl ? 'الملف الشخصي' : 'Profile' }}
-                                    </a>
-                                    <a href="{{ route('settings') }}" class="dd-item px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-300 gap-2.5">
-                                        <i class="fas fa-cog text-gray-400 text-xs w-4"></i>
-                                        {{ $appRtl ? 'الإعدادات' : 'Settings' }}
-                                    </a>
-                                    <hr class="my-1.5 border-gray-100 dark:border-gray-700">
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <button type="submit" class="w-full dd-item px-3 py-2 rounded-lg text-sm text-red-600 dark:text-red-400 gap-2.5 text-right">
-                                            <i class="fas fa-sign-out-alt text-xs w-4"></i>
-                                            {{ $appRtl ? 'تسجيل الخروج' : 'Sign out' }}
-                                        </button>
-                                    </form>
-                                </div>
+                                @if(Route::has('settings'))
+                                    <a href="{{ route('settings') }}" class="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">{{ $appRtl ? 'الإعدادات' : 'Settings' }}</a>
+                                @endif
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="w-full text-start px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20">{{ $appRtl ? 'تسجيل الخروج' : 'Logout' }}</button>
+                                </form>
                             </div>
                         </div>
                     </div>
                 </header>
             @endauth
 
-            <main class="flex-1 overflow-auto bg-surface-50 dark:bg-navy-950">
-                <div class="p-4 md:p-6 lg:p-8 w-full max-w-full">
-                    @if(session('success'))
-                        <div class="mb-5 flex items-center gap-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 px-4 py-3 rounded-xl text-sm">
-                            <i class="fas fa-check-circle flex-shrink-0"></i>
-                            {{ session('success') }}
-                        </div>
-                    @endif
-                    @if(session('error'))
-                        <div class="mb-5 flex items-center gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl text-sm">
-                            <i class="fas fa-exclamation-circle flex-shrink-0"></i>
-                            {{ session('error') }}
-                        </div>
-                    @endif
-                    @yield('content')
-                </div>
+            <main class="flex-1 overflow-y-auto p-4 md:p-6">
+                @yield('content')
             </main>
         </div>
     </div>
-
     @stack('scripts')
-    @include('partials.timezone-sync')
+@endif
+@include('partials.timezone-sync')
 </body>
 </html>

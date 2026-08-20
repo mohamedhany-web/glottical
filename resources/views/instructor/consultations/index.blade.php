@@ -1,67 +1,79 @@
 @extends('layouts.app')
 
-@section('title', 'طلبات الاستشارة')
+@section('title', __('instructor.cons_title'))
+@section('page_title', __('instructor.cons_title'))
 
 @section('content')
-<div class="space-y-6">
-    <div class="rounded-2xl p-6 text-white shadow-lg border border-white/10 bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="min-w-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
-                        <i class="fas fa-comments text-lg"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <h1 class="text-xl sm:text-2xl font-black leading-tight truncate">طلبات الاستشارة</h1>
-                        <p class="text-sm text-white/90 mt-0.5">تُدار الجدولة والدفع من الإدارة؛ ستصلك إشعارات عند التفعيل</p>
-                    </div>
-                </div>
-            </div>
-            <div class="flex flex-wrap items-center gap-2 shrink-0">
-                <a href="{{ route('instructor.courses.index') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/20 border border-white/20 text-white font-semibold transition-colors">
-                    <i class="fas fa-book"></i>
-                    <span>{{ __('instructor.courses') }}</span>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <h1 class="su-page-head__title">
+                <i class="fas fa-comments su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.cons_title') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.cons_subtitle') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.courses.index') }}" class="su-btn">
+                <i class="fas fa-book" aria-hidden="true"></i>
+                {{ __('instructor.courses') }}
+            </a>
+            @if(\Illuminate\Support\Facades\Route::has('instructor.calendar'))
+                <a href="{{ route('instructor.calendar') }}" class="su-btn su-btn--primary">
+                    <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                    {{ __('instructor.cons_my_calendar') }}
                 </a>
-                @if(\Illuminate\Support\Facades\Route::has('instructor.calendar'))
-                    <a href="{{ route('instructor.calendar') }}"
-                       class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-indigo-700 hover:bg-white/90 border border-white/20 font-extrabold transition-colors">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>تقويمي</span>
-                    </a>
-                @endif
-            </div>
+            @endif
         </div>
     </div>
 
-    <div class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="min-w-full text-sm">
-                <thead class="bg-slate-50 dark:bg-slate-900/50 text-xs text-slate-600 dark:text-slate-400 uppercase">
+    <section class="su-card su-card--flush">
+        <div class="su-table-wrap" style="border:0;border-radius:0;background:transparent">
+            <table class="su-table">
+                <thead>
                     <tr>
-                        <th class="px-4 py-3 text-right">الطالب</th>
-                        <th class="px-4 py-3 text-right">المبلغ</th>
-                        <th class="px-4 py-3 text-right">الحالة</th>
-                        <th class="px-4 py-3 text-right">الموعد</th>
-                        <th class="px-4 py-3 text-right"></th>
+                        <th>{{ __('instructor.cons_student') }}</th>
+                        <th>{{ __('instructor.cons_amount') }}</th>
+                        <th>{{ __('instructor.cons_status') }}</th>
+                        <th>{{ __('instructor.cons_when') }}</th>
+                        <th></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                <tbody>
                     @forelse($requests as $r)
                         <tr>
-                            <td class="px-4 py-3 font-semibold text-slate-900 dark:text-white">{{ $r->student->name ?? '—' }}</td>
-                            <td class="px-4 py-3">{{ number_format($r->price_amount, 2) }} ج.م</td>
-                            <td class="px-4 py-3"><span class="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-xs">{{ $r->statusLabel() }}</span></td>
-                            <td class="px-4 py-3 text-xs text-slate-500">@if($r->scheduled_at)<x-app-datetime :at="$r->scheduled_at" pattern="Y-m-d H:i" />@else — @endif</td>
-                            <td class="px-4 py-3"><a href="{{ route('instructor.consultations.show', $r) }}" class="text-sky-600 font-semibold hover:underline">تفاصيل</a></td>
+                            <td><strong style="font-weight:600">{{ $r->student->name ?? '—' }}</strong></td>
+                            <td class="tabular-nums" style="color:var(--su-ink-40)">{{ number_format($r->price_amount, 2) }} ج.م</td>
+                            <td><span class="su-chip">{{ $r->statusLabel() }}</span></td>
+                            <td class="tabular-nums" style="color:var(--su-ink-40)">
+                                @if($r->scheduled_at)
+                                    <x-app-datetime :at="$r->scheduled_at" pattern="Y-m-d H:i" />
+                                @else
+                                    —
+                                @endif
+                            </td>
+                            <td style="text-align:end">
+                                <a href="{{ route('instructor.consultations.show', $r) }}" class="su-btn" style="height:32px">
+                                    {{ __('instructor.cons_details') }}
+                                </a>
+                            </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="px-4 py-12 text-center text-slate-500">لا توجد طلبات</td></tr>
+                        <tr>
+                            <td colspan="5">
+                                <div class="su-empty">
+                                    <i class="fas fa-comments" aria-hidden="true"></i>
+                                    <p>{{ __('instructor.cons_empty') }}</p>
+                                </div>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-        <div class="px-4 py-3 border-t border-slate-100 dark:border-slate-700">{{ $requests->links() }}</div>
-    </div>
+        @if(method_exists($requests, 'links') && $requests->hasPages())
+            <div class="su-pager" style="padding:12px">{{ $requests->links() }}</div>
+        @endif
+    </section>
 </div>
 @endsection

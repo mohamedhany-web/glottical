@@ -1,48 +1,78 @@
 @extends('layouts.app')
 
-@section('title', 'تسعير الكورس')
-@section('header', 'تسعير الكورس')
+@section('title', app()->getLocale() === 'ar' ? 'تسعير الكورس' : 'Course pricing')
+@section('page_title', app()->getLocale() === 'ar' ? 'تسعير الكورس' : 'Course pricing')
 
 @section('content')
 @php
-    $field = 'h-10 w-full rounded-xl border border-slate-200 px-3 text-sm';
+    $isRtl = app()->getLocale() === 'ar';
 @endphp
-<div class="space-y-5 max-w-2xl">
-    <section>
-        <p class="text-xs text-slate-500">{{ $course->title }}</p>
-        <h2 class="mt-1 text-2xl font-semibold">أسعار الكورس المسجّل</h2>
-        <p class="mt-1 text-sm text-slate-500">الجنيه للداخل — الدولار للخارج. الطالب يختار العملة عند الدفع.</p>
-    </section>
 
-    @if(session('success'))
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
-    @endif
+<div class="su-page" style="max-width:720px">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.courses.index') }}">{{ __('instructor.my_courses') }}</a>
+                <span>/</span>
+                <a href="{{ route('instructor.courses.show', $course) }}">{{ $course->title }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ $isRtl ? 'التسعير' : 'Pricing' }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-tags su-page-head__ico" aria-hidden="true"></i>
+                {{ $isRtl ? 'أسعار الكورس المسجّل' : 'Recorded course pricing' }}
+            </h1>
+            <p class="su-page-head__sub">
+                {{ $isRtl ? 'الجنيه للداخل — الدولار للخارج. الطالب يختار العملة عند الدفع.' : 'EGP for local — USD for abroad. Students pick currency at checkout.' }}
+            </p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.courses.show', $course) }}" class="su-btn">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.back') }}
+            </a>
+        </div>
+    </div>
+
     @if($errors->any())
-        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ $errors->first() }}</div>
+        <div class="su-card" style="margin-bottom:16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08)">
+            <p style="margin:0;font-size:13px;color:#b91c1c">{{ $errors->first() }}</p>
+        </div>
     @endif
 
-    <form method="POST" action="{{ route('instructor.courses.pricing.update', $course) }}" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+    <form method="POST" action="{{ route('instructor.courses.pricing.update', $course) }}" class="su-card">
         @csrf
         @method('PUT')
-        <div class="grid gap-3 sm:grid-cols-2">
-            <div>
-                <label class="text-xs text-slate-500">السعر بالجنيه (EGP)</label>
-                <input type="number" step="0.01" min="0" name="price_egp" value="{{ old('price_egp', $course->price_egp ?? $course->price) }}" class="{{ $field }}">
+
+        <div class="su-form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
+            <div class="su-field">
+                <label for="price_egp">{{ $isRtl ? 'السعر بالجنيه (EGP)' : 'Price (EGP)' }}</label>
+                <input type="number" step="0.01" min="0" name="price_egp" id="price_egp"
+                       value="{{ old('price_egp', $course->price_egp ?? $course->price) }}" class="su-input">
             </div>
-            <div>
-                <label class="text-xs text-slate-500">بعد الخصم (EGP)</label>
-                <input type="number" step="0.01" min="0" name="price_egp_after_discount" value="{{ old('price_egp_after_discount', $course->price_egp_after_discount ?? $course->price_after_discount) }}" class="{{ $field }}">
+            <div class="su-field">
+                <label for="price_egp_after_discount">{{ $isRtl ? 'بعد الخصم (EGP)' : 'After discount (EGP)' }}</label>
+                <input type="number" step="0.01" min="0" name="price_egp_after_discount" id="price_egp_after_discount"
+                       value="{{ old('price_egp_after_discount', $course->price_egp_after_discount ?? $course->price_after_discount) }}" class="su-input">
             </div>
-            <div>
-                <label class="text-xs text-slate-500">السعر بالدولار (USD)</label>
-                <input type="number" step="0.01" min="0" name="price_usd" value="{{ old('price_usd', $course->price_usd) }}" class="{{ $field }}">
+            <div class="su-field">
+                <label for="price_usd">{{ $isRtl ? 'السعر بالدولار (USD)' : 'Price (USD)' }}</label>
+                <input type="number" step="0.01" min="0" name="price_usd" id="price_usd"
+                       value="{{ old('price_usd', $course->price_usd) }}" class="su-input">
             </div>
-            <div>
-                <label class="text-xs text-slate-500">بعد الخصم (USD)</label>
-                <input type="number" step="0.01" min="0" name="price_usd_after_discount" value="{{ old('price_usd_after_discount', $course->price_usd_after_discount) }}" class="{{ $field }}">
+            <div class="su-field">
+                <label for="price_usd_after_discount">{{ $isRtl ? 'بعد الخصم (USD)' : 'After discount (USD)' }}</label>
+                <input type="number" step="0.01" min="0" name="price_usd_after_discount" id="price_usd_after_discount"
+                       value="{{ old('price_usd_after_discount', $course->price_usd_after_discount) }}" class="su-input">
             </div>
         </div>
-        <button class="h-10 rounded-xl bg-[#0B3D91] px-5 text-sm font-semibold text-white">حفظ الأسعار</button>
+
+        <div class="su-page-head__actions">
+            <button type="submit" class="su-btn su-btn--primary">
+                <i class="fas fa-save" aria-hidden="true"></i>
+                {{ $isRtl ? 'حفظ الأسعار' : 'Save pricing' }}
+            </button>
+        </div>
     </form>
 </div>
 @endsection

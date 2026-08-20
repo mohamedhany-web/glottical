@@ -1,113 +1,146 @@
 @extends('layouts.app')
-@section('title', 'جلسات البث المباشر')
+
+@section('title', __('instructor.ls_title'))
+@section('page_title', __('instructor.ls_title'))
 
 @section('content')
-<div class="space-y-6">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-800 dark:text-white">
-                <i class="fas fa-broadcast-tower text-red-500 ml-2"></i>جلسات البث المباشر
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <h1 class="su-page-head__title">
+                <i class="fas fa-broadcast-tower su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.ls_title') }}
             </h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">إنشاء وإدارة جلسات البث المباشر لطلابك</p>
+            <p class="su-page-head__sub">{{ __('instructor.ls_subtitle') }}</p>
         </div>
-        <a href="{{ route('instructor.live-sessions.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 dark:bg-red-700 hover:bg-red-600 text-white rounded-xl font-semibold shadow-lg shadow-red-500/25 transition-all">
-            <i class="fas fa-plus"></i> جلسة بث جديدة
-        </a>
-    </div>
-
-    {{-- Stats --}}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
-            <p class="text-2xl font-bold text-slate-800 dark:text-white">{{ $stats['total'] }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400">إجمالي الجلسات</p>
-        </div>
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-red-200 dark:border-red-900/50">
-            <div class="flex items-center gap-2">
-                <span class="w-2 h-2 bg-red-600 dark:bg-red-700 rounded-full animate-pulse"></span>
-                <p class="text-2xl font-bold text-red-600">{{ $stats['live'] }}</p>
-            </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400">مباشر الآن</p>
-        </div>
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-blue-200 dark:border-blue-900/50">
-            <p class="text-2xl font-bold text-blue-600">{{ $stats['scheduled'] }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400">مجدولة</p>
-        </div>
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-emerald-200 dark:border-emerald-900/50">
-            <p class="text-2xl font-bold text-emerald-600">{{ $stats['ended'] }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400">منتهية</p>
-        </div>
-    </div>
-
-    {{-- Filters --}}
-    <div class="flex gap-2 flex-wrap">
-        <a href="{{ route('instructor.live-sessions.index') }}" class="px-3 py-1.5 rounded-lg text-sm {{ !request('status') ? 'bg-slate-800 dark:bg-white dark:bg-slate-800/95 text-white dark:text-slate-800 dark:text-slate-100 font-semibold' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200' }} transition-colors">الكل</a>
-        <a href="{{ route('instructor.live-sessions.index', ['status' => 'live']) }}" class="px-3 py-1.5 rounded-lg text-sm {{ request('status') === 'live' ? 'bg-red-600 dark:bg-red-700 text-white font-semibold' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200' }} transition-colors">مباشر</a>
-        <a href="{{ route('instructor.live-sessions.index', ['status' => 'scheduled']) }}" class="px-3 py-1.5 rounded-lg text-sm {{ request('status') === 'scheduled' ? 'bg-blue-600 dark:bg-blue-700 text-white font-semibold' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200' }} transition-colors">مجدولة</a>
-        <a href="{{ route('instructor.live-sessions.index', ['status' => 'ended']) }}" class="px-3 py-1.5 rounded-lg text-sm {{ request('status') === 'ended' ? 'bg-slate-600 text-white font-semibold' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200' }} transition-colors">منتهية</a>
-    </div>
-
-    {{-- Sessions List --}}
-    <div class="space-y-3">
-        @forelse($sessions as $session)
-        <div class="bg-white dark:bg-slate-800 rounded-xl border {{ $session->isLive() ? 'border-red-300 dark:border-red-800 ring-1 ring-red-200 dark:ring-red-900/50' : 'border-slate-200 dark:border-slate-700' }} p-5 flex flex-col sm:flex-row sm:items-center gap-4">
-            <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                    @if($session->isLive())
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/40 text-red-600 text-xs font-bold"><span class="w-1.5 h-1.5 bg-red-600 dark:bg-red-700 rounded-full animate-pulse"></span> مباشر</span>
-                    @elseif($session->isScheduled())
-                        <span class="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 text-xs font-medium">مجدولة</span>
-                    @elseif($session->isEnded())
-                        <span class="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-600 text-slate-500 dark:text-slate-400 text-xs font-medium">منتهية</span>
-                    @else
-                        <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-xs font-medium">ملغاة</span>
-                    @endif
-                    @if($session->course)
-                        <span class="text-xs text-slate-400">{{ Str::limit($session->course->title, 30) }}</span>
-                    @endif
-                </div>
-                <h3 class="font-bold text-slate-800 dark:text-white truncate">{{ $session->title }}</h3>
-                <div class="flex items-center gap-4 mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    <span><i class="fas fa-calendar ml-1"></i>@if($session->scheduled_at)<x-app-datetime :at="$session->scheduled_at" pattern="Y/m/d H:i" />@else — @endif</span>
-                    <span><i class="fas fa-users ml-1"></i>{{ $session->attendance_count }} حاضر</span>
-                    @if($session->duration_minutes)
-                        <span><i class="fas fa-clock ml-1"></i>{{ $session->duration_for_humans }}</span>
-                    @endif
-                </div>
-            </div>
-            <div class="flex items-center gap-2 flex-shrink-0">
-                @if($session->isLive())
-                    <a href="{{ route('instructor.live-sessions.room', $session) }}" class="px-4 py-2 bg-red-600 dark:bg-red-700 hover:bg-red-600 text-white rounded-lg text-sm font-semibold shadow-lg shadow-red-500/25 transition-all">
-                        <i class="fas fa-video ml-1"></i> دخول البث
-                    </a>
-                    <form method="POST" action="{{ route('instructor.live-sessions.end', $session) }}" onsubmit="return confirm('إنهاء الجلسة؟')">
-                        @csrf
-                        <button class="px-3 py-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-300 transition-colors"><i class="fas fa-stop"></i></button>
-                    </form>
-                @elseif($session->isScheduled())
-                    <form method="POST" action="{{ route('instructor.live-sessions.start', $session) }}">
-                        @csrf
-                        <button class="px-4 py-2 bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-sm font-semibold shadow-lg shadow-emerald-500/25 transition-all">
-                            <i class="fas fa-play ml-1"></i> بدء البث
-                        </button>
-                    </form>
-                @endif
-                <a href="{{ route('instructor.live-sessions.show', $session) }}" class="px-3 py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-200 transition-colors" title="تفاصيل"><i class="fas fa-eye"></i></a>
-            </div>
-        </div>
-        @empty
-        <div class="text-center py-16 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-            <i class="fas fa-broadcast-tower text-5xl text-slate-300 dark:text-slate-600 dark:text-slate-400 mb-4"></i>
-            <p class="text-lg font-semibold text-slate-600 dark:text-slate-400 mb-2">لا توجد جلسات بث بعد</p>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">أنشئ أول جلسة بث مباشر لطلابك</p>
-            <a href="{{ route('instructor.live-sessions.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 dark:bg-red-700 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors">
-                <i class="fas fa-plus"></i> إنشاء جلسة جديدة
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.live-sessions.create') }}" class="su-btn su-btn--primary">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                {{ __('instructor.ls_new') }}
             </a>
         </div>
+    </div>
+
+    <section class="su-kpi-row" style="margin-bottom:20px">
+        <div class="su-kpi su-kpi--1">
+            <div class="su-kpi__l">{{ __('instructor.ls_total') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['total'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-layer-group" aria-hidden="true"></i></div>
+            </div>
+        </div>
+        <div class="su-kpi su-kpi--4">
+            <div class="su-kpi__l">{{ __('instructor.ls_live_now') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['live'] ?? 0) }}</div>
+                <div class="su-kpi__d"><span class="su-pulse" aria-hidden="true"></span></div>
+            </div>
+        </div>
+        <div class="su-kpi su-kpi--2">
+            <div class="su-kpi__l">{{ __('instructor.ls_scheduled') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['scheduled'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-calendar-alt" aria-hidden="true"></i></div>
+            </div>
+        </div>
+        <div class="su-kpi su-kpi--3">
+            <div class="su-kpi__l">{{ __('instructor.ls_ended') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['ended'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-check" aria-hidden="true"></i></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="su-filters">
+        <a href="{{ route('instructor.live-sessions.index') }}"
+           class="su-filter {{ !request('status') ? 'is-on' : '' }}">{{ __('instructor.ls_all') }}</a>
+        <a href="{{ route('instructor.live-sessions.index', ['status' => 'live']) }}"
+           class="su-filter su-filter--live {{ request('status') === 'live' ? 'is-on' : '' }}">
+            <span class="su-pulse" aria-hidden="true"></span> {{ __('instructor.ls_live') }}
+        </a>
+        <a href="{{ route('instructor.live-sessions.index', ['status' => 'scheduled']) }}"
+           class="su-filter {{ request('status') === 'scheduled' ? 'is-on' : '' }}">{{ __('instructor.ls_scheduled') }}</a>
+        <a href="{{ route('instructor.live-sessions.index', ['status' => 'ended']) }}"
+           class="su-filter {{ request('status') === 'ended' ? 'is-on' : '' }}">{{ __('instructor.ls_ended') }}</a>
+    </div>
+
+    <div class="su-list">
+        @forelse($sessions as $session)
+            <article class="su-list-item {{ $session->isLive() ? 'su-list-item--live' : '' }}">
+                <span class="su-list-item__ico {{ $session->isLive() ? 'su-soft-4' : ($session->isScheduled() ? 'su-soft-1' : 'su-soft-3') }}">
+                    <i class="fas {{ $session->isLive() ? 'fa-broadcast-tower' : ($session->isScheduled() ? 'fa-calendar' : 'fa-flag-checkered') }}" aria-hidden="true"></i>
+                </span>
+                <div class="su-list-item__body">
+                    <div class="su-chip-row" style="margin:0 0 6px">
+                        @if($session->isLive())
+                            <span class="su-chip su-chip--off" style="background:rgba(239,68,68,.14);color:#b91c1c">
+                                <span class="su-pulse" aria-hidden="true"></span> {{ __('instructor.ls_live') }}
+                            </span>
+                        @elseif($session->isScheduled())
+                            <span class="su-chip su-soft-1">{{ __('instructor.ls_scheduled') }}</span>
+                        @elseif($session->isEnded())
+                            <span class="su-chip su-soft-3">{{ __('instructor.ls_ended') }}</span>
+                        @else
+                            <span class="su-chip su-chip--warn">{{ __('instructor.ls_cancelled') }}</span>
+                        @endif
+                        @if($session->course)
+                            <span class="su-chip">{{ Str::limit($session->course->title, 30) }}</span>
+                        @endif
+                    </div>
+                    <div class="su-list-item__title">{{ $session->title }}</div>
+                    <div class="su-list-item__meta">
+                        @if($session->scheduled_at)
+                            <x-app-datetime :at="$session->scheduled_at" pattern="Y/m/d H:i" />
+                        @else
+                            —
+                        @endif
+                        · {{ $session->attendance_count }} {{ __('instructor.ls_present') }}
+                        @if($session->duration_minutes)
+                            · {{ $session->duration_for_humans }}
+                        @endif
+                    </div>
+                </div>
+                <div class="su-list-item__actions">
+                    @if($session->isLive())
+                        <a href="{{ route('instructor.live-sessions.room', $session) }}" class="su-btn su-btn--danger">
+                            <i class="fas fa-video" aria-hidden="true"></i> {{ __('instructor.ls_enter') }}
+                        </a>
+                        <form method="POST" action="{{ route('instructor.live-sessions.end', $session) }}" onsubmit="return confirm(@json(__('instructor.ls_end_confirm')))">
+                            @csrf
+                            <button type="submit" class="su-btn" title="{{ __('instructor.ls_ended') }}">
+                                <i class="fas fa-stop" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    @elseif($session->isScheduled())
+                        <form method="POST" action="{{ route('instructor.live-sessions.start', $session) }}">
+                            @csrf
+                            <button type="submit" class="su-btn su-btn--ok">
+                                <i class="fas fa-play" aria-hidden="true"></i> {{ __('instructor.ls_start') }}
+                            </button>
+                        </form>
+                    @endif
+                    <a href="{{ route('instructor.live-sessions.show', $session) }}" class="su-icon-link su-icon-link--ghost" title="{{ __('common.view') }}">
+                        <i class="fas fa-eye" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </article>
+        @empty
+            <div class="su-card">
+                <div class="su-empty" style="padding:48px 16px">
+                    <i class="fas fa-broadcast-tower" aria-hidden="true"></i>
+                    <h3 style="margin:0;font-size:16px;font-weight:600;color:var(--su-ink)">{{ __('instructor.ls_empty') }}</h3>
+                    <p>{{ __('instructor.ls_empty_hint') }}</p>
+                    <a href="{{ route('instructor.live-sessions.create') }}" class="su-btn su-btn--primary">
+                        <i class="fas fa-plus" aria-hidden="true"></i> {{ __('instructor.ls_create_first') }}
+                    </a>
+                </div>
+            </div>
         @endforelse
     </div>
 
-    @if($sessions->hasPages())
-    <div>{{ $sessions->links() }}</div>
+    @if(method_exists($sessions, 'hasPages') && $sessions->hasPages())
+        <div class="su-pager">{{ $sessions->links() }}</div>
     @endif
 </div>
 @endsection

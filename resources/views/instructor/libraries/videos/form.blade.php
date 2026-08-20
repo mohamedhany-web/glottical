@@ -1,33 +1,42 @@
 @extends('layouts.app')
 
-@section('title', $mode === 'create' ? 'إضافة فيديو لطلابك' : 'تعديل فيديو')
-@section('header', $mode === 'create' ? 'إضافة فيديو لطلابك' : 'تعديل فيديو')
+@section('title', $mode === 'create' ? __('instructor.lib_videos_form_create') : __('instructor.lib_videos_form_edit'))
+@section('page_title', $mode === 'create' ? __('instructor.lib_videos_form_create') : __('instructor.lib_videos_form_edit'))
 
 @section('content')
-@php
-    $field = 'h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 focus:border-[#0B3D91] focus:outline-none focus:ring-2 focus:ring-[#0B3D91]/20';
-    $label = 'mb-1.5 block text-xs font-medium text-slate-500';
-@endphp
-<div class="space-y-5">
-    <section class="flex flex-wrap items-end justify-between gap-4">
-        <div>
-            <p class="text-xs font-medium text-slate-500"><a href="{{ $indexRoute }}" class="hover:text-[#0B3D91]">مكتبة الفيديو</a></p>
-            <h2 class="mt-1 text-2xl font-semibold text-slate-900">{{ $mode === 'create' ? 'فيديو جديد لطلابك' : 'تعديل فيديو' }}</h2>
-            <p class="mt-1 text-sm text-slate-500">يظهر فقط لطلابك المرتبطين بك + الإدارة. رابط أو رفع Cloudflare بدون حد مساحة عبر السيرفر.</p>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ $indexRoute }}">{{ __('instructor.lib_videos_title') }}</a>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-video su-page-head__ico" aria-hidden="true"></i>
+                {{ $mode === 'create' ? __('instructor.lib_videos_form_create_heading') : __('instructor.lib_videos_form_edit') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.lib_videos_form_sub') }}</p>
         </div>
-        <a href="{{ $indexRoute }}" class="inline-flex h-9 items-center rounded-xl border border-slate-200 px-4 text-sm">رجوع</a>
-    </section>
+        <div class="su-page-head__actions">
+            <a href="{{ $indexRoute }}" class="su-btn">
+                <i class="fas fa-arrow-{{ app()->getLocale() === 'ar' ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.back') }}
+            </a>
+        </div>
+    </div>
 
     @if($errors->any())
-        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ $errors->first() }}</div>
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#b91c1c;font-size:13px">
+            {{ $errors->first() }}
+        </div>
     @endif
     @if(session('error'))
-        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#b91c1c;font-size:13px">
+            {{ session('error') }}
+        </div>
     @endif
 
     <form method="POST" id="library-video-form"
-          action="{{ $mode === 'create' ? $storeRoute : $storeRoute }}"
-          class="space-y-5">
+          action="{{ $mode === 'create' ? $storeRoute : $storeRoute }}">
         @csrf
         @if($mode === 'edit') @method('PUT') @endif
 
@@ -36,38 +45,39 @@
         <input type="hidden" name="file_size" id="file_size" value="{{ old('file_size', $video->file_size ?? 0) }}">
         <input type="hidden" name="mime_type" id="mime_type" value="{{ old('mime_type', $video->mime_type) }}">
 
-        <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-            <div>
-                <label class="{{ $label }}">عنوان الفيديو *</label>
-                <input type="text" name="title" required value="{{ old('title', $video->title) }}" class="{{ $field }}" placeholder="مثال: مراجعة الوحدة">
+        <section class="su-card" style="margin-bottom:20px">
+            <div class="su-form-grid" style="grid-template-columns:1fr">
+                <div class="su-field">
+                    <label for="title">{{ __('instructor.lib_videos_title_label') }}</label>
+                    <input type="text" name="title" id="title" required value="{{ old('title', $video->title) }}" class="su-input" placeholder="{{ __('instructor.lib_videos_title_ph') }}">
+                </div>
+                <div class="su-field">
+                    <label for="description">{{ __('instructor.description') }}</label>
+                    <textarea name="description" id="description" rows="3" class="su-input" style="min-height:88px;padding-top:10px" placeholder="{{ __('instructor.lessons_desc_ph') }}">{{ old('description', $video->description) }}</textarea>
+                </div>
             </div>
-            <div>
-                <label class="{{ $label }}">الوصف</label>
-                <textarea name="description" rows="3" class="{{ $field }} py-3" placeholder="اختياري">{{ old('description', $video->description) }}</textarea>
-            </div>
-            <div class="grid gap-4 md:grid-cols-3">
-                <div>
-                    <label class="{{ $label }}">تصنيف المحتوى</label>
-                    <select name="content_theme" class="{{ $field }}">
-                        @foreach(\App\Support\FamilyLibraryThemes::labels('ar') as $key => $themeLabel)
+
+            <div class="su-form-grid" style="margin-top:16px">
+                <div class="su-field">
+                    <label for="content_theme">{{ __('instructor.lib_videos_theme') }}</label>
+                    <select name="content_theme" id="content_theme" class="su-select">
+                        @foreach(\App\Support\FamilyLibraryThemes::labels(app()->getLocale() === 'ar' ? 'ar' : 'en') as $key => $themeLabel)
                             <option value="{{ $key }}" @selected(old('content_theme', $video->content_theme ?: 'kids') === $key)>{{ $themeLabel }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div>
-                    <label class="{{ $label }}">اسم المسلسل</label>
-                    <input type="text" name="series_title" value="{{ old('series_title', $video->series_title) }}" class="{{ $field }}" placeholder="اختياري">
+                <div class="su-field">
+                    <label for="series_title">{{ __('instructor.lib_videos_series') }}</label>
+                    <input type="text" name="series_title" id="series_title" value="{{ old('series_title', $video->series_title) }}" class="su-input">
                 </div>
-                <div>
-                    <label class="{{ $label }}">الفئة العمرية</label>
-                    <input type="text" name="age_label" value="{{ old('age_label', $video->age_label) }}" class="{{ $field }}" placeholder="مثال: 6–10">
+                <div class="su-field">
+                    <label for="age_label">{{ __('instructor.lib_videos_age') }}</label>
+                    <input type="text" name="age_label" id="age_label" value="{{ old('age_label', $video->age_label) }}" class="su-input" placeholder="{{ __('instructor.lib_videos_age_ph') }}">
                 </div>
-            </div>
-            <div class="grid gap-4 md:grid-cols-2">
-                <div>
-                    <label class="{{ $label }}">مجلدك</label>
-                    <select name="library_folder_id" class="{{ $field }}">
-                        <option value="">بدون مجلد</option>
+                <div class="su-field">
+                    <label for="library_folder_id">{{ __('instructor.lib_videos_your_folder') }}</label>
+                    <select name="library_folder_id" id="library_folder_id" class="su-select">
+                        <option value="">{{ __('instructor.lib_videos_no_folder') }}</option>
                         @foreach(($folders ?? []) as $folder)
                             <option value="{{ $folder->id }}" @selected((string) old('library_folder_id', $video->library_folder_id) === (string) $folder->id)>
                                 {{ $folder->name_ar }}
@@ -75,54 +85,60 @@
                         @endforeach
                     </select>
                 </div>
-                <div>
-                    <label class="{{ $label }}">الترتيب</label>
-                    <input type="number" name="sort_order" min="0" value="{{ old('sort_order', $video->sort_order ?? 0) }}" class="{{ $field }}">
+                <div class="su-field">
+                    <label for="sort_order">{{ __('instructor.lib_videos_sort') }}</label>
+                    <input type="number" name="sort_order" id="sort_order" min="0" value="{{ old('sort_order', $video->sort_order ?? 0) }}" class="su-input">
                 </div>
             </div>
 
-            <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-4 space-y-3">
-                <h3 class="text-sm font-semibold text-slate-900">① رابط خارجي</h3>
-                <input type="url" name="external_url" id="external_url" value="{{ old('external_url', $video->external_url) }}" class="{{ $field }}" placeholder="https://youtube.com/…">
+            <div class="su-card su-soft-1" style="margin-top:16px;padding:16px">
+                <h3 class="su-card__title" style="margin-bottom:10px">{{ __('instructor.lib_videos_external') }}</h3>
+                <div class="su-field">
+                    <input type="url" name="external_url" id="external_url" value="{{ old('external_url', $video->external_url) }}" class="su-input" placeholder="https://youtube.com/…">
+                </div>
             </div>
 
-            <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-4 space-y-3">
-                <h3 class="text-sm font-semibold text-slate-900">② رفع ملف إلى Cloudflare</h3>
-                <p class="text-xs text-slate-500">الرفع يحاول Cloudflare مباشرة، وإن حُجب CORS يكتمل تلقائياً عبر الخادم. قرص: <strong>{{ $uploadDisk ?? 'r2' }}</strong></p>
-                <input type="file" id="video_file" accept="video/*,.mp4,.webm,.mov,.mkv,.m4v,.avi" class="block w-full text-sm">
-                <div id="upload-progress-wrap" class="hidden">
-                    <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
-                        <span id="upload-status">جاري الرفع…</span>
+            <div class="su-card su-soft-2" style="margin-top:16px;padding:16px">
+                <h3 class="su-card__title" style="margin-bottom:6px">{{ __('instructor.lib_videos_upload_cf') }}</h3>
+                <p style="margin:0 0 12px;font-size:12px;color:var(--su-ink-40)">
+                    {{ __('instructor.lib_videos_upload_hint', ['disk' => $uploadDisk ?? 'r2']) }}
+                </p>
+                <input type="file" id="video_file" accept="video/*,.mp4,.webm,.mov,.mkv,.m4v,.avi" class="su-input">
+                <div id="upload-progress-wrap" class="hidden" style="margin-top:12px">
+                    <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--su-ink-40);margin-bottom:6px">
+                        <span id="upload-status">…</span>
                         <span id="upload-percent">0%</span>
                     </div>
-                    <div class="h-2 rounded-full bg-slate-200 overflow-hidden">
-                        <div id="upload-bar" class="h-full w-0 bg-[#0B3D91] transition-all duration-150"></div>
+                    <div style="height:8px;border-radius:999px;background:var(--su-line);overflow:hidden">
+                        <div id="upload-bar" style="height:100%;width:0;background:var(--su-ink);transition:width .15s"></div>
                     </div>
                 </div>
-                <div id="upload-result" class="text-xs text-emerald-700 hidden"></div>
+                <div id="upload-result" class="hidden" style="margin-top:8px;font-size:12px;color:#15803d"></div>
                 @if($mode === 'edit' && $video->file_path)
-                    <label class="inline-flex items-center gap-2 text-sm text-slate-500">
-                        <input type="checkbox" name="clear_file" value="1"> حذف الملف الحالي
+                    <label style="display:inline-flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;cursor:pointer">
+                        <input type="checkbox" name="clear_file" value="1">
+                        {{ __('instructor.lib_videos_clear_file') }}
                     </label>
                 @endif
             </div>
 
-            <div class="grid gap-4 md:grid-cols-2">
-                <div>
-                    <label class="{{ $label }}">المدة (ثوانٍ)</label>
-                    <input type="number" name="duration_seconds" min="0" value="{{ old('duration_seconds', $video->duration_seconds ?? 0) }}" class="{{ $field }}">
+            <div class="su-form-grid" style="margin-top:16px">
+                <div class="su-field">
+                    <label for="duration_seconds">{{ __('instructor.lib_videos_duration') }}</label>
+                    <input type="number" name="duration_seconds" id="duration_seconds" min="0" value="{{ old('duration_seconds', $video->duration_seconds ?? 0) }}" class="su-input">
                 </div>
-                <div class="flex items-end pb-2">
-                    <label class="inline-flex items-center gap-2 text-sm">
+                <div class="su-field" style="display:flex;align-items:flex-end;padding-bottom:4px">
+                    <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
                         <input type="checkbox" name="is_published" value="1" @checked(old('is_published', $video->is_published ?? true))>
-                        منشور لطلابك
+                        {{ __('instructor.lib_videos_publish_check') }}
                     </label>
                 </div>
             </div>
-        </article>
+        </section>
 
-        <button type="submit" id="save-btn" class="inline-flex h-11 items-center gap-2 rounded-xl bg-[#0B3D91] px-5 text-sm font-semibold text-white">
-            <i class="fas fa-save text-xs"></i> حفظ
+        <button type="submit" id="save-btn" class="su-btn su-btn--primary">
+            <i class="fas fa-save" aria-hidden="true"></i>
+            {{ __('common.save') }}
         </button>
     </form>
 </div>
@@ -272,14 +288,12 @@
             setProgress(100, 'اكتمل الرفع');
             uploadResult.textContent = 'تم الرفع بنجاح (' + (completeData.file_size_human || '') + '). احفظ النموذج.';
             uploadResult.classList.remove('hidden');
-            uploadResult.classList.remove('text-rose-700');
-            uploadResult.classList.add('text-emerald-700');
+            uploadResult.style.color = '#15803d';
         } catch (err) {
             setProgress(0, 'فشل الرفع');
             uploadResult.textContent = err.message || String(err);
             uploadResult.classList.remove('hidden');
-            uploadResult.classList.remove('text-emerald-700');
-            uploadResult.classList.add('text-rose-700');
+            uploadResult.style.color = '#b91c1c';
             document.getElementById('file_path').value = @json(old('file_path', $video->file_path));
         } finally {
             saveBtn.disabled = false;

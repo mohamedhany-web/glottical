@@ -1,33 +1,44 @@
 @extends('layouts.app')
 
 @section('title', $material->title ?: $material->file_name)
-@section('header', $material->title ?: $material->file_name)
+@section('page_title', $material->title ?: $material->file_name)
 
 @section('content')
-<div class="space-y-5">
-    <section class="flex flex-wrap items-end justify-between gap-4">
-        <div>
-            <p class="text-xs font-medium text-slate-500">
-                <a href="{{ route('instructor.libraries.materials.index') }}" class="hover:text-[#0B3D91]">مكتبة الماتريال</a>
-                ·
-                <a href="{{ route('instructor.libraries.materials.show', $folder) }}" class="hover:text-[#0B3D91]">{{ $folder->displayName() }}</a>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.libraries.materials.index') }}">{{ __('instructor.lib_materials_title') }}</a>
+                <span>/</span>
+                <a href="{{ route('instructor.libraries.materials.show', $folder) }}">{{ $folder->displayName() }}</a>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-play-circle su-page-head__ico" aria-hidden="true"></i>
+                {{ $material->title ?: $material->file_name }}
+            </h1>
+            <p class="su-page-head__sub">
+                {{ $isGame ? __('instructor.lib_materials_play_in') : __('instructor.lib_materials_view_in') }}
             </p>
-            <h2 class="mt-1 text-2xl font-semibold text-slate-900">{{ $material->title ?: $material->file_name }}</h2>
-            <p class="mt-1 text-sm text-slate-500">{{ $isGame ? 'تشغيل داخل المنصة' : 'عرض داخل المنصة' }}</p>
         </div>
-        <div class="flex flex-wrap gap-2">
-            <a href="{{ route('instructor.libraries.materials.show', $folder) }}" class="inline-flex h-9 items-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700">رجوع</a>
-            <a href="{{ route('instructor.libraries.materials.download', [$folder, $material]) }}" class="inline-flex h-9 items-center rounded-xl bg-[#0B3D91] px-4 text-sm font-semibold text-white">تحميل</a>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.libraries.materials.show', $folder) }}" class="su-btn">
+                <i class="fas fa-arrow-{{ app()->getLocale() === 'ar' ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.back') }}
+            </a>
+            <a href="{{ route('instructor.libraries.materials.download', [$folder, $material]) }}" class="su-btn su-btn--primary">
+                <i class="fas fa-download" aria-hidden="true"></i>
+                {{ __('instructor.download') }}
+            </a>
         </div>
-    </section>
+    </div>
 
-    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section class="su-card su-card--flush" style="overflow:hidden">
         <iframe
             src="{{ $frameUrl }}"
             title="{{ $material->title ?: $material->file_name }}"
-            class="h-[75vh] w-full"
+            style="display:block;width:100%;height:75vh;border:0;background:#fff"
             sandbox="allow-scripts allow-same-origin allow-forms"
         ></iframe>
-    </div>
+    </section>
 </div>
 @endsection

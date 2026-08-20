@@ -597,16 +597,31 @@ class StudentEntitlementService
 
     public static function syncLegacySubscription(StudentTutoringSubscription $subscription, StudentServiceEntitlement $entitlement): void
     {
+        $status = match ($entitlement->status) {
+            StudentServiceEntitlement::STATUS_ACTIVE => StudentTutoringSubscription::STATUS_ACTIVE,
+            StudentServiceEntitlement::STATUS_CANCELLED => StudentTutoringSubscription::STATUS_CANCELLED,
+            default => StudentTutoringSubscription::STATUS_EXPIRED,
+        };
+
         $subscription->update([
             'student_service_entitlement_id' => $entitlement->id,
             'sessions_total' => $entitlement->units_total,
             'sessions_used' => $entitlement->units_used,
-            'status' => $entitlement->status === StudentServiceEntitlement::STATUS_ACTIVE
-                ? StudentTutoringSubscription::STATUS_ACTIVE
-                : StudentTutoringSubscription::STATUS_EXPIRED,
+            'status' => $status,
             'starts_at' => $entitlement->starts_at,
             'expires_at' => $entitlement->expires_at,
         ]);
+    }
+
+    public static function syncLinkedSubscriptionsFromEntitlement(StudentServiceEntitlement $entitlement): void
+    {
+        foreach (
+            StudentTutoringSubscription::query()
+                ->where('student_service_entitlement_id', $entitlement->id)
+                ->get() as $subscription
+        ) {
+            self::syncLegacySubscription($subscription, $entitlement);
+        }
     }
 
     public static function findOrCreatePackageForTutoringGroupPackage($tutoringPackage): ServicePackage

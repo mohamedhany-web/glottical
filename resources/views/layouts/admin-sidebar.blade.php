@@ -270,6 +270,7 @@
                     || request()->routeIs('admin.one-to-one-sessions.*')
                     || request()->routeIs('admin.placement.*')
                     || request()->routeIs('admin.student-entitlements.*')
+                    || request()->routeIs('admin.tutoring-subscriptions.*')
                     || request()->routeIs('admin.tutoring-group-bookings.*')
                     || request()->routeIs('admin.tutor-work-schedules.*')
                     || request()->routeIs('admin.tutoring-groups.*')
@@ -316,6 +317,14 @@
                     <li>
                         <a href="{{ route('admin.student-entitlements.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.student-entitlements.*') ? 'active' : '' }}">
                             <i class="fas fa-coins"></i><span>أرصدة الطلاب</span>
+                        </a>
+                    </li>
+                    @endif
+
+                    @if(($isFull || $u->hasPermission('manage.packages') || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.users')) && Route::has('admin.tutoring-subscriptions.index'))
+                    <li>
+                        <a href="{{ route('admin.tutoring-subscriptions.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.tutoring-subscriptions.*') ? 'active' : '' }}">
+                            <i class="fas fa-id-card"></i><span>اشتراكات التدريس</span>
                         </a>
                     </li>
                     @endif

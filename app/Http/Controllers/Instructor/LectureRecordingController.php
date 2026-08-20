@@ -34,8 +34,18 @@ class LectureRecordingController extends Controller
     {
         $user = $request->user();
 
-        $lectures = Lecture::query()
-            ->where('instructor_id', $user->id)
+        $base = Lecture::query()->where('instructor_id', $user->id);
+
+        $stats = [
+            'total' => (clone $base)->count(),
+            'recorded' => (clone $base)->where(function ($q) {
+                $q->whereNotNull('recording_url')->where('recording_url', '!=', '')
+                    ->orWhereNotNull('recording_file_path');
+            })->count(),
+        ];
+        $stats['missing'] = max(0, $stats['total'] - $stats['recorded']);
+
+        $lectures = (clone $base)
             ->with(['course:id,title'])
             ->orderByDesc('scheduled_at')
             ->orderByDesc('id')
@@ -55,7 +65,9 @@ class LectureRecordingController extends Controller
             }
         }
 
-        return view('instructor.lecture-recordings.index', compact('lectures', 'liveRecordings'));
+        $stats['live'] = $liveRecordings->count();
+
+        return view('instructor.lecture-recordings.index', compact('lectures', 'liveRecordings', 'stats'));
     }
 
     public function update(Request $request, Lecture $lecture): RedirectResponse

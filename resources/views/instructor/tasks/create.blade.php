@@ -1,230 +1,103 @@
 @extends('layouts.app')
 
-@section('title', 'إضافة مهمة جديدة - ' . config('app.name'))
-@section('header', 'إضافة مهمة جديدة')
-
-@push('styles')
-<style>
-    .form-card {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        border: 2px solid rgba(44, 169, 189, 0.1);
-        transition: all 0.3s;
-    }
-
-    .form-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(44, 169, 189, 0.1);
-        border-color: rgba(44, 169, 189, 0.2);
-    }
-
-    .form-input {
-        transition: all 0.3s;
-    }
-
-    .form-input:focus {
-        border-color: #2CA9BD;
-        box-shadow: 0 0 0 4px rgba(44, 169, 189, 0.1);
-    }
-
-    .priority-badge {
-        font-weight: bold;
-    }
-
-    .priority-low { background: linear-gradient(135deg, #10b981, #059669); }
-    .priority-medium { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-    .priority-high { background: linear-gradient(135deg, #f59e0b, #d97706); }
-    .priority-urgent { background: linear-gradient(135deg, #ef4444, #dc2626); }
-</style>
-@endpush
+@section('title', __('instructor.create_task') . ' - ' . config('app.name'))
+@section('page_title', __('instructor.create_task'))
 
 @section('content')
-<div class="space-y-6">
-    <!-- الهيدر المحسن -->
-    <div class="bg-gradient-to-r from-[#2CA9BD]/10 via-[#65DBE4]/10 to-[#2CA9BD]/10 rounded-2xl p-6 border-2 border-[#2CA9BD]/20 shadow-lg">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <nav class="text-sm text-[#1F3A56] font-medium mb-3">
-                    <a href="{{ route('instructor.tasks.index') }}" class="hover:text-[#2CA9BD] transition-colors">المهام</a>
-                    <span class="mx-2">/</span>
-                    <span class="text-[#1C2C39] font-bold">إضافة مهمة جديدة</span>
-                </nav>
-                <h1 class="text-2xl sm:text-3xl font-black text-[#1C2C39] mb-2">إضافة مهمة جديدة</h1>
-                <p class="text-sm sm:text-base text-[#1F3A56] font-medium">إنشاء مهمة جديدة لإدارة أعمالك</p>
-            </div>
-            <a href="{{ route('instructor.tasks.index') }}" 
-               class="inline-flex items-center gap-2 bg-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700/400 text-white px-5 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105">
-                <i class="fas fa-arrow-right"></i>
-                <span>العودة</span>
+@php
+    $isRtl = app()->getLocale() === 'ar';
+@endphp
+<div class="su-page" style="max-width:56rem">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.tasks.index') }}">{{ __('instructor.tasks_from_management') }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ __('instructor.create_task') }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-plus su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.create_task') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.create_task_desc') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.tasks.index') }}" class="su-btn">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.back') }}
             </a>
         </div>
     </div>
 
-    <!-- نموذج الإضافة -->
-    <div class="form-card rounded-2xl p-5 sm:p-6">
-        <form action="{{ route('instructor.tasks.store') }}" method="POST" class="space-y-6">
+    <section class="su-card">
+        <form action="{{ route('instructor.tasks.store') }}" method="POST">
             @csrf
-            
-            <!-- العنوان -->
-            <div>
-                <label for="title" class="block text-sm font-bold text-[#1C2C39] mb-2">
-                    <i class="fas fa-heading text-[#2CA9BD] ml-1"></i>
-                    عنوان المهمة <span class="text-red-500">*</span>
-                </label>
-                <input type="text" 
-                       name="title" 
-                       id="title" 
-                       value="{{ old('title') }}" 
-                       required
-                       placeholder="أدخل عنوان المهمة..."
-                       class="form-input w-full px-4 py-3 border-2 border-[#2CA9BD]/20 rounded-xl bg-white dark:bg-slate-800/95 text-[#1C2C39] font-medium focus:border-[#2CA9BD] focus:ring-4 focus:ring-[#2CA9BD]/20 transition-all">
-                @error('title')
-                    <p class="mt-2 text-sm text-red-600 font-medium flex items-center gap-1">
-                        <i class="fas fa-exclamation-circle"></i>
-                        {{ $message }}
-                    </p>
-                @enderror
-            </div>
-
-            <!-- الوصف -->
-            <div>
-                <label for="description" class="block text-sm font-bold text-[#1C2C39] mb-2">
-                    <i class="fas fa-align-right text-[#2CA9BD] ml-1"></i>
-                    الوصف
-                </label>
-                <textarea name="description" 
-                          id="description" 
-                          rows="4"
-                          placeholder="أدخل وصف المهمة..."
-                          class="form-input w-full px-4 py-3 border-2 border-[#2CA9BD]/20 rounded-xl bg-white dark:bg-slate-800/95 text-[#1C2C39] font-medium focus:border-[#2CA9BD] focus:ring-4 focus:ring-[#2CA9BD]/20 transition-all">{{ old('description') }}</textarea>
-                @error('description')
-                    <p class="mt-2 text-sm text-red-600 font-medium flex items-center gap-1">
-                        <i class="fas fa-exclamation-circle"></i>
-                        {{ $message }}
-                    </p>
-                @enderror
-            </div>
-
-            <!-- الأولوية وتاريخ الاستحقاق -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="priority" class="block text-sm font-bold text-[#1C2C39] mb-2">
-                        <i class="fas fa-exclamation-triangle text-[#2CA9BD] ml-1"></i>
-                        الأولوية <span class="text-red-500">*</span>
-                    </label>
-                    <select name="priority" 
-                            id="priority" 
-                            required
-                            class="form-input w-full px-4 py-3 border-2 border-[#2CA9BD]/20 rounded-xl bg-white dark:bg-slate-800/95 text-[#1C2C39] font-medium focus:border-[#2CA9BD] focus:ring-4 focus:ring-[#2CA9BD]/20 transition-all">
-                        <option value="low" {{ old('priority', 'medium') == 'low' ? 'selected' : '' }}>منخفضة</option>
-                        <option value="medium" {{ old('priority', 'medium') == 'medium' ? 'selected' : '' }}>متوسطة</option>
-                        <option value="high" {{ old('priority') == 'high' ? 'selected' : '' }}>عالية</option>
-                        <option value="urgent" {{ old('priority') == 'urgent' ? 'selected' : '' }}>عاجلة</option>
+            <div class="su-form-grid" style="grid-template-columns:1fr 1fr">
+                <div class="su-field" style="grid-column:1 / -1">
+                    <label for="title">{{ __('instructor.task_title_required') }}</label>
+                    <input type="text" name="title" id="title" value="{{ old('title') }}" required class="su-input"
+                           placeholder="{{ __('instructor.task_title_placeholder') }}">
+                    @error('title')<p class="su-field-error">{{ $message }}</p>@enderror
+                </div>
+                <div class="su-field" style="grid-column:1 / -1">
+                    <label for="description">{{ __('instructor.description') }}</label>
+                    <textarea name="description" id="description" rows="4" class="su-input" style="min-height:100px;resize:vertical"
+                              placeholder="{{ __('instructor.task_description_placeholder') }}">{{ old('description') }}</textarea>
+                    @error('description')<p class="su-field-error">{{ $message }}</p>@enderror
+                </div>
+                <div class="su-field">
+                    <label for="priority">{{ __('instructor.priority') }} <span style="color:#b91c1c">*</span></label>
+                    <select name="priority" id="priority" required class="su-select">
+                        <option value="low" {{ old('priority', 'medium') == 'low' ? 'selected' : '' }}>{{ __('instructor.low') }}</option>
+                        <option value="medium" {{ old('priority', 'medium') == 'medium' ? 'selected' : '' }}>{{ __('instructor.medium') }}</option>
+                        <option value="high" {{ old('priority') == 'high' ? 'selected' : '' }}>{{ __('instructor.high') }}</option>
+                        <option value="urgent" {{ old('priority') == 'urgent' ? 'selected' : '' }}>{{ __('instructor.urgent') }}</option>
                     </select>
-                    @error('priority')
-                        <p class="mt-2 text-sm text-red-600 font-medium flex items-center gap-1">
-                            <i class="fas fa-exclamation-circle"></i>
-                            {{ $message }}
-                        </p>
-                    @enderror
+                    @error('priority')<p class="su-field-error">{{ $message }}</p>@enderror
                 </div>
-
-                <div>
-                    <label for="due_date" class="block text-sm font-bold text-[#1C2C39] mb-2">
-                        <i class="fas fa-calendar-alt text-[#2CA9BD] ml-1"></i>
-                        تاريخ الاستحقاق
-                    </label>
-                    <input type="datetime-local" 
-                           name="due_date" 
-                           id="due_date" 
-                           value="{{ old('due_date') }}"
-                           class="form-input w-full px-4 py-3 border-2 border-[#2CA9BD]/20 rounded-xl bg-white dark:bg-slate-800/95 text-[#1C2C39] font-medium focus:border-[#2CA9BD] focus:ring-4 focus:ring-[#2CA9BD]/20 transition-all">
-                    @error('due_date')
-                        <p class="mt-2 text-sm text-red-600 font-medium flex items-center gap-1">
-                            <i class="fas fa-exclamation-circle"></i>
-                            {{ $message }}
-                        </p>
-                    @enderror
+                <div class="su-field">
+                    <label for="due_date">{{ __('instructor.due_date') }}</label>
+                    <input type="datetime-local" name="due_date" id="due_date" value="{{ old('due_date') }}" class="su-input">
+                    @error('due_date')<p class="su-field-error">{{ $message }}</p>@enderror
                 </div>
-            </div>
-
-            <!-- الربط بالكورس والمحاضرة -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="related_course_id" class="block text-sm font-bold text-[#1C2C39] mb-2">
-                        <i class="fas fa-book text-[#2CA9BD] ml-1"></i>
-                        الكورس (اختياري)
-                    </label>
-                    <select name="related_course_id" 
-                            id="related_course_id"
-                            class="form-input w-full px-4 py-3 border-2 border-[#2CA9BD]/20 rounded-xl bg-white dark:bg-slate-800/95 text-[#1C2C39] font-medium focus:border-[#2CA9BD] focus:ring-4 focus:ring-[#2CA9BD]/20 transition-all">
-                        <option value="">اختر الكورس...</option>
+                <div class="su-field">
+                    <label for="related_course_id">{{ __('instructor.course_optional') }}</label>
+                    <select name="related_course_id" id="related_course_id" class="su-select">
+                        <option value="">{{ __('instructor.choose_course') }}</option>
                         @foreach($courses as $course)
-                            <option value="{{ $course->id }}" {{ old('related_course_id') == $course->id ? 'selected' : '' }}>
-                                {{ $course->title }}
-                            </option>
+                            <option value="{{ $course->id }}" {{ old('related_course_id') == $course->id ? 'selected' : '' }}>{{ $course->title }}</option>
                         @endforeach
                     </select>
-                    @error('related_course_id')
-                        <p class="mt-2 text-sm text-red-600 font-medium flex items-center gap-1">
-                            <i class="fas fa-exclamation-circle"></i>
-                            {{ $message }}
-                        </p>
-                    @enderror
+                    @error('related_course_id')<p class="su-field-error">{{ $message }}</p>@enderror
                 </div>
-
-                <div>
-                    <label for="related_lecture_id" class="block text-sm font-bold text-[#1C2C39] mb-2">
-                        <i class="fas fa-chalkboard-teacher text-[#2CA9BD] ml-1"></i>
-                        المحاضرة (اختياري)
-                    </label>
-                    <select name="related_lecture_id" 
-                            id="related_lecture_id"
-                            class="form-input w-full px-4 py-3 border-2 border-[#2CA9BD]/20 rounded-xl bg-white dark:bg-slate-800/95 text-[#1C2C39] font-medium focus:border-[#2CA9BD] focus:ring-4 focus:ring-[#2CA9BD]/20 transition-all">
-                        <option value="">اختر المحاضرة...</option>
+                <div class="su-field">
+                    <label for="related_lecture_id">{{ __('instructor.lecture_optional') }}</label>
+                    <select name="related_lecture_id" id="related_lecture_id" class="su-select">
+                        <option value="">{{ __('instructor.choose_lecture') }}</option>
                         @foreach($lectures as $lecture)
                             <option value="{{ $lecture->id }}" {{ old('related_lecture_id') == $lecture->id ? 'selected' : '' }}>
                                 {{ $lecture->title }} - {{ $lecture->scheduled_at->format('Y/m/d') }}
                             </option>
                         @endforeach
                     </select>
-                    @error('related_lecture_id')
-                        <p class="mt-2 text-sm text-red-600 font-medium flex items-center gap-1">
-                            <i class="fas fa-exclamation-circle"></i>
-                            {{ $message }}
-                        </p>
-                    @enderror
+                    @error('related_lecture_id')<p class="su-field-error">{{ $message }}</p>@enderror
                 </div>
             </div>
 
-            <!-- معاينة الأولوية -->
-            <div class="p-4 bg-gradient-to-r from-[#2CA9BD]/5 to-[#65DBE4]/5 rounded-xl border border-[#2CA9BD]/10">
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-info-circle text-[#2CA9BD]"></i>
-                    <div>
-                        <div class="text-sm font-bold text-[#1C2C39] mb-1">معاينة الأولوية:</div>
-                        <div id="priority-preview" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow-md">
-                            <i class="fas fa-minus"></i>
-                            متوسطة
-                        </div>
-                    </div>
-                </div>
+            <div class="su-card" style="margin:16px 0;padding:12px 16px;background:var(--su-soft-1,rgba(59,130,246,.08));border-color:transparent">
+                <span style="font-size:13px;font-weight:600">{{ __('instructor.priority_preview') }}:</span>
+                <span id="priority-preview" class="su-chip" style="margin-inline-start:8px">{{ __('instructor.medium') }}</span>
             </div>
 
-            <!-- أزرار الإجراءات -->
-            <div class="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t-2 border-[#2CA9BD]/10">
-                <a href="{{ route('instructor.tasks.index') }}" 
-                   class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105">
-                    <i class="fas fa-times"></i>
-                    <span>إلغاء</span>
-                </a>
-                <button type="submit" 
-                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#2CA9BD] to-[#65DBE4] hover:from-[#1F3A56] hover:to-[#2CA9BD] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-[#2CA9BD]/30 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                    <i class="fas fa-save"></i>
-                    <span>حفظ المهمة</span>
+            <div class="su-form-actions" style="justify-content:flex-end;gap:8px;padding-top:12px;border-top:1px solid var(--su-line,rgba(0,0,0,.06))">
+                <a href="{{ route('instructor.tasks.index') }}" class="su-btn">{{ __('common.cancel') }}</a>
+                <button type="submit" class="su-btn su-btn--primary">
+                    <i class="fas fa-save" aria-hidden="true"></i>
+                    {{ __('instructor.save_task') }}
                 </button>
             </div>
         </form>
-    </div>
+    </section>
 </div>
 
 @push('scripts')
@@ -234,49 +107,43 @@ document.addEventListener('DOMContentLoaded', function() {
     const lectureSelect = document.getElementById('related_lecture_id');
     const prioritySelect = document.getElementById('priority');
     const priorityPreview = document.getElementById('priority-preview');
+    const labels = {
+        low: @json(__('instructor.low')),
+        medium: @json(__('instructor.medium')),
+        high: @json(__('instructor.high')),
+        urgent: @json(__('instructor.urgent')),
+    };
+    const chooseLecture = @json(__('instructor.choose_lecture'));
 
-    // تحديث المحاضرات عند اختيار الكورس
     courseSelect.addEventListener('change', function() {
         const courseId = this.value;
-        lectureSelect.innerHTML = '<option value="">اختر المحاضرة...</option>';
-        
+        lectureSelect.innerHTML = '<option value="">' + chooseLecture + '</option>';
         if (courseId) {
             fetch(`{{ route('instructor.tasks.lectures') }}?course_id=${courseId}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
             })
             .then(response => response.json())
             .then(data => {
                 data.forEach(lecture => {
                     const option = document.createElement('option');
                     option.value = lecture.id;
-                    option.textContent = `${lecture.title} - ${new Date(lecture.scheduled_at).toLocaleDateString('ar-EG')}`;
+                    option.textContent = `${lecture.title} - ${new Date(lecture.scheduled_at).toLocaleDateString()}`;
                     lectureSelect.appendChild(option);
                 });
             })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+            .catch(() => {});
         }
     });
 
-    // تحديث معاينة الأولوية
     function updatePriorityPreview() {
         const priority = prioritySelect.value;
-        const priorityText = {
-            'low': { text: 'منخفضة', icon: 'fa-arrow-down', class: 'priority-low' },
-            'medium': { text: 'متوسطة', icon: 'fa-minus', class: 'priority-medium' },
-            'high': { text: 'عالية', icon: 'fa-arrow-up', class: 'priority-high' },
-            'urgent': { text: 'عاجلة', icon: 'fa-exclamation', class: 'priority-urgent' }
-        };
-        
-        const selected = priorityText[priority];
-        priorityPreview.className = `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow-md ${selected.class}`;
-        priorityPreview.innerHTML = `<i class="fas ${selected.icon}"></i> ${selected.text}`;
+        priorityPreview.textContent = labels[priority] || labels.medium;
+        priorityPreview.className = 'su-chip ' + (
+            priority === 'urgent' ? 'su-chip--off' :
+            priority === 'high' ? 'su-chip--warn' :
+            priority === 'medium' ? 'su-soft-1' : ''
+        );
     }
-
     prioritySelect.addEventListener('change', updatePriorityPreview);
     updatePriorityPreview();
 });

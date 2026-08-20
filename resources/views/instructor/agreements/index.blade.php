@@ -1,183 +1,157 @@
 @extends('layouts.app')
 
 @section('title', __('instructor.agreements_system') . ' - ' . config('app.name'))
-@section('header', __('instructor.agreements_system'))
+@section('page_title', __('instructor.agreements_system'))
 
 @section('content')
-<div class="space-y-6">
-    <div class="rounded-2xl p-5 sm:p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 mb-1">{{ __('instructor.agreements_system') }}</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400">تابع عقودك ونسب الاستحقاق وحالة المدفوعات من مكان واحد.</p>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        <div class="rounded-2xl p-5 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex items-center justify-between mb-3">
-                <span class="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 inline-flex items-center justify-center">
-                    <i class="fas fa-sack-dollar"></i>
-                </span>
-                <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg">مدفوع</span>
-            </div>
-            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">{{ __('instructor.total_earned') }}</p>
-            <p class="mt-2 text-2xl font-black text-slate-900 dark:text-slate-100">{{ number_format($stats['total_earned'], 2) }} {{ __('public.currency_egp') }}</p>
-        </div>
-
-        <div class="rounded-2xl p-5 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex items-center justify-between mb-3">
-                <span class="w-11 h-11 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 inline-flex items-center justify-center">
-                    <i class="fas fa-clock"></i>
-                </span>
-                <span class="text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-lg">معلّق</span>
-            </div>
-            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">{{ __('instructor.pending') }}</p>
-            <p class="mt-2 text-2xl font-black text-slate-900 dark:text-slate-100">{{ number_format($stats['pending_amount'], 2) }} {{ __('public.currency_egp') }}</p>
-        </div>
-
-        <div class="rounded-2xl p-5 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex items-center justify-between mb-3">
-                <span class="w-11 h-11 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 inline-flex items-center justify-center">
-                    <i class="fas fa-receipt"></i>
-                </span>
-                <span class="text-xs font-semibold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg">سجلات</span>
-            </div>
-            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">{{ __('instructor.total_payments') }}</p>
-            <p class="mt-2 text-2xl font-black text-slate-900 dark:text-slate-100">{{ number_format($stats['total_payments']) }}</p>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <h1 class="su-page-head__title">
+                <i class="fas fa-handshake su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.agreements_system') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.agreements_subtitle') }}</p>
         </div>
     </div>
+
+    <section class="su-kpi-row su-kpi-row--3" style="margin-bottom:20px">
+        <div class="su-kpi su-kpi--1">
+            <div class="su-kpi__l">{{ __('instructor.total_earned') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v tabular-nums">{{ number_format($stats['total_earned'], 2) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-sack-dollar" aria-hidden="true"></i></div>
+            </div>
+            <div style="font-size:12px;color:var(--su-ink-40);margin-top:4px">{{ __('public.currency_egp') }}</div>
+        </div>
+        <div class="su-kpi su-kpi--2">
+            <div class="su-kpi__l">{{ __('instructor.pending') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v tabular-nums">{{ number_format($stats['pending_amount'], 2) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-clock" aria-hidden="true"></i></div>
+            </div>
+            <div style="font-size:12px;color:var(--su-ink-40);margin-top:4px">{{ __('public.currency_egp') }}</div>
+        </div>
+        <div class="su-kpi su-kpi--3">
+            <div class="su-kpi__l">{{ __('instructor.total_payments') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v tabular-nums">{{ number_format($stats['total_payments']) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-receipt" aria-hidden="true"></i></div>
+            </div>
+        </div>
+    </section>
 
     @if($activeAgreement)
-    <div class="rounded-2xl p-5 sm:p-6 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 shadow-sm">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div class="space-y-3">
-                <div class="flex items-center flex-wrap gap-2">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-600 text-white">{{ __('instructor.active_status') }}</span>
-                    <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">{{ $activeAgreement->title }}</h3>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                    <div>
-                        <p class="text-slate-500 dark:text-slate-400">{{ __('instructor.agreement_number') }}</p>
-                        <p class="font-bold text-slate-900 dark:text-slate-100">{{ $activeAgreement->agreement_number }}</p>
+        <section class="su-card" style="margin-bottom:20px;border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.06)">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px">
+                <div>
+                    <div class="su-chip-row" style="margin-bottom:8px">
+                        <span class="su-chip su-chip--ok">{{ __('instructor.active_status') }}</span>
+                        <strong style="font-size:16px">{{ $activeAgreement->title }}</strong>
                     </div>
-                    <div>
-                        <p class="text-slate-500 dark:text-slate-400">{{ __('instructor.type') }}</p>
-                        <p class="font-bold text-slate-900 dark:text-slate-100">
-                            @if($activeAgreement->type == 'course_price')
-                                {{ __('instructor.course_price') }}
-                            @elseif($activeAgreement->type == 'hourly_rate')
-                                {{ __('instructor.hourly_rate') }}
-                            @else
-                                {{ __('instructor.monthly_salary') }}
-                            @endif
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-slate-500 dark:text-slate-400">{{ __('instructor.rate') }}</p>
-                        <p class="font-bold text-slate-900 dark:text-slate-100">{{ number_format($activeAgreement->rate, 2) }} {{ __('public.currency_egp') }}</p>
+                    <div class="su-meta-list">
+                        <div class="su-meta-row">
+                            <span>{{ __('instructor.agreement_number') }}:</span>
+                            <strong>{{ $activeAgreement->agreement_number }}</strong>
+                        </div>
+                        <div class="su-meta-row">
+                            <span>{{ __('instructor.type') }}:</span>
+                            <strong>
+                                @if($activeAgreement->type == 'course_price') {{ __('instructor.course_price') }}
+                                @elseif($activeAgreement->type == 'hourly_rate') {{ __('instructor.hourly_rate') }}
+                                @else {{ __('instructor.monthly_salary') }}
+                                @endif
+                            </strong>
+                        </div>
+                        <div class="su-meta-row">
+                            <span>{{ __('instructor.rate') }}:</span>
+                            <strong class="tabular-nums">{{ number_format($activeAgreement->rate, 2) }} {{ __('public.currency_egp') }}</strong>
+                        </div>
                     </div>
                 </div>
+                <a href="{{ route('instructor.agreements.show', $activeAgreement) }}" class="su-btn su-btn--primary">
+                    <i class="fas fa-eye" aria-hidden="true"></i>
+                    {{ __('instructor.view_details') }}
+                </a>
             </div>
-            <a href="{{ route('instructor.agreements.show', $activeAgreement) }}"
-               class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition-colors shadow-sm">
-                <i class="fas fa-eye"></i>
-                {{ __('instructor.view_details') }}
-            </a>
-        </div>
-    </div>
+        </section>
     @endif
 
-    <div class="bg-white dark:bg-slate-800/95 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-        <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-700">
-            <h2 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <i class="fas fa-handshake text-emerald-600 dark:text-emerald-400"></i>
+    <section class="su-card su-card--flush">
+        <div class="su-section-head" style="padding:14px 16px;border-bottom:1px solid var(--su-line,rgba(0,0,0,.06))">
+            <h2 class="su-card__title" style="margin:0">
+                <i class="fas fa-handshake" aria-hidden="true"></i>
                 {{ __('instructor.all_agreements') }}
             </h2>
         </div>
-
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                <thead class="bg-slate-50 dark:bg-slate-800/70">
+        <div class="su-table-wrap" style="border:0;border-radius:0;background:transparent">
+            <table class="su-table">
+                <thead>
                     <tr>
-                        <th class="px-6 py-4 text-right text-xs font-bold tracking-wider text-slate-700 dark:text-slate-300 uppercase">{{ __('instructor.agreement_number') }}</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold tracking-wider text-slate-700 dark:text-slate-300 uppercase">{{ __('instructor.title') }}</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold tracking-wider text-slate-700 dark:text-slate-300 uppercase">{{ __('instructor.type') }}</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold tracking-wider text-slate-700 dark:text-slate-300 uppercase">{{ __('instructor.rate') }}</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold tracking-wider text-slate-700 dark:text-slate-300 uppercase">{{ __('common.status') }}</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold tracking-wider text-slate-700 dark:text-slate-300 uppercase">{{ __('instructor.start_date') }}</th>
-                        <th class="px-6 py-4 text-center text-xs font-bold tracking-wider text-slate-700 dark:text-slate-300 uppercase">{{ __('instructor.actions') }}</th>
+                        <th>{{ __('instructor.agreement_number') }}</th>
+                        <th>{{ __('instructor.title') }}</th>
+                        <th>{{ __('instructor.type') }}</th>
+                        <th>{{ __('instructor.rate') }}</th>
+                        <th>{{ __('common.status') }}</th>
+                        <th>{{ __('instructor.start_date') }}</th>
+                        <th></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                <tbody>
                     @forelse($agreements as $agreement)
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                        <td class="px-6 py-4">
-                            <p class="font-bold text-slate-900 dark:text-slate-100">{{ $agreement->agreement_number }}</p>
-                        </td>
-                        <td class="px-6 py-4">
-                            <p class="font-semibold text-slate-900 dark:text-slate-100">{{ $agreement->title }}</p>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold
-                                @if($agreement->type == 'course_price') bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300
-                                @elseif($agreement->type == 'hourly_rate') bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300
-                                @else bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300
-                                @endif">
-                                @if($agreement->type == 'course_price')
-                                    {{ __('instructor.course_price') }}
-                                @elseif($agreement->type == 'hourly_rate')
-                                    {{ __('instructor.hourly_rate') }}
-                                @else
-                                    {{ __('instructor.monthly_salary') }}
-                                @endif
-                            </span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <p class="font-bold text-slate-900 dark:text-slate-100">{{ number_format($agreement->rate, 2) }} {{ __('public.currency_egp') }}</p>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold
-                                @if($agreement->status == 'active') bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400
-                                @elseif($agreement->status == 'draft') bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300
-                                @elseif($agreement->status == 'suspended') bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300
-                                @elseif($agreement->status == 'terminated') bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400
-                                @else bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300
-                                @endif">
-                                @if($agreement->status == 'active') {{ __('instructor.active_status') }}
-                                @elseif($agreement->status == 'draft') {{ __('instructor.draft') }}
-                                @elseif($agreement->status == 'suspended') {{ __('instructor.suspended') }}
-                                @elseif($agreement->status == 'terminated') {{ __('instructor.terminated') }}
-                                @else {{ __('instructor.agreement_completed') }}
-                                @endif
-                            </span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <p class="text-sm text-slate-600 dark:text-slate-400">{{ $agreement->start_date->format('Y-m-d') }}</p>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <a href="{{ route('instructor.agreements.show', $agreement) }}"
-                               class="inline-flex items-center justify-center w-10 h-10 bg-emerald-100 dark:bg-emerald-900/40 hover:bg-emerald-200 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded-xl transition-colors"
-                               title="{{ __('common.view') }}">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                        </td>
-                    </tr>
+                        @php
+                            $typeChip = match ($agreement->type) {
+                                'course_price' => 'su-soft-1',
+                                'hourly_rate' => 'su-soft-2',
+                                default => 'su-soft-3',
+                            };
+                            $typeLabel = match ($agreement->type) {
+                                'course_price' => __('instructor.course_price'),
+                                'hourly_rate' => __('instructor.hourly_rate'),
+                                default => __('instructor.monthly_salary'),
+                            };
+                            $stChip = match ($agreement->status) {
+                                'active' => 'su-chip--ok',
+                                'draft' => '',
+                                'suspended' => 'su-chip--warn',
+                                'terminated' => 'su-chip--off',
+                                default => 'su-soft-1',
+                            };
+                            $stLabel = match ($agreement->status) {
+                                'active' => __('instructor.active_status'),
+                                'draft' => __('instructor.draft'),
+                                'suspended' => __('instructor.suspended'),
+                                'terminated' => __('instructor.terminated'),
+                                default => __('instructor.agreement_completed'),
+                            };
+                        @endphp
+                        <tr>
+                            <td><strong>{{ $agreement->agreement_number }}</strong></td>
+                            <td>{{ $agreement->title }}</td>
+                            <td><span class="su-chip {{ $typeChip }}">{{ $typeLabel }}</span></td>
+                            <td class="tabular-nums">{{ number_format($agreement->rate, 2) }} {{ __('public.currency_egp') }}</td>
+                            <td><span class="su-chip {{ $stChip }}">{{ $stLabel }}</span></td>
+                            <td class="tabular-nums" style="color:var(--su-ink-40)">{{ $agreement->start_date->format('Y-m-d') }}</td>
+                            <td style="text-align:end">
+                                <a href="{{ route('instructor.agreements.show', $agreement) }}" class="su-btn" style="height:32px">
+                                    {{ __('common.view') }}
+                                </a>
+                            </td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="7" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center gap-4">
-                                <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700/60 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-handshake text-slate-400 dark:text-slate-500 text-2xl"></i>
+                        <tr>
+                            <td colspan="7">
+                                <div class="su-empty">
+                                    <i class="fas fa-handshake" aria-hidden="true"></i>
+                                    <p>{{ __('instructor.no_agreements') }}</p>
+                                    <p style="color:var(--su-ink-40);font-size:13px;margin:0">{{ __('instructor.no_agreements_description') }}</p>
                                 </div>
-                                <div>
-                                    <p class="font-bold text-slate-900 dark:text-slate-100">{{ __('instructor.no_agreements') }}</p>
-                                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">{{ __('instructor.no_agreements_description') }}</p>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </div>
+    </section>
 </div>
 @endsection

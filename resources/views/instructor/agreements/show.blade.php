@@ -1,291 +1,307 @@
 @extends('layouts.app')
 
 @section('title', __('instructor.agreement_details_title') . ' - ' . config('app.name'))
-@section('header', __('instructor.agreement_details_title'))
+@section('page_title', __('instructor.agreement_details_title'))
 
 @section('content')
-<div class="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6" style="background: #f8fafc; min-height: 100vh;">
-    <!-- Header -->
-    <section class="rounded-2xl bg-white dark:bg-slate-800/95/95 backdrop-blur border-2 border-slate-200 dark:border-slate-700/50 shadow-xl overflow-hidden">
-        <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-[#2CA9BD] via-[#65DBE4] to-[#2CA9BD] flex items-center justify-center text-white shadow-lg">
-                    <i class="fas fa-file-contract text-xl"></i>
-                </div>
-                <div>
-                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-50">{{ $agreement->title }}</h2>
-                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">{{ __('instructor.agreement_number') }}: <span class="font-semibold">{{ $agreement->agreement_number ?? 'N/A' }}</span></p>
-                </div>
+@php
+    $isRtl = app()->getLocale() === 'ar';
+    $stChip = match ($agreement->status) {
+        'active' => 'su-chip--ok',
+        'draft' => '',
+        'suspended' => 'su-chip--warn',
+        'terminated' => 'su-chip--off',
+        default => 'su-soft-1',
+    };
+    $stLabel = match ($agreement->status) {
+        'active' => __('instructor.active_status'),
+        'draft' => __('instructor.draft'),
+        'suspended' => __('instructor.suspended'),
+        'terminated' => __('instructor.terminated'),
+        default => __('instructor.agreement_completed'),
+    };
+@endphp
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.agreements.index') }}">{{ __('instructor.agreements_system') }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ Str::limit($agreement->title, 40) }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-file-contract su-page-head__ico" aria-hidden="true"></i>
+                {{ $agreement->title }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.agreement_number') }}: {{ $agreement->agreement_number ?? 'N/A' }}</p>
+            <div class="su-chip-row">
+                <span class="su-chip {{ $stChip }}">{{ $stLabel }}</span>
             </div>
-            <a href="{{ route('instructor.agreements.index') }}" class="inline-flex items-center gap-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 px-5 py-3 text-sm font-semibold text-slate-600 dark:text-slate-400 transition hover:bg-slate-50 dark:bg-slate-800/40">
-                <i class="fas fa-arrow-right"></i>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.agreements.index') }}" class="su-btn">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
                 {{ __('instructor.back') }}
             </a>
         </div>
+    </div>
 
-        <!-- Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-5 sm:p-8">
-            <div class="dashboard-card rounded-xl border-2 border-emerald-200/50 bg-gradient-to-br from-emerald-50 to-white p-5 shadow-lg">
-                <p class="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mb-2">{{ __('instructor.total_payments') }}</p>
-                <p class="text-2xl font-black text-emerald-700 dark:text-emerald-400">{{ number_format($stats['total_earned'], 2) }} {{ __('public.currency_egp') }}</p>
+    <section class="su-kpi-row" style="margin-bottom:20px">
+        <div class="su-kpi su-kpi--1">
+            <div class="su-kpi__l">{{ __('instructor.total_payments') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v tabular-nums">{{ number_format($stats['total_earned'], 2) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-sack-dollar" aria-hidden="true"></i></div>
             </div>
-            <div class="dashboard-card rounded-xl border-2 border-amber-200/50 bg-gradient-to-br from-amber-50 to-white p-5 shadow-lg">
-                <p class="text-xs font-semibold text-amber-700 mb-2">{{ __('instructor.pending') }}</p>
-                <p class="text-2xl font-black text-amber-700">{{ number_format($stats['pending_amount'], 2) }} {{ __('public.currency_egp') }}</p>
+            <div style="font-size:12px;color:var(--su-ink-40)">{{ __('public.currency_egp') }}</div>
+        </div>
+        <div class="su-kpi su-kpi--2">
+            <div class="su-kpi__l">{{ __('instructor.pending') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v tabular-nums">{{ number_format($stats['pending_amount'], 2) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-clock" aria-hidden="true"></i></div>
             </div>
-            <div class="dashboard-card rounded-xl border-2 border-blue-200/50 bg-gradient-to-br from-blue-50 to-white p-5 shadow-lg">
-                <p class="text-xs font-semibold text-blue-700 mb-2">{{ __('instructor.total_payments') }}</p>
-                <p class="text-2xl font-black text-blue-700">{{ $stats['total_payments'] }}</p>
+            <div style="font-size:12px;color:var(--su-ink-40)">{{ __('public.currency_egp') }}</div>
+        </div>
+        <div class="su-kpi su-kpi--3">
+            <div class="su-kpi__l">{{ __('instructor.total_payments') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ $stats['total_payments'] }}</div>
+                <div class="su-kpi__d"><i class="fas fa-receipt" aria-hidden="true"></i></div>
             </div>
-            <div class="dashboard-card rounded-xl border-2 border-green-200/50 bg-gradient-to-br from-green-50 to-white p-5 shadow-lg">
-                <p class="text-xs font-semibold text-green-700 mb-2">{{ __('instructor.paid') }}</p>
-                <p class="text-2xl font-black text-green-700">{{ $stats['paid_payments'] }}</p>
+        </div>
+        <div class="su-kpi su-kpi--4">
+            <div class="su-kpi__l">{{ __('instructor.paid') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ $stats['paid_payments'] }}</div>
+                <div class="su-kpi__d"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
             </div>
         </div>
     </section>
 
-    <!-- Agreement Details -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div class="lg:col-span-2 space-y-4 sm:space-y-6">
-            <!-- Basic Info -->
-            <section class="rounded-2xl bg-white dark:bg-slate-800/95/95 backdrop-blur border-2 border-slate-200 dark:border-slate-700/50 shadow-xl overflow-hidden">
-                <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white">
-                    <h3 class="text-lg font-black text-slate-900 dark:text-slate-50 flex items-center gap-2">
-                        <i class="fas fa-info-circle text-[#2CA9BD]"></i>
-                        {{ __('instructor.agreement_info') }}
-                    </h3>
-                </div>
-                <div class="px-5 py-6 sm:px-8 lg:px-12 space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-gradient-to-br from-blue-50 to-white p-4 rounded-xl border-2 border-blue-100">
-                            <p class="text-xs font-semibold text-blue-700 mb-1">{{ __('instructor.agreement_type_label') }}</p>
-                            <p class="text-sm font-black text-slate-900 dark:text-slate-50">
-                                @if(($agreement->billing_type ?? '') === 'course_percentage')
-                                    نسبة من الكورس
-                                    @if($agreement->advancedCourse)
-                                        <span class="block text-xs font-normal text-slate-600 dark:text-slate-400 mt-1">{{ $agreement->advancedCourse->title }}</span>
-                                    @endif
-                                @elseif($agreement->type == 'course_price')
-                                    {{ __('instructor.course_price_full') }}
-                                @elseif($agreement->type == 'hourly_rate')
-                                    {{ __('instructor.hourly_rate_recorded') }}
-                                @elseif($agreement->type == 'consultation_session')
-                                    استشارات
-                                @else
-                                    {{ __('instructor.monthly_salary') }}
+    <div class="su-detail-grid">
+        <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+            <section class="su-card">
+                <h2 class="su-card__title"><i class="fas fa-info-circle" aria-hidden="true"></i> {{ __('instructor.agreement_info') }}</h2>
+                <div class="su-meta-list">
+                    <div class="su-meta-row">
+                        <span class="su-meta-ico su-soft-1"><i class="fas fa-tag" aria-hidden="true"></i></span>
+                        <span>{{ __('instructor.agreement_type_label') }}:</span>
+                        <strong>
+                            @if(($agreement->billing_type ?? '') === 'course_percentage')
+                                {{ __('instructor.course_percentage_type') }}
+                                @if($agreement->advancedCourse)
+                                    <span style="display:block;font-weight:400;font-size:12px;color:var(--su-ink-40)">{{ $agreement->advancedCourse->title }}</span>
                                 @endif
-                            </p>
-                        </div>
-                        <div class="bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border-2 border-purple-100">
-                            <p class="text-xs font-semibold text-purple-700 mb-1">{{ (($agreement->billing_type ?? '') === 'course_percentage') ? 'نسبة المدرب' : __('instructor.rate') }}</p>
-                            <p class="text-sm font-black text-slate-900 dark:text-slate-50">
-                                @if(($agreement->billing_type ?? '') === 'course_percentage')
-                                    {{ number_format($agreement->course_percentage ?? 0, 2) }}%
-                                @else
-                                    {{ number_format($agreement->rate, 2) }} {{ __('public.currency_egp') }}
-                                @endif
-                            </p>
-                        </div>
-                        <div class="bg-gradient-to-br from-emerald-50 to-white p-4 rounded-xl border-2 border-emerald-100">
-                            <p class="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mb-1">{{ __('common.status') }}</p>
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold 
-                                @if($agreement->status == 'active') bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-200
-                                @elseif($agreement->status == 'draft') bg-gray-100 text-gray-700 border-2 border-gray-200
-                                @elseif($agreement->status == 'suspended') bg-amber-100 text-amber-700 border-2 border-amber-200
-                                @elseif($agreement->status == 'terminated') bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400 border-2 border-rose-200
-                                @else bg-blue-100 text-blue-700 border-2 border-blue-200
-                                @endif">
-                                @if($agreement->status == 'active') {{ __('instructor.active_status') }}
-                                @elseif($agreement->status == 'draft') {{ __('instructor.draft') }}
-                                @elseif($agreement->status == 'suspended') {{ __('instructor.suspended') }}
-                                @elseif($agreement->status == 'terminated') {{ __('instructor.terminated') }}
-                                @else {{ __('instructor.agreement_completed') }}
-                                @endif
-                            </span>
-                        </div>
-                        <div class="bg-gradient-to-br from-indigo-50 to-white p-4 rounded-xl border-2 border-indigo-100">
-                            <p class="text-xs font-semibold text-indigo-700 mb-1">{{ __('instructor.start_date') }}</p>
-                            <p class="text-sm font-black text-slate-900 dark:text-slate-50">{{ $agreement->start_date ? $agreement->start_date->format('Y-m-d') : '-' }}</p>
-                        </div>
-                        @if($agreement->end_date)
-                        <div class="bg-gradient-to-br from-orange-50 to-white p-4 rounded-xl border-2 border-orange-100">
-                            <p class="text-xs font-semibold text-orange-700 mb-1">{{ __('instructor.end_date') }}</p>
-                            <p class="text-sm font-black text-slate-900 dark:text-slate-50">{{ $agreement->end_date->format('Y-m-d') }}</p>
-                        </div>
-                        @endif
+                            @elseif($agreement->type == 'course_price')
+                                {{ __('instructor.course_price_full') }}
+                            @elseif($agreement->type == 'hourly_rate')
+                                {{ __('instructor.hourly_rate_recorded') }}
+                            @elseif($agreement->type == 'consultation_session')
+                                {{ __('instructor.consultations_type') }}
+                            @else
+                                {{ __('instructor.monthly_salary') }}
+                            @endif
+                        </strong>
                     </div>
-                    @if($agreement->description)
-                    <div class="bg-gradient-to-br from-slate-50 to-white p-4 rounded-xl border-2 border-slate-100 dark:border-slate-700/80">
-                        <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ __('instructor.description') }}</p>
-                        <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{{ $agreement->description }}</p>
+                    <div class="su-meta-row">
+                        <span class="su-meta-ico su-soft-2"><i class="fas fa-percent" aria-hidden="true"></i></span>
+                        <span>{{ (($agreement->billing_type ?? '') === 'course_percentage') ? __('instructor.instructor_share_pct') : __('instructor.rate') }}:</span>
+                        <strong class="tabular-nums">
+                            @if(($agreement->billing_type ?? '') === 'course_percentage')
+                                {{ number_format($agreement->course_percentage ?? 0, 2) }}%
+                            @else
+                                {{ number_format($agreement->rate, 2) }} {{ __('public.currency_egp') }}
+                            @endif
+                        </strong>
                     </div>
-                    @endif
-                    @if($agreement->terms)
-                    <div class="bg-gradient-to-br from-slate-50 to-white p-4 rounded-xl border-2 border-slate-100 dark:border-slate-700/80">
-                        <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ __('instructor.contract_terms') }}</p>
-                        <div class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed">{{ $agreement->terms }}</div>
+                    <div class="su-meta-row">
+                        <span class="su-meta-ico su-soft-3"><i class="fas fa-info" aria-hidden="true"></i></span>
+                        <span>{{ __('common.status') }}:</span>
+                        <span class="su-chip {{ $stChip }}">{{ $stLabel }}</span>
                     </div>
-                    @endif
-                    @if($agreement->notes)
-                    <div class="bg-gradient-to-br from-amber-50 to-white p-4 rounded-xl border-2 border-amber-100">
-                        <p class="text-xs font-semibold text-amber-700 mb-2">{{ __('instructor.notes') }}</p>
-                        <div class="text-sm text-amber-800 whitespace-pre-line leading-relaxed">{{ $agreement->notes }}</div>
+                    <div class="su-meta-row">
+                        <span class="su-meta-ico su-soft-4"><i class="fas fa-calendar" aria-hidden="true"></i></span>
+                        <span>{{ __('instructor.start_date') }}:</span>
+                        <strong>{{ $agreement->start_date ? $agreement->start_date->format('Y-m-d') : '-' }}</strong>
                     </div>
+                    @if($agreement->end_date)
+                        <div class="su-meta-row">
+                            <span class="su-meta-ico su-soft-1"><i class="fas fa-calendar-check" aria-hidden="true"></i></span>
+                            <span>{{ __('instructor.end_date') }}:</span>
+                            <strong>{{ $agreement->end_date->format('Y-m-d') }}</strong>
+                        </div>
                     @endif
                 </div>
+                @if($agreement->description)
+                    <div style="margin-top:16px">
+                        <h3 style="font-size:13px;font-weight:600;margin:0 0 6px">{{ __('instructor.description') }}</h3>
+                        <p style="margin:0;font-size:14px;color:var(--su-ink-40);line-height:1.6">{{ $agreement->description }}</p>
+                    </div>
+                @endif
+                @if($agreement->terms)
+                    <div style="margin-top:16px">
+                        <h3 style="font-size:13px;font-weight:600;margin:0 0 6px">{{ __('instructor.contract_terms') }}</h3>
+                        <div style="font-size:14px;color:var(--su-ink-40);white-space:pre-line;line-height:1.6">{{ $agreement->terms }}</div>
+                    </div>
+                @endif
+                @if($agreement->notes)
+                    <div style="margin-top:16px;padding:12px;border-radius:10px;background:rgba(245,158,11,.08)">
+                        <h3 style="font-size:13px;font-weight:600;margin:0 0 6px">{{ __('instructor.notes') }}</h3>
+                        <div style="font-size:14px;white-space:pre-line;line-height:1.6">{{ $agreement->notes }}</div>
+                    </div>
+                @endif
             </section>
 
             @if(($agreement->billing_type ?? '') === 'course_percentage')
-            {{-- تفعيلات الطلاب وحصتي من كل شراء — يظهر عند اتفاقية "نسبة من الكورس" فقط --}}
-            @php
-                $activationPayments = $agreement->payments->where('type', 'course_activation');
-            @endphp
-            <section class="rounded-2xl bg-white dark:bg-slate-800/95/95 backdrop-blur border-2 border-blue-200/50 shadow-xl overflow-hidden">
-                <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-blue-50 to-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h3 class="text-lg font-black text-slate-900 dark:text-slate-50 flex items-center gap-2">
-                            <i class="fas fa-user-graduate text-blue-600"></i>
-                            تفعيلات الطلاب وحصتي من كل شراء
-                        </h3>
-                        <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">عند كل تفعيل لطالب في الكورس تظهر نسبتك من مبلغ الشراء وحصتك.</p>
+                @php $activationPayments = $agreement->payments->where('type', 'course_activation'); @endphp
+                <section class="su-card su-card--flush">
+                    <div class="su-section-head" style="padding:14px 16px;border-bottom:1px solid var(--su-line,rgba(0,0,0,.06))">
+                        <div>
+                            <h2 class="su-card__title" style="margin:0">
+                                <i class="fas fa-user-graduate" aria-hidden="true"></i>
+                                {{ __('instructor.student_activations_share') }}
+                            </h2>
+                            <p style="margin:4px 0 0;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.student_activations_desc') }}</p>
+                        </div>
+                        <a href="{{ route('instructor.agreements.export-activations', $agreement) }}" class="su-btn su-btn--primary" style="height:32px">
+                            <i class="fas fa-file-excel" aria-hidden="true"></i>
+                            {{ __('instructor.export_excel') }}
+                        </a>
                     </div>
-                    <a href="{{ route('instructor.agreements.export-activations', $agreement) }}"
-                       class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25 transition-all duration-200 border-2 border-emerald-500/30 whitespace-nowrap">
-                        <i class="fas fa-file-excel"></i>
-                        تصدير إلى Excel
-                    </a>
-                </div>
-                @if($activationPayments->isNotEmpty())
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                        <thead class="bg-slate-50 dark:bg-slate-800/40">
-                            <tr class="text-xs font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300">
-                                <th class="px-6 py-4 text-right">التاريخ</th>
-                                <th class="px-6 py-4 text-right">الطالب</th>
-                                <th class="px-6 py-4 text-right">مبلغ الشراء (ج.م)</th>
-                                <th class="px-6 py-4 text-right">نسبتي</th>
-                                <th class="px-6 py-4 text-right">حصتي (ج.م)</th>
-                                <th class="px-6 py-4 text-right">الحالة</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-800/95 text-sm">
-                            @foreach($activationPayments as $p)
-                            <tr class="hover:bg-slate-50 dark:bg-slate-800/40">
-                                <td class="px-6 py-4 text-slate-600 dark:text-slate-400">{{ $p->created_at?->format('Y-m-d') ?? '—' }}</td>
-                                <td class="px-6 py-4 font-medium text-slate-900 dark:text-slate-50">{{ $p->enrollment?->student?->name ?? '—' }}</td>
-                                <td class="px-6 py-4">{{ $p->enrollment ? number_format($p->enrollment->final_price ?? 0, 2) : '—' }}</td>
-                                <td class="px-6 py-4 font-semibold text-blue-700">{{ number_format($agreement->course_percentage ?? 0, 2) }}%</td>
-                                <td class="px-6 py-4 font-black text-slate-900 dark:text-slate-50">{{ number_format($p->amount, 2) }} ج.م</td>
-                                <td class="px-6 py-4">
-                                    @if($p->status === 'paid')
-                                        <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400">مدفوع</span>
-                                    @elseif($p->status === 'approved')
-                                        <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">موافق عليه</span>
-                                    @else
-                                        <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300">قيد المراجعة</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                <div class="px-5 py-4 sm:px-8 lg:px-12 bg-gradient-to-r from-blue-50 to-white border-t-2 border-blue-100">
-                    <p class="text-base font-black text-slate-900 dark:text-slate-50">
-                        إجمالي أرباحي من هذه الاتفاقية: <span class="text-blue-700">{{ number_format($activationPayments->sum('amount'), 2) }} ج.م</span>
-                    </p>
-                </div>
-                @else
-                <div class="px-5 py-8 sm:px-8 lg:px-12 text-center text-slate-500 dark:text-slate-400">
-                    <i class="fas fa-user-graduate text-4xl text-slate-300 mb-3"></i>
-                    <p class="font-medium">لا توجد تفعيلات للطلاب حتى الآن.</p>
-                    <p class="text-sm mt-1">عند تفعيل أي طالب في هذا الكورس ستظهر هنا نسبتك وحصتك تلقائياً.</p>
-                </div>
-                @endif
-            </section>
+                    @if($activationPayments->isNotEmpty())
+                        <div class="su-table-wrap" style="border:0;border-radius:0;background:transparent">
+                            <table class="su-table">
+                                <thead>
+                                    <tr>
+                                        <th>{{ __('common.date') }}</th>
+                                        <th>{{ __('instructor.student') }}</th>
+                                        <th>{{ __('instructor.purchase_amount') }}</th>
+                                        <th>{{ __('instructor.my_percentage') }}</th>
+                                        <th>{{ __('instructor.my_share') }}</th>
+                                        <th>{{ __('common.status') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($activationPayments as $p)
+                                        <tr>
+                                            <td class="tabular-nums" style="color:var(--su-ink-40)">{{ $p->created_at?->format('Y-m-d') ?? '—' }}</td>
+                                            <td>{{ $p->enrollment?->student?->name ?? '—' }}</td>
+                                            <td class="tabular-nums">{{ $p->enrollment ? number_format($p->enrollment->final_price ?? 0, 2) : '—' }}</td>
+                                            <td class="tabular-nums">{{ number_format($agreement->course_percentage ?? 0, 2) }}%</td>
+                                            <td class="tabular-nums"><strong>{{ number_format($p->amount, 2) }} {{ __('public.currency_egp') }}</strong></td>
+                                            <td>
+                                                @if($p->status === 'paid')
+                                                    <span class="su-chip su-chip--ok">{{ __('instructor.paid') }}</span>
+                                                @elseif($p->status === 'approved')
+                                                    <span class="su-chip su-chip--warn">{{ __('instructor.approved') }}</span>
+                                                @else
+                                                    <span class="su-chip">{{ __('instructor.pending_review') }}</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="padding:12px 16px;border-top:1px solid var(--su-line,rgba(0,0,0,.06));font-weight:600">
+                            {{ __('instructor.total_earnings_from_agreement') }}:
+                            <span class="tabular-nums">{{ number_format($activationPayments->sum('amount'), 2) }} {{ __('public.currency_egp') }}</span>
+                        </div>
+                    @else
+                        <div class="su-empty" style="padding:40px 16px">
+                            <i class="fas fa-user-graduate" aria-hidden="true"></i>
+                            <p>{{ __('instructor.no_activations_yet') }}</p>
+                            <p style="color:var(--su-ink-40);font-size:13px;margin:0">{{ __('instructor.no_activations_desc') }}</p>
+                        </div>
+                    @endif
+                </section>
             @endif
 
-            <!-- Payments -->
-            <section class="rounded-2xl bg-white dark:bg-slate-800/95/95 backdrop-blur border-2 border-slate-200 dark:border-slate-700/50 shadow-xl overflow-hidden">
-                <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white">
-                    <h3 class="text-lg font-black text-slate-900 dark:text-slate-50 flex items-center gap-2">
-                        <i class="fas fa-receipt text-[#2CA9BD]"></i>
+            <section class="su-card su-card--flush">
+                <div class="su-section-head" style="padding:14px 16px;border-bottom:1px solid var(--su-line,rgba(0,0,0,.06))">
+                    <h2 class="su-card__title" style="margin:0">
+                        <i class="fas fa-receipt" aria-hidden="true"></i>
                         {{ __('instructor.payments_log') }}
-                    </h3>
+                    </h2>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                        <thead class="bg-slate-50 dark:bg-slate-800/40">
-                            <tr class="text-xs font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300">
-                                <th class="px-6 py-4 text-right">{{ __('instructor.payment_number') }}</th>
-                                <th class="px-6 py-4 text-right">{{ __('instructor.type') }}</th>
-                                <th class="px-6 py-4 text-right">{{ __('instructor.amount') }}</th>
-                                <th class="px-6 py-4 text-right">{{ __('common.status') }}</th>
-                                <th class="px-6 py-4 text-right">{{ __('common.date') }}</th>
-                                <th class="px-6 py-4 text-right">{{ __('instructor.transfer_receipt') }}</th>
+                <div class="su-table-wrap" style="border:0;border-radius:0;background:transparent">
+                    <table class="su-table">
+                        <thead>
+                            <tr>
+                                <th>{{ __('instructor.payment_number') }}</th>
+                                <th>{{ __('instructor.type') }}</th>
+                                <th>{{ __('instructor.amount') }}</th>
+                                <th>{{ __('common.status') }}</th>
+                                <th>{{ __('common.date') }}</th>
+                                <th>{{ __('instructor.transfer_receipt') }}</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-800/95 text-sm">
+                        <tbody>
                             @forelse($agreement->payments as $payment)
-                                <tr class="hover:bg-slate-50 dark:bg-slate-800/40 transition-colors">
-                                    <td class="px-6 py-4 font-semibold text-slate-900 dark:text-slate-50">{{ $payment->payment_number ?? 'N/A' }}</td>
-                                    <td class="px-6 py-4">
-                                        @php
-                                            $typeLabels = [
-                                                'course_completion' => __('instructor.course_price_full'),
-                                                'course_sale' => __('instructor.course_price'),
-                                                'course_price' => __('instructor.course_price'),
-                                                'hourly_teaching' => __('instructor.hourly_rate_recorded'),
-                                                'lecture_hour' => __('instructor.hourly_rate_recorded'),
-                                                'hourly_rate' => __('instructor.hourly_rate'),
-                                                'monthly_salary' => __('instructor.monthly_salary'),
-                                                'consultation_session' => 'استشارات',
-                                                'bonus' => __('instructor.bonus'),
-                                                'other' => __('instructor.other'),
-                                                'course_activation' => 'نسبة من تفعيل الطالب',
-                                            ];
-                                            $typeLabel = $typeLabels[$payment->type] ?? ($payment->type ?? __('instructor.not_specified'));
-                                        @endphp
-                                        <div>
-                                            <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
-                                                {{ $typeLabel }}
-                                            </span>
-                                            @if($payment->type === 'course_activation' && $payment->enrollment)
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">الطالب: {{ $payment->enrollment->student->name ?? '—' }}</p>
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">مبلغ التفعيل: {{ number_format($payment->enrollment->final_price ?? 0, 2) }} ج.م → حصتك {{ number_format($payment->amount, 2) }} ج.م</p>
-                                            @endif
-                                            @if($payment->course)
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ $payment->course->title ?? '' }}</p>
-                                            @endif
-                                            @if($payment->lecture)
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ $payment->lecture->title ?? '' }}</p>
-                                            @endif
-                                            @if($payment->hours_count)
-                                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ $payment->hours_count }} {{ __('instructor.hour') }}</p>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 font-black text-slate-900 dark:text-slate-50">{{ number_format($payment->amount, 2) }} {{ __('public.currency_egp') }}</td>
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold 
-                                            @if($payment->status == 'paid') bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-200
-                                            @elseif($payment->status == 'approved') bg-amber-100 text-amber-700 border-2 border-amber-200
-                                            @else bg-gray-100 text-gray-700 border-2 border-gray-200
-                                            @endif">
-                                            @if($payment->status == 'paid') {{ __('instructor.received') }}
-                                            @elseif($payment->status == 'approved') {{ __('instructor.approved') }}
-                                            @else {{ __('instructor.pending_review') }}
-                                            @endif
-                                        </span>
-                                        @if($payment->status == 'paid')
-                                            <p class="text-xs text-emerald-600 mt-1">{{ __('instructor.amount_transferred_info') }}</p>
+                                @php
+                                    $typeLabels = [
+                                        'course_completion' => __('instructor.course_price_full'),
+                                        'course_sale' => __('instructor.course_price'),
+                                        'course_price' => __('instructor.course_price'),
+                                        'hourly_teaching' => __('instructor.hourly_rate_recorded'),
+                                        'lecture_hour' => __('instructor.hourly_rate_recorded'),
+                                        'hourly_rate' => __('instructor.hourly_rate'),
+                                        'monthly_salary' => __('instructor.monthly_salary'),
+                                        'consultation_session' => __('instructor.consultations_type'),
+                                        'bonus' => __('instructor.bonus'),
+                                        'other' => __('instructor.other'),
+                                        'course_activation' => __('instructor.activation_share_type'),
+                                    ];
+                                    $typeLabel = $typeLabels[$payment->type] ?? ($payment->type ?? __('instructor.not_specified'));
+                                    $pChip = match ($payment->status) {
+                                        'paid' => 'su-chip--ok',
+                                        'approved' => 'su-chip--warn',
+                                        default => '',
+                                    };
+                                    $pLabel = match ($payment->status) {
+                                        'paid' => __('instructor.received'),
+                                        'approved' => __('instructor.approved'),
+                                        default => __('instructor.pending_review'),
+                                    };
+                                @endphp
+                                <tr>
+                                    <td><strong>{{ $payment->payment_number ?? 'N/A' }}</strong></td>
+                                    <td>
+                                        <span class="su-chip su-soft-1">{{ $typeLabel }}</span>
+                                        @if($payment->type === 'course_activation' && $payment->enrollment)
+                                            <div style="font-size:12px;color:var(--su-ink-40);margin-top:4px">
+                                                {{ __('instructor.student') }}: {{ $payment->enrollment->student->name ?? '—' }}
+                                            </div>
+                                            <div style="font-size:12px;color:var(--su-ink-40)">
+                                                {{ __('instructor.activation_amount_share', [
+                                                    'price' => number_format($payment->enrollment->final_price ?? 0, 2),
+                                                    'share' => number_format($payment->amount, 2),
+                                                ]) }}
+                                            </div>
+                                        @endif
+                                        @if($payment->course)
+                                            <div style="font-size:12px;color:var(--su-ink-40);margin-top:2px">{{ $payment->course->title ?? '' }}</div>
+                                        @endif
+                                        @if($payment->lecture)
+                                            <div style="font-size:12px;color:var(--su-ink-40);margin-top:2px">{{ $payment->lecture->title ?? '' }}</div>
+                                        @endif
+                                        @if($payment->hours_count)
+                                            <div style="font-size:12px;color:var(--su-ink-40);margin-top:2px">{{ $payment->hours_count }} {{ __('instructor.hour') }}</div>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 text-xs text-slate-600 dark:text-slate-400">{{ $payment->created_at->format('Y-m-d') }}</td>
-                                    <td class="px-6 py-4">
+                                    <td class="tabular-nums"><strong>{{ number_format($payment->amount, 2) }} {{ __('public.currency_egp') }}</strong></td>
+                                    <td>
+                                        <span class="su-chip {{ $pChip }}">{{ $pLabel }}</span>
+                                        @if($payment->status == 'paid')
+                                            <div style="font-size:11px;color:#16a34a;margin-top:4px">{{ __('instructor.amount_transferred_info') }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="tabular-nums" style="color:var(--su-ink-40)">{{ $payment->created_at->format('Y-m-d') }}</td>
+                                    <td>
                                         @if($payment->status == 'paid' && $payment->transfer_receipt_path)
-                                            <a href="{{ storage_asset($payment->transfer_receipt_path) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold">
-                                                <i class="fas fa-receipt"></i>
+                                            <a href="{{ storage_asset($payment->transfer_receipt_path) }}" target="_blank" rel="noopener" class="su-btn" style="height:28px;font-size:12px">
+                                                <i class="fas fa-receipt" aria-hidden="true"></i>
                                                 {{ __('instructor.download_receipt') }}
                                             </a>
                                         @else
@@ -295,15 +311,11 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-12 text-center">
-                                        <div class="flex flex-col items-center gap-4">
-                                            <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700/50 rounded-2xl flex items-center justify-center">
-                                                <i class="fas fa-receipt text-slate-400 text-2xl"></i>
-                                            </div>
-                                            <div>
-                                                <p class="font-bold text-slate-900 dark:text-slate-50">{{ __('instructor.no_payments') }}</p>
-                                                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">{{ __('instructor.no_payments_yet') }}</p>
-                                            </div>
+                                    <td colspan="6">
+                                        <div class="su-empty">
+                                            <i class="fas fa-receipt" aria-hidden="true"></i>
+                                            <p>{{ __('instructor.no_payments') }}</p>
+                                            <p style="color:var(--su-ink-40);font-size:13px;margin:0">{{ __('instructor.no_payments_yet') }}</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -314,28 +326,14 @@
             </section>
         </div>
 
-        <!-- Sidebar -->
-        <div class="space-y-4 sm:space-y-6">
-            <section class="rounded-2xl bg-white dark:bg-slate-800/95/95 backdrop-blur border-2 border-slate-200 dark:border-slate-700/50 shadow-xl overflow-hidden">
-                <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white">
-                    <h3 class="text-lg font-black text-slate-900 dark:text-slate-50 flex items-center gap-2">
-                        <i class="fas fa-info-circle text-[#2CA9BD]"></i>
-                        {{ __('instructor.quick_tips') }}
-                    </h3>
-                </div>
-                <div class="px-5 py-6 sm:px-8 lg:px-12 space-y-4">
-                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border-2 border-blue-200">
-                        <div class="flex items-center gap-2 mb-2">
-                            <i class="fas fa-info-circle text-blue-600"></i>
-                            <span class="text-sm font-bold text-blue-800">{{ __('instructor.tips') }}</span>
-                        </div>
-                        <ul class="mt-2 text-sm text-blue-700 space-y-1.5 font-medium">
-                            <li>• {{ __('instructor.tips_follow_payments') }}</li>
-                            <li>• {{ __('instructor.tips_pending') }}</li>
-                            <li>• {{ __('instructor.tips_completed') }}</li>
-                        </ul>
-                    </div>
-                </div>
+        <div>
+            <section class="su-card">
+                <h2 class="su-card__title"><i class="fas fa-lightbulb" aria-hidden="true"></i> {{ __('instructor.quick_tips') }}</h2>
+                <ul style="margin:0;padding-inline-start:1.1rem;font-size:13px;color:var(--su-ink-40);line-height:1.7">
+                    <li>{{ __('instructor.tips_follow_payments') }}</li>
+                    <li>{{ __('instructor.tips_pending') }}</li>
+                    <li>{{ __('instructor.tips_completed') }}</li>
+                </ul>
             </section>
         </div>
     </div>

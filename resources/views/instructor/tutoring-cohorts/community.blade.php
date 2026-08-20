@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', (app()->getLocale() === 'ar' ? 'مجتمع الفصل' : 'Class community').' · '.$cohort->title)
-@section('page_title', app()->getLocale() === 'ar' ? 'مجتمع الفصل' : 'Class community')
+@section('title', __('instructor.tc_community_title') . ' · ' . $cohort->title)
+@section('page_title', __('instructor.tc_community_title'))
 
 @section('content')
 @php
@@ -10,92 +10,136 @@
     $canModerateFeed = $canModerateFeed ?? true;
 @endphp
 
-<div class="mx-auto max-w-3xl space-y-5">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <a href="{{ route('instructor.tutoring-cohorts.show', $cohort) }}" class="text-sm font-bold text-accent hover:underline">
-            ← {{ $isRtl ? 'مركز قيادة الدفعة' : 'Cohort command' }}
-        </a>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.tutoring-cohorts.show', $cohort) }}">{{ __('instructor.tc_back_command') }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ __('instructor.tc_community_title') }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-comments su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.tc_community_title') }}
+            </h1>
+            <p class="su-page-head__sub">{{ $cohort->title }} — {{ __('instructor.tc_community_sub') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.tutoring-cohorts.show', $cohort) }}" class="su-btn">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.tc_back_command') }}
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+        <div class="su-card" style="margin-bottom:16px;padding:14px 18px;background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.25);color:#15803d;font-size:13px;font-weight:600">
+            <i class="fas fa-check-circle" aria-hidden="true"></i> {{ session('success') }}
+        </div>
     @endif
 
-    <section class="rounded-2xl border border-line bg-gradient-to-br from-[#0B3D91] to-[#072A66] p-5 text-white shadow-soft">
-        <p class="text-xs font-bold uppercase tracking-wide text-white/70">{{ $cohort->title }}</p>
-        <h2 class="mt-1 text-2xl font-black">{{ $isRtl ? 'مجتمع الفصل' : 'Class community' }}</h2>
-        <p class="mt-1 text-sm text-white/85">{{ $isRtl ? 'أسئلة الطلاب وإعلاناتك — نفس المجتمع الذي يراه الطلاب.' : 'Student questions and your announcements — the same feed students see.' }}</p>
-    </section>
-
-    <article class="rounded-2xl border border-line bg-white p-4 shadow-soft sm:p-5">
-        <form method="POST" action="{{ route('instructor.tutoring-cohorts.feed.store', $cohort) }}" class="space-y-3">
+    <section class="su-card" style="margin-bottom:20px">
+        <h2 class="su-card__title">
+            <i class="fas fa-pen" aria-hidden="true"></i>
+            {{ __('instructor.tc_publish_short') }}
+        </h2>
+        <form method="POST" action="{{ route('instructor.tutoring-cohorts.feed.store', $cohort) }}">
             @csrf
-            <textarea name="body" rows="3" maxlength="1000" required class="w-full rounded-xl border border-line px-3 py-2 text-sm"
-                      placeholder="{{ $isRtl ? 'اكتب إعلاناً أو رداً للفصل…' : 'Write an announcement or reply…' }}"></textarea>
-            <div class="flex flex-wrap items-center gap-3">
-                <select name="post_type" class="h-9 rounded-xl border border-line px-3 text-sm">
-                    <option value="announcement">{{ $isRtl ? 'إعلان' : 'Announcement' }}</option>
-                    <option value="question">{{ $isRtl ? 'منشور' : 'Post' }}</option>
-                </select>
-                <label class="inline-flex items-center gap-2 text-xs font-bold text-muted">
-                    <input type="checkbox" name="is_pinned" value="1" class="rounded border-line"> {{ $isRtl ? 'تثبيت' : 'Pin' }}
+            <div class="su-field" style="margin-bottom:12px">
+                <label for="community_body">{{ __('instructor.tc_write_ph') }}</label>
+                <textarea name="body" id="community_body" rows="3" maxlength="1000" required
+                          class="su-input" style="height:auto;min-height:96px;padding:10px 12px;resize:vertical"
+                          placeholder="{{ __('instructor.tc_write_ph') }}"></textarea>
+            </div>
+            <div class="su-form-actions" style="flex-wrap:wrap">
+                <div class="su-field" style="margin:0;min-width:160px">
+                    <label for="post_type">{{ __('instructor.tc_type_announcement') }}</label>
+                    <select name="post_type" id="post_type" class="su-select">
+                        <option value="announcement">{{ __('instructor.tc_type_announcement') }}</option>
+                        <option value="question">{{ __('instructor.tc_type_post') }}</option>
+                    </select>
+                </div>
+                <label style="display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--su-ink-40)">
+                    <input type="checkbox" name="is_pinned" value="1"> {{ __('instructor.tc_pin') }}
                 </label>
-                <button class="ms-auto inline-flex h-9 items-center rounded-xl bg-accent px-4 text-xs font-black text-white">
-                    {{ $isRtl ? 'نشر' : 'Publish' }}
+                <button type="submit" class="su-btn su-btn--primary" style="height:40px;margin-inline-start:auto">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                    {{ __('instructor.tc_publish_short') }}
                 </button>
             </div>
         </form>
-    </article>
+    </section>
 
-    <ul class="space-y-3">
+    <div class="su-list">
         @forelse($feedPosts as $post)
-            <li class="rounded-2xl border {{ $post->is_hidden ? 'border-red-200 bg-red-50' : 'border-line bg-white' }} p-4 shadow-soft">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                        <p class="font-bold text-ink">{{ $post->author?->name }} · {{ $post->typeLabel() }}</p>
-                        <p class="text-[11px] font-semibold text-muted">{{ $post->created_at?->diffForHumans() }}</p>
+            <article class="su-card" style="margin-bottom:12px;{{ $post->is_hidden ? 'background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.25)' : '' }}">
+                <div style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:10px">
+                    <div class="min-w-0">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                            <strong style="font-size:14px;color:var(--su-ink)">{{ $post->author?->name }}</strong>
+                            <span class="su-chip {{ $post->is_pinned ? 'su-chip--warn' : 'su-soft-1' }}">{{ $post->typeLabel() }}</span>
+                            @if($post->is_pinned)
+                                <span class="su-chip su-chip--warn"><i class="fas fa-thumbtack" aria-hidden="true"></i> {{ __('instructor.tc_pin') }}</span>
+                            @endif
+                            @if($post->is_hidden)
+                                <span class="su-chip su-chip--off">{{ __('instructor.tc_hide') }}</span>
+                            @endif
+                        </div>
+                        <p style="margin:4px 0 0;font-size:11px;color:var(--su-ink-40);font-weight:600">{{ $post->created_at?->diffForHumans() }}</p>
                     </div>
-                    <div class="flex flex-wrap gap-2">
-                        <form method="POST" action="{{ route('instructor.class-feed.pin', $post) }}">@csrf
-                            <button class="text-xs font-bold text-accent">{{ $post->is_pinned ? 'Unpin' : 'Pin' }}</button>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px">
+                        <form method="POST" action="{{ route('instructor.class-feed.pin', $post) }}">
+                            @csrf
+                            <button type="submit" class="su-btn" style="height:32px">
+                                {{ $post->is_pinned ? __('instructor.tc_unpin') : __('instructor.tc_pin') }}
+                            </button>
                         </form>
                         @if($post->is_hidden)
-                            <form method="POST" action="{{ route('instructor.class-feed.unhide', $post) }}">@csrf
-                                <button class="text-xs font-bold text-emerald-700">Unhide</button>
+                            <form method="POST" action="{{ route('instructor.class-feed.unhide', $post) }}">
+                                @csrf
+                                <button type="submit" class="su-btn" style="height:32px">{{ __('instructor.tc_unhide') }}</button>
                             </form>
                         @else
-                            <form method="POST" action="{{ route('instructor.class-feed.hide', $post) }}">@csrf
-                                <button class="text-xs font-bold text-red-600">Hide</button>
+                            <form method="POST" action="{{ route('instructor.class-feed.hide', $post) }}">
+                                @csrf
+                                <button type="submit" class="su-btn" style="height:32px">{{ __('instructor.tc_hide') }}</button>
                             </form>
                         @endif
                     </div>
                 </div>
-                <p class="mt-3 whitespace-pre-wrap text-sm text-ink">{{ $post->body }}</p>
+
+                <p style="margin:14px 0 0;font-size:13px;line-height:1.55;color:var(--su-ink);white-space:pre-wrap">{{ $post->body }}</p>
 
                 @if($post->visibleComments && $post->visibleComments->isNotEmpty())
-                    <ul class="mt-3 space-y-2 border-t border-line pt-3">
+                    <div class="su-list" style="margin-top:14px;padding-top:14px;border-top:0.5px solid var(--su-line)">
                         @foreach($post->visibleComments as $comment)
-                            <li class="rounded-xl bg-slate-50 px-3 py-2 text-sm">
-                                <strong>{{ $comment->author?->name }}</strong>
-                                <span class="text-muted">· {{ $comment->created_at?->diffForHumans() }}</span>
-                                <p class="mt-1 whitespace-pre-wrap">{{ $comment->body }}</p>
-                            </li>
+                            <div class="su-list-item" style="background:var(--su-bg)">
+                                <span class="su-list-item__ico su-soft-3">
+                                    <i class="fas fa-reply" aria-hidden="true"></i>
+                                </span>
+                                <div class="su-list-item__body">
+                                    <div class="su-list-item__title">{{ $comment->author?->name }}</div>
+                                    <div class="su-list-item__meta">{{ $comment->created_at?->diffForHumans() }}</div>
+                                    <p style="margin:6px 0 0;font-size:13px;white-space:pre-wrap;color:var(--su-ink)">{{ $comment->body }}</p>
+                                </div>
+                            </div>
                         @endforeach
-                    </ul>
+                    </div>
                 @endif
 
-                <form method="POST" action="{{ route('instructor.class-feed.comment', $post) }}" class="mt-3 flex flex-wrap gap-2">
+                <form method="POST" action="{{ route('instructor.class-feed.comment', $post) }}" class="su-form-actions" style="margin-top:14px;align-items:stretch">
                     @csrf
-                    <input type="text" name="body" required maxlength="1000" class="h-9 min-w-[200px] flex-1 rounded-xl border border-line px-3 text-sm"
-                           placeholder="{{ $isRtl ? 'أضف تعليقاً…' : 'Add a comment…' }}">
-                    <button class="h-9 rounded-xl border border-line px-3 text-xs font-bold">{{ $isRtl ? 'تعليق' : 'Comment' }}</button>
+                    <input type="text" name="body" required maxlength="1000" class="su-input" style="flex:1;min-width:180px"
+                           placeholder="{{ __('instructor.tc_comment_ph') }}">
+                    <button type="submit" class="su-btn" style="height:40px">{{ __('instructor.tc_comment') }}</button>
                 </form>
-            </li>
+            </article>
         @empty
-            <li class="rounded-2xl border border-dashed border-line px-4 py-10 text-center text-sm text-muted">
-                {{ $isRtl ? 'لا منشورات بعد في مجتمع هذا الفصل.' : 'No posts in this class community yet.' }}
-            </li>
+            <div class="su-empty">
+                <i class="fas fa-comments" aria-hidden="true"></i>
+                <p>{{ __('instructor.tc_no_community_posts') }}</p>
+            </div>
         @endforelse
-    </ul>
+    </div>
 </div>
 @endsection

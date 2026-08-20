@@ -1,18 +1,32 @@
 @extends('layouts.app')
 
-@section('title', 'تعديل الاختبار')
-@section('header', 'تعديل الاختبار: ' . $exam->title)
+@section('title', __('instructor.edit_exam'))
+@section('page_title', __('instructor.edit_exam'))
 
 @section('content')
-<div class="space-y-6">
-    <div class="rounded-2xl p-5 sm:p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">تعديل الاختبار</h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">تعديل معلومات الاختبار والإعدادات</p>
-            </div>
-            <a href="{{ route('instructor.exams.show', $exam) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                <i class="fas fa-arrow-right"></i> العودة
+@php
+    $isRtl = app()->getLocale() === 'ar';
+@endphp
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.exams.index') }}">{{ __('instructor.my_exams') }}</a>
+                <span>/</span>
+                <a href="{{ route('instructor.exams.show', $exam) }}">{{ Str::limit($exam->title, 40) }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ __('common.edit') }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-edit su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.edit_exam') }}
+            </h1>
+            <p class="su-page-head__sub">{{ $exam->title }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.exams.show', $exam) }}" class="su-btn">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.back') }}
             </a>
         </div>
     </div>
@@ -20,177 +34,121 @@
     <form action="{{ route('instructor.exams.update', $exam) }}" method="POST">
         @csrf
         @method('PUT')
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div class="xl:col-span-2 space-y-6">
-                <div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40">
-                        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">معلومات الاختبار</h3>
-                    </div>
-                    <div class="p-6 space-y-6">
-                        <div>
-                            <label for="title" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">عنوان الاختبار <span class="text-red-500">*</span></label>
-                            <input type="text" name="title" id="title" value="{{ old('title', $exam->title) }}" required
-                                   class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100"
-                                   placeholder="مثال: اختبار الوحدة الأولى">
-                            @error('title')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+        <div class="su-detail-grid">
+            <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+                <section class="su-card">
+                    <h2 class="su-card__title"><i class="fas fa-info-circle" aria-hidden="true"></i> {{ __('instructor.exam_info') }}</h2>
+                    <div class="su-form-grid" style="grid-template-columns:1fr 1fr">
+                        <div class="su-field" style="grid-column:1 / -1">
+                            <label for="title">{{ __('instructor.title') }} <span style="color:#b91c1c">*</span></label>
+                            <input type="text" name="title" id="title" value="{{ old('title', $exam->title) }}" required class="su-input"
+                                   placeholder="{{ __('instructor.exam_title_placeholder') }}">
+                            @error('title')<p class="su-field-error">{{ $message }}</p>@enderror
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label for="advanced_course_id" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">الكورس</label>
-                                <select name="advanced_course_id" id="advanced_course_id" onchange="loadLessons()"
-                                        class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                                    <option value="">اختر الكورس</option>
-                                    @foreach($courses as $course)
-                                        <option value="{{ $course->id }}" {{ old('advanced_course_id', $exam->advanced_course_id) == $course->id ? 'selected' : '' }}>{{ $course->title }}</option>
-                                    @endforeach
-                                </select>
-                                @error('advanced_course_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                            </div>
-                            <div>
-                                <label for="course_lesson_id" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">الدرس (اختياري)</label>
-                                <select name="course_lesson_id" id="course_lesson_id"
-                                        class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                                    <option value="">اختبار عام للكورس</option>
-                                    @foreach($lessons as $lesson)
-                                        <option value="{{ $lesson->id }}" {{ old('course_lesson_id', $exam->course_lesson_id) == $lesson->id ? 'selected' : '' }}>{{ $lesson->title }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <label for="description" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">وصف الاختبار</label>
-                            <textarea name="description" id="description" rows="3" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100" placeholder="وصف مختصر...">{{ old('description', $exam->description) }}</textarea>
-                        </div>
-                        <div>
-                            <label for="instructions" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">تعليمات الاختبار</label>
-                            <textarea name="instructions" id="instructions" rows="4" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100" placeholder="تعليمات تظهر للطالب...">{{ old('instructions', $exam->instructions) }}</textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40">
-                        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">إعدادات التوقيت والدرجات</h3>
-                    </div>
-                    <div class="p-6">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div>
-                                <label for="duration_minutes" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">مدة الاختبار (دقيقة) <span class="text-red-500">*</span></label>
-                                <input type="number" name="duration_minutes" id="duration_minutes" value="{{ old('duration_minutes', $exam->duration_minutes) }}" min="5" max="480" required
-                                       class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                            </div>
-                            <div>
-                                <label for="total_marks" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">الدرجة الكلية <span class="text-red-500">*</span></label>
-                                <input type="number" name="total_marks" id="total_marks" value="{{ old('total_marks', $exam->total_marks) }}" min="1" required
-                                       class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                            </div>
-                            <div>
-                                <label for="passing_marks" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">درجة النجاح <span class="text-red-500">*</span></label>
-                                <input type="number" name="passing_marks" id="passing_marks" value="{{ old('passing_marks', $exam->passing_marks) }}" min="0" step="0.5" required
-                                       class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                            </div>
-                            <div>
-                                <label for="attempts_allowed" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">عدد المحاولات <span class="text-red-500">*</span></label>
-                                <input type="number" name="attempts_allowed" id="attempts_allowed" value="{{ old('attempts_allowed', $exam->attempts_allowed) }}" min="1" max="10" required
-                                       class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">1–10 محاولات</p>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                            <div>
-                                <label for="start_time" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">بداية الاختبار</label>
-                                <input type="datetime-local" name="start_time" id="start_time" value="{{ old('start_time', $exam->start_time ? $exam->start_time->format('Y-m-d\TH:i') : '') }}"
-                                       class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">فارغ = متاح دائماً</p>
-                            </div>
-                            <div>
-                                <label for="end_time" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">نهاية الاختبار</label>
-                                <input type="datetime-local" name="end_time" id="end_time" value="{{ old('end_time', $exam->end_time ? $exam->end_time->format('Y-m-d\TH:i') : '') }}"
-                                       class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">فارغ = متاح دائماً</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40">
-                        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">إعدادات العرض</h3>
-                    </div>
-                    <div class="p-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-3">
-                                <h4 class="font-semibold text-slate-800 dark:text-slate-100">العرض</h4>
-                                @foreach(['randomize_questions' => 'خلط ترتيب الأسئلة', 'randomize_options' => 'خلط ترتيب الخيارات', 'show_results_immediately' => 'عرض النتيجة فوراً', 'show_correct_answers' => 'عرض الإجابات الصحيحة', 'show_explanations' => 'عرض شرح الإجابات', 'allow_review' => 'السماح بمراجعة الإجابات'] as $name => $label)
-                                    <label class="flex items-center gap-3 cursor-pointer">
-                                        <input type="checkbox" name="{{ $name }}" value="1" {{ old($name, $exam->$name) ? 'checked' : '' }}
-                                               class="w-5 h-5 rounded border-slate-300 text-sky-500 focus:ring-sky-500/20">
-                                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ $label }}</span>
-                                    </label>
+                        <div class="su-field">
+                            <label for="advanced_course_id">{{ __('instructor.course_label') }}</label>
+                            <select name="advanced_course_id" id="advanced_course_id" onchange="loadLessons()" class="su-select">
+                                <option value="">{{ __('instructor.choose_course') }}</option>
+                                @foreach($courses as $course)
+                                    <option value="{{ $course->id }}" {{ old('advanced_course_id', $exam->advanced_course_id) == $course->id ? 'selected' : '' }}>{{ $course->title }}</option>
                                 @endforeach
-                            </div>
-                            <div class="space-y-3">
-                                <h4 class="font-semibold text-slate-800 dark:text-slate-100">الحالة</h4>
-                                <label class="flex items-center gap-3 cursor-pointer">
-                                    <input type="checkbox" name="is_active" value="1" {{ old('is_active', $exam->is_active) ? 'checked' : '' }}
-                                           class="w-5 h-5 rounded border-slate-300 text-sky-500 focus:ring-sky-500/20">
-                                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">اختبار نشط</span>
-                                </label>
-                            </div>
+                            </select>
+                            @error('advanced_course_id')<p class="su-field-error">{{ $message }}</p>@enderror
+                        </div>
+                        <div class="su-field">
+                            <label for="course_lesson_id">{{ __('instructor.lesson_optional') }}</label>
+                            <select name="course_lesson_id" id="course_lesson_id" class="su-select">
+                                <option value="">{{ __('instructor.general_exam') }}</option>
+                                @foreach($lessons as $lesson)
+                                    <option value="{{ $lesson->id }}" {{ old('course_lesson_id', $exam->course_lesson_id) == $lesson->id ? 'selected' : '' }}>{{ $lesson->title }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="su-field" style="grid-column:1 / -1">
+                            <label for="description">{{ __('instructor.description') }}</label>
+                            <textarea name="description" id="description" rows="3" class="su-input" style="min-height:88px;resize:vertical">{{ old('description', $exam->description) }}</textarea>
+                        </div>
+                        <div class="su-field" style="grid-column:1 / -1">
+                            <label for="instructions">{{ __('instructor.exam_instructions') }}</label>
+                            <textarea name="instructions" id="instructions" rows="4" class="su-input" style="min-height:110px;resize:vertical">{{ old('instructions', $exam->instructions) }}</textarea>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40">
-                        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">إعدادات السايدبار</h3>
-                    </div>
-                    <div class="p-6 space-y-4">
-                        <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" name="show_in_sidebar" value="1" {{ old('show_in_sidebar', $exam->show_in_sidebar ?? true) ? 'checked' : '' }}
-                                   class="w-5 h-5 rounded border-slate-300 text-sky-500 focus:ring-sky-500/20">
-                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">إظهار الاختبار في السايدبار</span>
-                        </label>
-                        <div>
-                            <label for="sidebar_position" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">موضع في السايدبار (1–10)</label>
-                            <input type="number" name="sidebar_position" id="sidebar_position" value="{{ old('sidebar_position', $exam->sidebar_position ?? 1) }}" min="1" max="10"
-                                   class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">الرقم الأصغر يظهر أولاً</p>
+                <section class="su-card">
+                    <h2 class="su-card__title"><i class="fas fa-clock" aria-hidden="true"></i> {{ __('instructor.time_and_marks') }}</h2>
+                    <div class="su-form-grid" style="grid-template-columns:1fr 1fr 1fr">
+                        <div class="su-field">
+                            <label for="duration_minutes">{{ __('instructor.duration_minutes') }} ({{ __('instructor.minute_unit') }}) <span style="color:#b91c1c">*</span></label>
+                            <input type="number" name="duration_minutes" id="duration_minutes" value="{{ old('duration_minutes', $exam->duration_minutes) }}" min="5" max="480" required class="su-input">
+                        </div>
+                        <div class="su-field">
+                            <label for="total_marks">{{ __('instructor.total_marks') }} <span style="color:#b91c1c">*</span></label>
+                            <input type="number" name="total_marks" id="total_marks" value="{{ old('total_marks', $exam->total_marks) }}" min="1" required class="su-input">
+                        </div>
+                        <div class="su-field">
+                            <label for="passing_marks">{{ __('instructor.passing_marks') }} <span style="color:#b91c1c">*</span></label>
+                            <input type="number" name="passing_marks" id="passing_marks" value="{{ old('passing_marks', $exam->passing_marks) }}" min="0" step="0.5" required class="su-input">
+                        </div>
+                        <div class="su-field">
+                            <label for="attempts_allowed">{{ __('instructor.attempts_allowed') }} <span style="color:#b91c1c">*</span></label>
+                            <input type="number" name="attempts_allowed" id="attempts_allowed" value="{{ old('attempts_allowed', $exam->attempts_allowed) }}" min="1" max="10" required class="su-input">
+                            <p style="margin:6px 0 0;font-size:12px;color:var(--su-ink-40)">1–10</p>
+                        </div>
+                        <div class="su-field">
+                            <label for="start_time">{{ __('instructor.start_time') }}</label>
+                            <input type="datetime-local" name="start_time" id="start_time" value="{{ old('start_time', $exam->start_time ? $exam->start_time->format('Y-m-d\TH:i') : '') }}" class="su-input">
+                        </div>
+                        <div class="su-field">
+                            <label for="end_time">{{ __('instructor.end_time') }}</label>
+                            <input type="datetime-local" name="end_time" id="end_time" value="{{ old('end_time', $exam->end_time ? $exam->end_time->format('Y-m-d\TH:i') : '') }}" class="su-input">
                         </div>
                     </div>
-                </div>
+                </section>
+
+                <section class="su-card">
+                    <h2 class="su-card__title"><i class="fas fa-sliders-h" aria-hidden="true"></i> {{ __('instructor.display_settings') }}</h2>
+                    <div class="su-chip-row" style="flex-wrap:wrap;gap:10px;margin-bottom:16px">
+                        @foreach([
+                            'randomize_questions' => __('instructor.randomize_questions'),
+                            'randomize_options' => __('instructor.randomize_options'),
+                            'show_results_immediately' => __('instructor.show_results_immediately'),
+                            'show_correct_answers' => __('instructor.show_correct_answers'),
+                            'show_explanations' => __('instructor.show_explanations'),
+                            'allow_review' => __('instructor.allow_review'),
+                            'is_active' => __('instructor.exam_active'),
+                            'show_in_sidebar' => __('instructor.show_in_sidebar'),
+                        ] as $name => $label)
+                            <label class="su-chip" style="cursor:pointer;height:auto;padding:10px 12px">
+                                <input type="checkbox" name="{{ $name }}" value="1" {{ old($name, $exam->$name) ? 'checked' : '' }} style="margin-inline-end:8px">
+                                {{ $label }}
+                            </label>
+                        @endforeach
+                    </div>
+                    <div class="su-field" style="max-width:12rem">
+                        <label for="sidebar_position">{{ __('instructor.sidebar_position') }}</label>
+                        <input type="number" name="sidebar_position" id="sidebar_position" value="{{ old('sidebar_position', $exam->sidebar_position ?? 1) }}" min="1" max="10" class="su-input">
+                    </div>
+                </section>
             </div>
 
-            <div class="space-y-6">
-                <div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40">
-                        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">معلومات سريعة</h3>
-                    </div>
-                    <div class="p-6">
-                        <div class="p-4 rounded-xl border border-sky-200 bg-sky-50 dark:bg-sky-900/30">
-                            <div class="flex items-center gap-2 mb-2">
-                                <i class="fas fa-info-circle text-sky-600"></i>
-                                <span class="text-sm font-semibold text-sky-800">نصائح</span>
-                            </div>
-                            <ul class="text-sm text-sky-700 space-y-1.5">
-                                <li>• يمكنك تعديل جميع معلومات الاختبار</li>
-                                <li>• احفظ التغييرات قبل الخروج</li>
-                                <li>• إدارة الأسئلة من صفحة عرض الاختبار</li>
-                            </ul>
-                        </div>
-                    </div>
+            <aside style="display:flex;flex-direction:column;gap:16px;min-width:0">
+                <div class="su-card">
+                    <h2 class="su-card__title"><i class="fas fa-lightbulb" aria-hidden="true"></i> {{ __('instructor.tips') }}</h2>
+                    <ul class="su-meta-list" style="font-size:13px;color:var(--su-ink-40)">
+                        <li>{{ __('instructor.edit_exam_tip_1') }}</li>
+                        <li>{{ __('instructor.edit_exam_tip_2') }}</li>
+                        <li>{{ __('instructor.edit_exam_tip_3') }}</li>
+                    </ul>
                 </div>
-                <div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                    <div class="p-6 space-y-3">
-                        <button type="submit" class="w-full px-4 py-3 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                            <i class="fas fa-save ml-2"></i> حفظ التغييرات
-                        </button>
-                        <a href="{{ route('instructor.exams.show', $exam) }}" class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors block text-center">
-                            إلغاء
-                        </a>
-                    </div>
+                <div class="su-card" style="display:flex;flex-direction:column;gap:8px">
+                    <button type="submit" class="su-btn su-btn--primary" style="justify-content:center">
+                        <i class="fas fa-save" aria-hidden="true"></i>
+                        {{ __('instructor.save_changes') }}
+                    </button>
+                    <a href="{{ route('instructor.exams.show', $exam) }}" class="su-btn" style="justify-content:center">{{ __('common.cancel') }}</a>
                 </div>
-            </div>
+            </aside>
         </div>
     </form>
 </div>
@@ -200,12 +158,12 @@
 function loadLessons() {
     var courseId = document.getElementById('advanced_course_id').value;
     var lessonSelect = document.getElementById('course_lesson_id');
-    lessonSelect.innerHTML = '<option value="">اختبار عام للكورس</option>';
+    lessonSelect.innerHTML = '<option value="">' + @json(__('instructor.general_exam')) + '</option>';
     if (courseId) {
         fetch('/instructor/api/courses/' + courseId + '/lessons-list')
             .then(function(r) { return r.json(); })
             .then(function(lessons) {
-                lessons.forEach(function(lesson) {
+                (Array.isArray(lessons) ? lessons : []).forEach(function(lesson) {
                     var option = document.createElement('option');
                     option.value = lesson.id;
                     option.textContent = lesson.title;

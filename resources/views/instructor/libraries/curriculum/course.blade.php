@@ -1,38 +1,66 @@
 @extends('layouts.app')
 
-@section('title', 'منهج: '.$course->title)
-@section('header', 'منهج الكورس')
+@section('title', __('instructor.lib_curriculum_title') . ': ' . $course->title)
+@section('page_title', $course->title)
 
 @section('content')
-<div class="space-y-5">
-    <section class="flex flex-wrap items-end justify-between gap-4">
-        <div>
-            <p class="text-xs font-medium text-slate-500">
-                <a href="{{ route('instructor.libraries.curriculum.index') }}" class="hover:text-[#0B3D91]">مكتبة المناهج</a>
-                · {{ $course->academicSubject?->academicYear?->name }}
-                · {{ $course->academicSubject?->name }}
-            </p>
-            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{{ $course->title }}</h2>
-            <p class="mt-1 text-sm text-slate-500">أقسام المنهج وعناصر المحتوى — للعرض فقط.</p>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.libraries.curriculum.index') }}">{{ __('instructor.lib_curriculum_title') }}</a>
+                <span>/</span>
+                <span>{{ $course->academicSubject?->academicYear?->name }}</span>
+                <span>/</span>
+                <span>{{ $course->academicSubject?->name }}</span>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-layer-group su-page-head__ico" aria-hidden="true"></i>
+                {{ $course->title }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.lib_curriculum_course_sub') }}</p>
         </div>
-        <a href="{{ route('instructor.libraries.curriculum.index') }}" class="inline-flex h-9 items-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700">رجوع</a>
-    </section>
-
-    <div class="grid gap-3 sm:grid-cols-3">
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><div class="text-xs text-slate-500">أقسام</div><div class="mt-1 text-2xl font-semibold text-[#0B3D91]">{{ $course->sections->count() }}</div></div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><div class="text-xs text-slate-500">عناصر</div><div class="mt-1 text-2xl font-semibold text-[#0B3D91]">{{ $course->sections->sum(fn ($s) => $s->items->count()) }}</div></div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><div class="text-xs text-slate-500">محاضرات</div><div class="mt-1 text-2xl font-semibold text-[#0B3D91]">{{ $course->lectures->count() }}</div></div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.libraries.curriculum.index') }}" class="su-btn">
+                <i class="fas fa-arrow-{{ app()->getLocale() === 'ar' ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.back') }}
+            </a>
+        </div>
     </div>
 
+    <section class="su-kpi-row su-kpi-row--3" style="margin-bottom:20px">
+        <div class="su-kpi su-kpi--1">
+            <div class="su-kpi__l">{{ __('instructor.lib_curriculum_kpi_sections') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($course->sections->count()) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-folder" aria-hidden="true"></i></div>
+            </div>
+        </div>
+        <div class="su-kpi su-kpi--2">
+            <div class="su-kpi__l">{{ __('instructor.lib_curriculum_kpi_items') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($course->sections->sum(fn ($s) => $s->items->count())) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-list" aria-hidden="true"></i></div>
+            </div>
+        </div>
+        <div class="su-kpi su-kpi--3">
+            <div class="su-kpi__l">{{ __('instructor.lib_curriculum_kpi_lectures') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($course->lectures->count()) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i></div>
+            </div>
+        </div>
+    </section>
+
     @forelse($course->sections as $section)
-        <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div class="border-b border-slate-100 bg-slate-50 px-4 py-3">
-                <h3 class="font-semibold text-slate-900">{{ $section->title }}</h3>
+        <section class="su-card su-card--flush" style="margin-bottom:16px">
+            <div style="padding:14px 16px;border-bottom:0.5px solid var(--su-line)">
+                <h3 class="su-card__title" style="margin:0">{{ $section->title }}</h3>
                 @if($section->description)
-                    <p class="mt-0.5 text-xs text-slate-500">{{ $section->description }}</p>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--su-ink-40)">{{ $section->description }}</p>
                 @endif
             </div>
-            <ul class="divide-y divide-slate-100">
+            <div class="su-list" style="padding:12px">
                 @forelse($section->items as $item)
                     @php
                         $related = $item->item;
@@ -40,21 +68,27 @@
                             ?? $related->name
                             ?? (class_basename((string) $item->item_type).' #'.$item->item_id);
                     @endphp
-                    <li class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
-                        <div>
-                            <span class="font-medium text-slate-900">{{ $label }}</span>
-                            <span class="ms-2 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-500">{{ class_basename((string) $item->item_type) }}</span>
+                    <div class="su-list-item">
+                        <span class="su-list-item__ico su-soft-1"><i class="fas fa-puzzle-piece" aria-hidden="true"></i></span>
+                        <div class="su-list-item__body">
+                            <div class="su-list-item__title">{{ $label }}</div>
+                            <div class="su-list-item__meta">
+                                <span class="su-chip" style="height:22px;font-size:10px;text-transform:uppercase">{{ class_basename((string) $item->item_type) }}</span>
+                                {{ __('instructor.lib_curriculum_order', ['order' => $item->order]) }}
+                            </div>
                         </div>
-                        <span class="text-xs text-slate-500">ترتيب {{ $item->order }}</span>
-                    </li>
+                    </div>
                 @empty
-                    <li class="px-4 py-6 text-sm text-slate-500">لا عناصر في هذا القسم.</li>
+                    <div class="su-empty" style="padding:24px">
+                        <p>{{ __('instructor.lib_curriculum_no_section_items') }}</p>
+                    </div>
                 @endforelse
-            </ul>
-        </article>
+            </div>
+        </section>
     @empty
-        <div class="rounded-2xl border border-dashed border-slate-200 px-4 py-12 text-center text-slate-500">
-            لا أقسام منهج لهذا الكورس بعد.
+        <div class="su-empty">
+            <i class="fas fa-folder-open" aria-hidden="true"></i>
+            <p>{{ __('instructor.lib_curriculum_no_sections') }}</p>
         </div>
     @endforelse
 </div>

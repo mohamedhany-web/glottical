@@ -1085,7 +1085,26 @@ class CheckoutController extends Controller
             try {
                 \App\Services\TutoringGroupCheckoutService::fulfillApprovedOrder($order->fresh());
             } catch (\Throwable $e) {
-                Log::warning('Tutoring fulfill failed after online payment: '.$e->getMessage(), ['order_id' => $order->id]);
+                Log::error('Tutoring fulfill failed after online payment: '.$e->getMessage(), [
+                    'order_id' => $order->id,
+                    'exception' => $e::class,
+                ]);
+
+                try {
+                    \App\Services\TutoringGroupCheckoutService::fulfillApprovedOrder($order->fresh());
+                } catch (\Throwable $retry) {
+                    Log::critical('Tutoring fulfill retry failed after online payment: '.$retry->getMessage(), [
+                        'order_id' => $order->id,
+                    ]);
+
+                    $marker = '[TUTORING_FULFILL_FAILED] '.$retry->getMessage();
+                    $existingNotes = (string) ($order->notes ?? '');
+                    if (! str_contains($existingNotes, '[TUTORING_FULFILL_FAILED]')) {
+                        $order->update([
+                            'notes' => trim($existingNotes !== '' ? $existingNotes."\n".$marker : $marker),
+                        ]);
+                    }
+                }
             }
         }
 

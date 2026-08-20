@@ -107,4 +107,34 @@ class AppTimezoneTest extends TestCase
         $utc = AppTimezone::parseAppointmentInput('2026-01-15 16:00:00', 'America/New_York');
         $this->assertSame('16:00', $utc->format('H:i'));
     }
+
+    public function test_slot_quality_bands_match_coordination_tower(): void
+    {
+        $this->assertSame(AppTimezone::QUALITY_GOOD, AppTimezone::slotQualityForHour(9));
+        $this->assertSame(AppTimezone::QUALITY_GOOD, AppTimezone::slotQualityForHour(19));
+        $this->assertSame(AppTimezone::QUALITY_CAUTION, AppTimezone::slotQualityForHour(6));
+        $this->assertSame(AppTimezone::QUALITY_CAUTION, AppTimezone::slotQualityForHour(21));
+        $this->assertSame(AppTimezone::QUALITY_POOR, AppTimezone::slotQualityForHour(2));
+        $this->assertSame(AppTimezone::QUALITY_POOR, AppTimezone::slotQualityForHour(23));
+    }
+
+    public function test_slot_quality_uses_viewer_local_hour(): void
+    {
+        // 18:00 Cairo = 16:00 UTC in January = 11:00 New York → good
+        $utc = AppTimezone::wallClockToUtc('2026-01-15', '18:00', 'Africa/Cairo');
+        $this->assertSame(AppTimezone::QUALITY_GOOD, AppTimezone::slotQuality($utc, 'America/New_York'));
+
+        // 02:00 Cairo = 00:00 UTC = 19:00 previous evening NY? Jan 15 02:00 Cairo = Jan 15 00:00 UTC = Jan 14 19:00 NY → good
+        // Use late NY night: 08:00 Cairo = 06:00 UTC = 01:00 NY → poor
+        $late = AppTimezone::wallClockToUtc('2026-01-15', '08:00', 'Africa/Cairo');
+        $this->assertSame(AppTimezone::QUALITY_POOR, AppTimezone::slotQuality($late, 'America/New_York'));
+    }
+
+    public function test_us_state_maps_to_timezone(): void
+    {
+        $this->assertSame('America/New_York', AppTimezone::timezoneForUsState('نيويورك'));
+        $this->assertSame('America/Los_Angeles', AppTimezone::timezoneForUsState('كاليفورنيا'));
+        $this->assertSame('America/Chicago', AppTimezone::timezoneForUsState('تكساس'));
+        $this->assertNull(AppTimezone::timezoneForUsState(''));
+    }
 }

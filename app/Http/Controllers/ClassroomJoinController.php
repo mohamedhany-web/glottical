@@ -26,8 +26,10 @@ class ClassroomJoinController extends Controller
             abort(404, 'كود الغرفة غير صالح.');
         }
 
-        $roomName = 'Glottical-'.$code;
         $meeting = ClassroomMeeting::where('code', $code)->first();
+        $roomName = $meeting
+            ? $meeting->jitsiRoomName()
+            : ClassroomMeeting::canonicalRoomName($code);
         $jitsiDomain = LiveSetting::getJitsiDomain();
         $joinUrl = url('classroom/join/'.$code);
         $maxParticipants = (int) ($meeting?->max_participants ?? 25);

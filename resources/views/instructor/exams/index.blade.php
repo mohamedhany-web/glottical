@@ -1,165 +1,156 @@
 @extends('layouts.app')
 
 @section('title', __('instructor.exams'))
-@section('header', __('instructor.exams'))
+@section('page_title', __('instructor.exams'))
 
 @section('content')
-<div class="space-y-6">
-    <div class="rounded-2xl p-6 text-white shadow-lg border border-white/10 bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="min-w-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
-                        <i class="fas fa-clipboard-check text-lg"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <h1 class="text-xl sm:text-2xl font-black leading-tight truncate">{{ __('instructor.exams') }}</h1>
-                        <p class="text-sm text-white/90 mt-0.5">{{ __('instructor.manage_exams_attempts') }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="flex flex-wrap items-center gap-2 shrink-0">
-                <a href="{{ route('instructor.courses.index') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/20 border border-white/20 text-white font-semibold transition-colors">
-                    <i class="fas fa-book"></i>
-                    <span>{{ __('instructor.courses') }}</span>
-                </a>
-                <a href="{{ route('instructor.exams.create') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-indigo-700 hover:bg-white/90 border border-white/20 font-extrabold transition-colors">
-                    <i class="fas fa-plus"></i>
-                    <span>{{ __('instructor.create_exam') }}</span>
-                </a>
-            </div>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <h1 class="su-page-head__title">
+                <i class="fas fa-clipboard-check su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.exams') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.manage_exams_attempts') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.courses.index') }}" class="su-btn">
+                <i class="fas fa-book" aria-hidden="true"></i>
+                {{ __('instructor.courses') }}
+            </a>
+            <a href="{{ route('instructor.exams.create') }}" class="su-btn su-btn--primary">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                {{ __('instructor.create_exam') }}
+            </a>
         </div>
     </div>
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="rounded-xl p-4 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">{{ __('instructor.total') }}</p>
-                    <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['total'] ?? 0 }}</p>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-sky-100 flex items-center justify-center text-sky-600"><i class="fas fa-clipboard-check"></i></div>
+    <section class="su-kpi-row" style="margin-bottom:20px">
+        <div class="su-kpi su-kpi--1">
+            <div class="su-kpi__l">{{ __('instructor.total') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['total'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-clipboard-check" aria-hidden="true"></i></div>
             </div>
         </div>
-        <div class="rounded-xl p-4 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">{{ __('instructor.active') }}</p>
-                    <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['active'] ?? 0 }}</p>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600"><i class="fas fa-check-circle"></i></div>
+        <div class="su-kpi su-kpi--2">
+            <div class="su-kpi__l">{{ __('instructor.active') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['active'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
             </div>
         </div>
-        <div class="rounded-xl p-4 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">{{ __('instructor.attempts') }}</p>
-                    <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['total_attempts'] ?? 0 }}</p>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center text-violet-600"><i class="fas fa-redo"></i></div>
+        <div class="su-kpi su-kpi--3">
+            <div class="su-kpi__l">{{ __('instructor.attempts') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['total_attempts'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-redo" aria-hidden="true"></i></div>
             </div>
         </div>
-        <div class="rounded-xl p-4 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">{{ __('instructor.completed_attempts') }}</p>
-                    <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['completed_attempts'] ?? 0 }}</p>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600"><i class="fas fa-check-double"></i></div>
+        <div class="su-kpi su-kpi--4">
+            <div class="su-kpi__l">{{ __('instructor.completed_attempts') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['completed_attempts'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-check-double" aria-hidden="true"></i></div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-5">
-        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-                <label for="course_id" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.online_course') }}</label>
-                <select name="course_id" id="course_id" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
+    <section class="su-card" style="margin-bottom:20px">
+        <form method="GET" class="su-form-grid">
+            <div class="su-field">
+                <label for="course_id">{{ __('instructor.online_course') }}</label>
+                <select name="course_id" id="course_id" class="su-select">
                     <option value="">{{ __('instructor.all_online_courses') }}</option>
                     @foreach($courses as $course)
                         <option value="{{ $course->id }}" {{ request('course_id') == $course->id ? 'selected' : '' }}>{{ $course->title }}</option>
                     @endforeach
                 </select>
             </div>
-            <div>
-                <label for="is_active" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('common.status') }}</label>
-                <select name="is_active" id="is_active" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
+            <div class="su-field">
+                <label for="is_active">{{ __('common.status') }}</label>
+                <select name="is_active" id="is_active" class="su-select">
                     <option value="">{{ __('instructor.all') }}</option>
                     <option value="1" {{ request('is_active') == '1' ? 'selected' : '' }}>{{ __('instructor.active') }}</option>
                     <option value="0" {{ request('is_active') == '0' ? 'selected' : '' }}>{{ __('instructor.inactive') }}</option>
                 </select>
             </div>
-            <div>
-                <label for="search" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('common.search') }}</label>
-                <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="{{ __('instructor.search_placeholder') }}" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
+            <div class="su-field">
+                <label for="search">{{ __('common.search') }}</label>
+                <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="{{ __('instructor.search_placeholder') }}" class="su-input">
             </div>
-            <div class="flex items-end gap-2">
-                <button type="submit" class="px-4 py-2.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-search ml-1"></i> {{ __('common.search') }}
+            <div class="su-form-actions">
+                <button type="submit" class="su-btn su-btn--primary" style="flex:1;justify-content:center;height:40px">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    {{ __('common.search') }}
                 </button>
                 @if(request()->anyFilled(['course_id', 'is_active', 'search']))
-                    <a href="{{ route('instructor.exams.index') }}" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                        <i class="fas fa-times"></i>
+                    <a href="{{ route('instructor.exams.index') }}" class="su-btn" style="height:40px;width:40px;padding:0;justify-content:center" title="{{ __('common.reset') ?? 'Reset' }}">
+                        <i class="fas fa-times" aria-hidden="true"></i>
                     </a>
                 @endif
             </div>
         </form>
-    </div>
+    </section>
 
     @if($exams->count() > 0)
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div class="su-list">
             @foreach($exams as $exam)
-                <div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm hover:border-sky-300 hover:shadow-md transition-all overflow-hidden flex flex-col">
-                    <div class="p-5 flex-1 flex flex-col">
-                        <div class="flex items-start justify-between gap-2 mb-2">
-                            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 line-clamp-2 flex-1 min-w-0">{{ $exam->title }}</h3>
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold shrink-0 {{ $exam->is_active ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 text-amber-700' }}">
+                <article class="su-list-item">
+                    <span class="su-list-item__ico {{ $exam->is_active ? 'su-soft-2' : 'su-soft-4' }}">
+                        <i class="fas fa-clipboard-check" aria-hidden="true"></i>
+                    </span>
+                    <div class="su-list-item__body">
+                        <div class="su-chip-row" style="margin:0 0 6px">
+                            <span class="su-chip {{ $exam->is_active ? 'su-chip--ok' : 'su-chip--warn' }}">
                                 {{ $exam->is_active ? __('instructor.active_status') : __('instructor.inactive_status') }}
                             </span>
+                            @if($exam->advancedCourse)
+                                <span class="su-chip">{{ Str::limit($exam->advancedCourse->title, 36) }}</span>
+                            @endif
                         </div>
+                        <div class="su-list-item__title">{{ $exam->title }}</div>
                         @if($exam->description)
-                            <p class="text-sm text-slate-600 dark:text-slate-400 mb-3 line-clamp-2">{{ $exam->description }}</p>
+                            <p style="margin:4px 0 0;font-size:13px;color:var(--su-ink-40)">{{ Str::limit($exam->description, 120) }}</p>
                         @endif
-                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 dark:text-slate-400 mt-auto">
-                            <span class="truncate max-w-full" title="{{ $exam->advancedCourse->title ?? '—' }}"><i class="fas fa-book text-sky-500 ml-1"></i> {{ $exam->advancedCourse->title ?? '—' }}</span>
-                            <span>{{ $exam->duration_minutes }} د</span>
-                            <span>{{ $exam->total_marks }} {{ __('instructor.marks') }}</span>
-                            <span>{{ $exam->questions_count }} {{ __('instructor.question_single') }}</span>
-                            <span>{{ $exam->attempts_count }} {{ __('instructor.attempt_single') }}</span>
+                        <div class="su-list-item__meta">
+                            {{ $exam->duration_minutes }} {{ __('instructor.minutes') }} ·
+                            {{ $exam->total_marks }} {{ __('instructor.marks') }} ·
+                            {{ $exam->questions_count }} {{ __('instructor.question_single') }} ·
+                            {{ $exam->attempts_count }} {{ __('instructor.attempt_single') }}
                         </div>
                     </div>
-                    <div class="px-5 py-4 border-t border-slate-100 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/50 flex flex-wrap items-center gap-2">
-                        <a href="{{ route('instructor.exams.questions.manage', $exam) }}" class="inline-flex items-center gap-1.5 px-3 py-2 bg-violet-600 dark:bg-violet-700 hover:bg-violet-600 text-white rounded-lg font-semibold text-sm transition-colors">
-                            <i class="fas fa-list"></i> {{ __('instructor.questions') }}
+                    <div class="su-list-item__actions">
+                        <a href="{{ route('instructor.exams.questions.manage', $exam) }}" class="su-btn" style="height:32px">
+                            <i class="fas fa-list" aria-hidden="true"></i>
+                            {{ __('instructor.questions') }}
                         </a>
-                        <a href="{{ route('instructor.exams.show', $exam) }}" class="inline-flex items-center gap-1.5 px-3 py-2 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-lg font-semibold text-sm transition-colors">
-                            <i class="fas fa-eye"></i> {{ __('common.view') }}
+                        <a href="{{ route('instructor.exams.show', $exam) }}" class="su-btn su-btn--primary" style="height:32px">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                            {{ __('common.view') }}
                         </a>
-                        <form action="{{ route('instructor.exams.destroy', $exam) }}" method="POST" class="inline" onsubmit="return confirm('{{ __('instructor.confirm_delete_exam') }}');">
+                        <form action="{{ route('instructor.exams.destroy', $exam) }}" method="POST" onsubmit="return confirm(@json(__('instructor.confirm_delete_exam')));">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 text-red-600 rounded-lg font-semibold text-sm transition-colors border border-red-100 hover:border-red-200" title="{{ __('instructor.delete_exam_title') }}">
-                                <i class="fas fa-trash-alt"></i> {{ __('common.delete') }}
+                            <button type="submit" class="su-icon-link" style="color:#b91c1c" title="{{ __('instructor.delete_exam_title') }}">
+                                <i class="fas fa-trash-alt" aria-hidden="true"></i>
                             </button>
                         </form>
                     </div>
-                </div>
+                </article>
             @endforeach
         </div>
-        <div class="flex justify-center">
-            <div class="rounded-xl p-3 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">{{ $exams->links() }}</div>
-        </div>
+        @if(method_exists($exams, 'links') && $exams->hasPages())
+            <div class="su-pager" style="margin-top:16px">{{ $exams->links() }}</div>
+        @endif
     @else
-        <div class="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 py-12 text-center">
-            <div class="w-16 h-16 rounded-2xl bg-sky-100 flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-clipboard-check text-2xl text-sky-500"></i>
-            </div>
-            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">{{ __('instructor.no_exams') }}</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">{{ __('instructor.no_exams_description') }}</p>
-            <a href="{{ route('instructor.exams.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                <i class="fas fa-plus"></i> {{ __('instructor.create_exam') }}
+        <div class="su-empty">
+            <i class="fas fa-clipboard-check" aria-hidden="true"></i>
+            <p><strong>{{ __('instructor.no_exams') }}</strong></p>
+            <p>{{ __('instructor.no_exams_description') }}</p>
+            <a href="{{ route('instructor.exams.create') }}" class="su-btn su-btn--primary" style="margin-top:12px">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                {{ __('instructor.create_exam') }}
             </a>
         </div>
     @endif

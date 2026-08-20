@@ -1,137 +1,134 @@
 @extends('layouts.app')
 
-@section('title', 'تعديل: ' . $lesson->title)
-@section('header', 'تعديل الدرس')
+@section('title', __('instructor.lessons_edit_title') . ': ' . $lesson->title)
+@section('page_title', __('instructor.lessons_edit_title'))
 
 @section('content')
-<div class="space-y-6">
-    <!-- الهيدر -->
-    <div class="rounded-2xl p-5 sm:p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <nav class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2 flex-wrap">
-            <a href="{{ route('instructor.courses.index') }}" class="hover:text-sky-600 transition-colors">الكورسات</a>
-            <span>/</span>
-            <a href="{{ route('instructor.courses.show', $course->id) }}" class="hover:text-sky-600 transition-colors truncate max-w-[150px]">{{ $course->title }}</a>
-            <span>/</span>
-            <a href="{{ route('instructor.courses.lessons.index', $course->id) }}" class="hover:text-sky-600 transition-colors">الدروس</a>
-            <span>/</span>
-            <span class="text-slate-700 dark:text-slate-300 font-medium">تعديل</span>
-        </nav>
-        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">تعديل الدرس</h1>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.courses.index') }}">{{ __('instructor.courses') }}</a>
+                <span>/</span>
+                <a href="{{ route('instructor.courses.show', $course->id) }}">{{ $course->title }}</a>
+                <span>/</span>
+                <a href="{{ route('instructor.courses.lessons.index', $course->id) }}">{{ __('instructor.lessons_breadcrumb') }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ __('instructor.lessons_edit_title') }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-edit su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.lessons_edit_title') }}
+            </h1>
+        </div>
     </div>
 
     @if ($errors->any())
-    <div class="rounded-xl p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 text-red-800">
-        <p class="font-semibold mb-2"><i class="fas fa-exclamation-circle ml-2"></i> يرجى تصحيح الأخطاء:</p>
-        <ul class="list-disc list-inside text-sm">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#b91c1c;font-size:13px">
+            <strong>{{ __('instructor.form_fix_errors') }}</strong>
+            <ul style="margin:8px 0 0;padding-inline-start:18px">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
     @endif
 
-    <div class="rounded-xl p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
+    <section class="su-card">
         <form action="{{ route('instructor.courses.lessons.update', [$course->id, $lesson->id]) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
-            <div class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">عنوان الدرس <span class="text-red-500">*</span></label>
-                        <input type="text" name="title" value="{{ old('title', $lesson->title) }}" required
-                               class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100"
-                               placeholder="عنوان الدرس">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">نوع الدرس <span class="text-red-500">*</span></label>
-                        <select name="type" id="lessonType" required
-                                class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100">
-                            <option value="video" {{ old('type', $lesson->type) == 'video' ? 'selected' : '' }}>فيديو</option>
-                            <option value="text" {{ old('type', $lesson->type) == 'text' ? 'selected' : '' }}>نص</option>
-                            <option value="document" {{ old('type', $lesson->type) == 'document' ? 'selected' : '' }}>ملف</option>
-                            <option value="quiz" {{ old('type', $lesson->type) == 'quiz' ? 'selected' : '' }}>اختبار</option>
-                        </select>
-                    </div>
+            <div class="su-form-grid">
+                <div class="su-field" style="grid-column:span 2">
+                    <label for="title">{{ __('instructor.lessons_title_label') }} *</label>
+                    <input type="text" name="title" id="title" value="{{ old('title', $lesson->title) }}" required class="su-input" placeholder="{{ __('instructor.lessons_title_ph') }}">
                 </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">الوصف</label>
-                    <textarea name="description" rows="3" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100"
-                              placeholder="وصف مختصر">{{ old('description', $lesson->description) }}</textarea>
+                <div class="su-field">
+                    <label for="lessonType">{{ __('instructor.lessons_type_label') }} *</label>
+                    <select name="type" id="lessonType" required class="su-select">
+                        <option value="video" {{ old('type', $lesson->type) == 'video' ? 'selected' : '' }}>{{ __('instructor.lessons_type_video') }}</option>
+                        <option value="text" {{ old('type', $lesson->type) == 'text' ? 'selected' : '' }}>{{ __('instructor.lessons_type_text') }}</option>
+                        <option value="document" {{ old('type', $lesson->type) == 'document' ? 'selected' : '' }}>{{ __('instructor.lessons_type_document') }}</option>
+                        <option value="quiz" {{ old('type', $lesson->type) == 'quiz' ? 'selected' : '' }}>{{ __('instructor.lessons_type_quiz') }}</option>
+                    </select>
                 </div>
+            </div>
 
-                <div class="video-section {{ old('type', $lesson->type) != 'video' ? 'hidden' : '' }} rounded-xl p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
-                    <h4 class="font-semibold text-slate-800 dark:text-slate-100 mb-3 flex items-center gap-2"><i class="fas fa-video text-red-500"></i> إعدادات الفيديو</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">رابط الفيديو</label>
-                            <input type="url" name="video_url" value="{{ old('video_url', $lesson->video_url) }}"
-                                   class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-sky-500 text-slate-800 dark:text-slate-100"
-                                   placeholder="https://...">
+            <div class="su-field" style="margin-top:16px">
+                <label for="description">{{ __('instructor.description') }}</label>
+                <textarea name="description" id="description" rows="3" class="su-input" style="min-height:88px;padding-top:10px" placeholder="{{ __('instructor.lessons_desc_ph') }}">{{ old('description', $lesson->description) }}</textarea>
+            </div>
+
+            <div class="video-section {{ old('type', $lesson->type) != 'video' ? 'hidden' : '' }}" style="margin-top:16px">
+                <div class="su-card su-soft-1" style="padding:16px">
+                    <h3 class="su-card__title" style="margin-bottom:12px">
+                        <i class="fas fa-video" aria-hidden="true"></i>
+                        {{ __('instructor.lessons_video_settings') }}
+                    </h3>
+                    <div class="su-form-grid">
+                        <div class="su-field">
+                            <label for="video_url">{{ __('instructor.lessons_video_url') }}</label>
+                            <input type="url" name="video_url" id="video_url" value="{{ old('video_url', $lesson->video_url) }}" class="su-input" placeholder="https://...">
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">أو رفع ملف فيديو (حتى 500MB)</label>
-                            <input type="file" name="video_file" accept="video/*"
-                                   class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100">
+                        <div class="su-field">
+                            <label for="video_file">{{ __('instructor.lessons_video_file_label') }}</label>
+                            <input type="file" name="video_file" id="video_file" accept="video/*" class="su-input">
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="text-section {{ old('type', $lesson->type) != 'text' ? 'hidden' : '' }}">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">محتوى الدرس</label>
-                    <textarea name="content" rows="8" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100"
-                              placeholder="محتوى الدرس...">{{ old('content', $lesson->content) }}</textarea>
+            <div class="text-section {{ old('type', $lesson->type) != 'text' ? 'hidden' : '' }}" style="margin-top:16px">
+                <div class="su-field">
+                    <label for="content">{{ __('instructor.lessons_content_label') }}</label>
+                    <textarea name="content" id="content" rows="8" class="su-input" style="min-height:180px;padding-top:10px" placeholder="{{ __('instructor.lessons_content_ph') }}">{{ old('content', $lesson->content) }}</textarea>
                 </div>
+            </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">مدة الدرس (دقيقة)</label>
-                        <input type="number" name="duration_minutes" value="{{ old('duration_minutes', $lesson->duration_minutes) }}" min="0"
-                               class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">الترتيب <span class="text-red-500">*</span></label>
-                        <input type="number" name="order" value="{{ old('order', $lesson->order) }}" min="0" required
-                               class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                    </div>
+            <div class="su-form-grid" style="margin-top:16px">
+                <div class="su-field">
+                    <label for="duration_minutes">{{ __('instructor.lessons_duration_label') }}</label>
+                    <input type="number" name="duration_minutes" id="duration_minutes" value="{{ old('duration_minutes', $lesson->duration_minutes) }}" min="0" class="su-input">
                 </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">مرفقات إضافية</label>
-                    <input type="file" name="attachments[]" multiple
-                           class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100">
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">حتى 40 ميجابايت لكل ملف. المرفقات الحالية تبقى مضافاً عليها الجديد.</p>
+                <div class="su-field">
+                    <label for="order">{{ __('instructor.lessons_order_label') }} *</label>
+                    <input type="number" name="order" id="order" value="{{ old('order', $lesson->order) }}" min="0" required class="su-input">
                 </div>
+            </div>
 
-                <div class="rounded-xl p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-3">
-                    <h4 class="font-semibold text-slate-800 dark:text-slate-100">خيارات الدرس</h4>
-                    <label class="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox" name="is_active" value="1" {{ old('is_active', $lesson->is_active) ? 'checked' : '' }}
-                               class="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500">
-                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">الدرس نشط</span>
+            <div class="su-field" style="margin-top:16px">
+                <label for="attachments">{{ __('instructor.lessons_attachments') }}</label>
+                <input type="file" name="attachments[]" id="attachments" multiple class="su-input">
+                <p style="margin:6px 0 0;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.lessons_attachments_edit_hint') }}</p>
+            </div>
+
+            <div class="su-card su-soft-2" style="margin-top:16px;padding:16px">
+                <h3 class="su-card__title" style="margin-bottom:12px">{{ __('instructor.lessons_options') }}</h3>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                        <input type="checkbox" name="is_active" value="1" {{ old('is_active', $lesson->is_active) ? 'checked' : '' }}>
+                        {{ __('instructor.lessons_active_check') }}
                     </label>
-                    <label class="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox" name="is_free" value="1" {{ old('is_free', $lesson->is_free) ? 'checked' : '' }}
-                               class="w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500">
-                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">درس مجاني (معاينة)</span>
+                    <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                        <input type="checkbox" name="is_free" value="1" {{ old('is_free', $lesson->is_free) ? 'checked' : '' }}>
+                        {{ __('instructor.lessons_free_check') }}
                     </label>
                 </div>
             </div>
 
-            <div class="flex flex-wrap items-center justify-between gap-4 mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
-                <a href="{{ route('instructor.courses.lessons.index', $course->id) }}"
-                   class="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-times"></i>
-                    إلغاء
+            <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:24px;padding-top:16px;border-top:0.5px solid var(--su-line)">
+                <a href="{{ route('instructor.courses.lessons.index', $course->id) }}" class="su-btn">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                    {{ __('instructor.cancel') }}
                 </a>
-                <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-save"></i>
-                    حفظ التعديلات
+                <button type="submit" class="su-btn su-btn--primary">
+                    <i class="fas fa-save" aria-hidden="true"></i>
+                    {{ __('instructor.lessons_save_edits') }}
                 </button>
             </div>
         </form>
-    </div>
+    </section>
 </div>
 
 @push('scripts')

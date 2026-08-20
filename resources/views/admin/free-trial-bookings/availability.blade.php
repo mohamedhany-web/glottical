@@ -75,7 +75,7 @@
     <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
         <div class="border-b border-line px-4 py-4 sm:px-5">
             <h3 class="text-base font-semibold text-ink">إضافة نافذة جديدة</h3>
-            <p class="mt-0.5 text-xs text-muted">مدة الشريحة غالباً 30 دقيقة — تظهر في تقويم الحجز على الموقع</p>
+            <p class="mt-0.5 text-xs text-muted">الأوقات بتوقيت الأكاديمية (مصر — القاهرة). مدة الشريحة غالباً 30 دقيقة — تظهر في تقويم الحجز على الموقع بتوقيت الزائر مع تلوين الجودة.</p>
         </div>
         <form method="post" action="{{ route('admin.free-trial-bookings.availability.store') }}" class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-6 lg:items-end">
             @csrf

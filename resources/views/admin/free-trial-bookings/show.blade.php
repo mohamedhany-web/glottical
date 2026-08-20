@@ -53,8 +53,25 @@
                 <i class="fas fa-calendar-day text-sm"></i>
             </div>
             <p class="mt-3 text-xs text-muted">الموعد</p>
-            <p class="mt-1 text-base font-semibold tabular-nums tracking-tight text-ink">{{ $booking->starts_at?->format('Y-m-d') }}</p>
-            <p class="mt-0.5 text-sm text-muted">{{ $booking->starts_at?->format('H:i') }} — {{ $booking->ends_at?->format('H:i') }}</p>
+            <p class="mt-1 text-base font-semibold tabular-nums tracking-tight text-ink">
+                <x-app-datetime :at="$booking->starts_at" :timezone="$booking->timezone" pattern="Y-m-d · g:i A" />
+            </p>
+            @if($booking->timezone || $booking->us_state)
+                <p class="mt-1 text-xs text-muted">
+                    @if($booking->us_state)ولاية: {{ $booking->us_state }} · @endif
+                    @if($booking->timezone){{ \App\Support\AppTimezone::label($booking->timezone) }}@endif
+                </p>
+            @endif
+            @php
+                $slotQuality = \App\Support\AppTimezone::slotQuality(
+                    $booking->starts_at,
+                    $booking->timezone ?: \App\Support\AppTimezone::academy()
+                );
+                $qLabels = \App\Support\AppTimezone::qualityLabels($slotQuality);
+            @endphp
+            <p class="mt-1 text-xs {{ $slotQuality === 'good' ? 'text-emerald-700' : ($slotQuality === 'caution' ? 'text-amber-700' : 'text-rose-700') }}">
+                جودة التوقيت للطالب: {{ $qLabels['ar'] }}
+            </p>
         </article>
         <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
             <div class="inline-flex size-9 items-center justify-center rounded-xl bg-metal/15 text-metal">

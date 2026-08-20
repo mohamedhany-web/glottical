@@ -126,8 +126,9 @@ class StudentEntitlementController extends Controller
 
         if ($data['action'] === 'cancel') {
             $studentEntitlement->update(['status' => StudentServiceEntitlement::STATUS_CANCELLED]);
+            StudentEntitlementService::syncLinkedSubscriptionsFromEntitlement($studentEntitlement->fresh());
 
-            return back()->with('success', 'تم إلغاء الرصيد.');
+            return back()->with('success', 'تم إلغاء الرصيد ومزامنة الاشتراك المرتبط.');
         }
 
         $units = (int) ($data['units'] ?? 1);
@@ -147,6 +148,8 @@ class StudentEntitlementController extends Controller
             $studentEntitlement->save();
         }
 
-        return back()->with('success', 'تم تعديل الرصيد.');
+        StudentEntitlementService::syncLinkedSubscriptionsFromEntitlement($studentEntitlement->fresh());
+
+        return back()->with('success', 'تم تعديل الرصيد ومزامنة الاشتراك المرتبط.');
     }
 }

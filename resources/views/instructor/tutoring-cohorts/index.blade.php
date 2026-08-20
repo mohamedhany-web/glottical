@@ -1,73 +1,111 @@
 @extends('layouts.app')
 
-@section('title', 'مركز قيادة الفصول')
-@section('page_title', 'مركز قيادة الفصول')
+@section('title', __('instructor.tc_title'))
+@section('page_title', __('instructor.tc_title'))
 
 @section('content')
-@php $isRtl = app()->getLocale() === 'ar'; @endphp
-<div class="space-y-5">
-    <section class="rounded-2xl border border-line bg-gradient-to-l from-[#0B3D91] to-[#072A66] p-5 text-white shadow-soft">
-        <p class="text-xs font-bold uppercase tracking-wide text-white/70">Command Center</p>
-        <h2 class="mt-1 text-2xl font-black">
-            {{ $isRtl ? 'صباح الخير' : 'Hello' }}, {{ $overview['instructor_name'] ?? auth()->user()->name }}
-        </h2>
-        <p class="mt-1 text-sm font-semibold text-white/85">
-            {{ $isRtl ? 'نظرة سريعة على دفعاتك الجماعية داخل المدرسة.' : 'A quick look at your school cohorts.' }}
-        </p>
-        <div class="mt-4 grid gap-3 sm:grid-cols-3">
-            <div class="rounded-xl bg-white/10 px-3 py-3 ring-1 ring-white/15">
-                <p class="text-[11px] font-bold text-white/70">{{ $isRtl ? 'الدفعات' : 'Cohorts' }}</p>
-                <p class="text-xl font-black tabular-nums">{{ $overview['cohorts_count'] ?? $cohorts->total() }}</p>
+@php
+    $instructorName = $overview['instructor_name'] ?? auth()->user()->name;
+@endphp
+
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <h1 class="su-page-head__title">
+                <i class="fas fa-chalkboard-teacher su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.tc_title') }}
+            </h1>
+            <p class="su-page-head__sub">
+                {{ __('instructor.tc_hello', ['name' => $instructorName]) }}
+                — {{ __('instructor.tc_subtitle') }}
+            </p>
+        </div>
+    </div>
+
+    <section class="su-kpi-row su-kpi-row--3" style="margin-bottom:20px">
+        <div class="su-kpi su-kpi--1">
+            <div class="su-kpi__l">{{ __('instructor.tc_cohorts') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($overview['cohorts_count'] ?? $cohorts->total()) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-layer-group" aria-hidden="true"></i></div>
             </div>
-            <div class="rounded-xl bg-white/10 px-3 py-3 ring-1 ring-white/15">
-                <p class="text-[11px] font-bold text-white/70">{{ $isRtl ? 'الطلاب' : 'Students' }}</p>
-                <p class="text-xl font-black tabular-nums">{{ $overview['students_count'] ?? 0 }}</p>
+        </div>
+        <div class="su-kpi su-kpi--2">
+            <div class="su-kpi__l">{{ __('instructor.tc_students') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($overview['students_count'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-user-graduate" aria-hidden="true"></i></div>
             </div>
-            <div class="rounded-xl bg-white/10 px-3 py-3 ring-1 ring-white/15">
-                <p class="text-[11px] font-bold text-white/70">{{ $isRtl ? 'حصص اليوم' : 'Sessions today' }}</p>
-                <p class="text-xl font-black tabular-nums">{{ $overview['sessions_today'] ?? 0 }}</p>
+        </div>
+        <div class="su-kpi su-kpi--3">
+            <div class="su-kpi__l">{{ __('instructor.tc_sessions_today') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($overview['sessions_today'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-calendar-day" aria-hidden="true"></i></div>
             </div>
         </div>
     </section>
 
-    <div class="overflow-hidden rounded-2xl border border-line bg-white shadow-soft">
-        <table class="min-w-full text-sm">
-            <thead class="border-b border-line bg-slate-50 text-xs font-semibold text-muted">
-                <tr>
-                    <th class="px-4 py-3 text-start">{{ $isRtl ? 'الدفعة / الفصل' : 'Cohort / class' }}</th>
-                    <th class="px-4 py-3 text-start">{{ $isRtl ? 'المجموعة' : 'Group' }}</th>
-                    <th class="px-4 py-3 text-start">{{ $isRtl ? 'الطلاب' : 'Students' }}</th>
-                    <th class="px-4 py-3 text-start">{{ $isRtl ? 'البداية' : 'Starts' }}</th>
-                    <th class="px-4 py-3 text-end"></th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-line">
-                @forelse($cohorts as $cohort)
+    <section class="su-card su-card--flush">
+        <div class="su-table-wrap" style="border:0;border-radius:0;background:transparent">
+            <table class="su-table">
+                <thead>
                     <tr>
-                        <td class="px-4 py-3 font-semibold text-ink">{{ $cohort->title }}</td>
-                        <td class="px-4 py-3">
-                            {{ $cohort->tutoringGroup?->title }}
-                            @if($cohort->tutoringGroup?->schoolYear)
-                                <div class="text-xs text-muted">{{ $cohort->tutoringGroup->schoolYear->name }}</div>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3 tabular-nums">
-                            {{ $cohort->students_count ?? $cohort->enrolled_count }}/{{ $cohort->capacity }}
-                        </td>
-                        <td class="px-4 py-3 tabular-nums">{{ $cohort->starts_at?->format('Y-m-d') ?: '—' }}</td>
-                        <td class="px-4 py-3 text-end">
-                            <a href="{{ route('instructor.tutoring-cohorts.show', $cohort) }}"
-                               class="inline-flex h-8 items-center rounded-lg bg-accent px-3 text-xs font-bold text-white">
-                                {{ $isRtl ? 'Command Center' : 'Open' }}
-                            </a>
-                        </td>
+                        <th>{{ __('instructor.tc_col_cohort') }}</th>
+                        <th>{{ __('instructor.tc_col_group') }}</th>
+                        <th>{{ __('instructor.tc_students') }}</th>
+                        <th>{{ __('instructor.tc_col_starts') }}</th>
+                        <th></th>
                     </tr>
-                @empty
-                    <tr><td colspan="5" class="px-4 py-10 text-center text-muted">{{ $isRtl ? 'لا توجد دفعات مرتبطة بك.' : 'No cohorts linked to you yet.' }}</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-        <div class="px-4 py-3">{{ $cohorts->links() }}</div>
-    </div>
+                </thead>
+                <tbody>
+                    @forelse($cohorts as $cohort)
+                        <tr>
+                            <td>
+                                <strong style="font-weight:600">{{ $cohort->title }}</strong>
+                            </td>
+                            <td>
+                                <div style="font-weight:500">{{ $cohort->tutoringGroup?->title ?? '—' }}</div>
+                                @if($cohort->tutoringGroup?->schoolYear)
+                                    <div style="font-size:11px;color:var(--su-ink-40);margin-top:2px">
+                                        {{ $cohort->tutoringGroup->schoolYear->name }}
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="tabular-nums">
+                                <span class="su-chip su-soft-1">
+                                    {{ $cohort->students_count ?? $cohort->enrolled_count }}/{{ $cohort->capacity }}
+                                </span>
+                            </td>
+                            <td class="tabular-nums" style="color:var(--su-ink-40)">
+                                @if($cohort->starts_at)
+                                    <x-app-datetime :at="$cohort->starts_at" pattern="Y-m-d" />
+                                @else
+                                    —
+                                @endif
+                            </td>
+                            <td style="text-align:end">
+                                <a href="{{ route('instructor.tutoring-cohorts.show', $cohort) }}" class="su-btn su-btn--primary" style="height:32px">
+                                    {{ __('instructor.tc_open') }}
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5">
+                                <div class="su-empty">
+                                    <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
+                                    <p>{{ __('instructor.tc_empty') }}</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if(method_exists($cohorts, 'links'))
+            <div class="su-pager" style="padding:12px">{{ $cohorts->links() }}</div>
+        @endif
+    </section>
 </div>
 @endsection

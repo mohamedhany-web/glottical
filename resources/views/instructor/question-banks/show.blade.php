@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'بنك الأسئلة: ' . $questionBank->title . ' - ' . config('app.name'))
-@section('header', 'بنك الأسئلة: ' . $questionBank->title)
+@section('title', __('instructor.question_bank') . ': ' . $questionBank->title . ' - ' . config('app.name'))
+@section('page_title', $questionBank->title)
 
 @push('styles')
 <style>
@@ -10,52 +10,47 @@
 @endpush
 
 @section('content')
-<div class="w-full px-4 sm:px-6 lg:px-8 py-6" x-data="{ showCreateModal: false }">
-    <!-- هيدر الصفحة (عرض الصفحة كاملاً) -->
-    <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6 mb-6">
-        <nav class="text-sm text-slate-500 dark:text-slate-400 mb-2">
-            <a href="{{ route('instructor.question-banks.index') }}" class="hover:text-sky-600 transition-colors">بنوك الأسئلة</a>
-            <span class="mx-2">/</span>
-            <span class="text-slate-700 dark:text-slate-300 font-semibold">{{ $questionBank->title }}</span>
-        </nav>
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div class="flex flex-wrap items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center shrink-0">
-                    <i class="fas fa-database text-lg"></i>
-                </div>
-                <div class="min-w-0">
-                    <h1 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $questionBank->title }}</h1>
-                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{{ $questionBank->description ?? 'بنك أسئلة' }}</p>
-                </div>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-                <button type="button" @click="showCreateModal = true"
-                        class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-plus"></i>
-                    <span>إضافة سؤال</span>
-                </button>
-                <a href="{{ route('instructor.question-banks.edit', $questionBank) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-edit"></i>
-                    <span>تعديل البنك</span>
-                </a>
-                <a href="{{ route('instructor.question-banks.index') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-arrow-right"></i>
-                    <span>العودة</span>
-                </a>
-            </div>
+@php
+    $isRtl = app()->getLocale() === 'ar';
+@endphp
+<div class="su-page" x-data="{ showCreateModal: false }">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.question-banks.index') }}">{{ __('instructor.question_banks') }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ $questionBank->title }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-database su-page-head__ico" aria-hidden="true"></i>
+                {{ $questionBank->title }}
+            </h1>
+            <p class="su-page-head__sub">{{ $questionBank->description ?? __('instructor.question_bank') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <button type="button" @click="showCreateModal = true" class="su-btn su-btn--primary">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                {{ __('instructor.add_question') }}
+            </button>
+            <a href="{{ route('instructor.question-banks.edit', $questionBank) }}" class="su-btn">
+                <i class="fas fa-edit" aria-hidden="true"></i>
+                {{ __('instructor.edit_question_bank') }}
+            </a>
+            <a href="{{ route('instructor.question-banks.index') }}" class="su-btn">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.back') }}
+            </a>
         </div>
     </div>
 
     @if(session('success'))
-        <div class="rounded-xl p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 text-emerald-800 text-sm font-medium mb-6">
-            <i class="fas fa-check-circle ml-2"></i>{{ session('success') }}
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#15803d;font-size:13px">
+            <i class="fas fa-check-circle" aria-hidden="true"></i> {{ session('success') }}
         </div>
     @endif
     @if($errors->any())
-        <div class="rounded-xl p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 text-red-800 text-sm mb-6">
-            <ul class="list-disc list-inside space-y-0.5">
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#b91c1c;font-size:13px">
+            <ul style="margin:0;padding-inline-start:1.2rem">
                 @foreach($errors->all() as $err)
                     <li>{{ $err }}</li>
                 @endforeach
@@ -63,203 +58,203 @@
         </div>
     @endif
 
-    <!-- إحصائيات -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        <div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-5">
-            <div class="text-2xl font-bold text-sky-600">{{ $questionBank->questions->count() }}</div>
-            <div class="text-sm font-medium text-slate-600 dark:text-slate-400 mt-0.5">إجمالي الأسئلة</div>
+    <section class="su-kpi-row" style="margin-bottom:20px">
+        <div class="su-kpi su-kpi--1">
+            <div class="su-kpi__l">{{ __('instructor.total_questions') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($questionBank->questions->count()) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-list" aria-hidden="true"></i></div>
+            </div>
         </div>
-        <div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-5">
-            <div class="text-2xl font-bold text-green-600">{{ $questionBank->questions->where('difficulty_level', 'easy')->count() }}</div>
-            <div class="text-sm font-medium text-slate-600 dark:text-slate-400 mt-0.5">سهل</div>
+        <div class="su-kpi su-kpi--2">
+            <div class="su-kpi__l">{{ __('instructor.easy') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($questionBank->questions->where('difficulty_level', 'easy')->count()) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-smile" aria-hidden="true"></i></div>
+            </div>
         </div>
-        <div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-5">
-            <div class="text-2xl font-bold text-amber-600">{{ $questionBank->questions->where('difficulty_level', 'medium')->count() }}</div>
-            <div class="text-sm font-medium text-slate-600 dark:text-slate-400 mt-0.5">متوسط</div>
+        <div class="su-kpi su-kpi--3">
+            <div class="su-kpi__l">{{ __('instructor.medium') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($questionBank->questions->where('difficulty_level', 'medium')->count()) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-meh" aria-hidden="true"></i></div>
+            </div>
         </div>
-        <div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-5">
-            <div class="text-2xl font-bold text-red-600">{{ $questionBank->questions->where('difficulty_level', 'hard')->count() }}</div>
-            <div class="text-sm font-medium text-slate-600 dark:text-slate-400 mt-0.5">صعب</div>
+        <div class="su-kpi su-kpi--4">
+            <div class="su-kpi__l">{{ __('instructor.hard') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($questionBank->questions->where('difficulty_level', 'hard')->count()) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-frown" aria-hidden="true"></i></div>
+            </div>
         </div>
-    </div>
+    </section>
 
-    <!-- قائمة الأسئلة -->
-    <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between flex-wrap gap-2">
-            <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100">الأسئلة ({{ $questionBank->questions->count() }})</h2>
-            <button type="button" @click="showCreateModal = true"
-                    class="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-sm font-semibold transition-colors">
-                <i class="fas fa-plus"></i>
-                إضافة سؤال
+    <section class="su-card su-card--flush">
+        <div class="su-section-head" style="padding:14px 16px;border-bottom:1px solid var(--su-line,rgba(0,0,0,.06))">
+            <h2 class="su-card__title" style="margin:0">
+                {{ __('instructor.questions') }} ({{ $questionBank->questions->count() }})
+            </h2>
+            <button type="button" @click="showCreateModal = true" class="su-btn su-btn--primary" style="height:32px">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                {{ __('instructor.add_question') }}
             </button>
         </div>
 
         @if($questionBank->questions->count() > 0)
-            <div class="divide-y divide-slate-200 dark:divide-slate-700">
+            <div class="su-list">
                 @foreach($questionBank->questions as $index => $question)
-                    <div class="p-6 hover:bg-slate-50 dark:bg-slate-800/50 transition-colors">
-                        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                            <div class="flex-1 min-w-0">
-                                @php
-                                    $typeIcons = [
-                                        'multiple_choice' => ['fas fa-list-ul', 'text-sky-600', 'bg-sky-100'],
-                                        'true_false' => ['fas fa-check-circle', 'text-green-600', 'bg-green-100'],
-                                        'fill_blank' => ['fas fa-edit', 'text-violet-600', 'bg-violet-100'],
-                                        'short_answer' => ['fas fa-comment', 'text-amber-600', 'bg-amber-100'],
-                                        'essay' => ['fas fa-file-alt', 'text-indigo-600', 'bg-indigo-100'],
-                                    ];
-                                    $icon = $typeIcons[$question->type] ?? ['fas fa-question', 'text-slate-600 dark:text-slate-400', 'bg-slate-100 dark:bg-slate-700/50'];
-                                @endphp
-                                <div class="flex gap-3 mb-2">
-                                    <span class="w-8 h-8 rounded-lg {{ $icon[2] }} {{ $icon[1] }} flex items-center justify-center text-sm font-bold shrink-0">{{ $index + 1 }}</span>
-                                    <div class="min-w-0 flex-1">
-                                        <p class="font-semibold text-slate-800 dark:text-slate-100">{{ Str::limit($question->question, 200) }}</p>
-                                        <div class="flex flex-wrap items-center gap-2 mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                            <span class="px-2 py-0.5 rounded {{ $icon[2] }} {{ $icon[1] }}">{{ $question->getTypeLabel() }}</span>
-                                            <span>{{ $question->points }} نقطة</span>
-                                            <span>{{ $question->getDifficultyLabel() }}</span>
-                                            @if($question->category)
-                                                <span>{{ $question->category->name }}</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                                @if($question->type == 'multiple_choice' && $question->options && is_array($question->options))
-                                    @php
-                                        $normalizedCorrectAnswers = $question->normalizeMultipleChoiceCorrectAnswers();
-                                    @endphp
-                                    <div class="mt-2 flex flex-wrap gap-2">
-                                        @foreach($question->options as $optIndex => $opt)
-                                            @php $isCorrect = in_array((int)$optIndex, $normalizedCorrectAnswers, true); @endphp
-                                            <span class="px-2 py-1 rounded-lg text-sm bg-slate-100 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 {{ $isCorrect ? 'ring-2 ring-green-500 bg-green-50 text-green-800' : '' }}">
-                                                {{ $opt }} @if($isCorrect) <i class="fas fa-check text-green-600 mr-1"></i> @endif
-                                            </span>
-                                        @endforeach
-                                    </div>
-                                @elseif(in_array($question->type, ['true_false', 'short_answer', 'essay']))
-                                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">الإجابة: {{ is_array($question->correct_answer) ? ($question->correct_answer[0] ?? '—') : $question->correct_answer }}</p>
+                    @php
+                        $typeSoft = match ($question->type) {
+                            'multiple_choice' => 'su-soft-1',
+                            'true_false' => 'su-soft-2',
+                            'fill_blank' => 'su-soft-3',
+                            'short_answer' => 'su-soft-4',
+                            default => 'su-soft-1',
+                        };
+                    @endphp
+                    <div class="su-list-item">
+                        <span class="su-list-item__ico {{ $typeSoft }}" style="font-weight:700;font-size:12px">{{ $index + 1 }}</span>
+                        <div class="su-list-item__body">
+                            <div class="su-list-item__title">{{ Str::limit($question->question, 200) }}</div>
+                            <div class="su-list-item__meta" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+                                <span class="su-chip {{ $typeSoft }}">{{ $question->getTypeLabel() }}</span>
+                                <span class="su-chip">{{ $question->points }} {{ __('instructor.points') }}</span>
+                                <span class="su-chip">{{ $question->getDifficultyLabel() }}</span>
+                                @if($question->category)
+                                    <span class="su-chip">{{ $question->category->name }}</span>
                                 @endif
                             </div>
-                            <div class="flex items-center gap-2 shrink-0">
-                                <a href="{{ route('instructor.questions.edit', $question) }}" class="p-2 rounded-lg text-sky-600 hover:bg-sky-50 dark:bg-sky-900/30 transition-colors" title="تعديل">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('instructor.questions.destroy', $question) }}" method="POST" onsubmit="return confirm('هل تريد حذف هذا السؤال؟');" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:bg-red-900/30 transition-colors" title="حذف">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
+                            @if($question->type == 'multiple_choice' && $question->options && is_array($question->options))
+                                @php $normalizedCorrectAnswers = $question->normalizeMultipleChoiceCorrectAnswers(); @endphp
+                                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+                                    @foreach($question->options as $optIndex => $opt)
+                                        @php $isCorrect = in_array((int)$optIndex, $normalizedCorrectAnswers, true); @endphp
+                                        <span class="su-chip {{ $isCorrect ? 'su-chip--ok' : '' }}">
+                                            {{ $opt }} @if($isCorrect)<i class="fas fa-check" aria-hidden="true"></i>@endif
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @elseif(in_array($question->type, ['true_false', 'short_answer', 'essay']))
+                                <p style="margin:8px 0 0;font-size:13px;color:var(--su-ink-40)">
+                                    {{ __('instructor.answer_label') }}:
+                                    {{ is_array($question->correct_answer) ? ($question->correct_answer[0] ?? '—') : $question->correct_answer }}
+                                </p>
+                            @endif
+                        </div>
+                        <div class="su-list-item__actions">
+                            <a href="{{ route('instructor.questions.edit', $question) }}" class="su-btn" style="height:32px;width:32px;padding:0;justify-content:center" title="{{ __('common.edit') }}">
+                                <i class="fas fa-edit" aria-hidden="true"></i>
+                            </a>
+                            <form action="{{ route('instructor.questions.destroy', $question) }}" method="POST" onsubmit="return confirm(@json(__('instructor.confirm_delete_question')));" style="display:inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="su-btn" style="height:32px;width:32px;padding:0;justify-content:center;color:#b91c1c" title="{{ __('common.delete') }}">
+                                    <i class="fas fa-trash" aria-hidden="true"></i>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 @endforeach
             </div>
         @else
-            <div class="p-12 text-center">
-                <div class="w-16 h-16 rounded-2xl bg-sky-100 text-sky-500 flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-question-circle text-3xl"></i>
-                </div>
-                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">لا توجد أسئلة بعد</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">أضف أول سؤال لهذا البنك</p>
-                <button type="button" @click="showCreateModal = true"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-plus"></i>
-                    إضافة سؤال
+            <div class="su-empty" style="padding:48px 16px">
+                <i class="fas fa-question-circle" aria-hidden="true"></i>
+                <p>{{ __('instructor.no_questions_yet') }}</p>
+                <p style="color:var(--su-ink-40);font-size:13px;margin:0 0 12px">{{ __('instructor.add_first_question') }}</p>
+                <button type="button" @click="showCreateModal = true" class="su-btn su-btn--primary">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    {{ __('instructor.add_question') }}
                 </button>
             </div>
         @endif
-    </div>
+    </section>
 
-    <!-- Modal إضافة سؤال جديد (داخل نفس x-data) -->
     <div x-show="showCreateModal"
          x-cloak
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4"
-         style="background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);"
+         class="su-modal-backdrop"
+         style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.45)"
          @click.self="showCreateModal = false">
-        <div class="bg-white dark:bg-slate-800/95 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" @click.stop>
-            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 shrink-0">
-                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">إضافة سؤال جديد</h3>
-                <button type="button" @click="showCreateModal = false" class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 transition-colors">
-                    <i class="fas fa-times"></i>
+        <div class="su-card" style="width:100%;max-width:40rem;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;margin:0" @click.stop>
+            <div class="su-section-head" style="padding:14px 16px;border-bottom:1px solid var(--su-line,rgba(0,0,0,.06));flex-shrink:0">
+                <h3 class="su-card__title" style="margin:0">{{ __('instructor.create_new_question') }}</h3>
+                <button type="button" @click="showCreateModal = false" class="su-btn" style="height:32px;width:32px;padding:0;justify-content:center">
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
-            <form action="{{ route('instructor.question-banks.questions.store', $questionBank) }}" method="POST" class="p-6 overflow-y-auto flex-1" id="add-question-form">
+            <form action="{{ route('instructor.question-banks.questions.store', $questionBank) }}" method="POST" id="add-question-form" style="padding:16px;overflow-y:auto;flex:1">
                 @csrf
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">نوع السؤال <span class="text-red-500">*</span></label>
-                        <select name="type" id="question_type" required onchange="updateQuestionForm()" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                            <option value="">اختر نوع السؤال</option>
-                            <option value="multiple_choice">اختيار متعدد</option>
-                            <option value="true_false">صح أو خطأ</option>
+                <div class="su-form-grid" style="grid-template-columns:1fr 1fr">
+                    <div class="su-field" style="grid-column:1 / -1">
+                        <label for="question_type">{{ __('instructor.question_type') }} <span style="color:#b91c1c">*</span></label>
+                        <select name="type" id="question_type" required onchange="updateQuestionForm()" class="su-select">
+                            <option value="">{{ __('instructor.choose_type') }}</option>
+                            <option value="multiple_choice">{{ __('instructor.type_multiple_choice') }}</option>
+                            <option value="true_false">{{ __('instructor.type_true_false') }}</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">نص السؤال <span class="text-red-500">*</span></label>
-                        <textarea name="question" rows="3" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100" placeholder="اكتب نص السؤال..."></textarea>
+                    <div class="su-field" style="grid-column:1 / -1">
+                        <label>{{ __('instructor.question_text') }} <span style="color:#b91c1c">*</span></label>
+                        <textarea name="question" rows="3" required class="su-input" style="min-height:88px;resize:vertical" placeholder="{{ __('instructor.question_text_ph') }}"></textarea>
                     </div>
-                    <div id="options_field" style="display: none;">
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">الخيارات (سطر لكل خيار)</label>
-                        <textarea name="options_text" rows="4" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100" placeholder="الخيار 1&#10;الخيار 2&#10;..."></textarea>
+                    <div class="su-field" id="options_field" style="display:none;grid-column:1 / -1">
+                        <label>{{ __('instructor.options_one_per_line') }}</label>
+                        <textarea name="options_text" rows="4" class="su-input" style="min-height:100px;resize:vertical" placeholder="{{ __('instructor.options_ph') }}"></textarea>
                     </div>
-                    <div id="correct_answer_wrap">
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">الإجابة الصحيحة <span class="text-red-500">*</span></label>
-                        <div id="correct_answer_multiple_choice" style="display: none;">
-                            <select name="correct_answer" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100">
-                                <option value="">اختر الإجابة (أدخل الخيارات أولاً)</option>
+                    <div class="su-field" id="correct_answer_wrap" style="grid-column:1 / -1">
+                        <label>{{ __('instructor.correct_answer') }} <span style="color:#b91c1c">*</span></label>
+                        <div id="correct_answer_multiple_choice" style="display:none">
+                            <select name="correct_answer" class="su-select">
+                                <option value="">{{ __('instructor.choose_answer_after_options') }}</option>
                             </select>
                         </div>
-                        <div id="correct_answer_true_false" style="display: none;">
-                            <select name="correct_answer" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100">
-                                <option value="">اختر</option>
-                                <option value="صح">صح</option>
-                                <option value="خطأ">خطأ</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">شرح الإجابة</label>
-                        <textarea name="explanation" rows="2" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100"></textarea>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">النقاط <span class="text-red-500">*</span></label>
-                            <input type="number" name="points" value="1" min="0.5" step="0.5" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">الصعوبة <span class="text-red-500">*</span></label>
-                            <select name="difficulty_level" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100">
-                                <option value="easy">سهل</option>
-                                <option value="medium" selected>متوسط</option>
-                                <option value="hard">صعب</option>
-                            </select>
-                        </div>
-                        <div class="col-span-2">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">التصنيف</label>
-                            <select name="category_id" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100">
-                                <option value="">بدون تصنيف</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                @endforeach
+                        <div id="correct_answer_true_false" style="display:none">
+                            <select name="correct_answer" class="su-select">
+                                <option value="">{{ __('instructor.choose_type') }}</option>
+                                <option value="صح">{{ __('instructor.true_answer') }}</option>
+                                <option value="خطأ">{{ __('instructor.false_answer') }}</option>
                             </select>
                         </div>
                     </div>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="is_active" value="1" checked class="rounded border-slate-300 text-sky-600 focus:ring-sky-500">
-                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">سؤال نشط</span>
-                    </label>
+                    <div class="su-field" style="grid-column:1 / -1">
+                        <label>{{ __('instructor.explanation') }}</label>
+                        <textarea name="explanation" rows="2" class="su-input" style="min-height:64px;resize:vertical"></textarea>
+                    </div>
+                    <div class="su-field">
+                        <label>{{ __('instructor.points') }} <span style="color:#b91c1c">*</span></label>
+                        <input type="number" name="points" value="1" min="0.5" step="0.5" required class="su-input">
+                    </div>
+                    <div class="su-field">
+                        <label>{{ __('instructor.difficulty') }} <span style="color:#b91c1c">*</span></label>
+                        <select name="difficulty_level" required class="su-select">
+                            <option value="easy">{{ __('instructor.easy') }}</option>
+                            <option value="medium" selected>{{ __('instructor.medium') }}</option>
+                            <option value="hard">{{ __('instructor.hard') }}</option>
+                        </select>
+                    </div>
+                    <div class="su-field" style="grid-column:1 / -1">
+                        <label>{{ __('instructor.category_label') }}</label>
+                        <select name="category_id" class="su-select">
+                            <option value="">{{ __('instructor.no_category') }}</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="su-field" style="grid-column:1 / -1">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500">
+                            <input type="checkbox" name="is_active" value="1" checked>
+                            <span>{{ __('instructor.question_active') }}</span>
+                        </label>
+                    </div>
                 </div>
-                <div class="flex gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
-                    <button type="submit" class="flex-1 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold transition-colors">
-                        <i class="fas fa-save ml-1"></i> إضافة السؤال
-                    </button>
-                    <button type="button" @click="showCreateModal = false" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                        إلغاء
+                <div class="su-form-actions" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--su-line,rgba(0,0,0,.06));justify-content:flex-end;gap:8px">
+                    <button type="button" @click="showCreateModal = false" class="su-btn">{{ __('common.cancel') }}</button>
+                    <button type="submit" class="su-btn su-btn--primary">
+                        <i class="fas fa-save" aria-hidden="true"></i>
+                        {{ __('instructor.add_question') }}
                     </button>
                 </div>
             </form>

@@ -1,0 +1,16 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="28.4489" height="33.1682" viewBox="0 0 28.4489 33.1682" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Frame">
+<mask id="mask0_0_4253" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="1" y="0" width="28" height="32">
+<path id="Subtract" fill-rule="evenodd" clip-rule="evenodd" d="M13.1298 29.9016C14.1888 31.7359 16.4872 32.3975 18.4851 31.6943C20.3957 31.0218 22.3949 30.5372 24.4604 30.2628C26.6503 29.9719 28.4489 28.2091 28.4489 26V4C28.4489 1.79086 26.6559 -0.0139506 24.4515 0.131047C17.0883 0.615375 10.0879 2.42797 3.68761 5.33149C1.63468 6.26281 0.931352 8.77325 2.05851 10.7255L13.1298 29.9016Z" fill="url(#paint0_linear_0_4253)"/>
+</mask>
+<g mask="url(#mask0_0_4253)">
+<path id="Subtract_2" fill-rule="evenodd" clip-rule="evenodd" d="M13.1298 29.9016C14.1888 31.7359 16.4872 32.3975 18.4851 31.6943C20.3957 31.0218 22.3949 30.5372 24.4604 30.2628C26.6503 29.9719 28.4489 28.2091 28.4489 26V4C28.4489 1.79086 26.6559 -0.0139506 24.4515 0.131047C17.0883 0.615375 10.0879 2.42797 3.68761 5.33149C1.63468 6.26281 0.931352 8.77325 2.05851 10.7255L13.1298 29.9016Z" fill="#A0BCE8"/>
+</g>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_4253" x1="28.4489" y1="0" x2="17.9783" y2="15.3713" gradientUnits="userSpaceOnUse">
+<stop/>
+<stop offset="1"/>
+</linearGradient>
+</defs>
+</svg>

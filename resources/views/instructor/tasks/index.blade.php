@@ -1,77 +1,70 @@
 @extends('layouts.app')
 
 @section('title', __('instructor.tasks_from_management') . ' - ' . config('app.name'))
-@section('header', __('instructor.tasks_from_management'))
+@section('page_title', __('instructor.tasks_from_management'))
 
 @section('content')
-<div class="space-y-6">
-    <!-- الهيدر -->
-    <div class="rounded-2xl p-5 sm:p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 mb-1">{{ __('instructor.tasks_from_management') }}</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400">{{ __('instructor.tasks_assigned_by_management') }}</p>
-    </div>
-
-    <!-- الإحصائيات -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="rounded-2xl p-5 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">{{ __('instructor.total_tasks') }}</p>
-                <p class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['total'] ?? 0 }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center">
-                <i class="fas fa-check-square text-sky-600 text-lg"></i>
-            </div>
-        </div>
-        <div class="rounded-2xl p-5 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">{{ __('instructor.pending') }}</p>
-                <p class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['pending'] ?? 0 }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
-                <i class="fas fa-clock text-amber-600 text-lg"></i>
-            </div>
-        </div>
-        <div class="rounded-2xl p-5 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">{{ __('instructor.in_progress') }}</p>
-                <p class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['in_progress'] ?? 0 }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                <i class="fas fa-spinner text-blue-600 text-lg"></i>
-            </div>
-        </div>
-        <div class="rounded-2xl p-5 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">{{ __('instructor.completed_attempts') }}</p>
-                <p class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['completed'] ?? 0 }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
-                <i class="fas fa-check-double text-emerald-600 text-lg"></i>
-            </div>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <h1 class="su-page-head__title">
+                <i class="fas fa-check-square su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.tasks_from_management') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.tasks_assigned_by_management') }}</p>
         </div>
     </div>
 
-    <!-- الفلاتر -->
-    <div class="bg-white dark:bg-slate-800/95 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-                <label for="search" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ __('common.search') }}</label>
+    <section class="su-kpi-row" style="margin-bottom:20px">
+        <div class="su-kpi su-kpi--1">
+            <div class="su-kpi__l">{{ __('instructor.total_tasks') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['total'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-check-square" aria-hidden="true"></i></div>
+            </div>
+        </div>
+        <div class="su-kpi su-kpi--2">
+            <div class="su-kpi__l">{{ __('instructor.pending') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['pending'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-clock" aria-hidden="true"></i></div>
+            </div>
+        </div>
+        <div class="su-kpi su-kpi--3">
+            <div class="su-kpi__l">{{ __('instructor.in_progress') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['in_progress'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-spinner" aria-hidden="true"></i></div>
+            </div>
+        </div>
+        <div class="su-kpi su-kpi--4">
+            <div class="su-kpi__l">{{ __('instructor.completed_attempts') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['completed'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-check-double" aria-hidden="true"></i></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="su-card" style="margin-bottom:20px">
+        <form method="GET" class="su-form-grid">
+            <div class="su-field">
+                <label for="search">{{ __('common.search') }}</label>
                 <input type="text" name="search" id="search" value="{{ request('search') }}"
-                       placeholder="{{ __('instructor.search_in_tasks') }}"
-                       class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-colors">
+                       placeholder="{{ __('instructor.search_in_tasks') }}" class="su-input">
             </div>
-            <div>
-                <label for="status" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ __('common.status') }}</label>
-                <select name="status" id="status" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-colors">
+            <div class="su-field">
+                <label for="status">{{ __('common.status') }}</label>
+                <select name="status" id="status" class="su-select">
                     <option value="">{{ __('instructor.all_statuses') }}</option>
                     <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>{{ __('instructor.pending') }}</option>
                     <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>{{ __('instructor.in_progress') }}</option>
                     <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>{{ __('instructor.completed_attempts') }}</option>
                 </select>
             </div>
-            <div>
-                <label for="priority" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ __('instructor.priority') }}</label>
-                <select name="priority" id="priority" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-colors">
+            <div class="su-field">
+                <label for="priority">{{ __('instructor.priority') }}</label>
+                <select name="priority" id="priority" class="su-select">
                     <option value="">{{ __('instructor.all_priorities') }}</option>
                     <option value="low" {{ request('priority') == 'low' ? 'selected' : '' }}>{{ __('instructor.low') }}</option>
                     <option value="medium" {{ request('priority') == 'medium' ? 'selected' : '' }}>{{ __('instructor.medium') }}</option>
@@ -79,97 +72,95 @@
                     <option value="urgent" {{ request('priority') == 'urgent' ? 'selected' : '' }}>{{ __('instructor.urgent') }}</option>
                 </select>
             </div>
-            <div class="flex items-end gap-2">
-                <button type="submit" class="flex-1 inline-flex items-center justify-center gap-2 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-search"></i>
-                    <span>{{ __('common.search') }}</span>
+            <div class="su-form-actions">
+                <button type="submit" class="su-btn su-btn--primary" style="flex:1;justify-content:center;height:40px">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    {{ __('common.search') }}
                 </button>
                 @if(request()->anyFilled(['search', 'status', 'priority']))
-                    <a href="{{ route('instructor.tasks.index') }}" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors inline-flex items-center justify-center">
-                        <i class="fas fa-times"></i>
+                    <a href="{{ route('instructor.tasks.index') }}" class="su-btn" style="height:40px;width:40px;padding:0;justify-content:center">
+                        <i class="fas fa-times" aria-hidden="true"></i>
                     </a>
                 @endif
             </div>
         </form>
-    </div>
+    </section>
 
-    <!-- قائمة المهام -->
     @if($tasks->count() > 0)
-        <div class="space-y-4">
+        <div class="su-list">
             @foreach($tasks as $task)
-                <div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm hover:border-sky-300 hover:shadow-md transition-all p-5">
-                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex flex-wrap items-center gap-2 mb-2">
-                                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">{{ $task->title }}</h3>
-                                @if($task->assigner)
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400">{{ __('instructor.from_management') }}</span>
-                                @endif
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold
-                                    @if($task->priority == 'urgent') bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400
-                                    @elseif($task->priority == 'high') bg-amber-100 text-amber-700
-                                    @elseif($task->priority == 'medium') bg-sky-100 text-sky-700
-                                    @else bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400
-                                    @endif">
-                                    @if($task->priority == 'urgent') {{ __('instructor.urgent') }}
-                                    @elseif($task->priority == 'high') {{ __('instructor.high') }}
-                                    @elseif($task->priority == 'medium') {{ __('instructor.medium') }}
-                                    @else {{ __('instructor.low') }}
-                                    @endif
-                                </span>
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold
-                                    @if($task->status == 'completed') bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400
-                                    @elseif($task->status == 'in_progress') bg-blue-100 text-blue-700
-                                    @else bg-amber-100 text-amber-700
-                                    @endif">
-                                    @if($task->status == 'completed') {{ __('instructor.completed_attempts') }}
-                                    @elseif($task->status == 'in_progress') {{ __('instructor.in_progress') }}
-                                    @else {{ __('instructor.pending') }}
-                                    @endif
-                                </span>
-                            </div>
-                            @if($task->description)
-                                <p class="text-sm text-slate-600 dark:text-slate-400 mb-3 line-clamp-2">{{ $task->description }}</p>
+                @php
+                    $prioChip = match ($task->priority) {
+                        'urgent' => 'su-chip--off',
+                        'high' => 'su-chip--warn',
+                        'medium' => 'su-soft-1',
+                        default => '',
+                    };
+                    $prioLabel = match ($task->priority) {
+                        'urgent' => __('instructor.urgent'),
+                        'high' => __('instructor.high'),
+                        'medium' => __('instructor.medium'),
+                        default => __('instructor.low'),
+                    };
+                    $stChip = match ($task->status) {
+                        'completed' => 'su-chip--ok',
+                        'in_progress' => 'su-soft-1',
+                        default => 'su-chip--warn',
+                    };
+                    $stLabel = match ($task->status) {
+                        'completed' => __('instructor.completed_attempts'),
+                        'in_progress' => __('instructor.in_progress'),
+                        default => __('instructor.pending'),
+                    };
+                @endphp
+                <div class="su-list-item su-card" style="margin-bottom:12px">
+                    <div class="su-list-item__body">
+                        <div class="su-list-item__title" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+                            {{ $task->title }}
+                            @if($task->assigner)
+                                <span class="su-chip">{{ __('instructor.from_management') }}</span>
                             @endif
-                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
-                                @if($task->relatedCourse)
-                                    <span><i class="fas fa-book text-sky-500 ml-1"></i> {{ $task->relatedCourse->title ?? '—' }}</span>
-                                @endif
-                                @if($task->relatedLecture)
-                                    <span><i class="fas fa-chalkboard-teacher text-violet-500 ml-1"></i> {{ $task->relatedLecture->title ?? '—' }}</span>
-                                @endif
-                                @if($task->due_date)
-                                    <span><i class="fas fa-calendar text-slate-400 ml-1"></i> {{ $task->due_date->format('Y/m/d') }}</span>
-                                    @if($task->due_date->isPast() && $task->status != 'completed')
-                                        <span class="text-rose-600 font-semibold">{{ __('instructor.late') }}</span>
-                                    @endif
-                                @endif
-                            </div>
+                            <span class="su-chip {{ $prioChip }}">{{ $prioLabel }}</span>
+                            <span class="su-chip {{ $stChip }}">{{ $stLabel }}</span>
                         </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <a href="{{ route('instructor.tasks.show', $task) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold text-sm transition-colors">
-                                <i class="fas fa-eye"></i>
-                                {{ __('instructor.view_and_submit') }}
-                            </a>
+                        @if($task->description)
+                            <p style="margin:6px 0 0;font-size:13px;color:var(--su-ink-40)">{{ Str::limit($task->description, 160) }}</p>
+                        @endif
+                        <div class="su-list-item__meta">
+                            @if($task->relatedCourse)
+                                <span><i class="fas fa-book" aria-hidden="true"></i> {{ $task->relatedCourse->title ?? '—' }}</span>
+                            @endif
+                            @if($task->relatedLecture)
+                                <span><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i> {{ $task->relatedLecture->title ?? '—' }}</span>
+                            @endif
+                            @if($task->due_date)
+                                <span><i class="fas fa-calendar" aria-hidden="true"></i> {{ $task->due_date->format('Y/m/d') }}</span>
+                                @if($task->due_date->isPast() && $task->status != 'completed')
+                                    <span class="su-chip su-chip--off">{{ __('instructor.late') }}</span>
+                                @endif
+                            @endif
                         </div>
+                    </div>
+                    <div class="su-list-item__actions">
+                        <a href="{{ route('instructor.tasks.show', $task) }}" class="su-btn su-btn--primary" style="height:32px">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                            {{ __('instructor.view_and_submit') }}
+                        </a>
                     </div>
                 </div>
             @endforeach
         </div>
-
         @if($tasks->hasPages())
-            <div class="mt-6">
-                {{ $tasks->appends(request()->query())->links() }}
-            </div>
+            <div class="su-pager" style="margin-top:16px">{{ $tasks->appends(request()->query())->links() }}</div>
         @endif
     @else
-        <div class="rounded-2xl p-12 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm text-center">
-            <div class="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-700/50 flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-check-square text-3xl text-slate-400"></i>
+        <section class="su-card">
+            <div class="su-empty">
+                <i class="fas fa-check-square" aria-hidden="true"></i>
+                <p>{{ __('instructor.no_tasks_from_management') }}</p>
+                <p style="color:var(--su-ink-40);font-size:13px;margin:0">{{ __('instructor.no_tasks_description') }}</p>
             </div>
-            <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">{{ __('instructor.no_tasks_from_management') }}</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">{{ __('instructor.no_tasks_description') }}</p>
-        </div>
+        </section>
     @endif
 </div>
 @endsection

@@ -1,220 +1,174 @@
 @extends('layouts.app')
 
 @section('title', __('instructor.profile') . ' - ' . config('app.name'))
-@section('header', __('instructor.profile'))
+@section('page_title', __('instructor.profile'))
 
 @section('content')
 @php
     $user = auth()->user();
-    $memberSince = $user->created_at ? $user->created_at->copy()->locale('ar')->translatedFormat('d F Y') : '—';
+    $memberSince = $user->created_at ? $user->created_at->copy()->locale(app()->getLocale())->translatedFormat('d F Y') : '—';
     $myCoursesCount = \App\Models\AdvancedCourse::where('instructor_id', $user->id)->count();
     $totalStudents = \App\Models\StudentCourseEnrollment::whereHas('course', function($q) use ($user) {
         $q->where('instructor_id', $user->id);
     })->where('status', 'active')->distinct('user_id')->count();
-    $lastLogin = $user->last_login_at ? $user->last_login_at->copy()->locale('ar')->diffForHumans() : '—';
+    $lastLogin = $user->last_login_at ? $user->last_login_at->copy()->locale(app()->getLocale())->diffForHumans() : '—';
+    $isRtl = app()->getLocale() === 'ar';
 @endphp
 
-<div class="space-y-6">
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <h1 class="su-page-head__title">
+                <i class="fas fa-user-circle su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.profile') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.manage_profile_data') }}</p>
+        </div>
+    </div>
+
     @if(session('success'))
-        <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 px-4 py-3 flex items-center gap-3">
-            <i class="fas fa-check-circle text-emerald-600"></i>
-            <span class="font-semibold text-emerald-800">{{ session('success') }}</span>
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#15803d;font-size:13px">
+            <i class="fas fa-check-circle" aria-hidden="true"></i> {{ session('success') }}
         </div>
     @endif
 
-    <!-- الهيدر -->
-    <div class="rounded-2xl p-5 sm:p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 mb-1">{{ __('instructor.profile') }}</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400">{{ __('instructor.manage_profile_data') }}</p>
-    </div>
-
-    <!-- بطاقة الملف + إحصائيات -->
-    <div class="rounded-2xl p-5 sm:p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <div class="flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8">
-            <div class="flex flex-col sm:flex-row sm:items-center gap-5">
-                <div class="flex items-center justify-center h-24 w-24 sm:h-28 sm:w-28 rounded-2xl bg-sky-100 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 mx-auto sm:mx-0">
+    <section class="su-card" style="margin-bottom:20px">
+        <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:center">
+            <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;flex:1;min-width:0">
+                <div style="width:96px;height:96px;border-radius:16px;overflow:hidden;border:1px solid var(--su-line,rgba(0,0,0,.08));background:var(--su-soft-1,rgba(59,130,246,.1));display:flex;align-items:center;justify-content:center;flex-shrink:0">
                     @if($user->profile_image)
-                        <img src="{{ $user->profile_image_url }}" alt="{{ __('instructor.profile_image') }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
-                        <span class="text-4xl font-bold text-sky-600 hidden">{{ mb_substr($user->name, 0, 1) }}</span>
+                        <img src="{{ $user->profile_image_url }}" alt="{{ __('instructor.profile_image') }}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
+                        <span class="hidden" style="font-size:32px;font-weight:700;color:var(--su-accent,#3b82f6)">{{ mb_substr($user->name, 0, 1) }}</span>
                     @else
-                        <span class="text-4xl font-bold text-sky-600">{{ mb_substr($user->name, 0, 1) }}</span>
+                        <span style="font-size:32px;font-weight:700;color:var(--su-accent,#3b82f6)">{{ mb_substr($user->name, 0, 1) }}</span>
                     @endif
                 </div>
-                <div class="flex-1 text-center sm:text-right">
-                    <span class="inline-flex items-center gap-2 rounded-lg bg-sky-100 text-sky-700 px-3 py-1.5 text-xs font-semibold mb-2">
-                        <i class="fas fa-chalkboard-teacher"></i>
-                        {{ __('instructor.instructor_role') }}
-                    </span>
-                    <h2 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 mb-1">{{ $user->name }}</h2>
+                <div class="min-w-0">
+                    <span class="su-chip su-soft-1"><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i> {{ __('instructor.instructor_role') }}</span>
+                    <h2 style="margin:8px 0 4px;font-size:20px;font-weight:700">{{ $user->name }}</h2>
                     @if($user->phone)
-                        <p class="text-sm text-slate-600 dark:text-slate-400 flex items-center justify-center sm:justify-end gap-2 mt-1">
-                            <i class="fas fa-phone text-slate-400"></i>
-                            {{ $user->phone }}
-                        </p>
+                        <p style="margin:0;font-size:13px;color:var(--su-ink-40)"><i class="fas fa-phone" aria-hidden="true"></i> {{ $user->phone }}</p>
                     @endif
                     @if($user->email)
-                        <p class="text-sm text-slate-600 dark:text-slate-400 flex items-center justify-center sm:justify-end gap-2 mt-0.5">
-                            <i class="fas fa-envelope text-slate-400"></i>
-                            {{ $user->email }}
-                        </p>
+                        <p style="margin:2px 0 0;font-size:13px;color:var(--su-ink-40)"><i class="fas fa-envelope" aria-hidden="true"></i> {{ $user->email }}</p>
                     @endif
                 </div>
             </div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1">
-                <div class="rounded-xl p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 text-center">
-                    <div class="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 mx-auto mb-2">
-                        <i class="fas fa-calendar-week text-sm"></i>
-                    </div>
-                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5">{{ __('instructor.join_date') }}</p>
-                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100">{{ $memberSince }}</p>
+            <div class="su-kpi-row su-kpi-row--4" style="flex:1;min-width:220px">
+                <div class="su-kpi su-kpi--1">
+                    <div class="su-kpi__l">{{ __('instructor.join_date') }}</div>
+                    <div class="su-kpi__v" style="font-size:14px">{{ $memberSince }}</div>
                 </div>
-                <div class="rounded-xl p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 text-center">
-                    <div class="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 mx-auto mb-2">
-                        <i class="fas fa-book-open text-sm"></i>
-                    </div>
-                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5">{{ __('instructor.my_courses') }}</p>
-                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100">{{ $myCoursesCount }}</p>
+                <div class="su-kpi su-kpi--2">
+                    <div class="su-kpi__l">{{ __('instructor.my_courses') }}</div>
+                    <div class="su-kpi__v">{{ $myCoursesCount }}</div>
                 </div>
-                <div class="rounded-xl p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 text-center">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 mx-auto mb-2">
-                        <i class="fas fa-user-graduate text-sm"></i>
-                    </div>
-                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5">{{ __('instructor.students') }}</p>
-                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100">{{ $totalStudents }}</p>
+                <div class="su-kpi su-kpi--3">
+                    <div class="su-kpi__l">{{ __('instructor.students') }}</div>
+                    <div class="su-kpi__v">{{ $totalStudents }}</div>
                 </div>
-                <div class="rounded-xl p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 text-center">
-                    <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 mx-auto mb-2">
-                        <i class="fas fa-clock-rotate-left text-sm"></i>
-                    </div>
-                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5">{{ __('instructor.last_login') }}</p>
-                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100">{{ $lastLogin }}</p>
+                <div class="su-kpi su-kpi--4">
+                    <div class="su-kpi__l">{{ __('instructor.last_login') }}</div>
+                    <div class="su-kpi__v" style="font-size:14px">{{ $lastLogin }}</div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="grid grid-cols-1 gap-6 lg:gap-8 lg:grid-cols-3">
-        <!-- البطاقات الجانبية -->
-        <div class="space-y-6">
-            <div class="rounded-2xl p-5 sm:p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-                    <span class="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center text-sky-600">
-                        <i class="fas fa-info-circle text-sm"></i>
-                    </span>
-                    {{ __('instructor.account_info') }}
-                </h3>
-                <div class="space-y-3 text-sm">
-                    <div class="flex items-center justify-between gap-3 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-700/80">
-                        <span class="text-slate-600 dark:text-slate-400 font-medium">{{ __('instructor.membership_number') }}</span>
-                        <span class="font-bold text-slate-800 dark:text-slate-100">#{{ str_pad($user->id, 5, '0', STR_PAD_LEFT) }}</span>
+    <div class="su-detail-grid">
+        <div style="display:flex;flex-direction:column;gap:16px">
+            <section class="su-card">
+                <h2 class="su-card__title"><i class="fas fa-info-circle" aria-hidden="true"></i> {{ __('instructor.account_info') }}</h2>
+                <div class="su-meta-list">
+                    <div class="su-meta-row">
+                        <span>{{ __('instructor.membership_number') }}</span>
+                        <strong>#{{ str_pad($user->id, 5, '0', STR_PAD_LEFT) }}</strong>
                     </div>
-                    <div class="flex items-center justify-between gap-3 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-700/80">
-                        <span class="text-slate-600 dark:text-slate-400 font-medium">{{ __('instructor.account_type') }}</span>
-                        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-100 text-sky-700">{{ __('instructor.instructor_role') }}</span>
+                    <div class="su-meta-row">
+                        <span>{{ __('instructor.account_type') }}</span>
+                        <span class="su-chip su-soft-1">{{ __('instructor.instructor_role') }}</span>
                     </div>
-                    <div class="flex items-center justify-between gap-3 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-700/80">
-                        <span class="text-slate-600 dark:text-slate-400 font-medium">{{ __('common.status') }}</span>
-                        <span class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs font-semibold {{ $user->is_active ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400' }}">
-                            <span class="w-1.5 h-1.5 rounded-full {{ $user->is_active ? 'bg-emerald-600 dark:bg-emerald-700' : 'bg-rose-600 dark:bg-rose-700' }}"></span>
+                    <div class="su-meta-row">
+                        <span>{{ __('common.status') }}</span>
+                        <span class="su-chip {{ $user->is_active ? 'su-chip--ok' : 'su-chip--off' }}">
                             {{ $user->is_active ? __('instructor.active_status') : __('instructor.not_active') }}
                         </span>
                     </div>
                 </div>
-            </div>
+            </section>
 
             @if($user->isAcademyWorkingInstructor())
-            <div class="rounded-2xl p-5 sm:p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-                    <span class="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center text-sky-600">
-                        <i class="fas fa-folder-open text-sm"></i>
-                    </span>
-                    مكتباتك وملفات الطلاب
-                </h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">ارفع الماتريال من هنا لطلابك فقط. مناهج الأكاديمية للعرض دون رفع.</p>
-                <div class="space-y-2 text-sm">
-                    <a href="{{ route('instructor.libraries.materials.index') }}" class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/40 hover:border-[#0B3D91]/40">
-                        <span class="font-semibold text-slate-800 dark:text-slate-100"><i class="fas fa-file-upload ml-2 text-sky-600"></i>رفع الماتريال</span>
-                        <i class="fas fa-chevron-left text-slate-400 text-xs"></i>
-                    </a>
-                    <a href="{{ route('instructor.libraries.curriculum.index') }}" class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/40 hover:border-[#0B3D91]/40">
-                        <span class="font-semibold text-slate-800 dark:text-slate-100"><i class="fas fa-book-open ml-2 text-violet-600"></i>عرض مناهج الأكاديمية</span>
-                        <i class="fas fa-chevron-left text-slate-400 text-xs"></i>
-                    </a>
-                    <a href="{{ route('instructor.courses.index') }}" class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/40 hover:border-[#0B3D91]/40">
-                        <span class="font-semibold text-slate-800 dark:text-slate-100"><i class="fas fa-layer-group ml-2 text-amber-600"></i>بناء منهج كورساتك</span>
-                        <i class="fas fa-chevron-left text-slate-400 text-xs"></i>
-                    </a>
-                    <a href="{{ route('instructor.libraries.videos.index') }}" class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/40 hover:border-[#0B3D91]/40">
-                        <span class="font-semibold text-slate-800 dark:text-slate-100"><i class="fas fa-video ml-2 text-rose-600"></i>مكتبة الفيديو</span>
-                        <i class="fas fa-chevron-left text-slate-400 text-xs"></i>
-                    </a>
-                </div>
-            </div>
+                <section class="su-card">
+                    <h2 class="su-card__title"><i class="fas fa-folder-open" aria-hidden="true"></i> {{ __('instructor.your_libraries') }}</h2>
+                    <p style="margin:0 0 12px;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.your_libraries_desc') }}</p>
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        <a href="{{ route('instructor.libraries.materials.index') }}" class="su-btn" style="justify-content:space-between">
+                            <span><i class="fas fa-file-upload" aria-hidden="true"></i> {{ __('instructor.upload_materials') }}</span>
+                            <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }}" aria-hidden="true"></i>
+                        </a>
+                        <a href="{{ route('instructor.libraries.curriculum.index') }}" class="su-btn" style="justify-content:space-between">
+                            <span><i class="fas fa-book-open" aria-hidden="true"></i> {{ __('instructor.view_academy_curriculum') }}</span>
+                            <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }}" aria-hidden="true"></i>
+                        </a>
+                        <a href="{{ route('instructor.courses.index') }}" class="su-btn" style="justify-content:space-between">
+                            <span><i class="fas fa-layer-group" aria-hidden="true"></i> {{ __('instructor.build_course_curriculum') }}</span>
+                            <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }}" aria-hidden="true"></i>
+                        </a>
+                        <a href="{{ route('instructor.libraries.videos.index') }}" class="su-btn" style="justify-content:space-between">
+                            <span><i class="fas fa-video" aria-hidden="true"></i> {{ __('instructor.video_library') }}</span>
+                            <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }}" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                </section>
             @endif
 
-            <div class="rounded-2xl p-5 sm:p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-                    <span class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600">
-                        <i class="fas fa-lightbulb text-sm"></i>
-                    </span>
-                    {{ __('instructor.tips_for_instructor') }}
-                </h3>
-                <ul class="space-y-3 text-sm text-slate-600 dark:text-slate-400">
-                    <li class="flex items-start gap-3 p-3 bg-sky-50 dark:bg-sky-900/40 rounded-xl border border-slate-100 dark:border-slate-700/80">
-                        <span class="text-sky-500 mt-0.5"><i class="fas fa-check-circle"></i></span>
+            <section class="su-card">
+                <h2 class="su-card__title"><i class="fas fa-lightbulb" aria-hidden="true"></i> {{ __('instructor.tips_for_instructor') }}</h2>
+                <div class="su-meta-list">
+                    <div class="su-meta-row" style="align-items:flex-start">
+                        <span class="su-meta-ico su-soft-1"><i class="fas fa-check-circle" aria-hidden="true"></i></span>
                         <div>
-                            <p class="font-semibold text-slate-800 dark:text-slate-100">{{ __('instructor.update_bio') }}</p>
-                            <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ __('instructor.add_bio_for_students') }}</p>
+                            <strong>{{ __('instructor.update_bio') }}</strong>
+                            <div style="font-size:12px;color:var(--su-ink-40)">{{ __('instructor.add_bio_for_students') }}</div>
                         </div>
-                    </li>
-                    <li class="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-700/80">
-                        <span class="text-emerald-500 mt-0.5"><i class="fas fa-lock"></i></span>
+                    </div>
+                    <div class="su-meta-row" style="align-items:flex-start">
+                        <span class="su-meta-ico su-soft-2"><i class="fas fa-lock" aria-hidden="true"></i></span>
                         <div>
-                            <p class="font-semibold text-slate-800 dark:text-slate-100">{{ __('instructor.strong_password') }}</p>
-                            <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ __('instructor.change_password_regularly') }}</p>
+                            <strong>{{ __('instructor.strong_password') }}</strong>
+                            <div style="font-size:12px;color:var(--su-ink-40)">{{ __('instructor.change_password_regularly') }}</div>
                         </div>
-                    </li>
-                </ul>
-            </div>
+                    </div>
+                </div>
+            </section>
         </div>
 
-        <!-- نموذج التحديث -->
-        <div class="lg:col-span-2">
-            <div class="rounded-2xl p-5 sm:p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-                <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1">{{ __('instructor.update_data') }}</h3>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">{{ __('instructor.update_data_subtitle') }}</p>
+        <div>
+            <section class="su-card">
+                <h2 class="su-card__title">{{ __('instructor.update_data') }}</h2>
+                <p style="margin:0 0 16px;font-size:13px;color:var(--su-ink-40)">{{ __('instructor.update_data_subtitle') }}</p>
 
-                <form method="POST" action="{{ route('instructor.profile.update') }}" class="space-y-6" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('instructor.profile.update') }}" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
-
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ __('instructor.full_name') }}</label>
-                            <input type="text" name="name" value="{{ old('name', $user->name) }}" required
-                                   class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-colors">
-                            @error('name')
-                                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
-                            @enderror
+                    <div class="su-form-grid" style="grid-template-columns:1fr 1fr">
+                        <div class="su-field">
+                            <label>{{ __('instructor.full_name') }}</label>
+                            <input type="text" name="name" value="{{ old('name', $user->name) }}" required class="su-input">
+                            @error('name')<p class="su-field-error">{{ $message }}</p>@enderror
                         </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ __('instructor.phone') }}</label>
-                            <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" required
-                                   class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-colors">
-                            @error('phone')
-                                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
-                            @enderror
+                        <div class="su-field">
+                            <label>{{ __('instructor.phone') }}</label>
+                            <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" required class="su-input">
+                            @error('phone')<p class="su-field-error">{{ $message }}</p>@enderror
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ __('instructor.email_optional') }}</label>
-                            <input type="email" name="email" value="{{ old('email', $user->email) }}"
-                                   class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-colors">
-                            @error('email')
-                                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
-                            @enderror
+                        <div class="su-field" style="grid-column:1 / -1">
+                            <label>{{ __('instructor.email_optional') }}</label>
+                            <input type="email" name="email" value="{{ old('email', $user->email) }}" class="su-input">
+                            @error('email')<p class="su-field-error">{{ $message }}</p>@enderror
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ app()->getLocale() === 'ar' ? 'المنطقة الزمنية' : 'Timezone' }}</label>
+                        <div class="su-field" style="grid-column:1 / -1">
+                            <label>{{ __('instructor.timezone') }}</label>
                             @php
                                 $tzOptions = \App\Support\AppTimezone::commonZones();
                                 $tzCurrent = old('timezone', $user->timezone ?: \App\Support\AppTimezone::academy());
@@ -222,91 +176,74 @@
                                     $tzOptions = [$tzCurrent => $tzCurrent] + $tzOptions;
                                 }
                             @endphp
-                            <select name="timezone" data-timezone-select required
-                                    class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-colors">
+                            <select name="timezone" data-timezone-select required class="su-select">
                                 @foreach ($tzOptions as $tzId => $tzLabel)
                                     <option value="{{ $tzId }}" @selected($tzCurrent === $tzId)>{{ $tzLabel }}</option>
                                 @endforeach
                             </select>
-                            <p class="text-xs text-slate-500 mt-1">{{ app()->getLocale() === 'ar' ? 'ساعات التوفر والمواعيد هتتحسب حسب المنطقة دي. لو المقابلة في أمريكا اختار نيويورك أو لوس أنجلوس.' : 'Availability and appointments use this timezone. Choose a US zone for meetings in America.' }}</p>
-                            @error('timezone')
-                                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
-                            @enderror
+                            <span style="font-size:12px;color:var(--su-ink-40)">{{ __('instructor.timezone_hint') }}</span>
+                            @error('timezone')<p class="su-field-error">{{ $message }}</p>@enderror
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ __('instructor.bio_optional') }}</label>
-                            <textarea name="bio" rows="4" placeholder="{{ __('instructor.bio_placeholder_short') }}"
-                                      class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-colors">{{ old('bio', $user->bio) }}</textarea>
-                            @error('bio')
-                                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
-                            @enderror
+                        <div class="su-field" style="grid-column:1 / -1">
+                            <label>{{ __('instructor.bio_optional') }}</label>
+                            <textarea name="bio" rows="4" class="su-input" style="min-height:100px;resize:vertical"
+                                      placeholder="{{ __('instructor.bio_placeholder_short') }}">{{ old('bio', $user->bio) }}</textarea>
+                            @error('bio')<p class="su-field-error">{{ $message }}</p>@enderror
                         </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ __('instructor.profile_image') }}</label>
-                        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-                            <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-center shrink-0">
-                                @if($user->profile_image)
-                                    <img src="{{ $user->profile_image_url }}" alt="{{ __('instructor.profile_image') }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
-                                    <i class="fas fa-user text-slate-400 text-2xl hidden"></i>
-                                @else
-                                    <i class="fas fa-user text-slate-400 text-2xl"></i>
-                                @endif
-                            </div>
-                            <div class="flex-1">
-                                <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:bg-slate-700/50 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors">
-                                    <i class="fas fa-upload text-sky-500"></i>
-                                    <span>{{ __('instructor.choose_image_label') }}</span>
-                                    <input type="file" name="profile_image" accept="image/*" class="hidden">
+                        <div class="su-field" style="grid-column:1 / -1">
+                            <label>{{ __('instructor.profile_image') }}</label>
+                            <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+                                <div style="width:88px;height:88px;border-radius:12px;overflow:hidden;border:1px solid var(--su-line,rgba(0,0,0,.08));background:var(--su-soft-1,rgba(0,0,0,.04));display:flex;align-items:center;justify-content:center">
+                                    @if($user->profile_image)
+                                        <img src="{{ $user->profile_image_url }}" alt="{{ __('instructor.profile_image') }}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
+                                        <i class="fas fa-user hidden" style="color:var(--su-ink-40)" aria-hidden="true"></i>
+                                    @else
+                                        <i class="fas fa-user" style="color:var(--su-ink-40)" aria-hidden="true"></i>
+                                    @endif
+                                </div>
+                                <label class="su-btn" style="cursor:pointer">
+                                    <i class="fas fa-upload" aria-hidden="true"></i>
+                                    {{ __('instructor.choose_image_label') }}
+                                    <input type="file" name="profile_image" accept="image/*" class="hidden" style="display:none">
                                 </label>
-                                @error('profile_image')
-                                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
-                                @enderror
+                            </div>
+                            @error('profile_image')<p class="su-field-error">{{ $message }}</p>@enderror
+                        </div>
+                    </div>
+
+                    <div class="su-card" style="margin:20px 0;background:rgba(0,0,0,.02)">
+                        <h3 class="su-card__title">{{ __('instructor.change_password') }}</h3>
+                        <p style="margin:0 0 12px;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.leave_empty_if_no_change') }}</p>
+                        <div class="su-form-grid" style="grid-template-columns:1fr 1fr 1fr">
+                            <div class="su-field">
+                                <label>{{ __('instructor.current_password') }}</label>
+                                <input type="password" name="current_password" class="su-input">
+                                @error('current_password')<p class="su-field-error">{{ $message }}</p>@enderror
+                            </div>
+                            <div class="su-field">
+                                <label>{{ __('instructor.new_password') }}</label>
+                                <input type="password" name="password" class="su-input">
+                                @error('password')<p class="su-field-error">{{ $message }}</p>@enderror
+                            </div>
+                            <div class="su-field">
+                                <label>{{ __('instructor.confirm_password') }}</label>
+                                <input type="password" name="password_confirmation" class="su-input">
                             </div>
                         </div>
                     </div>
 
-                    <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-5 space-y-4">
-                        <h4 class="text-base font-bold text-slate-800 dark:text-slate-100">{{ __('instructor.change_password') }}</h4>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">{{ __('instructor.leave_empty_if_no_change') }}</p>
-                        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{{ __('instructor.current_password') }}</label>
-                                <input type="password" name="current_password"
-                                       class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20">
-                                @error('current_password')
-                                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{{ __('instructor.new_password') }}</label>
-                                <input type="password" name="password"
-                                       class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20">
-                                @error('password')
-                                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{{ __('instructor.confirm_password') }}</label>
-                                <input type="password" name="password_confirmation"
-                                       class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-slate-200 dark:border-slate-700">
-                        <a href="{{ route('dashboard') }}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/95 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800/40 transition-colors">
-                            <i class="fas fa-arrow-right"></i>
+                    <div class="su-form-actions" style="justify-content:space-between;gap:8px;padding-top:16px;border-top:1px solid var(--su-line,rgba(0,0,0,.06))">
+                        <a href="{{ route('dashboard') }}" class="su-btn">
+                            <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
                             {{ __('instructor.back_to_dashboard') }}
                         </a>
-                        <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white px-6 py-2.5 text-sm font-semibold transition-colors">
-                            <i class="fas fa-save"></i>
+                        <button type="submit" class="su-btn su-btn--primary">
+                            <i class="fas fa-save" aria-hidden="true"></i>
                             {{ __('instructor.save_changes') }}
                         </button>
                     </div>
                 </form>
-            </div>
+            </section>
         </div>
     </div>
 </div>

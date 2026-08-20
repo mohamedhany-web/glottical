@@ -1,95 +1,84 @@
 @extends('layouts.app')
 
 @section('title', __('instructor.create_question_bank_new') . ' - ' . config('app.name'))
-@section('header', __('instructor.create_question_bank_new'))
+@section('page_title', __('instructor.create_question_bank_new'))
 
 @section('content')
-<div class="w-full px-4 sm:px-6 lg:px-8 py-6">
-    <!-- هيدر الصفحة (عرض الصفحة كاملاً) -->
-    <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6 mb-6">
-        <nav class="text-sm text-slate-500 dark:text-slate-400 mb-2">
-            <a href="{{ route('instructor.question-banks.index') }}" class="hover:text-sky-600 transition-colors">{{ __('instructor.question_banks') }}</a>
-            <span class="mx-2">/</span>
-            <span class="text-slate-700 dark:text-slate-300 font-semibold">{{ __('instructor.create_bank') }}</span>
-        </nav>
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div class="flex flex-wrap items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center shrink-0">
-                    <i class="fas fa-database text-lg"></i>
-                </div>
-                <div class="min-w-0">
-                    <h1 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">{{ __('instructor.create_question_bank_new') }}</h1>
-                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{{ __('instructor.create_question_bank_desc') }}</p>
-                </div>
-            </div>
-            <a href="{{ route('instructor.question-banks.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                <i class="fas fa-arrow-right"></i>
+@php
+    $isRtl = app()->getLocale() === 'ar';
+@endphp
+<div class="su-page" style="max-width:56rem">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.question-banks.index') }}">{{ __('instructor.question_banks') }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ __('instructor.create_bank') }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-database su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.create_question_bank_new') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.create_question_bank_desc') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.question-banks.index') }}" class="su-btn">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
                 {{ __('instructor.back') }}
             </a>
         </div>
     </div>
 
-    <!-- بطاقة النموذج -->
-    <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <section class="su-card">
         <form action="{{ route('instructor.question-banks.store') }}" method="POST">
             @csrf
-            <div class="p-6 sm:p-8 space-y-8">
-                <!-- معلومات بنك الأسئلة -->
-                <div class="space-y-6">
-                    <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">{{ __('instructor.question_bank_info') }}</h2>
-                    <div>
-                        <label for="title" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.title_required') }} <span class="text-red-500">*</span></label>
-                        <input type="text" name="title" id="title" value="{{ old('title') }}" required
-                               class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100"
-                               placeholder="{{ __('instructor.question_bank_title_placeholder') }}">
-                        @error('title')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                    </div>
-                    <div>
-                        <label for="description" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.description') }}</label>
-                        <textarea name="description" id="description" rows="4"
-                                  class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100"
-                                  placeholder="{{ __('instructor.description_placeholder') }}">{{ old('description') }}</textarea>
-                        @error('description')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                    </div>
-                    <div class="max-w-xs">
-                        <label for="difficulty" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.difficulty') }}</label>
-                        <select name="difficulty" id="difficulty"
-                                class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                            <option value="">{{ __('instructor.optional_label') }}</option>
-                            <option value="easy" {{ old('difficulty') == 'easy' ? 'selected' : '' }}>{{ __('instructor.easy') }}</option>
-                            <option value="medium" {{ old('difficulty') == 'medium' ? 'selected' : '' }}>{{ __('instructor.medium') }}</option>
-                            <option value="hard" {{ old('difficulty') == 'hard' ? 'selected' : '' }}>{{ __('instructor.hard') }}</option>
-                        </select>
-                    </div>
+            <h2 class="su-card__title" style="margin-bottom:16px">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                {{ __('instructor.question_bank_info') }}
+            </h2>
+            <div class="su-form-grid" style="grid-template-columns:1fr">
+                <div class="su-field">
+                    <label for="title">{{ __('instructor.title_required') }} <span style="color:#b91c1c">*</span></label>
+                    <input type="text" name="title" id="title" value="{{ old('title') }}" required class="su-input"
+                           placeholder="{{ __('instructor.question_bank_title_placeholder') }}">
+                    @error('title')<p class="su-field-error">{{ $message }}</p>@enderror
                 </div>
-
-                <!-- الحالة -->
-                <div class="space-y-4 pt-6 border-t border-slate-200 dark:border-slate-700">
-                    <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">{{ __('instructor.status_label') }}</h2>
-                    <label class="inline-flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}
-                               class="rounded border-slate-300 text-sky-600 focus:ring-sky-500">
-                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ __('instructor.bank_active') }}</span>
+                <div class="su-field">
+                    <label for="description">{{ __('instructor.description') }}</label>
+                    <textarea name="description" id="description" rows="4" class="su-input" style="min-height:100px;resize:vertical"
+                              placeholder="{{ __('instructor.description_placeholder') }}">{{ old('description') }}</textarea>
+                    @error('description')<p class="su-field-error">{{ $message }}</p>@enderror
+                </div>
+                <div class="su-field" style="max-width:16rem">
+                    <label for="difficulty">{{ __('instructor.difficulty') }}</label>
+                    <select name="difficulty" id="difficulty" class="su-select">
+                        <option value="">{{ __('instructor.optional_label') }}</option>
+                        <option value="easy" {{ old('difficulty') == 'easy' ? 'selected' : '' }}>{{ __('instructor.easy') }}</option>
+                        <option value="medium" {{ old('difficulty') == 'medium' ? 'selected' : '' }}>{{ __('instructor.medium') }}</option>
+                        <option value="hard" {{ old('difficulty') == 'hard' ? 'selected' : '' }}>{{ __('instructor.hard') }}</option>
+                    </select>
+                </div>
+                <div class="su-field">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500">
+                        <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}>
+                        <span>{{ __('instructor.bank_active') }}</span>
                     </label>
                 </div>
+            </div>
 
-                <!-- نصائح وأزرار -->
-                <div class="pt-6 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div class="bg-sky-50 dark:bg-sky-900/30 border border-sky-200 rounded-xl p-4 text-sm text-sky-800 max-w-md">
-                        <span class="font-semibold">{{ __('instructor.tips') }}:</span> {{ __('instructor.tip_after_create_bank') }}
-                    </div>
-                    <div class="flex gap-3 shrink-0">
-                        <button type="submit" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold transition-colors">
-                            <i class="fas fa-save ml-2"></i>
-                            {{ __('instructor.create_bank_btn') }}
-                        </button>
-                        <a href="{{ route('instructor.question-banks.index') }}" class="px-6 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                            {{ __('common.cancel') }}
-                        </a>
-                    </div>
-                </div>
+            <div class="su-card" style="margin:20px 0;padding:12px 16px;background:var(--su-soft-1,rgba(59,130,246,.08));border-color:transparent">
+                <strong style="font-size:13px">{{ __('instructor.tips') }}:</strong>
+                <span style="font-size:13px;color:var(--su-ink-40)"> {{ __('instructor.tip_after_create_bank') }}</span>
+            </div>
+
+            <div class="su-form-actions" style="justify-content:flex-end;gap:8px">
+                <a href="{{ route('instructor.question-banks.index') }}" class="su-btn">{{ __('common.cancel') }}</a>
+                <button type="submit" class="su-btn su-btn--primary">
+                    <i class="fas fa-save" aria-hidden="true"></i>
+                    {{ __('instructor.create_bank_btn') }}
+                </button>
             </div>
         </form>
-    </div>
+    </section>
 </div>
 @endsection

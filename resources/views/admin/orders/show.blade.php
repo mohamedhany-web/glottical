@@ -243,6 +243,18 @@
                         </div>
                     @endforelse
 
+                    @if($order->status === \App\Models\Order::STATUS_APPROVED)
+                        <form method="POST" action="{{ route('admin.orders.refulfill-tutoring', $order) }}" class="pt-1">
+                            @csrf
+                            <button type="submit" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium text-ink hover:bg-canvas">
+                                <i class="fas fa-rotate"></i> إعادة تفعيل رصيد الباقة
+                            </button>
+                            @if(str_contains((string) $order->notes, '[TUTORING_FULFILL_FAILED]'))
+                                <p class="mt-2 text-xs font-medium text-rose-600">فشل تفعيل سابق بعد الدفع — استخدم الزر أعلاه.</p>
+                            @endif
+                        </form>
+                    @endif
+
                     @if($order->tutoringGroupBookings->isNotEmpty())
                         <div>
                             <h4 class="mb-2 text-sm font-semibold text-ink">الحجوزات المرتبطة</h4>

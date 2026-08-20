@@ -1,186 +1,153 @@
 @extends('layouts.app')
 
 @section('title', __('instructor.lectures') . ' - ' . config('app.name'))
-@section('header', __('instructor.lectures'))
+@section('page_title', __('instructor.lectures'))
 
 @section('content')
-<div class="space-y-6">
-    <!-- الهيدر -->
-    <div class="rounded-2xl p-6 text-white shadow-lg border border-white/10 bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="min-w-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
-                        <i class="fas fa-chalkboard-teacher text-lg"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <h1 class="text-xl sm:text-2xl font-black leading-tight truncate">{{ __('instructor.lectures') }}</h1>
-                        <p class="text-sm text-white/90 mt-0.5">{{ __('instructor.manage_lectures_curriculum') }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-                <a href="{{ route('instructor.courses.index') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/20 border border-white/20 text-white font-semibold transition-colors">
-                    <i class="fas fa-book"></i>
-                    <span>{{ __('instructor.courses') }}</span>
-                </a>
-                <a href="{{ route('instructor.lectures.create') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-indigo-700 hover:bg-white/90 border border-white/20 font-extrabold transition-colors">
-                    <i class="fas fa-plus"></i>
-                    <span>{{ __('instructor.add_new_lecture') }}</span>
-                </a>
-            </div>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <h1 class="su-page-head__title">
+                <i class="fas fa-chalkboard-teacher su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.lectures') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.manage_lectures_curriculum') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.courses.index') }}" class="su-btn">
+                <i class="fas fa-book" aria-hidden="true"></i>
+                {{ __('instructor.courses') }}
+            </a>
+            <a href="{{ route('instructor.lectures.create') }}" class="su-btn su-btn--primary">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                {{ __('instructor.add_new_lecture') }}
+            </a>
         </div>
     </div>
 
-    <!-- الإحصائيات -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div class="rounded-2xl p-5 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">{{ __('instructor.total_courses') }}</p>
-                <p class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['total_courses'] ?? 0 }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center">
-                <i class="fas fa-book text-sky-600 text-lg"></i>
+    <section class="su-kpi-row" style="margin-bottom:20px">
+        <div class="su-kpi su-kpi--1">
+            <div class="su-kpi__l">{{ __('instructor.total_courses') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['total_courses'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-book" aria-hidden="true"></i></div>
             </div>
         </div>
-        <div class="rounded-2xl p-5 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">{{ __('instructor.active_courses') }}</p>
-                <p class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['active_courses'] ?? 0 }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
-                <i class="fas fa-check-circle text-emerald-600 text-lg"></i>
+        <div class="su-kpi su-kpi--2">
+            <div class="su-kpi__l">{{ __('instructor.active_courses') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['active_courses'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
             </div>
         </div>
-        <div class="rounded-2xl p-5 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">{{ __('instructor.total_lectures') }}</p>
-                <p class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['total_lectures'] ?? 0 }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center">
-                <i class="fas fa-chalkboard-teacher text-violet-600 text-lg"></i>
+        <div class="su-kpi su-kpi--3">
+            <div class="su-kpi__l">{{ __('instructor.total_lectures') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['total_lectures'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i></div>
             </div>
         </div>
-        <div class="rounded-2xl p-5 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">{{ __('instructor.scheduled_lectures') }}</p>
-                <p class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['scheduled_lectures'] ?? 0 }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
-                <i class="fas fa-calendar-alt text-amber-600 text-lg"></i>
+        <div class="su-kpi su-kpi--4">
+            <div class="su-kpi__l">{{ __('instructor.scheduled_lectures') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['scheduled_lectures'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-calendar-alt" aria-hidden="true"></i></div>
             </div>
         </div>
-        <div class="rounded-2xl p-5 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">{{ __('instructor.total_students') }}</p>
-                <p class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['total_students'] ?? 0 }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center">
-                <i class="fas fa-users text-violet-600 text-lg"></i>
+        <div class="su-kpi su-kpi--1">
+            <div class="su-kpi__l">{{ __('instructor.total_students') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['total_students'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-users" aria-hidden="true"></i></div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- الفلاتر -->
-    <div class="bg-white dark:bg-slate-800/95 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <label for="search" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ __('common.search') }}</label>
-                <input type="text" name="search" id="search" value="{{ request('search') }}" 
+    <section class="su-card" style="margin-bottom:20px">
+        <form method="GET" class="su-form-grid">
+            <div class="su-field">
+                <label for="search">{{ __('common.search') }}</label>
+                <input type="text" name="search" id="search" value="{{ request('search') }}"
                        placeholder="{{ __('instructor.search_in_courses') }}"
-                       class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-colors">
+                       class="su-input">
             </div>
-            <div>
-                <label for="status" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ __('common.status') }}</label>
-                <select name="status" id="status" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-colors">
+            <div class="su-field">
+                <label for="status">{{ __('common.status') }}</label>
+                <select name="status" id="status" class="su-select">
                     <option value="">{{ __('instructor.all_statuses') }}</option>
                     <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>{{ __('instructor.active_status') }}</option>
                     <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>{{ __('instructor.not_active') }}</option>
                 </select>
             </div>
-            <div class="flex items-end gap-2">
-                <button type="submit" class="flex-1 inline-flex items-center justify-center gap-2 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-search"></i>
-                    <span class="mr-2">{{ __('common.search') }}</span>
+            <div class="su-form-actions">
+                <button type="submit" class="su-btn su-btn--primary" style="flex:1;justify-content:center;height:40px">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    {{ __('common.search') }}
                 </button>
                 @if(request()->anyFilled(['search', 'status']))
-                    <a href="{{ route('instructor.lectures.index') }}" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors inline-flex items-center justify-center">
-                        <i class="fas fa-times"></i>
+                    <a href="{{ route('instructor.lectures.index') }}" class="su-btn" style="height:40px;width:40px;padding:0;justify-content:center" title="{{ __('common.reset') ?? 'Reset' }}">
+                        <i class="fas fa-times" aria-hidden="true"></i>
                     </a>
                 @endif
             </div>
         </form>
-    </div>
+    </section>
 
-    <!-- قائمة الكورسات -->
     @if($courses->count() > 0)
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 max-w-6xl">
+        <div class="su-course-grid">
             @foreach($courses as $course)
-            <div class="rounded-xl overflow-hidden bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-                <div class="p-4 border-b border-slate-200 dark:border-slate-700">
-                    <div class="flex items-center justify-between gap-2 flex-wrap">
-                        <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 truncate flex-1 min-w-0">{{ $course->title }}</h3>
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold shrink-0 {{ $course->is_active ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400' }}">
-                            @if($course->is_active)<i class="fas fa-check-circle"></i> {{ __('instructor.active_status') }}
-                            @else<i class="fas fa-times-circle"></i> {{ __('instructor.not_active') }}
-                            @endif
+                <article class="su-course-card">
+                    <div class="su-course-card__head">
+                        <h3 class="su-course-card__title">{{ $course->title }}</h3>
+                        <span class="su-chip {{ $course->is_active ? 'su-chip--ok' : 'su-chip--off' }}">
+                            <i class="fas {{ $course->is_active ? 'fa-check-circle' : 'fa-times-circle' }}" aria-hidden="true"></i>
+                            {{ $course->is_active ? __('instructor.active_status') : __('instructor.not_active') }}
                         </span>
                     </div>
-                    @if($course->academicYear)
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ $course->academicYear->name }}</p>
-                    @endif
-                </div>
-
-                <div class="p-4 flex-1">
-                    <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
-                        <div class="flex items-center gap-1.5">
-                            <i class="fas fa-book-open text-violet-500 w-4 text-center"></i>
-                            <span class="text-slate-500 dark:text-slate-400">{{ __('instructor.sections_label') }}:</span>
-                            <span class="text-slate-800 dark:text-slate-100 font-medium">{{ $course->sections_count ?? 0 }}</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <i class="fas fa-chalkboard-teacher text-amber-500 w-4 text-center"></i>
-                            <span class="text-slate-500 dark:text-slate-400">{{ __('instructor.lectures_label') }}:</span>
-                            <span class="text-slate-800 dark:text-slate-100 font-medium">{{ $course->lectures_count ?? 0 }}</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <i class="fas fa-users text-emerald-500 w-4 text-center"></i>
-                            <span class="text-slate-500 dark:text-slate-400">{{ __('instructor.students_label') }}:</span>
-                            <span class="text-slate-800 dark:text-slate-100 font-medium">{{ $course->enrollments_count ?? 0 }}</span>
+                    <div class="su-course-card__body">
+                        @if($course->academicYear)
+                            <p class="su-course-card__desc">{{ $course->academicYear->name }}</p>
+                        @endif
+                        <div class="su-meta-list">
+                            <div class="su-meta-row">
+                                <span class="su-meta-ico su-soft-1"><i class="fas fa-book-open" aria-hidden="true"></i></span>
+                                <span>{{ __('instructor.sections_label') }}:</span>
+                                <strong>{{ $course->sections_count ?? 0 }}</strong>
+                            </div>
+                            <div class="su-meta-row">
+                                <span class="su-meta-ico su-soft-2"><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i></span>
+                                <span>{{ __('instructor.lectures_label') }}:</span>
+                                <strong>{{ $course->lectures_count ?? 0 }}</strong>
+                            </div>
+                            <div class="su-meta-row">
+                                <span class="su-meta-ico su-soft-3"><i class="fas fa-users" aria-hidden="true"></i></span>
+                                <span>{{ __('instructor.students_label') }}:</span>
+                                <strong>{{ $course->enrollments_count ?? 0 }}</strong>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="p-4 pt-0 flex flex-col gap-2">
-                    <a href="{{ route('instructor.courses.curriculum', $course) }}" 
-                       class="w-full inline-flex items-center justify-center gap-2 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
-                        <i class="fas fa-sitemap"></i>
-<span>{{ __('instructor.build_curriculum') }}</span>
-                    </a>
-                    <a href="{{ route('instructor.courses.show', $course) }}"
-                       class="w-full inline-flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
-                        <i class="fas fa-eye"></i>
-                        <span>{{ __('instructor.view_details') }}</span>
-                    </a>
-                </div>
-            </div>
+                    <div class="su-course-card__foot" style="display:flex;flex-direction:column;gap:8px">
+                        <a href="{{ route('instructor.courses.curriculum', $course) }}" class="su-btn su-btn--primary" style="justify-content:center">
+                            <i class="fas fa-sitemap" aria-hidden="true"></i>
+                            {{ __('instructor.build_curriculum') }}
+                        </a>
+                        <a href="{{ route('instructor.courses.show', $course) }}" class="su-btn" style="justify-content:center">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                            {{ __('instructor.view_details') }}
+                        </a>
+                    </div>
+                </article>
             @endforeach
         </div>
 
-        <div class="mt-6 flex justify-center">
-            <div class="bg-white dark:bg-slate-800/95 rounded-xl p-3 border border-slate-200 dark:border-slate-700 shadow-sm">
-                {{ $courses->links() }}
-            </div>
-        </div>
+        @if(method_exists($courses, 'links') && $courses->hasPages())
+            <div class="su-pager" style="margin-top:16px">{{ $courses->links() }}</div>
+        @endif
     @else
-        <div class="rounded-2xl p-12 sm:p-16 text-center bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="w-24 h-24 rounded-2xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-chalkboard-teacher text-4xl text-sky-500"></i>
-            </div>
-            <h3 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">{{ __('instructor.no_courses') }}</h3>
-            <p class="text-slate-500 dark:text-slate-400 max-w-md mx-auto">{{ __('instructor.no_courses_lectures_desc') }}</p>
+        <div class="su-empty">
+            <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
+            <p><strong>{{ __('instructor.no_courses') }}</strong></p>
+            <p>{{ __('instructor.no_courses_lectures_desc') }}</p>
         </div>
     @endif
 </div>

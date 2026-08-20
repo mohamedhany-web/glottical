@@ -1,96 +1,157 @@
 @extends('layouts.app')
 
 @section('title', $folder->displayName())
-@section('header', $folder->displayName())
+@section('page_title', $folder->displayName())
 
 @section('content')
-<div class="space-y-5">
-    <section class="flex flex-wrap items-end justify-between gap-4">
-        <div>
-            <p class="text-xs font-medium text-slate-500"><a href="{{ route('instructor.libraries.materials.index') }}" class="hover:text-[#0B3D91]">مكتبة الماتريال</a> · {{ $folder->academicYear->name ?? '' }}</p>
-            <h2 class="mt-1 text-2xl font-semibold text-slate-900">{{ $folder->displayName() }}</h2>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.libraries.materials.index') }}">{{ __('instructor.lib_materials_title') }}</a>
+                @if($folder->academicYear?->name)
+                    <span>/</span>
+                    <span>{{ $folder->academicYear->name }}</span>
+                @endif
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-folder-open su-page-head__ico" aria-hidden="true"></i>
+                {{ $folder->displayName() }}
+            </h1>
         </div>
-    </section>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.libraries.materials.index') }}" class="su-btn">
+                <i class="fas fa-arrow-{{ app()->getLocale() === 'ar' ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.back') }}
+            </a>
+        </div>
+    </div>
 
     @if(session('success'))
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#15803d;font-size:13px">
+            {{ session('success') }}
+        </div>
     @endif
     @if($errors->any())
-        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ $errors->first() }}</div>
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#b91c1c;font-size:13px">
+            {{ $errors->first() }}
+        </div>
     @endif
 
     @if($canManage ?? true)
-    <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h3 class="text-base font-semibold mb-3">رفع محتوى آمن (PDF / PPT / HTML / ألعاب)</h3>
-        <form method="POST" action="{{ route('instructor.libraries.materials.upload', $folder) }}" enctype="multipart/form-data" class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            @csrf
-            <input type="text" name="title" placeholder="عنوان العرض" class="h-10 rounded-xl border border-slate-200 px-3 text-sm">
-            <input type="text" name="description" placeholder="وصف مختصر للطالب" class="h-10 rounded-xl border border-slate-200 px-3 text-sm">
-            <select name="content_theme" class="h-10 rounded-xl border border-slate-200 px-3 text-sm">
-                @foreach(\App\Support\FamilyLibraryThemes::labels('ar') as $key => $themeLabel)
-                    <option value="{{ $key }}" @selected(($folder->content_theme ?: 'general') === $key)>{{ $themeLabel }}</option>
-                @endforeach
-            </select>
-            <select name="experience_mode" class="h-10 rounded-xl border border-slate-200 px-3 text-sm">
-                <option value="download">تحميل</option>
-                <option value="view">عرض داخل المنصة</option>
-                <option value="play">لعب داخل المنصة</option>
-            </select>
-            <input type="file" name="file" required accept="{{ \App\Support\FamilyLibraryThemes::materialAcceptAttr() }}" class="h-10 rounded-xl border border-slate-200 px-3 text-sm file:mr-2">
-            <label class="inline-flex items-center gap-2 text-sm h-10"><input type="checkbox" name="is_visible_to_student" value="1" checked> ظاهر للطالب</label>
-            <button class="h-10 rounded-xl bg-[#0B3D91] px-4 text-sm font-semibold text-white md:col-span-2 lg:col-span-1">رفع</button>
-        </form>
-    </article>
+        <section class="su-card" style="margin-bottom:20px">
+            <h3 class="su-card__title" style="margin-bottom:14px">{{ __('instructor.lib_materials_upload_title') }}</h3>
+            <form method="POST" action="{{ route('instructor.libraries.materials.upload', $folder) }}" enctype="multipart/form-data" class="su-form-grid">
+                @csrf
+                <div class="su-field">
+                    <label for="title">{{ __('instructor.lib_materials_title_ph') }}</label>
+                    <input type="text" name="title" id="title" class="su-input" placeholder="{{ __('instructor.lib_materials_title_ph') }}">
+                </div>
+                <div class="su-field">
+                    <label for="description">{{ __('instructor.lib_materials_desc_ph') }}</label>
+                    <input type="text" name="description" id="description" class="su-input" placeholder="{{ __('instructor.lib_materials_desc_ph') }}">
+                </div>
+                <div class="su-field">
+                    <label for="content_theme">{{ __('instructor.lib_videos_theme') }}</label>
+                    <select name="content_theme" id="content_theme" class="su-select">
+                        @foreach(\App\Support\FamilyLibraryThemes::labels(app()->getLocale() === 'ar' ? 'ar' : 'en') as $key => $themeLabel)
+                            <option value="{{ $key }}" @selected(($folder->content_theme ?: 'general') === $key)>{{ $themeLabel }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="su-field">
+                    <label for="experience_mode">{{ __('instructor.lib_materials_col_theme') }}</label>
+                    <select name="experience_mode" id="experience_mode" class="su-select">
+                        <option value="download">{{ __('instructor.lib_materials_mode_download') }}</option>
+                        <option value="view">{{ __('instructor.lib_materials_mode_view') }}</option>
+                        <option value="play">{{ __('instructor.lib_materials_mode_play') }}</option>
+                    </select>
+                </div>
+                <div class="su-field">
+                    <label for="file">{{ __('instructor.lib_materials_col_file') }}</label>
+                    <input type="file" name="file" id="file" required accept="{{ \App\Support\FamilyLibraryThemes::materialAcceptAttr() }}" class="su-input">
+                </div>
+                <div class="su-field" style="display:flex;align-items:flex-end;padding-bottom:4px">
+                    <label class="su-check" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                        <input type="checkbox" name="is_visible_to_student" value="1" checked>
+                        {{ __('instructor.lib_materials_visible_student') }}
+                    </label>
+                </div>
+                <div class="su-form-actions">
+                    <button type="submit" class="su-btn su-btn--primary" style="height:40px;justify-content:center;flex:1">
+                        <i class="fas fa-upload" aria-hidden="true"></i>
+                        {{ __('instructor.lib_materials_upload') }}
+                    </button>
+                </div>
+            </form>
+        </section>
     @else
-        <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">مجلد إداري — عرض فقط. ارفع في فولدراتك الخاصة.</div>
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08);color:#92400e;font-size:13px">
+            {{ __('instructor.lib_materials_admin_readonly') }}
+        </div>
     @endif
 
-    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <table class="min-w-full text-sm">
-            <thead class="bg-slate-50 text-xs text-slate-500">
-                <tr>
-                    <th class="px-4 py-3 text-start">الملف</th>
-                    <th class="px-4 py-3 text-start">التصنيف</th>
-                    <th class="px-4 py-3 text-start">الظهور</th>
-                    <th class="px-4 py-3 text-end">إجراء</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-                @forelse($folder->materials as $m)
+    <section class="su-card su-card--flush">
+        <div class="su-table-wrap" style="border:0;border-radius:0;background:transparent">
+            <table class="su-table">
+                <thead>
                     <tr>
-                        <td class="px-4 py-3">
-                            <div class="font-semibold text-slate-900">{{ $m->title ?: $m->file_name }}</div>
-                            <div class="text-xs text-slate-500">{{ $m->file_name }}</div>
-                        </td>
-                        <td class="px-4 py-3 text-xs">{{ $m->themeLabel('ar') }} · {{ $m->experience_mode ?: 'download' }}</td>
-                        <td class="px-4 py-3">{{ $m->is_visible_to_student ? 'ظاهر' : 'مخفي' }}</td>
-                        <td class="px-4 py-3 text-end">
-                            <div class="flex flex-wrap items-center justify-end gap-3">
-                                @if($m->file_path)
-                                    @php
-                                        $mode = $m->experience_mode ?: \App\Support\FamilyLibraryThemes::detectExperienceMode($m->file_name, $m->content_theme);
-                                        $canPlay = \App\Support\FamilyLibraryThemes::isPlayableInPlatform($m->file_name, $mode);
-                                    @endphp
-                                    @if($canPlay)
-                                        <a href="{{ route('instructor.libraries.materials.experience', [$folder, $m]) }}" class="font-semibold text-[#0B3D91] hover:underline">عرض</a>
-                                    @endif
-                                    <a href="{{ route('instructor.libraries.materials.download', [$folder, $m]) }}" class="font-semibold text-[#0B3D91] hover:underline">تحميل</a>
-                                @endif
-                                @if($canManage ?? true)
-                                    <form method="POST" action="{{ route('instructor.libraries.materials.destroy', [$folder, $m]) }}" onsubmit="return confirm('حذف الملف؟')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="text-rose-600 font-semibold">حذف</button>
-                                    </form>
-                                @endif
-                            </div>
-                        </td>
+                        <th>{{ __('instructor.lib_materials_col_file') }}</th>
+                        <th>{{ __('instructor.lib_materials_col_theme') }}</th>
+                        <th>{{ __('instructor.lib_materials_col_visibility') }}</th>
+                        <th></th>
                     </tr>
-                @empty
-                    <tr><td colspan="4" class="px-4 py-8 text-center text-slate-500">لا ملفات بعد.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody>
+                    @forelse($folder->materials as $m)
+                        <tr>
+                            <td>
+                                <strong style="font-weight:600">{{ $m->title ?: $m->file_name }}</strong>
+                                <div style="font-size:12px;color:var(--su-ink-40)">{{ $m->file_name }}</div>
+                            </td>
+                            <td style="color:var(--su-ink-40);font-size:12px">
+                                {{ $m->themeLabel(app()->getLocale() === 'ar' ? 'ar' : 'en') }} · {{ $m->experience_mode ?: 'download' }}
+                            </td>
+                            <td>
+                                <span class="su-chip {{ $m->is_visible_to_student ? 'su-chip--ok' : 'su-chip--off' }}">
+                                    {{ $m->is_visible_to_student ? __('instructor.lib_materials_visible') : __('instructor.lib_materials_hidden') }}
+                                </span>
+                            </td>
+                            <td style="text-align:end">
+                                <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px">
+                                    @if($m->file_path)
+                                        @php
+                                            $mode = $m->experience_mode ?: \App\Support\FamilyLibraryThemes::detectExperienceMode($m->file_name, $m->content_theme);
+                                            $canPlay = \App\Support\FamilyLibraryThemes::isPlayableInPlatform($m->file_name, $mode);
+                                        @endphp
+                                        @if($canPlay)
+                                            <a href="{{ route('instructor.libraries.materials.experience', [$folder, $m]) }}" class="su-btn" style="height:32px">{{ __('common.view') }}</a>
+                                        @endif
+                                        <a href="{{ route('instructor.libraries.materials.download', [$folder, $m]) }}" class="su-btn" style="height:32px">{{ __('instructor.download') }}</a>
+                                    @endif
+                                    @if($canManage ?? true)
+                                        <form method="POST" action="{{ route('instructor.libraries.materials.destroy', [$folder, $m]) }}" onsubmit="return confirm(@json(__('instructor.lib_materials_confirm_delete')))">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="su-btn su-btn--danger" style="height:32px">{{ __('common.delete') }}</button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4">
+                                <div class="su-empty">
+                                    <i class="fas fa-file" aria-hidden="true"></i>
+                                    <p>{{ __('instructor.lib_materials_empty_files') }}</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
 @endsection

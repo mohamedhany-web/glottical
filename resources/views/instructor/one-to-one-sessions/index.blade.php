@@ -1,150 +1,217 @@
 @extends('layouts.app')
 
-@section('title', __('student.one_to_one_sessions_instructor_nav'))
+@section('title', __('instructor.o1o_title'))
+@section('page_title', __('instructor.o1o_title'))
 
 @section('content')
 @php
-    $isRtl = app()->getLocale() === 'ar';
     $lessonDuration = (int) ($lessonDuration ?? 50);
 @endphp
-<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-10">
-    @if(session('success'))
-        <div class="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 text-sm">{{ session('success') }}</div>
-    @endif
 
-    <div>
-        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{{ $isRtl ? 'حصصي الخاصة' : 'Private Lessons' }}</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ $isRtl ? 'جدول اليوم والطلاب المُسنَدين — مدة الحصة 50 دقيقة.' : 'Today’s schedule and assigned students — 50 min lessons.' }}</p>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <h1 class="su-page-head__title">
+                <i class="fas fa-user-graduate su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.o1o_title') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.o1o_subtitle') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            @if(Route::has('instructor.one-to-one-availability.index'))
+                <a href="{{ route('instructor.one-to-one-availability.index') }}" class="su-btn su-btn--primary">
+                    <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                    {{ __('instructor.o1a_title') }}
+                </a>
+            @endif
+        </div>
     </div>
+
+    @if(session('success'))
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08);color:#15803d;font-size:13px">
+            {{ session('success') }}
+        </div>
+    @endif
 
     @if(($newAssignments ?? collect())->isNotEmpty())
-    <div class="space-y-3">
-        @foreach($newAssignments as $assignment)
-            @php
-                $student = $assignment->student;
-                $age = null;
-                if ($student?->birth_date) {
-                    $age = $student->birth_date->age;
-                }
-                $related = ($students ?? collect())->first(fn ($row) => (int) ($row['student']->id ?? 0) === (int) ($student->id ?? 0));
-            @endphp
-            <section class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 dark:bg-amber-950/30 dark:border-amber-800">
-                <p class="text-sm font-black text-amber-900 dark:text-amber-200">🎉 New Student Assigned</p>
-                <p class="mt-1 text-sm text-amber-900/90 dark:text-amber-100/90">
-                    {{ $student->name ?? 'Student' }} has been assigned to you for private lessons.
-                </p>
-                <dl class="mt-3 grid sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
-                    <div class="rounded-xl bg-white/80 dark:bg-gray-900/50 px-3 py-2">
-                        <dt class="font-bold text-gray-500">{{ $isRtl ? 'الطالب' : 'Student' }}</dt>
-                        <dd class="font-extrabold text-gray-900 dark:text-white">{{ $student->name ?? '—' }}</dd>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
+            @foreach($newAssignments as $assignment)
+                @php
+                    $student = $assignment->student;
+                    $age = null;
+                    if ($student?->birth_date) {
+                        $age = $student->birth_date->age;
+                    }
+                    $related = ($students ?? collect())->first(fn ($row) => (int) ($row['student']->id ?? 0) === (int) ($student->id ?? 0));
+                @endphp
+                <section class="su-card su-soft-4" style="padding:16px">
+                    <div class="su-chip-row" style="margin-bottom:8px">
+                        <span class="su-chip su-chip--warn">{{ __('instructor.o1o_new_student') }}</span>
                     </div>
-                    <div class="rounded-xl bg-white/80 dark:bg-gray-900/50 px-3 py-2">
-                        <dt class="font-bold text-gray-500">{{ $isRtl ? 'العمر' : 'Age' }}</dt>
-                        <dd class="font-extrabold text-gray-900 dark:text-white">{{ $age !== null ? $age : '—' }}</dd>
+                    <p style="margin:0 0 12px;font-size:13px;color:var(--su-ink)">
+                        {{ __('instructor.o1o_new_student_body', ['name' => $student->name ?? __('instructor.pm_student_fallback')]) }}
+                    </p>
+                    <div class="su-meta-list">
+                        <div class="su-meta-row">
+                            <span class="su-meta-ico su-soft-1"><i class="fas fa-user" aria-hidden="true"></i></span>
+                            <span>{{ __('instructor.o1o_student') }}:</span>
+                            <strong>{{ $student->name ?? '—' }}</strong>
+                        </div>
+                        <div class="su-meta-row">
+                            <span class="su-meta-ico su-soft-2"><i class="fas fa-birthday-cake" aria-hidden="true"></i></span>
+                            <span>{{ __('instructor.o1o_age') }}:</span>
+                            <strong>{{ $age !== null ? $age : '—' }}</strong>
+                        </div>
+                        <div class="su-meta-row">
+                            <span class="su-meta-ico su-soft-3"><i class="fas fa-book" aria-hidden="true"></i></span>
+                            <span>{{ __('instructor.o1o_subject_scope') }}:</span>
+                            <strong>{{ $related['course']->title ?? $assignment->scopeLabel() }}</strong>
+                        </div>
+                        <div class="su-meta-row">
+                            <span class="su-meta-ico su-soft-4"><i class="fas fa-list-ol" aria-hidden="true"></i></span>
+                            <span>{{ __('instructor.o1o_lessons') }}:</span>
+                            <strong>{{ $related['total'] ?? '—' }}</strong>
+                        </div>
+                        <div class="su-meta-row">
+                            <span class="su-meta-ico su-soft-1"><i class="fas fa-play" aria-hidden="true"></i></span>
+                            <span>{{ __('instructor.o1o_plan_starts') }}:</span>
+                            <strong>{{ optional($related['starts_at'] ?? $assignment->starts_at)->format('Y-m-d') ?? '—' }}</strong>
+                        </div>
+                        <div class="su-meta-row">
+                            <span class="su-meta-ico su-soft-2"><i class="fas fa-flag-checkered" aria-hidden="true"></i></span>
+                            <span>{{ __('instructor.o1o_plan_ends') }}:</span>
+                            <strong>{{ optional($related['ends_at'] ?? $assignment->ends_at)->format('Y-m-d') ?? '—' }}</strong>
+                        </div>
+                        <div class="su-meta-row">
+                            <span class="su-meta-ico su-soft-3"><i class="fas fa-sticky-note" aria-hidden="true"></i></span>
+                            <span>{{ __('instructor.o1o_notes') }}:</span>
+                            <strong>{{ $related['notes'] ?? $assignment->notes ?? '—' }}</strong>
+                        </div>
                     </div>
-                    <div class="rounded-xl bg-white/80 dark:bg-gray-900/50 px-3 py-2">
-                        <dt class="font-bold text-gray-500">{{ $isRtl ? 'المادة / النطاق' : 'Subject / scope' }}</dt>
-                        <dd class="font-extrabold text-gray-900 dark:text-white">{{ $related['course']->title ?? $assignment->scopeLabel() }}</dd>
-                    </div>
-                    <div class="rounded-xl bg-white/80 dark:bg-gray-900/50 px-3 py-2">
-                        <dt class="font-bold text-gray-500">{{ $isRtl ? 'عدد الحصص' : 'Lessons' }}</dt>
-                        <dd class="font-extrabold text-gray-900 dark:text-white">{{ $related['total'] ?? '—' }}</dd>
-                    </div>
-                    <div class="rounded-xl bg-white/80 dark:bg-gray-900/50 px-3 py-2">
-                        <dt class="font-bold text-gray-500">{{ $isRtl ? 'بداية الاشتراك' : 'Plan starts' }}</dt>
-                        <dd class="font-extrabold text-gray-900 dark:text-white">{{ optional($related['starts_at'] ?? $assignment->starts_at)->format('Y-m-d') ?? '—' }}</dd>
-                    </div>
-                    <div class="rounded-xl bg-white/80 dark:bg-gray-900/50 px-3 py-2">
-                        <dt class="font-bold text-gray-500">{{ $isRtl ? 'نهاية الاشتراك' : 'Plan ends' }}</dt>
-                        <dd class="font-extrabold text-gray-900 dark:text-white">{{ optional($related['ends_at'] ?? $assignment->ends_at)->format('Y-m-d') ?? '—' }}</dd>
-                    </div>
-                    <div class="sm:col-span-2 rounded-xl bg-white/80 dark:bg-gray-900/50 px-3 py-2">
-                        <dt class="font-bold text-gray-500">{{ $isRtl ? 'ملاحظات ولي الأمر' : 'Parent / student notes' }}</dt>
-                        <dd class="font-semibold text-gray-800 dark:text-gray-200">{{ $related['notes'] ?? $assignment->notes ?? '—' }}</dd>
-                    </div>
-                </dl>
-            </section>
-        @endforeach
-    </div>
+                </section>
+            @endforeach
+        </div>
     @endif
 
-    <section class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden shadow-sm">
-        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
-            <h2 class="text-base font-black text-gray-900 dark:text-white">{{ $isRtl ? 'جدول اليوم' : "Today's Schedule" }}</h2>
-        </div>
-        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+    <section class="su-card" style="margin-bottom:20px">
+        <h2 class="su-card__title">
+            <i class="fas fa-calendar-day" aria-hidden="true"></i>
+            {{ __('instructor.o1o_today_schedule') }}
+        </h2>
+        <div class="su-list">
             @forelse($todaysSchedule ?? [] as $slot)
                 @php
                     $dur = (int) ($slot->duration_minutes ?: $lessonDuration);
                     $end = $slot->scheduled_at?->copy()->addMinutes($dur);
                 @endphp
-                <div class="px-5 py-4 flex flex-wrap items-center justify-between gap-3">
-                    <div class="min-w-0">
-                        <p class="text-lg font-black text-[#0B3D91] tabular-nums"><x-app-datetime :at="$slot->scheduled_at" pattern="g:i A" /></p>
-                        <p class="font-bold text-gray-900 dark:text-white">
-                            {{ $slot->course->title ?? 'Private lesson' }}
-                            <span class="text-gray-500 font-semibold">— {{ $slot->student->name ?? '—' }}</span>
-                        </p>
-                        <p class="text-xs text-gray-500 mt-0.5">{{ $dur }} {{ $isRtl ? 'دقيقة' : 'min' }}@if($end) · <x-app-datetime :at="$slot->scheduled_at" pattern="g:i A" />–<x-app-datetime :at="$end" pattern="g:i A" />@endif</p>
+                <article class="su-list-item">
+                    <span class="su-list-item__ico su-soft-1">
+                        <i class="fas fa-clock" aria-hidden="true"></i>
+                    </span>
+                    <div class="su-list-item__body">
+                        <div class="su-list-item__title">
+                            {{ $slot->course->title ?? __('instructor.cal_private') }}
+                            — {{ $slot->student->name ?? '—' }}
+                        </div>
+                        <div class="su-list-item__meta">
+                            <span class="tabular-nums"><x-app-datetime :at="$slot->scheduled_at" pattern="g:i A" /></span>
+                            · {{ $dur }} {{ __('instructor.o1o_minutes') }}
+                            @if($end)
+                                · <x-app-datetime :at="$slot->scheduled_at" pattern="g:i A" />–<x-app-datetime :at="$end" pattern="g:i A" />
+                            @endif
+                        </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 px-3 py-1 text-xs font-extrabold">🟢 Upcoming</span>
-                        <a href="{{ route('instructor.one-to-one-sessions.show', $slot) }}" class="text-sm font-bold text-sky-600 hover:underline">{{ $isRtl ? 'إدارة' : 'Manage' }}</a>
+                    <div class="su-list-item__actions">
+                        <span class="su-chip su-chip--ok">{{ __('instructor.o1o_upcoming') }}</span>
+                        <a href="{{ route('instructor.one-to-one-sessions.show', $slot) }}" class="su-btn" style="height:32px">
+                            {{ __('instructor.o1o_manage') }}
+                        </a>
                     </div>
-                </div>
+                </article>
             @empty
-                <p class="px-5 py-8 text-sm text-gray-500">{{ $isRtl ? 'لا حصص مجدولة اليوم.' : 'No lessons scheduled for today.' }}</p>
+                <div class="su-empty" style="padding:24px 8px">
+                    <i class="fas fa-calendar" aria-hidden="true"></i>
+                    <p>{{ __('instructor.o1o_no_today') }}</p>
+                </div>
             @endforelse
         </div>
     </section>
 
     @if(($students ?? collect())->isNotEmpty())
-    <div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-        <h2 class="text-sm font-black text-gray-900 dark:text-white mb-3">{{ __('student.one_to_one_instructor_students') }}</h2>
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            @foreach($students as $row)
-                <div class="rounded-lg border border-gray-100 dark:border-gray-700 p-3">
-                    <p class="font-bold text-gray-900 dark:text-white">{{ $row['student']->name ?? '—' }}</p>
-                    <p class="text-xs text-gray-500 mt-0.5">{{ $row['course']->title ?? '' }}</p>
-                    <p class="text-xs mt-2 text-amber-600">{{ $row['pending'] }} {{ $isRtl ? 'بانتظار الجدولة' : 'pending' }} · {{ $row['scheduled'] }} {{ $isRtl ? 'مجدولة' : 'scheduled' }}</p>
-                </div>
-            @endforeach
-        </div>
-    </div>
+        <section class="su-card" style="margin-bottom:20px">
+            <h2 class="su-card__title">
+                <i class="fas fa-users" aria-hidden="true"></i>
+                {{ __('instructor.o1o_students') }}
+            </h2>
+            <div class="su-list">
+                @foreach($students as $row)
+                    <div class="su-list-item">
+                        <span class="su-list-item__ico su-soft-2">
+                            <i class="fas fa-user" aria-hidden="true"></i>
+                        </span>
+                        <div class="su-list-item__body">
+                            <div class="su-list-item__title">{{ $row['student']->name ?? '—' }}</div>
+                            <div class="su-list-item__meta">
+                                {{ $row['course']->title ?? '' }}
+                                · {{ $row['pending'] }} {{ __('instructor.o1o_pending') }}
+                                · {{ $row['scheduled'] }} {{ __('instructor.o1o_scheduled') }}
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </section>
     @endif
 
-    <div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="min-w-full text-sm">
-                <thead class="bg-gray-50 dark:bg-gray-900/50 text-xs text-gray-600 dark:text-gray-400 uppercase">
+    <section class="su-card su-card--flush">
+        <div class="su-table-wrap" style="border:0;border-radius:0;background:transparent">
+            <table class="su-table">
+                <thead>
                     <tr>
-                        <th class="px-4 py-3 text-right">{{ $isRtl ? 'الطالب' : 'Student' }}</th>
-                        <th class="px-4 py-3 text-right">{{ $isRtl ? 'المادة' : 'Subject' }}</th>
-                        <th class="px-4 py-3 text-right">#</th>
-                        <th class="px-4 py-3 text-right">{{ $isRtl ? 'الحالة' : 'Status' }}</th>
-                        <th class="px-4 py-3 text-right">{{ $isRtl ? 'الموعد' : 'Time' }}</th>
-                        <th class="px-4 py-3 text-right"></th>
+                        <th>{{ __('instructor.o1o_student') }}</th>
+                        <th>{{ __('instructor.o1o_subject_scope') }}</th>
+                        <th>#</th>
+                        <th>{{ __('instructor.o1o_status') }}</th>
+                        <th>{{ __('instructor.o1o_time') }}</th>
+                        <th></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                <tbody>
                     @forelse($sessions as $session)
-                        <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-900/30">
-                            <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white">{{ $session->student->name ?? '—' }}</td>
-                            <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ $session->course->title ?? '—' }}</td>
-                            <td class="px-4 py-3 text-gray-500">{{ $session->session_number }}</td>
-                            <td class="px-4 py-3"><span class="px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-xs font-medium">{{ $session->statusLabel() }}</span></td>
-                            <td class="px-4 py-3 text-xs text-gray-500">@if($session->scheduled_at)<x-app-datetime :at="$session->scheduled_at" pattern="Y-m-d H:i" />@else — @endif</td>
-                            <td class="px-4 py-3">
-                                <a href="{{ route('instructor.one-to-one-sessions.show', $session) }}" class="text-sky-600 dark:text-sky-400 font-semibold hover:underline">{{ $isRtl ? 'إدارة' : 'Manage' }}</a>
+                        <tr>
+                            <td><strong style="font-weight:600">{{ $session->student->name ?? '—' }}</strong></td>
+                            <td style="color:var(--su-ink-40)">{{ $session->course->title ?? '—' }}</td>
+                            <td class="tabular-nums">{{ $session->session_number }}</td>
+                            <td><span class="su-chip">{{ $session->statusLabel() }}</span></td>
+                            <td class="tabular-nums" style="color:var(--su-ink-40)">
+                                @if($session->scheduled_at)
+                                    <x-app-datetime :at="$session->scheduled_at" pattern="Y-m-d H:i" />
+                                @else
+                                    —
+                                @endif
+                            </td>
+                            <td style="text-align:end">
+                                <a href="{{ route('instructor.one-to-one-sessions.show', $session) }}" class="su-btn" style="height:32px">
+                                    {{ __('instructor.o1o_manage') }}
+                                </a>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="px-4 py-12 text-center text-gray-500">{{ __('student.one_to_one_sessions_empty') }}</td></tr>
+                        <tr>
+                            <td colspan="6">
+                                <div class="su-empty">
+                                    <i class="fas fa-user-graduate" aria-hidden="true"></i>
+                                    <p>{{ __('instructor.o1o_empty') }}</p>
+                                </div>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-        <div class="px-4 py-3 border-t border-gray-100 dark:border-gray-700">{{ $sessions->links() }}</div>
-    </div>
+        @if(method_exists($sessions, 'links') && $sessions->hasPages())
+            <div class="su-pager" style="padding:12px">{{ $sessions->links() }}</div>
+        @endif
+    </section>
 </div>
 @endsection

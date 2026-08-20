@@ -94,6 +94,23 @@ class ClassroomMeeting extends Model
         return (bool) data_get($this->settings, 'allow_participant_whiteboard', false);
     }
 
+    /**
+     * اسم غرفة Jitsi الموحّد للضيف والمضيف.
+     */
+    public static function canonicalRoomName(string $code): string
+    {
+        return 'Glottical-'.strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $code));
+    }
+
+    public function jitsiRoomName(): string
+    {
+        if (is_string($this->room_name) && $this->room_name !== '') {
+            return $this->room_name;
+        }
+
+        return self::canonicalRoomName((string) $this->code);
+    }
+
     public static function generateCode(): string
     {
         do {

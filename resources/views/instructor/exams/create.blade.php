@@ -1,180 +1,141 @@
 @extends('layouts.app')
 
 @section('title', __('instructor.create_exam_new') . ' - ' . config('app.name'))
-@section('header', __('instructor.create_exam_new'))
+@section('page_title', __('instructor.create_exam_new'))
 
 @section('content')
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <!-- هيدر الصفحة (عرض الصفحة كاملاً) -->
-    <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6 mb-6">
-        <nav class="text-sm text-slate-500 dark:text-slate-400 mb-2">
-            <a href="{{ route('instructor.exams.index') }}" class="hover:text-sky-600 transition-colors">{{ __('instructor.my_exams') }}</a>
-            <span class="mx-2">/</span>
-            <span class="text-slate-700 dark:text-slate-300 font-semibold">{{ __('instructor.create_exam_new') }}</span>
-        </nav>
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div class="flex flex-wrap items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center shrink-0">
-                    <i class="fas fa-clipboard-list text-lg"></i>
-                </div>
-                <div class="min-w-0">
-                    <h1 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">{{ __('instructor.create_exam_new') }}</h1>
-                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{{ __('instructor.add_exam_to_course') }}</p>
-                </div>
-            </div>
-            <a href="{{ route('instructor.exams.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                <i class="fas fa-arrow-right"></i>
+@php
+    $isRtl = app()->getLocale() === 'ar';
+@endphp
+<div class="su-page" style="max-width:56rem">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.exams.index') }}">{{ __('instructor.my_exams') }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ __('instructor.create_exam_new') }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-clipboard-list su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.create_exam_new') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.add_exam_to_course') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.exams.index') }}" class="su-btn">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
                 {{ __('instructor.back') }}
             </a>
         </div>
     </div>
 
-    <!-- بطاقة النموذج -->
-    <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-        <form action="{{ route('instructor.exams.store') }}" method="POST">
-            @csrf
-            <div class="p-6 sm:p-8 space-y-8">
-                <!-- معلومات الاختبار -->
-                <div class="space-y-6">
-                    <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">{{ __('instructor.exam_info') }}</h2>
-                    <div>
-                        <label for="title" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.title') }} <span class="text-red-500">*</span></label>
-                        <input type="text" name="title" id="title" value="{{ old('title') }}" required
-                               class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100"
-                               placeholder="{{ __('instructor.exam_title_placeholder') }}">
-                        @error('title')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="advanced_course_id" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.online_course') }} <span class="text-red-500">*</span></label>
-                            <select name="advanced_course_id" id="advanced_course_id" onchange="loadLessons()"
-                                    class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                                <option value="">{{ __('instructor.choose_course') }}</option>
-                                @foreach($courses as $course)
-                                    <option value="{{ $course->id }}" {{ old('advanced_course_id') == $course->id ? 'selected' : '' }}>{{ $course->title }}</option>
-                                @endforeach
-                            </select>
-                            @error('advanced_course_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                        </div>
-                        <div id="lesson-wrap">
-                            <label for="course_lesson_id" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.lesson_optional') }}</label>
-                            <select name="course_lesson_id" id="course_lesson_id"
-                                    class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                                <option value="">{{ __('instructor.general_exam') }}</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="description" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.description') }}</label>
-                        <textarea name="description" id="description" rows="3" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100" placeholder="{{ __('instructor.description_placeholder') }}">{{ old('description') }}</textarea>
-                    </div>
-                    <div>
-                        <label for="instructions" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.exam_instructions') }}</label>
-                        <textarea name="instructions" id="instructions" rows="4" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100" placeholder="{{ __('instructor.instructions_placeholder') }}">{{ old('instructions') }}</textarea>
-                    </div>
-                </div>
+    <form action="{{ route('instructor.exams.store') }}" method="POST" class="su-card">
+        @csrf
 
-                <!-- التوقيت والدرجات -->
-                <div class="space-y-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-                    <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">{{ __('instructor.time_and_marks') }}</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div>
-                            <label for="duration_minutes" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.duration_minutes') }} ({{ __('instructor.minute_unit') }}) <span class="text-red-500">*</span></label>
-                            <input type="number" name="duration_minutes" id="duration_minutes" value="{{ old('duration_minutes', 60) }}" min="5" max="480" required
-                                   class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                        </div>
-                        <div>
-                            <label for="total_marks" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.total_marks') }} <span class="text-red-500">*</span></label>
-                            <input type="number" name="total_marks" id="total_marks" value="{{ old('total_marks', 100) }}" min="1" required
-                                   class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                        </div>
-                        <div>
-                            <label for="passing_marks" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.passing_marks') }} <span class="text-red-500">*</span></label>
-                            <input type="number" name="passing_marks" id="passing_marks" value="{{ old('passing_marks', 60) }}" min="0" step="0.5" required
-                                   class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                        </div>
-                        <div>
-                            <label for="attempts_allowed" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.attempts_allowed') }} <span class="text-red-500">*</span></label>
-                            <input type="number" name="attempts_allowed" id="attempts_allowed" value="{{ old('attempts_allowed', 1) }}" min="1" max="10" required
-                                   class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div>
-                            <label for="start_time" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.start_time') }}</label>
-                            <input type="datetime-local" name="start_time" id="start_time" value="{{ old('start_time') }}"
-                                   class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                        </div>
-                        <div>
-                            <label for="end_time" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.end_time') }}</label>
-                            <input type="datetime-local" name="end_time" id="end_time" value="{{ old('end_time') }}"
-                                   class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- إعدادات العرض والحالة -->
-                <div class="space-y-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-                    <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">{{ __('instructor.display_settings') }}</h2>
-                    <div class="flex flex-wrap gap-6">
-                        <label class="inline-flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="randomize_questions" value="1" {{ old('randomize_questions') ? 'checked' : '' }} class="rounded border-slate-300 text-sky-600 focus:ring-sky-500">
-                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ __('instructor.randomize_questions') }}</span>
-                        </label>
-                        <label class="inline-flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="randomize_options" value="1" {{ old('randomize_options') ? 'checked' : '' }} class="rounded border-slate-300 text-sky-600 focus:ring-sky-500">
-                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ __('instructor.randomize_options') }}</span>
-                        </label>
-                        <label class="inline-flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="show_results_immediately" value="1" {{ old('show_results_immediately', true) ? 'checked' : '' }} class="rounded border-slate-300 text-sky-600 focus:ring-sky-500">
-                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ __('instructor.show_results_immediately') }}</span>
-                        </label>
-                        <label class="inline-flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="show_correct_answers" value="1" {{ old('show_correct_answers') ? 'checked' : '' }} class="rounded border-slate-300 text-sky-600 focus:ring-sky-500">
-                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ __('instructor.show_correct_answers') }}</span>
-                        </label>
-                        <label class="inline-flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="show_explanations" value="1" {{ old('show_explanations') ? 'checked' : '' }} class="rounded border-slate-300 text-sky-600 focus:ring-sky-500">
-                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ __('instructor.show_explanations') }}</span>
-                        </label>
-                        <label class="inline-flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="allow_review" value="1" {{ old('allow_review', true) ? 'checked' : '' }} class="rounded border-slate-300 text-sky-600 focus:ring-sky-500">
-                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ __('instructor.allow_review') }}</span>
-                        </label>
-                        <label class="inline-flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }} class="rounded border-slate-300 text-sky-600 focus:ring-sky-500">
-                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ __('instructor.exam_active') }}</span>
-                        </label>
-                        <label class="inline-flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="show_in_sidebar" value="1" {{ old('show_in_sidebar', true) ? 'checked' : '' }} class="rounded border-slate-300 text-sky-600 focus:ring-sky-500">
-                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ __('instructor.show_in_sidebar') }}</span>
-                        </label>
-                    </div>
-                    <div class="max-w-xs">
-                        <label for="sidebar_position" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.sidebar_position') }}</label>
-                        <input type="number" name="sidebar_position" id="sidebar_position" value="{{ old('sidebar_position', 1) }}" min="1" max="10"
-                               class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                    </div>
-                </div>
-
-                <!-- نصائح وأزرار -->
-                <div class="pt-6 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div class="bg-sky-50 dark:bg-sky-900/30 border border-sky-200 rounded-xl p-4 text-sm text-sky-800 max-w-md">
-                        <span class="font-semibold">{{ __('instructor.tips') }}:</span> {{ __('instructor.tip_after_create_exam') }}
-                    </div>
-                    <div class="flex gap-3 shrink-0">
-                        <button type="submit" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold transition-colors">
-                            <i class="fas fa-save ml-2"></i>
-                            {{ __('instructor.create_exam_btn') }}
-                        </button>
-                        <a href="{{ route('instructor.exams.index') }}" class="px-6 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                            {{ __('common.cancel') }}
-                        </a>
-                    </div>
-                </div>
+        <div class="su-section-head" style="margin:0 0 16px">
+            <h3><i class="fas fa-info-circle" aria-hidden="true"></i> {{ __('instructor.exam_info') }}</h3>
+        </div>
+        <div class="su-form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:24px">
+            <div class="su-field" style="grid-column:1 / -1">
+                <label for="title">{{ __('instructor.title') }} <span style="color:#b91c1c">*</span></label>
+                <input type="text" name="title" id="title" value="{{ old('title') }}" required class="su-input"
+                       placeholder="{{ __('instructor.exam_title_placeholder') }}">
+                @error('title')<p class="su-field-error">{{ $message }}</p>@enderror
             </div>
-        </form>
-    </div>
+            <div class="su-field">
+                <label for="advanced_course_id">{{ __('instructor.online_course') }} <span style="color:#b91c1c">*</span></label>
+                <select name="advanced_course_id" id="advanced_course_id" onchange="loadLessons()" class="su-select">
+                    <option value="">{{ __('instructor.choose_course') }}</option>
+                    @foreach($courses as $course)
+                        <option value="{{ $course->id }}" {{ old('advanced_course_id') == $course->id ? 'selected' : '' }}>{{ $course->title }}</option>
+                    @endforeach
+                </select>
+                @error('advanced_course_id')<p class="su-field-error">{{ $message }}</p>@enderror
+            </div>
+            <div class="su-field" id="lesson-wrap">
+                <label for="course_lesson_id">{{ __('instructor.lesson_optional') }}</label>
+                <select name="course_lesson_id" id="course_lesson_id" class="su-select">
+                    <option value="">{{ __('instructor.general_exam') }}</option>
+                </select>
+            </div>
+            <div class="su-field" style="grid-column:1 / -1">
+                <label for="description">{{ __('instructor.description') }}</label>
+                <textarea name="description" id="description" rows="3" class="su-input" style="min-height:88px;resize:vertical" placeholder="{{ __('instructor.description_placeholder') }}">{{ old('description') }}</textarea>
+            </div>
+            <div class="su-field" style="grid-column:1 / -1">
+                <label for="instructions">{{ __('instructor.exam_instructions') }}</label>
+                <textarea name="instructions" id="instructions" rows="4" class="su-input" style="min-height:110px;resize:vertical" placeholder="{{ __('instructor.instructions_placeholder') }}">{{ old('instructions') }}</textarea>
+            </div>
+        </div>
+
+        <div class="su-section-head" style="margin:0 0 16px;border-top:1px solid var(--su-line);padding-top:16px">
+            <h3><i class="fas fa-clock" aria-hidden="true"></i> {{ __('instructor.time_and_marks') }}</h3>
+        </div>
+        <div class="su-form-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px">
+            <div class="su-field">
+                <label for="duration_minutes">{{ __('instructor.duration_minutes') }} ({{ __('instructor.minute_unit') }}) <span style="color:#b91c1c">*</span></label>
+                <input type="number" name="duration_minutes" id="duration_minutes" value="{{ old('duration_minutes', 60) }}" min="5" max="480" required class="su-input">
+            </div>
+            <div class="su-field">
+                <label for="total_marks">{{ __('instructor.total_marks') }} <span style="color:#b91c1c">*</span></label>
+                <input type="number" name="total_marks" id="total_marks" value="{{ old('total_marks', 100) }}" min="1" required class="su-input">
+            </div>
+            <div class="su-field">
+                <label for="passing_marks">{{ __('instructor.passing_marks') }} <span style="color:#b91c1c">*</span></label>
+                <input type="number" name="passing_marks" id="passing_marks" value="{{ old('passing_marks', 60) }}" min="0" step="0.5" required class="su-input">
+            </div>
+            <div class="su-field">
+                <label for="attempts_allowed">{{ __('instructor.attempts_allowed') }} <span style="color:#b91c1c">*</span></label>
+                <input type="number" name="attempts_allowed" id="attempts_allowed" value="{{ old('attempts_allowed', 1) }}" min="1" max="10" required class="su-input">
+            </div>
+            <div class="su-field">
+                <label for="start_time">{{ __('instructor.start_time') }}</label>
+                <input type="datetime-local" name="start_time" id="start_time" value="{{ old('start_time') }}" class="su-input">
+            </div>
+            <div class="su-field">
+                <label for="end_time">{{ __('instructor.end_time') }}</label>
+                <input type="datetime-local" name="end_time" id="end_time" value="{{ old('end_time') }}" class="su-input">
+            </div>
+        </div>
+
+        <div class="su-section-head" style="margin:0 0 16px;border-top:1px solid var(--su-line);padding-top:16px">
+            <h3><i class="fas fa-sliders-h" aria-hidden="true"></i> {{ __('instructor.display_settings') }}</h3>
+        </div>
+        <div class="su-chip-row" style="margin-bottom:16px;flex-wrap:wrap;gap:10px">
+            @foreach([
+                ['randomize_questions', __('instructor.randomize_questions'), false],
+                ['randomize_options', __('instructor.randomize_options'), false],
+                ['show_results_immediately', __('instructor.show_results_immediately'), true],
+                ['show_correct_answers', __('instructor.show_correct_answers'), false],
+                ['show_explanations', __('instructor.show_explanations'), false],
+                ['allow_review', __('instructor.allow_review'), true],
+                ['is_active', __('instructor.exam_active'), true],
+                ['show_in_sidebar', __('instructor.show_in_sidebar'), true],
+            ] as $opt)
+                <label class="su-chip" style="cursor:pointer;height:auto;padding:10px 12px">
+                    <input type="checkbox" name="{{ $opt[0] }}" value="1" {{ old($opt[0], $opt[2]) ? 'checked' : '' }} style="margin-inline-end:8px">
+                    {{ $opt[1] }}
+                </label>
+            @endforeach
+        </div>
+        <div class="su-field" style="max-width:12rem;margin-bottom:20px">
+            <label for="sidebar_position">{{ __('instructor.sidebar_position') }}</label>
+            <input type="number" name="sidebar_position" id="sidebar_position" value="{{ old('sidebar_position', 1) }}" min="1" max="10" class="su-input">
+        </div>
+
+        <div class="su-page-head__actions" style="justify-content:space-between;border-top:1px solid var(--su-line);padding-top:16px;flex-wrap:wrap;gap:12px">
+            <div class="su-chip su-soft-1" style="height:auto;padding:10px 14px;max-width:28rem">
+                <strong>{{ __('instructor.tips') }}:</strong> {{ __('instructor.tip_after_create_exam') }}
+            </div>
+            <div style="display:flex;gap:8px">
+                <a href="{{ route('instructor.exams.index') }}" class="su-btn">{{ __('common.cancel') }}</a>
+                <button type="submit" class="su-btn su-btn--primary">
+                    <i class="fas fa-save" aria-hidden="true"></i>
+                    {{ __('instructor.create_exam_btn') }}
+                </button>
+            </div>
+        </div>
+    </form>
 </div>
 
 @push('scripts')
@@ -182,9 +143,7 @@
 function loadLessons() {
     const courseId = document.getElementById('advanced_course_id').value;
     const lessonSelect = document.getElementById('course_lesson_id');
-    
-    lessonSelect.innerHTML = '<option value="">اختبار عام للكورس</option>';
-    
+    lessonSelect.innerHTML = '<option value="">' + @json(__('instructor.general_exam')) + '</option>';
     if (courseId) {
         fetch(`/instructor/api/courses/${courseId}/lessons-list`)
             .then(response => response.json())
@@ -199,7 +158,6 @@ function loadLessons() {
             .catch(error => console.error('Error loading lessons:', error));
     }
 }
-
 document.addEventListener('DOMContentLoaded', function() {
     const courseId = document.getElementById('advanced_course_id').value;
     if (courseId) loadLessons();

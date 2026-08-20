@@ -7,12 +7,15 @@ use App\Models\ClassroomMeeting;
 use App\Models\ClassroomMeetingReport;
 use App\Models\IntegrationSetting;
 use App\Models\LiveSetting;
+use App\Models\TutoringGroupBooking;
 use App\Services\ClassroomCurriculumPresentService;
+use App\Services\TutoringGroupOrchestrationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -215,6 +218,11 @@ class ClassroomController extends Controller
 
         if ($meeting->ended_at) {
             if (request()->routeIs('instructor.*')) {
+                if ($meeting->tutoring_group_booking_id) {
+                    return redirect()->route('instructor.tutoring-bookings.show', $meeting->tutoring_group_booking_id)
+                        ->with('error', 'انتهى هذا الاجتماع ولا يمكن إعادة فتح الغرفة.');
+                }
+
                 if ($meeting->consultation_request_id) {
                     return redirect()->route('instructor.consultations.show', $meeting->consultation_request_id)
                         ->with('error', 'انتهى هذا الاجتماع ولا يمكن إعادة فتح الغرفة.');
@@ -222,6 +230,11 @@ class ClassroomController extends Controller
 
                 return redirect()->route('instructor.consultations.index')
                     ->with('error', 'انتهى هذا الاجتماع ولا يمكن إعادة فتح الغرفة.');
+            }
+
+            if ($meeting->tutoring_group_booking_id && \Illuminate\Support\Facades\Route::has('student.tutoring-bookings.show')) {
+                return redirect()->route('student.tutoring-bookings.show', $meeting->tutoring_group_booking_id)
+                    ->with('error', 'انتهى هذا الاجتماع.');
             }
 
             return redirect()->route('student.classroom.show', $meeting)
@@ -457,9 +470,21 @@ class ClassroomController extends Controller
         $user = Auth::user();
         $this->ensureMeetingOwnership($meeting, $user);
         app(ClassroomCurriculumPresentService::class)->clearSession($meeting);
-        $meeting->update(['ended_at' => now()]);
+        if (! $meeting->ended_at) {
+            $meeting->update(['ended_at' => now()]);
+        }
+
+        $completedTutoring = $this->completeLinkedTutoringBookingIfNeeded($meeting);
 
         if (request()->routeIs('instructor.*')) {
+            if ($meeting->tutoring_group_booking_id) {
+                return redirect()
+                    ->route('instructor.tutoring-bookings.show', $meeting->tutoring_group_booking_id)
+                    ->with('success', $completedTutoring
+                        ? 'تم إنهاء الاجتماع وخصم حصة من رصيد الطالب.'
+                        : 'تم إنهاء الاجتماع.');
+            }
+
             if ($meeting->consultation_request_id) {
                 return redirect()->route('instructor.consultations.show', $meeting->consultation_request_id)
                     ->with('success', 'تم إنهاء جلسة الاستشارة.');
@@ -468,7 +493,62 @@ class ClassroomController extends Controller
             return redirect()->route('instructor.consultations.index')->with('success', 'تم إنهاء الاجتماع.');
         }
 
+        if ($meeting->tutoring_group_booking_id && Route::has('student.tutoring-bookings.show')) {
+            return redirect()
+                ->route('student.tutoring-bookings.show', $meeting->tutoring_group_booking_id)
+                ->with('success', $completedTutoring
+                    ? 'تم إنهاء الحصة وخصم وحدة من رصيدك.'
+                    : 'تم إنهاء الاجتماع.');
+        }
+
         return redirect()->route('student.classroom.show', $meeting)->with('success', 'تم إنهاء الاجتماع.');
+    }
+
+    /**
+     * حجز التدريس 1:1 يبقى على Classroom/Jitsi (ليس LiveSession/LiveKit).
+     * عند إنهاء غرفة مربوطة بحجز مؤكد: خصم الرصيد مرة واحدة.
+     */
+    private function completeLinkedTutoringBookingIfNeeded(ClassroomMeeting $meeting): bool
+    {
+        $bookingId = $meeting->tutoring_group_booking_id;
+        if (! $bookingId) {
+            $bookingId = TutoringGroupBooking::query()
+                ->where('classroom_meeting_id', $meeting->id)
+                ->value('id');
+        }
+        if (! $bookingId) {
+            return false;
+        }
+
+        $booking = TutoringGroupBooking::query()->find($bookingId);
+        if (! $booking || $booking->status !== TutoringGroupBooking::STATUS_CONFIRMED) {
+            return false;
+        }
+
+        // يتطلب بدء الاجتماع فعلياً؛ لا نخصم إن أُغلق قبل البدء
+        if (! $meeting->started_at) {
+            return false;
+        }
+
+        try {
+            TutoringGroupOrchestrationService::completeBooking($booking);
+
+            return true;
+        } catch (\InvalidArgumentException $e) {
+            Log::info('Tutoring auto-complete skipped: '.$e->getMessage(), [
+                'meeting_id' => $meeting->id,
+                'booking_id' => $booking->id,
+            ]);
+
+            return false;
+        } catch (\Throwable $e) {
+            Log::error('Tutoring auto-complete failed: '.$e->getMessage(), [
+                'meeting_id' => $meeting->id,
+                'booking_id' => $booking->id,
+            ]);
+
+            return false;
+        }
     }
 
     public function uploadRecording(Request $request, ClassroomMeeting $meeting)

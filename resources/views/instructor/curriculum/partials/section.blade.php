@@ -1,118 +1,122 @@
 @php
     $depth = $depth ?? 0;
-    $marginClass = $depth > 0 ? 'mr-4 border-r-2 border-slate-200 dark:border-slate-700' : '';
 @endphp
-<div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow mb-4 section-block {{ $marginClass }}" data-section-id="{{ $section->id }}" style="{{ $depth > 0 ? 'margin-right: ' . ($depth * 1.5) . 'rem;' : '' }}">
-    <div class="flex items-center justify-between p-4 cursor-pointer section-header" onclick="toggleSection({{ $section->id }})">
-        <div class="flex items-center gap-3 flex-1 min-w-0">
-            <span class="section-chevron text-slate-400 transition-transform duration-200" data-section-id="{{ $section->id }}">
-                <i class="fas fa-chevron-down"></i>
+<div class="su-card section-block" data-section-id="{{ $section->id }}" style="margin-bottom:16px;{{ $depth > 0 ? 'margin-inline-start: '.($depth * 1.25).'rem;border-inline-start:2px solid var(--su-line)' : '' }}">
+    <div class="section-header" onclick="toggleSection({{ $section->id }})" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0;cursor:pointer">
+        <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
+            <span class="section-chevron" data-section-id="{{ $section->id }}" style="color:var(--su-ink-40);transition:transform .2s">
+                <i class="fas fa-chevron-down" aria-hidden="true"></i>
             </span>
-            <div class="flex-1 min-w-0">
-                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">{{ $section->title }}</h3>
+            <div class="min-w-0">
+                <h3 class="su-card__title" style="margin:0">{{ $section->title }}</h3>
                 @if($section->description)
-                    <p class="text-sm text-slate-500 dark:text-slate-400 truncate">{{ $section->description }}</p>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--su-ink-40);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $section->description }}</p>
                 @endif
             </div>
         </div>
-        <div class="flex items-center gap-2 shrink-0" onclick="event.stopPropagation();">
-            <button onclick="event.stopPropagation(); editSection({{ $section->id }}, '{{ addslashes($section->title) }}', '{{ addslashes($section->description ?? '') }}', {{ $section->parent_id ?? 'null' }}, '{{ $section->unlock_rule ?? 'previous_all_items' }}', {{ $section->unlock_percent !== null ? (int)$section->unlock_percent : 'null' }})"
-                    class="p-2 rounded-lg bg-sky-100 hover:bg-sky-200 text-sky-600 text-sm transition-colors" title="تعديل القسم">
-                <i class="fas fa-edit"></i>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0" onclick="event.stopPropagation();">
+            <button type="button" onclick="event.stopPropagation(); editSection({{ $section->id }}, '{{ addslashes($section->title) }}', '{{ addslashes($section->description ?? '') }}', {{ $section->parent_id ?? 'null' }}, '{{ $section->unlock_rule ?? 'previous_all_items' }}', {{ $section->unlock_percent !== null ? (int)$section->unlock_percent : 'null' }})"
+                    class="su-icon-link su-icon-link--ghost" title="{{ __('common.edit') }}">
+                <i class="fas fa-edit" aria-hidden="true"></i>
             </button>
-            <button onclick="event.stopPropagation(); deleteSection({{ $section->id }})"
-                    class="p-2 rounded-lg bg-red-50 dark:bg-red-900/30 hover:bg-red-100 text-red-600 text-sm transition-colors" title="حذف القسم">
-                <i class="fas fa-trash"></i>
+            <button type="button" onclick="event.stopPropagation(); deleteSection({{ $section->id }})"
+                    class="su-icon-link" style="background:#fee2e2;color:#b91c1c;border:0;cursor:pointer" title="{{ __('common.delete') }}">
+                <i class="fas fa-trash" aria-hidden="true"></i>
             </button>
         </div>
     </div>
 
-    <div class="section-body px-4 pb-4 border-t border-slate-100 dark:border-slate-700/80">
-        <div class="mb-4 flex flex-wrap items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-700 mt-4">
-            <span class="text-xs font-semibold text-slate-600 dark:text-slate-400 mr-2">إضافة:</span>
+    <div class="section-body" style="margin-top:12px;padding-top:12px;border-top:0.5px solid var(--su-line)">
+        <div style="margin-bottom:12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:var(--su-bg);border:0.5px solid var(--su-line)">
+            <span style="font-size:11px;font-weight:600;color:var(--su-ink-40)">{{ __('instructor.curr_add_label') }}</span>
             <button type="button" onclick="event.stopPropagation(); showAddSubSectionModal({{ $section->id }})"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition-colors"
-                    title="قسم فرعي داخل هذا القسم">
-                <i class="fas fa-folder-plus"></i>
-                <span>قسم فرعي</span>
+                    class="su-btn" style="height:30px;font-size:12px"
+                    title="{{ __('instructor.curr_subsection') }}">
+                <i class="fas fa-folder-plus" aria-hidden="true"></i>
+                {{ __('instructor.curr_subsection') }}
             </button>
             <button type="button" onclick="event.stopPropagation(); showAddLectureModal({{ $section->id }})"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-lg text-xs font-semibold transition-colors">
-                <i class="fas fa-chalkboard-teacher"></i>
-                <span>محاضرة</span>
+                    class="su-btn su-btn--primary" style="height:30px;font-size:12px">
+                <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
+                {{ __('instructor.curr_lecture') }}
             </button>
             <button type="button" onclick="event.stopPropagation(); showAddExamModal({{ $section->id }})"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 dark:bg-violet-700 hover:bg-violet-600 text-white rounded-lg text-xs font-semibold transition-colors">
-                <i class="fas fa-clipboard-check"></i>
-                <span>امتحان</span>
+                    class="su-btn" style="height:30px;font-size:12px">
+                <i class="fas fa-clipboard-check" aria-hidden="true"></i>
+                {{ __('instructor.curr_exam') }}
             </button>
             <button type="button" onclick="event.stopPropagation(); showAddAssignmentModal({{ $section->id }})"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold transition-colors">
-                <i class="fas fa-tasks"></i>
-                <span>واجب</span>
+                    class="su-btn" style="height:30px;font-size:12px">
+                <i class="fas fa-tasks" aria-hidden="true"></i>
+                {{ __('instructor.curr_assignment') }}
             </button>
         </div>
 
         <div class="items-container" data-section-id="{{ $section->id }}">
             @php $sectionItems = $section->items->filter(fn($i) => !($i->item instanceof \App\Models\CourseLesson)); @endphp
             @forelse($sectionItems as $item)
-                <div class="item-card rounded-lg p-3 mb-2 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 hover:border-sky-300 hover:shadow-sm transition-all cursor-move"
+                <div class="item-card su-list-item" style="margin-bottom:8px;cursor:move"
                      data-item-id="{{ $item->id }}"
                      @if($item->item instanceof \App\Models\Lecture)
                      onclick="if (event.target.closest('button') || event.target.closest('a') || event.target.closest('.fa-grip-vertical')) return; editLectureFromCurriculum({{ $item->item->id }}, {{ $section->id }});"
                      @endif
                 >
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-3 flex-1 min-w-0">
-                            <i class="fas fa-grip-vertical text-slate-400 drag-handle shrink-0" title="سحب لإعادة الترتيب"></i>
-                            @if($item->item instanceof \App\Models\Lecture)
-                                <i class="fas fa-chalkboard-teacher text-sky-500 shrink-0"></i>
-                                <span class="font-semibold text-slate-800 dark:text-slate-100 truncate">{{ $item->item->title }}</span>
-                                <span class="text-xs text-slate-500 dark:text-slate-400 shrink-0">(محاضرة)</span>
-                                <div class="flex items-center gap-1 shrink-0">
-                                    <button type="button" onclick="event.stopPropagation(); openVideoQuestionsModal({{ $item->item->id }}, '{{ addslashes($item->item->title) }}')" class="p-1.5 rounded bg-amber-100 hover:bg-amber-200 text-amber-700 text-xs" title="أسئلة الفيديو"><i class="fas fa-question-circle"></i></button>
-                                    <button type="button" onclick="event.stopPropagation(); editLectureFromCurriculum({{ $item->item->id }}, {{ $section->id }})" class="p-1.5 rounded bg-sky-100 hover:bg-sky-200 text-sky-600 text-xs" title="تعديل المحاضرة"><i class="fas fa-edit"></i></button>
-                                    <button type="button" onclick="event.stopPropagation(); deleteLectureFromCurriculum({{ $item->item->id }}, {{ $item->id }})" class="p-1.5 rounded bg-red-50 dark:bg-red-900/30 hover:bg-red-100 text-red-600 text-xs" title="حذف المحاضرة"><i class="fas fa-trash"></i></button>
-                                </div>
-                            @elseif($item->item instanceof \App\Models\Assignment)
-                                <i class="fas fa-tasks text-emerald-500 shrink-0"></i>
-                                <span class="font-semibold text-slate-800 dark:text-slate-100 truncate">{{ $item->item->title }}</span>
-                                <span class="text-xs text-slate-500 dark:text-slate-400 shrink-0">(واجب)</span>
-                                <div class="flex items-center gap-1 shrink-0">
-                                    <a href="{{ route('instructor.assignments.edit', $item->item) }}" class="p-1.5 rounded bg-emerald-100 dark:bg-emerald-900/40 hover:bg-emerald-200 text-emerald-600 text-xs" title="تعديل الواجب"><i class="fas fa-edit"></i></a>
-                                    <button type="button" onclick="event.stopPropagation(); removeItem({{ $item->id }})" class="p-1.5 rounded bg-red-50 dark:bg-red-900/30 hover:bg-red-100 text-red-600 text-xs" title="إزالة من المنهج"><i class="fas fa-times"></i></button>
-                                </div>
-                            @elseif($item->item instanceof \App\Models\AdvancedExam || $item->item instanceof \App\Models\Exam)
-                                <i class="fas fa-clipboard-check text-violet-500 shrink-0"></i>
-                                <span class="font-semibold text-slate-800 dark:text-slate-100 truncate">{{ $item->item->title }}</span>
-                                <span class="text-xs text-slate-500 dark:text-slate-400 shrink-0">(امتحان)</span>
-                                <div class="flex items-center gap-1 shrink-0">
-                                    @if($item->item instanceof \App\Models\AdvancedExam)
-                                        <a href="{{ route('instructor.exams.edit', $item->item) }}" class="p-1.5 rounded bg-violet-100 hover:bg-violet-200 text-violet-600 text-xs" title="تعديل الامتحان"><i class="fas fa-edit"></i></a>
-                                    @endif
-                                    <button type="button" onclick="event.stopPropagation(); removeItem({{ $item->id }})" class="p-1.5 rounded bg-red-50 dark:bg-red-900/30 hover:bg-red-100 text-red-600 text-xs" title="إزالة من المنهج"><i class="fas fa-times"></i></button>
-                                </div>
-                            @endif
+                    <i class="fas fa-grip-vertical drag-handle" style="color:var(--su-ink-40);flex-shrink:0" title="drag" aria-hidden="true"></i>
+                    @if($item->item instanceof \App\Models\Lecture)
+                        <span class="su-list-item__ico su-soft-1"><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i></span>
+                        <div class="su-list-item__body">
+                            <div class="su-list-item__title">{{ $item->item->title }}</div>
+                            <div class="su-list-item__meta">{{ __('instructor.curr_lecture') }}</div>
                         </div>
-                    </div>
+                        <div class="su-list-item__actions">
+                            <button type="button" onclick="event.stopPropagation(); openVideoQuestionsModal({{ $item->item->id }}, '{{ addslashes($item->item->title) }}')" class="su-icon-link su-icon-link--ghost" title="?"><i class="fas fa-question-circle" aria-hidden="true"></i></button>
+                            <button type="button" onclick="event.stopPropagation(); editLectureFromCurriculum({{ $item->item->id }}, {{ $section->id }})" class="su-icon-link su-icon-link--ghost" title="{{ __('common.edit') }}"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                            <button type="button" onclick="event.stopPropagation(); deleteLectureFromCurriculum({{ $item->item->id }}, {{ $item->id }})" class="su-icon-link" style="background:#fee2e2;color:#b91c1c;border:0;cursor:pointer" title="{{ __('common.delete') }}"><i class="fas fa-trash" aria-hidden="true"></i></button>
+                        </div>
+                    @elseif($item->item instanceof \App\Models\Assignment)
+                        <span class="su-list-item__ico su-soft-2"><i class="fas fa-tasks" aria-hidden="true"></i></span>
+                        <div class="su-list-item__body">
+                            <div class="su-list-item__title">{{ $item->item->title }}</div>
+                            <div class="su-list-item__meta">{{ __('instructor.curr_assignment') }}</div>
+                        </div>
+                        <div class="su-list-item__actions">
+                            <a href="{{ route('instructor.assignments.edit', $item->item) }}" class="su-icon-link su-icon-link--ghost" title="{{ __('common.edit') }}"><i class="fas fa-edit" aria-hidden="true"></i></a>
+                            <button type="button" onclick="event.stopPropagation(); removeItem({{ $item->id }})" class="su-icon-link" style="background:#fee2e2;color:#b91c1c;border:0;cursor:pointer" title="{{ __('common.delete') }}"><i class="fas fa-times" aria-hidden="true"></i></button>
+                        </div>
+                    @elseif($item->item instanceof \App\Models\AdvancedExam || $item->item instanceof \App\Models\Exam)
+                        <span class="su-list-item__ico su-soft-3"><i class="fas fa-clipboard-check" aria-hidden="true"></i></span>
+                        <div class="su-list-item__body">
+                            <div class="su-list-item__title">{{ $item->item->title }}</div>
+                            <div class="su-list-item__meta">{{ __('instructor.curr_exam') }}</div>
+                        </div>
+                        <div class="su-list-item__actions">
+                            @if($item->item instanceof \App\Models\AdvancedExam)
+                                <a href="{{ route('instructor.exams.edit', $item->item) }}" class="su-icon-link su-icon-link--ghost" title="{{ __('common.edit') }}"><i class="fas fa-edit" aria-hidden="true"></i></a>
+                            @endif
+                            <button type="button" onclick="event.stopPropagation(); removeItem({{ $item->id }})" class="su-icon-link" style="background:#fee2e2;color:#b91c1c;border:0;cursor:pointer" title="{{ __('common.delete') }}"><i class="fas fa-times" aria-hidden="true"></i></button>
+                        </div>
+                    @endif
                 </div>
             @empty
-                <div class="text-center py-6 text-slate-500 dark:text-slate-400 border border-dashed border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                    <i class="fas fa-inbox text-2xl mb-2 text-slate-400"></i>
-                    <p class="text-sm mb-1">لا توجد عناصر في هذا القسم</p>
-                    <p class="text-xs text-slate-400">أضف محاضرات أو امتحانات أو واجبات من الأزرار أعلاه</p>
+                <div class="su-empty" style="padding:20px;border:1px dashed var(--su-line);border-radius:12px">
+                    <i class="fas fa-inbox" aria-hidden="true"></i>
+                    <p>{{ __('instructor.curr_no_items_section') }}</p>
+                    <p style="margin-top:4px;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.curr_no_items_hint') }}</p>
                 </div>
             @endforelse
         </div>
 
         @if($section->children && $section->children->count() > 0)
-            <div class="sections-children mt-4 pr-4 border-r-2 border-slate-100 dark:border-slate-700/80 space-y-4" data-parent-id="{{ $section->id }}" style="margin-right: 1rem;">
+            <div class="sections-children" data-parent-id="{{ $section->id }}" style="margin-top:16px;margin-inline-start:1rem;padding-inline-start:12px;border-inline-start:2px solid var(--su-line)">
                 @foreach($section->children as $child)
                     @include('instructor.curriculum.partials.section', ['section' => $child, 'depth' => $depth + 1])
                 @endforeach
             </div>
         @else
-            <div class="sections-children empty-drop-zone mt-4 pr-4 border-r-2 border-slate-100 dark:border-slate-700/80 border-dashed min-h-[52px] rounded-lg bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center transition-all" data-parent-id="{{ $section->id }}" style="margin-right: 1rem;" data-empty="1"><span class="text-xs text-slate-400 opacity-0 group-hover:opacity-100 curriculum-drag-hint">أفلت قسم هنا</span></div>
+            <div class="sections-children empty-drop-zone" data-parent-id="{{ $section->id }}" data-empty="1"
+                 style="margin-top:16px;margin-inline-start:1rem;min-height:52px;border-radius:12px;border:1px dashed var(--su-line);background:var(--su-bg);display:flex;align-items:center;justify-content:center">
+                <span class="curriculum-drag-hint" style="font-size:11px;color:var(--su-ink-40);opacity:0">{{ __('instructor.curr_drop_section') }}</span>
+            </div>
         @endif
     </div>
 </div>

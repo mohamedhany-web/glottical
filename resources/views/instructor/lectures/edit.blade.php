@@ -1,295 +1,217 @@
 @extends('layouts.app')
 
-@section('title', 'تعديل المحاضرة - ' . $lecture->title)
-@section('header', 'تعديل المحاضرة')
+@section('title', __('instructor.edit_lecture') . ' - ' . $lecture->title)
+@section('page_title', __('instructor.edit_lecture'))
 
 @section('content')
-<div class="space-y-6">
-    <!-- الهيدر -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">تعديل المحاضرة</h1>
-                <p class="text-gray-600 dark:text-gray-400 mt-1">{{ $lecture->title }}</p>
-            </div>
-            <a href="{{ route('instructor.lectures.show', $lecture) }}" 
-               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                <i class="fas fa-arrow-right ml-2"></i>
-                العودة
+@php
+    $isRtl = app()->getLocale() === 'ar';
+@endphp
+<div class="su-page" style="max-width:56rem">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.lectures.index') }}">{{ __('instructor.lectures') }}</a>
+                <span>/</span>
+                <a href="{{ route('instructor.lectures.show', $lecture) }}">{{ Str::limit($lecture->title, 40) }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ __('common.edit') }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-edit su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.edit_lecture') }}
+            </h1>
+            <p class="su-page-head__sub">{{ $lecture->title }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.lectures.show', $lecture) }}" class="su-btn">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.back') }}
             </a>
         </div>
     </div>
 
-    <!-- النموذج -->
-    <form action="{{ route('instructor.lectures.update', $lecture) }}" method="POST" enctype="multipart/form-data" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <form action="{{ route('instructor.lectures.update', $lecture) }}" method="POST" enctype="multipart/form-data" class="su-card">
         @csrf
         @method('PUT')
-        
-        <div class="p-6 space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- الكورس -->
-                <div>
-                    <label for="course_id" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        الكورس <span class="text-rose-500">*</span>
-                    </label>
-                    <select name="course_id" id="course_id" required
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white">
-                        <option value="">اختر الكورس</option>
-                        @foreach($courses as $course)
-                            <option value="{{ $course->id }}" {{ old('course_id', $lecture->course_id) == $course->id ? 'selected' : '' }}>
-                                {{ $course->title }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('course_id')
-                        <p class="mt-1 text-sm text-rose-500">{{ $message }}</p>
-                    @enderror
-                </div>
 
-                <!-- الدرس (اختياري) -->
-                <div>
-                    <label for="course_lesson_id" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        الدرس (اختياري)
-                    </label>
-                    <select name="course_lesson_id" id="course_lesson_id"
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white">
-                        <option value="">بدون درس محدد</option>
-                        @foreach($lessons as $lesson)
-                            <option value="{{ $lesson->id }}" {{ old('course_lesson_id', $lecture->course_lesson_id) == $lesson->id ? 'selected' : '' }}>
-                                {{ $lesson->title }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">يمكنك ربط المحاضرة بدرس محدد من الكورس</p>
-                    @error('course_lesson_id')
-                        <p class="mt-1 text-sm text-rose-500">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- العنوان -->
-                <div>
-                    <label for="title" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        عنوان المحاضرة <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" name="title" id="title" value="{{ old('title', $lecture->title) }}" required
-                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white">
-                    @error('title')
-                        <p class="mt-1 text-sm text-rose-500">{{ $message }}</p>
-                    @enderror
-                </div>
-            </div>
-
-            <!-- الوصف -->
-            <div>
-                <label for="description" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    الوصف
-                </label>
-                <textarea name="description" id="description" rows="3"
-                          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white">{{ old('description', $lecture->description) }}</textarea>
-                @error('description')
-                    <p class="mt-1 text-sm text-rose-500">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                @include('partials.timezone-select', ['value' => old('timezone', auth()->user()?->timezoneCode())])
-                <!-- التاريخ والوقت -->
-                <div>
-                    <label for="scheduled_at" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        التاريخ والوقت <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="datetime-local" name="scheduled_at" id="scheduled_at" 
-                           value="{{ old('scheduled_at', \App\Support\AppTimezone::datetimeLocalValue($lecture->scheduled_at, old('timezone', auth()->user()?->timezoneCode()))) }}" required
-                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white">
-                    @error('scheduled_at')
-                        <p class="mt-1 text-sm text-rose-500">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- المدة -->
-                <div>
-                    <label for="duration_minutes" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        المدة (بالدقائق) <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="number" name="duration_minutes" id="duration_minutes" 
-                           value="{{ old('duration_minutes', $lecture->duration_minutes) }}" min="15" max="480" required
-                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white">
-                    @error('duration_minutes')
-                        <p class="mt-1 text-sm text-rose-500">{{ $message }}</p>
-                    @enderror
-                </div>
-                <!-- نسبة المشاهدة المطلوبة للمحاضرة التالية -->
-                <div>
-                    <label for="min_watch_percent_to_unlock_next" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        نسبة المشاهدة المطلوبة لفتح المحاضرة التالية
-                    </label>
-                    <input type="number" name="min_watch_percent_to_unlock_next" id="min_watch_percent_to_unlock_next"
-                           value="{{ old('min_watch_percent_to_unlock_next', $lecture->min_watch_percent_to_unlock_next ?? 0) }}" min="0" max="100"
-                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white"
-                           placeholder="مثال: 80 يعني يجب مشاهدة 80% من هذه المحاضرة لفتح التالية">
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">اتركها 0 أو فارغة إذا لم ترغب في قفل المحاضرة التالية على نسبة مشاهدة معينة.</p>
-                </div>
-            </div>
-
-            <!-- الحالة -->
-            <div>
-                <label for="status" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    الحالة <span class="text-rose-500">*</span>
-                </label>
-                <select name="status" id="status" required
-                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white">
-                    <option value="scheduled" {{ old('status', $lecture->status) == 'scheduled' ? 'selected' : '' }}>مجدولة</option>
-                    <option value="in_progress" {{ old('status', $lecture->status) == 'in_progress' ? 'selected' : '' }}>قيد التنفيذ</option>
-                    <option value="completed" {{ old('status', $lecture->status) == 'completed' ? 'selected' : '' }}>مكتملة</option>
-                    <option value="cancelled" {{ old('status', $lecture->status) == 'cancelled' ? 'selected' : '' }}>ملغاة</option>
+        <div class="su-form-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:16px">
+            <div class="su-field">
+                <label for="course_id">{{ __('instructor.course_label') }} <span style="color:#b91c1c">*</span></label>
+                <select name="course_id" id="course_id" required class="su-select">
+                    <option value="">{{ __('instructor.choose_course') }}</option>
+                    @foreach($courses as $course)
+                        <option value="{{ $course->id }}" {{ old('course_id', $lecture->course_id) == $course->id ? 'selected' : '' }}>{{ $course->title }}</option>
+                    @endforeach
                 </select>
-                @error('status')
-                    <p class="mt-1 text-sm text-rose-500">{{ $message }}</p>
-                @enderror
+                @error('course_id')<p class="su-field-error">{{ $message }}</p>@enderror
             </div>
-
-            <!-- رابط التسجيل -->
-            <div>
-                <label for="recording_url" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    رابط تسجيل المحاضرة
-                </label>
-                <input type="url" name="recording_url" id="recording_url" 
-                       value="{{ old('recording_url', $lecture->recording_url) }}"
-                       class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white">
-                @error('recording_url')
-                    <p class="mt-1 text-sm text-rose-500">{{ $message }}</p>
-                @enderror
+            <div class="su-field">
+                <label for="course_lesson_id">{{ __('instructor.lesson_optional') }}</label>
+                <select name="course_lesson_id" id="course_lesson_id" class="su-select">
+                    <option value="">{{ __('instructor.no_lesson') }}</option>
+                    @foreach($lessons as $lesson)
+                        <option value="{{ $lesson->id }}" {{ old('course_lesson_id', $lecture->course_lesson_id) == $lesson->id ? 'selected' : '' }}>{{ $lesson->title }}</option>
+                    @endforeach
+                </select>
+                <p style="margin:6px 0 0;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.lesson_link_hint') }}</p>
+                @error('course_lesson_id')<p class="su-field-error">{{ $message }}</p>@enderror
             </div>
-
-            <!-- مواد المحاضرة -->
-            @php $lecture->load('materials'); @endphp
-            <div class="space-y-4">
-                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    مواد المحاضرة
-                </label>
-                @foreach($lecture->materials as $mat)
-                    <div class="flex flex-wrap items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                        <div class="flex-1 min-w-0">
-                            <span class="font-medium text-gray-900 dark:text-white">{{ $mat->title ?: $mat->file_name }}</span>
-                            <span class="text-xs text-gray-500 dark:text-gray-400 block">{{ $mat->file_name }}</span>
-                        </div>
-                        <label class="flex items-center gap-2">
-                            <input type="hidden" name="material_visible_old[{{ $mat->id }}]" value="0">
-                            <input type="checkbox" name="material_visible_old[{{ $mat->id }}]" value="1" {{ $mat->is_visible_to_student ? 'checked' : '' }} class="w-4 h-4 text-sky-600 rounded">
-                            <span class="text-sm text-gray-700 dark:text-gray-300">ظاهر للطالب</span>
-                        </label>
-                        <label class="flex items-center gap-2 text-rose-600 text-sm cursor-pointer">
-                            <input type="checkbox" name="material_delete_old[]" value="{{ $mat->id }}" class="w-4 h-4 rounded">
-                            <span>حذف</span>
-                        </label>
-                    </div>
-                @endforeach
-                <div id="edit-materials-new" class="space-y-3"></div>
-                <button type="button" id="edit-add-material" class="inline-flex items-center gap-2 px-4 py-2 bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 rounded-lg font-medium text-sm hover:bg-sky-200 dark:hover:bg-sky-800 transition-colors">
-                    <i class="fas fa-plus"></i>
-                    إضافة مادة جديدة
-                </button>
-            </div>
-
-            <!-- الملاحظات -->
-            <div>
-                <label for="notes" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    الملاحظات
-                </label>
-                <textarea name="notes" id="notes" rows="3"
-                          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white">{{ old('notes', $lecture->notes) }}</textarea>
-                @error('notes')
-                    <p class="mt-1 text-sm text-rose-500">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- الخيارات -->
-            <div class="space-y-3">
-                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    الخيارات
-                </label>
-                
-                <label class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
-                    <input type="checkbox" name="has_attendance_tracking" value="1" 
-                           {{ old('has_attendance_tracking', $lecture->has_attendance_tracking) ? 'checked' : '' }}
-                           class="w-5 h-5 text-sky-600 border-gray-300 rounded focus:ring-sky-500">
-                    <div>
-                        <div class="font-medium text-gray-900 dark:text-white">تتبع الحضور</div>
-                        <div class="text-sm text-gray-600 dark:text-gray-400">تسجيل حضور الطلاب تلقائياً أو يدوياً</div>
-                    </div>
-                </label>
-
-                <label class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
-                    <input type="checkbox" name="has_assignment" value="1" 
-                           {{ old('has_assignment', $lecture->has_assignment) ? 'checked' : '' }}
-                           class="w-5 h-5 text-sky-600 border-gray-300 rounded focus:ring-sky-500">
-                    <div>
-                        <div class="font-medium text-gray-900 dark:text-white">يوجد واجب</div>
-                        <div class="text-sm text-gray-600 dark:text-gray-400">إضافة واجب مرتبط بهذه المحاضرة</div>
-                    </div>
-                </label>
-
-                <label class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
-                    <input type="checkbox" name="has_evaluation" value="1" 
-                           {{ old('has_evaluation', $lecture->has_evaluation) ? 'checked' : '' }}
-                           class="w-5 h-5 text-sky-600 border-gray-300 rounded focus:ring-sky-500">
-                    <div>
-                        <div class="font-medium text-gray-900 dark:text-white">يوجد تقييم</div>
-                        <div class="text-sm text-gray-600 dark:text-gray-400">السماح للطلاب بتقييم المحاضرة</div>
-                    </div>
-                </label>
+            <div class="su-field">
+                <label for="title">{{ __('instructor.lecture_title') }} <span style="color:#b91c1c">*</span></label>
+                <input type="text" name="title" id="title" value="{{ old('title', $lecture->title) }}" required class="su-input">
+                @error('title')<p class="su-field-error">{{ $message }}</p>@enderror
             </div>
         </div>
 
-        <!-- الأزرار -->
-        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex items-center justify-end gap-3">
-            <a href="{{ route('instructor.lectures.show', $lecture) }}" 
-               class="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
-                إلغاء
-            </a>
-            <button type="submit" 
-                    class="bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-sky-500/30">
-                <i class="fas fa-save ml-2"></i>
-                حفظ التعديلات
+        <div class="su-field" style="margin-bottom:16px">
+            <label for="description">{{ __('instructor.description') }}</label>
+            <textarea name="description" id="description" rows="3" class="su-input" style="min-height:88px;resize:vertical">{{ old('description', $lecture->description) }}</textarea>
+            @error('description')<p class="su-field-error">{{ $message }}</p>@enderror
+        </div>
+
+        <div class="su-form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
+            @include('partials.timezone-select', ['value' => old('timezone', auth()->user()?->timezoneCode())])
+            <div class="su-field">
+                <label for="scheduled_at">{{ __('instructor.date_time') }} <span style="color:#b91c1c">*</span></label>
+                <input type="datetime-local" name="scheduled_at" id="scheduled_at"
+                       value="{{ old('scheduled_at', \App\Support\AppTimezone::datetimeLocalValue($lecture->scheduled_at, old('timezone', auth()->user()?->timezoneCode()))) }}"
+                       required class="su-input">
+                @error('scheduled_at')<p class="su-field-error">{{ $message }}</p>@enderror
+            </div>
+            <div class="su-field">
+                <label for="duration_minutes">{{ __('instructor.duration_minutes_label') }} <span style="color:#b91c1c">*</span></label>
+                <input type="number" name="duration_minutes" id="duration_minutes"
+                       value="{{ old('duration_minutes', $lecture->duration_minutes) }}" min="15" max="480" required class="su-input">
+                @error('duration_minutes')<p class="su-field-error">{{ $message }}</p>@enderror
+            </div>
+            <div class="su-field">
+                <label for="min_watch_percent_to_unlock_next">{{ __('instructor.min_watch_percent') }}</label>
+                <input type="number" name="min_watch_percent_to_unlock_next" id="min_watch_percent_to_unlock_next"
+                       value="{{ old('min_watch_percent_to_unlock_next', $lecture->min_watch_percent_to_unlock_next ?? 0) }}" min="0" max="100" class="su-input"
+                       placeholder="{{ __('instructor.min_watch_percent_ph') }}">
+                <p style="margin:6px 0 0;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.min_watch_percent_hint') }}</p>
+            </div>
+        </div>
+
+        <div class="su-field" style="margin-bottom:16px">
+            <label for="status">{{ __('common.status') }} <span style="color:#b91c1c">*</span></label>
+            <select name="status" id="status" required class="su-select">
+                <option value="scheduled" {{ old('status', $lecture->status) == 'scheduled' ? 'selected' : '' }}>{{ __('instructor.scheduled_lecture') }}</option>
+                <option value="in_progress" {{ old('status', $lecture->status) == 'in_progress' ? 'selected' : '' }}>{{ __('instructor.in_progress_status') }}</option>
+                <option value="completed" {{ old('status', $lecture->status) == 'completed' ? 'selected' : '' }}>{{ __('instructor.completed_status') }}</option>
+                <option value="cancelled" {{ old('status', $lecture->status) == 'cancelled' ? 'selected' : '' }}>{{ __('instructor.cancelled_lecture') }}</option>
+            </select>
+            @error('status')<p class="su-field-error">{{ $message }}</p>@enderror
+        </div>
+
+        <div class="su-field" style="margin-bottom:16px">
+            <label for="recording_url">{{ __('instructor.recording_link_section') }}</label>
+            <input type="url" name="recording_url" id="recording_url" value="{{ old('recording_url', $lecture->recording_url) }}" class="su-input">
+            @error('recording_url')<p class="su-field-error">{{ $message }}</p>@enderror
+        </div>
+
+        @php $lecture->load('materials'); @endphp
+        <div class="su-field" style="margin-bottom:16px">
+            <label>{{ __('instructor.lecture_materials') }}</label>
+            @foreach($lecture->materials as $mat)
+                <div class="su-chip-row" style="justify-content:space-between;padding:12px;border:1px solid var(--su-line);border-radius:12px;margin:0 0 8px">
+                    <div class="min-w-0">
+                        <strong style="font-weight:600">{{ $mat->title ?: $mat->file_name }}</strong>
+                        <div style="font-size:12px;color:var(--su-ink-40)">{{ $mat->file_name }}</div>
+                    </div>
+                    <div class="su-chip-row" style="margin:0">
+                        <label class="su-chip" style="cursor:pointer">
+                            <input type="hidden" name="material_visible_old[{{ $mat->id }}]" value="0">
+                            <input type="checkbox" name="material_visible_old[{{ $mat->id }}]" value="1" {{ $mat->is_visible_to_student ? 'checked' : '' }} style="margin-inline-end:6px">
+                            {{ __('instructor.visible_to_student') }}
+                        </label>
+                        <label class="su-chip su-chip--off" style="cursor:pointer">
+                            <input type="checkbox" name="material_delete_old[]" value="{{ $mat->id }}" style="margin-inline-end:6px">
+                            {{ __('common.delete') }}
+                        </label>
+                    </div>
+                </div>
+            @endforeach
+            <div id="edit-materials-new" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+            <button type="button" id="edit-add-material" class="su-btn">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                {{ __('instructor.add_material') }}
+            </button>
+        </div>
+
+        <div class="su-field" style="margin-bottom:16px">
+            <label for="notes">{{ __('instructor.notes_section') }}</label>
+            <textarea name="notes" id="notes" rows="3" class="su-input" style="min-height:88px;resize:vertical">{{ old('notes', $lecture->notes) }}</textarea>
+            @error('notes')<p class="su-field-error">{{ $message }}</p>@enderror
+        </div>
+
+        <div class="su-section-head" style="margin:0 0 12px">
+            <h3>{{ __('instructor.options_section') }}</h3>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+            <label class="su-chip" style="cursor:pointer;height:auto;padding:14px;width:100%;justify-content:flex-start;gap:12px">
+                <input type="checkbox" name="has_attendance_tracking" value="1"
+                       {{ old('has_attendance_tracking', $lecture->has_attendance_tracking) ? 'checked' : '' }}>
+                <span>
+                    <strong style="display:block">{{ __('instructor.attendance_tracking') }}</strong>
+                    <span style="font-size:12px;color:var(--su-ink-40)">{{ __('instructor.attendance_tracking_desc') }}</span>
+                </span>
+            </label>
+            <label class="su-chip" style="cursor:pointer;height:auto;padding:14px;width:100%;justify-content:flex-start;gap:12px">
+                <input type="checkbox" name="has_assignment" value="1"
+                       {{ old('has_assignment', $lecture->has_assignment) ? 'checked' : '' }}>
+                <span>
+                    <strong style="display:block">{{ __('instructor.has_assignment') }}</strong>
+                    <span style="font-size:12px;color:var(--su-ink-40)">{{ __('instructor.has_assignment_desc') }}</span>
+                </span>
+            </label>
+            <label class="su-chip" style="cursor:pointer;height:auto;padding:14px;width:100%;justify-content:flex-start;gap:12px">
+                <input type="checkbox" name="has_evaluation" value="1"
+                       {{ old('has_evaluation', $lecture->has_evaluation) ? 'checked' : '' }}>
+                <span>
+                    <strong style="display:block">{{ __('instructor.has_evaluation') }}</strong>
+                    <span style="font-size:12px;color:var(--su-ink-40)">{{ __('instructor.has_evaluation_desc') }}</span>
+                </span>
+            </label>
+        </div>
+
+        <div class="su-page-head__actions" style="justify-content:flex-end;border-top:1px solid var(--su-line);padding-top:16px">
+            <a href="{{ route('instructor.lectures.show', $lecture) }}" class="su-btn">{{ __('common.cancel') }}</a>
+            <button type="submit" class="su-btn su-btn--primary">
+                <i class="fas fa-save" aria-hidden="true"></i>
+                {{ __('instructor.save_changes') }}
             </button>
         </div>
     </form>
 </div>
 
 <script>
-    (function() {
-        var newMaterialsContainer = document.getElementById('edit-materials-new');
-        var addBtn = document.getElementById('edit-add-material');
-        if (newMaterialsContainer && addBtn) {
-            var rowHtml = '<div class="edit-material-row flex flex-wrap items-end gap-3 p-4 bg-slate-50 dark:bg-gray-700 rounded-lg border border-slate-200 dark:border-gray-600">' +
-                '<div class="flex-1 min-w-[180px]"><label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">الملف</label>' +
-                '<input type="file" name="material_files[]" class="w-full text-sm" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,.png,.jpg,.jpeg"></div>' +
-                '<div class="w-48"><label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">عنوان (اختياري)</label>' +
-                '<input type="text" name="material_titles[]" placeholder="عنوان المادة" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-white"></div>' +
-                '<label class="flex items-center gap-2 pb-2"><input type="hidden" name="material_visible[]" value="0"><input type="checkbox" name="material_visible[]" value="1" checked class="w-4 h-4 text-sky-600 rounded"><span class="text-sm">ظاهر للطالب</span></label>' +
-                '<button type="button" class="edit-remove-material px-3 py-2 bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 rounded-lg text-sm font-medium hover:bg-rose-200 dark:hover:bg-rose-800">حذف</button></div>';
-            addBtn.addEventListener('click', function() {
-                var div = document.createElement('div');
-                div.innerHTML = rowHtml;
-                newMaterialsContainer.appendChild(div.firstElementChild);
-            });
-            newMaterialsContainer.addEventListener('click', function(e) {
-                if (e.target.closest('.edit-remove-material')) e.target.closest('.edit-material-row').remove();
-            });
-        }
-    })();
-    // تحديث قائمة الدروس عند اختيار الكورس
+(function() {
+    var newMaterialsContainer = document.getElementById('edit-materials-new');
+    var addBtn = document.getElementById('edit-add-material');
+    if (newMaterialsContainer && addBtn) {
+        var rowHtml = '<div class="edit-material-row su-chip-row" style="flex-wrap:wrap;align-items:flex-end;gap:12px;padding:14px;border:1px solid var(--su-line);border-radius:14px;margin:0">' +
+            '<div style="flex:1;min-width:180px"><label style="display:block;font-size:12px;margin-bottom:4px">{{ __("instructor.file_label") }}</label>' +
+            '<input type="file" name="material_files[]" class="su-input" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,.png,.jpg,.jpeg"></div>' +
+            '<div style="width:12rem"><label style="display:block;font-size:12px;margin-bottom:4px">{{ __("instructor.title_optional") }}</label>' +
+            '<input type="text" name="material_titles[]" placeholder="{{ __("instructor.material_title_ph") }}" class="su-input"></div>' +
+            '<label class="su-chip" style="cursor:pointer"><input type="hidden" name="material_visible[]" value="0"><input type="checkbox" name="material_visible[]" value="1" checked style="margin-inline-end:6px"><span>{{ __("instructor.visible_to_student") }}</span></label>' +
+            '<button type="button" class="edit-remove-material su-btn" style="height:32px">{{ __("common.delete") }}</button></div>';
+        addBtn.addEventListener('click', function() {
+            var div = document.createElement('div');
+            div.innerHTML = rowHtml;
+            newMaterialsContainer.appendChild(div.firstElementChild);
+        });
+        newMaterialsContainer.addEventListener('click', function(e) {
+            if (e.target.closest('.edit-remove-material')) e.target.closest('.edit-material-row').remove();
+        });
+    }
     document.getElementById('course_id').addEventListener('change', function() {
         const courseId = this.value;
         const lessonSelect = document.getElementById('course_lesson_id');
-        
-        // مسح الخيارات الحالية (ما عدا الخيار الأول)
-        while (lessonSelect.children.length > 1) {
-            lessonSelect.removeChild(lessonSelect.lastChild);
-        }
-        
+        while (lessonSelect.children.length > 1) lessonSelect.removeChild(lessonSelect.lastChild);
         if (courseId) {
-            // جلب دروس الكورس
             fetch(`/api/courses/${courseId}/lessons`)
                 .then(response => response.json())
                 .then(data => {
@@ -302,11 +224,9 @@
                         });
                     }
                 })
-                .catch(error => {
-                    console.error('Error fetching lessons:', error);
-                });
+                .catch(error => console.error('Error fetching lessons:', error));
         }
     });
+})();
 </script>
 @endsection
-

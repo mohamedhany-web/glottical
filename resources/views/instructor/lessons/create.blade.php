@@ -1,217 +1,136 @@
 @extends('layouts.app')
 
-@section('title', 'إضافة درس جديد')
-@section('header', 'إضافة درس جديد')
-
-@push('styles')
-<style>
-    .form-card {
-        background: white;
-        border-radius: 1rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-</style>
-@endpush
+@section('title', __('instructor.lessons_create_title'))
+@section('page_title', __('instructor.lessons_create_title'))
 
 @section('content')
-<div class="space-y-6">
-    <!-- Breadcrumb -->
-    <div class="flex items-center gap-2 text-sm">
-        <a href="{{ route('instructor.courses.index') }}" class="text-[#2CA9BD] hover:underline">الكورسات</a>
-        <i class="fas fa-chevron-left text-gray-400 text-xs"></i>
-        <a href="{{ route('instructor.courses.show', $course->id) }}" class="text-[#2CA9BD] hover:underline">{{ $course->title }}</a>
-        <i class="fas fa-chevron-left text-gray-400 text-xs"></i>
-        <span class="text-gray-600">إضافة درس</span>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.courses.index') }}">{{ __('instructor.courses') }}</a>
+                <span>/</span>
+                <a href="{{ route('instructor.courses.show', $course->id) }}">{{ $course->title }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ __('instructor.lessons_create_title') }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-plus-circle su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.lessons_create_title') }}
+            </h1>
+        </div>
     </div>
 
     @if ($errors->any())
-    <div class="bg-red-50 dark:bg-red-900/30 border-r-4 border-red-500 text-red-700 p-4 rounded-lg">
-        <div class="flex items-start">
-            <i class="fas fa-exclamation-circle mt-0.5 ml-2"></i>
-            <div>
-                <strong class="font-bold">خطأ!</strong>
-                <ul class="mt-2 mr-4 list-disc">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:#b91c1c;font-size:13px">
+            <strong>{{ __('instructor.form_fix_errors') }}</strong>
+            <ul style="margin:8px 0 0;padding-inline-start:18px">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
-    </div>
     @endif
 
-    <!-- Form Card -->
-    <div class="form-card p-6">
+    <section class="su-card">
         <form action="{{ route('instructor.courses.lessons.store', $course->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
-            
+
             @if(request('section_id'))
-            <input type="hidden" name="section_id" value="{{ request('section_id') }}">
+                <input type="hidden" name="section_id" value="{{ request('section_id') }}">
             @endif
 
-            <div class="space-y-6">
-                <!-- العنوان ونوع الدرس -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- العنوان -->
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-bold text-gray-700 mb-2">
-                            <i class="fas fa-heading text-[#2CA9BD] ml-2"></i>
-                            عنوان الدرس <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" name="title" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2CA9BD] focus:border-transparent" 
-                               value="{{ old('title') }}" 
-                               placeholder="مثال: مقدمة في أهداف التعلّم" 
-                               required>
-                    </div>
-
-                    <!-- نوع الدرس -->
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">
-                            <i class="fas fa-list text-[#2CA9BD] ml-2"></i>
-                            نوع الدرس <span class="text-red-500">*</span>
-                        </label>
-                        <select name="type" id="lessonType" 
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2CA9BD] focus:border-transparent" 
-                                required>
-                            <option value="">اختر نوع الدرس</option>
-                            <option value="video">فيديو</option>
-                            <option value="text">نص</option>
-                            <option value="document">ملف</option>
-                            <option value="quiz">اختبار</option>
-                        </select>
-                    </div>
+            <div class="su-form-grid">
+                <div class="su-field" style="grid-column:span 2">
+                    <label for="title">{{ __('instructor.lessons_title_label') }} *</label>
+                    <input type="text" name="title" id="title" class="su-input" value="{{ old('title') }}" placeholder="{{ __('instructor.lessons_title_ph') }}" required>
                 </div>
-
-                <!-- الوصف -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">
-                        <i class="fas fa-align-right text-[#2CA9BD] ml-2"></i>
-                        وصف الدرس
-                    </label>
-                    <textarea name="description" rows="3" 
-                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2CA9BD] focus:border-transparent" 
-                              placeholder="وصف مختصر للدرس">{{ old('description') }}</textarea>
+                <div class="su-field">
+                    <label for="lessonType">{{ __('instructor.lessons_type_label') }} *</label>
+                    <select name="type" id="lessonType" class="su-select" required>
+                        <option value="">{{ __('instructor.lessons_type_choose') }}</option>
+                        <option value="video" @selected(old('type') === 'video')>{{ __('instructor.lessons_type_video') }}</option>
+                        <option value="text" @selected(old('type') === 'text')>{{ __('instructor.lessons_type_text') }}</option>
+                        <option value="document" @selected(old('type') === 'document')>{{ __('instructor.lessons_type_document') }}</option>
+                        <option value="quiz" @selected(old('type') === 'quiz')>{{ __('instructor.lessons_type_quiz') }}</option>
+                    </select>
                 </div>
+            </div>
 
-                <!-- Video Section -->
-                <div class="video-section hidden">
-                    <div class="bg-blue-50 dark:bg-blue-900/30 p-6 rounded-lg border border-blue-200">
-                        <h6 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <i class="fas fa-video text-red-500"></i>
-                            <span>إعدادات الفيديو</span>
-                        </h6>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">رابط الفيديو (يوتيوب/فيميو)</label>
-                                <input type="url" name="video_url" 
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2CA9BD]" 
-                                       placeholder="https://youtube.com/watch?v=...">
-                                <p class="text-xs text-gray-500 mt-1">أو يمكنك رفع ملف فيديو</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">رفع ملف فيديو (حتى 500MB)</label>
-                                <input type="file" name="video_file" accept="video/*"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2CA9BD]">
-                                <p class="text-xs text-gray-500 mt-1">MP4, WebM, OGG</p>
-                            </div>
+            <div class="su-field" style="margin-top:16px">
+                <label for="description">{{ __('instructor.lessons_desc_label') }}</label>
+                <textarea name="description" id="description" rows="3" class="su-input" style="min-height:88px;padding-top:10px" placeholder="{{ __('instructor.lessons_desc_ph') }}">{{ old('description') }}</textarea>
+            </div>
+
+            <div class="video-section hidden" style="margin-top:16px">
+                <div class="su-card su-soft-1" style="padding:16px">
+                    <h3 class="su-card__title" style="margin-bottom:12px">
+                        <i class="fas fa-video" aria-hidden="true"></i>
+                        {{ __('instructor.lessons_video_settings') }}
+                    </h3>
+                    <div class="su-form-grid">
+                        <div class="su-field">
+                            <label for="video_url">{{ __('instructor.lessons_video_url_label') }}</label>
+                            <input type="url" name="video_url" id="video_url" class="su-input" placeholder="https://youtube.com/watch?v=...">
+                        </div>
+                        <div class="su-field">
+                            <label for="video_file">{{ __('instructor.lessons_video_file_label') }}</label>
+                            <input type="file" name="video_file" id="video_file" accept="video/*" class="su-input">
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Text Content Section -->
-                <div class="text-section hidden">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">
-                        <i class="fas fa-paragraph text-[#2CA9BD] ml-2"></i>
-                        محتوى الدرس
-                    </label>
-                    <textarea name="content" rows="10" 
-                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2CA9BD]" 
-                              placeholder="اكتب محتوى الدرس هنا...">{{ old('content') }}</textarea>
-                </div>
-
-                <!-- المدة والترتيب -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">
-                            <i class="fas fa-clock text-[#2CA9BD] ml-2"></i>
-                            مدة الدرس (بالدقائق)
-                        </label>
-                        <input type="number" name="duration_minutes" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2CA9BD]" 
-                               value="{{ old('duration_minutes') }}" 
-                               min="0" 
-                               placeholder="45">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">
-                            <i class="fas fa-sort-numeric-up text-[#2CA9BD] ml-2"></i>
-                            ترتيب الدرس <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number" name="order" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2CA9BD]" 
-                               value="{{ old('order', $lastOrder + 1) }}" 
-                               min="0" 
-                               required>
-                    </div>
-                </div>
-
-                <!-- المرفقات -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">
-                        <i class="fas fa-paperclip text-[#2CA9BD] ml-2"></i>
-                        المرفقات (اختياري)
-                    </label>
-                    <input type="file" name="attachments[]" multiple
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2CA9BD]">
-                    <p class="text-xs text-gray-500 mt-1">يمكنك رفع عدة ملفات (حتى 40 ميجابايت لكل ملف)</p>
-                </div>
-
-                <!-- الخيارات -->
-                <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                    <h6 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <i class="fas fa-cog text-[#2CA9BD]"></i>
-                        <span>خيارات الدرس</span>
-                    </h6>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" name="is_active" checked
-                                   class="w-5 h-5 text-[#2CA9BD] border-gray-300 rounded focus:ring-[#2CA9BD]">
-                            <span class="text-sm font-semibold text-gray-700">
-                                <i class="fas fa-eye text-green-500 ml-2"></i>
-                                الدرس نشط
-                            </span>
-                        </label>
-                        
-                        <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" name="is_free"
-                                   class="w-5 h-5 text-[#2CA9BD] border-gray-300 rounded focus:ring-[#2CA9BD]">
-                            <span class="text-sm font-semibold text-gray-700">
-                                <i class="fas fa-gift text-yellow-500 ml-2"></i>
-                                درس مجاني (معاينة)
-                            </span>
-                        </label>
-                    </div>
+            <div class="text-section hidden" style="margin-top:16px">
+                <div class="su-field">
+                    <label for="content">{{ __('instructor.lessons_content_label') }}</label>
+                    <textarea name="content" id="content" rows="10" class="su-input" style="min-height:200px;padding-top:10px" placeholder="{{ __('instructor.lessons_content_ph') }}">{{ old('content') }}</textarea>
                 </div>
             </div>
 
-            <!-- Buttons -->
-            <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
-                <a href="{{ route('instructor.courses.curriculum', $course->id) }}" 
-                   class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-bold transition-all">
-                    <i class="fas fa-times ml-2"></i>
-                    إلغاء
+            <div class="su-form-grid" style="margin-top:16px">
+                <div class="su-field">
+                    <label for="duration_minutes">{{ __('instructor.lessons_duration_label') }}</label>
+                    <input type="number" name="duration_minutes" id="duration_minutes" class="su-input" value="{{ old('duration_minutes') }}" min="0" placeholder="45">
+                </div>
+                <div class="su-field">
+                    <label for="order">{{ __('instructor.lessons_order_label') }} *</label>
+                    <input type="number" name="order" id="order" class="su-input" value="{{ old('order', $lastOrder + 1) }}" min="0" required>
+                </div>
+            </div>
+
+            <div class="su-field" style="margin-top:16px">
+                <label for="attachments">{{ __('instructor.lessons_attachments_label') }}</label>
+                <input type="file" name="attachments[]" id="attachments" multiple class="su-input">
+                <p style="margin:6px 0 0;font-size:12px;color:var(--su-ink-40)">{{ __('instructor.lessons_attachments_hint') }}</p>
+            </div>
+
+            <div class="su-card su-soft-2" style="margin-top:16px;padding:16px">
+                <h3 class="su-card__title" style="margin-bottom:12px">{{ __('instructor.lessons_options') }}</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:16px">
+                    <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                        <input type="checkbox" name="is_active" checked>
+                        {{ __('instructor.lessons_active_check') }}
+                    </label>
+                    <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                        <input type="checkbox" name="is_free">
+                        {{ __('instructor.lessons_free_check') }}
+                    </label>
+                </div>
+            </div>
+
+            <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:24px;padding-top:16px;border-top:0.5px solid var(--su-line)">
+                <a href="{{ route('instructor.courses.curriculum', $course->id) }}" class="su-btn">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                    {{ __('instructor.cancel') }}
                 </a>
-                <button type="submit" 
-                        class="px-8 py-3 bg-gradient-to-r from-[#2CA9BD] to-[#65DBE4] hover:from-[#1F3A56] hover:to-[#2CA9BD] text-white rounded-lg font-bold transition-all shadow-lg">
-                    <i class="fas fa-save ml-2"></i>
-                    حفظ الدرس
+                <button type="submit" class="su-btn su-btn--primary">
+                    <i class="fas fa-save" aria-hidden="true"></i>
+                    {{ __('instructor.lessons_save') }}
                 </button>
             </div>
         </form>
-    </div>
+    </section>
 </div>
 
 @push('scripts')
@@ -220,20 +139,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const lessonType = document.getElementById('lessonType');
     const videoSection = document.querySelector('.video-section');
     const textSection = document.querySelector('.text-section');
-    
+
     function updateSections() {
         const type = lessonType.value;
-        
         videoSection.classList.add('hidden');
         textSection.classList.add('hidden');
-        
-        if (type === 'video') {
-            videoSection.classList.remove('hidden');
-        } else if (type === 'text') {
-            textSection.classList.remove('hidden');
-        }
+        if (type === 'video') videoSection.classList.remove('hidden');
+        else if (type === 'text') textSection.classList.remove('hidden');
     }
-    
+
     lessonType.addEventListener('change', updateSections);
     updateSections();
 });

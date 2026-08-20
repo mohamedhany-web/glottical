@@ -147,6 +147,35 @@ class OrderController extends Controller
     }
 
     /**
+     * إعادة محاولة تفعيل رصيد/حجز التدريس بعد فشل fulfill (مثلاً بعد دفع أونلاين).
+     */
+    public function refulfillTutoring(Order $order)
+    {
+        if ($order->status !== Order::STATUS_APPROVED) {
+            return back()->with('error', 'إعادة التفعيل متاحة للطلبات المعتمدة فقط.');
+        }
+        if (! $order->isTutoringOrder()) {
+            return back()->with('error', 'هذا الطلب ليس طلب تدريس/باقة حصص.');
+        }
+
+        try {
+            \App\Services\TutoringGroupCheckoutService::fulfillApprovedOrder($order->fresh());
+
+            $notes = (string) ($order->notes ?? '');
+            if (str_contains($notes, '[TUTORING_FULFILL_FAILED]')) {
+                $cleaned = trim(preg_replace('/^\[TUTORING_FULFILL_FAILED\].*$/m', '', $notes) ?? '');
+                $order->update(['notes' => $cleaned !== '' ? $cleaned : null]);
+            }
+
+            return back()->with('success', 'تمت إعادة تفعيل رصيد الباقة بنجاح.');
+        } catch (\Throwable $e) {
+            Log::error('Admin tutoring refulfill failed: '.$e->getMessage(), ['order_id' => $order->id]);
+
+            return back()->with('error', 'تعذر التفعيل: '.$e->getMessage());
+        }
+    }
+
+    /**
      * تحديث محفظة الاستلام على المنصة (لطلبات التحويل المعلقة) حتى يُسجَّل الإيداع عند الموافقة
      */
     public function updateReceivingWallet(Request $request, Order $order)

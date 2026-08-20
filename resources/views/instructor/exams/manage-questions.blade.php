@@ -1,322 +1,281 @@
 @extends('layouts.app')
 
-@section('title', 'إدارة أسئلة الاختبار')
-@section('header', 'إدارة أسئلة الاختبار')
+@section('title', __('instructor.manage_questions'))
+@section('page_title', __('instructor.manage_questions'))
 
 @push('styles')
-<style>
-    [x-cloak] { display: none !important; }
-</style>
+<style>[x-cloak]{display:none!important}</style>
 @endpush
 
 @section('content')
-<div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6" x-data="{ activeTab: 'current', showAddModal: false, showCreateModal: false }">
-    <!-- الهيدر -->
-    <div class="rounded-2xl p-5 sm:p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <nav class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2 flex-wrap">
-            <a href="{{ route('instructor.exams.index') }}" class="hover:text-sky-600 transition-colors">الامتحانات</a>
-            <span>/</span>
-            <a href="{{ route('instructor.exams.show', $exam) }}" class="hover:text-sky-600 transition-colors truncate max-w-[180px]">{{ $exam->title }}</a>
-            <span>/</span>
-            <span class="text-slate-700 dark:text-slate-300 font-medium">الأسئلة</span>
-        </nav>
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">إدارة أسئلة الاختبار</h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{{ $exam->title }}</p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-                <button type="button" @click="showAddModal = true"
-                        class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-database"></i>
-                    <span>إضافة من البنك</span>
-                </button>
-                <button type="button" @click="showCreateModal = true"
-                        class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>سؤال جديد</span>
-                </button>
-                <a href="{{ route('instructor.exams.show', $exam) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-arrow-right"></i>
-                    <span>العودة</span>
-                </a>
-            </div>
+@php $isRtl = app()->getLocale() === 'ar'; @endphp
+<div class="su-page" x-data="{ activeTab: 'current', showAddModal: false, showCreateModal: false }">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.exams.index') }}">{{ __('instructor.exams') }}</a>
+                <span>/</span>
+                <a href="{{ route('instructor.exams.show', $exam) }}">{{ Str::limit($exam->title, 40) }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ __('instructor.questions') }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-list su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.manage_questions') }}
+            </h1>
+            <p class="su-page-head__sub">{{ $exam->title }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <button type="button" @click="showAddModal = true" class="su-btn su-btn--primary">
+                <i class="fas fa-database" aria-hidden="true"></i>
+                {{ __('instructor.add_from_bank') }}
+            </button>
+            <button type="button" @click="showCreateModal = true" class="su-btn">
+                <i class="fas fa-plus-circle" aria-hidden="true"></i>
+                {{ __('instructor.new_question') }}
+            </button>
+            <a href="{{ route('instructor.exams.show', $exam) }}" class="su-btn">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.back') }}
+            </a>
         </div>
     </div>
 
     @if(session('success'))
-        <div class="rounded-xl p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 text-emerald-800 text-sm font-medium">
-            <i class="fas fa-check-circle ml-2"></i>{{ session('success') }}
+        <div class="su-card" style="margin-bottom:16px;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08)">
+            <p style="margin:0;font-size:13px;color:#15803d"><i class="fas fa-check-circle" aria-hidden="true"></i> {{ session('success') }}</p>
         </div>
     @endif
     @if(session('error'))
-        <div class="rounded-xl p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 text-red-800 text-sm font-medium">
-            <i class="fas fa-exclamation-circle ml-2"></i>{{ session('error') }}
+        <div class="su-card" style="margin-bottom:16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08)">
+            <p style="margin:0;font-size:13px;color:#b91c1c"><i class="fas fa-exclamation-circle" aria-hidden="true"></i> {{ session('error') }}</p>
         </div>
     @endif
     @if($errors->any())
-        <div class="rounded-xl p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 text-red-800 text-sm">
-            <p class="font-semibold mb-2"><i class="fas fa-exclamation-triangle ml-2"></i>يرجى تصحيح الأخطاء التالية:</p>
-            <ul class="list-disc list-inside space-y-0.5">
-                @foreach($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
+        <div class="su-card" style="margin-bottom:16px;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08)">
+            <p style="margin:0 0 8px;font-weight:600;color:#b91c1c">{{ __('instructor.fix_fix_errors') }}</p>
+            <ul style="margin:0;padding-inline-start:1.25rem;font-size:13px;color:#b91c1c">
+                @foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach
             </ul>
         </div>
     @endif
 
-    <!-- التبويبات والمحتوى -->
-    <div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-        <div class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-            <nav class="flex gap-1 p-2">
-                <button @click="activeTab = 'current'"
-                        :class="activeTab === 'current' ? 'bg-white dark:bg-slate-800/95 text-sky-600 border-slate-200 dark:border-slate-700 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:text-slate-100 border-transparent'"
-                        class="px-4 py-2.5 rounded-lg border text-sm font-semibold transition-colors flex items-center gap-2">
-                    <i class="fas fa-list"></i>
-                    الأسئلة الحالية ({{ $exam->questions->count() }})
-                </button>
-                <button @click="activeTab = 'bank'"
-                        :class="activeTab === 'bank' ? 'bg-white dark:bg-slate-800/95 text-sky-600 border-slate-200 dark:border-slate-700 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:text-slate-100 border-transparent'"
-                        class="px-4 py-2.5 rounded-lg border text-sm font-semibold transition-colors flex items-center gap-2">
-                    <i class="fas fa-database"></i>
-                    بنك الأسئلة ({{ $availableQuestions->count() }})
-                </button>
-            </nav>
+    <section class="su-card" style="padding:16px">
+        <div class="su-tabs-bar" role="tablist">
+            <button type="button" class="su-tab" :class="{ 'is-on': activeTab === 'current' }" @click="activeTab = 'current'">
+                <i class="fas fa-list" aria-hidden="true"></i>
+                {{ __('instructor.current_questions') }} ({{ $exam->questions->count() }})
+            </button>
+            <button type="button" class="su-tab" :class="{ 'is-on': activeTab === 'bank' }" @click="activeTab = 'bank'">
+                <i class="fas fa-database" aria-hidden="true"></i>
+                {{ __('instructor.question_bank') }} ({{ $availableQuestions->count() }})
+            </button>
         </div>
 
-        <div class="p-6">
-            <!-- تبويب الأسئلة الحالية -->
-            <div x-show="activeTab === 'current'" x-transition>
+        <div style="padding:16px 4px 4px">
+            <div x-show="activeTab === 'current'" x-cloak>
                 @if($exam->questions->count() > 0)
-                    <div class="space-y-3" id="questions-list">
+                    <div class="su-list" id="questions-list">
                         @foreach($exam->questions as $index => $question)
-                            <div class="rounded-xl p-4 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 hover:border-sky-300 hover:shadow-sm transition-all flex items-start justify-between gap-4">
-                                <div class="flex items-start gap-3 flex-1 min-w-0">
-                                    <span class="w-9 h-9 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center text-sm font-bold shrink-0">{{ $index + 1 }}</span>
-                                    <div class="min-w-0 flex-1">
-                                        <p class="font-semibold text-slate-800 dark:text-slate-100 mb-1">{{ $question->question }}</p>
-                                        <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                                            <span><i class="fas fa-tag text-sky-500 ml-1"></i> {{ $question->getTypeLabel() }}</span>
-                                            <span><i class="fas fa-star text-amber-500 ml-1"></i> {{ $question->pivot->marks ?? 1 }} نقطة</span>
-                                            <span>{{ $question->getDifficultyLabel() }}</span>
-                                        </div>
+                            <article class="su-list-item">
+                                <span class="su-list-item__ico su-soft-1" style="font-weight:700">{{ $index + 1 }}</span>
+                                <div class="su-list-item__body">
+                                    <div class="su-list-item__title" style="font-size:14px">{{ $question->question }}</div>
+                                    <div class="su-list-item__meta">
+                                        {{ $question->getTypeLabel() }} ·
+                                        {{ $question->pivot->marks ?? 1 }} {{ __('instructor.point_unit') }} ·
+                                        {{ $question->getDifficultyLabel() }}
                                     </div>
                                 </div>
-                                <form action="{{ route('instructor.exams.questions.remove', [$exam, $question->id]) }}" method="POST" onsubmit="return confirm('هل تريد حذف هذا السؤال من الاختبار؟');" class="shrink-0">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:bg-red-900/30 transition-colors" title="حذف من الاختبار">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center py-12 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-                        <div class="w-16 h-16 rounded-2xl bg-sky-100 flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-question-circle text-2xl text-sky-500"></i>
-                        </div>
-                        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">لا توجد أسئلة</h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-4">ابدأ بإضافة أسئلة من البنك أو إنشاء سؤال جديد</p>
-                        <div class="flex flex-wrap justify-center gap-2">
-                            <button type="button" @click="showAddModal = true" class="px-4 py-2 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-lg text-sm font-semibold">
-                                <i class="fas fa-database ml-1"></i> إضافة من البنك
-                            </button>
-                            <button type="button" @click="showCreateModal = true" class="px-4 py-2 bg-emerald-600 dark:bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-sm font-semibold">
-                                <i class="fas fa-plus ml-1"></i> سؤال جديد
-                            </button>
-                        </div>
-                    </div>
-                @endif
-            </div>
-
-            <!-- تبويب بنك الأسئلة -->
-            <div x-show="activeTab === 'bank'" x-transition style="display: none;">
-                @if($availableQuestions->count() > 0)
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        @foreach($availableQuestions as $question)
-                            <div class="rounded-xl p-4 border border-slate-200 dark:border-slate-700 hover:border-sky-300 bg-white dark:bg-slate-800/95 hover:shadow-sm transition-all">
-                                <p class="font-semibold text-slate-800 dark:text-slate-100 mb-2 line-clamp-2">{{ Str::limit($question->question, 100) }}</p>
-                                <div class="flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-400 mb-3">
-                                    <span>{{ $question->getTypeLabel() }}</span>
-                                    <span>{{ $question->getDifficultyLabel() }}</span>
-                                    @if(!$question->is_active)
-                                        <span class="text-amber-700 bg-amber-100 px-2 py-0.5 rounded">غير نشط</span>
-                                    @endif
-                                    @if($question->questionBank)
-                                        <span><i class="fas fa-database text-sky-500 ml-1"></i> {{ $question->questionBank->title }}</span>
-                                    @endif
+                                <div class="su-list-item__actions">
+                                    <form action="{{ route('instructor.exams.questions.remove', [$exam, $question->id]) }}" method="POST" onsubmit="return confirm(@json(__('instructor.confirm_remove_question')));">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="su-icon-link" style="color:#b91c1c" title="{{ __('common.delete') }}">
+                                            <i class="fas fa-trash" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
                                 </div>
-                                <form action="{{ route('instructor.exams.questions.add-from-bank', $exam) }}" method="POST" class="flex items-center gap-2">
-                                    @csrf
-                                    <input type="hidden" name="question_id" value="{{ $question->id }}">
-                                    <input type="number" name="marks" value="{{ $question->points ?? 1 }}" min="0.5" step="0.5" required
-                                           class="w-20 px-2 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-center focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
-                                    <button type="submit" class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-lg text-sm font-semibold transition-colors">
-                                        <i class="fas fa-plus"></i> إضافة
-                                    </button>
-                                </form>
-                            </div>
+                            </article>
                         @endforeach
                     </div>
                 @else
-                    <div class="text-center py-12 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-                        <div class="w-16 h-16 rounded-2xl bg-sky-100 flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-database text-2xl text-sky-500"></i>
+                    <div class="su-empty">
+                        <i class="fas fa-question-circle" aria-hidden="true"></i>
+                        <p><strong>{{ __('instructor.no_questions') }}</strong></p>
+                        <p>{{ __('instructor.add_questions_hint') }}</p>
+                        <div class="su-page-head__actions" style="justify-content:center;margin-top:12px">
+                            <button type="button" @click="showAddModal = true" class="su-btn su-btn--primary">{{ __('instructor.add_from_bank') }}</button>
+                            <button type="button" @click="showCreateModal = true" class="su-btn">{{ __('instructor.new_question') }}</button>
                         </div>
-                        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">لا توجد أسئلة في البنك</h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">أنشئ بنك أسئلة وأضف أسئلة إليه أولاً</p>
+                    </div>
+                @endif
+            </div>
+
+            <div x-show="activeTab === 'bank'" x-cloak>
+                @if($availableQuestions->count() > 0)
+                    <div class="su-course-grid">
+                        @foreach($availableQuestions as $question)
+                            <article class="su-course-card">
+                                <div class="su-course-card__body">
+                                    <p class="su-course-card__title" style="font-size:14px">{{ Str::limit($question->question, 100) }}</p>
+                                    <div class="su-chip-row" style="margin:8px 0">
+                                        <span class="su-chip">{{ $question->getTypeLabel() }}</span>
+                                        <span class="su-chip">{{ $question->getDifficultyLabel() }}</span>
+                                        @if(!$question->is_active)
+                                            <span class="su-chip su-chip--warn">{{ __('instructor.inactive') }}</span>
+                                        @endif
+                                        @if($question->questionBank)
+                                            <span class="su-chip su-soft-1">{{ $question->questionBank->title }}</span>
+                                        @endif
+                                    </div>
+                                    <form action="{{ route('instructor.exams.questions.add-from-bank', $exam) }}" method="POST" class="su-form-actions">
+                                        @csrf
+                                        <input type="hidden" name="question_id" value="{{ $question->id }}">
+                                        <input type="number" name="marks" value="{{ $question->points ?? 1 }}" min="0.5" step="0.5" required class="su-input" style="width:5rem;height:36px">
+                                        <button type="submit" class="su-btn su-btn--primary" style="flex:1;justify-content:center;height:36px">
+                                            <i class="fas fa-plus" aria-hidden="true"></i> {{ __('instructor.add_short') }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="su-empty">
+                        <i class="fas fa-database" aria-hidden="true"></i>
+                        <p><strong>{{ __('instructor.no_bank_questions') }}</strong></p>
+                        <p>{{ __('instructor.create_bank_first') }}</p>
                     </div>
                 @endif
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Modal إنشاء سؤال جديد (داخل نفس x-data) -->
+    {{-- Create question modal --}}
     <div x-show="showCreateModal" x-cloak
-     x-transition:enter="transition ease-out duration-200"
-     x-transition:enter-start="opacity-0"
-     x-transition:enter-end="opacity-100"
-     class="fixed inset-0 z-50 flex items-center justify-center p-4"
-     style="background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);"
-     @click.self="showCreateModal = false">
-    <div class="bg-white dark:bg-slate-800/95 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
-         @click.stop>
-        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40">
-            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">إنشاء سؤال جديد</h3>
-            <button type="button" @click="showCreateModal = false" class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:text-slate-300 transition-colors">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        @if($questionBanks->isEmpty())
-            <div class="p-6 text-center">
-                <p class="text-slate-600 dark:text-slate-400 mb-4">يجب إنشاء بنك أسئلة أولاً قبل إضافة أسئلة جديدة.</p>
-                <a href="{{ route('instructor.question-banks.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-database ml-1"></i> الذهاب لبنوك الأسئلة
-                </a>
+         style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.45)"
+         @click.self="showCreateModal = false">
+        <div class="su-card" style="width:100%;max-width:40rem;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;margin:0;padding:0" @click.stop>
+            <div class="su-section-head" style="padding:16px 20px;border-bottom:1px solid var(--su-line);margin:0">
+                <h3>{{ __('instructor.create_new_question') }}</h3>
+                <button type="button" @click="showCreateModal = false" class="su-icon-link su-icon-link--ghost"><i class="fas fa-times" aria-hidden="true"></i></button>
             </div>
-        @else
-        <form action="{{ route('instructor.exams.questions.create-new', $exam) }}" method="POST" class="p-6 overflow-y-auto flex-1">
-            @csrf
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">بنك الأسئلة <span class="text-red-500">*</span></label>
-                    <select name="question_bank_id" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                        <option value="">اختر بنك الأسئلة</option>
-                        @foreach($questionBanks as $bank)
-                            <option value="{{ $bank->id }}" {{ old('question_bank_id') == $bank->id ? 'selected' : '' }}>{{ $bank->title }}</option>
-                        @endforeach
-                    </select>
-                    @error('question_bank_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">نوع السؤال <span class="text-red-500">*</span></label>
-                    <select name="type" id="question_type" required onchange="updateQuestionForm()" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
-                        <option value="">اختر النوع</option>
-                        <option value="multiple_choice">اختيار متعدد</option>
-                        <option value="true_false">صح أو خطأ</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">نص السؤال <span class="text-red-500">*</span></label>
-                    <textarea name="question" rows="3" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100" placeholder="اكتب السؤال..."></textarea>
-                </div>
-                <div id="options_field" style="display: none;">
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">الخيارات (سطر لكل خيار)</label>
-                    <textarea name="options_text" rows="3" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100" placeholder="الخيار 1&#10;الخيار 2&#10;..."></textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">الإجابة الصحيحة <span class="text-red-500">*</span></label>
-                    <input type="text" name="correct_answer" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100" placeholder="الإجابة الصحيحة">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">شرح الإجابة</label>
-                    <textarea name="explanation" rows="2" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100" placeholder="اختياري..."></textarea>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">النقاط <span class="text-red-500">*</span></label>
-                        <input type="number" name="points" value="1" min="0.5" step="0.5" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">الصعوبة <span class="text-red-500">*</span></label>
-                        <select name="difficulty_level" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100">
-                            <option value="easy">سهل</option>
-                            <option value="medium" selected>متوسط</option>
-                            <option value="hard">صعب</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">الدرجة في الاختبار <span class="text-red-500">*</span></label>
-                        <input type="number" name="marks" value="1" min="0.5" step="0.5" required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100">
-                    </div>
-                </div>
-            </div>
-            <div class="flex gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <button type="submit" class="flex-1 px-4 py-2.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-save ml-1"></i> إنشاء وإضافة
-                </button>
-                <button type="button" @click="showCreateModal = false" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                    إلغاء
-                </button>
-            </div>
-        </form>
-        @endif
-    </div>
-    </div>
-
-    <!-- Modal إضافة من البنك (داخل نفس x-data) -->
-    <div x-show="showAddModal" x-cloak
-     x-transition:enter="transition ease-out duration-200"
-     x-transition:enter-start="opacity-0"
-     x-transition:enter-end="opacity-100"
-     class="fixed inset-0 z-50 flex items-center justify-center p-4"
-     style="background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);"
-     @click.self="showAddModal = false">
-    <div class="bg-white dark:bg-slate-800/95 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" @click.stop>
-        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40">
-            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">إضافة أسئلة من البنك</h3>
-            <button type="button" @click="showAddModal = false" class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:text-slate-300 transition-colors">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="p-6 overflow-y-auto flex-1">
-            <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">اختر الأسئلة واضغط إضافة لإدراجها في الاختبار</p>
-            @if($availableQuestions->isEmpty())
-                <div class="text-center py-8 rounded-xl bg-amber-50 dark:bg-amber-900/30 border border-amber-200 text-amber-800">
-                    <i class="fas fa-database text-2xl mb-2"></i>
-                    <p class="font-semibold">لا توجد أسئلة في البنك</p>
-                    <p class="text-sm mt-1">أنشئ بنك أسئلة وأضف أسئلة إليه، أو استخدم "سؤال جديد" لإنشاء سؤال وإضافته مباشرة.</p>
-                    <a href="{{ route('instructor.question-banks.index') }}" class="inline-block mt-3 text-sky-600 hover:text-sky-700 font-medium">بنوك الأسئلة</a>
+            @if($questionBanks->isEmpty())
+                <div class="su-empty" style="padding:24px">
+                    <p>{{ __('instructor.need_question_bank_first') }}</p>
+                    <a href="{{ route('instructor.question-banks.index') }}" class="su-btn su-btn--primary" style="margin-top:12px">
+                        <i class="fas fa-database" aria-hidden="true"></i> {{ __('instructor.question_banks') }}
+                    </a>
                 </div>
             @else
-            <div class="space-y-3 max-h-80 overflow-y-auto">
-                @foreach($availableQuestions as $question)
-                    <form action="{{ route('instructor.exams.questions.add-from-bank', $exam) }}" method="POST" class="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-sky-200 hover:bg-sky-50 dark:bg-sky-900/30/30 transition-colors">
-                        @csrf
-                        <input type="hidden" name="question_id" value="{{ $question->id }}">
-                        <div class="flex-1 min-w-0">
-                            <p class="font-semibold text-slate-800 dark:text-slate-100 text-sm truncate">{{ Str::limit($question->question, 70) }}</p>
-                            <div class="flex gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                <span>{{ $question->getTypeLabel() }}</span>
-                                <span>{{ $question->getDifficultyLabel() }}</span>
-                                @if(!$question->is_active)
-                                    <span class="text-amber-700 bg-amber-100 px-2 py-0.5 rounded">غير نشط</span>
-                                @endif
-                            </div>
+                <form action="{{ route('instructor.exams.questions.create-new', $exam) }}" method="POST" style="padding:20px;overflow-y:auto;flex:1">
+                    @csrf
+                    <div class="su-form-grid" style="grid-template-columns:1fr 1fr">
+                        <div class="su-field" style="grid-column:1 / -1">
+                            <label>{{ __('instructor.question_bank') }} <span style="color:#b91c1c">*</span></label>
+                            <select name="question_bank_id" required class="su-select">
+                                <option value="">{{ __('instructor.choose_question_bank') }}</option>
+                                @foreach($questionBanks as $bank)
+                                    <option value="{{ $bank->id }}" {{ old('question_bank_id') == $bank->id ? 'selected' : '' }}>{{ $bank->title }}</option>
+                                @endforeach
+                            </select>
+                            @error('question_bank_id')<p class="su-field-error">{{ $message }}</p>@enderror
                         </div>
-                        <input type="number" name="marks" value="{{ $question->points ?? 1 }}" min="0.5" step="0.5" required class="w-16 px-2 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-center">
-                        <button type="submit" class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-lg text-sm font-semibold transition-colors">
-                            <i class="fas fa-plus"></i> إضافة
+                        <div class="su-field" style="grid-column:1 / -1">
+                            <label>{{ __('instructor.question_type') }} <span style="color:#b91c1c">*</span></label>
+                            <select name="type" id="question_type" required onchange="updateQuestionForm()" class="su-select">
+                                <option value="">{{ __('instructor.choose_type') }}</option>
+                                <option value="multiple_choice">{{ __('instructor.type_multiple_choice') }}</option>
+                                <option value="true_false">{{ __('instructor.type_true_false') }}</option>
+                            </select>
+                        </div>
+                        <div class="su-field" style="grid-column:1 / -1">
+                            <label>{{ __('instructor.question_text') }} <span style="color:#b91c1c">*</span></label>
+                            <textarea name="question" rows="3" required class="su-input" style="min-height:88px;resize:vertical" placeholder="{{ __('instructor.question_text_ph') }}"></textarea>
+                        </div>
+                        <div class="su-field" style="grid-column:1 / -1;display:none" id="options_field">
+                            <label>{{ __('instructor.options_one_per_line') }}</label>
+                            <textarea name="options_text" rows="3" class="su-input" style="min-height:88px;resize:vertical" placeholder="{{ __('instructor.options_ph') }}"></textarea>
+                        </div>
+                        <div class="su-field" style="grid-column:1 / -1">
+                            <label>{{ __('instructor.correct_answer') }} <span style="color:#b91c1c">*</span></label>
+                            <input type="text" name="correct_answer" required class="su-input" placeholder="{{ __('instructor.correct_answer') }}">
+                        </div>
+                        <div class="su-field" style="grid-column:1 / -1">
+                            <label>{{ __('instructor.explanation') }}</label>
+                            <textarea name="explanation" rows="2" class="su-input" style="min-height:72px;resize:vertical"></textarea>
+                        </div>
+                        <div class="su-field">
+                            <label>{{ __('instructor.points') }} <span style="color:#b91c1c">*</span></label>
+                            <input type="number" name="points" value="1" min="0.5" step="0.5" required class="su-input">
+                        </div>
+                        <div class="su-field">
+                            <label>{{ __('instructor.difficulty') }} <span style="color:#b91c1c">*</span></label>
+                            <select name="difficulty_level" required class="su-select">
+                                <option value="easy">{{ __('instructor.easy') }}</option>
+                                <option value="medium" selected>{{ __('instructor.medium') }}</option>
+                                <option value="hard">{{ __('instructor.hard') }}</option>
+                            </select>
+                        </div>
+                        <div class="su-field">
+                            <label>{{ __('instructor.exam_marks') }} <span style="color:#b91c1c">*</span></label>
+                            <input type="number" name="marks" value="1" min="0.5" step="0.5" required class="su-input">
+                        </div>
+                    </div>
+                    <div class="su-page-head__actions" style="justify-content:flex-end;margin-top:16px;border-top:1px solid var(--su-line);padding-top:16px">
+                        <button type="button" @click="showCreateModal = false" class="su-btn">{{ __('common.cancel') }}</button>
+                        <button type="submit" class="su-btn su-btn--primary">
+                            <i class="fas fa-save" aria-hidden="true"></i> {{ __('instructor.create_and_add') }}
                         </button>
-                    </form>
-                @endforeach
-            </div>
+                    </div>
+                </form>
             @endif
         </div>
     </div>
+
+    {{-- Add from bank modal --}}
+    <div x-show="showAddModal" x-cloak
+         style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.45)"
+         @click.self="showAddModal = false">
+        <div class="su-card" style="width:100%;max-width:40rem;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;margin:0;padding:0" @click.stop>
+            <div class="su-section-head" style="padding:16px 20px;border-bottom:1px solid var(--su-line);margin:0">
+                <h3>{{ __('instructor.add_from_bank') }}</h3>
+                <button type="button" @click="showAddModal = false" class="su-icon-link su-icon-link--ghost"><i class="fas fa-times" aria-hidden="true"></i></button>
+            </div>
+            <div style="padding:20px;overflow-y:auto;flex:1">
+                <p style="margin:0 0 12px;font-size:13px;color:var(--su-ink-40)">{{ __('instructor.add_from_bank_hint') }}</p>
+                @if($availableQuestions->isEmpty())
+                    <div class="su-empty">
+                        <i class="fas fa-database" aria-hidden="true"></i>
+                        <p>{{ __('instructor.no_bank_questions') }}</p>
+                        <a href="{{ route('instructor.question-banks.index') }}" class="su-btn" style="margin-top:8px">{{ __('instructor.question_banks') }}</a>
+                    </div>
+                @else
+                    <div class="su-list">
+                        @foreach($availableQuestions as $question)
+                            <form action="{{ route('instructor.exams.questions.add-from-bank', $exam) }}" method="POST" class="su-list-item">
+                                @csrf
+                                <input type="hidden" name="question_id" value="{{ $question->id }}">
+                                <div class="su-list-item__body">
+                                    <div class="su-list-item__title" style="font-size:13px">{{ Str::limit($question->question, 70) }}</div>
+                                    <div class="su-list-item__meta">
+                                        {{ $question->getTypeLabel() }} · {{ $question->getDifficultyLabel() }}
+                                        @if(!$question->is_active) · {{ __('instructor.inactive') }} @endif
+                                    </div>
+                                </div>
+                                <div class="su-list-item__actions">
+                                    <input type="number" name="marks" value="{{ $question->points ?? 1 }}" min="0.5" step="0.5" required class="su-input" style="width:4.5rem;height:32px">
+                                    <button type="submit" class="su-btn su-btn--primary" style="height:32px">
+                                        <i class="fas fa-plus" aria-hidden="true"></i> {{ __('instructor.add_short') }}
+                                    </button>
+                                </div>
+                            </form>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        </div>
     </div>
 </div>
 

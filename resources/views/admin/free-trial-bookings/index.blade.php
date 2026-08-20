@@ -152,7 +152,7 @@
                                 @endif
                             </td>
                             <td class="whitespace-nowrap px-3 py-3 font-medium tabular-nums text-ink">
-                                {{ $b->starts_at?->timezone(config('app.timezone'))->format('Y-m-d H:i') }}
+                                <x-app-datetime :at="$b->starts_at" :timezone="$b->timezone" pattern="Y-m-d H:i" />
                             </td>
                             <td class="px-3 py-3 tabular-nums text-muted">{{ $b->duration_minutes }} د</td>
                             <td class="px-3 py-3">

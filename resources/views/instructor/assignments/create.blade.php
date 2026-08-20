@@ -1,39 +1,37 @@
 @extends('layouts.app')
 
 @section('title', __('instructor.create_assignment') . ' - ' . config('app.name'))
-@section('header', __('instructor.create_assignment'))
-
-@push('styles')
-<style>
-    .form-card { background: #fff; border: 1px solid rgb(226 232 240); border-radius: 1rem; transition: box-shadow 0.2s; }
-    .form-card:focus-within { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
-</style>
-@endpush
+@section('page_title', __('instructor.create_assignment'))
 
 @section('content')
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <!-- الهيدر -->
-    <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-5 sm:p-6 mb-6">
-        <nav class="text-sm text-slate-500 dark:text-slate-400 mb-2">
-            <a href="{{ route('instructor.assignments.index') }}" class="hover:text-sky-600 transition-colors">{{ __('instructor.assignments') }}</a>
-            <span class="mx-2">/</span>
-            <span class="text-slate-700 dark:text-slate-300 font-semibold">{{ __('instructor.create_assignment') }}</span>
-        </nav>
-        <div class="flex flex-wrap items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
-                <i class="fas fa-tasks text-lg"></i>
-            </div>
-            <div class="min-w-0 flex-1">
-                <h1 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">{{ __('instructor.create_assignment') }}</h1>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{{ __('instructor.add_assignment_for_course') }}</p>
-            </div>
+@php
+    $isRtl = app()->getLocale() === 'ar';
+@endphp
+<div class="su-page" style="max-width:56rem">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <nav class="su-crumb-inline" aria-label="breadcrumb">
+                <a href="{{ route('instructor.assignments.index') }}">{{ __('instructor.assignments') }}</a>
+                <span>/</span>
+                <strong style="color:var(--su-ink)">{{ __('instructor.create_assignment') }}</strong>
+            </nav>
+            <h1 class="su-page-head__title">
+                <i class="fas fa-tasks su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.create_assignment') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.add_assignment_for_course') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.assignments.index') }}" class="su-btn">
+                <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.back') }}
+            </a>
         </div>
     </div>
 
-    <!-- بطاقة النموذج -->
-    <div class="form-card shadow-sm p-6 sm:p-8">
+    <section class="su-card">
         @include('instructor.assignments.create-form', ['courses' => $courses])
-    </div>
+    </section>
 </div>
 
 <script>
@@ -93,7 +91,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     });
 
-    updateGroupOptions(newCourseSelect.value);
+    if (typeof updateGroupOptions === 'function') {
+        updateGroupOptions(newCourseSelect.value);
+    }
 });
 </script>
 @endsection

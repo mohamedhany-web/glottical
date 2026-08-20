@@ -1425,6 +1425,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/orders/{order}/approve', [\App\Http\Controllers\Admin\OrderController::class, 'approve'])
             ->middleware('throttle:10,1')
             ->name('orders.approve');
+        Route::post('/orders/{order}/refulfill-tutoring', [\App\Http\Controllers\Admin\OrderController::class, 'refulfillTutoring'])
+            ->middleware('throttle:10,1')
+            ->name('orders.refulfill-tutoring');
         Route::post('/orders/{order}/reject', [\App\Http\Controllers\Admin\OrderController::class, 'reject'])
             ->middleware('throttle:10,1')
             ->name('orders.reject');
@@ -1653,6 +1656,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/student-entitlements/create', [\App\Http\Controllers\Admin\StudentEntitlementController::class, 'create'])->name('student-entitlements.create');
         Route::post('/student-entitlements', [\App\Http\Controllers\Admin\StudentEntitlementController::class, 'store'])->name('student-entitlements.store');
         Route::post('/student-entitlements/{studentEntitlement}/adjust', [\App\Http\Controllers\Admin\StudentEntitlementController::class, 'adjust'])->name('student-entitlements.adjust');
+        Route::get('/tutoring-subscriptions', [\App\Http\Controllers\Admin\TutoringSubscriptionController::class, 'index'])->name('tutoring-subscriptions.index');
+        Route::get('/tutoring-subscriptions/{tutoringSubscription}', [\App\Http\Controllers\Admin\TutoringSubscriptionController::class, 'show'])->name('tutoring-subscriptions.show');
+        Route::post('/tutoring-subscriptions/{tutoringSubscription}/sync', [\App\Http\Controllers\Admin\TutoringSubscriptionController::class, 'sync'])->name('tutoring-subscriptions.sync');
 
         // إدارة الإشعارات
         Route::prefix('notifications')->name('notifications.')->group(function () {

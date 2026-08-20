@@ -276,11 +276,21 @@ class TutoringGroupBookingController extends Controller
 
     public function destroy(TutoringGroupBooking $tutoringGroupBooking): RedirectResponse
     {
-        $tutoringGroupBooking->delete();
+        try {
+            if (in_array($tutoringGroupBooking->status, [
+                TutoringGroupBooking::STATUS_PENDING,
+                TutoringGroupBooking::STATUS_CONFIRMED,
+            ], true)) {
+                TutoringGroupOrchestrationService::cancelBooking($tutoringGroupBooking, 'حذف من لوحة الإدارة');
+            }
+            $tutoringGroupBooking->delete();
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return redirect()
             ->route('admin.tutoring-group-bookings.index')
-            ->with('success', 'تم حذف الحجز.');
+            ->with('success', 'تم إلغاء الحجز ثم حذفه.');
     }
 
     private function assertInstructorAvailable(int $instructorId, Carbon $startsAt, Carbon $endsAt, ?int $ignoreBookingId = null): void

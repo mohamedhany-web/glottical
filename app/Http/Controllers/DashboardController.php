@@ -161,21 +161,44 @@ class DashboardController extends Controller
 
             $upcomingTutoringBooking = null;
             $upcomingTutoringCount = 0;
+            $upcoming_tutoring_bookings = collect();
             if (\Illuminate\Support\Facades\Schema::hasTable('tutoring_group_bookings')) {
-                $upcomingTutoringBooking = \App\Models\TutoringGroupBooking::query()
+                $upcomingTutoringQ = \App\Models\TutoringGroupBooking::query()
                     ->where('instructor_id', $user->id)
                     ->where('status', \App\Models\TutoringGroupBooking::STATUS_CONFIRMED)
                     ->where('starts_at', '>=', now())
                     ->with(['tutoringGroup', 'classroomMeeting', 'user'])
-                    ->orderBy('starts_at')
-                    ->first();
-                $upcomingTutoringCount = \App\Models\TutoringGroupBooking::query()
-                    ->where('instructor_id', $user->id)
-                    ->where('status', \App\Models\TutoringGroupBooking::STATUS_CONFIRMED)
-                    ->where('starts_at', '>=', now())
-                    ->count();
+                    ->orderBy('starts_at');
+
+                $upcomingTutoringBooking = (clone $upcomingTutoringQ)->first();
+                $upcoming_tutoring_bookings = (clone $upcomingTutoringQ)->take(5)->get();
+                $upcomingTutoringCount = (clone $upcomingTutoringQ)->count();
             }
             $stats['upcoming_tutoring'] = $upcomingTutoringCount;
+
+            $stats['cohorts_count'] = 0;
+            if (\Illuminate\Support\Facades\Schema::hasTable('tutoring_group_cohorts')
+                && \Illuminate\Support\Facades\Schema::hasTable('tutoring_groups')) {
+                $groupIds = \App\Models\TutoringGroup::query()
+                    ->where('instructor_id', $user->id)
+                    ->pluck('id');
+                $stats['cohorts_count'] = $groupIds->isEmpty()
+                    ? 0
+                    : \App\Models\TutoringGroupCohort::query()
+                        ->whereIn('tutoring_group_id', $groupIds)
+                        ->count();
+            }
+
+            $stats['live_now'] = 0;
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('live_sessions')) {
+                    $stats['live_now'] = \App\Models\LiveSession::query()
+                        ->where('instructor_id', $user->id)
+                        ->where('status', 'live')
+                        ->count();
+                }
+            } catch (\Throwable $e) {
+            }
 
             return view('dashboard.instructor', compact(
                 'stats',
@@ -183,7 +206,8 @@ class DashboardController extends Controller
                 'my_classrooms',
                 'upcoming_lectures',
                 'pending_assignments',
-                'upcomingTutoringBooking'
+                'upcomingTutoringBooking',
+                'upcoming_tutoring_bookings'
             ));
         } catch (\Exception $e) {
             // في حالة وجود خطأ، نعيد لوحة تحكم بسيطة
@@ -198,12 +222,15 @@ class DashboardController extends Controller
                 'pending_submissions' => 0,
                 'total_exams' => 0,
                 'upcoming_tutoring' => 0,
+                'cohorts_count' => 0,
+                'live_now' => 0,
             ];
             $my_courses = collect();
             $my_classrooms = collect();
             $upcoming_lectures = collect();
             $pending_assignments = collect();
             $upcomingTutoringBooking = null;
+            $upcoming_tutoring_bookings = collect();
 
             return view('dashboard.instructor', compact(
                 'stats',
@@ -211,7 +238,8 @@ class DashboardController extends Controller
                 'my_classrooms',
                 'upcoming_lectures',
                 'pending_assignments',
-                'upcomingTutoringBooking'
+                'upcomingTutoringBooking',
+                'upcoming_tutoring_bookings'
             ));
         }
     }

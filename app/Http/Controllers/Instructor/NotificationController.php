@@ -14,20 +14,28 @@ class NotificationController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Auth::user()->customNotifications()
-            ->with(['sender'])
+        $base = Auth::user()->customNotifications()
             ->where(function ($q) {
                 $q->whereNull('audience')->orWhere('audience', 'instructor');
-            })
-            ->latest();
+            });
+
+        $stats = [
+            'total' => (clone $base)->count(),
+            'unread' => (clone $base)->where('is_read', false)->count(),
+        ];
+        $stats['read'] = max(0, $stats['total'] - $stats['unread']);
+
+        $query = (clone $base)->with(['sender'])->latest();
 
         if ($request->filled('status') && $request->status === 'unread') {
             $query->where('is_read', false);
+        } elseif ($request->filled('status') && $request->status === 'read') {
+            $query->where('is_read', true);
         }
 
         $notifications = $query->paginate(25)->withQueryString();
 
-        return view('instructor.notifications.index', compact('notifications'));
+        return view('instructor.notifications.index', compact('notifications', 'stats'));
     }
 
     public function go(Notification $notification): RedirectResponse

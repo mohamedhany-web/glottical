@@ -1,91 +1,75 @@
 @extends('layouts.app')
 
 @section('title', __('instructor.attendance_absence'))
-@section('header', __('instructor.attendance_absence'))
+@section('page_title', __('instructor.attendance_absence'))
 
 @section('content')
-<div class="space-y-6">
-    <div class="rounded-2xl p-6 text-white shadow-lg border border-white/10 bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="min-w-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
-                        <i class="fas fa-clipboard-list text-lg"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <h1 class="text-xl sm:text-2xl font-black leading-tight truncate">{{ __('instructor.attendance_absence') }}</h1>
-                        <p class="text-sm text-white/90 mt-0.5">{{ __('instructor.attendance_manage_desc') }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="flex flex-wrap items-center gap-2 shrink-0">
-                <a href="{{ route('instructor.courses.index') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/20 border border-white/20 text-white font-semibold transition-colors">
-                    <i class="fas fa-book"></i>
-                    <span>{{ __('instructor.courses') }}</span>
-                </a>
-                <a href="{{ route('instructor.lectures.index') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/20 border border-white/20 text-white font-semibold transition-colors">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                    <span>{{ __('instructor.lectures') }}</span>
-                </a>
-            </div>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <h1 class="su-page-head__title">
+                <i class="fas fa-clipboard-list su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.attendance_absence') }}
+            </h1>
+            <p class="su-page-head__sub">{{ __('instructor.attendance_manage_desc') }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.courses.index') }}" class="su-btn">
+                <i class="fas fa-book" aria-hidden="true"></i>
+                {{ __('instructor.courses') }}
+            </a>
+            <a href="{{ route('instructor.lectures.index') }}" class="su-btn su-btn--primary">
+                <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
+                {{ __('instructor.lectures') }}
+            </a>
         </div>
     </div>
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="rounded-xl p-4 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">{{ __('instructor.lectures') }}</p>
-                    <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['total_lectures'] ?? 0 }}</p>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-sky-100 flex items-center justify-center text-sky-600"><i class="fas fa-chalkboard-teacher"></i></div>
+    <section class="su-kpi-row" style="margin-bottom:20px">
+        <div class="su-kpi su-kpi--1">
+            <div class="su-kpi__l">{{ __('instructor.lectures') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['total_lectures'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i></div>
             </div>
         </div>
-        <div class="rounded-xl p-4 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">{{ __('instructor.attendance_records') }}</p>
-                    <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['total_attendance_records'] ?? 0 }}</p>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center text-violet-600"><i class="fas fa-clipboard-list"></i></div>
+        <div class="su-kpi su-kpi--2">
+            <div class="su-kpi__l">{{ __('instructor.attendance_records') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['total_attendance_records'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-clipboard-list" aria-hidden="true"></i></div>
             </div>
         </div>
-        <div class="rounded-xl p-4 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">{{ __('instructor.present') }}</p>
-                    <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['present_count'] ?? 0 }}</p>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600"><i class="fas fa-check-circle"></i></div>
+        <div class="su-kpi su-kpi--3">
+            <div class="su-kpi__l">{{ __('instructor.present') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['present_count'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
             </div>
         </div>
-        <div class="rounded-xl p-4 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">{{ __('instructor.absent') }}</p>
-                    <p class="text-2xl font-bold text-slate-800 dark:text-slate-100">{{ $stats['absent_count'] ?? 0 }}</p>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600"><i class="fas fa-times-circle"></i></div>
+        <div class="su-kpi su-kpi--4">
+            <div class="su-kpi__l">{{ __('instructor.absent') }}</div>
+            <div class="su-kpi__row">
+                <div class="su-kpi__v">{{ number_format($stats['absent_count'] ?? 0) }}</div>
+                <div class="su-kpi__d"><i class="fas fa-times-circle" aria-hidden="true"></i></div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-5">
-        <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div>
-                <label for="course_id" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.course') }}</label>
-                <select name="course_id" id="course_id" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
+    <section class="su-card" style="margin-bottom:20px">
+        <form method="GET" class="su-form-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
+            <div class="su-field">
+                <label for="course_id">{{ __('instructor.course') }}</label>
+                <select name="course_id" id="course_id" class="su-select">
                     <option value="">{{ __('instructor.all_courses') }}</option>
                     @foreach($courses as $course)
                         <option value="{{ $course->id }}" {{ request('course_id') == $course->id ? 'selected' : '' }}>{{ $course->title }}</option>
                     @endforeach
                 </select>
             </div>
-            <div>
-                <label for="status" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.lecture_status') }}</label>
-                <select name="status" id="status" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
+            <div class="su-field">
+                <label for="status">{{ __('instructor.lecture_status') }}</label>
+                <select name="status" id="status" class="su-select">
                     <option value="">{{ __('instructor.all') }}</option>
                     <option value="scheduled" {{ request('status') == 'scheduled' ? 'selected' : '' }}>{{ __('instructor.scheduled_lecture') }}</option>
                     <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>{{ __('instructor.in_progress') }}</option>
@@ -93,79 +77,84 @@
                     <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>{{ __('instructor.cancelled_lecture') }}</option>
                 </select>
             </div>
-            <div>
-                <label for="date_from" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.date_from') }}</label>
-                <input type="date" name="date_from" id="date_from" value="{{ request('date_from') }}" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
+            <div class="su-field">
+                <label for="date_from">{{ __('instructor.date_from') }}</label>
+                <input type="date" name="date_from" id="date_from" value="{{ request('date_from') }}" class="su-input">
             </div>
-            <div>
-                <label for="date_to" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.date_to') }}</label>
-                <input type="date" name="date_to" id="date_to" value="{{ request('date_to') }}" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
+            <div class="su-field">
+                <label for="date_to">{{ __('instructor.date_to') }}</label>
+                <input type="date" name="date_to" id="date_to" value="{{ request('date_to') }}" class="su-input">
             </div>
-            <div class="flex items-end gap-2">
-                <button type="submit" class="px-4 py-2.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-search ml-1"></i> {{ __('common.search') }}
+            <div class="su-form-actions" style="align-items:flex-end">
+                <button type="submit" class="su-btn su-btn--primary" style="height:40px">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    {{ __('common.search') }}
                 </button>
                 @if(request()->anyFilled(['course_id', 'status', 'date_from', 'date_to']))
-                    <a href="{{ route('instructor.attendance.index') }}" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                        <i class="fas fa-times"></i>
+                    <a href="{{ route('instructor.attendance.index') }}" class="su-btn" style="height:40px;width:40px;padding:0;justify-content:center" title="{{ __('common.reset') ?? 'Reset' }}">
+                        <i class="fas fa-times" aria-hidden="true"></i>
                     </a>
                 @endif
             </div>
         </form>
-    </div>
+    </section>
 
     @if($lectures->count() > 0)
-        <div class="space-y-4">
+        <div class="su-list">
             @foreach($lectures as $lecture)
-                <div class="rounded-xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm hover:border-sky-300 hover:shadow-md transition-all p-5">
-                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex flex-wrap items-center gap-2 mb-2">
-                                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">{{ $lecture->title }}</h3>
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold
-                                    @if($lecture->status == 'scheduled') bg-sky-100 text-sky-700
-                                    @elseif($lecture->status == 'in_progress') bg-amber-100 text-amber-700
-                                    @elseif($lecture->status == 'completed') bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400
-                                    @else bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400
-                                    @endif">
-                                    @if($lecture->status == 'scheduled') {{ __('instructor.scheduled_lecture') }}
-                                    @elseif($lecture->status == 'in_progress') {{ __('instructor.in_progress') }}
-                                    @elseif($lecture->status == 'completed') {{ __('instructor.completed') }}
-                                    @else {{ __('instructor.cancelled_lecture') }}
-                                    @endif
-                                </span>
-                            </div>
-                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
-                                <span><i class="fas fa-book text-sky-500 ml-1"></i> {{ $lecture->course->title ?? '—' }}</span>
-                                <span><i class="fas fa-calendar text-slate-400 ml-1"></i> {{ $lecture->scheduled_at ? $lecture->scheduled_at->format('Y/m/d H:i') : '—' }}</span>
-                                @if($lecture->attendance_records_count > 0)
-                                    <span>{{ $lecture->attendance_records_count }} {{ __('instructor.attendance_record_single') }}</span>
-                                @endif
-                            </div>
+                @php
+                    $chip = match ($lecture->status) {
+                        'scheduled' => 'su-soft-1',
+                        'in_progress' => 'su-chip--warn',
+                        'completed' => 'su-chip--ok',
+                        default => 'su-chip--off',
+                    };
+                    $statusLabel = match ($lecture->status) {
+                        'scheduled' => __('instructor.scheduled_lecture'),
+                        'in_progress' => __('instructor.in_progress'),
+                        'completed' => __('instructor.completed'),
+                        default => __('instructor.cancelled_lecture'),
+                    };
+                @endphp
+                <div class="su-list-item su-card" style="margin-bottom:12px">
+                    <div class="su-list-item__body">
+                        <div class="su-list-item__title" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                            {{ $lecture->title }}
+                            <span class="su-chip {{ $chip }}">{{ $statusLabel }}</span>
                         </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <a href="{{ route('instructor.attendance.lecture', $lecture) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold text-sm transition-colors">
-                                <i class="fas fa-eye"></i> {{ __('instructor.view_attendance') }}
-                            </a>
-                            <a href="{{ route('instructor.lectures.show', $lecture) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold text-sm transition-colors">
-                                <i class="fas fa-info-circle"></i>
-                            </a>
+                        <div class="su-list-item__meta">
+                            <span><i class="fas fa-book" aria-hidden="true"></i> {{ $lecture->course->title ?? '—' }}</span>
+                            <span><i class="fas fa-calendar" aria-hidden="true"></i>
+                                {{ $lecture->scheduled_at ? $lecture->scheduled_at->format('Y/m/d H:i') : '—' }}
+                            </span>
+                            @if($lecture->attendance_records_count > 0)
+                                <span>{{ $lecture->attendance_records_count }} {{ __('instructor.attendance_record_single') }}</span>
+                            @endif
                         </div>
+                    </div>
+                    <div class="su-list-item__actions">
+                        <a href="{{ route('instructor.attendance.lecture', $lecture) }}" class="su-btn su-btn--primary" style="height:32px">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                            {{ __('instructor.view_attendance') }}
+                        </a>
+                        <a href="{{ route('instructor.lectures.show', $lecture) }}" class="su-btn" style="height:32px;width:32px;padding:0;justify-content:center" title="{{ __('common.view') }}">
+                            <i class="fas fa-info-circle" aria-hidden="true"></i>
+                        </a>
                     </div>
                 </div>
             @endforeach
         </div>
-        <div class="flex justify-center">
-            <div class="rounded-xl p-3 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">{{ $lectures->links() }}</div>
-        </div>
+        @if(method_exists($lectures, 'links') && $lectures->hasPages())
+            <div class="su-pager" style="margin-top:16px">{{ $lectures->links() }}</div>
+        @endif
     @else
-        <div class="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 py-12 text-center">
-            <div class="w-16 h-16 rounded-2xl bg-sky-100 flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-clipboard-check text-2xl text-sky-500"></i>
+        <section class="su-card">
+            <div class="su-empty">
+                <i class="fas fa-clipboard-check" aria-hidden="true"></i>
+                <p>{{ __('instructor.no_lectures') }}</p>
+                <p style="color:var(--su-ink-40);font-size:13px;margin:0">{{ __('instructor.no_lectures_yet') }}</p>
             </div>
-            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">{{ __('instructor.no_lectures') }}</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">{{ __('instructor.no_lectures_yet') }}</p>
-        </div>
+        </section>
     @endif
 </div>
 @endsection

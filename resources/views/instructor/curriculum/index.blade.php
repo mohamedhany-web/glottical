@@ -1,94 +1,89 @@
 @extends('layouts.app')
 
 @section('title', __('instructor.build_curriculum') . ' - ' . $course->title)
-@section('header', __('instructor.build_curriculum') . ' - ' . $course->title)
+@section('page_title', __('instructor.build_curriculum'))
 
 @push('styles')
 <style>
     #lectureModal { backdrop-filter: blur(4px); }
     .section-block.collapsed .section-body { display: none; }
     .section-block.collapsed .section-chevron { transform: rotate(-90deg); }
-    /* سحب وإفلات احترافي */
-    .sortable-ghost { opacity: 0.35; background: #e0f2fe !important; border-color: #0ea5e9 !important; border-style: dashed !important; transform: scale(0.98); }
-    .sortable-drag { opacity: 1; box-shadow: 0 10px 40px rgba(0,0,0,0.15); cursor: grabbing !important; z-index: 1000; }
-    .sortable-chosen { background: #f0f9ff !important; border-color: #0ea5e9 !important; }
-    .items-container.sortable-dragging { min-height: 52px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 0.75rem; }
+    .sortable-ghost { opacity: 0.35; background: var(--su-card-1) !important; border-color: var(--su-ink) !important; border-style: dashed !important; transform: scale(0.98); }
+    .sortable-drag { opacity: 1; box-shadow: 0 10px 40px rgba(0,0,0,0.12); cursor: grabbing !important; z-index: 1000; }
+    .sortable-chosen { background: var(--su-bg) !important; border-color: var(--su-ink) !important; }
+    .items-container.sortable-dragging { min-height: 52px; background: var(--su-bg); border: 2px dashed var(--su-line); border-radius: 12px; }
     body.curriculum-dragging .curriculum-drag-hint { opacity: 1 !important; }
     .section-block .section-header { touch-action: manipulation; }
     .item-card .drag-handle { cursor: grab; }
+    .su-curr-layout { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:20px; }
+    @media (max-width: 1024px) { .su-curr-layout { grid-template-columns:1fr; } }
 </style>
 @endpush
 
 @section('content')
-<div class="space-y-6">
-    <!-- الهيدر -->
-    <div class="rounded-2xl p-5 sm:p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 mb-1">{{ __('instructor.build_curriculum') }}</h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400">{{ $course->title }}</p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-                <a href="{{ route('instructor.lectures.index') }}" 
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                    <span>{{ __('instructor.lectures') }}</span>
-                </a>
-                <a href="{{ route('instructor.courses.index') }}" 
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-arrow-right"></i>
-                    <span>{{ __('instructor.back') }}</span>
-                </a>
-            </div>
+<div class="su-page">
+    <div class="su-page-head">
+        <div class="min-w-0">
+            <h1 class="su-page-head__title">
+                <i class="fas fa-sitemap su-page-head__ico" aria-hidden="true"></i>
+                {{ __('instructor.build_curriculum') }}
+            </h1>
+            <p class="su-page-head__sub">{{ $course->title }}</p>
+        </div>
+        <div class="su-page-head__actions">
+            <a href="{{ route('instructor.lectures.index') }}" class="su-btn su-btn--primary">
+                <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
+                {{ __('instructor.lectures') }}
+            </a>
+            <a href="{{ route('instructor.courses.index') }}" class="su-btn">
+                <i class="fas fa-arrow-{{ app()->getLocale() === 'ar' ? 'right' : 'left' }}" aria-hidden="true"></i>
+                {{ __('instructor.back') }}
+            </a>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- الأقسام والمنهج -->
-        <div class="lg:col-span-2 space-y-6">
-            <!-- الأقسام -->
+    <div class="su-curr-layout">
+        <div>
             <div id="sections-container">
                 @forelse($sections as $section)
                     @include('instructor.curriculum.partials.section', ['section' => $section, 'depth' => 0])
                 @empty
-                    <div class="text-center py-12 bg-white dark:bg-slate-800/95 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                        <i class="fas fa-folder-open text-4xl text-slate-300 mb-4"></i>
-                        <p class="text-slate-600 dark:text-slate-400 mb-4">لا توجد أقسام بعد</p>
-                        <button onclick="showAddSectionModal()" 
-                                class="inline-flex items-center gap-2 px-6 py-3 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                            <i class="fas fa-plus"></i>
-                            إضافة قسم جديد
+                    <div class="su-empty">
+                        <i class="fas fa-folder-open" aria-hidden="true"></i>
+                        <p>{{ __('instructor.curr_no_sections') }}</p>
+                        <button type="button" onclick="showAddSectionModal()" class="su-btn su-btn--primary" style="margin-top:12px">
+                            <i class="fas fa-plus" aria-hidden="true"></i>
+                            {{ __('instructor.curr_add_section') }}
                         </button>
                     </div>
                 @endforelse
             </div>
 
             @if($sections->count() > 0)
-                <button onclick="showAddSectionModal()" 
-                        class="w-full py-3 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800/40 transition-colors inline-flex items-center justify-center gap-2">
-                    <i class="fas fa-plus"></i>
-                    إضافة قسم جديد
+                <button type="button" onclick="showAddSectionModal()" class="su-btn" style="width:100%;justify-content:center;margin-top:12px">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    {{ __('instructor.curr_add_section') }}
                 </button>
             @endif
         </div>
 
-        <!-- العناصر المتاحة -->
-        <div class="rounded-xl p-5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">العناصر المتاحة</h3>
-            </div>
+        <aside class="su-card">
+            <h3 class="su-card__title" style="margin-bottom:14px">{{ __('instructor.curr_available_items') }}</h3>
 
             @if($availableLectures->count() > 0)
-                <div class="mb-5">
-                    <h4 class="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2 flex items-center gap-2">
-                        <i class="fas fa-chalkboard-teacher text-sky-500"></i>
-                        المحاضرات ({{ $availableLectures->count() }})
-                    </h4>
-                    <div class="space-y-2">
+                <div style="margin-bottom:16px">
+                    <div style="font-size:12px;font-weight:600;color:var(--su-ink-40);margin-bottom:8px">
+                        <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
+                        {{ __('instructor.curr_lecture') }} ({{ $availableLectures->count() }})
+                    </div>
+                    <div class="su-list">
                         @foreach($availableLectures as $lecture)
-                            <div class="p-3 bg-white dark:bg-slate-800/95 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-sky-300 hover:bg-sky-50 dark:bg-sky-900/40 transition-all cursor-pointer"
-                                 onclick="showAddItemModal('App\\Models\\Lecture', {{ $lecture->id }}, '{{ addslashes($lecture->title) }}', 'محاضرة')">
-                                <div class="font-semibold text-sm text-slate-800 dark:text-slate-100">{{ $lecture->title }}</div>
+                            <div class="su-list-item" style="cursor:pointer"
+                                 onclick="showAddItemModal('App\\Models\\Lecture', {{ $lecture->id }}, '{{ addslashes($lecture->title) }}', '{{ __('instructor.curr_lecture') }}')">
+                                <span class="su-list-item__ico su-soft-1"><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i></span>
+                                <div class="su-list-item__body">
+                                    <div class="su-list-item__title">{{ $lecture->title }}</div>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -96,16 +91,19 @@
             @endif
 
             @if($availableAssignments->count() > 0)
-                <div class="mb-5">
-                    <h4 class="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2 flex items-center gap-2">
-                        <i class="fas fa-tasks text-emerald-500"></i>
-                        الواجبات ({{ $availableAssignments->count() }})
-                    </h4>
-                    <div class="space-y-2">
+                <div style="margin-bottom:16px">
+                    <div style="font-size:12px;font-weight:600;color:var(--su-ink-40);margin-bottom:8px">
+                        <i class="fas fa-tasks" aria-hidden="true"></i>
+                        {{ __('instructor.curr_assignment') }} ({{ $availableAssignments->count() }})
+                    </div>
+                    <div class="su-list">
                         @foreach($availableAssignments as $assignment)
-                            <div class="p-3 bg-white dark:bg-slate-800/95 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-sky-300 hover:bg-sky-50 dark:bg-sky-900/40 transition-all cursor-pointer"
-                                 onclick="showAddItemModal('App\\Models\\Assignment', {{ $assignment->id }}, '{{ addslashes($assignment->title) }}', 'واجب')">
-                                <div class="font-semibold text-sm text-slate-800 dark:text-slate-100">{{ $assignment->title }}</div>
+                            <div class="su-list-item" style="cursor:pointer"
+                                 onclick="showAddItemModal('App\\Models\\Assignment', {{ $assignment->id }}, '{{ addslashes($assignment->title) }}', '{{ __('instructor.curr_assignment') }}')">
+                                <span class="su-list-item__ico su-soft-2"><i class="fas fa-tasks" aria-hidden="true"></i></span>
+                                <div class="su-list-item__body">
+                                    <div class="su-list-item__title">{{ $assignment->title }}</div>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -113,16 +111,19 @@
             @endif
 
             @if(isset($availableExams) && $availableExams->count() > 0)
-                <div class="mb-5">
-                    <h4 class="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2 flex items-center gap-2">
-                        <i class="fas fa-clipboard-check text-violet-500"></i>
-                        الامتحانات ({{ $availableExams->count() }})
-                    </h4>
-                    <div class="space-y-2">
+                <div style="margin-bottom:16px">
+                    <div style="font-size:12px;font-weight:600;color:var(--su-ink-40);margin-bottom:8px">
+                        <i class="fas fa-clipboard-check" aria-hidden="true"></i>
+                        {{ __('instructor.curr_exam') }} ({{ $availableExams->count() }})
+                    </div>
+                    <div class="su-list">
                         @foreach($availableExams as $exam)
-                            <div class="p-3 bg-white dark:bg-slate-800/95 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-sky-300 hover:bg-sky-50 dark:bg-sky-900/40 transition-all cursor-pointer"
-                                 onclick="showAddItemModal('App\\Models\\AdvancedExam', {{ $exam->id }}, '{{ addslashes($exam->title) }}', 'امتحان')">
-                                <div class="font-semibold text-sm text-slate-800 dark:text-slate-100">{{ $exam->title }}</div>
+                            <div class="su-list-item" style="cursor:pointer"
+                                 onclick="showAddItemModal('App\\Models\\AdvancedExam', {{ $exam->id }}, '{{ addslashes($exam->title) }}', '{{ __('instructor.curr_exam') }}')">
+                                <span class="su-list-item__ico su-soft-3"><i class="fas fa-clipboard-check" aria-hidden="true"></i></span>
+                                <div class="su-list-item__body">
+                                    <div class="su-list-item__title">{{ $exam->title }}</div>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -130,12 +131,12 @@
             @endif
 
             @if($availableLectures->count() == 0 && $availableAssignments->count() == 0 && (!isset($availableExams) || $availableExams->count() == 0))
-                <div class="text-center py-8 text-slate-500 dark:text-slate-400">
-                    <i class="fas fa-check-circle text-2xl mb-2 text-emerald-400"></i>
-                    <p class="text-sm">جميع العناصر مضافة للمنهج</p>
+                <div class="su-empty" style="padding:24px">
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
+                    <p>{{ __('instructor.curr_all_items_added') }}</p>
                 </div>
             @endif
-        </div>
+        </aside>
     </div>
 </div>
 
