@@ -102,8 +102,12 @@ class LiveSessionController extends Controller
 
         $jitsiDomain = $liveSession->server?->normalized_domain ?: LiveSetting::getJitsiDomain();
         $allowStudentWhiteboard = $liveSession->allowsStudentWhiteboard();
+        $meeting = app(\App\Services\LiveMeetingProvider::class)->roomPayload($liveSession, $user, false);
 
-        return view('student.live-sessions.room', compact('liveSession', 'jitsiDomain', 'user', 'allowStudentWhiteboard'));
+        return view('student.live-sessions.room', array_merge(
+            compact('liveSession', 'jitsiDomain', 'user', 'allowStudentWhiteboard'),
+            $meeting
+        ));
     }
 
     public function leave(LiveSession $liveSession)

@@ -39,6 +39,42 @@ class LiveSetting extends Model
         return 'meet.jit.si';
     }
 
+    public static function getLiveProvider(): string
+    {
+        $provider = trim((string) static::get('live_provider', ''));
+        if (in_array($provider, ['livekit', 'jitsi'], true)) {
+            return $provider;
+        }
+
+        $cfg = (string) config('livekit.provider', 'livekit');
+
+        return in_array($cfg, ['livekit', 'jitsi'], true) ? $cfg : 'livekit';
+    }
+
+    public static function getLiveKitHost(): string
+    {
+        $host = trim((string) static::get('livekit_host', ''));
+        if ($host !== '') {
+            return static::normalizeJitsiDomain($host);
+        }
+
+        $fromConfig = trim((string) config('livekit.livekit.host', ''));
+        if ($fromConfig !== '') {
+            return static::normalizeJitsiDomain($fromConfig);
+        }
+
+        $server = LiveServer::query()
+            ->where('status', 'active')
+            ->where('provider', 'livekit')
+            ->orderByDesc('id')
+            ->first();
+        if ($server && trim($server->domain) !== '') {
+            return static::normalizeJitsiDomain($server->domain);
+        }
+
+        return 'live.glottical.com';
+    }
+
     public static function get(string $key, $default = null)
     {
         $setting = Cache::remember("live_setting_{$key}", 3600, function () use ($key) {

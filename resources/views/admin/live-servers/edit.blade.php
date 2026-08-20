@@ -29,6 +29,7 @@
             <div>
                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">النوع</label>
                 <select name="provider" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                    <option value="livekit" {{ $liveServer->provider === 'livekit' ? 'selected' : '' }}>LiveKit</option>
                     <option value="jitsi" {{ $liveServer->provider === 'jitsi' ? 'selected' : '' }}>Jitsi Meet</option>
                     <option value="custom" {{ $liveServer->provider === 'custom' ? 'selected' : '' }}>مخصص</option>
                 </select>

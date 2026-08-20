@@ -87,7 +87,8 @@ class LiveSessionController extends Controller
         $validated['video_off_on_join'] = LiveSetting::get('video_off_students_on_join', true);
         $validated['status'] = 'scheduled';
 
-        $defaultServer = LiveServer::where('status', 'active')->first();
+        $defaultServer = app(\App\Services\LiveMeetingProvider::class)->preferredLiveKitServer()
+            ?: LiveServer::where('status', 'active')->orderByDesc('id')->first();
         if ($defaultServer) {
             $validated['server_id'] = $defaultServer->id;
         }
@@ -143,18 +144,17 @@ class LiveSessionController extends Controller
                 ->with('info', 'الجلسة ليست في وضع البث');
         }
 
-        $jitsiDomain = $liveSession->server?->normalized_domain ?: LiveSetting::getJitsiDomain();
         $user = auth()->user();
         $subscriptionFeatureMenuItems = [];
         $subscriptionPackageLabel = null;
+        $meeting = app(\App\Services\LiveMeetingProvider::class)->roomPayload($liveSession, $user, true);
 
-        return view('instructor.live-sessions.room', compact(
-            'liveSession',
-            'jitsiDomain',
-            'user',
-            'subscriptionFeatureMenuItems',
-            'subscriptionPackageLabel'
-        ));
+        return view('instructor.live-sessions.room', array_merge([
+            'liveSession' => $liveSession,
+            'user' => $user,
+            'subscriptionFeatureMenuItems' => $subscriptionFeatureMenuItems,
+            'subscriptionPackageLabel' => $subscriptionPackageLabel,
+        ], $meeting));
     }
 
     public function updateStudentWhiteboard(Request $request, LiveSession $liveSession)

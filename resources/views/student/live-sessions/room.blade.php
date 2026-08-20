@@ -93,7 +93,17 @@
 
     <div class="room-body">
         <div id="mx-video-stack" class="relative flex-1 min-h-0 flex flex-col">
-            <main id="mx-live-broadcast-root" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة البث — Glottical"></main>
+            @if(($provider ?? 'jitsi') === 'livekit')
+                @include('partials.livekit-room', [
+                    'livekitUrl' => $livekitUrl,
+                    'livekitToken' => $livekitToken,
+                    'user' => $user,
+                    'lkRole' => 'participant',
+                    'lkLeaveUrl' => route('student.live-sessions.leave', $liveSession),
+                ])
+            @else
+                <main id="mx-live-broadcast-root" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة البث — Glottical"></main>
+            @endif
             @include('partials.mx-share-annotation-overlay', [
                 'mxAnnRole' => 'student_emit',
                 'mxAnnPostUrl' => route('student.live-sessions.share-annotation', $liveSession),
@@ -101,6 +111,7 @@
         </div>
     </div>
 
+    @if(($provider ?? 'jitsi') !== 'livekit')
     @include('partials.jitsi-iframe-media-allow')
     <script src="https://{{ $jitsiDomain }}/external_api.js"></script>
     <script>
@@ -228,5 +239,6 @@
             }, 12000);
         })();
     </script>
+    @endif
 </body>
 </html>

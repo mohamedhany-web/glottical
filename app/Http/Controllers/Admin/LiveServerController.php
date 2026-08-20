@@ -37,7 +37,7 @@ class LiveServerController extends Controller
         $validated = $request->validate([
             'name'             => 'required|string|max:255',
             'domain'           => 'required|string|max:255',
-            'provider'         => 'required|in:jitsi,custom',
+            'provider'         => 'required|in:jitsi,livekit,custom',
             'ip_address'       => 'nullable|string|max:45',
             'max_participants' => 'required|integer|min:2|max:10000',
             'notes'            => 'nullable|string',
@@ -67,7 +67,7 @@ class LiveServerController extends Controller
         $validated = $request->validate([
             'name'             => 'required|string|max:255',
             'domain'           => 'required|string|max:255',
-            'provider'         => 'required|in:jitsi,custom',
+            'provider'         => 'required|in:jitsi,livekit,custom',
             'status'           => 'required|in:active,inactive,maintenance',
             'ip_address'       => 'nullable|string|max:45',
             'max_participants' => 'required|integer|min:2|max:10000',
@@ -116,10 +116,17 @@ class LiveServerController extends Controller
             return back()->with('error', 'نطاق السيرفر غير صالح');
         }
 
-        $urls = [
-            "https://{$domain}/config.js",
-            "https://{$domain}/",
-        ];
+        $urls = $liveServer->provider === 'livekit'
+            ? [
+                "https://{$domain}/",
+                "http://{$domain}:7880/",
+                'http://187.124.36.228:7880/',
+            ]
+            : [
+                "https://{$domain}/config.js",
+                "https://{$domain}/external_api.js",
+                "https://{$domain}/",
+            ];
 
         foreach ($urls as $url) {
             try {
@@ -138,7 +145,7 @@ class LiveServerController extends Controller
             }
         }
 
-        return back()->with('error', 'لا يمكن الوصول إلى السيرفر. تحقق من النطاق واتصال الشبكة و SSL، وأن Jitsi يعمل على هذا النطاق.');
+        return back()->with('error', 'لا يمكن الوصول إلى السيرفر. تحقق من النطاق واتصال الشبكة و SSL، وأن خدمة البث (LiveKit/Jitsi) تعمل.');
     }
 
     /**
@@ -150,8 +157,16 @@ class LiveServerController extends Controller
             return back()->with('error', 'يجب تفعيل السيرفر أولاً لاستخدامه كنطاق افتراضي.');
         }
         $domain = LiveSetting::normalizeJitsiDomain($liveServer->domain);
-        LiveSetting::set('jitsi_domain', $domain);
-        return back()->with('success', "تم تعيين «{$liveServer->name}» كنطاق Jitsi الافتراضي. سيُستخدم في غرف Classroom والانضمام وجلسات البث.");
+        if ($liveServer->provider === 'livekit') {
+            LiveSetting::set('live_provider', 'livekit');
+            LiveSetting::set('livekit_host', $domain);
+            LiveSetting::set('jitsi_domain', $domain);
+        } else {
+            LiveSetting::set('live_provider', 'jitsi');
+            LiveSetting::set('jitsi_domain', $domain);
+        }
+
+        return back()->with('success', "تم تعيين «{$liveServer->name}» كنطاق البث الافتراضي ({$liveServer->provider}).");
     }
 
     /** بناء مصفوفة config مع بيانات SSH (كلمة المرور مشفّرة). */

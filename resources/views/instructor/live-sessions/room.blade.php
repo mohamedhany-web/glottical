@@ -113,7 +113,17 @@
 
     <div class="room-body">
         <div id="mx-video-stack" class="relative flex-1 min-h-0 flex flex-col">
-            <main id="mx-live-broadcast-root" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة البث — Glottical"></main>
+            @if(($provider ?? 'jitsi') === 'livekit')
+                @include('partials.livekit-room', [
+                    'livekitUrl' => $livekitUrl,
+                    'livekitToken' => $livekitToken,
+                    'user' => $user,
+                    'lkRole' => 'host',
+                    'lkLeaveUrl' => route('instructor.live-sessions.show', $liveSession),
+                ])
+            @else
+                <main id="mx-live-broadcast-root" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة البث — Glottical"></main>
+            @endif
             @include('partials.mx-share-annotation-overlay', [
                 'mxAnnRole' => 'viewer_poll',
                 'mxAnnPollUrl' => route('instructor.live-sessions.share-annotations', $liveSession),
@@ -122,11 +132,12 @@
     </div>
 
     @include('partials.mx-muallimx-excalidraw-popup')
+    @if(($provider ?? 'jitsi') !== 'livekit')
     @include('partials.jitsi-iframe-media-allow')
     <script src="https://{{ $jitsiDomain }}/external_api.js"></script>
     <script>
         /* ══════════════════════════════════════════════
-           غرفة البث (Glottical)
+           غرفة البث (Glottical) — Jitsi
         ══════════════════════════════════════════════ */
         const domain   = '{{ $jitsiDomain }}';
         const jitsiRoot = document.querySelector('#mx-live-broadcast-root');
@@ -457,5 +468,6 @@
             }
         });
     </script>
+    @endif
 </body>
 </html>
