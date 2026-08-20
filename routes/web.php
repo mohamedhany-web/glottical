@@ -21,6 +21,21 @@ Route::get('/storage/{path}', [\App\Http\Controllers\StorageFileController::clas
     ->name('storage.file')
     ->middleware('web');
 
+/*
+|--------------------------------------------------------------------------
+| Instructor panel CSS — عبر Laravel عند فشل خدمة public/css على الاستضافة
+|--------------------------------------------------------------------------
+*/
+Route::get('/__glottical/instructor-panel.css', function () {
+    $path = public_path('css/instructor-panel.css');
+    abort_unless(is_file($path), 404);
+
+    return response()->file($path, [
+        'Content-Type' => 'text/css; charset=UTF-8',
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+})->name('assets.instructor-panel.css');
+
 Route::post('/webhooks/fawaterak', [\App\Http\Controllers\Webhooks\FawaterakWebhookController::class, 'handle'])
     ->name('webhooks.fawaterak')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
