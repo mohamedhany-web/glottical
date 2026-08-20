@@ -13,6 +13,27 @@ use Illuminate\Http\Request;
 
 class LiveSessionController extends Controller
 {
+    /**
+     * @return \Illuminate\Support\Collection<int, User>
+     */
+    private function liveHostOptions()
+    {
+        try {
+            return User::canHostLiveSession()
+                ->select('id', 'name', 'email', 'role')
+                ->orderBy('name')
+                ->get();
+        } catch (\Throwable $e) {
+            report($e);
+
+            return User::query()
+                ->whereIn('role', ['instructor', 'teacher'])
+                ->select('id', 'name', 'email', 'role')
+                ->orderBy('name')
+                ->get();
+        }
+    }
+
     public function index(Request $request)
     {
         $query = LiveSession::with(['course', 'instructor', 'server'])
@@ -44,11 +65,7 @@ class LiveSessionController extends Controller
         ];
 
         $courses = AdvancedCourse::select('id', 'title')->orderBy('title')->get();
-        // المعلم = المدرب: إما مدرب داخلي أو طالب مشترك لدينا (يشترون منا الخدمة)
-        $instructors = User::canHostLiveSession()
-            ->select('id', 'name', 'email', 'role')
-            ->orderBy('name')
-            ->get();
+        $instructors = $this->liveHostOptions();
 
         return view('admin.live-sessions.index', compact('sessions', 'stats', 'courses', 'instructors'));
     }
@@ -56,10 +73,7 @@ class LiveSessionController extends Controller
     public function create()
     {
         $courses = AdvancedCourse::select('id', 'title')->orderBy('title')->get();
-        $instructors = User::canHostLiveSession()
-            ->select('id', 'name', 'email', 'role')
-            ->orderBy('name')
-            ->get();
+        $instructors = $this->liveHostOptions();
         $servers = LiveServer::where('status', 'active')->get();
 
         return view('admin.live-sessions.create', compact('courses', 'instructors', 'servers'));
@@ -115,10 +129,7 @@ class LiveSessionController extends Controller
     public function edit(LiveSession $liveSession)
     {
         $courses = AdvancedCourse::select('id', 'title')->orderBy('title')->get();
-        $instructors = User::canHostLiveSession()
-            ->select('id', 'name', 'email', 'role')
-            ->orderBy('name')
-            ->get();
+        $instructors = $this->liveHostOptions();
         $servers = LiveServer::where('status', 'active')->get();
 
         return view('admin.live-sessions.edit', compact('liveSession', 'courses', 'instructors', 'servers'));

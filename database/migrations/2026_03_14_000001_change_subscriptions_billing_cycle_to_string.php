@@ -7,6 +7,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! Schema::hasTable('subscriptions')) {
+            return;
+        }
+
         $driver = DB::getDriverName();
         if ($driver === 'mysql') {
             DB::statement('ALTER TABLE subscriptions MODIFY billing_cycle VARCHAR(20) NOT NULL DEFAULT \'monthly\'');

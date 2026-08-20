@@ -40,7 +40,14 @@
         $useInstructorPanel = auth()->check() && (auth()->user()->isInstructor() || auth()->user()->isTeacher());
     @endphp
     @if($useInstructorPanel)
-        <link rel="stylesheet" href="{{ versioned_asset('css/instructor-panel.css') }}">
+        @php
+            $ipCssRel = 'css/instructor-panel.css';
+            $ipCssFile = public_path($ipCssRel);
+            $ipCssVer = is_file($ipCssFile) ? (string) filemtime($ipCssFile) : (string) time();
+        @endphp
+        {{-- مسار نسبي + asset مطلق: يتجنّب كسر التصميم عند خطأ APP_URL أو كاش قديم --}}
+        <link rel="stylesheet" href="{{ versioned_asset($ipCssRel) }}">
+        <link rel="stylesheet" href="{{ asset($ipCssRel) }}?v={{ $ipCssVer }}">
     @endif
 
     @php
