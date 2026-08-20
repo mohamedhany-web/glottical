@@ -348,6 +348,28 @@ class User extends Authenticatable
     }
 
     /**
+     * اشتراكات الباقات (جدول subscriptions) — مطلوب لـ canHostLiveSession.
+     */
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * الاشتراك النشط الحالي إن وُجد.
+     */
+    public function activeSubscription(): ?Subscription
+    {
+        return $this->subscriptions()
+            ->where('status', 'active')
+            ->where(function ($q) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+            })
+            ->orderByDesc('end_date')
+            ->first();
+    }
+
+    /**
      * طلاب يشرف عليهم هذا الموظف كمشرف أكاديمي.
      */
     public function supervisedStudentsAsAcademic()

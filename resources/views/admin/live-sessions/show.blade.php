@@ -129,11 +129,6 @@
                     <a href="{{ route('admin.users.show', $liveSession->instructor->id) }}" class="inline-flex items-center justify-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-400 rounded-lg text-sm font-semibold hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors">
                         <i class="fas fa-user"></i> عرض بيانات المعلم
                     </a>
-                    @if($liveSession->instructor->role === 'student')
-                    <a href="{{ route('admin.subscriptions.index') }}?user_id={{ $liveSession->instructor->id }}" class="inline-flex items-center justify-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors">
-                        <i class="fas fa-crown"></i> اشتراكاته
-                    </a>
-                    @endif
                 </div>
             </div>
             @endif
