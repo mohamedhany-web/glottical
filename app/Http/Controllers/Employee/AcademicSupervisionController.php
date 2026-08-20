@@ -140,7 +140,14 @@ class AcademicSupervisionController extends Controller
         $meetingPayload = app(\App\Services\LiveMeetingProvider::class)->classroomPayload(
             $meeting->liveRoomName(),
             $supervisor,
-            false
+            false,
+            [
+                'canPublish' => false,
+                'canSubscribe' => true,
+                'canPublishData' => false,
+                'hidden' => true,
+                'roomAdmin' => false,
+            ]
         );
         $meetingEndsAt = $meeting->started_at ? $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes) : null;
         $useInstructorRoutes = false;

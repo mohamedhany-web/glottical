@@ -1,15 +1,17 @@
-{{-- غرفة LiveKit مضمّنة — يتطلب $livekitUrl و $livekitToken و $liveSession --}}
+{{-- غرفة LiveKit مضمّنة — يتطلب $livekitUrl و $livekitToken و $user --}}
 @php
     $lkRole = $lkRole ?? 'participant';
     $lkLeaveUrl = $lkLeaveUrl ?? url('/');
     $displayName = $user->name ?? ('User #'.($user->id ?? ''));
+    $lkStartAudio = $lkStartAudio ?? true;
+    $lkStartVideo = $lkStartVideo ?? true;
 @endphp
 <div id="lk-room-shell" class="relative flex-1 min-h-0 flex flex-col bg-slate-950">
     <div id="lk-status" class="absolute top-3 left-1/2 -translate-x-1/2 z-20 px-4 py-1.5 rounded-full bg-slate-900/90 text-slate-200 text-xs font-semibold border border-slate-700 hidden"></div>
     <div id="lk-stage" class="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 p-2 overflow-auto"></div>
     <div class="shrink-0 border-t border-slate-800 bg-slate-900/95 px-4 py-3 flex flex-wrap items-center justify-center gap-2">
-        <button type="button" id="lk-toggle-mic" class="lk-btn"><i class="fas fa-microphone"></i> ميكروفون</button>
-        <button type="button" id="lk-toggle-cam" class="lk-btn"><i class="fas fa-video"></i> كاميرا</button>
+        <button type="button" id="lk-toggle-mic" class="lk-btn{{ $lkStartAudio ? '' : ' is-off' }}"><i class="fas fa-microphone"></i> ميكروفون</button>
+        <button type="button" id="lk-toggle-cam" class="lk-btn{{ $lkStartVideo ? '' : ' is-off' }}"><i class="fas fa-video"></i> كاميرا</button>
         <button type="button" id="lk-toggle-screen" class="lk-btn"><i class="fas fa-desktop"></i> شاشة</button>
         <a href="{{ $lkLeaveUrl }}" id="lk-leave" class="lk-btn lk-btn-danger"><i class="fas fa-phone-slash"></i> مغادرة</a>
     </div>
@@ -30,6 +32,8 @@
     const token = @json($livekitToken);
     const displayName = @json($displayName);
     const role = @json($lkRole);
+    const startAudio = @json($lkStartAudio);
+    const startVideo = @json($lkStartVideo);
     const stage = document.getElementById('lk-stage');
     const statusEl = document.getElementById('lk-status');
     const micBtn = document.getElementById('lk-toggle-mic');
@@ -48,8 +52,8 @@
     const { Room, RoomEvent, Track, createLocalTracks, createLocalScreenTracks } = window.LivekitClient;
     const room = new Room({ adaptiveStream: true, dynacast: true });
     const tiles = new Map();
-    let micOn = true;
-    let camOn = true;
+    let micOn = !!startAudio;
+    let camOn = !!startVideo;
     let screenTrack = null;
 
     function setStatus(msg, isError) {
@@ -126,11 +130,28 @@
         try {
             setStatus('جارٍ الاتصال بـ LiveKit…');
             await room.connect(url, token);
-            const localTracks = await createLocalTracks({ audio: true, video: true });
-            await Promise.all(localTracks.map((t) => room.localParticipant.publishTrack(t)));
-            localTracks.forEach((t) => attachTrack(t, room.localParticipant));
-            setStatus('متصل · ' + (role === 'host' ? 'مضيف' : 'مشارك') + ' · ' + displayName);
-            setTimeout(() => statusEl.classList.add('hidden'), 2500);
+            try {
+                const wantAudio = !!startAudio;
+                const wantVideo = !!startVideo;
+                if (wantAudio || wantVideo) {
+                    const localTracks = await createLocalTracks({ audio: wantAudio, video: wantVideo });
+                    await Promise.all(localTracks.map((t) => room.localParticipant.publishTrack(t)));
+                    localTracks.forEach((t) => attachTrack(t, room.localParticipant));
+                }
+                micOn = wantAudio;
+                camOn = wantVideo;
+                micBtn?.classList.toggle('is-off', !micOn);
+                camBtn?.classList.toggle('is-off', !camOn);
+                setStatus('متصل · ' + (role === 'host' ? 'مضيف' : 'مشارك') + ' · ' + displayName);
+                setTimeout(() => statusEl.classList.add('hidden'), 2500);
+            } catch (mediaErr) {
+                console.warn('Local media unavailable, joining without mic/cam', mediaErr);
+                micOn = false;
+                camOn = false;
+                micBtn?.classList.add('is-off');
+                camBtn?.classList.add('is-off');
+                setStatus('متصل بدون ميكروفون/كاميرا — فعّل الأذونات من الأزرار', true);
+            }
         } catch (err) {
             console.error(err);
             setStatus('فشل الاتصال بـ LiveKit: ' + (err && err.message ? err.message : err), true);
@@ -138,14 +159,24 @@
     }
 
     micBtn?.addEventListener('click', async () => {
-        micOn = !micOn;
-        await room.localParticipant.setMicrophoneEnabled(micOn);
-        micBtn.classList.toggle('is-off', !micOn);
+        try {
+            micOn = !micOn;
+            await room.localParticipant.setMicrophoneEnabled(micOn);
+            micBtn.classList.toggle('is-off', !micOn);
+        } catch (e) {
+            micOn = !micOn;
+            setStatus('تعذر تفعيل الميكروفون', true);
+        }
     });
     camBtn?.addEventListener('click', async () => {
-        camOn = !camOn;
-        await room.localParticipant.setCameraEnabled(camOn);
-        camBtn.classList.toggle('is-off', !camOn);
+        try {
+            camOn = !camOn;
+            await room.localParticipant.setCameraEnabled(camOn);
+            camBtn.classList.toggle('is-off', !camOn);
+        } catch (e) {
+            camOn = !camOn;
+            setStatus('تعذر تفعيل الكاميرا', true);
+        }
     });
     screenBtn?.addEventListener('click', async () => {
         try {

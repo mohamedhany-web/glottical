@@ -225,7 +225,7 @@
                         <span class="hidden sm:inline">رسم فوق البث</span>
                     </button>
                 </div>
-                <form method="POST" action="{{ route('student.live-sessions.leave', $liveSession) }}" class="inline m-0">
+                <form method="POST" action="{{ route('student.live-sessions.leave', $liveSession) }}" class="inline m-0" id="student-live-leave-form">
                     @csrf
                     <button type="submit" class="st-live-pill st-live-pill--ghost">
                         <i class="fas fa-sign-out-alt"></i> مغادرة
@@ -243,6 +243,8 @@
                         'user' => $user,
                         'lkRole' => 'participant',
                         'lkLeaveUrl' => route('student.live-sessions.index'),
+                        'lkStartAudio' => !($liveSession->mute_on_join ?? false),
+                        'lkStartVideo' => !($liveSession->video_off_on_join ?? false),
                     ])
                 @else
                     <div class="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center text-slate-200">
@@ -259,6 +261,19 @@
             </div>
         </div>
     </div>
+
+    <script>
+        (function () {
+            var leaveForm = document.getElementById('student-live-leave-form');
+            var lkLeave = document.getElementById('lk-leave');
+            if (leaveForm && lkLeave) {
+                lkLeave.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    leaveForm.submit();
+                });
+            }
+        })();
+    </script>
 
     <script>
         (function () {

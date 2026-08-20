@@ -69,9 +69,10 @@ class LiveMeetingProvider
     }
 
     /**
+     * @param  array{canPublish?: bool, canSubscribe?: bool, canPublishData?: bool, roomAdmin?: bool, hidden?: bool}  $grants
      * @return array{provider: string, livekitUrl: string|null, livekitToken: string|null, livekitHost: string|null, livekitConfigured: bool, roomName: string}
      */
-    public function classroomPayload(string $roomName, User $user, bool $isHost = false): array
+    public function classroomPayload(string $roomName, User $user, bool $isHost = false, array $grants = []): array
     {
         $server = $this->preferredLiveKitServer();
         $payload = [
@@ -87,12 +88,12 @@ class LiveMeetingProvider
             $payload['livekitToken'] = $this->liveKit->createJoinToken(
                 $roomName,
                 $user,
-                [
+                array_merge([
                     'canPublish' => true,
                     'canSubscribe' => true,
                     'canPublishData' => true,
                     'roomAdmin' => $isHost,
-                ]
+                ], $grants)
             );
         }
 
