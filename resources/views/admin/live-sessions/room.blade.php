@@ -55,6 +55,8 @@
             'lkLeaveUrl' => route('admin.live-sessions.show', $liveSession),
             'lkStartAudio' => true,
             'lkStartVideo' => true,
+            'lkAllowScreenShare' => $allowScreenShare ?? true,
+            'lkAllowChat' => $allowChat ?? true,
         ])
     @else
         <div class="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">

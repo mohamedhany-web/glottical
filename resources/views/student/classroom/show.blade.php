@@ -22,7 +22,13 @@
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-black text-slate-900 dark:text-white">{{ $meeting->title }}</h1>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">الكود: <span class="font-mono font-bold">{{ $meeting->code }}</span></p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    @if(!empty($isPlatformBound) || empty($guestJoinEnabled))
+                        اجتماع محمي — الدخول من حساب الطالب/المعلم داخل المنصة فقط
+                    @else
+                        الكود: <span class="font-mono font-bold">{{ $meeting->code }}</span>
+                    @endif
+                </p>
             </div>
             <div class="flex items-center gap-2">
                 @if(!$meeting->consultation_request_id && !($useInstructorRoutes ?? false))
@@ -66,13 +72,32 @@
             </div>
         </div>
 
-        <div class="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 p-3 flex flex-wrap items-center justify-between gap-3">
-            <div class="text-xs text-slate-600 dark:text-slate-300">رابط الانضمام للطلاب والضيوف:</div>
-            <div class="flex items-center gap-2">
-                <input type="text" readonly value="{{ $joinUrl }}" class="w-[340px] max-w-[60vw] px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs">
-                <button type="button" onclick="navigator.clipboard.writeText('{{ $joinUrl }}')" class="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold">نسخ</button>
+        @if(!empty($isPlatformBound) || empty($guestJoinEnabled))
+            <div class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-900/10 p-3 space-y-2">
+                <p class="text-sm font-bold text-emerald-800 dark:text-emerald-200 m-0">حماية الدخول</p>
+                <p class="text-xs text-slate-600 dark:text-slate-300 m-0">لا يوجد رابط ضيف قابل للمشاركة. الطالب والمعلم يدخلان فقط من حسابهما داخل المنصة (صفحة الحصة / الجدول).</p>
+                @if(empty($isPlatformBound))
+                    <form method="POST" action="{{ route($rp.'classroom.guest-join', $meeting) }}" class="pt-1">
+                        @csrf
+                        <input type="hidden" name="allow" value="1">
+                        <button type="submit" class="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs font-semibold">تفعيل رابط ضيوف (اختياري)</button>
+                    </form>
+                @endif
             </div>
-        </div>
+        @else
+            <div class="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 p-3 flex flex-wrap items-center justify-between gap-3">
+                <div class="text-xs text-slate-600 dark:text-slate-300">رابط الانضمام للضيوف (مفعّل):</div>
+                <div class="flex items-center gap-2">
+                    <input type="text" readonly value="{{ $joinUrl }}" class="w-[340px] max-w-[60vw] px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs">
+                    <button type="button" onclick="navigator.clipboard.writeText(@json($joinUrl))" class="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold">نسخ</button>
+                    <form method="POST" action="{{ route($rp.'classroom.guest-join', $meeting) }}">
+                        @csrf
+                        <input type="hidden" name="allow" value="0">
+                        <button type="submit" class="px-3 py-2 rounded-lg bg-rose-100 text-rose-700 text-xs font-semibold">إيقاف الرابط</button>
+                    </form>
+                </div>
+            </div>
+        @endif
 
         @if($meeting->ended_at)
             @php

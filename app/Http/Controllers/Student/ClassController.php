@@ -107,7 +107,7 @@ class ClassController extends Controller
             $session->update(['status' => TutoringClassSession::STATUS_LIVE]);
         }
 
-        return redirect()->away(url('classroom/join/'.$meeting->code));
+        return redirect()->to(\App\Services\ClassroomMeetingAccessService::platformEnterUrl($meeting));
     }
 
     /**

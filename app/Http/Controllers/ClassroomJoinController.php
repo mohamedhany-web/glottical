@@ -34,6 +34,7 @@ class ClassroomJoinController extends Controller
         $maxParticipants = (int) ($meeting?->max_participants ?? 25);
         $meetingEnded = (bool) ($meeting && $meeting->ended_at);
         $meetingNotStarted = (bool) ($meeting && ! $meeting->started_at && ! $meeting->ended_at);
+        $guestJoinBlocked = (bool) ($meeting && ! \App\Services\ClassroomMeetingAccessService::allowsGuestJoin($meeting));
         $livekitConfigured = app(\App\Services\LiveKitTokenService::class)->isConfigured();
         $livekitHost = LiveSetting::getLiveKitHost();
 
@@ -45,6 +46,7 @@ class ClassroomJoinController extends Controller
             'maxParticipants',
             'meetingEnded',
             'meetingNotStarted',
+            'guestJoinBlocked',
             'livekitConfigured',
             'livekitHost'
         ));
@@ -55,6 +57,12 @@ class ClassroomJoinController extends Controller
         $code = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $code));
         $meeting = ClassroomMeeting::where('code', $code)->firstOrFail();
 
+        if (! \App\Services\ClassroomMeetingAccessService::allowsGuestJoin($meeting)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'هذا الاجتماع خاص داخل المنصة فقط. سجّل دخولك كطالب أو معلم وانضم من حسابك — لا يوجد رابط ضيف قابل للمشاركة.',
+            ], 403);
+        }
         if ($meeting->ended_at) {
             return response()->json([
                 'ok' => false,

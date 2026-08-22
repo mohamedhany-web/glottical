@@ -8,11 +8,13 @@ use App\Models\ServicePackage;
 use App\Models\StudentServiceEntitlement;
 use App\Models\TutoringGroup;
 use App\Models\TutoringGroupBooking;
+use App\Models\TutoringGroupCohort;
 use App\Models\User;
 use App\Services\OneToOneAvailabilityService;
 use App\Services\OneToOneSessionService;
 use App\Services\PrivateCoursesCoreService;
 use App\Services\StudentEntitlementService;
+use App\Services\TutoringClassService;
 use App\Services\TutoringGroupAvailabilityService;
 use App\Services\TutoringGroupOrchestrationService;
 use App\Support\AppTimezone;
@@ -519,8 +521,11 @@ class PlacementController extends Controller
                     throw new \InvalidArgumentException('المعلم لديه حجز متداخل في هذا الموعد.');
                 }
 
+                $cohort = self::resolvePlacementCohort($group);
+
                 $booking = TutoringGroupBooking::create([
                     'tutoring_group_id' => $group->id,
+                    'cohort_id' => $cohort?->id,
                     'student_service_entitlement_id' => $entitlement->id,
                     'order_id' => $entitlement->order_id,
                     'payment_status' => TutoringGroupBooking::PAYMENT_PAID,
@@ -532,7 +537,23 @@ class PlacementController extends Controller
                     'admin_notes' => trim(($data['notes'] ?? '')."\nتسكين من لوحة الطلاب والخدمات"),
                 ]);
 
-                return TutoringGroupOrchestrationService::confirmBooking($booking);
+                $confirmed = TutoringGroupOrchestrationService::confirmBooking($booking);
+
+                // Ensure class timetable exists so cohort sessions show on the student calendar.
+                if ($cohort
+                    && $cohort->classSessions()->count() === 0
+                    && filled($cohort->study_days)
+                    && filled($cohort->study_time)
+                    && $cohort->starts_at) {
+                    try {
+                        TutoringClassService::generateSchedule($cohort);
+                        TutoringClassService::ensureAllMeetings($cohort->fresh());
+                    } catch (\Throwable) {
+                        // جدول الحصص يمكن توليده لاحقاً من لوحة الإدارة
+                    }
+                }
+
+                return $confirmed;
             });
         } catch (\InvalidArgumentException $e) {
             return back()->withInput()->with('error', $e->getMessage());
@@ -550,6 +571,27 @@ class PlacementController extends Controller
         return redirect()
             ->route('admin.tutoring-group-bookings.show', $booking)
             ->with('success', 'تم تسكين الطالب في المجموعة وإنشاء غرفة Live.');
+    }
+
+    /**
+     * Pick an open/postponed cohort for collective placement so class sessions land on the calendar.
+     */
+    private static function resolvePlacementCohort(TutoringGroup $group): ?TutoringGroupCohort
+    {
+        if (! $group->isCollective()) {
+            return null;
+        }
+
+        return TutoringGroupCohort::query()
+            ->where('tutoring_group_id', $group->id)
+            ->whereIn('status', [
+                TutoringGroupCohort::STATUS_OPEN,
+                TutoringGroupCohort::STATUS_POSTPONED,
+            ])
+            ->orderByRaw('CASE WHEN starts_at IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('starts_at')
+            ->orderBy('id')
+            ->first();
     }
 
     public function destroyPrivate(OneToOneSession $oneToOneSession): RedirectResponse

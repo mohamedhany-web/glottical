@@ -23,8 +23,8 @@ class SecurityHeadersMiddleware
             $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
             $response->headers->set('X-XSS-Protection', '1; mode=block');
             $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-            // لا تضبط microphone=/camera=() — ذلك يمنع المتصفح من منح إذن الميكروفون/الكاميرا لغرف LiveKit.
-            $response->headers->set('Permissions-Policy', 'geolocation=()');
+            // لا تضبط microphone=/camera=/display-capture=() — ذلك يمنع أذونات غرف LiveKit (ميك/كاميرا/شير).
+            $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(self), camera=(self), display-capture=(self)');
 
             $this->applyContentSecurityPolicy($response, $request);
         } catch (\Throwable $e) {

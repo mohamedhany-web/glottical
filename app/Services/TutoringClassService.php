@@ -287,6 +287,7 @@ class TutoringClassService
                     'tutoring_class_session_id' => $session->id,
                     'tutoring_group_cohort_id' => $session->tutoring_group_cohort_id,
                     'shared_class_room' => true,
+                    'allow_guest_join' => false,
                 ],
             ]);
 

@@ -122,7 +122,7 @@ class StudentHomeScheduleTest extends TestCase
 
         $this->actingAs($student)
             ->get(route('student.schedule.join', ['type' => 'private', 'id' => $session->id]))
-            ->assertRedirect(url('classroom/join/JOIN9999'));
+            ->assertRedirect(route('classroom.secure-enter', $meeting));
 
         $group = TutoringGroup::create([
             'type' => TutoringGroup::TYPE_COLLECTIVE,

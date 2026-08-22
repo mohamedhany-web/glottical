@@ -49,7 +49,7 @@ class LiveKitTokenService
     }
 
     /**
-     * @param  array{canPublish?: bool, canSubscribe?: bool, canPublishData?: bool, roomAdmin?: bool, hidden?: bool}  $grants
+     * @param  array{canPublish?: bool, canSubscribe?: bool, canPublishData?: bool, roomAdmin?: bool, hidden?: bool, canPublishSources?: list<string>, metadata?: array<string, mixed>}  $grants
      */
     public function createJoinToken(string $roomName, User $user, array $grants = []): string
     {
@@ -67,7 +67,7 @@ class LiveKitTokenService
     /**
      * توكن LiveKit لهوية نصية (ضيف classroom / مشارك بدون User).
      *
-     * @param  array{canPublish?: bool, canSubscribe?: bool, canPublishData?: bool, roomAdmin?: bool, hidden?: bool, metadata?: array<string, mixed>}  $grants
+     * @param  array{canPublish?: bool, canSubscribe?: bool, canPublishData?: bool, roomAdmin?: bool, hidden?: bool, canPublishSources?: list<string>, metadata?: array<string, mixed>}  $grants
      */
     public function createIdentityToken(string $roomName, string $identity, string $displayName, array $grants = []): string
     {
@@ -90,6 +90,12 @@ class LiveKitTokenService
             'canSubscribe' => (bool) ($grants['canSubscribe'] ?? true),
             'canPublishData' => (bool) ($grants['canPublishData'] ?? true),
         ];
+
+        if (! empty($grants['canPublishSources']) && is_array($grants['canPublishSources'])) {
+            $video['canPublishSources'] = array_values(array_filter(
+                array_map('strval', $grants['canPublishSources'])
+            ));
+        }
 
         if (! empty($grants['roomAdmin'])) {
             $video['roomAdmin'] = true;

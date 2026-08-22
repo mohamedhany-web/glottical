@@ -8,6 +8,7 @@ use App\Models\ClassroomMeetingReport;
 use App\Models\IntegrationSetting;
 use App\Models\TutoringGroupBooking;
 use App\Services\ClassroomCurriculumPresentService;
+use App\Services\ClassroomMeetingAccessService;
 use App\Services\TutoringGroupOrchestrationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -114,6 +115,8 @@ class ClassroomController extends Controller
             'planned_duration_minutes' => (int) ($data['planned_duration_minutes'] ?? $limits['classroom_default_duration_minutes']),
             'max_participants' => (int) $data['max_participants'],
             'started_at' => $startNow ? now() : null,
+            // رابط الضيوف مغلق افتراضياً — يُفعَّل يدوياً إن لزم
+            'settings' => ['allow_guest_join' => false],
         ]);
 
         if ($startNow) {
@@ -149,18 +152,35 @@ class ClassroomController extends Controller
         $aiReports = $meeting->aiReports;
         $activeAiReport = $aiReports->first(fn ($r) => in_array($r->status, ['pending', 'processing'], true));
         $latestCompletedAiReport = $aiReports->firstWhere('status', 'completed');
-        $joinUrl = url('classroom/join/'.$meeting->code);
+        $joinUrl = ClassroomMeetingAccessService::allowsGuestJoin($meeting)
+            ? url('classroom/join/'.$meeting->code)
+            : null;
+        $guestJoinEnabled = ClassroomMeetingAccessService::allowsGuestJoin($meeting);
+        $isPlatformBound = ClassroomMeetingAccessService::isPlatformBound($meeting);
         $limits = $this->classroomLimits();
         $useInstructorRoutes = request()->routeIs('instructor.*');
 
         return view('student.classroom.show', compact(
             'meeting',
             'joinUrl',
+            'guestJoinEnabled',
+            'isPlatformBound',
             'limits',
             'useInstructorRoutes',
             'activeAiReport',
             'latestCompletedAiReport'
         ));
+    }
+
+    /**
+     * دخول آمن من المنصة فقط (طالب/معلم مصرّح) — بدون رابط ضيف قابل للمشاركة.
+     */
+    public function secureEnter(ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingCanEnter($meeting, $user);
+
+        return redirect()->to(ClassroomMeetingAccessService::roomUrlForUser($meeting, $user));
     }
 
     public function edit(ClassroomMeeting $meeting)
@@ -213,7 +233,8 @@ class ClassroomController extends Controller
     public function room(ClassroomMeeting $meeting)
     {
         $user = Auth::user();
-        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureMeetingCanEnter($meeting, $user);
+        $isHost = ClassroomMeetingAccessService::userIsHost($meeting, $user);
 
         if ($meeting->ended_at) {
             if (request()->routeIs('instructor.*')) {
@@ -236,16 +257,26 @@ class ClassroomController extends Controller
                     ->with('error', 'انتهى هذا الاجتماع ولا يمكن إعادة فتح الغرفة.');
             }
 
-            if ($meeting->tutoring_group_booking_id && \Illuminate\Support\Facades\Route::has('student.tutoring-bookings.show')) {
+            if ($meeting->one_to_one_session_id && Route::has('student.one-to-one-sessions.show')) {
+                return redirect()->route('student.one-to-one-sessions.show', $meeting->one_to_one_session_id)
+                    ->with('error', 'انتهى هذا الاجتماع.');
+            }
+
+            if ($meeting->tutoring_group_booking_id && Route::has('student.tutoring-bookings.show')) {
                 return redirect()->route('student.tutoring-bookings.show', $meeting->tutoring_group_booking_id)
                     ->with('error', 'انتهى هذا الاجتماع.');
             }
 
-            return redirect()->route('student.classroom.show', $meeting)
-                ->with('error', 'انتهى هذا الاجتماع ولا يمكن إعادة فتح الغرفة.');
+            if ((int) $meeting->user_id === (int) $user->id) {
+                return redirect()->route('student.classroom.show', $meeting)
+                    ->with('error', 'انتهى هذا الاجتماع ولا يمكن إعادة فتح الغرفة.');
+            }
+
+            return redirect()->route('dashboard')
+                ->with('error', 'انتهى هذا الاجتماع.');
         }
 
-        // Host entering the room starts the meeting so attendance can be verified before completing 1:1.
+        // أي طرف مصرّح يدخل يبدأ الجلسة حتى يتمكن الطرف الآخر من الانضمام داخل المنصة.
         if (! $meeting->started_at) {
             $meeting->update(['started_at' => now()]);
             $meeting->refresh();
@@ -269,7 +300,7 @@ class ClassroomController extends Controller
             }
             $back = request()->routeIs('instructor.*')
                 ? route('instructor.consultations.index')
-                : route('student.classroom.index');
+                : route('dashboard');
 
             return redirect()->to($back)
                 ->with('error', $meeting->consultation_request_id
@@ -280,12 +311,16 @@ class ClassroomController extends Controller
         $meetingPayload = app(\App\Services\LiveMeetingProvider::class)->classroomPayload(
             $meeting->liveRoomName(),
             $user,
-            true
+            $isHost
         );
         $meetingEndsAt = $meeting->started_at ? $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes) : null;
-        $useInstructorRoutes = request()->routeIs('instructor.*');
+        $useInstructorRoutes = request()->routeIs('instructor.*') || ($isHost && ($user->isInstructor() || $user->isAdmin()));
         $subscriptionFeatureMenuItems = [];
         $subscriptionPackageLabel = null;
+        $guestJoinEnabled = ClassroomMeetingAccessService::allowsGuestJoin($meeting);
+        $lkRole = $isHost ? 'host' : 'participant';
+
+        $roomExitUrl = $this->classroomRoomExitUrl($meeting, $user, $isHost);
 
         return view('student.classroom.room', array_merge(
             compact(
@@ -296,7 +331,11 @@ class ClassroomController extends Controller
                 'meetingEndsAt',
                 'useInstructorRoutes',
                 'subscriptionFeatureMenuItems',
-                'subscriptionPackageLabel'
+                'subscriptionPackageLabel',
+                'guestJoinEnabled',
+                'isHost',
+                'lkRole',
+                'roomExitUrl'
             ),
             $meetingPayload
         ));
@@ -341,6 +380,25 @@ class ClassroomController extends Controller
             'ok' => true,
             'allow_participant_whiteboard' => $meeting->allowsParticipantWhiteboard(),
         ]);
+    }
+
+    public function updateGuestJoin(Request $request, ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+
+        if (ClassroomMeetingAccessService::isPlatformBound($meeting)) {
+            return back()->with('error', 'لا يمكن تفعيل رابط ضيف لاجتماعات الحصص الخاصة — الدخول من المنصة فقط.');
+        }
+
+        $allow = $request->boolean('allow');
+        $settings = $meeting->settings ?? [];
+        $settings['allow_guest_join'] = $allow;
+        $meeting->update(['settings' => $settings]);
+
+        return back()->with('success', $allow
+            ? 'تم تفعيل رابط الضيوف. شاركه بحذر.'
+            : 'تم إيقاف رابط الضيوف. الدخول من المنصة فقط.');
     }
 
     public function shareAnnotations(ClassroomMeeting $meeting)
@@ -1322,10 +1380,50 @@ class ClassroomController extends Controller
         return route('student.classroom.room', $meeting);
     }
 
+    private function classroomRoomExitUrl(ClassroomMeeting $meeting, $user, bool $isHost): string
+    {
+        if ($meeting->one_to_one_session_id) {
+            if ($isHost && Route::has('instructor.one-to-one-sessions.show')) {
+                return route('instructor.one-to-one-sessions.show', $meeting->one_to_one_session_id);
+            }
+            if (Route::has('student.one-to-one-sessions.show')) {
+                return route('student.one-to-one-sessions.show', $meeting->one_to_one_session_id);
+            }
+        }
+
+        if ($meeting->tutoring_group_booking_id) {
+            if ($isHost && Route::has('instructor.tutoring-bookings.show')) {
+                return route('instructor.tutoring-bookings.show', $meeting->tutoring_group_booking_id);
+            }
+            if (Route::has('student.tutoring-bookings.show')) {
+                return route('student.tutoring-bookings.show', $meeting->tutoring_group_booking_id);
+            }
+        }
+
+        if ($isHost && request()->routeIs('instructor.*') && Route::has('instructor.classroom.index')) {
+            return route('instructor.classroom.index');
+        }
+
+        if ((int) $meeting->user_id === (int) $user->id && Route::has('student.classroom.index')) {
+            return route('student.classroom.index');
+        }
+
+        return route('dashboard');
+    }
+
     private function ensureMeetingOwnership(ClassroomMeeting $meeting, $user): void
     {
-        if ((int) $meeting->user_id !== (int) $user->id) {
+        if (! ClassroomMeetingAccessService::userIsHost($meeting, $user)
+            && (int) $meeting->user_id !== (int) $user->id
+            && ! $user->isAdmin()) {
             abort(403);
+        }
+    }
+
+    private function ensureMeetingCanEnter(ClassroomMeeting $meeting, $user): void
+    {
+        if (! ClassroomMeetingAccessService::userCanEnter($meeting, $user)) {
+            abort(403, 'غير مصرح لك بدخول هذه الغرفة. الدخول من حسابك داخل المنصة فقط.');
         }
     }
 

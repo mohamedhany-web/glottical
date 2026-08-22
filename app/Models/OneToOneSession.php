@@ -131,8 +131,11 @@ class OneToOneSession extends Model
     public function joinUrl(): ?string
     {
         $meeting = $this->classroomMeeting;
+        if (! $meeting) {
+            return null;
+        }
 
-        return $meeting ? url('classroom/join/'.$meeting->code) : null;
+        return \App\Services\ClassroomMeetingAccessService::platformEnterUrl($meeting);
     }
 
     /**

@@ -64,6 +64,10 @@ class LiveSetting extends Model
 
     public static function get(string $key, $default = null)
     {
+        if (! \Illuminate\Support\Facades\Schema::hasTable((new static)->getTable())) {
+            return $default;
+        }
+
         $setting = Cache::remember("live_setting_{$key}", 3600, function () use ($key) {
             return static::where('key', $key)->first();
         });

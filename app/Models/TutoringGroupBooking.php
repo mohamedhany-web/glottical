@@ -152,6 +152,6 @@ class TutoringGroupBooking extends Model
             return null;
         }
 
-        return url('classroom/join/'.$this->classroomMeeting->code);
+        return \App\Services\ClassroomMeetingAccessService::platformEnterUrl($this->classroomMeeting);
     }
 }

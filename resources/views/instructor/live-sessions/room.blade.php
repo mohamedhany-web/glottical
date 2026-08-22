@@ -119,6 +119,8 @@
                 'user' => $user,
                 'lkRole' => 'host',
                 'lkLeaveUrl' => route('instructor.live-sessions.show', $liveSession),
+                'lkAllowScreenShare' => $allowScreenShare ?? true,
+                'lkAllowChat' => $allowChat ?? true,
             ])
             @include('partials.mx-share-annotation-overlay', [
                 'mxAnnRole' => 'viewer_poll',

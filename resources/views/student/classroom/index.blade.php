@@ -79,7 +79,10 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60">
                     @forelse($meetings as $m)
-                        @php $joinUrl = $joinBaseUrl . '/' . $m->code; @endphp
+                        @php
+                            $guestOk = \App\Services\ClassroomMeetingAccessService::allowsGuestJoin($m);
+                            $joinUrl = $guestOk ? ($joinBaseUrl . '/' . $m->code) : null;
+                        @endphp
                         <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-700/20">
                             <td class="px-4 py-3">
                                 <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ $m->title ?: 'اجتماع بدون عنوان' }}</p>
@@ -90,7 +93,9 @@
                                     @endif
                                 </p>
                             </td>
-                            <td class="px-4 py-3 text-sm font-mono text-slate-700 dark:text-slate-300">{{ $m->code }}</td>
+                            <td class="px-4 py-3 text-sm font-mono text-slate-700 dark:text-slate-300">
+                                {{ $guestOk ? $m->code : '—' }}
+                            </td>
                             <td class="px-4 py-3">
                                 @if($m->isLive())
                                     <span class="inline-flex px-2 py-1 rounded-lg text-xs font-semibold bg-rose-100 text-rose-700">مباشر</span>
@@ -104,7 +109,11 @@
                                 {{ (int) ($m->max_participants ?? 25) }} / {{ (int) ($m->participants_peak ?? 0) }}
                             </td>
                             <td class="px-4 py-3 text-sm">
-                                <button type="button" onclick="navigator.clipboard.writeText('{{ $joinUrl }}'); this.textContent='تم النسخ'; setTimeout(()=>this.textContent='نسخ', 1000)" class="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold">نسخ</button>
+                                @if($guestOk && $joinUrl)
+                                    <button type="button" onclick="navigator.clipboard.writeText(@json($joinUrl)); this.textContent='تم النسخ'; setTimeout(()=>this.textContent='نسخ', 1000)" class="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold">نسخ</button>
+                                @else
+                                    <span class="text-xs text-emerald-700 dark:text-emerald-300 font-semibold">محمي</span>
+                                @endif
                             </td>
                             <td class="px-4 py-3 text-sm">
                                 <div class="flex items-center gap-2">

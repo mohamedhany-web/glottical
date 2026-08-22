@@ -215,7 +215,7 @@ class StudentScheduleService
             $session->update(['status' => TutoringClassSession::STATUS_LIVE]);
         }
 
-        return url('classroom/join/'.$meeting->code);
+        return ClassroomMeetingAccessService::platformEnterUrl($meeting);
     }
 
     public static function sendUpcomingReminders(int $minutes = 30): int

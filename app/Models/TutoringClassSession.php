@@ -92,7 +92,7 @@ class TutoringClassSession extends Model
             return null;
         }
 
-        return url('classroom/join/'.$meeting->code);
+        return \App\Services\ClassroomMeetingAccessService::platformEnterUrl($meeting);
     }
 
     public function displayTitle(): string

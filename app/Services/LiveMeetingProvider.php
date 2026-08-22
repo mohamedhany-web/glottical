@@ -37,12 +37,16 @@ class LiveMeetingProvider
      *   livekitUrl: string|null,
      *   livekitToken: string|null,
      *   livekitHost: string|null,
-     *   livekitConfigured: bool
+     *   livekitConfigured: bool,
+     *   allowScreenShare: bool,
+     *   allowChat: bool
      * }
      */
     public function roomPayload(LiveSession $session, User $user, bool $isHost = false): array
     {
         $server = $session->server ?: $this->preferredLiveKitServer();
+        $allowScreenShare = $isHost || (bool) ($session->allow_screen_share ?? true);
+        $allowChat = (bool) ($session->allow_chat ?? true);
 
         $payload = [
             'provider' => 'livekit',
@@ -50,18 +54,27 @@ class LiveMeetingProvider
             'livekitToken' => null,
             'livekitHost' => $this->liveKit->publicHost($server),
             'livekitConfigured' => $this->liveKit->isConfigured(),
+            'allowScreenShare' => $allowScreenShare,
+            'allowChat' => $allowChat,
         ];
 
         if ($this->liveKit->isConfigured()) {
+            $grants = [
+                'canPublish' => true,
+                'canSubscribe' => true,
+                'canPublishData' => $allowChat,
+                'roomAdmin' => $isHost,
+            ];
+
+            // Restrict students from publishing screen when host disabled share.
+            if (! $allowScreenShare) {
+                $grants['canPublishSources'] = ['camera', 'microphone'];
+            }
+
             $payload['livekitToken'] = $this->liveKit->createJoinToken(
                 $session->room_name,
                 $user,
-                [
-                    'canPublish' => true,
-                    'canSubscribe' => true,
-                    'canPublishData' => true,
-                    'roomAdmin' => $isHost,
-                ]
+                $grants
             );
         }
 
@@ -69,8 +82,8 @@ class LiveMeetingProvider
     }
 
     /**
-     * @param  array{canPublish?: bool, canSubscribe?: bool, canPublishData?: bool, roomAdmin?: bool, hidden?: bool}  $grants
-     * @return array{provider: string, livekitUrl: string|null, livekitToken: string|null, livekitHost: string|null, livekitConfigured: bool, roomName: string}
+     * @param  array{canPublish?: bool, canSubscribe?: bool, canPublishData?: bool, roomAdmin?: bool, hidden?: bool, canPublishSources?: list<string>}  $grants
+     * @return array{provider: string, livekitUrl: string|null, livekitToken: string|null, livekitHost: string|null, livekitConfigured: bool, roomName: string, allowScreenShare: bool, allowChat: bool}
      */
     public function classroomPayload(string $roomName, User $user, bool $isHost = false, array $grants = []): array
     {
@@ -82,6 +95,8 @@ class LiveMeetingProvider
             'livekitHost' => $this->liveKit->publicHost($server),
             'livekitConfigured' => $this->liveKit->isConfigured(),
             'roomName' => $roomName,
+            'allowScreenShare' => true,
+            'allowChat' => true,
         ];
 
         if ($this->liveKit->isConfigured()) {
@@ -101,7 +116,7 @@ class LiveMeetingProvider
     }
 
     /**
-     * @return array{provider: string, livekitUrl: string|null, livekitToken: string|null, livekitHost: string|null, livekitConfigured: bool, roomName: string}
+     * @return array{provider: string, livekitUrl: string|null, livekitToken: string|null, livekitHost: string|null, livekitConfigured: bool, roomName: string, allowScreenShare: bool, allowChat: bool}
      */
     public function classroomGuestPayload(string $roomName, string $guestToken, string $displayName): array
     {
@@ -113,6 +128,8 @@ class LiveMeetingProvider
             'livekitHost' => $this->liveKit->publicHost($server),
             'livekitConfigured' => $this->liveKit->isConfigured(),
             'roomName' => $roomName,
+            'allowScreenShare' => true,
+            'allowChat' => true,
         ];
 
         if ($this->liveKit->isConfigured()) {

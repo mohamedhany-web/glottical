@@ -165,7 +165,9 @@ class TeachingCalendarService
                     'group',
                     '#0B3D91',
                     $url,
-                    $booking->classroomMeeting?->code ? url('classroom/join/'.$booking->classroomMeeting->code) : null
+                    $booking->classroomMeeting
+                        ? \App\Services\ClassroomMeetingAccessService::platformEnterUrl($booking->classroomMeeting)
+                        : null
                 );
             });
     }
@@ -191,7 +193,9 @@ class TeachingCalendarService
                 $title = ($booking->tutoringGroup->title ?? 'مجموعة').' — '.($booking->instructor->name ?? 'معلم');
                 $url = Route::has('student.tutoring-bookings.show')
                     ? route('student.tutoring-bookings.show', $booking)
-                    : ($booking->classroomMeeting?->code ? url('classroom/join/'.$booking->classroomMeeting->code) : null);
+                    : ($booking->classroomMeeting
+                        ? \App\Services\ClassroomMeetingAccessService::platformEnterUrl($booking->classroomMeeting)
+                        : null);
 
                 return self::event(
                     'group_booking_'.$booking->id,
@@ -202,7 +206,9 @@ class TeachingCalendarService
                     'group',
                     '#0B3D91',
                     $url,
-                    $booking->classroomMeeting?->code ? url('classroom/join/'.$booking->classroomMeeting->code) : null
+                    $booking->classroomMeeting
+                        ? \App\Services\ClassroomMeetingAccessService::platformEnterUrl($booking->classroomMeeting)
+                        : null
                 );
             });
     }

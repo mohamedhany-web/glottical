@@ -175,6 +175,10 @@ class ConsultationController extends Controller
             'scheduled_for' => $scheduledAt,
             'planned_duration_minutes' => $duration,
             'max_participants' => 12,
+            'settings' => [
+                'allow_guest_join' => false,
+                'consultation' => true,
+            ],
         ]);
 
         $consultation->update([
@@ -184,7 +188,7 @@ class ConsultationController extends Controller
             'classroom_meeting_id' => $meeting->id,
         ]);
 
-        $joinUrl = url('classroom/join/' . $meeting->code);
+        $joinUrl = \App\Services\ClassroomMeetingAccessService::platformEnterUrl($meeting);
 
         Notification::create([
             'user_id' => $consultation->student_id,

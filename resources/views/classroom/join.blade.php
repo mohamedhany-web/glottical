@@ -21,10 +21,13 @@
         .room-body { position: relative; display: flex; flex-direction: column; height: calc(100vh - 72px); background: #0b1220; }
         #lk-guest-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; padding: 8px; overflow: auto; }
         .lk-tile { position: relative; background: #0f172a; border: 1px solid #1e293b; border-radius: 1rem; overflow: hidden; min-height: 180px; }
+        .lk-tile.is-screen { grid-column: 1 / -1; min-height: 260px; }
         .lk-tile video { width: 100%; height: 100%; object-fit: cover; background: #020617; }
+        .lk-tile.is-screen video { object-fit: contain; }
         .lk-tile-label { position: absolute; left: .75rem; bottom: .75rem; background: rgba(15,23,42,.85); color: #e2e8f0; font-size: .7rem; font-weight: 700; padding: .25rem .55rem; border-radius: .5rem; }
         .lk-btn { display: inline-flex; align-items: center; gap: .5rem; border-radius: 999px; background: #1e293b; color: #e2e8f0; padding: .55rem 1rem; font-size: .8rem; font-weight: 700; border: 1px solid #334155; }
         .lk-btn.is-off { background: #7f1d1d; border-color: #991b1b; color: #fecaca; }
+        .lk-btn.is-sharing { background: #0e7490; border-color: #06b6d4; color: #ecfeff; }
         .join-card {
             background: #fff;
             border: 1px solid #ebebeb;
@@ -53,6 +56,15 @@
                     <h2 class="text-lg font-bold text-slate-800">انتهى الاجتماع</h2>
                     <p class="text-slate-500 text-sm mt-3 leading-relaxed">قام منظم الاجتماع بإنهائه. لا يمكن الانضمام من هذا الرابط.</p>
                     <p class="text-slate-400 text-xs mt-4">كود الغرفة: <span class="font-mono">{{ $code }}</span></p>
+                </div>
+            @elseif(!empty($guestJoinBlocked))
+                <div class="text-center">
+                    <h2 class="text-lg font-bold text-slate-800">اجتماع خاص داخل المنصة</h2>
+                    <p class="text-slate-500 text-sm mt-3 leading-relaxed">لا يمكن الدخول برابط ضيف. سجّل الدخول كطالب أو معلم وانضم من صفحة الحصة داخل المنصة.</p>
+                    <p class="text-slate-400 text-xs mt-4">كود الغرفة غير قابل للمشاركة الخارجية.</p>
+                    <a href="{{ route('login') }}" class="mt-5 inline-flex w-full items-center justify-center px-6 py-3 rounded-xl bg-[var(--st-brand)] hover:opacity-95 text-white font-bold transition-colors">
+                        تسجيل الدخول والانضمام
+                    </a>
                 </div>
             @elseif(!empty($meetingNotStarted))
                 <div class="text-center">
@@ -169,7 +181,7 @@
             room = new Room({ adaptiveStream: true, dynacast: true });
             const stage = document.getElementById('lk-guest-stage');
             const tiles = new Map();
-            let micOn = true, camOn = true, screenTrack = null;
+            let micOn = true, camOn = true, screenOn = false, screenTrack = null;
 
             function tileKey(participant, source) {
                 return participant.identity + ':' + source;
@@ -178,7 +190,7 @@
                 const key = tileKey(participant, source);
                 if (tiles.has(key)) return tiles.get(key);
                 const el = document.createElement('div');
-                el.className = 'lk-tile';
+                el.className = 'lk-tile' + (source === Track.Source.ScreenShare ? ' is-screen' : '');
                 const video = document.createElement('video');
                 video.autoplay = true;
                 video.playsInline = true;
@@ -194,53 +206,113 @@
                 return tile;
             }
             function attachTrack(track, participant) {
-                if (track.kind !== 'video' && track.kind !== 'audio') return;
-                if (track.kind === 'audio' && !participant.isLocal) {
-                    const audio = track.attach();
-                    audio.autoplay = true;
-                    document.body.appendChild(audio);
+                if (!track) return;
+                if (track.kind === Track.Kind.Audio || track.kind === 'audio') {
+                    if (!participant.isLocal) {
+                        const audio = track.attach();
+                        audio.autoplay = true;
+                        document.body.appendChild(audio);
+                    }
                     return;
                 }
-                if (track.kind === 'video') {
+                if (track.kind === Track.Kind.Video || track.kind === 'video') {
                     const tile = ensureTile(participant, track.source);
                     track.attach(tile.video);
                 }
             }
+            function detachTrack(track, participant) {
+                if (!track) return;
+                track.detach().forEach((el) => el.remove());
+                if (track.kind === Track.Kind.Video || track.kind === 'video') {
+                    const key = tileKey(participant, track.source);
+                    const ref = tiles.get(key);
+                    if (ref) { ref.el.remove(); tiles.delete(key); }
+                }
+            }
+
             room.on(RoomEvent.TrackSubscribed, (track, _pub, participant) => attachTrack(track, participant));
+            room.on(RoomEvent.TrackUnsubscribed, (track, _pub, participant) => detachTrack(track, participant));
             room.on(RoomEvent.LocalTrackPublished, (pub) => {
                 if (pub.track) attachTrack(pub.track, room.localParticipant);
+            });
+            room.on(RoomEvent.LocalTrackUnpublished, (pub) => {
+                if (pub.track) detachTrack(pub.track, room.localParticipant);
+                if (pub.source === Track.Source.ScreenShare) {
+                    screenOn = false;
+                    screenTrack = null;
+                    document.getElementById('lk-toggle-screen')?.classList.remove('is-sharing');
+                }
             });
             room.on(RoomEvent.Disconnected, () => setStatus('انقطع الاتصال', true));
 
             setStatus('جاري الاتصال...');
             await room.connect(url, token);
-            const localTracks = await createLocalTracks({ audio: true, video: true });
-            await Promise.all(localTracks.map((t) => room.localParticipant.publishTrack(t)));
-            localTracks.forEach((t) => attachTrack(t, room.localParticipant));
-            setStatus('متصل');
+            try {
+                const localTracks = await createLocalTracks({ audio: true, video: true });
+                await Promise.all(localTracks.map((t) => room.localParticipant.publishTrack(t)));
+                localTracks.forEach((t) => attachTrack(t, room.localParticipant));
+                setStatus('متصل');
+            } catch (mediaErr) {
+                console.warn(mediaErr);
+                micOn = false;
+                camOn = false;
+                document.getElementById('lk-toggle-mic')?.classList.add('is-off');
+                document.getElementById('lk-toggle-cam')?.classList.add('is-off');
+                setStatus('متصل بدون ميكروفون/كاميرا — فعّل الأذونات من الأزرار', true);
+            }
 
             document.getElementById('lk-toggle-mic')?.addEventListener('click', async function () {
-                micOn = !micOn;
-                await room.localParticipant.setMicrophoneEnabled(micOn);
-                this.classList.toggle('is-off', !micOn);
+                try {
+                    micOn = !micOn;
+                    await room.localParticipant.setMicrophoneEnabled(micOn);
+                    this.classList.toggle('is-off', !micOn);
+                } catch (e) {
+                    micOn = !micOn;
+                    setStatus('تعذر تفعيل الميكروفون', true);
+                }
             });
             document.getElementById('lk-toggle-cam')?.addEventListener('click', async function () {
-                camOn = !camOn;
-                await room.localParticipant.setCameraEnabled(camOn);
-                this.classList.toggle('is-off', !camOn);
+                try {
+                    camOn = !camOn;
+                    await room.localParticipant.setCameraEnabled(camOn);
+                    this.classList.toggle('is-off', !camOn);
+                } catch (e) {
+                    camOn = !camOn;
+                    setStatus('تعذر تفعيل الكاميرا', true);
+                }
             });
             document.getElementById('lk-toggle-screen')?.addEventListener('click', async function () {
-                if (screenTrack) {
-                    await room.localParticipant.unpublishTrack(screenTrack);
-                    screenTrack.stop();
-                    screenTrack = null;
-                    this.classList.remove('is-off');
-                    return;
+                try {
+                    if (screenOn) {
+                        if (typeof room.localParticipant.setScreenShareEnabled === 'function') {
+                            await room.localParticipant.setScreenShareEnabled(false);
+                        } else if (screenTrack) {
+                            await room.localParticipant.unpublishTrack(screenTrack);
+                            screenTrack.stop();
+                            screenTrack = null;
+                        }
+                        screenOn = false;
+                        this.classList.remove('is-sharing');
+                        return;
+                    }
+                    if (typeof room.localParticipant.setScreenShareEnabled === 'function') {
+                        await room.localParticipant.setScreenShareEnabled(true, { audio: true });
+                    } else {
+                        let tracks;
+                        try { tracks = await createLocalScreenTracks({ audio: true }); }
+                        catch (e) { tracks = await createLocalScreenTracks({ audio: false }); }
+                        screenTrack = tracks[0];
+                        await room.localParticipant.publishTrack(screenTrack);
+                        attachTrack(screenTrack, room.localParticipant);
+                    }
+                    screenOn = true;
+                    this.classList.add('is-sharing');
+                } catch (err) {
+                    console.error(err);
+                    screenOn = false;
+                    this.classList.remove('is-sharing');
+                    setStatus('تعذر مشاركة الشاشة — اسمح من نافذة المتصفح', true);
                 }
-                const tracks = await createLocalScreenTracks({ audio: true });
-                screenTrack = tracks[0];
-                await room.localParticipant.publishTrack(screenTrack);
-                this.classList.add('is-off');
             });
         }
 

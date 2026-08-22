@@ -269,12 +269,19 @@
                     </button>
                 </div>
             </div>
+            @if(!empty($guestJoinEnabled) && !empty($isHost))
             <button type="button" id="btn-classroom-copy-join" class="classroom-room-toolbar-btn w-full justify-center gap-2 bg-slate-700/80 hover:bg-slate-600 text-slate-200 border border-slate-600 md:w-auto md:justify-start" title="نسخ رابط الانضمام" data-join-url="{{ url('classroom/join/' . $meeting->code) }}">
                 <i class="fas fa-link text-[10px] btn-copy-join-ic"></i>
                 <span class="btn-copy-join-tx min-w-0 truncate">مشاركة الرابط</span>
                 <span class="btn-copy-join-tx-sm hidden min-w-0 truncate" aria-hidden="true">رابط</span>
             </button>
-            <form method="POST" action="{{ route($rp.'classroom.end', $meeting) }}" class="inline w-full shrink-0 md:w-auto" id="mx-end-meeting-form" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
+            @elseif(!empty($isHost))
+            <span class="classroom-room-toolbar-btn w-full justify-center gap-2 bg-emerald-900/40 text-emerald-200 border border-emerald-700/50 md:w-auto md:justify-start cursor-default" title="الدخول محمي داخل المنصة">
+                <i class="fas fa-shield-alt text-[10px]"></i>
+                <span class="min-w-0 truncate">دخول محمي · بدون رابط ضيف</span>
+            </span>
+            @endif
+            <form method="POST" action="{{ route($rp.'classroom.end', $meeting) }}" class="inline w-full shrink-0 md:w-auto {{ empty($isHost) ? 'hidden' : '' }}" id="mx-end-meeting-form" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
                 @csrf
                 <button type="submit" id="mx-end-meeting-btn" class="classroom-room-toolbar-btn w-full justify-center bg-rose-600 hover:bg-rose-500 text-white font-semibold border border-rose-500/50 shadow-sm shadow-rose-900/20 md:w-auto md:justify-start">
                     <i class="fas fa-stop text-[10px]"></i><span class="hidden md:inline">إنهاء الاجتماع</span><span class="md:hidden">إنهاء</span>
@@ -379,8 +386,10 @@
                 'livekitUrl' => $livekitUrl,
                 'livekitToken' => $livekitToken,
                 'user' => $user,
-                'lkRole' => (!empty($useInstructorRoutes) || (($user->id ?? null) === ($meeting->user_id ?? null))) ? 'host' : 'participant',
+                'lkRole' => $lkRole ?? ((($isHost ?? false) || !empty($useInstructorRoutes) || (($user->id ?? null) === ($meeting->user_id ?? null))) ? 'host' : 'participant'),
                 'lkLeaveUrl' => $roomExitUrl ?? url('/'),
+                'lkAllowScreenShare' => $allowScreenShare ?? true,
+                'lkAllowChat' => $allowChat ?? true,
             ])
         @else
             <main id="meeting-video-root" class="flex-1 min-h-0 relative w-full flex flex-col items-center justify-center gap-3 p-8 text-center text-slate-300" role="application" aria-label="غرفة الاجتماع">

@@ -41,6 +41,26 @@ class LiveKitTokenServiceTest extends TestCase
         $this->assertTrue($payload['video']['roomAdmin']);
     }
 
+    public function test_can_publish_sources_restricts_screen_share(): void
+    {
+        config([
+            'livekit.livekit.api_key' => 'APItestkey',
+            'livekit.livekit.api_secret' => 'test-secret-value-1234567890',
+            'livekit.livekit.token_ttl' => 3600,
+        ]);
+
+        $service = new LiveKitTokenService();
+        $token = $service->createIdentityToken(
+            'room-a',
+            'guest-1',
+            'Guest',
+            ['canPublishSources' => ['camera', 'microphone']]
+        );
+        $parts = explode('.', $token);
+        $payload = json_decode($this->b64urlDecode($parts[1]), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame(['camera', 'microphone'], $payload['video']['canPublishSources']);
+    }
+
     private function b64urlDecode(string $data): string
     {
         $remainder = strlen($data) % 4;

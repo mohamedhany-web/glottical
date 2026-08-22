@@ -69,7 +69,7 @@ class TutoringClassSystemTest extends TestCase
             ->post(route('student.classes.sessions.join', $session));
 
         $meeting = $session->fresh()->classroomMeeting;
-        $response->assertRedirect(url('classroom/join/'.$meeting->code));
+        $response->assertRedirect(route('classroom.secure-enter', $meeting));
         $this->assertSame(TutoringClassSession::STATUS_LIVE, $session->fresh()->status);
         $this->assertDatabaseHas('tutoring_class_attendances', [
             'tutoring_class_session_id' => $session->id,

@@ -311,6 +311,7 @@ trait BuildsFeatureSchema
         Schema::create('tutoring_group_bookings', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('tutoring_group_id')->nullable();
+            $table->unsignedBigInteger('cohort_id')->nullable();
             $table->unsignedBigInteger('student_service_entitlement_id')->nullable();
             $table->unsignedBigInteger('order_id')->nullable();
             $table->string('payment_status', 32)->nullable();
@@ -319,6 +320,7 @@ trait BuildsFeatureSchema
             $table->timestamp('starts_at')->nullable();
             $table->timestamp('ends_at')->nullable();
             $table->string('status', 32)->default('pending');
+            $table->unsignedBigInteger('classroom_meeting_id')->nullable();
             $table->text('admin_notes')->nullable();
             $table->timestamps();
         });

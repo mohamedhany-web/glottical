@@ -13,10 +13,8 @@
     $isCompleted = $status === \App\Models\OneToOneSession::STATUS_COMPLETED;
     $awaiting = method_exists($session, 'isAwaitingTeacherStart') && $session->isAwaitingTeacherStart();
     $joinHref = ($isScheduled && $session->classroomMeeting)
-        ? (Route::has('student.classroom.room')
-            ? route('student.classroom.room', $session->classroomMeeting)
-            : $session->joinUrl())
-        : $session->joinUrl();
+        ? route('classroom.secure-enter', $session->classroomMeeting)
+        : null;
     $duration = (int) ($session->duration_minutes ?: 50);
     $instructor = $session->instructor;
     $title = $session->course->title ?? __('student_timeline.private_lesson');

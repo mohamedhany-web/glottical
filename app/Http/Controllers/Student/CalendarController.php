@@ -8,6 +8,7 @@ use App\Models\CalendarEvent;
 use App\Models\Exam;
 use App\Models\Lecture;
 use App\Models\LectureAssignment;
+use App\Services\TeachingCalendarService;
 use App\Support\AppTimezone;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -80,24 +81,26 @@ class CalendarController extends Controller
 
         $events = $this->getStudentEvents($user, $start, $end);
 
-        // تحويل الأحداث إلى صيغة FullCalendar
-        $calendarEvents = $events->map(function ($event) {
+        $calendarEvents = collect(TeachingCalendarService::toFullCalendar($events))->map(function (array $row) {
+            $type = $row['type'] ?? null;
+
             return [
-                'id' => $event->id ?? $event->calendar_id,
-                'title' => $event->title,
-                'start' => $event->start_date->toIso8601String(),
-                'end' => $event->end_date ? $event->end_date->toIso8601String() : null,
-                'allDay' => $event->is_all_day ?? false,
-                'color' => $event->color ?? $this->getEventColor($event->type),
-                'type' => $event->type,
-                'url' => $event->url ?? null,
-                'description' => $event->description ?? null,
+                'id' => $row['id'],
+                'title' => $row['title'],
+                'start' => $row['start'],
+                'end' => $row['end'],
+                'allDay' => (bool) ($row['allDay'] ?? false),
+                'color' => $row['color'] ?? $this->getEventColor($type),
+                'type' => $type,
+                'url' => $row['url'] ?? null,
+                'description' => $row['description'] ?? null,
                 'extendedProps' => [
-                    'priority' => $event->priority ?? 'medium',
-                    'location' => $event->location ?? null,
+                    'priority' => $row['extendedProps']['priority'] ?? 'medium',
+                    'location' => $row['extendedProps']['location'] ?? null,
+                    'type' => $type,
                 ],
             ];
-        });
+        })->values();
 
         return response()->json($calendarEvents);
     }

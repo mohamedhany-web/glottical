@@ -142,7 +142,9 @@ class ConsultationRequest extends Model
 
         return $q->with(['instructor', 'student', 'classroomMeeting'])->get()->map(function (self $cr) use ($perspective) {
             $end = $cr->scheduled_at->copy()->addMinutes($cr->duration_minutes ?? 30);
-            $joinUrl = $cr->classroomMeeting ? url('classroom/join/'.$cr->classroomMeeting->code) : null;
+            $joinUrl = $cr->classroomMeeting
+                ? \App\Services\ClassroomMeetingAccessService::platformEnterUrl($cr->classroomMeeting)
+                : null;
             $isStudent = $perspective === 'student';
 
             $title = $isStudent

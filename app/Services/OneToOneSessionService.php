@@ -470,6 +470,10 @@ class OneToOneSessionService
             'scheduled_for' => $scheduledAt,
             'planned_duration_minutes' => $durationMinutes,
             'max_participants' => 4,
+            'settings' => [
+                'allow_guest_join' => false,
+                'private_lesson' => true,
+            ],
         ]);
 
         $session->update([
@@ -481,7 +485,7 @@ class OneToOneSessionService
             'student_service_entitlement_id' => $session->student_service_entitlement_id,
         ]);
 
-        $joinUrl = url('classroom/join/'.$meeting->code);
+        $joinUrl = \App\Services\ClassroomMeetingAccessService::platformEnterUrl($meeting);
         $session->loadMissing(['student', 'instructor']);
         $studentWhen = \App\Support\AppTimezone::formatFor(
             $scheduledAt,

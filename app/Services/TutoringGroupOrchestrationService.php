@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Models\ClassroomMeeting;
 use App\Models\Notification;
 use App\Models\StudentTutoringSubscription;
+use App\Models\TutoringCohortEnrollment;
 use App\Models\TutoringGroupBooking;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
@@ -28,8 +30,23 @@ class TutoringGroupOrchestrationService
                 throw new InvalidArgumentException('هذا الحجز مكتمل مسبقاً.');
             }
 
+            // Roster enrollment is required so class sessions appear on the student calendar.
             if ($booking->cohort_id && $booking->status === TutoringGroupBooking::STATUS_PENDING) {
-                TutoringCohortService::enroll($booking->cohort);
+                $cohort = $booking->cohort;
+                if ($cohort && $booking->user) {
+                    TutoringClassService::enrollStudent(
+                        $cohort,
+                        $booking->user,
+                        orderId: $booking->order_id ? (int) $booking->order_id : null,
+                        entitlementId: $booking->student_service_entitlement_id
+                            ? (int) $booking->student_service_entitlement_id
+                            : null,
+                        countSeat: true,
+                        notes: 'from_booking:'.$booking->id,
+                    );
+                } elseif ($cohort) {
+                    TutoringCohortService::enroll($cohort);
+                }
             }
 
             $meeting = $booking->classroomMeeting;
@@ -61,7 +78,20 @@ class TutoringGroupOrchestrationService
             $wasConfirmed = $booking->status === TutoringGroupBooking::STATUS_CONFIRMED;
 
             if ($wasConfirmed && $booking->cohort_id) {
-                TutoringCohortService::releaseSeat($booking->cohort);
+                $enrollment = null;
+                if ($booking->user_id) {
+                    $enrollment = TutoringCohortEnrollment::query()
+                        ->where('tutoring_group_cohort_id', $booking->cohort_id)
+                        ->where('user_id', $booking->user_id)
+                        ->where('status', TutoringCohortEnrollment::STATUS_ACTIVE)
+                        ->first();
+                }
+
+                if ($enrollment) {
+                    TutoringClassService::cancelEnrollment($enrollment, releaseSeat: true);
+                } elseif ($booking->cohort) {
+                    TutoringCohortService::releaseSeat($booking->cohort);
+                }
             }
 
             if ($booking->classroomMeeting && ! $booking->classroomMeeting->ended_at) {
@@ -191,6 +221,10 @@ class TutoringGroupOrchestrationService
                 ? $booking->starts_at->diffInMinutes($booking->ends_at)
                 : ($group->duration_minutes ?? 60))),
             'max_participants' => $capacity,
+            'settings' => [
+                'allow_guest_join' => false,
+                'group_booking' => true,
+            ],
         ]);
     }
 

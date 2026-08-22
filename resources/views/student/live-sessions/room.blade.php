@@ -245,6 +245,8 @@
                         'lkLeaveUrl' => route('student.live-sessions.index'),
                         'lkStartAudio' => !($liveSession->mute_on_join ?? false),
                         'lkStartVideo' => !($liveSession->video_off_on_join ?? false),
+                        'lkAllowScreenShare' => $allowScreenShare ?? true,
+                        'lkAllowChat' => $allowChat ?? true,
                     ])
                 @else
                     <div class="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center text-slate-200">

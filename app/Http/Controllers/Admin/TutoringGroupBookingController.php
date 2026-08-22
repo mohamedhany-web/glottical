@@ -7,6 +7,7 @@ use App\Models\ServicePackage;
 use App\Models\StudentServiceEntitlement;
 use App\Models\TutoringGroup;
 use App\Models\TutoringGroupBooking;
+use App\Models\TutoringGroupCohort;
 use App\Models\User;
 use App\Services\StudentEntitlementService;
 use App\Services\TutoringGroupOrchestrationService;
@@ -173,8 +174,23 @@ class TutoringGroupBookingController extends Controller
                 $endsAt = $startsAt->copy()->addMinutes(max(30, (int) ($group->duration_minutes ?: 60)));
                 $this->assertInstructorAvailable((int) $instructor->id, $startsAt, $endsAt);
 
+                $cohortId = null;
+                if ($group->isCollective()) {
+                    $cohortId = TutoringGroupCohort::query()
+                        ->where('tutoring_group_id', $group->id)
+                        ->whereIn('status', [
+                            TutoringGroupCohort::STATUS_OPEN,
+                            TutoringGroupCohort::STATUS_POSTPONED,
+                        ])
+                        ->orderByRaw('CASE WHEN starts_at IS NULL THEN 1 ELSE 0 END')
+                        ->orderBy('starts_at')
+                        ->orderBy('id')
+                        ->value('id');
+                }
+
                 $booking = TutoringGroupBooking::create([
                     'tutoring_group_id' => $group->id,
+                    'cohort_id' => $cohortId,
                     'student_service_entitlement_id' => $entitlement->id,
                     'order_id' => $entitlement->order_id,
                     'payment_status' => TutoringGroupBooking::PAYMENT_PAID,
