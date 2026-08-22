@@ -70,18 +70,18 @@
                 </div>
                 <div class="flex justify-between gap-4">
                     <dt class="text-muted">القيمة</dt>
-                    <dd class="font-semibold tabular-nums text-ink">{{ $coupon->discount_type === 'percentage' ? $coupon->discount_value.'%' : number_format($coupon->discount_value, 2).' ج.م' }}</dd>
+                    <dd class="font-semibold tabular-nums text-ink">{{ $coupon->discount_type === 'percentage' ? $coupon->discount_value.'%' : number_format($coupon->discount_value, 2).' $' }}</dd>
                 </div>
                 @if($coupon->minimum_amount)
                     <div class="flex justify-between gap-4">
                         <dt class="text-muted">الحد الأدنى للطلب</dt>
-                        <dd class="font-mono tabular-nums text-ink">{{ number_format($coupon->minimum_amount, 2) }} ج.م</dd>
+                        <dd class="font-mono tabular-nums text-ink">{{ number_format($coupon->minimum_amount, 2) }} $</dd>
                     </div>
                 @endif
                 @if($coupon->maximum_discount)
                     <div class="flex justify-between gap-4">
                         <dt class="text-muted">الحد الأقصى للخصم</dt>
-                        <dd class="font-mono tabular-nums text-ink">{{ number_format($coupon->maximum_discount, 2) }} ج.م</dd>
+                        <dd class="font-mono tabular-nums text-ink">{{ number_format($coupon->maximum_discount, 2) }} $</dd>
                     </div>
                 @endif
             </dl>
@@ -234,7 +234,7 @@
                                         —
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 font-mono tabular-nums text-ink">{{ number_format($usage->discount_amount ?? 0, 2) }} ج.م</td>
+                                <td class="px-4 py-3 font-mono tabular-nums text-ink">{{ number_format($usage->discount_amount ?? 0, 2) }} $</td>
                                 <td class="px-4 py-3 tabular-nums text-muted">{{ $usage->created_at ? $usage->created_at->format('Y-m-d H:i') : '—' }}</td>
                             </tr>
                         @endforeach

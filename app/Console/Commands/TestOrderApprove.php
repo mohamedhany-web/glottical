@@ -96,7 +96,7 @@ class TestOrderApprove extends Command
                 'user_id' => $order->user_id,
                 'payment_method' => $paymentMethod,
                 'amount' => $order->amount,
-                'currency' => 'EGP',
+                'currency' => 'USD',
                 'status' => 'completed',
                 'paid_at' => now(),
                 'processed_by' => auth()->id(),
@@ -116,7 +116,7 @@ class TestOrderApprove extends Command
                 'type' => 'credit',
                 'category' => 'course_payment',
                 'amount' => $order->amount,
-                'currency' => 'EGP',
+                'currency' => 'USD',
                 'description' => 'دفعة مقابل تسجيل - طلب رقم: ' . $order->id . ' - فاتورة: ' . $invoice->invoice_number,
                 'status' => 'completed',
                 'metadata' => [

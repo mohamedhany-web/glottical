@@ -60,7 +60,7 @@
                             <option value="">اختر الفاتورة</option>
                             @foreach($invoices as $invoice)
                             <option value="{{ $invoice->id }}">
-                                {{ $invoice->invoice_number }} · {{ $invoice->user->name }} · متبقي {{ number_format($invoice->remaining_amount, 2) }} ج.م
+                                {{ $invoice->invoice_number }} · {{ $invoice->user->name }} · متبقي {{ number_format($invoice->remaining_amount, 2) }} $
                             </option>
                             @endforeach
                         @endif

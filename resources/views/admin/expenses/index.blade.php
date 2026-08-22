@@ -25,7 +25,7 @@
         ['label' => 'إجمالي المصروفات', 'value' => $stats['total'], 'icon' => 'fa-receipt', 'tone' => 'accent', 'note' => 'كل المصروفات المسجلة'],
         ['label' => 'قيد المراجعة', 'value' => $stats['pending'], 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'note' => 'بانتظار الموافقة أو الرفض'],
         ['label' => 'موافق عليها', 'value' => $stats['approved'], 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => 'تمت الموافقة عليها'],
-        ['label' => 'إجمالي المبلغ', 'value' => number_format($stats['total_amount'], 2), 'icon' => 'fa-money-bill-wave', 'tone' => 'muted', 'note' => 'المبالغ المعتمدة (ج.م)', 'suffix' => ' ج.م'],
+        ['label' => 'إجمالي المبلغ', 'value' => number_format($stats['total_amount'], 2), 'icon' => 'fa-money-bill-wave', 'tone' => 'muted', 'note' => 'المبالغ المعتمدة ($)', 'suffix' => ' $'],
     ] : [];
     $toneClass = [
         'accent' => 'bg-accent-soft text-accent',
@@ -145,7 +145,7 @@
                             <td class="px-4 py-3 font-medium tabular-nums text-ink">{{ $expense->expense_number }}</td>
                             <td class="px-4 py-3 text-ink-soft">{{ $expense->title }}</td>
                             <td class="px-4 py-3 text-ink-soft">{{ $expense->category_label }}</td>
-                            <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($expense->amount, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></td>
+                            <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($expense->amount, 2) }} <span class="text-xs font-normal text-muted">$</span></td>
                             <td class="px-4 py-3 text-xs tabular-nums text-muted">{{ $expense->expense_date->format('Y-m-d') }}</td>
                             <td class="px-4 py-3">
                                 @if($badge)
@@ -201,14 +201,14 @@
                 <i class="fas fa-hourglass-half text-sm"></i>
             </div>
             <p class="mt-3 text-xs text-muted">مبالغ قيد المراجعة</p>
-            <p class="mt-1 text-xl font-semibold tabular-nums text-ink">{{ number_format($stats['pending_amount'], 2) }} <span class="text-sm font-normal text-muted">ج.م</span></p>
+            <p class="mt-1 text-xl font-semibold tabular-nums text-ink">{{ number_format($stats['pending_amount'], 2) }} <span class="text-sm font-normal text-muted">$</span></p>
         </article>
         <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
             <div class="inline-flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent">
                 <i class="fas fa-calendar text-sm"></i>
             </div>
             <p class="mt-3 text-xs text-muted">مصروفات هذا الشهر</p>
-            <p class="mt-1 text-xl font-semibold tabular-nums text-ink">{{ number_format($stats['this_month'], 2) }} <span class="text-sm font-normal text-muted">ج.م</span></p>
+            <p class="mt-1 text-xl font-semibold tabular-nums text-ink">{{ number_format($stats['this_month'], 2) }} <span class="text-sm font-normal text-muted">$</span></p>
         </article>
         <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
             <div class="inline-flex size-9 items-center justify-center rounded-xl bg-canvas-muted text-muted">

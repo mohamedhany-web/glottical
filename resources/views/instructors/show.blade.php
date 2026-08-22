@@ -143,7 +143,7 @@
                     <i class="fas fa-book-open"></i> {{ (int) ($course->lessons_count ?? 0) }} {{ $isRtl ? 'درس' : 'lessons' }}
                   </span>
                   @if(!empty($course->price))
-                    <span class="gl-tp-private__price">{{ number_format((float) $course->price) }} {{ $isRtl ? 'ج.م' : 'EGP' }}</span>
+                    <span class="gl-tp-private__price">{{ number_format((float) $course->price) }} {{ $isRtl ? '$' : 'USD' }}</span>
                   @endif
                 </a>
               @endforeach

@@ -131,7 +131,7 @@ class CheckoutController extends Controller
             ->where('is_active', true)
             ->firstOrFail();
 
-        $currency = strtoupper((string) $request->input('currency', 'EGP')) === 'USD' ? 'USD' : 'EGP';
+        $currency = 'USD';
 
         $pricing = CourseCheckoutPricingService::resolve(
             Auth::user(),
@@ -189,7 +189,7 @@ class CheckoutController extends Controller
             $request->input('coupon_code'),
             (float) $request->input('wallet_credit', 0),
             null,
-            'EGP'
+            'USD'
         );
 
         if (! $pricing['ok']) {
@@ -206,7 +206,7 @@ class CheckoutController extends Controller
             'discount_amount' => $pricing['discount_amount'],
             'wallet_credit_amount' => $pricing['wallet_credit_amount'],
             'amount' => $pricing['final_amount'],
-            'currency' => 'EGP',
+            'currency' => 'USD',
             'billing_mode' => $course->billing_mode ?? CourseSubscriptionService::BILLING_ONE_TIME,
             'payment_method' => 'online',
             'payment_proof' => null,
@@ -402,7 +402,7 @@ class CheckoutController extends Controller
             'currency' => 'nullable|in:EGP,USD,egp,usd',
         ]);
 
-        $currency = strtoupper((string) $request->input('currency', 'EGP')) === 'USD' ? 'USD' : 'EGP';
+        $currency = 'USD';
 
         $pricing = CourseCheckoutPricingService::resolve(
             Auth::user(),
@@ -545,7 +545,7 @@ class CheckoutController extends Controller
             $phone = '0000000000';
         }
 
-        $currency = $order->currencyCode() ?: (string) config('fawaterak.currency', 'EGP');
+        $currency = $order->currencyCode() ?: (string) config('currency.code', 'USD');
         $cartTotal = number_format($amount, 2, '.', '');
         $itemPrice = $cartTotal;
 
@@ -684,7 +684,7 @@ class CheckoutController extends Controller
         }
 
         $amount = (float) $order->amount;
-        $currency = $order->currencyCode() ?: (string) config('fawaterak.currency', 'EGP');
+        $currency = $order->currencyCode() ?: (string) config('currency.code', 'USD');
         $cartTotal = number_format($amount, 2, '.', '');
         $itemPrice = $cartTotal;
 
@@ -960,7 +960,7 @@ class CheckoutController extends Controller
 
         $orderTitle = $order->course->title ?? 'كورس';
 
-        $currency = $order->currencyCode() ?: (string) config('fawaterak.currency', 'EGP');
+        $currency = $order->currencyCode() ?: (string) config('currency.code', 'USD');
 
         $orig = (float) ($order->original_amount ?? $order->amount);
         $couponDisc = (float) ($order->discount_amount ?? 0);
@@ -1152,7 +1152,7 @@ class CheckoutController extends Controller
             'currency' => 'nullable|in:EGP,USD,egp,usd',
         ]);
 
-        $currency = strtoupper((string) $request->input('currency', 'EGP')) === 'USD' ? 'USD' : 'EGP';
+        $currency = 'USD';
 
         $pricing = CourseCheckoutPricingService::resolve(
             Auth::user(),
@@ -1201,10 +1201,10 @@ class CheckoutController extends Controller
 
             $extraNotes = [];
             if ($pricing['discount_amount'] > 0) {
-                $extraNotes[] = 'خصم كوبون: '.number_format($pricing['discount_amount'], 2).' ج.م';
+                $extraNotes[] = 'خصم كوبون: '.number_format($pricing['discount_amount'], 2).' $';
             }
             if ($pricing['wallet_credit_amount'] > 0) {
-                $extraNotes[] = 'خصم من رصيد المحفظة: '.number_format($pricing['wallet_credit_amount'], 2).' ج.م';
+                $extraNotes[] = 'خصم من رصيد المحفظة: '.number_format($pricing['wallet_credit_amount'], 2).' $';
             }
             $notes = trim((string) ($request->notes ?? ''));
             if ($extraNotes !== []) {

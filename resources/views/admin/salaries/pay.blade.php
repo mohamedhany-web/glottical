@@ -48,7 +48,7 @@
                 </div>
                 <div>
                     <dt class="text-xs font-medium text-muted">المبلغ</dt>
-                    <dd class="mt-1 text-xl font-semibold tabular-nums text-accent">{{ number_format($payment->amount, 2) }} <span class="text-sm font-normal text-muted">ج.م</span></dd>
+                    <dd class="mt-1 text-xl font-semibold tabular-nums text-accent">{{ number_format($payment->amount, 2) }} <span class="text-sm font-normal text-muted">$</span></dd>
                 </div>
             </dl>
         </article>

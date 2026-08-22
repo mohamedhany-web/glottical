@@ -104,7 +104,7 @@ class WithdrawalRequestController extends Controller
         if ($request->amount > $availableAmount) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'المبلغ المطلوب يتجاوز الماديات المتاحة. المبلغ المتاح: ' . number_format($availableAmount, 2) . ' ج.م');
+                ->with('error', 'المبلغ المطلوب يتجاوز الماديات المتاحة. المبلغ المتاح: ' . number_format($availableAmount, 2) . ' $');
         }
 
         WithdrawalRequest::create([

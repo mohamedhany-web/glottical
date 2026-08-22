@@ -160,7 +160,7 @@ class CoursesSeeder extends Seeder
             ]);
 
             $created++;
-            echo '✅ تم إنشاء كورس: '.$courseData['title'].' - السعر: '.($courseData['price'] ?? 0)." ج.م\n";
+            echo '✅ تم إنشاء كورس: '.$courseData['title'].' - السعر: '.($courseData['price'] ?? 0)." $\n";
 
             $sections = $this->getCourseSections($courseData['title']);
             $sectionOrder = 1;

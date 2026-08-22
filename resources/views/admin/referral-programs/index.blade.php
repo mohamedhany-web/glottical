@@ -121,7 +121,7 @@
                                             @elseif($program->referrer_reward_type == 'points')
                                                 {{ number_format($program->referrer_reward_value, 0) }} نقطة
                                             @else
-                                                {{ number_format($program->referrer_reward_value, 2) }} ج.م
+                                                {{ number_format($program->referrer_reward_value, 2) }} $
                                             @endif
                                         </p>
                                     @else

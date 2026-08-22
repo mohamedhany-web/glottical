@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 /**
- * تسعير الكورسات المسجّلة من المعلم: EGP للداخل و USD للخارج.
+ * تسعير الكورسات المسجّلة من المعلم بالدولار الأمريكي.
  */
 class CoursePricingController extends Controller
 {
@@ -26,26 +26,27 @@ class CoursePricingController extends Controller
         $this->assertOwns($course);
 
         $data = $request->validate([
-            'price_egp' => ['nullable', 'numeric', 'min:0'],
-            'price_egp_after_discount' => ['nullable', 'numeric', 'min:0'],
             'price_usd' => ['nullable', 'numeric', 'min:0'],
             'price_usd_after_discount' => ['nullable', 'numeric', 'min:0'],
         ]);
 
+        $usd = $data['price_usd'] ?? null;
+        $usdSale = $data['price_usd_after_discount'] ?? null;
+
         $payload = [
-            'price_egp' => $data['price_egp'] ?? null,
-            'price_egp_after_discount' => $data['price_egp_after_discount'] ?? null,
-            'price_usd' => $data['price_usd'] ?? null,
-            'price_usd_after_discount' => $data['price_usd_after_discount'] ?? null,
+            'price_usd' => $usd,
+            'price_usd_after_discount' => $usdSale,
         ];
 
-        // مزامنة الحقل القديم price من EGP للتوافق مع الشاشات القديمة
-        if (isset($payload['price_egp']) && $payload['price_egp'] !== null) {
-            $payload['price'] = $payload['price_egp'];
-            $payload['price_after_discount'] = $payload['price_egp_after_discount'];
+        // مزامنة الحقول القديمة + توافق price_egp مع الدولار
+        if ($usd !== null && $usd !== '') {
+            $payload['price'] = $usd;
+            $payload['price_after_discount'] = $usdSale;
+            $payload['price_egp'] = $usd;
+            $payload['price_egp_after_discount'] = $usdSale;
         }
 
-        if (Schema::hasColumn('advanced_courses', 'price_egp')) {
+        if (Schema::hasColumn('advanced_courses', 'price_usd')) {
             $course->update($payload);
         } else {
             $course->update([
@@ -54,7 +55,7 @@ class CoursePricingController extends Controller
             ]);
         }
 
-        return back()->with('success', 'تم تحديث أسعار الكورس (جنيه / دولار).');
+        return back()->with('success', 'تم تحديث أسعار الكورس بالدولار.');
     }
 
     private function assertOwns(AdvancedCourse $course): void

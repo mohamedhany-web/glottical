@@ -30,14 +30,14 @@ class PackagePaymentCriticalFixesTest extends TestCase
         $this->extendSchemaForPackagesAndPayments();
     }
 
-    public function test_service_package_order_persists_package_currency_not_forced_usd(): void
+    public function test_service_package_order_persists_package_currency_usd(): void
     {
-        config(['fawaterak.currency' => 'EGP']);
+        config(['currency.code' => 'USD', 'fawaterak.currency' => 'USD']);
 
         $student = User::factory()->create(['role' => 'student', 'is_active' => true]);
         $package = ServicePackage::create([
             'name' => 'باقة المدرسة',
-            'slug' => 'school-egp-'.uniqid(),
+            'slug' => 'school-usd-'.uniqid(),
             'scope' => ServicePackage::SCOPE_TUTORING_COLLECTIVE,
             'plan_type' => ServicePackage::PLAN_SCHOOL,
             'term_months' => 1,
@@ -47,15 +47,15 @@ class PackagePaymentCriticalFixesTest extends TestCase
             'session_minutes' => 60,
             'duration_days' => 30,
             'price' => 1500,
-            'currency' => 'EGP',
+            'currency' => 'USD',
             'is_active' => true,
             'sort_order' => 1,
         ]);
 
         $order = StudentEntitlementService::createOrder($student, $package, 'online');
 
-        $this->assertSame('EGP', $order->currency);
-        $this->assertSame('EGP', $order->currencyCode());
+        $this->assertSame('USD', $order->currency);
+        $this->assertSame('USD', $order->currencyCode());
         $this->assertSame(1500.0, (float) $order->amount);
     }
 
@@ -79,7 +79,7 @@ class PackagePaymentCriticalFixesTest extends TestCase
             'user_id' => $student->id,
             'order_type' => Order::TYPE_SERVICE_PACKAGE,
             'amount' => 100,
-            'currency' => 'EGP',
+            'currency' => 'USD',
             'payment_method' => 'online',
             'status' => Order::STATUS_PENDING,
             'fawaterak_invoice_id' => 'INV-99',
@@ -109,7 +109,7 @@ class PackagePaymentCriticalFixesTest extends TestCase
             'user_id' => $student->id,
             'order_type' => Order::TYPE_SERVICE_PACKAGE,
             'amount' => 100,
-            'currency' => 'EGP',
+            'currency' => 'USD',
             'payment_method' => 'online',
             'status' => Order::STATUS_PENDING,
         ]);
@@ -243,7 +243,7 @@ class PackagePaymentCriticalFixesTest extends TestCase
             $table->unsignedInteger('duration_days')->nullable();
             $table->decimal('price', 10, 2)->default(0);
             $table->decimal('original_price', 10, 2)->nullable();
-            $table->string('currency', 8)->default('EGP');
+            $table->string('currency', 8)->default('USD');
             $table->boolean('is_active')->default(true);
             $table->boolean('is_featured')->default(false);
             $table->unsignedInteger('sort_order')->default(0);

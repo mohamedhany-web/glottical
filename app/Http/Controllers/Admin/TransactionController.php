@@ -115,7 +115,7 @@ class TransactionController extends Controller
             'type' => $validated['type'],
             'category' => $validated['category'] ?? 'other',
             'amount' => $validated['amount'],
-            'currency' => 'EGP',
+            'currency' => 'USD',
             'description' => $validated['description'] ?? 'معاملة مالية',
             'status' => 'completed',
             'created_by' => auth()->id(),

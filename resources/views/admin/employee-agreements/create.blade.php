@@ -85,7 +85,7 @@
                 </div>
 
                 <div>
-                    <label class="{{ $labelClass }}" for="salary">الراتب (ج.م) <span class="text-rose-500">*</span></label>
+                    <label class="{{ $labelClass }}" for="salary">الراتب ($) <span class="text-rose-500">*</span></label>
                     <input id="salary" type="number" name="salary" step="0.01" min="0" value="{{ old('salary') }}" required class="{{ $fieldClass }}" placeholder="0.00" />
                     <p class="mt-1 text-xs text-muted">الراتب الشهري للموظف</p>
                     @error('salary')<p class="mt-1 text-xs text-rose-500">{{ $message }}</p>@enderror

@@ -35,23 +35,23 @@
                 <div class="space-y-2">
                     <div class="flex justify-between">
                         <span class="text-gray-600">المبلغ الفرعي:</span>
-                        <span class="font-medium text-gray-900">{{ number_format($invoice->subtotal, 2) }} ج.م</span>
+                        <span class="font-medium text-gray-900">{{ number_format($invoice->subtotal, 2) }} $</span>
                     </div>
                     @if($invoice->tax_amount > 0)
                     <div class="flex justify-between">
                         <span class="text-gray-600">الضريبة:</span>
-                        <span class="font-medium text-gray-900">{{ number_format($invoice->tax_amount, 2) }} ج.م</span>
+                        <span class="font-medium text-gray-900">{{ number_format($invoice->tax_amount, 2) }} $</span>
                     </div>
                     @endif
                     @if($invoice->discount_amount > 0)
                     <div class="flex justify-between">
                         <span class="text-gray-600">الخصم:</span>
-                        <span class="font-medium text-red-600">-{{ number_format($invoice->discount_amount, 2) }} ج.م</span>
+                        <span class="font-medium text-red-600">-{{ number_format($invoice->discount_amount, 2) }} $</span>
                     </div>
                     @endif
                     <div class="flex justify-between text-lg font-bold border-t border-gray-200 pt-2 mt-2">
                         <span class="text-gray-900">المبلغ الإجمالي:</span>
-                        <span class="text-sky-600">{{ number_format($invoice->total_amount, 2) }} ج.م</span>
+                        <span class="text-sky-600">{{ number_format($invoice->total_amount, 2) }} $</span>
                     </div>
                 </div>
             </div>
@@ -67,7 +67,7 @@
                         <div class="font-medium text-gray-900">{{ $payment->payment_number }}</div>
                         <div class="text-sm text-gray-600">{{ $payment->paid_at ? $payment->paid_at->format('Y-m-d') : '-' }}</div>
                     </div>
-                    <div class="font-medium text-green-600">{{ number_format($payment->amount, 2) }} ج.م</div>
+                    <div class="font-medium text-green-600">{{ number_format($payment->amount, 2) }} $</div>
                 </div>
                 @endforeach
             </div>

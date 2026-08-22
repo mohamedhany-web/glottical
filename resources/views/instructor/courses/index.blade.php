@@ -150,7 +150,7 @@
                                         @if($course->hasPromotionalPrice())
                                             <span style="text-decoration:line-through;color:var(--su-ink-40);font-size:11px;margin-inline-end:4px">{{ number_format($course->listPriceAmount(), 2) }}</span>
                                         @endif
-                                        {{ number_format($course->effectivePurchasePrice(), 2) }} ج.م
+                                        {{ number_format($course->effectivePurchasePrice(), 2) }} $
                                     </strong>
                                 </div>
                             @else

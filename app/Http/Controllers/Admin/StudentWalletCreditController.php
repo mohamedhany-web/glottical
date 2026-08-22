@@ -70,7 +70,7 @@ class StudentWalletCreditController extends Controller
                 [
                     'balance' => 0,
                     'pending_balance' => 0,
-                    'currency' => 'EGP',
+                    'currency' => 'USD',
                     'is_active' => true,
                 ]
             );
@@ -84,6 +84,6 @@ class StudentWalletCreditController extends Controller
 
         return redirect()
             ->route('admin.marketing.student-wallet-credit.create')
-            ->with('success', 'تم إضافة '.number_format((float) $validated['amount'], 2).' ج.م لمحفظة الطالب بنجاح.');
+            ->with('success', 'تم إضافة '.number_format((float) $validated['amount'], 2).' $ لمحفظة الطالب بنجاح.');
     }
 }

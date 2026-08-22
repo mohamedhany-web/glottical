@@ -267,7 +267,12 @@ class AdvancedCourseController extends Controller
 
         $data['level'] = 'beginner';
         $data['price'] = $data['price'] ?? 0;
-        if ($request->filled('price_egp')) {
+        if ($request->filled('price_usd')) {
+            $data['price'] = $data['price_usd'];
+            $data['price_after_discount'] = $request->input('price_usd_after_discount');
+            $data['price_egp'] = $data['price_usd'];
+            $data['price_egp_after_discount'] = $request->input('price_usd_after_discount');
+        } elseif ($request->filled('price_egp')) {
             $data['price'] = $data['price_egp'];
             $data['price_after_discount'] = $request->input('price_egp_after_discount');
         }
@@ -474,7 +479,12 @@ class AdvancedCourseController extends Controller
 
         $data['level'] = 'beginner';
         $data['price'] = $data['price'] ?? 0;
-        if ($request->filled('price_egp')) {
+        if ($request->filled('price_usd')) {
+            $data['price'] = $data['price_usd'];
+            $data['price_after_discount'] = $request->input('price_usd_after_discount');
+            $data['price_egp'] = $data['price_usd'];
+            $data['price_egp_after_discount'] = $request->input('price_usd_after_discount');
+        } elseif ($request->filled('price_egp')) {
             $data['price'] = $data['price_egp'];
             $data['price_after_discount'] = $request->input('price_egp_after_discount');
         }

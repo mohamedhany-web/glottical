@@ -410,7 +410,7 @@
                                         </span>
                                         <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full {{ $course->price > 0 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700' }}">
                                             <i class="fas fa-money-bill"></i>
-                                            {{ $course->price > 0 ? number_format($course->price) . ' ج.م' : 'مجاني' }}
+                                            {{ $course->price > 0 ? number_format($course->price) . ' $' : 'مجاني' }}
                                         </span>
                                     </div>
                                 </div>
@@ -536,7 +536,7 @@
                                     - {{ $course->instructor->name }}
                                 @endif
                                 @if($course->price > 0)
-                                    ({{ number_format($course->price) }} ج.م)
+                                    ({{ number_format($course->price) }} $)
                                 @else
                                     (مجاني)
                                 @endif

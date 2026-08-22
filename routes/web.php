@@ -2093,11 +2093,15 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::prefix('live-sessions')->name('live-sessions.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\LiveSessionController::class, 'index'])->name('index');
             Route::get('/create', [\App\Http\Controllers\Admin\LiveSessionController::class, 'create'])->name('create');
+            Route::post('/instant', [\App\Http\Controllers\Admin\LiveSessionController::class, 'instant'])->name('instant');
             Route::post('/', [\App\Http\Controllers\Admin\LiveSessionController::class, 'store'])->name('store');
             Route::get('/{liveSession}', [\App\Http\Controllers\Admin\LiveSessionController::class, 'show'])->name('show');
             Route::get('/{liveSession}/edit', [\App\Http\Controllers\Admin\LiveSessionController::class, 'edit'])->name('edit');
             Route::put('/{liveSession}', [\App\Http\Controllers\Admin\LiveSessionController::class, 'update'])->name('update');
             Route::delete('/{liveSession}', [\App\Http\Controllers\Admin\LiveSessionController::class, 'destroy'])->name('destroy');
+            Route::post('/{liveSession}/start', [\App\Http\Controllers\Admin\LiveSessionController::class, 'start'])->name('start');
+            Route::get('/{liveSession}/room', [\App\Http\Controllers\Admin\LiveSessionController::class, 'room'])->name('room');
+            Route::post('/{liveSession}/end', [\App\Http\Controllers\Admin\LiveSessionController::class, 'end'])->name('end');
             Route::post('/{liveSession}/force-end', [\App\Http\Controllers\Admin\LiveSessionController::class, 'forceEnd'])->name('force-end');
             Route::post('/{liveSession}/cancel', [\App\Http\Controllers\Admin\LiveSessionController::class, 'cancel'])->name('cancel');
         });

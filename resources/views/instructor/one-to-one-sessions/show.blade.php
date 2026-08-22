@@ -35,6 +35,11 @@
             {{ session('success') }}
         </div>
     @endif
+    @if(session('error'))
+        <div class="su-card" style="margin-bottom:16px;padding:12px 16px;border-color:rgba(185,28,28,.35);background:rgba(185,28,28,.08);color:#b91c1c;font-size:13px">
+            {{ session('error') }}
+        </div>
+    @endif
 
     <section class="su-card">
         @if($session->status === \App\Models\OneToOneSession::STATUS_SCHEDULED && $session->classroomMeeting)
@@ -57,13 +62,25 @@
                     @endif
                 </div>
             </div>
-            <form method="POST" action="{{ route('instructor.one-to-one-sessions.complete', $session) }}" onsubmit="return confirm(@json(__('instructor.o1o_complete_confirm')))">
-                @csrf
-                <button type="submit" class="su-btn su-btn--primary">
-                    <i class="fas fa-check" aria-hidden="true"></i>
-                    {{ __('instructor.o1o_mark_complete') }}
-                </button>
-            </form>
+            @php
+                $canMarkComplete = $m->started_at
+                    && $session->scheduled_at
+                    && $session->scheduled_at->lte(now()->addMinutes(15));
+            @endphp
+            @if($canMarkComplete)
+                <form method="POST" action="{{ route('instructor.one-to-one-sessions.complete', $session) }}" onsubmit="return confirm(@json(__('instructor.o1o_complete_confirm')))">
+                    @csrf
+                    <button type="submit" class="su-btn su-btn--primary">
+                        <i class="fas fa-check" aria-hidden="true"></i>
+                        {{ __('instructor.o1o_mark_complete') }}
+                    </button>
+                </form>
+            @else
+                <div class="su-card su-soft-4" style="padding:12px 16px;font-size:13px;color:var(--su-ink)">
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
+                    {{ __('instructor.o1o_complete_requires_room') }}
+                </div>
+            @endif
         @elseif($session->status === \App\Models\OneToOneSession::STATUS_PENDING)
             <div class="su-card su-soft-4" style="padding:16px;margin-bottom:16px">
                 <p style="margin:0;font-size:13px;color:var(--su-ink)">{{ __('instructor.o1o_pending_hint') }}</p>

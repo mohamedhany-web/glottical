@@ -310,11 +310,16 @@ class AdvancedCourse extends Model
      */
     public function listPriceAmount(?string $currency = null): float
     {
-        $currency = strtoupper((string) ($currency ?: 'EGP'));
+        $currency = strtoupper((string) ($currency ?: 'USD'));
         if ($currency === 'USD') {
             $v = $this->price_usd;
             if ($v !== null && $v !== '') {
                 return round(max(0, (float) $v), 2);
+            }
+            // توافق: إن لم يُملأ USD استخدم السعر الأساسي أو الحقل القديم
+            $fallback = $this->price ?? $this->price_egp;
+            if ($fallback !== null && $fallback !== '') {
+                return round(max(0, (float) $fallback), 2);
             }
         }
         if ($currency === 'EGP') {
@@ -332,7 +337,7 @@ class AdvancedCourse extends Model
      */
     public function effectivePurchasePrice(?string $currency = null): float
     {
-        $currency = strtoupper((string) ($currency ?: 'EGP'));
+        $currency = strtoupper((string) ($currency ?: 'USD'));
         $list = $this->listPriceAmount($currency);
         if ($list <= 0) {
             return 0.0;
@@ -343,6 +348,9 @@ class AdvancedCourse extends Model
             default => $this->price_egp_after_discount,
         };
         // توافق مع الحقل القديم إن لم تُملأ الأسعار المزدوجة
+        if (($sale === null || $sale === '') && $currency === 'USD') {
+            $sale = $this->price_after_discount ?? $this->price_egp_after_discount;
+        }
         if (($sale === null || $sale === '') && $currency === 'EGP' && ($this->price_egp === null || $this->price_egp === '')) {
             $sale = $this->price_after_discount;
         }
@@ -363,7 +371,7 @@ class AdvancedCourse extends Model
      */
     public function hasPromotionalPrice(?string $currency = null): bool
     {
-        $currency = strtoupper((string) ($currency ?: 'EGP'));
+        $currency = strtoupper((string) ($currency ?: 'USD'));
         $list = $this->listPriceAmount($currency);
         if ($list <= 0) {
             return false;

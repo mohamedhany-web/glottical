@@ -22,7 +22,7 @@ class OrderWalletAndCouponFinalizer
                 throw new \RuntimeException('لا توجد محفظة للطالب لخصم الرصيد.');
             }
             if ((float) $wallet->balance + 0.00001 < $credit) {
-                throw new \RuntimeException('رصيد محفظة الطالب غير كافٍ لإتمام الطلب (مطلوب خصم '.number_format($credit, 2).' ج.م).');
+                throw new \RuntimeException('رصيد محفظة الطالب غير كافٍ لإتمام الطلب (مطلوب خصم '.number_format($credit, 2).' $).');
             }
             $wallet->withdraw(
                 $credit,

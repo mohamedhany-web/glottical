@@ -26,9 +26,9 @@
     ];
     $statusBadge = $statusBadgeMap[$agreement->status] ?? 'bg-canvas-muted text-muted';
     $kpis = [
-        ['label' => 'إجمالي الاتفاقية', 'value' => number_format($agreement->total_amount ?? 0, 2) . ' ج.م', 'icon' => 'fa-wallet', 'tone' => 'accent', 'note' => 'القيمة الكاملة التي سيتم سدادها عبر الخطة'],
-        ['label' => 'الدفعة المقدمة', 'value' => number_format($agreement->deposit_amount ?? 0, 2) . ' ج.م', 'icon' => 'fa-hand-holding-usd', 'tone' => 'metal', 'note' => 'تم تحصيلها عند توقيع الاتفاقية'],
-        ['label' => 'الأقساط المتبقية', 'value' => $pendingPayments->count(), 'icon' => 'fa-stream', 'tone' => 'accent', 'note' => 'القيمة التالية: ' . (optional($nextPayment)->amount ? number_format($nextPayment->amount, 2) . ' ج.م' : '—')],
+        ['label' => 'إجمالي الاتفاقية', 'value' => number_format($agreement->total_amount ?? 0, 2) . ' $', 'icon' => 'fa-wallet', 'tone' => 'accent', 'note' => 'القيمة الكاملة التي سيتم سدادها عبر الخطة'],
+        ['label' => 'الدفعة المقدمة', 'value' => number_format($agreement->deposit_amount ?? 0, 2) . ' $', 'icon' => 'fa-hand-holding-usd', 'tone' => 'metal', 'note' => 'تم تحصيلها عند توقيع الاتفاقية'],
+        ['label' => 'الأقساط المتبقية', 'value' => $pendingPayments->count(), 'icon' => 'fa-stream', 'tone' => 'accent', 'note' => 'القيمة التالية: ' . (optional($nextPayment)->amount ? number_format($nextPayment->amount, 2) . ' $' : '—')],
         ['label' => 'القسط القادم', 'value' => optional($nextPayment)->due_date?->format('Y-m-d') ?? '—', 'icon' => 'fa-calendar', 'tone' => 'muted', 'note' => 'عدد الأقساط الكلي: ' . $agreement->installments_count],
     ];
     $toneClass = [
@@ -96,7 +96,7 @@
                     <div>
                         <dt class="text-xs font-medium text-muted">الكورس</dt>
                         <dd class="mt-1 text-sm font-semibold text-ink">{{ $course->title ?? 'خطة عامة' }}</dd>
-                        <dd class="mt-0.5 text-xs text-muted">سعر الكورس: {{ number_format($course->price ?? 0, 2) }} ج.م</dd>
+                        <dd class="mt-0.5 text-xs text-muted">سعر الكورس: {{ number_format($course->price ?? 0, 2) }} $</dd>
                     </div>
                     <div>
                         <dt class="text-xs font-medium text-muted">الخطة</dt>
@@ -145,7 +145,7 @@
                                 <tr class="hover:bg-canvas/40">
                                     <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ $payment->sequence_number }}</td>
                                     <td class="px-4 py-3 tabular-nums text-ink-soft">{{ optional($payment->due_date)->format('Y-m-d') }}</td>
-                                    <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($payment->amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></td>
+                                    <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($payment->amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">$</span></td>
                                     <td class="px-4 py-3">
                                         <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $payBadge }}">
                                             {{ $paymentStatuses[$payment->status] ?? $payment->status }}
@@ -184,11 +184,11 @@
                 <ul class="space-y-3 p-4 text-sm text-ink-soft sm:p-5">
                     <li class="flex items-start gap-2">
                         <i class="fas fa-wallet mt-0.5 text-accent"></i>
-                        مجموع ما تم دفعه حتى الآن: {{ number_format($paidTotal, 2) }} ج.م
+                        مجموع ما تم دفعه حتى الآن: {{ number_format($paidTotal, 2) }} $
                     </li>
                     <li class="flex items-start gap-2">
                         <i class="fas fa-balance-scale mt-0.5 text-accent"></i>
-                        المبلغ المتبقي: {{ number_format($remainingTotal, 2) }} ج.م
+                        المبلغ المتبقي: {{ number_format($remainingTotal, 2) }} $
                     </li>
                     <li class="flex items-start gap-2">
                         <i class="fas fa-exclamation-triangle mt-0.5 text-metal"></i>

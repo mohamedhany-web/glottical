@@ -192,7 +192,7 @@ trait BuildsFeatureSchema
             $table->string('learning_path')->nullable();
             $table->unsignedBigInteger('academic_year_id')->nullable();
             $table->unsignedBigInteger('academic_subject_id')->nullable();
-            $table->string('currency', 8)->default('EGP');
+            $table->string('currency', 8)->default('USD');
             $table->unsignedSmallInteger('capacity')->default(1);
             $table->unsignedSmallInteger('duration_minutes')->default(60);
             $table->boolean('is_active')->default(true);

@@ -133,14 +133,14 @@ class Order extends Model
 
             return in_array($fromQuote, ['EGP', 'USD'], true)
                 ? $fromQuote
-                : strtoupper((string) config('fawaterak.currency', 'EGP'));
+                : strtoupper((string) config('currency.code', 'USD'));
         }
 
         if ($this->servicePackage) {
             return $this->servicePackage->currencyCode();
         }
 
-        return 'EGP';
+        return 'USD';
     }
 
     public function learningPath()

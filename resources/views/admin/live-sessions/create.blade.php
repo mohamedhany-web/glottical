@@ -1,111 +1,129 @@
 @extends('layouts.admin')
-@section('title', 'إنشاء جلسة بث مباشر')
+
+@section('title', 'جدولة جلسة بث - Glottical')
+@section('page_title', 'جدولة جلسة بث')
 
 @section('content')
-<div class="space-y-6">
-    <div class="flex items-center gap-3">
-        <a href="{{ route('admin.live-sessions.index') }}" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition-colors"><i class="fas fa-arrow-right"></i></a>
-        <h1 class="text-2xl font-bold text-slate-800 dark:text-white"><i class="fas fa-plus-circle text-red-500 ml-2"></i>إنشاء جلسة بث مباشر</h1>
-    </div>
+@php
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+    $areaClass = 'w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+@endphp
 
-    <form method="POST" action="{{ route('admin.live-sessions.store') }}" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 space-y-5">
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">
+                <a href="{{ route('admin.live-sessions.index') }}" class="hover:text-accent">جلسات البث</a>
+                <span class="mx-1 text-line">/</span>
+                جدولة
+            </p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">جدولة جلسة بث</h2>
+            <p class="mt-1 text-sm text-muted">لحجز موعد لاحق. للبث الفوري استخدم «ابدأ بثاً الآن» من قائمة الجلسات.</p>
+        </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <form method="POST" action="{{ route('admin.live-sessions.instant') }}">
+                @csrf
+                <button type="submit" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                    <i class="fas fa-video text-xs"></i> ابدأ بثاً الآن
+                </button>
+            </form>
+            <a href="{{ route('admin.live-sessions.index') }}" class="btn-press inline-flex h-9 items-center rounded-xl border border-line px-4 text-sm font-medium text-ink-soft hover:bg-canvas">رجوع</a>
+        </div>
+    </section>
+
+    <form method="POST" action="{{ route('admin.live-sessions.store') }}" class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
         @csrf
-        <div class="grid md:grid-cols-2 gap-5">
+        <div class="border-b border-line px-4 py-4 sm:px-5">
+            <h3 class="text-base font-semibold text-ink">بيانات الجلسة</h3>
+            <p class="mt-0.5 text-xs text-muted">العنوان والمضيف والموعد — ثم إعدادات الغرفة</p>
+        </div>
+        <div class="grid gap-4 p-4 sm:p-5 md:grid-cols-2">
             <div class="md:col-span-2">
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">عنوان الجلسة <span class="text-red-500">*</span></label>
-                <input type="text" name="title" value="{{ old('title') }}" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="مثال: حصة تفاعلية — الذكاء الاصطناعي">
-                @error('title')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                <label class="{{ $labelClass }}" for="title">عنوان الجلسة <span class="text-danger">*</span></label>
+                <input id="title" type="text" name="title" value="{{ old('title') }}" required class="{{ $fieldClass }}" placeholder="مثال: لقاء تشغيلي — فريق الدعم">
+                @error('title')<p class="mt-1 text-xs text-danger">{{ $message }}</p>@enderror
             </div>
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">المعلم (المشترك) <span class="text-red-500">*</span></label>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">المعلم = المشترك عندنا (طالب يشترون منا الخدمة).</p>
-                <select name="instructor_id" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
-                    <option value="">اختر المعلم</option>
+                <label class="{{ $labelClass }}" for="instructor_id">المضيف <span class="text-danger">*</span></label>
+                <select id="instructor_id" name="instructor_id" required class="{{ $fieldClass }}">
+                    <option value="">اختر المضيف</option>
                     @foreach($instructors as $inst)
-                        <option value="{{ $inst->id }}" {{ old('instructor_id') == $inst->id ? 'selected' : '' }}>{{ $inst->name }}{{ $inst->role === 'student' ? ' (مشترك)' : '' }}</option>
+                        <option value="{{ $inst->id }}" @selected((string) old('instructor_id', auth()->id()) === (string) $inst->id)>
+                            {{ $inst->name }}@if($inst->id === auth()->id()) (أنت)@elseif($inst->role === 'student') (مشترك)@endif
+                        </option>
                     @endforeach
                 </select>
-                @error('instructor_id')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                @error('instructor_id')<p class="mt-1 text-xs text-danger">{{ $message }}</p>@enderror
             </div>
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">الكورس (اختياري)</label>
-                <select name="course_id" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                <label class="{{ $labelClass }}" for="course_id">الكورس (اختياري)</label>
+                <select id="course_id" name="course_id" class="{{ $fieldClass }}">
                     <option value="">جلسة عامة</option>
                     @foreach($courses as $course)
-                        <option value="{{ $course->id }}" {{ old('course_id') == $course->id ? 'selected' : '' }}>{{ Str::limit($course->title, 50) }}</option>
+                        <option value="{{ $course->id }}" @selected((string) old('course_id') === (string) $course->id)>{{ Str::limit($course->title, 50) }}</option>
                     @endforeach
                 </select>
             </div>
             <div>
                 @include('partials.timezone-select', [
                     'value' => old('timezone', auth()->user()?->timezoneCode()),
-                    'class' => 'w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white',
-                    'labelClass' => 'block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1',
+                    'class' => $fieldClass,
+                    'labelClass' => $labelClass,
                 ])
             </div>
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">موعد البث <span class="text-red-500">*</span></label>
-                <input type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at') }}" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
-                @error('scheduled_at')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                <label class="{{ $labelClass }}" for="scheduled_at">موعد البث <span class="text-danger">*</span></label>
+                <input id="scheduled_at" type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at') }}" required class="{{ $fieldClass }}">
+                @error('scheduled_at')<p class="mt-1 text-xs text-danger">{{ $message }}</p>@enderror
             </div>
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">سيرفر البث</label>
-                <select name="server_id" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                <label class="{{ $labelClass }}" for="server_id">سيرفر البث</label>
+                <select id="server_id" name="server_id" class="{{ $fieldClass }}">
                     <option value="">الافتراضي</option>
                     @foreach($servers as $server)
-                        <option value="{{ $server->id }}">{{ $server->name }} ({{ $server->domain }})</option>
+                        <option value="{{ $server->id }}" @selected((string) old('server_id') === (string) $server->id)>{{ $server->name }} ({{ $server->domain }})</option>
                     @endforeach
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">الحد الأقصى للمشاركين</label>
-                <input type="number" name="max_participants" value="{{ old('max_participants', 100) }}" min="2" max="1000" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                <label class="{{ $labelClass }}" for="max_participants">الحد الأقصى للمشاركين</label>
+                <input id="max_participants" type="number" name="max_participants" value="{{ old('max_participants', 100) }}" min="2" max="1000" class="{{ $fieldClass }}">
             </div>
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">كلمة مرور (اختياري)</label>
-                <input type="text" name="password" value="{{ old('password') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="اتركها فارغة إذا لا تريد">
+                <label class="{{ $labelClass }}" for="password">كلمة مرور (اختياري)</label>
+                <input id="password" type="text" name="password" value="{{ old('password') }}" class="{{ $fieldClass }}" placeholder="اتركها فارغة إن لم تلزم">
             </div>
             <div class="md:col-span-2">
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">وصف الجلسة</label>
-                <textarea name="description" rows="3" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="وصف مختصر عن محتوى الجلسة...">{{ old('description') }}</textarea>
+                <label class="{{ $labelClass }}" for="description">وصف الجلسة</label>
+                <textarea id="description" name="description" rows="3" class="{{ $areaClass }}" placeholder="محتوى مختصر...">{{ old('description') }}</textarea>
             </div>
         </div>
 
-        <div class="border-t border-slate-200 dark:border-slate-700 pt-5">
-            <h3 class="font-semibold text-slate-700 dark:text-slate-200 mb-3">إعدادات الغرفة</h3>
-            <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
-                <label class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg cursor-pointer">
-                    <input type="checkbox" name="is_recorded" value="1" {{ old('is_recorded') ? 'checked' : '' }} class="rounded text-red-500 focus:ring-red-500">
-                    <span class="text-sm text-slate-700 dark:text-slate-300">تسجيل الجلسة</span>
-                </label>
-                <label class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg cursor-pointer">
-                    <input type="checkbox" name="allow_chat" value="1" {{ old('allow_chat', true) ? 'checked' : '' }} class="rounded text-blue-500 focus:ring-blue-500">
-                    <span class="text-sm text-slate-700 dark:text-slate-300">السماح بالشات</span>
-                </label>
-                <label class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg cursor-pointer">
-                    <input type="checkbox" name="allow_screen_share" value="1" {{ old('allow_screen_share', true) ? 'checked' : '' }} class="rounded text-emerald-500 focus:ring-emerald-500">
-                    <span class="text-sm text-slate-700 dark:text-slate-300">مشاركة الشاشة</span>
-                </label>
-                <label class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg cursor-pointer">
-                    <input type="checkbox" name="require_enrollment" value="1" {{ old('require_enrollment', true) ? 'checked' : '' }} class="rounded text-amber-500 focus:ring-amber-500">
-                    <span class="text-sm text-slate-700 dark:text-slate-300">يتطلب تسجيل في الكورس</span>
-                </label>
-                <label class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg cursor-pointer">
-                    <input type="checkbox" name="mute_on_join" value="1" {{ old('mute_on_join', true) ? 'checked' : '' }} class="rounded text-violet-500 focus:ring-violet-500">
-                    <span class="text-sm text-slate-700 dark:text-slate-300">كتم الصوت عند الدخول</span>
-                </label>
-                <label class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg cursor-pointer">
-                    <input type="checkbox" name="video_off_on_join" value="1" {{ old('video_off_on_join', true) ? 'checked' : '' }} class="rounded text-pink-500 focus:ring-pink-500">
-                    <span class="text-sm text-slate-700 dark:text-slate-300">إيقاف الفيديو عند الدخول</span>
-                </label>
+        <div class="border-t border-line px-4 py-4 sm:px-5">
+            <h3 class="text-sm font-semibold text-ink">إعدادات الغرفة</h3>
+            <div class="mt-3 grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+                @foreach([
+                    ['is_recorded', false, 'تسجيل الجلسة'],
+                    ['allow_chat', true, 'السماح بالشات'],
+                    ['allow_screen_share', true, 'مشاركة الشاشة'],
+                    ['require_enrollment', false, 'يتطلب تسجيل في الكورس'],
+                    ['mute_on_join', true, 'كتم الصوت عند الدخول'],
+                    ['video_off_on_join', true, 'إيقاف الفيديو عند الدخول'],
+                ] as [$name, $default, $label])
+                    <label class="flex cursor-pointer items-center gap-2 rounded-xl border border-line bg-canvas/40 px-3 py-2.5 text-sm text-ink">
+                        <input type="checkbox" name="{{ $name }}" value="1" @checked(old($name, $default)) class="rounded border-line text-accent focus:ring-accent/30">
+                        {{ $label }}
+                    </label>
+                @endforeach
             </div>
         </div>
 
-        <div class="flex items-center gap-3 pt-2">
-            <button type="submit" class="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold shadow-lg shadow-red-500/25 transition-all">
-                <i class="fas fa-broadcast-tower ml-1"></i> إنشاء الجلسة
+        <div class="flex flex-wrap items-center gap-2 border-t border-line px-4 py-4 sm:px-5">
+            <button type="submit" class="btn-press inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-medium text-white">
+                <i class="fas fa-calendar-check text-xs"></i> حفظ الجدولة
             </button>
-            <a href="{{ route('admin.live-sessions.index') }}" class="px-6 py-2.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-medium hover:bg-slate-300 transition-colors">إلغاء</a>
+            <a href="{{ route('admin.live-sessions.index') }}" class="btn-press inline-flex h-10 items-center rounded-xl border border-line px-5 text-sm font-medium text-ink-soft hover:bg-canvas">إلغاء</a>
         </div>
     </form>
 </div>

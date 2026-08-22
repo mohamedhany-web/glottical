@@ -602,9 +602,9 @@ class OneToOneSessionService
         });
     }
 
-    public static function markCompleted(OneToOneSession $session): void
+    public static function markCompleted(OneToOneSession $session, bool $requireLiveAttendance = true): void
     {
-        DB::transaction(function () use ($session) {
+        DB::transaction(function () use ($session, $requireLiveAttendance) {
             $session = OneToOneSession::query()
                 ->with(['entitlement', 'classroomMeeting'])
                 ->lockForUpdate()
@@ -615,6 +615,20 @@ class OneToOneSessionService
             }
             if ($session->status !== OneToOneSession::STATUS_SCHEDULED) {
                 throw new \InvalidArgumentException('لا يمكن إكمال حصة غير مجدولة.');
+            }
+
+            $meeting = $session->classroomMeeting;
+            if ($requireLiveAttendance) {
+                if (! $meeting) {
+                    throw new \InvalidArgumentException('لا يمكن إكمال الحصة قبل إنشاء غرفة الاجتماع.');
+                }
+                if (! $meeting->started_at) {
+                    throw new \InvalidArgumentException('لا يمكن تعليم الحصة كمكتملة قبل دخول الغرفة وبدء الاجتماع.');
+                }
+                // لا يُسمح بخصم الرصيد قبل موعد الحصة (هامش 15 دقيقة للدخول المبكر).
+                if ($session->scheduled_at && $session->scheduled_at->gt(now()->addMinutes(15))) {
+                    throw new \InvalidArgumentException('لا يمكن إكمال الحصة قبل موعدها المحدد.');
+                }
             }
 
             $entitlement = $session->entitlement ?: StudentEntitlementService::availableFor(
@@ -631,8 +645,8 @@ class OneToOneSessionService
 
             $session->status = OneToOneSession::STATUS_COMPLETED;
             $session->save();
-            if ($session->classroomMeeting && ! $session->classroomMeeting->ended_at) {
-                $session->classroomMeeting->update(['ended_at' => now()]);
+            if ($meeting && ! $meeting->ended_at) {
+                $meeting->update(['ended_at' => now()]);
             }
         });
     }

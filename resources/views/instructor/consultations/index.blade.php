@@ -43,7 +43,7 @@
                     @forelse($requests as $r)
                         <tr>
                             <td><strong style="font-weight:600">{{ $r->student->name ?? '—' }}</strong></td>
-                            <td class="tabular-nums" style="color:var(--su-ink-40)">{{ number_format($r->price_amount, 2) }} ج.م</td>
+                            <td class="tabular-nums" style="color:var(--su-ink-40)">{{ number_format($r->price_amount, 2) }} $</td>
                             <td><span class="su-chip">{{ $r->statusLabel() }}</span></td>
                             <td class="tabular-nums" style="color:var(--su-ink-40)">
                                 @if($r->scheduled_at)

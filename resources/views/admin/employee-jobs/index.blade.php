@@ -137,11 +137,11 @@
                             <span class="text-gray-600">الراتب:</span>
                             <span class="text-gray-900 mr-2 font-medium">
                                 @if($job->min_salary && $job->max_salary)
-                                    {{ number_format($job->min_salary) }} - {{ number_format($job->max_salary) }} ج.م
+                                    {{ number_format($job->min_salary) }} - {{ number_format($job->max_salary) }} $
                                 @elseif($job->min_salary)
-                                    من {{ number_format($job->min_salary) }} ج.م
+                                    من {{ number_format($job->min_salary) }} $
                                 @elseif($job->max_salary)
-                                    حتى {{ number_format($job->max_salary) }} ج.م
+                                    حتى {{ number_format($job->max_salary) }} $
                                 @endif
                             </span>
                         </div>

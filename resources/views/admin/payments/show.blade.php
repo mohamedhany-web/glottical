@@ -65,16 +65,16 @@
                 <dl class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5">
                     <div>
                         <dt class="text-xs font-medium text-muted">المبلغ</dt>
-                        <dd class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ number_format($payment->amount, 2) }} <span class="text-sm font-normal text-muted">ج.م</span></dd>
+                        <dd class="mt-1 text-2xl font-semibold tabular-nums text-ink">{{ number_format($payment->amount, 2) }} <span class="text-sm font-normal text-muted">$</span></dd>
                     </div>
                     <div>
                         <dt class="text-xs font-medium text-muted">العملة</dt>
-                        <dd class="mt-1 text-sm font-semibold text-ink">{{ $payment->currency ?? 'EGP' }}</dd>
+                        <dd class="mt-1 text-sm font-semibold text-ink">{{ $payment->currency ?? 'USD' }}</dd>
                     </div>
                     @if(($payment->gateway_fee_amount ?? 0) > 0 || $payment->net_after_gateway_fee !== null)
                     <div>
                         <dt class="text-xs font-medium text-muted">عمولة البوابة (تقدير)</dt>
-                        <dd class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format((float) ($payment->gateway_fee_amount ?? 0), 2) }} <span class="text-xs font-normal text-muted">ج.م</span></dd>
+                        <dd class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format((float) ($payment->gateway_fee_amount ?? 0), 2) }} <span class="text-xs font-normal text-muted">$</span></dd>
                     </div>
                     <div>
                         <dt class="text-xs font-medium text-muted">صافي بعد العمولة</dt>
@@ -84,7 +84,7 @@
                                     ? (float) $payment->net_after_gateway_fee
                                     : round((float) $payment->amount - (float) ($payment->gateway_fee_amount ?? 0), 2);
                             @endphp
-                            {{ number_format($netShow, 2) }} <span class="text-xs font-normal text-muted">ج.م</span>
+                            {{ number_format($netShow, 2) }} <span class="text-xs font-normal text-muted">$</span>
                         </dd>
                     </div>
                     @endif
@@ -188,7 +188,7 @@
                     </div>
                     <div class="flex items-center justify-between gap-4">
                         <dt class="text-xs font-medium text-muted">المبلغ الإجمالي</dt>
-                        <dd class="text-sm font-semibold tabular-nums text-ink">{{ number_format($payment->invoice->total_amount, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></dd>
+                        <dd class="text-sm font-semibold tabular-nums text-ink">{{ number_format($payment->invoice->total_amount, 2) }} <span class="text-xs font-normal text-muted">$</span></dd>
                     </div>
                     <div class="flex items-center justify-between gap-4">
                         <dt class="text-xs font-medium text-muted">الحالة</dt>
@@ -215,7 +215,7 @@
                         <a href="{{ route('admin.transactions.show', $transaction) }}" class="text-sm font-semibold text-accent transition hover:text-accent/80">
                             {{ $transaction->transaction_number ?? 'N/A' }}
                         </a>
-                        <span class="text-sm tabular-nums text-muted">{{ number_format($transaction->amount, 2) }} ج.م</span>
+                        <span class="text-sm tabular-nums text-muted">{{ number_format($transaction->amount, 2) }} $</span>
                     </div>
                     @endforeach
                     @if($payment->transactions->count() > 3)

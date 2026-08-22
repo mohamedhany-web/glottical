@@ -146,16 +146,15 @@
                 <div>
                     <label class="{{ $labelClass }}" for="currency">العملة *</label>
                     @php
-                        $currencyValue = strtoupper((string) old('currency', $package->currency ?: config('fawaterak.currency', 'EGP')));
+                        $currencyValue = strtoupper((string) old('currency', $package->currency ?: config('currency.code', 'USD')));
                         if (! in_array($currencyValue, ['EGP', 'USD'], true)) {
-                            $currencyValue = 'EGP';
+                            $currencyValue = 'USD';
                         }
                     @endphp
                     <select id="currency" name="currency" required class="{{ $fieldClass }}">
-                        <option value="EGP" @selected($currencyValue === 'EGP')>EGP — جنيه مصري</option>
-                        <option value="USD" @selected($currencyValue === 'USD')>USD — دولار أمريكي</option>
+                        <option value="USD" @selected($currencyValue === 'USD' || $currencyValue === 'EGP')>USD — دولار أمريكي</option>
                     </select>
-                    <p class="mt-1 text-[11px] text-muted">تُستخدم نفس العملة عند إنشاء الطلب وإرسال الدفع لفواتيرك.</p>
+                    <p class="mt-1 text-[11px] text-muted">عملة المنصة هي الدولار الأمريكي فقط.</p>
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="sort_order">الترتيب</label>

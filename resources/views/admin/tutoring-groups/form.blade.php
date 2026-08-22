@@ -119,7 +119,7 @@
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="currency">العملة</label>
-                    <input id="currency" type="text" name="currency" value="{{ old('currency', $group->currency ?: 'EGP') }}" class="{{ $fieldClass }}">
+                    <input id="currency" type="text" name="currency" value="{{ old('currency', $group->currency ?: 'USD') }}" class="{{ $fieldClass }}">
                 </div>
                 <div>
                     <label class="{{ $labelClass }}" for="duration_minutes">مدة الجلسة (دقيقة)</label>

@@ -91,38 +91,19 @@
                                 </div>
 
                                 <div class="space-y-2">
-                                    <label class="block text-sm font-semibold text-ink">سعر أساسي (توافق قديم — يُزامَن من EGP)</label>
-                                    <input type="number" name="price" value="{{ old('price', 0) }}" min="0" step="0.01"
+                                    <label class="block text-sm font-semibold text-ink">السعر بالدولار (USD)</label>
+                                    <input type="number" name="price_usd" value="{{ old('price_usd', 0) }}" min="0" step="0.01"
                                            class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-ink focus:border-accent focus:ring-2 focus:ring-accent/20 transition"
                                            placeholder="0 للمجاني">
-                                </div>
-                                <div class="space-y-2 md:col-span-2">
-                                    <label class="block text-sm font-semibold text-ink">سعر بعد الخصم (توافق قديم)</label>
-                                    <input type="number" name="price_after_discount" value="{{ old('price_after_discount') }}" min="0" step="0.01"
-                                           class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-ink focus:border-accent focus:ring-2 focus:ring-accent/20 transition"
-                                           placeholder="اتركه فارغاً إن لم يكن هناك عرض">
-                                    <p class="text-xs text-muted">يفضّل تعبئة حقول الجنيه/الدولار بالأسفل للطالب حسب العملة.</p>
-                                    @error('price_after_discount') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="block text-sm font-semibold text-ink">السعر بالجنيه (EGP — داخل مصر)</label>
-                                    <input type="number" name="price_egp" value="{{ old('price_egp') }}" min="0" step="0.01"
-                                           class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-ink">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="block text-sm font-semibold text-ink">بعد الخصم (EGP)</label>
-                                    <input type="number" name="price_egp_after_discount" value="{{ old('price_egp_after_discount') }}" min="0" step="0.01"
-                                           class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-ink">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="block text-sm font-semibold text-ink">السعر بالدولار (USD — خارج مصر)</label>
-                                    <input type="number" name="price_usd" value="{{ old('price_usd') }}" min="0" step="0.01"
-                                           class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-ink">
+                                    @error('price_usd') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div class="space-y-2">
                                     <label class="block text-sm font-semibold text-ink">بعد الخصم (USD)</label>
                                     <input type="number" name="price_usd_after_discount" value="{{ old('price_usd_after_discount') }}" min="0" step="0.01"
-                                           class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-ink">
+                                           class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-ink focus:border-accent focus:ring-2 focus:ring-accent/20 transition"
+                                           placeholder="اتركه فارغاً إن لم يكن هناك عرض">
+                                    <p class="text-xs text-muted">عملة المنصة دولار أمريكي فقط.</p>
+                                    @error('price_usd_after_discount') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                                 </div>
                                 <div class="space-y-2 md:col-span-2 rounded-xl border border-accent/20 bg-accent-soft/40 p-4">
                                     <label class="block text-sm font-semibold text-ink">نوع التعلّم * <span class="text-muted font-medium">(يظهر في /groups)</span></label>

@@ -81,12 +81,12 @@
                     @error('discount_value')<p class="{{ $errorClass }}">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label class="{{ $labelClass }}">الحد الأدنى للطلب (ج.م)</label>
+                    <label class="{{ $labelClass }}">الحد الأدنى للطلب ($)</label>
                     <input type="number" name="minimum_amount" step="0.01" min="0" value="{{ old('minimum_amount') }}" class="{{ $fieldClass }}" placeholder="اختياري">
                     @error('minimum_amount')<p class="{{ $errorClass }}">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label class="{{ $labelClass }}">الحد الأقصى للخصم (ج.م)</label>
+                    <label class="{{ $labelClass }}">الحد الأقصى للخصم ($)</label>
                     <input type="number" name="maximum_discount" step="0.01" min="0" value="{{ old('maximum_discount') }}" class="{{ $fieldClass }}" placeholder="اختياري">
                     <p class="{{ $hintClass }}">مهم عند اختيار خصم نسبة مئوية.</p>
                     @error('maximum_discount')<p class="{{ $errorClass }}">{{ $message }}</p>@enderror

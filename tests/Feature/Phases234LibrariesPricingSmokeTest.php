@@ -155,19 +155,20 @@ class Phases234LibrariesPricingSmokeTest extends TestCase
 
         $this->assertTrue($teacher->fresh()->isAcademyWorkingInstructor());
 
-        // تسعير بدون رندر كامل للواجهة (الـ layout يحتاج جداول إضافية)
+        // تسعير بالدولار فقط (عملة المنصة)
         $this->actingAs($teacher)
             ->put(route('instructor.courses.pricing.update', $course), [
-                'price_egp' => 120,
                 'price_usd' => 12,
+                'price_usd_after_discount' => null,
             ])
             ->assertRedirect();
 
         $course->refresh();
-        $this->assertSame(120.0, (float) $course->price_egp);
         $this->assertSame(12.0, (float) $course->price_usd);
-        $this->assertSame(120.0, $course->effectivePurchasePrice('EGP'));
+        $this->assertSame(12.0, (float) $course->price);
+        $this->assertSame(12.0, (float) $course->price_egp);
         $this->assertSame(12.0, $course->effectivePurchasePrice('USD'));
+        $this->assertSame(12.0, $course->effectivePurchasePrice('EGP'));
 
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('instructor.libraries.materials.index'));
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('instructor.lecture-recordings.index'));

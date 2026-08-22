@@ -13,13 +13,13 @@
         'muted' => 'bg-canvas-muted text-muted',
     ];
     $mainKpis = [
-        ['label' => 'إجمالي الإيرادات', 'value' => number_format($stats['total_revenue'], 2) . ' ج.م', 'icon' => 'fa-arrow-down', 'tone' => 'accent', 'note' => 'مدفوعات ومقبوضات الفترة', 'raw' => true],
-        ['label' => 'إجمالي المصروفات', 'value' => number_format($stats['total_expenses'], 2) . ' ج.م', 'icon' => 'fa-arrow-up', 'tone' => 'muted', 'note' => 'مصروفات وتكاليف الفترة', 'raw' => true],
-        ['label' => 'الربح الصافي', 'value' => number_format($stats['net_profit'], 2) . ' ج.م', 'icon' => 'fa-chart-line', 'tone' => $stats['net_profit'] >= 0 ? 'accent' : 'muted', 'note' => 'الإيرادات ناقص المصروفات', 'raw' => true],
+        ['label' => 'إجمالي الإيرادات', 'value' => number_format($stats['total_revenue'], 2) . ' $', 'icon' => 'fa-arrow-down', 'tone' => 'accent', 'note' => 'مدفوعات ومقبوضات الفترة', 'raw' => true],
+        ['label' => 'إجمالي المصروفات', 'value' => number_format($stats['total_expenses'], 2) . ' $', 'icon' => 'fa-arrow-up', 'tone' => 'muted', 'note' => 'مصروفات وتكاليف الفترة', 'raw' => true],
+        ['label' => 'الربح الصافي', 'value' => number_format($stats['net_profit'], 2) . ' $', 'icon' => 'fa-chart-line', 'tone' => $stats['net_profit'] >= 0 ? 'accent' : 'muted', 'note' => 'الإيرادات ناقص المصروفات', 'raw' => true],
         ['label' => 'نسبة الربحية', 'value' => ($stats['total_revenue'] > 0 ? number_format(($stats['net_profit'] / $stats['total_revenue']) * 100, 2) : '0') . '%', 'icon' => 'fa-percentage', 'tone' => 'metal', 'note' => 'من إجمالي الإيرادات', 'raw' => true],
     ];
     $secondaryKpis = [
-        ['label' => 'محافظ المنصة', 'value' => $stats['wallet_stats']['total_wallets'], 'icon' => 'fa-wallet', 'tone' => 'accent', 'note' => $stats['wallet_stats']['active_wallets'] . ' نشطة · ' . number_format($stats['wallet_stats']['total_balance'], 2) . ' ج.م'],
+        ['label' => 'محافظ المنصة', 'value' => $stats['wallet_stats']['total_wallets'], 'icon' => 'fa-wallet', 'tone' => 'accent', 'note' => $stats['wallet_stats']['active_wallets'] . ' نشطة · ' . number_format($stats['wallet_stats']['total_balance'], 2) . ' $'],
         ['label' => 'الطلبات (الفترة)', 'value' => $stats['order_stats']['total_orders'], 'icon' => 'fa-shopping-cart', 'tone' => 'metal', 'note' => $stats['order_stats']['approved_orders'] . ' معتمدة · ' . $stats['order_stats']['pending_orders'] . ' معلقة'],
     ];
     $sectionLinks = [
@@ -162,7 +162,7 @@
                 <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ number_format($kpi['value']) }}</p>
                 <p class="mt-1 text-[11px] text-muted">{{ $kpi['note'] }}</p>
                 @if($kpi['label'] === 'الطلبات (الفترة)')
-                    <p class="mt-2 text-[11px] text-muted">مبالغ معتمدة: <strong class="text-ink">{{ number_format($stats['order_stats']['approved_amount'], 2) }} ج.م</strong></p>
+                    <p class="mt-2 text-[11px] text-muted">مبالغ معتمدة: <strong class="text-ink">{{ number_format($stats['order_stats']['approved_amount'], 2) }} $</strong></p>
                 @endif
             </article>
         @endforeach
@@ -254,7 +254,7 @@
                                 <p class="text-sm font-medium text-ink">{{ $item->payment_method }}</p>
                                 <p class="text-xs text-muted">{{ $item->count }} دفعة</p>
                             </div>
-                            <p class="text-sm font-semibold tabular-nums text-accent">{{ number_format($item->total, 2) }} ج.م</p>
+                            <p class="text-sm font-semibold tabular-nums text-accent">{{ number_format($item->total, 2) }} $</p>
                         </div>
                     @empty
                         <p class="py-4 text-center text-sm text-muted">لا توجد بيانات</p>
@@ -270,7 +270,7 @@
                                 <p class="text-sm font-medium text-ink">{{ $item->category ?? 'غير محدد' }}</p>
                                 <p class="text-xs text-muted">{{ $item->count }} معاملة</p>
                             </div>
-                            <p class="text-sm font-semibold tabular-nums text-accent">{{ number_format($item->total, 2) }} ج.م</p>
+                            <p class="text-sm font-semibold tabular-nums text-accent">{{ number_format($item->total, 2) }} $</p>
                         </div>
                     @empty
                         <p class="py-4 text-center text-sm text-muted">لا توجد بيانات</p>
@@ -294,7 +294,7 @@
                                 <p class="text-sm font-medium text-ink">{{ \App\Models\Expense::categoryLabel($item->category) }}</p>
                                 <p class="text-xs text-muted">{{ $item->count }} مصروف</p>
                             </div>
-                            <p class="text-sm font-semibold tabular-nums text-ink">{{ number_format($item->total, 2) }} ج.م</p>
+                            <p class="text-sm font-semibold tabular-nums text-ink">{{ number_format($item->total, 2) }} $</p>
                         </div>
                     @empty
                         <p class="py-4 text-center text-sm text-muted">لا توجد بيانات</p>
@@ -310,7 +310,7 @@
                                 <p class="text-sm font-medium text-ink">{{ $item->category ?? 'غير محدد' }}</p>
                                 <p class="text-xs text-muted">{{ $item->count }} معاملة</p>
                             </div>
-                            <p class="text-sm font-semibold tabular-nums text-ink">{{ number_format($item->total, 2) }} ج.م</p>
+                            <p class="text-sm font-semibold tabular-nums text-ink">{{ number_format($item->total, 2) }} $</p>
                         </div>
                     @empty
                         <p class="py-4 text-center text-sm text-muted">لا توجد بيانات</p>
@@ -331,9 +331,9 @@
                         <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
                             <span class="text-sm font-medium text-ink">{{ \Carbon\Carbon::parse($month . '-01')->format('Y-m') }}</span>
                             <div class="flex flex-wrap items-center gap-4 text-xs">
-                                <span class="text-accent">إيرادات: {{ number_format($monthlyData['revenues'][$index], 2) }} ج.م</span>
-                                <span class="text-muted">مصروفات: {{ number_format($monthlyData['expenses'][$index], 2) }} ج.م</span>
-                                <span class="font-semibold text-ink">صافي: {{ number_format($monthlyData['revenues'][$index] - $monthlyData['expenses'][$index], 2) }} ج.م</span>
+                                <span class="text-accent">إيرادات: {{ number_format($monthlyData['revenues'][$index], 2) }} $</span>
+                                <span class="text-muted">مصروفات: {{ number_format($monthlyData['expenses'][$index], 2) }} $</span>
+                                <span class="font-semibold text-ink">صافي: {{ number_format($monthlyData['revenues'][$index] - $monthlyData['expenses'][$index], 2) }} $</span>
                             </div>
                         </div>
                         <div class="relative h-8 overflow-hidden rounded-full bg-canvas-muted">

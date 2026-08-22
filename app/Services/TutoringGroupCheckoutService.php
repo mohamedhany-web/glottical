@@ -221,7 +221,7 @@ class TutoringGroupCheckoutService
                         'units_count' => $units,
                         'duration_days' => 90,
                         'price' => $order->amount,
-                        'currency' => 'EGP',
+                        'currency' => 'USD',
                         'is_active' => true,
                         'sort_order' => 0,
                     ]);

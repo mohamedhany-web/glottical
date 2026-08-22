@@ -16,9 +16,9 @@
     ];
     $status = $statusBadges[$employeeAgreement->status] ?? ['label' => $employeeAgreement->status, 'classes' => 'bg-canvas text-muted'];
     $statCards = [
-        ['label' => 'الراتب الأساسي', 'value' => number_format($employeeAgreement->salary, 2) . ' ج.م', 'icon' => 'fas fa-money-bill-wave'],
-        ['label' => 'إجمالي الخصومات', 'value' => number_format($stats['total_deductions'], 2) . ' ج.م', 'icon' => 'fas fa-minus-circle', 'tone' => 'rose'],
-        ['label' => 'إجمالي المدفوعات', 'value' => number_format($stats['total_payments'], 2) . ' ج.م', 'icon' => 'fas fa-check-circle', 'tone' => 'emerald'],
+        ['label' => 'الراتب الأساسي', 'value' => number_format($employeeAgreement->salary, 2) . ' $', 'icon' => 'fas fa-money-bill-wave'],
+        ['label' => 'إجمالي الخصومات', 'value' => number_format($stats['total_deductions'], 2) . ' $', 'icon' => 'fas fa-minus-circle', 'tone' => 'rose'],
+        ['label' => 'إجمالي المدفوعات', 'value' => number_format($stats['total_payments'], 2) . ' $', 'icon' => 'fas fa-check-circle', 'tone' => 'emerald'],
         ['label' => 'الدفعات المعلقة', 'value' => $stats['pending_payments'], 'icon' => 'fas fa-clock', 'tone' => 'amber'],
     ];
 @endphp
@@ -84,7 +84,7 @@
                         </div>
                         <div>
                             <p class="text-xs font-medium text-muted">الراتب</p>
-                            <p class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($employeeAgreement->salary, 2) }} ج.م</p>
+                            <p class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($employeeAgreement->salary, 2) }} $</p>
                         </div>
                         <div>
                             <p class="text-xs font-medium text-muted">الحالة</p>
@@ -162,7 +162,7 @@
                                         @endif
                                     </span>
                                 </td>
-                                <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold tabular-nums text-rose-600">{{ number_format($deduction->amount, 2) }} ج.م</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold tabular-nums text-rose-600">{{ number_format($deduction->amount, 2) }} $</td>
                                 <td class="whitespace-nowrap px-4 py-3 text-muted">{{ $deduction->deduction_date->format('Y-m-d') }}</td>
                             </tr>
                             @endforeach
@@ -196,7 +196,7 @@
                             <input type="date" name="payment_date" value="{{ now()->endOfMonth()->format('Y-m-d') }}" required class="{{ $fieldClass }} w-auto min-w-[160px]">
                         </div>
                         <div>
-                            <label class="{{ $labelClass }}">الخصومات (ج.م)</label>
+                            <label class="{{ $labelClass }}">الخصومات ($)</label>
                             <input type="number" name="total_deductions" value="0" min="0" step="0.01" class="{{ $fieldClass }} w-28">
                         </div>
                         <div class="min-w-[200px] flex-1">
@@ -227,9 +227,9 @@
                             <tr class="hover:bg-canvas/40">
                                 <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-ink">{{ $payment->payment_number }}</td>
                                 <td class="whitespace-nowrap px-4 py-3 text-muted">{{ $payment->payment_date->format('Y-m-d') }}</td>
-                                <td class="whitespace-nowrap px-4 py-3 tabular-nums text-ink">{{ number_format($payment->base_salary, 2) }} ج.م</td>
-                                <td class="whitespace-nowrap px-4 py-3 tabular-nums text-rose-600">{{ number_format($payment->total_deductions, 2) }} ج.م</td>
-                                <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold tabular-nums text-emerald-600">{{ number_format($payment->net_salary, 2) }} ج.م</td>
+                                <td class="whitespace-nowrap px-4 py-3 tabular-nums text-ink">{{ number_format($payment->base_salary, 2) }} $</td>
+                                <td class="whitespace-nowrap px-4 py-3 tabular-nums text-rose-600">{{ number_format($payment->total_deductions, 2) }} $</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold tabular-nums text-emerald-600">{{ number_format($payment->net_salary, 2) }} $</td>
                                 <td class="whitespace-nowrap px-4 py-3">
                                     <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-semibold
                                         @if($payment->status === 'paid') bg-emerald-50 text-emerald-700

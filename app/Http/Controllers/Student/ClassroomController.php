@@ -227,6 +227,11 @@ class ClassroomController extends Controller
                         ->with('error', 'انتهى هذا الاجتماع ولا يمكن إعادة فتح الغرفة.');
                 }
 
+                if ($meeting->one_to_one_session_id) {
+                    return redirect()->route('instructor.one-to-one-sessions.show', $meeting->one_to_one_session_id)
+                        ->with('error', 'انتهى هذا الاجتماع ولا يمكن إعادة فتح الغرفة.');
+                }
+
                 return redirect()->route('instructor.consultations.index')
                     ->with('error', 'انتهى هذا الاجتماع ولا يمكن إعادة فتح الغرفة.');
             }
@@ -238,6 +243,12 @@ class ClassroomController extends Controller
 
             return redirect()->route('student.classroom.show', $meeting)
                 ->with('error', 'انتهى هذا الاجتماع ولا يمكن إعادة فتح الغرفة.');
+        }
+
+        // Host entering the room starts the meeting so attendance can be verified before completing 1:1.
+        if (! $meeting->started_at) {
+            $meeting->update(['started_at' => now()]);
+            $meeting->refresh();
         }
 
         $limits = $this->classroomLimits();

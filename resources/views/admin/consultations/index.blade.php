@@ -17,7 +17,7 @@
         <form method="POST" action="{{ route('admin.consultations.settings') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             @csrf
             <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">السعر الافتراضي (جنيه مصري — ج.م)</label>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">السعر الافتراضي (دولار أمريكي — $)</label>
                 <p class="text-[11px] text-slate-500 mb-1">يُستخدم للمدربين الذين لم يُحدَّد لهم سعر خاص من صفحة <a href="{{ route('admin.personal-branding.index') }}" class="text-sky-600 font-semibold underline">التسويق الشخصي</a>.</p>
                 <input type="number" step="0.01" name="default_price" value="{{ old('default_price', $settings->default_price) }}" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" required>
             </div>
@@ -78,7 +78,7 @@
                             <td class="px-4 py-3 font-mono text-xs">{{ $req->id }}</td>
                             <td class="px-4 py-3">{{ $req->student->name ?? '—' }}</td>
                             <td class="px-4 py-3">{{ $req->instructor->name ?? '—' }}</td>
-                            <td class="px-4 py-3 font-semibold">{{ number_format($req->price_amount, 2) }} ج.م</td>
+                            <td class="px-4 py-3 font-semibold">{{ number_format($req->price_amount, 2) }} $</td>
                             <td class="px-4 py-3"><span class="px-2 py-1 rounded-md bg-slate-100 text-xs">{{ $req->statusLabel() }}</span></td>
                             <td class="px-4 py-3 text-xs text-slate-500">{{ $req->created_at->format('Y-m-d H:i') }}</td>
                             <td class="px-4 py-3"><a href="{{ route('admin.consultations.show', $req) }}" class="text-sky-600 font-semibold hover:underline">إدارة</a></td>

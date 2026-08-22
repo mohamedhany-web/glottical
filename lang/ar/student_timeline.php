@@ -607,7 +607,7 @@ return [
     'learn_week_days' => 'أيام توافر',
     'learn_consultation' => 'استشارة',
     'learn_min_short' => ' د',
-    'learn_egp' => 'ج.م',
+    'learn_egp' => '$',
     'learn_teacher_courses' => 'كورساته',
     'learn_teacher_courses_hint' => 'مسارات فردية وجماعية مرتبطة بهذا المعلم',
     'learn_lessons' => 'درس',

@@ -29,7 +29,7 @@ class PaymentGatewaysHubTest extends TestCase
             'mid' => 'MID-test',
             'api_key' => 'api-key-test',
             'secret' => 'secret-value',
-            'currency' => 'EGP',
+            'currency' => 'USD',
             'merchant_redirect_url' => 'https://glottical.test/checkout/kashier/callback',
         ]);
 
@@ -44,7 +44,7 @@ class PaymentGatewaysHubTest extends TestCase
         $this->assertNotSame('api-key-test', Setting::getValue(KashierSettings::API_KEY_KEY));
         $this->assertTrue(PaymentGatewaySettings::blocksManualCheckout());
         $this->assertTrue(PaymentGatewaySettings::paidMatchesOrder(100.5, 'EGP', 100.50, 'egp'));
-        $this->assertFalse(PaymentGatewaySettings::paidMatchesOrder(100.5, 'EGP', 1.00, 'EGP'));
+        $this->assertFalse(PaymentGatewaySettings::paidMatchesOrder(100.5, 'EGP', 1.00, 'USD'));
     }
 
     public function test_admin_payment_gateways_page_does_not_echo_kashier_api_key(): void
@@ -55,7 +55,7 @@ class PaymentGatewaysHubTest extends TestCase
             'mid' => 'MID-test',
             'api_key' => 'kashier-api-secret-value',
             'secret' => 'secret-value',
-            'currency' => 'EGP',
+            'currency' => 'USD',
         ]);
 
         $admin = User::factory()->create([

@@ -120,7 +120,7 @@ class PaymentGatewaysController extends Controller
             'mid' => $kashierMid,
             'api_key' => $kashierApiKey !== '' ? $kashierApiKey : null,
             'secret' => $kashierSecret !== '' ? $kashierSecret : null,
-            'currency' => (string) $request->input('kashier_currency', 'EGP'),
+            'currency' => (string) $request->input('kashier_currency', 'USD'),
             'merchant_redirect_url' => $redirectRaw,
         ]);
 

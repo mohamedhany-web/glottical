@@ -114,11 +114,14 @@ class Invoice extends Model
 
     public function scopeOverdue($query)
     {
-        return $query->where('status', 'overdue')
-            ->orWhere(function($q) {
-                $q->where('status', 'pending')
-                  ->where('due_date', '<', now());
-            });
+        return $query->where(function ($q) {
+            $q->where('status', 'overdue')
+                ->orWhere(function ($inner) {
+                    $inner->where('status', 'pending')
+                        ->whereNotNull('due_date')
+                        ->whereDate('due_date', '<', now()->toDateString());
+                });
+        });
     }
 
     // Methods

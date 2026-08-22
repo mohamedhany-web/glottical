@@ -21,8 +21,8 @@
     };
 
     $kpiCards = [
-        ['label' => 'إجمالي المدفوعات', 'value' => number_format($stats['total_earned'], 2) . ' ج.م', 'icon' => 'fa-money-bill-wave', 'tone' => 'ink'],
-        ['label' => 'معلق', 'value' => number_format($stats['pending_amount'], 2) . ' ج.م', 'icon' => 'fa-clock', 'tone' => 'amber'],
+        ['label' => 'إجمالي المدفوعات', 'value' => number_format($stats['total_earned'], 2) . ' $', 'icon' => 'fa-money-bill-wave', 'tone' => 'ink'],
+        ['label' => 'معلق', 'value' => number_format($stats['pending_amount'], 2) . ' $', 'icon' => 'fa-clock', 'tone' => 'amber'],
         ['label' => 'إجمالي الدفعات', 'value' => number_format($stats['total_payments']), 'icon' => 'fa-receipt', 'tone' => 'ink'],
         ['label' => 'مدفوع', 'value' => number_format($stats['paid_payments']), 'icon' => 'fa-check-circle', 'tone' => 'emerald'],
     ];
@@ -100,7 +100,7 @@
                         @else
                             <div>
                                 <p class="text-xs font-medium text-muted">السعر/المعدل</p>
-                                <p class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($agreement->rate, 2) }} ج.م</p>
+                                <p class="mt-1 text-sm font-semibold tabular-nums text-ink">{{ number_format($agreement->rate, 2) }} $</p>
                             </div>
                         @endif
                         <div>
@@ -164,7 +164,7 @@
                                             <p class="mt-0.5 text-xs text-muted">الطالب: {{ $payment->enrollment->student->name ?? '—' }}</p>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($payment->amount, 2) }} ج.م</td>
+                                    <td class="px-4 py-3 font-semibold tabular-nums text-ink">{{ number_format($payment->amount, 2) }} $</td>
                                     <td class="px-4 py-3">
                                         <span class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold {{ $paymentStatusBadge($payment->status) }}">
                                             <span class="size-1.5 rounded-full bg-current"></span>

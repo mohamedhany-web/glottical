@@ -11,7 +11,7 @@
         ['label' => 'إجمالي المعاملات', 'value' => $stats['total'] ?? 0, 'icon' => 'fa-exchange-alt', 'tone' => 'accent', 'note' => 'كل المعاملات المسجلة'],
         ['label' => 'مكتملة', 'value' => $stats['completed'] ?? 0, 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => 'تمت بنجاح'],
         ['label' => 'معلقة', 'value' => $stats['pending'] ?? 0, 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'note' => 'في انتظار المعالجة'],
-        ['label' => 'إجمالي المبلغ', 'value' => number_format($stats['total_amount'] ?? 0, 2) . ' ج.م', 'icon' => 'fa-coins', 'tone' => 'muted', 'note' => 'قيمة المكتملة', 'raw' => true],
+        ['label' => 'إجمالي المبلغ', 'value' => number_format($stats['total_amount'] ?? 0, 2) . ' $', 'icon' => 'fa-coins', 'tone' => 'muted', 'note' => 'قيمة المكتملة', 'raw' => true],
     ];
     $toneClass = [
         'accent' => 'bg-accent-soft text-accent',
@@ -172,7 +172,7 @@
                             </td>
                             <td class="px-4 py-3 font-semibold tabular-nums {{ $isDebit ? 'text-metal' : ($isCredit ? 'text-accent' : 'text-ink') }}">
                                 {{ $isDebit ? '-' : ($isCredit ? '+' : '') }}{{ number_format($transaction->amount, 2) }}
-                                <span class="text-xs font-normal text-muted">ج.م</span>
+                                <span class="text-xs font-normal text-muted">$</span>
                             </td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-medium {{ $statusMeta['classes'] }}">{{ $statusMeta['label'] }}</span>

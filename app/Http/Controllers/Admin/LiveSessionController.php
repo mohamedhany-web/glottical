@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\LiveSession;
-use App\Models\LiveServer;
-use App\Models\LiveSetting;
 use App\Models\AdvancedCourse;
+use App\Models\LiveServer;
+use App\Models\LiveSession;
+use App\Models\SessionAttendance;
 use App\Models\User;
+use App\Services\LiveMeetingProvider;
 use App\Support\AppTimezone;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LiveSessionController extends Controller
 {
@@ -19,19 +21,56 @@ class LiveSessionController extends Controller
     private function liveHostOptions()
     {
         try {
-            return User::canHostLiveSession()
+            $hosts = User::canHostLiveSession()
                 ->select('id', 'name', 'email', 'role')
                 ->orderBy('name')
                 ->get();
         } catch (\Throwable $e) {
             report($e);
 
-            return User::query()
+            $hosts = User::query()
                 ->whereIn('role', ['instructor', 'teacher'])
                 ->select('id', 'name', 'email', 'role')
                 ->orderBy('name')
                 ->get();
         }
+
+        $admin = Auth::user();
+        if ($admin && ! $hosts->contains('id', $admin->id)) {
+            $hosts = $hosts->prepend($admin)->values();
+        }
+
+        return $hosts;
+    }
+
+    private function preferredServerId(): ?int
+    {
+        $server = app(LiveMeetingProvider::class)->preferredLiveKitServer()
+            ?: LiveServer::query()->where('status', 'active')->orderByDesc('id')->first();
+
+        return $server?->id;
+    }
+
+    private function recordHostAttendance(LiveSession $liveSession): void
+    {
+        $exists = SessionAttendance::query()
+            ->where('session_id', $liveSession->id)
+            ->where('user_id', Auth::id())
+            ->whereNull('left_at')
+            ->exists();
+
+        if ($exists) {
+            return;
+        }
+
+        SessionAttendance::create([
+            'session_id' => $liveSession->id,
+            'user_id' => Auth::id(),
+            'joined_at' => now(),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'role_in_session' => 'instructor',
+        ]);
     }
 
     public function index(Request $request)
@@ -108,6 +147,9 @@ class LiveSessionController extends Controller
         $validated['mute_on_join'] = $request->boolean('mute_on_join', true);
         $validated['video_off_on_join'] = $request->boolean('video_off_on_join', true);
         $validated['status'] = 'scheduled';
+        if (empty($validated['server_id'])) {
+            $validated['server_id'] = $this->preferredServerId();
+        }
 
         $session = LiveSession::create($validated);
 
@@ -183,12 +225,102 @@ class LiveSessionController extends Controller
     public function forceEnd(LiveSession $liveSession)
     {
         $liveSession->end();
+
         return back()->with('success', 'تم إنهاء الجلسة بنجاح');
     }
 
     public function cancel(LiveSession $liveSession)
     {
         $liveSession->cancel();
+
         return back()->with('success', 'تم إلغاء الجلسة');
+    }
+
+    /**
+     * إنشاء بث فوري للإدارة والدخول للغرفة مباشرة (مضيف).
+     */
+    public function instant(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'nullable|string|max:255',
+        ]);
+
+        $title = trim((string) ($validated['title'] ?? ''));
+        if ($title === '') {
+            $title = 'بث إداري — '.now()->timezone(config('app.timezone'))->format('Y/m/d H:i');
+        }
+
+        $session = LiveSession::create([
+            'title' => $title,
+            'description' => 'جلسة مباشرة أنشأتها الإدارة للانضمام الفوري.',
+            'instructor_id' => Auth::id(),
+            'server_id' => $this->preferredServerId(),
+            'scheduled_at' => now(),
+            'status' => 'scheduled',
+            'max_participants' => 200,
+            'is_recorded' => false,
+            'allow_chat' => true,
+            'allow_screen_share' => true,
+            'require_enrollment' => false,
+            'mute_on_join' => false,
+            'video_off_on_join' => false,
+        ]);
+
+        $session->start();
+        $this->recordHostAttendance($session);
+
+        return redirect()
+            ->route('admin.live-sessions.room', $session)
+            ->with('success', 'تم فتح البث المباشر — أنت المضيف الآن');
+    }
+
+    /**
+     * بدء جلسة مجدولة والدخول كمضيف من لوحة الإدارة.
+     */
+    public function start(LiveSession $liveSession)
+    {
+        if ($liveSession->isLive()) {
+            $this->recordHostAttendance($liveSession);
+
+            return redirect()->route('admin.live-sessions.room', $liveSession);
+        }
+
+        if (! $liveSession->isScheduled()) {
+            return back()->with('error', 'لا يمكن بدء هذه الجلسة — الحالة الحالية: '.$liveSession->status);
+        }
+
+        $liveSession->start();
+        $this->recordHostAttendance($liveSession);
+
+        return redirect()->route('admin.live-sessions.room', $liveSession);
+    }
+
+    public function room(LiveSession $liveSession)
+    {
+        if (! $liveSession->isLive()) {
+            return redirect()
+                ->route('admin.live-sessions.show', $liveSession)
+                ->with('info', 'الجلسة ليست في وضع البث حالياً');
+        }
+
+        $user = Auth::user();
+        $this->recordHostAttendance($liveSession);
+        $meeting = app(LiveMeetingProvider::class)->roomPayload($liveSession, $user, true);
+
+        return view('admin.live-sessions.room', array_merge([
+            'liveSession' => $liveSession,
+            'user' => $user,
+        ], $meeting));
+    }
+
+    public function end(LiveSession $liveSession)
+    {
+        if ($liveSession->isLive()) {
+            $liveSession->end();
+        }
+
+        return redirect()
+            ->route('admin.live-sessions.show', $liveSession)
+            ->with('success', 'تم إنهاء البث');
     }
 }

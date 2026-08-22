@@ -28,7 +28,7 @@
         ],
         [
             'label' => 'إجمالي المكتملة',
-            'value' => number_format($stats['completed'], 2) . ' ج.م',
+            'value' => number_format($stats['completed'], 2) . ' $',
             'icon' => 'fas fa-check-double',
             'description' => 'مجموع المبالغ المكتملة',
         ],
@@ -149,7 +149,7 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="text-lg font-semibold tabular-nums text-ink">{{ number_format($withdrawal->amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></div>
+                                    <div class="text-lg font-semibold tabular-nums text-ink">{{ number_format($withdrawal->amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">$</span></div>
                                 </td>
                                 <td class="px-4 py-3">
                                     @php

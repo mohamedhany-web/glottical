@@ -37,7 +37,7 @@
             <div class="su-meta-row">
                 <span class="su-meta-ico su-soft-1"><i class="fas fa-money-bill-wave" aria-hidden="true"></i></span>
                 <span>{{ __('instructor.cons_amount') }}:</span>
-                <strong class="tabular-nums">{{ number_format($consultation->price_amount, 2) }} ج.م</strong>
+                <strong class="tabular-nums">{{ number_format($consultation->price_amount, 2) }} $</strong>
             </div>
             <div class="su-meta-row">
                 <span class="su-meta-ico su-soft-2"><i class="fas fa-clock" aria-hidden="true"></i></span>

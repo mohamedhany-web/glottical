@@ -385,7 +385,7 @@ return [
     'lesson_single' => 'درس',
     'course_description_fallback' => 'برنامج تدريبي متكامل لتعلّم اللغة',
     'free' => 'مجاني',
-    'currency' => 'ج.م',
+    'currency' => '$',
     'view_btn' => 'عرض',
     'view_all_courses' => 'عرض جميع الكورسات',
     'coming_soon' => 'قريباً...',

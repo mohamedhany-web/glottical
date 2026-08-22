@@ -120,7 +120,7 @@
                                     {{ $coupon->discount_type == 'percentage' ? 'نسبة مئوية' : 'مبلغ ثابت' }}
                                 </td>
                                 <td class="px-4 py-3 font-semibold tabular-nums text-ink">
-                                    {{ $coupon->discount_type == 'percentage' ? $coupon->discount_value . '%' : number_format($coupon->discount_value, 2) . ' ج.م' }}
+                                    {{ $coupon->discount_type == 'percentage' ? $coupon->discount_value . '%' : number_format($coupon->discount_value, 2) . ' $' }}
                                 </td>
                                 <td class="px-4 py-3 tabular-nums text-muted">
                                     <span title="استخدامات فعلية">{{ $coupon->used_count ?? ($coupon->usages_count ?? 0) }}</span>

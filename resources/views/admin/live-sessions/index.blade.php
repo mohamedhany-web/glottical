@@ -1,211 +1,207 @@
 @extends('layouts.admin')
-@section('title', 'جلسات البث المباشر')
+
+@section('title', 'جلسات البث المباشر - Glottical')
+@section('page_title', 'جلسات البث المباشر')
 
 @section('content')
-<div class="space-y-6">
-    {{-- Header --}}
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-800 dark:text-white">
-                <i class="fas fa-broadcast-tower text-red-500 ml-2"></i>جلسات البث المباشر
-            </h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">إدارة جلسات البث والتحكم في المعلمين (المعلم = المشترك عندنا — طالب يشترون منا الخدمة)</p>
-        </div>
-        <a href="{{ route('admin.live-sessions.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold shadow-lg shadow-red-500/25 transition-all">
-            <i class="fas fa-plus"></i> إنشاء جلسة جديدة
-        </a>
-    </div>
+@php
+    $kpis = [
+        ['label' => 'إجمالي الجلسات', 'value' => $stats['total'], 'icon' => 'fa-list', 'tone' => 'muted', 'note' => 'كل الجلسات المسجّلة'],
+        ['label' => 'مباشر الآن', 'value' => $stats['live'], 'icon' => 'fa-broadcast-tower', 'tone' => 'accent', 'note' => 'غرف قيد التشغيل'],
+        ['label' => 'مجدولة', 'value' => $stats['scheduled'], 'icon' => 'fa-clock', 'tone' => 'metal', 'note' => 'بانتظار البدء'],
+        ['label' => 'منتهية', 'value' => $stats['ended'], 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => 'اكتملت'],
+    ];
+    $toneClass = [
+        'accent' => 'bg-accent-soft text-accent',
+        'metal' => 'bg-metal/15 text-metal',
+        'muted' => 'bg-canvas-muted text-muted',
+    ];
+    $fieldClass = 'h-11 w-full rounded-xl border border-line bg-surface px-4 text-sm text-ink transition placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20';
+    $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
+@endphp
 
-    {{-- Stats --}}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-                    <i class="fas fa-list text-slate-500"></i>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-slate-800 dark:text-white">{{ $stats['total'] }}</p>
-                    <p class="text-xs text-slate-500">إجمالي الجلسات</p>
-                </div>
-            </div>
+<div class="space-y-5">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-xs font-medium text-muted">البث المباشر · LiveKit</p>
+            <h2 class="mt-1 text-2xl font-semibold tracking-tight text-ink md:text-[28px]">جلسات البث المباشر</h2>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-red-200 dark:border-red-900/50">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-red-50 dark:bg-red-900/30 flex items-center justify-center">
-                    <i class="fas fa-circle text-red-500 animate-pulse text-xs"></i>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-red-600">{{ $stats['live'] }}</p>
-                    <p class="text-xs text-slate-500">مباشر الآن</p>
-                </div>
-            </div>
+        <div class="admin-hero-actions flex flex-wrap gap-2">
+            <form method="POST" action="{{ route('admin.live-sessions.instant') }}" class="inline">
+                @csrf
+                <button type="submit" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                    <i class="fas fa-video text-xs"></i>
+                    ابدأ بثاً الآن
+                </button>
+            </form>
+            <a href="{{ route('admin.live-sessions.create') }}" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-ink-soft transition hover:border-accent/30 hover:text-accent">
+                <i class="fas fa-calendar-plus text-xs"></i>
+                جدولة جلسة
+            </a>
         </div>
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-blue-200 dark:border-blue-900/50">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                    <i class="fas fa-clock text-blue-500"></i>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-blue-600">{{ $stats['scheduled'] }}</p>
-                    <p class="text-xs text-slate-500">مجدولة</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-emerald-200 dark:border-emerald-900/50">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
-                    <i class="fas fa-check-circle text-emerald-500"></i>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-emerald-600">{{ $stats['ended'] }}</p>
-                    <p class="text-xs text-slate-500">منتهية</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    </section>
 
-    {{-- Filters --}}
-    <form method="GET" class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 flex flex-wrap gap-3 items-end">
-        <div class="flex-1 min-w-[180px]">
-            <label class="text-xs text-slate-500 mb-1 block">بحث</label>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="اسم الجلسة أو الغرفة..." class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
+    @if(session('success'))
+        <div class="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink shadow-soft" role="status">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><i class="fas fa-check text-sm"></i></span>
+            <p>{{ session('success') }}</p>
         </div>
-        <div>
-            <label class="text-xs text-slate-500 mb-1 block">الحالة</label>
-            <select name="status" class="rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
-                <option value="">الكل</option>
-                <option value="scheduled" {{ request('status') == 'scheduled' ? 'selected' : '' }}>مجدولة</option>
-                <option value="live" {{ request('status') == 'live' ? 'selected' : '' }}>مباشر</option>
-                <option value="ended" {{ request('status') == 'ended' ? 'selected' : '' }}>منتهية</option>
-                <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ملغاة</option>
-            </select>
+    @endif
+    @if(session('error'))
+        <div class="flex items-center gap-3 rounded-2xl border border-danger/30 bg-surface px-4 py-3 text-sm font-medium text-danger shadow-soft" role="alert">
+            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-danger/10 text-danger"><i class="fas fa-exclamation text-sm"></i></span>
+            <p>{{ session('error') }}</p>
         </div>
-        <div>
-            <label class="text-xs text-slate-500 mb-1 block">الكورس</label>
-            <select name="course_id" class="rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
-                <option value="">الكل</option>
-                @foreach($courses as $course)
-                    <option value="{{ $course->id }}" {{ request('course_id') == $course->id ? 'selected' : '' }}>{{ Str::limit($course->title, 30) }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <label class="text-xs text-slate-500 mb-1 block">المعلم (المشترك)</label>
-            <select name="instructor_id" class="rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
-                <option value="">الكل</option>
-                @foreach($instructors as $inst)
-                    <option value="{{ $inst->id }}" {{ request('instructor_id') == $inst->id ? 'selected' : '' }}>{{ $inst->name }}{{ $inst->role === 'student' ? ' (مشترك)' : '' }}</option>
-                @endforeach
-            </select>
-        </div>
-        <button type="submit" class="px-4 py-2 bg-slate-800 dark:bg-slate-600 text-white rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors">
-            <i class="fas fa-search ml-1"></i> بحث
-        </button>
-        @if(request()->hasAny(['search', 'status', 'course_id', 'instructor_id']))
-            <a href="{{ route('admin.live-sessions.index') }}" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-300 transition-colors">مسح</a>
-        @endif
-    </form>
+    @endif
 
-    {{-- Table --}}
-    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <section class="admin-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach($kpis as $kpi)
+            <article class="rounded-2xl border border-line bg-surface p-4 shadow-soft">
+                <div class="inline-flex size-9 items-center justify-center rounded-xl {{ $toneClass[$kpi['tone']] }}">
+                    <i class="fas {{ $kpi['icon'] }} text-sm"></i>
+                </div>
+                <p class="mt-3 text-xs text-muted">{{ $kpi['label'] }}</p>
+                <p class="mt-1 text-xl font-semibold tabular-nums tracking-tight text-ink">{{ number_format($kpi['value']) }}</p>
+                <p class="mt-1 text-[11px] text-muted">{{ $kpi['note'] }}</p>
+            </article>
+        @endforeach
+    </section>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div class="border-b border-line px-4 py-4 sm:px-5">
+            <h3 class="text-base font-semibold text-ink">البحث والفلترة</h3>
+            <p class="mt-0.5 text-xs text-muted">ابحث بالعنوان أو اسم الغرفة، أو صفِّ حسب الحالة والمضيف والكورس</p>
+        </div>
+        <form method="GET" class="grid grid-cols-1 gap-4 p-4 sm:p-5 md:grid-cols-2 xl:grid-cols-5 md:items-end">
+            <div class="xl:col-span-2">
+                <label class="{{ $labelClass }}" for="search">بحث</label>
+                <input id="search" type="search" name="search" value="{{ request('search') }}" placeholder="اسم الجلسة أو الغرفة..." class="{{ $fieldClass }}">
+            </div>
+            <div>
+                <label class="{{ $labelClass }}" for="status">الحالة</label>
+                <select id="status" name="status" class="{{ $fieldClass }}">
+                    <option value="">الكل</option>
+                    <option value="scheduled" @selected(request('status') === 'scheduled')>مجدولة</option>
+                    <option value="live" @selected(request('status') === 'live')>مباشر</option>
+                    <option value="ended" @selected(request('status') === 'ended')>منتهية</option>
+                    <option value="cancelled" @selected(request('status') === 'cancelled')>ملغاة</option>
+                </select>
+            </div>
+            <div>
+                <label class="{{ $labelClass }}" for="course_id">الكورس</label>
+                <select id="course_id" name="course_id" class="{{ $fieldClass }}">
+                    <option value="">الكل</option>
+                    @foreach($courses as $course)
+                        <option value="{{ $course->id }}" @selected((string) request('course_id') === (string) $course->id)>{{ Str::limit($course->title, 30) }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="{{ $labelClass }}" for="instructor_id">المضيف</label>
+                <select id="instructor_id" name="instructor_id" class="{{ $fieldClass }}">
+                    <option value="">الكل</option>
+                    @foreach($instructors as $inst)
+                        <option value="{{ $inst->id }}" @selected((string) request('instructor_id') === (string) $inst->id)>{{ $inst->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="flex flex-wrap gap-2 xl:col-span-5">
+                <button type="submit" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                    <i class="fas fa-search text-xs"></i> بحث
+                </button>
+                @if(request()->hasAny(['search', 'status', 'course_id', 'instructor_id']))
+                    <a href="{{ route('admin.live-sessions.index') }}" class="btn-press inline-flex h-9 items-center rounded-xl border border-line px-4 text-sm font-medium text-ink-soft hover:bg-canvas">مسح</a>
+                @endif
+            </div>
+        </form>
+    </article>
+
+    <article class="overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-50 dark:bg-slate-700/50">
-                    <tr>
-                        <th class="px-4 py-3 text-right text-slate-600 dark:text-slate-300 font-semibold">#</th>
-                        <th class="px-4 py-3 text-right text-slate-600 dark:text-slate-300 font-semibold">الجلسة</th>
-                        <th class="px-4 py-3 text-right text-slate-600 dark:text-slate-300 font-semibold">المعلم (المشترك)</th>
-                        <th class="px-4 py-3 text-right text-slate-600 dark:text-slate-300 font-semibold">الكورس</th>
-                        <th class="px-4 py-3 text-center text-slate-600 dark:text-slate-300 font-semibold">الحالة</th>
-                        <th class="px-4 py-3 text-center text-slate-600 dark:text-slate-300 font-semibold">الحضور</th>
-                        <th class="px-4 py-3 text-right text-slate-600 dark:text-slate-300 font-semibold">الموعد</th>
-                        <th class="px-4 py-3 text-center text-slate-600 dark:text-slate-300 font-semibold">إجراءات</th>
+            <table class="w-full min-w-[880px] text-sm">
+                <thead>
+                    <tr class="border-b border-line bg-canvas/60 text-start text-xs font-medium text-muted">
+                        <th class="px-4 py-3 font-medium">#</th>
+                        <th class="px-4 py-3 font-medium">الجلسة</th>
+                        <th class="px-4 py-3 font-medium">المضيف</th>
+                        <th class="px-4 py-3 font-medium">الكورس</th>
+                        <th class="px-4 py-3 text-center font-medium">الحالة</th>
+                        <th class="px-4 py-3 text-center font-medium">الحضور</th>
+                        <th class="px-4 py-3 font-medium">الموعد</th>
+                        <th class="px-4 py-3 text-center font-medium">إجراءات</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                <tbody class="divide-y divide-line">
                     @forelse($sessions as $session)
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                        <td class="px-4 py-3 text-slate-500">{{ $session->id }}</td>
-                        <td class="px-4 py-3">
-                            <a href="{{ route('admin.live-sessions.show', $session) }}" class="font-semibold text-slate-800 dark:text-white hover:text-blue-600 transition-colors">{{ Str::limit($session->title, 40) }}</a>
-                            <p class="text-[11px] text-slate-400 mt-0.5 font-mono">{{ $session->room_name }}</p>
-                        </td>
-                        <td class="px-4 py-3">
-                            @if($session->instructor)
-                                <a href="{{ route('admin.users.show', $session->instructor->id) }}" class="font-medium text-slate-800 dark:text-white hover:text-blue-600 hover:underline">{{ $session->instructor->name }}</a>
-                                @if($session->instructor->role === 'student')
-                                    <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">(مشترك)</span>
-                                @endif
-                            @else
-                                <span class="text-slate-500">—</span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ Str::limit($session->course?->title ?? 'عامة', 25) }}</td>
-                        <td class="px-4 py-3 text-center">
-                            @if($session->status === 'live')
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 text-xs font-bold">
-                                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span> مباشر
-                                </span>
-                            @elseif($session->status === 'scheduled')
-                                <span class="px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-xs font-medium">مجدولة</span>
-                            @elseif($session->status === 'ended')
-                                <span class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 text-xs font-medium">منتهية</span>
-                            @else
-                                <span class="px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 text-xs font-medium">ملغاة</span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300">
-                                <i class="fas fa-users text-xs text-slate-400"></i> {{ $session->attendance_count }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 text-slate-500 text-xs">{{ $session->scheduled_at?->format('Y/m/d H:i') ?? '—' }}</td>
-                        <td class="px-4 py-3 text-center">
-                            <div class="flex items-center justify-center gap-1">
-                                <a href="{{ route('admin.live-sessions.show', $session) }}" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-blue-600 transition-colors" title="عرض">
-                                    <i class="fas fa-eye text-xs"></i>
-                                </a>
-                                @if($session->status === 'scheduled')
-                                    <a href="{{ route('admin.live-sessions.edit', $session) }}" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-amber-600 transition-colors" title="تعديل">
-                                        <i class="fas fa-edit text-xs"></i>
-                                    </a>
-                                    <form method="POST" action="{{ route('admin.live-sessions.cancel', $session) }}" class="inline" onsubmit="return confirm('إلغاء هذه الجلسة؟')">
-                                        @csrf
-                                        <button type="submit" class="p-1.5 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 text-slate-500 hover:text-amber-600 transition-colors" title="إلغاء الجلسة">
-                                            <i class="fas fa-ban text-xs"></i>
-                                        </button>
-                                    </form>
-                                @endif
+                        <tr class="hover:bg-canvas/40 transition-colors">
+                            <td class="px-4 py-3 tabular-nums text-muted">{{ $session->id }}</td>
+                            <td class="px-4 py-3">
+                                <a href="{{ route('admin.live-sessions.show', $session) }}" class="font-semibold text-ink hover:text-accent">{{ Str::limit($session->title, 40) }}</a>
+                                <p class="mt-0.5 font-mono text-[11px] text-muted">{{ $session->room_name }}</p>
+                            </td>
+                            <td class="px-4 py-3 text-ink-soft">{{ $session->instructor?->name ?? '—' }}</td>
+                            <td class="px-4 py-3 text-ink-soft">{{ Str::limit($session->course?->title ?? 'عامة', 25) }}</td>
+                            <td class="px-4 py-3 text-center">
                                 @if($session->status === 'live')
-                                    <form method="POST" action="{{ route('admin.live-sessions.force-end', $session) }}" class="inline" onsubmit="return confirm('هل تريد إنهاء البث؟')">
-                                        @csrf
-                                        <button class="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-slate-500 hover:text-red-600 transition-colors" title="إنهاء البث">
-                                            <i class="fas fa-stop text-xs"></i>
-                                        </button>
-                                    </form>
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2.5 py-1 text-xs font-bold text-accent">
+                                        <span class="size-1.5 rounded-full bg-accent animate-pulse"></span> مباشر
+                                    </span>
+                                @elseif($session->status === 'scheduled')
+                                    <span class="inline-flex rounded-full bg-metal/15 px-2.5 py-1 text-xs font-medium text-metal">مجدولة</span>
+                                @elseif($session->status === 'ended')
+                                    <span class="inline-flex rounded-full bg-canvas-muted px-2.5 py-1 text-xs font-medium text-muted">منتهية</span>
+                                @else
+                                    <span class="inline-flex rounded-full bg-danger/10 px-2.5 py-1 text-xs font-medium text-danger">ملغاة</span>
                                 @endif
-                            </div>
-                        </td>
-                    </tr>
+                            </td>
+                            <td class="px-4 py-3 text-center tabular-nums text-ink-soft">{{ $session->attendance_count }}</td>
+                            <td class="px-4 py-3 text-xs text-muted">{{ $session->scheduled_at?->format('Y/m/d H:i') ?? '—' }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center justify-center gap-1">
+                                    @if($session->status === 'live')
+                                        <a href="{{ route('admin.live-sessions.room', $session) }}" class="btn-press inline-flex h-8 items-center gap-1 rounded-lg bg-accent px-2.5 text-xs font-semibold text-white" title="دخول الغرفة">
+                                            <i class="fas fa-door-open"></i> دخول
+                                        </a>
+                                        <form method="POST" action="{{ route('admin.live-sessions.force-end', $session) }}" class="inline" onsubmit="return confirm('إنهاء البث؟')">
+                                            @csrf
+                                            <button type="submit" class="inline-flex size-8 items-center justify-center rounded-lg text-muted hover:bg-danger/10 hover:text-danger" title="إنهاء"><i class="fas fa-stop text-xs"></i></button>
+                                        </form>
+                                    @elseif($session->status === 'scheduled')
+                                        <form method="POST" action="{{ route('admin.live-sessions.start', $session) }}" class="inline">
+                                            @csrf
+                                            <button type="submit" class="btn-press inline-flex h-8 items-center gap-1 rounded-lg bg-accent px-2.5 text-xs font-semibold text-white" title="بدء والدخول">
+                                                <i class="fas fa-play"></i> بدء
+                                            </button>
+                                        </form>
+                                        <a href="{{ route('admin.live-sessions.edit', $session) }}" class="inline-flex size-8 items-center justify-center rounded-lg text-muted hover:bg-canvas hover:text-accent" title="تعديل"><i class="fas fa-edit text-xs"></i></a>
+                                    @endif
+                                    <a href="{{ route('admin.live-sessions.show', $session) }}" class="inline-flex size-8 items-center justify-center rounded-lg text-muted hover:bg-canvas hover:text-accent" title="عرض"><i class="fas fa-eye text-xs"></i></a>
+                                </div>
+                            </td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="8" class="px-4 py-12 text-center">
-                            <i class="fas fa-broadcast-tower text-4xl text-slate-300 dark:text-slate-600 mb-3"></i>
-                            <p class="text-slate-500">لا توجد جلسات بث بعد</p>
-                            <a href="{{ route('admin.live-sessions.create') }}" class="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors">
-                                <i class="fas fa-plus"></i> إنشاء أول جلسة
-                            </a>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td colspan="8" class="px-4 py-14 text-center">
+                                <div class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+                                    <i class="fas fa-broadcast-tower"></i>
+                                </div>
+                                <p class="text-sm font-medium text-ink">لا توجد جلسات بث بعد</p>
+                                <p class="mt-1 text-xs text-muted">ابدأ بثاً فورياً الآن أو جدول جلسة لاحقاً</p>
+                                <form method="POST" action="{{ route('admin.live-sessions.instant') }}" class="mt-4 inline">
+                                    @csrf
+                                    <button type="submit" class="btn-press inline-flex h-9 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-medium text-white">
+                                        <i class="fas fa-video text-xs"></i> ابدأ بثاً الآن
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
         @if($sessions->hasPages())
-        <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700">
-            {{ $sessions->links() }}
-        </div>
+            <div class="border-t border-line px-4 py-3">{{ $sessions->links() }}</div>
         @endif
-    </div>
+    </article>
 </div>
 @endsection

@@ -104,7 +104,7 @@ class PaymentController extends Controller
 
         if ($validated['amount'] > $remainingAmount) {
             return back()->withErrors([
-                'amount' => 'لا يمكن دفع مبلغ أكبر من المتبقي (' . number_format($remainingAmount, 2) . ' ج.م).' ,
+                'amount' => 'لا يمكن دفع مبلغ أكبر من المتبقي (' . number_format($remainingAmount, 2) . ' $).' ,
             ])->withInput();
         }
 
@@ -115,7 +115,7 @@ class PaymentController extends Controller
             'payment_method' => $validated['payment_method'],
             'wallet_id' => $request->wallet_id ?? null,
             'amount' => $validated['amount'],
-            'currency' => 'EGP',
+            'currency' => 'USD',
             'status' => 'completed',
             'paid_at' => now(),
             'processed_by' => auth()->id(),
@@ -134,7 +134,7 @@ class PaymentController extends Controller
             'type' => 'credit', // دائن (إيراد)
             'category' => $invoice->type === 'subscription' ? 'subscription' : 'course_payment',
             'amount' => $validated['amount'],
-            'currency' => 'EGP',
+            'currency' => 'USD',
             'description' => 'دفعة للفاتورة: ' . $invoice->invoice_number . ' - ' . $invoice->description,
             'status' => 'completed',
             'metadata' => [
@@ -198,7 +198,7 @@ class PaymentController extends Controller
 
         if ($validated['status'] === 'completed' && $validated['amount'] > $currentRemaining) {
             return back()->withErrors([
-                'amount' => 'لا يمكن دفع مبلغ أكبر من المتبقي (' . number_format(max($currentRemaining, 0), 2) . ' ج.م).' ,
+                'amount' => 'لا يمكن دفع مبلغ أكبر من المتبقي (' . number_format(max($currentRemaining, 0), 2) . ' $).' ,
             ])->withInput();
         }
 

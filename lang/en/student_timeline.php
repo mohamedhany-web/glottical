@@ -607,7 +607,7 @@ return [
     'learn_week_days' => 'available days',
     'learn_consultation' => 'Consultation',
     'learn_min_short' => 'm',
-    'learn_egp' => 'EGP',
+    'learn_egp' => '$',
     'learn_teacher_courses' => 'Their courses',
     'learn_teacher_courses_hint' => 'Private and group paths linked to this teacher',
     'learn_lessons' => 'lessons',

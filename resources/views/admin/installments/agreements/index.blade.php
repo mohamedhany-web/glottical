@@ -20,8 +20,8 @@
     ];
     $kpis = [
         ['label' => 'اتفاقيات نشطة', 'value' => number_format($agreements->where('status', \App\Models\InstallmentAgreement::STATUS_ACTIVE)->count()), 'icon' => 'fa-bolt', 'tone' => 'accent', 'note' => 'الانتقالات الحالية التي تتطلب متابعة دورية'],
-        ['label' => 'إجمالي المبالغ الممولة', 'value' => number_format($agreements->sum('total_amount'), 2) . ' ج.م', 'icon' => 'fa-coins', 'tone' => 'metal', 'note' => 'القيمة الإجمالية التي تغطيها جميع الاتفاقيات'],
-        ['label' => 'دفعات مقدمة', 'value' => number_format($agreements->sum('deposit_amount'), 2) . ' ج.م', 'icon' => 'fa-hand-holding-usd', 'tone' => 'accent', 'note' => 'إجمالي المبالغ المحصلة كدفعات مقدمة'],
+        ['label' => 'إجمالي المبالغ الممولة', 'value' => number_format($agreements->sum('total_amount'), 2) . ' $', 'icon' => 'fa-coins', 'tone' => 'metal', 'note' => 'القيمة الإجمالية التي تغطيها جميع الاتفاقيات'],
+        ['label' => 'دفعات مقدمة', 'value' => number_format($agreements->sum('deposit_amount'), 2) . ' $', 'icon' => 'fa-hand-holding-usd', 'tone' => 'accent', 'note' => 'إجمالي المبالغ المحصلة كدفعات مقدمة'],
         ['label' => 'اتفاقيات متأخرة', 'value' => number_format($agreements->where('status', \App\Models\InstallmentAgreement::STATUS_OVERDUE)->count()), 'icon' => 'fa-exclamation-circle', 'tone' => 'muted', 'note' => 'الاتفاقيات التي تحتاج تدخلاً بسبب تأخر السداد'],
     ];
     $toneClass = [
@@ -128,11 +128,11 @@
                         <div class="grid grid-cols-2 gap-3 text-sm">
                             <div>
                                 <p class="text-[11px] font-medium uppercase text-muted">إجمالي الاتفاقية</p>
-                                <p class="mt-1 font-semibold tabular-nums text-ink">{{ number_format($agreement->total_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></p>
+                                <p class="mt-1 font-semibold tabular-nums text-ink">{{ number_format($agreement->total_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">$</span></p>
                             </div>
                             <div>
                                 <p class="text-[11px] font-medium uppercase text-muted">دفعة مقدمة</p>
-                                <p class="mt-1 font-semibold tabular-nums text-ink">{{ number_format($agreement->deposit_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></p>
+                                <p class="mt-1 font-semibold tabular-nums text-ink">{{ number_format($agreement->deposit_amount ?? 0, 2) }} <span class="text-xs font-normal text-muted">$</span></p>
                             </div>
                             <div>
                                 <p class="text-[11px] font-medium uppercase text-muted">عدد الأقساط</p>

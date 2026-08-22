@@ -160,7 +160,7 @@ class TutoringGroup extends Model
             return 'حسب الاتفاق';
         }
 
-        return number_format((float) $this->price, 0).' '.($this->currency ?: 'EGP');
+        return number_format((float) $this->price, 0).' '.($this->currency ?: 'USD');
     }
 
     public static function uniqueSlug(string $title, ?int $ignoreId = null): string

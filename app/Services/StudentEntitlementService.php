@@ -26,9 +26,9 @@ class StudentEntitlementService
             $paymentMethod = 'bank_transfer';
         }
 
-        $currency = strtoupper((string) ($package->currencyCode() ?: config('fawaterak.currency', 'EGP')));
+        $currency = strtoupper((string) ($package->currencyCode() ?: config('currency.code', 'USD')));
         if (! in_array($currency, ['EGP', 'USD'], true)) {
-            $currency = 'EGP';
+            $currency = 'USD';
         }
 
         return Order::create([
@@ -76,9 +76,9 @@ class StudentEntitlementService
             ? ' · '.$quote['term_months'].' شهر · '.((int) ($quote['weekly_sessions'] ?? 0)).' حصص/أسبوع'
             : '';
 
-        $currency = strtoupper((string) ($quote['currency'] ?? config('fawaterak.currency', 'EGP')));
+        $currency = strtoupper((string) ($quote['currency'] ?? config('currency.code', 'USD')));
         if (! in_array($currency, ['EGP', 'USD'], true)) {
-            $currency = 'EGP';
+            $currency = 'USD';
         }
 
         return Order::create([
@@ -648,7 +648,7 @@ class StudentEntitlementService
             'duration_days' => max(1, (int) $tutoringPackage->duration_months) * 30,
             'price' => $tutoringPackage->price,
             'original_price' => $tutoringPackage->original_price,
-            'currency' => $tutoringPackage->currency ?: 'EGP',
+            'currency' => $tutoringPackage->currency ?: 'USD',
             'is_active' => (bool) $tutoringPackage->is_active,
             'is_featured' => (bool) $tutoringPackage->is_featured,
             'sort_order' => (int) ($tutoringPackage->sort_order ?? 0),

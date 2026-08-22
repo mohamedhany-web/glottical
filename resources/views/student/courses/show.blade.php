@@ -294,20 +294,20 @@
                             <div class="original-price">
                                 @if($advancedCourse->hasPromotionalPrice())
                                     <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">قبل الخصم</p>
-                                    <div class="text-2xl text-gray-400 line-through mb-3 tabular-nums">{{ number_format($advancedCourse->listPriceAmount()) }} <span class="text-base">ج.م</span></div>
+                                    <div class="text-2xl text-gray-400 line-through mb-3 tabular-nums">{{ number_format($advancedCourse->listPriceAmount()) }} <span class="text-base">$</span></div>
                                     <p class="text-xs font-bold text-emerald-600 uppercase tracking-wide mb-1">بعد الخصم</p>
                                 @endif
                                 <div class="text-5xl sm:text-6xl font-black text-[#1C2C39] mb-2 tabular-nums" id="coursePrice" data-price="{{ $advancedCourse->effectivePurchasePrice() }}">{{ number_format($advancedCourse->effectivePurchasePrice()) }}</div>
-                                <div class="text-lg font-semibold text-[#1F3A56]">ج.م</div>
+                                <div class="text-lg font-semibold text-[#1F3A56]">$</div>
                             </div>
                             <!-- عرض السعر بعد كوبون إضافي (مخفي افتراضياً) -->
                             <div class="discount-price hidden mt-4 pt-4 border-t-2 border-gray-200">
                                 <div class="flex items-center justify-center gap-2 mb-3">
-                                    <span class="text-sm text-gray-400 line-through font-medium" id="originalPriceDisplay">{{ number_format($advancedCourse->effectivePurchasePrice()) }} ج.م</span>
+                                    <span class="text-sm text-gray-400 line-through font-medium" id="originalPriceDisplay">{{ number_format($advancedCourse->effectivePurchasePrice()) }} $</span>
                                     <span class="text-xs bg-gradient-to-r from-emerald-500 to-green-500 text-white px-3 py-1 rounded-full font-bold shadow-md" id="discountPercentage"></span>
                                 </div>
                                 <div class="text-5xl sm:text-6xl font-black text-emerald-600 mb-2 tabular-nums" id="finalPriceDisplay">{{ number_format($advancedCourse->effectivePurchasePrice()) }}</div>
-                                <div class="text-lg font-semibold text-emerald-600">ج.م</div>
+                                <div class="text-lg font-semibold text-emerald-600">$</div>
                                 <p class="text-sm text-emerald-600 mt-2 font-medium" id="discountAmountText"></p>
                             </div>
                         @else
@@ -723,9 +723,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const originalPriceSection = document.querySelector('.original-price');
 
         if (discountPriceSection && originalPriceDisplay && finalPriceDisplay && discountAmountText && discountPercentage) {
-            originalPriceDisplay.textContent = number_format(pricing.original_price) + ' ج.م';
+            originalPriceDisplay.textContent = number_format(pricing.original_price) + ' $';
             finalPriceDisplay.textContent = number_format(pricing.final_amount);
-            discountAmountText.textContent = 'وفرت: ' + number_format(pricing.discount_amount) + ' ج.م';
+            discountAmountText.textContent = 'وفرت: ' + number_format(pricing.discount_amount) + ' $';
             discountPercentage.textContent = '-' + pricing.discount_percentage + '%';
 
             // إخفاء السعر الأصلي وإظهار السعر بعد الخصم

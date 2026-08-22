@@ -6,6 +6,8 @@
 @section('content')
 @php
     $isRtl = app()->getLocale() === 'ar';
+    $usdPrice = old('price_usd', $course->price_usd ?? $course->price_egp ?? $course->price);
+    $usdSale = old('price_usd_after_discount', $course->price_usd_after_discount ?? $course->price_egp_after_discount ?? $course->price_after_discount);
 @endphp
 
 <div class="su-page" style="max-width:720px">
@@ -23,7 +25,7 @@
                 {{ $isRtl ? 'أسعار الكورس المسجّل' : 'Recorded course pricing' }}
             </h1>
             <p class="su-page-head__sub">
-                {{ $isRtl ? 'الجنيه للداخل — الدولار للخارج. الطالب يختار العملة عند الدفع.' : 'EGP for local — USD for abroad. Students pick currency at checkout.' }}
+                {{ $isRtl ? 'جميع الأسعار بالدولار الأمريكي (USD).' : 'All prices are in US dollars (USD).' }}
             </p>
         </div>
         <div class="su-page-head__actions">
@@ -46,24 +48,14 @@
 
         <div class="su-form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
             <div class="su-field">
-                <label for="price_egp">{{ $isRtl ? 'السعر بالجنيه (EGP)' : 'Price (EGP)' }}</label>
-                <input type="number" step="0.01" min="0" name="price_egp" id="price_egp"
-                       value="{{ old('price_egp', $course->price_egp ?? $course->price) }}" class="su-input">
-            </div>
-            <div class="su-field">
-                <label for="price_egp_after_discount">{{ $isRtl ? 'بعد الخصم (EGP)' : 'After discount (EGP)' }}</label>
-                <input type="number" step="0.01" min="0" name="price_egp_after_discount" id="price_egp_after_discount"
-                       value="{{ old('price_egp_after_discount', $course->price_egp_after_discount ?? $course->price_after_discount) }}" class="su-input">
-            </div>
-            <div class="su-field">
                 <label for="price_usd">{{ $isRtl ? 'السعر بالدولار (USD)' : 'Price (USD)' }}</label>
                 <input type="number" step="0.01" min="0" name="price_usd" id="price_usd"
-                       value="{{ old('price_usd', $course->price_usd) }}" class="su-input">
+                       value="{{ $usdPrice }}" class="su-input">
             </div>
             <div class="su-field">
                 <label for="price_usd_after_discount">{{ $isRtl ? 'بعد الخصم (USD)' : 'After discount (USD)' }}</label>
                 <input type="number" step="0.01" min="0" name="price_usd_after_discount" id="price_usd_after_discount"
-                       value="{{ old('price_usd_after_discount', $course->price_usd_after_discount) }}" class="su-input">
+                       value="{{ $usdSale }}" class="su-input">
             </div>
         </div>
 

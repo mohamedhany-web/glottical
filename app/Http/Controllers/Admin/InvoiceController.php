@@ -12,10 +12,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
 
 class InvoiceController extends Controller
 {
+    private const INVOICE_TYPES = ['course', 'subscription', 'membership', 'learning_path', 'other'];
+
     /**
      * عرض قائمة الفواتير
      * محمي من: XSS, SQL Injection, Brute Force
@@ -30,7 +32,7 @@ class InvoiceController extends Controller
             if ($request->filled('status')) {
                 $status = strip_tags(trim($request->status));
                 $status = preg_replace('/[^a-z_]/', '', $status); // السماح فقط بالأحرف الصغيرة والشرطة السفلية
-                if (in_array($status, ['pending', 'paid', 'overdue', 'cancelled'])) {
+                if (in_array($status, ['pending', 'paid', 'overdue', 'cancelled'], true)) {
                     $query->where('status', $status);
                 }
             }
@@ -39,11 +41,12 @@ class InvoiceController extends Controller
             if ($request->filled('search')) {
                 $search = SearchInput::sanitizeForLike((string) $request->search);
                 if ($search !== '') {
-                    $query->where(function($q) use ($search) {
+                    $query->where(function ($q) use ($search) {
                         $q->where('invoice_number', 'like', "%{$search}%")
-                          ->orWhereHas('user', function($uq) use ($search) {
+                          ->orWhereHas('user', function ($uq) use ($search) {
                               $uq->where('name', 'like', "%{$search}%")
-                                ->orWhere('phone', 'like', "%{$search}%");
+                                ->orWhere('phone', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
                           });
                     });
                 }
@@ -60,16 +63,34 @@ class InvoiceController extends Controller
             ];
 
             return view('admin.invoices.index', compact('invoices', 'stats'));
-        } catch (\Exception $e) {
-            Log::error('Error in InvoiceController@index: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Error in InvoiceController@index', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
             abort(500, 'حدث خطأ أثناء تحميل الصفحة');
         }
     }
 
     public function create()
     {
-        $users = User::where('role', 'student')->where('is_active', true)->get();
-        return view('admin.invoices.create', compact('users'));
+        try {
+            $users = User::query()
+                ->where('role', 'student')
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'email', 'phone']);
+
+            return view('admin.invoices.create', compact('users'));
+        } catch (\Throwable $e) {
+            Log::error('Error in InvoiceController@create', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            abort(500, 'حدث خطأ أثناء تحميل صفحة إنشاء الفاتورة');
+        }
     }
 
     /**
@@ -92,7 +113,7 @@ class InvoiceController extends Controller
             // Sanitization
             $validated = $request->validate([
                 'user_id' => 'required|exists:users,id',
-                'type' => 'required|string|max:255',
+                'type' => 'required|in:'.implode(',', self::INVOICE_TYPES),
                 'description' => 'nullable|string|max:1000',
                 'subtotal' => 'required|numeric|min:0|max:99999999.99',
                 'tax_amount' => 'nullable|numeric|min:0|max:99999999.99',
@@ -114,17 +135,19 @@ class InvoiceController extends Controller
                 $validated['description'] = match ($validated['type']) {
                     'course' => 'فاتورة كورس',
                     'subscription' => 'فاتورة اشتراك',
+                    'membership' => 'فاتورة عضوية',
+                    'learning_path' => 'فاتورة مسار تعليمي',
                     default => 'فاتورة',
                 };
             }
 
-            $total = $validated['subtotal'] 
-                + ($validated['tax_amount'] ?? 0) 
+            $total = $validated['subtotal']
+                + ($validated['tax_amount'] ?? 0)
                 - ($validated['discount_amount'] ?? 0);
 
             // Mass Assignment Protection - استخدام fillable فقط
             $invoice = Invoice::create([
-                'invoice_number' => 'INV-' . str_pad(Invoice::count() + 1, 8, '0', STR_PAD_LEFT),
+                'invoice_number' => Invoice::generateUniqueInvoiceNumber(),
                 'user_id' => (int) $validated['user_id'],
                 'type' => $validated['type'],
                 'description' => $validated['description'],
@@ -133,21 +156,13 @@ class InvoiceController extends Controller
                 'discount_amount' => (float) ($validated['discount_amount'] ?? 0),
                 'total_amount' => (float) $total,
                 'status' => 'pending',
-                'due_date' => $validated['due_date'] ? date('Y-m-d', strtotime($validated['due_date'])) : now()->addDays(30)->format('Y-m-d'),
-                'notes' => $validated['notes'],
-                'currency' => 'EGP',
+                'due_date' => ! empty($validated['due_date'])
+                    ? date('Y-m-d', strtotime((string) $validated['due_date']))
+                    : now()->addDays(30)->format('Y-m-d'),
+                'notes' => $validated['notes'] ?? null,
             ]);
 
-            // Activity Logging
-            ActivityLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'created',
-                'model_type' => 'Invoice',
-                'model_id' => $invoice->id,
-                'description' => 'تم إنشاء فاتورة جديدة: ' . $invoice->invoice_number,
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-            ]);
+            $this->logInvoiceActivity('created', $invoice, 'تم إنشاء فاتورة جديدة: '.$invoice->invoice_number, $request);
 
             DB::commit();
 
@@ -156,9 +171,13 @@ class InvoiceController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
             return back()->withErrors($e->errors())->withInput();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Error in InvoiceController@store: ' . $e->getMessage());
+            Log::error('Error in InvoiceController@store', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
             return back()->with('error', 'حدث خطأ أثناء إنشاء الفاتورة')->withInput();
         }
     }
@@ -170,18 +189,51 @@ class InvoiceController extends Controller
     public function show(Invoice $invoice)
     {
         try {
-            $invoice->load('user', 'payments', 'transactions', 'order', 'expense');
+            $with = ['user'];
+            if (Schema::hasTable('payments')) {
+                $with[] = 'payments';
+            }
+            if (Schema::hasTable('transactions') && Schema::hasColumn('transactions', 'invoice_id')) {
+                $with[] = 'transactions';
+            }
+            if (Schema::hasTable('orders') && Schema::hasColumn('orders', 'invoice_id')) {
+                $with[] = 'order';
+            }
+            if (Schema::hasTable('expenses') && Schema::hasColumn('expenses', 'invoice_id')) {
+                $with[] = 'expense';
+            }
+
+            $invoice->load($with);
+
             return view('admin.invoices.show', compact('invoice'));
-        } catch (\Exception $e) {
-            Log::error('Error in InvoiceController@show: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Error in InvoiceController@show', [
+                'invoice_id' => $invoice->id,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
             abort(500, 'حدث خطأ أثناء تحميل الصفحة');
         }
     }
 
     public function edit(Invoice $invoice)
     {
-        $users = User::where('role', 'student')->where('is_active', true)->get();
-        return view('admin.invoices.edit', compact('invoice', 'users'));
+        try {
+            $users = User::query()
+                ->where('role', 'student')
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'email', 'phone']);
+
+            return view('admin.invoices.edit', compact('invoice', 'users'));
+        } catch (\Throwable $e) {
+            Log::error('Error in InvoiceController@edit', [
+                'invoice_id' => $invoice->id,
+                'message' => $e->getMessage(),
+            ]);
+            abort(500, 'حدث خطأ أثناء تحميل صفحة التعديل');
+        }
     }
 
     /**
@@ -203,7 +255,7 @@ class InvoiceController extends Controller
 
             $validated = $request->validate([
                 'user_id' => 'required|exists:users,id',
-                'type' => 'required|string|max:255',
+                'type' => 'required|in:'.implode(',', self::INVOICE_TYPES),
                 'description' => 'nullable|string|max:1000',
                 'subtotal' => 'required|numeric|min:0|max:99999999.99',
                 'tax_amount' => 'nullable|numeric|min:0|max:99999999.99',
@@ -225,12 +277,14 @@ class InvoiceController extends Controller
                 $validated['description'] = match ($validated['type']) {
                     'course' => 'فاتورة كورس',
                     'subscription' => 'فاتورة اشتراك',
+                    'membership' => 'فاتورة عضوية',
+                    'learning_path' => 'فاتورة مسار تعليمي',
                     default => 'فاتورة',
                 };
             }
 
-            $total = $validated['subtotal'] 
-                + ($validated['tax_amount'] ?? 0) 
+            $total = $validated['subtotal']
+                + ($validated['tax_amount'] ?? 0)
                 - ($validated['discount_amount'] ?? 0);
 
             // Mass Assignment Protection
@@ -243,20 +297,13 @@ class InvoiceController extends Controller
                 'discount_amount' => (float) ($validated['discount_amount'] ?? 0),
                 'total_amount' => (float) $total,
                 'status' => $validated['status'],
-                'due_date' => $validated['due_date'] ? date('Y-m-d', strtotime($validated['due_date'])) : null,
-                'notes' => $validated['notes'],
+                'due_date' => ! empty($validated['due_date'])
+                    ? date('Y-m-d', strtotime((string) $validated['due_date']))
+                    : null,
+                'notes' => $validated['notes'] ?? null,
             ]);
 
-            // Activity Logging
-            ActivityLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'updated',
-                'model_type' => 'Invoice',
-                'model_id' => $invoice->id,
-                'description' => 'تم تحديث فاتورة: ' . $invoice->invoice_number,
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-            ]);
+            $this->logInvoiceActivity('updated', $invoice, 'تم تحديث فاتورة: '.$invoice->invoice_number, $request);
 
             DB::commit();
 
@@ -265,9 +312,12 @@ class InvoiceController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
             return back()->withErrors($e->errors())->withInput();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Error in InvoiceController@update: ' . $e->getMessage());
+            Log::error('Error in InvoiceController@update', [
+                'invoice_id' => $invoice->id,
+                'message' => $e->getMessage(),
+            ]);
             return back()->with('error', 'حدث خطأ أثناء تحديث الفاتورة')->withInput();
         }
     }
@@ -290,27 +340,61 @@ class InvoiceController extends Controller
             DB::beginTransaction();
 
             $invoiceNumber = $invoice->invoice_number;
+            $invoiceId = $invoice->id;
             $invoice->delete();
 
-            // Activity Logging
-            ActivityLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'deleted',
-                'model_type' => 'Invoice',
-                'model_id' => $invoice->id,
-                'description' => 'تم حذف فاتورة: ' . $invoiceNumber,
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
+            $this->logInvoiceActivity(
+                'deleted',
+                null,
+                'تم حذف فاتورة: '.$invoiceNumber,
+                request(),
+                $invoiceId
+            );
 
             DB::commit();
 
             return redirect()->route('admin.invoices.index')
                 ->with('success', 'تم حذف الفاتورة بنجاح');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Error in InvoiceController@destroy: ' . $e->getMessage());
+            Log::error('Error in InvoiceController@destroy', [
+                'message' => $e->getMessage(),
+            ]);
             return back()->with('error', 'حدث خطأ أثناء حذف الفاتورة');
+        }
+    }
+
+    private function logInvoiceActivity(
+        string $action,
+        ?Invoice $invoice,
+        string $description,
+        $request,
+        ?int $modelId = null
+    ): void {
+        if (! Schema::hasTable('activity_logs')) {
+            return;
+        }
+
+        try {
+            $payload = [
+                'user_id' => Auth::id(),
+                'action' => $action,
+                'model_type' => Invoice::class,
+                'model_id' => $modelId ?? $invoice?->id,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ];
+
+            if (Schema::hasColumn('activity_logs', 'description')) {
+                $payload['description'] = $description;
+            }
+
+            ActivityLog::create($payload);
+        } catch (\Throwable $e) {
+            Log::warning('Invoice activity log skipped', [
+                'action' => $action,
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 }

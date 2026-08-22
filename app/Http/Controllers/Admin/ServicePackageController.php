@@ -57,7 +57,7 @@ class ServicePackageController extends Controller
             'units_count' => 8,
             'session_minutes' => 60,
             'duration_days' => 60,
-            'currency' => (string) config('fawaterak.currency', 'EGP'),
+            'currency' => (string) config('currency.code', 'USD'),
             'is_active' => true,
             'sort_order' => (int) ServicePackage::query()->max('sort_order') + 1,
         ]), 'create'));
@@ -311,18 +311,13 @@ class ServicePackageController extends Controller
             'duration_days' => ['nullable', 'integer', 'min:1', 'max:730'],
             'price' => ['required', 'numeric', 'min:0'],
             'original_price' => ['nullable', 'numeric', 'min:0'],
-            'currency' => ['nullable', 'in:EGP,USD,egp,usd'],
+            'currency' => ['nullable', 'in:USD,usd'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
         ]);
     }
 
     protected function normalizeCurrency(?string $currency): string
     {
-        $currency = strtoupper(trim((string) $currency));
-        if (in_array($currency, ['EGP', 'USD'], true)) {
-            return $currency;
-        }
-
-        return strtoupper((string) config('fawaterak.currency', 'EGP')) === 'USD' ? 'USD' : 'EGP';
+        return 'USD';
     }
 }

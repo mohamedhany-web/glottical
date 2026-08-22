@@ -15,8 +15,8 @@
     ];
     $kpis = [
         ['label' => 'عدد المدربين', 'value' => number_format($globalStats['instructors_count']), 'suffix' => '', 'icon' => 'fa-chalkboard-teacher', 'tone' => 'muted', 'note' => 'مدربون لديهم اتفاقيات أو مدفوعات'],
-        ['label' => 'إجمالي مطلوب الدفع', 'value' => number_format($globalStats['pending_total'], 2), 'suffix' => 'ج.م', 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'note' => 'مجموع المدفوعات المعلقة'],
-        ['label' => 'إجمالي تم الدفع', 'value' => number_format($globalStats['paid_total'], 2), 'suffix' => 'ج.م', 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => 'مجموع المدفوعات المنفّذة'],
+        ['label' => 'إجمالي مطلوب الدفع', 'value' => number_format($globalStats['pending_total'], 2), 'suffix' => '$', 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'note' => 'مجموع المدفوعات المعلقة'],
+        ['label' => 'إجمالي تم الدفع', 'value' => number_format($globalStats['paid_total'], 2), 'suffix' => '$', 'icon' => 'fa-check-circle', 'tone' => 'accent', 'note' => 'مجموع المدفوعات المنفّذة'],
     ];
 @endphp
 
@@ -115,7 +115,7 @@
                                 <td class="px-4 py-3 tabular-nums text-ink-soft">{{ $stats['agreements_count'] ?? 0 }}</td>
                                 <td class="px-4 py-3">
                                     @if(($stats['pending_total'] ?? 0) > 0)
-                                        <p class="font-semibold tabular-nums text-metal">{{ number_format($stats['pending_total'], 2) }} <span class="text-xs font-normal text-muted">ج.م</span></p>
+                                        <p class="font-semibold tabular-nums text-metal">{{ number_format($stats['pending_total'], 2) }} <span class="text-xs font-normal text-muted">$</span></p>
                                         <p class="mt-0.5 text-[11px] text-muted">{{ $stats['pending_count'] ?? 0 }} مدفوعة</p>
                                     @else
                                         <span class="text-muted">—</span>
@@ -123,7 +123,7 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     @if(($stats['paid_total'] ?? 0) > 0)
-                                        <p class="font-semibold tabular-nums text-accent">{{ number_format($stats['paid_total'], 2) }} <span class="text-xs font-normal text-muted">ج.م</span></p>
+                                        <p class="font-semibold tabular-nums text-accent">{{ number_format($stats['paid_total'], 2) }} <span class="text-xs font-normal text-muted">$</span></p>
                                         <p class="mt-0.5 text-[11px] text-muted">{{ $stats['paid_count'] ?? 0 }} مدفوعة</p>
                                     @else
                                         <span class="text-muted">—</span>

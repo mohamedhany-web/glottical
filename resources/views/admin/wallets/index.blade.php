@@ -11,9 +11,9 @@
     $labelClass = 'mb-1.5 block text-xs font-medium text-muted';
     $kpis = [
         ['label' => 'إجمالي المحافظ', 'value' => $stats['total'] ?? 0, 'icon' => 'fa-wallet', 'tone' => 'accent', 'note' => 'يشمل كل المحافظ المربوطة بالطلاب'],
-        ['label' => 'الرصيد المتاح', 'value' => number_format($stats['total_balance'] ?? 0, 2), 'icon' => 'fa-coins', 'tone' => 'accent', 'note' => 'إجمالي الأرصدة الحالية بكل المحافظ', 'suffix' => ' ج.م'],
-        ['label' => 'الرصيد المعلّق', 'value' => number_format($stats['pending_balance'] ?? 0, 2), 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'note' => 'المبالغ المعلّقة أو قيد المراجعة', 'suffix' => ' ج.م'],
-        ['label' => 'صافي تدفقات الشهر', 'value' => number_format($netMonth, 2), 'icon' => 'fa-wave-square', 'tone' => 'muted', 'note' => 'الإيداعات ناقص السحوبات خلال ' . \Carbon\Carbon::now()->translatedFormat('F'), 'suffix' => ' ج.م'],
+        ['label' => 'الرصيد المتاح', 'value' => number_format($stats['total_balance'] ?? 0, 2), 'icon' => 'fa-coins', 'tone' => 'accent', 'note' => 'إجمالي الأرصدة الحالية بكل المحافظ', 'suffix' => ' $'],
+        ['label' => 'الرصيد المعلّق', 'value' => number_format($stats['pending_balance'] ?? 0, 2), 'icon' => 'fa-hourglass-half', 'tone' => 'metal', 'note' => 'المبالغ المعلّقة أو قيد المراجعة', 'suffix' => ' $'],
+        ['label' => 'صافي تدفقات الشهر', 'value' => number_format($netMonth, 2), 'icon' => 'fa-wave-square', 'tone' => 'muted', 'note' => 'الإيداعات ناقص السحوبات خلال ' . \Carbon\Carbon::now()->translatedFormat('F'), 'suffix' => ' $'],
     ];
     $toneClass = [
         'accent' => 'bg-accent-soft text-accent',
@@ -99,7 +99,7 @@
                         <option value="">اختر محفظة المصدر</option>
                         @foreach(($transferWallets ?? collect()) as $walletOption)
                             <option value="{{ $walletOption->id }}" {{ (string) old('from_wallet_id') === (string) $walletOption->id ? 'selected' : '' }}>
-                                {{ $walletOption->name }} ({{ number_format($walletOption->balance, 2) }} {{ $walletOption->currency ?? 'EGP' }})
+                                {{ $walletOption->name }} ({{ number_format($walletOption->balance, 2) }} {{ $walletOption->currency ?? 'USD' }})
                             </option>
                         @endforeach
                     </select>
@@ -114,7 +114,7 @@
                         <option value="">اختر محفظة الوجهة</option>
                         @foreach(($transferWallets ?? collect()) as $walletOption)
                             <option value="{{ $walletOption->id }}" {{ (string) old('to_wallet_id') === (string) $walletOption->id ? 'selected' : '' }}>
-                                {{ $walletOption->name }} ({{ number_format($walletOption->balance, 2) }} {{ $walletOption->currency ?? 'EGP' }})
+                                {{ $walletOption->name }} ({{ number_format($walletOption->balance, 2) }} {{ $walletOption->currency ?? 'USD' }})
                             </option>
                         @endforeach
                     </select>
@@ -173,7 +173,7 @@
                             <i class="fas fa-arrow-down text-accent"></i>
                         </div>
                         <p class="mt-3 text-2xl font-semibold tabular-nums text-ink">
-                            {{ number_format($currentMonthDeposits ?? 0, 2) }} <span class="text-sm font-normal text-muted">ج.م</span>
+                            {{ number_format($currentMonthDeposits ?? 0, 2) }} <span class="text-sm font-normal text-muted">$</span>
                         </p>
                     </div>
                     <div class="rounded-xl border border-line bg-canvas-muted/50 p-4">
@@ -182,7 +182,7 @@
                             <i class="fas fa-arrow-up text-muted"></i>
                         </div>
                         <p class="mt-3 text-2xl font-semibold tabular-nums text-ink">
-                            {{ number_format($currentMonthWithdrawals ?? 0, 2) }} <span class="text-sm font-normal text-muted">ج.م</span>
+                            {{ number_format($currentMonthWithdrawals ?? 0, 2) }} <span class="text-sm font-normal text-muted">$</span>
                         </p>
                     </div>
                 </div>
@@ -206,7 +206,7 @@
                                 </div>
                             </div>
                             <p class="text-sm font-semibold tabular-nums text-accent">
-                                {{ number_format($type['total_balance'], 2) }} <span class="text-xs font-normal text-muted">ج.م</span>
+                                {{ number_format($type['total_balance'], 2) }} <span class="text-xs font-normal text-muted">$</span>
                             </p>
                         </div>
                     @empty
@@ -234,7 +234,7 @@
                         </p>
                         <div class="mt-3 flex items-center justify-between">
                             <span class="text-sm font-semibold tabular-nums text-ink">
-                                {{ number_format($recent->balance, 2) }} <span class="text-xs font-normal text-muted">ج.م</span>
+                                {{ number_format($recent->balance, 2) }} <span class="text-xs font-normal text-muted">$</span>
                             </span>
                             <a href="{{ route('admin.wallets.show', $recent) }}" class="text-xs font-medium text-accent hover:underline">
                                 تفاصيل <i class="fas fa-arrow-left text-[10px]"></i>
@@ -283,11 +283,11 @@
                         <dl class="grid grid-cols-2 gap-3 text-sm">
                             <div>
                                 <dt class="text-xs text-muted">الرصيد الحالي</dt>
-                                <dd class="mt-0.5 font-semibold tabular-nums text-ink">{{ number_format($wallet->balance, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></dd>
+                                <dd class="mt-0.5 font-semibold tabular-nums text-ink">{{ number_format($wallet->balance, 2) }} <span class="text-xs font-normal text-muted">$</span></dd>
                             </div>
                             <div>
                                 <dt class="text-xs text-muted">الرصيد المعلّق</dt>
-                                <dd class="mt-0.5 font-semibold tabular-nums text-ink">{{ number_format($wallet->pending_balance ?? 0, 2) }} <span class="text-xs font-normal text-muted">ج.م</span></dd>
+                                <dd class="mt-0.5 font-semibold tabular-nums text-ink">{{ number_format($wallet->pending_balance ?? 0, 2) }} <span class="text-xs font-normal text-muted">$</span></dd>
                             </div>
                             <div>
                                 <dt class="text-xs text-muted">رقم الحساب</dt>

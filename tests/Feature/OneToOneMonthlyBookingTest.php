@@ -754,7 +754,11 @@ class OneToOneMonthlyBookingTest extends TestCase
             $admin
         );
         $session = $sessions->first();
-        OneToOneSessionService::markCompleted($session);
+        $meeting = $session->classroomMeeting;
+        $this->assertNotNull($meeting);
+        $meeting->update(['started_at' => now()]);
+        $session->update(['scheduled_at' => now()->subMinutes(5)]);
+        OneToOneSessionService::markCompleted($session->fresh(['classroomMeeting', 'entitlement']));
 
         $response = $this->actingAs($admin)->from(route('admin.placement.index'))->withoutMiddleware([
             \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
@@ -766,6 +770,74 @@ class OneToOneMonthlyBookingTest extends TestCase
         $response->assertRedirect(route('admin.placement.index'));
         $this->assertSame(OneToOneSession::STATUS_COMPLETED, $session->fresh()->status);
         $this->assertSame(1, (int) $entitlement->fresh()->units_used);
+        $this->assertSame(1, StudentEntitlementService::bookableUnitsLeft($entitlement->fresh()));
+    }
+
+    public function test_instructor_cannot_complete_session_without_entering_room(): void
+    {
+        [$student, $instructor, $entitlement] = $this->seedActors(2);
+
+        $sessions = OneToOneSessionService::bookMonthlySeriesWithInstructor(
+            $student,
+            $instructor,
+            [['day_of_week' => 1, 'time' => '18:00']],
+            1,
+            $entitlement,
+            $instructor
+        );
+        $session = $sessions->first();
+        $this->assertNotNull($session->classroomMeeting);
+        $this->assertNull($session->classroomMeeting->started_at);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('قبل دخول الغرفة');
+
+        OneToOneSessionService::markCompleted($session);
+    }
+
+    public function test_instructor_cannot_complete_session_before_scheduled_time(): void
+    {
+        [$student, $instructor, $entitlement] = $this->seedActors(2);
+
+        $sessions = OneToOneSessionService::bookMonthlySeriesWithInstructor(
+            $student,
+            $instructor,
+            [['day_of_week' => 1, 'time' => '18:00']],
+            1,
+            $entitlement,
+            $instructor
+        );
+        $session = $sessions->first();
+        $session->classroomMeeting->update(['started_at' => now()]);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('قبل موعدها');
+
+        OneToOneSessionService::markCompleted($session->fresh(['classroomMeeting']));
+    }
+
+    public function test_instructor_complete_route_does_not_deduct_without_room_start(): void
+    {
+        [$student, $instructor, $entitlement] = $this->seedActors(2);
+
+        $sessions = OneToOneSessionService::bookMonthlySeriesWithInstructor(
+            $student,
+            $instructor,
+            [['day_of_week' => 1, 'time' => '18:00']],
+            1,
+            $entitlement,
+            $instructor
+        );
+        $session = $sessions->first();
+
+        $this->actingAs($instructor)
+            ->from(route('instructor.one-to-one-sessions.show', $session))
+            ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])
+            ->post(route('instructor.one-to-one-sessions.complete', $session))
+            ->assertRedirect();
+
+        $this->assertSame(OneToOneSession::STATUS_SCHEDULED, $session->fresh()->status);
+        $this->assertSame(0, (int) $entitlement->fresh()->units_used);
         $this->assertSame(1, StudentEntitlementService::bookableUnitsLeft($entitlement->fresh()));
     }
 }

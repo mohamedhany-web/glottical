@@ -385,7 +385,7 @@ return [
     'lesson_single' => 'lesson',
     'course_description_fallback' => 'A complete training program for language learning',
     'free' => 'Free',
-    'currency' => 'EGP',
+    'currency' => 'USD',
     'view_btn' => 'View',
     'view_all_courses' => 'View all courses',
     'coming_soon' => 'Coming soon...',

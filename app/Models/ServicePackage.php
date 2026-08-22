@@ -204,7 +204,7 @@ class ServicePackage extends Model
 
     public function currencyCode(): string
     {
-        return $this->currency ?: 'EGP';
+        return $this->currency ?: 'USD';
     }
 
     public function formattedPrice(): string

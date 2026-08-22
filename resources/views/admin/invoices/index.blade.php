@@ -140,7 +140,7 @@
                             </td>
                             <td class="px-4 py-3 font-semibold tabular-nums text-ink">
                                 {{ number_format($invoice->total_amount, 2) }}
-                                <span class="text-xs font-normal text-muted">ج.م</span>
+                                <span class="text-xs font-normal text-muted">$</span>
                             </td>
                             <td class="px-4 py-3 text-xs tabular-nums text-muted">
                                 {{ $invoice->due_date ? $invoice->due_date->format('d/m/Y') : '—' }}

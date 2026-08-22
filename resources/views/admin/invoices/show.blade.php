@@ -105,23 +105,23 @@
                         <tbody class="divide-y divide-line">
                             <tr class="flex items-center justify-between py-3">
                                 <td>المبلغ الفرعي</td>
-                                <td class="font-semibold tabular-nums text-ink">{{ number_format($invoice->subtotal, 2) }} ج.م</td>
+                                <td class="font-semibold tabular-nums text-ink">{{ number_format($invoice->subtotal, 2) }} $</td>
                             </tr>
                             @if ($invoice->tax_amount > 0)
                                 <tr class="flex items-center justify-between py-3">
                                     <td>الضريبة</td>
-                                    <td class="font-semibold tabular-nums text-ink">{{ number_format($invoice->tax_amount, 2) }} ج.م</td>
+                                    <td class="font-semibold tabular-nums text-ink">{{ number_format($invoice->tax_amount, 2) }} $</td>
                                 </tr>
                             @endif
                             @if ($invoice->discount_amount > 0)
                                 <tr class="flex items-center justify-between py-3">
                                     <td>الخصم</td>
-                                    <td class="font-semibold tabular-nums text-metal">-{{ number_format($invoice->discount_amount, 2) }} ج.م</td>
+                                    <td class="font-semibold tabular-nums text-metal">-{{ number_format($invoice->discount_amount, 2) }} $</td>
                                 </tr>
                             @endif
                             <tr class="flex items-center justify-between py-3 text-base font-semibold text-ink">
                                 <td>الإجمالي المستحق</td>
-                                <td class="tabular-nums text-accent">{{ number_format($invoice->total_amount, 2) }} ج.م</td>
+                                <td class="tabular-nums text-accent">{{ number_format($invoice->total_amount, 2) }} $</td>
                             </tr>
                         </tbody>
                     </table>
@@ -147,7 +147,7 @@
                                     <tr class="hover:bg-canvas/40">
                                         <td class="px-4 py-3 font-semibold text-ink">{{ $payment->payment_number }}</td>
                                         <td class="px-4 py-3 text-center text-muted">{{ $payment->paid_at ? $payment->paid_at->format('Y-m-d') : '—' }}</td>
-                                        <td class="px-4 py-3 text-end font-semibold tabular-nums text-ink">{{ number_format($payment->amount, 2) }} ج.م</td>
+                                        <td class="px-4 py-3 text-end font-semibold tabular-nums text-ink">{{ number_format($payment->amount, 2) }} $</td>
                                     </tr>
                                 @endforeach
                             </tbody>

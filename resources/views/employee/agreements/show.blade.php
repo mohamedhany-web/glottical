@@ -31,7 +31,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
                 <p class="text-sm font-semibold text-gray-600 mb-2">الراتب الأساسي</p>
-                <p class="text-3xl font-bold text-green-600">{{ number_format($agreement->salary, 2) }} ج.م</p>
+                <p class="text-3xl font-bold text-green-600">{{ number_format($agreement->salary, 2) }} $</p>
             </div>
             <div>
                 <p class="text-sm font-semibold text-gray-600 mb-2">تاريخ البدء</p>
@@ -77,11 +77,11 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
             <p class="text-sm font-semibold text-gray-600 mb-2">إجمالي الخصومات</p>
-            <p class="text-2xl font-bold text-red-600">{{ number_format($stats['total_deductions'], 2) }} ج.م</p>
+            <p class="text-2xl font-bold text-red-600">{{ number_format($stats['total_deductions'], 2) }} $</p>
         </div>
         <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
             <p class="text-sm font-semibold text-gray-600 mb-2">إجمالي المدفوعات</p>
-            <p class="text-2xl font-bold text-green-600">{{ number_format($stats['total_payments'], 2) }} ج.م</p>
+            <p class="text-2xl font-bold text-green-600">{{ number_format($stats['total_payments'], 2) }} $</p>
         </div>
         <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
             <p class="text-sm font-semibold text-gray-600 mb-2">الدفعات المعلقة</p>
@@ -119,7 +119,7 @@
                                 @endif
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">{{ number_format($deduction->amount, 2) }} ج.م</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">{{ number_format($deduction->amount, 2) }} $</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $deduction->deduction_date->format('Y-m-d') }}</td>
                     </tr>
                     @endforeach
@@ -150,9 +150,9 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $payment->payment_number }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $payment->payment_date->format('Y-m-d') }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($payment->base_salary, 2) }} ج.م</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600">{{ number_format($payment->total_deductions, 2) }} ج.م</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">{{ number_format($payment->net_salary, 2) }} ج.م</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($payment->base_salary, 2) }} $</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600">{{ number_format($payment->total_deductions, 2) }} $</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">{{ number_format($payment->net_salary, 2) }} $</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="px-2 py-1 text-xs font-semibold rounded-full
                                 @if($payment->status === 'paid') bg-green-100 text-green-800

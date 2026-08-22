@@ -106,7 +106,7 @@ class CustomServicePackagePricingService
             'original_amount' => $originalAmount,
             'amount' => $amount,
             'final_price_per_session' => $sessions > 0 ? round($amount / $sessions, 2) : 0,
-            'currency' => strtoupper((string) config('fawaterak.currency', 'EGP')) === 'USD' ? 'USD' : 'EGP',
+            'currency' => 'USD',
         ], $extra);
     }
 

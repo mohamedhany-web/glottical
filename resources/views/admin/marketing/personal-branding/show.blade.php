@@ -152,7 +152,7 @@
                             <i class="fas fa-comments text-sm"></i>
                         </span>
                         <div>
-                            <h3 class="text-base font-semibold text-ink">استشارة مدفوعة (جنيه مصري)</h3>
+                            <h3 class="text-base font-semibold text-ink">استشارة مدفوعة (دولار أمريكي)</h3>
                             <p class="mt-0.5 text-xs text-muted">حدّد سعراً ومدة خاصة بهذا المدرب</p>
                         </div>
                     </div>
@@ -160,13 +160,13 @@
                 <div class="space-y-4 p-4 sm:p-5">
                     <p class="text-xs text-muted">
                         إن تركت حقل السعر فارغاً يُستخدم السعر الافتراضي للمنصة حالياً:
-                        <strong class="tabular-nums text-ink">{{ number_format($consultDefaults->default_price, 2) }} ج.م</strong>
+                        <strong class="tabular-nums text-ink">{{ number_format($consultDefaults->default_price, 2) }} $</strong>
                         — مدة افتراضية:
                         <strong class="tabular-nums text-ink">{{ (int) $consultDefaults->default_duration_minutes }} دقيقة</strong>.
                     </p>
                     <p class="text-xs text-muted">
                         السعر الظاهر للزوار الآن لهذا المدرب:
-                        <strong class="tabular-nums text-accent">{{ number_format($personal_branding->effectiveConsultationPriceEgp(), 2) }} ج.م</strong>
+                        <strong class="tabular-nums text-accent">{{ number_format($personal_branding->effectiveConsultationPriceEgp(), 2) }} $</strong>
                         — المدة:
                         <strong class="tabular-nums text-ink">{{ $personal_branding->effectiveConsultationDurationMinutes() }} دقيقة</strong>
                     </p>
@@ -175,7 +175,7 @@
                           class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         @csrf
                         <div>
-                            <label class="{{ $labelClass }}">سعر الاستشارة (ج.م) — اختياري</label>
+                            <label class="{{ $labelClass }}">سعر الاستشارة ($) — اختياري</label>
                             <input type="number" step="0.01" name="consultation_price_egp"
                                    value="{{ old('consultation_price_egp', $personal_branding->consultation_price_egp) }}"
                                    class="{{ $fieldClass }}" placeholder="فارغ = الافتراضي" dir="ltr">

@@ -41,7 +41,7 @@ class PayPalCheckoutController extends Controller
             'currency' => 'nullable|in:EGP,USD,EUR,GBP,egp,usd,eur,gbp',
         ]);
 
-        $pricingCurrency = strtoupper((string) $request->input('currency', 'EGP')) === 'USD' ? 'USD' : 'EGP';
+        $pricingCurrency = 'USD';
 
         $pricing = CourseCheckoutPricingService::resolve(
             Auth::user(),

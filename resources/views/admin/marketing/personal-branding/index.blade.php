@@ -104,7 +104,7 @@
                         <th class="px-4 py-3 text-start font-medium">المدرب</th>
                         <th class="px-4 py-3 text-start font-medium">العنوان التعريفي</th>
                         <th class="px-4 py-3 text-start font-medium">الحالة</th>
-                        <th class="px-4 py-3 text-start font-medium">استشارة (ج.م)</th>
+                        <th class="px-4 py-3 text-start font-medium">استشارة ($)</th>
                         <th class="px-4 py-3 text-start font-medium">تاريخ التقديم</th>
                         <th class="px-4 py-3 text-end font-medium">إجراءات</th>
                     </tr>
