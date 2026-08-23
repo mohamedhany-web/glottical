@@ -349,7 +349,11 @@ class ClassroomController extends Controller
 
         $roomExitUrl = $this->classroomRoomExitUrl($meeting, $user, $canManageMeeting);
 
-        return view('student.classroom.room', array_merge(
+        $viewName = ($canManageMeeting || request()->routeIs('instructor.*'))
+            ? 'student.classroom.room'
+            : 'student.classroom.room-student';
+
+        return view($viewName, array_merge(
             compact(
                 'meeting',
                 'user',

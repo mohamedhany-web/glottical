@@ -139,8 +139,9 @@ class ClassroomRoomRoleUiTest extends TestCase
             ->get(route('student.classroom.room', $meeting));
 
         $response->assertOk();
+        $response->assertSee('st-live-shell', false);
         $response->assertSee('lk-theme-student', false);
-        $response->assertSee('العودة للوحة', false);
+        $response->assertSee('حصة مباشرة', false);
         $response->assertDontSee('id="mx-ml-btn-curriculum"', false);
         $response->assertDontSee('id="btn-wb-popup-open"', false);
         $response->assertDontSee('id="mx-classroom-toggle-guest-wb"', false);
