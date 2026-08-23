@@ -140,8 +140,10 @@ class ClassroomRoomRoleUiTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('st-live-shell', false);
+        $response->assertSee('حصة خاصة', false);
+        $response->assertDontSee('بث إداري', false);
+        $response->assertDontSee('بث مباشر', false);
         $response->assertSee('lk-theme-student', false);
-        $response->assertSee('حصة مباشرة', false);
         $response->assertDontSee('id="mx-ml-btn-curriculum"', false);
         $response->assertDontSee('id="btn-wb-popup-open"', false);
         $response->assertDontSee('id="mx-classroom-toggle-guest-wb"', false);

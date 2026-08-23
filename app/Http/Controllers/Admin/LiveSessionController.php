@@ -264,6 +264,8 @@ class LiveSessionController extends Controller
             'require_enrollment' => false,
             'mute_on_join' => false,
             'video_off_on_join' => false,
+            // Internal admin room — never listed/joinable on student live pages.
+            'settings' => ['admin_only' => true],
         ]);
 
         $session->start();

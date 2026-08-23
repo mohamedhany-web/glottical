@@ -138,6 +138,8 @@ class AdminLiveSessionFlowTest extends TestCase
         $this->assertSame('live', $session->status);
         $this->assertSame($admin->id, $session->instructor_id);
         $this->assertFalse((bool) $session->require_enrollment);
+        $this->assertTrue($session->isAdminOnlyBroadcast());
+        $this->assertTrue((bool) data_get($session->settings, 'admin_only'));
 
         $response->assertRedirect(route('admin.live-sessions.room', $session));
 

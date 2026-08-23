@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $meeting->roomChromeTitle() }} — حصة مباشرة</title>
+    <title>{{ $meeting->roomChromeTitle() }} — حصة خاصة</title>
     @include('partials.favicon-links')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -219,10 +219,21 @@
                     <span class="st-live-brand__mark"><i class="fas fa-video"></i></span>
                     <span class="hidden sm:inline">{{ config('app.name') }}</span>
                 </a>
+                @php
+                    $roomHostName = $meeting->user?->name
+                        ?? $meeting->oneToOneSession?->instructor?->name
+                        ?? null;
+                @endphp
                 <div class="st-live-meta">
-                    <p class="st-live-meta__kicker"><span class="st-live-live-dot"></span> حصة مباشرة</p>
+                    <p class="st-live-meta__kicker"><span class="st-live-live-dot"></span> حصة خاصة</p>
                     <h1 class="st-live-meta__title">{{ $meeting->roomChromeTitle() }}</h1>
-                    <p class="st-live-meta__sub hidden sm:block" id="meeting-timer-chip">مدة الحصة: {{ (int) ($effectiveDurationMinutes ?? 50) }} دقيقة</p>
+                    <p class="st-live-meta__sub hidden sm:block" id="meeting-timer-chip">
+                        @if($roomHostName)
+                            {{ $roomHostName }}
+                            <span aria-hidden="true"> · </span>
+                        @endif
+                        مدة الحصة: {{ (int) ($effectiveDurationMinutes ?? 50) }} دقيقة
+                    </p>
                 </div>
             </div>
             <div class="st-live-actions">

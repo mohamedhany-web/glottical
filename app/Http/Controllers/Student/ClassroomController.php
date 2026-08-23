@@ -347,6 +347,12 @@ class ClassroomController extends Controller
         $guestJoinEnabled = ClassroomMeetingAccessService::allowsGuestJoin($meeting);
         $lkRole = $canManageMeeting ? 'host' : 'participant';
 
+        $meeting->loadMissing([
+            'user:id,name',
+            'oneToOneSession.instructor:id,name',
+            'oneToOneSession.student:id,name',
+        ]);
+
         $roomExitUrl = $this->classroomRoomExitUrl($meeting, $user, $canManageMeeting);
 
         $viewName = ($canManageMeeting || request()->routeIs('instructor.*'))

@@ -100,7 +100,42 @@ class LiveSession extends Model
         return $query->where('instructor_id', $instructorId);
     }
 
+    /**
+     * جلسات البث الظاهرة للطالب (كورسات / بث عام) — بدون بث الإدارة الداخلي.
+     */
+    public function scopeVisibleToStudents($query)
+    {
+        return $query
+            ->where(function ($q) {
+                $q->whereNull('description')
+                    ->orWhere('description', 'not like', '%أنشأتها الإدارة%');
+            })
+            ->where('title', 'not like', 'بث إداري%')
+            ->where(function ($q) {
+                $q->whereNull('settings')
+                    ->orWhere('settings', 'not like', '%"admin_only":true%')
+                    ->orWhere('settings', 'not like', '%"admin_only": true%');
+            });
+    }
+
     // ======================== Helpers ========================
+
+    /**
+     * بث فوري/داخلي من لوحة الإدارة — ليس لواجهة الطالب.
+     */
+    public function isAdminOnlyBroadcast(): bool
+    {
+        if ((bool) data_get($this->settings, 'admin_only', false)) {
+            return true;
+        }
+
+        $description = (string) ($this->description ?? '');
+        if (str_contains($description, 'أنشأتها الإدارة')) {
+            return true;
+        }
+
+        return str_starts_with(trim((string) ($this->title ?? '')), 'بث إداري');
+    }
 
     public function isLive(): bool
     {
@@ -174,6 +209,9 @@ class LiveSession extends Model
     {
         if ($user->id === $this->instructor_id) {
             return true;
+        }
+        if ($this->isAdminOnlyBroadcast()) {
+            return false;
         }
         if (! $this->require_enrollment || ! $this->course_id) {
             return true;

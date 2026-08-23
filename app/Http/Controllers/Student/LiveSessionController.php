@@ -33,6 +33,7 @@ class LiveSessionController extends Controller
         }
 
         $query = LiveSession::with(['course', 'instructor'])
+            ->visibleToStudents()
             ->where(function ($q) use ($enrolledCourseIds) {
                 $q->whereIn('course_id', $enrolledCourseIds)
                     ->orWhere('require_enrollment', false)
@@ -44,12 +45,14 @@ class LiveSessionController extends Controller
             $query->where('status', $request->status);
         }
 
-        $sessions = $query->orderByRaw("FIELD(status, 'live', 'scheduled')")
+        $sessions = $query->orderByRaw("CASE status WHEN 'live' THEN 0 WHEN 'scheduled' THEN 1 ELSE 2 END")
             ->orderBy('scheduled_at')
             ->paginate(15)
             ->withQueryString();
 
-        $liveSessions = LiveSession::where('status', 'live')
+        $liveSessions = LiveSession::query()
+            ->visibleToStudents()
+            ->where('status', 'live')
             ->where(function ($q) use ($enrolledCourseIds) {
                 $q->whereIn('course_id', $enrolledCourseIds)
                     ->orWhere('require_enrollment', false)

@@ -7,7 +7,7 @@
     <div class="st-join-hero__copy">
         <p class="st-join-hero__kicker">Live · LiveKit</p>
         <h1 class="st-join-hero__title">جلسات البث المباشر</h1>
-        <p class="st-join-hero__meta">الجلسات المباشرة والمجدولة المتاحة لك وفق كورساتك</p>
+        <p class="st-join-hero__meta">بث المنصة الجماعي والكورسات — الحصص الخاصة 1:1 من صفحة الحصص الخاصة وليس من هنا</p>
     </div>
     <div class="st-join-hero__actions">
         @if(Route::has('student.learn.index'))
