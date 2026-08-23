@@ -23,6 +23,7 @@
                 <div class="lk-focus__bar">
                     <span class="lk-focus__title" id="lk-focus-title">مشاركة الشاشة</span>
                     <div class="lk-focus__zoom">
+                        <button type="button" id="lk-os-pip" class="lk-icon-btn" title="نافذة عائمة فوق التبويبات والتطبيقات"><i class="fas fa-external-link-alt"></i></button>
                         <button type="button" id="lk-zoom-out" class="lk-icon-btn" title="تصغير"><i class="fas fa-search-minus"></i></button>
                         <span id="lk-zoom-label" class="lk-zoom-label">100%</span>
                         <button type="button" id="lk-zoom-in" class="lk-icon-btn" title="تكبير"><i class="fas fa-search-plus"></i></button>
@@ -37,7 +38,10 @@
             <div id="lk-pip" class="lk-pip hidden" aria-label="كاميرات المشاركين">
                 <div class="lk-pip__head">
                     <span><i class="fas fa-video"></i> الكاميرات</span>
-                    <button type="button" id="lk-pip-toggle" class="lk-icon-btn" title="طي/فتح"><i class="fas fa-chevron-down"></i></button>
+                    <div class="lk-pip__actions">
+                        <button type="button" id="lk-pip-os" class="lk-icon-btn" title="نافذة عائمة فوق التبويبات"><i class="fas fa-external-link-alt"></i></button>
+                        <button type="button" id="lk-pip-toggle" class="lk-icon-btn" title="طي/فتح"><i class="fas fa-chevron-down"></i></button>
+                    </div>
                 </div>
                 <div class="lk-pip__body" id="lk-pip-body"></div>
             </div>
@@ -50,6 +54,7 @@
         @if($lkAllowScreenShare)
         <button type="button" id="lk-toggle-screen" class="lk-btn"><i class="fas fa-desktop"></i><span>مشاركة الشاشة</span></button>
         @endif
+        <button type="button" id="lk-toggle-os-pip" class="lk-btn" title="نافذة عائمة فوق التبويبات والتطبيقات"><i class="fas fa-external-link-alt"></i><span>عائمة</span></button>
         @unless($lkHideLeave)
         <a href="{{ $lkLeaveUrl }}" id="lk-leave" class="lk-btn lk-btn--danger"><i class="fas fa-phone-slash"></i><span>مغادرة</span></a>
         @endunless
@@ -111,15 +116,24 @@
 .lk-tile.is-host{outline:2px solid color-mix(in srgb, var(--lk-gold) 70%, transparent)}
 .lk-tile.is-host .lk-tile-label::after{content:' · مضيف';color:var(--lk-gold)}
 
-/* floating pip */
-.lk-pip{position:absolute;z-index:25;inset-inline-end:12px;bottom:12px;width:min(280px,46vw);border-radius:16px;border:1px solid var(--lk-line);background:rgba(15,23,42,.94);backdrop-filter:blur(10px);box-shadow:0 16px 40px rgba(0,0,0,.35);overflow:hidden}
+/* floating pip — fixed داخل الصفحة + Document PiP للتبويبات/الجهاز */
+.lk-pip{position:fixed;z-index:99990;inset-inline-end:12px;bottom:calc(72px + env(safe-area-inset-bottom,0px));width:min(280px,46vw);border-radius:16px;border:1px solid var(--lk-line);background:rgba(15,23,42,.94);backdrop-filter:blur(10px);box-shadow:0 16px 40px rgba(0,0,0,.35);overflow:hidden}
 .lk-pip.hidden{display:none!important}
 .lk-pip.is-collapsed .lk-pip__body{display:none}
 .lk-pip__head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.45rem .65rem;font-size:.72rem;font-weight:800;border-bottom:1px solid var(--lk-line);cursor:move;user-select:none}
+.lk-pip__actions{display:inline-flex;align-items:center;gap:.25rem}
 .lk-pip__body{display:grid;grid-template-columns:1fr 1fr;gap:.35rem;padding:.45rem;max-height:220px;overflow:auto}
 .lk-pip-tile{position:relative;border-radius:10px;overflow:hidden;background:#000;border:1px solid var(--lk-line);aspect-ratio:4/3}
 .lk-pip-tile video{width:100%;height:100%;object-fit:cover}
 .lk-pip-tile span{position:absolute;inset-inline-start:.3rem;bottom:.3rem;font-size:.58rem;font-weight:800;background:rgba(0,0,0,.7);padding:.1rem .3rem;border-radius:.3rem}
+.lk-btn.is-os-pip{background:color-mix(in srgb, var(--lk-gold) 28%, var(--lk-surface));border-color:var(--lk-gold);color:#fff}
+.lk-os-pip-shell{position:fixed;inset:0;background:#020617;color:var(--lk-text);display:flex;flex-direction:column;overflow:hidden;font-family:inherit}
+.lk-os-pip-shell .lk-focus{flex:1;min-height:0;display:flex!important}
+.lk-os-pip-shell .lk-focus__viewport{flex:1}
+.lk-os-pip-shell .lk-pip{position:relative;inset:auto;bottom:auto;right:auto;width:100%;max-height:38vh;border-radius:0;border-inline:0;border-bottom:0;box-shadow:none}
+.lk-os-pip-shell .lk-pip__head{cursor:default}
+.lk-os-pip-compact{flex:1;display:flex;align-items:center;justify-content:center;padding:.5rem;background:#020617}
+.lk-os-pip-compact video{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px;background:#000}
 
 /* toolbar */
 .lk-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.45rem;padding:.7rem .85rem;border-top:1px solid var(--lk-line);background:color-mix(in srgb, var(--lk-panel) 92%, #000)}
@@ -313,9 +327,14 @@
                 focusVideo.removeAttribute('src');
             }
             focusTrack = null;
+            if (documentPictureInPicture?.window || osPipActive) {
+                closeOsFloatingWindow().catch(() => restoreOsPipDom());
+            }
+            osPipAutoTried = false;
             updateStageLayout();
         } else {
             rebuildPip();
+            maybeAutoOpenOsPip();
         }
     }
     function attachToFocus(track, label) {
@@ -591,6 +610,201 @@
         pip?.classList.toggle('is-collapsed');
     });
 
+    const osPipBtn = document.getElementById('lk-toggle-os-pip');
+    const osPipFocusBtn = document.getElementById('lk-os-pip');
+    const osPipCamBtn = document.getElementById('lk-pip-os');
+    let osPipShell = null;
+    let osPipCompact = null;
+    let osPipRestore = null;
+    let osPipActive = false;
+    let osPipAutoTried = false;
+
+    function supportsDocumentPiP() {
+        return typeof window.documentPictureInPicture !== 'undefined'
+            && typeof window.documentPictureInPicture.requestWindow === 'function';
+    }
+    function supportsVideoPiP() {
+        return typeof HTMLVideoElement !== 'undefined'
+            && HTMLVideoElement.prototype.requestPictureInPicture;
+    }
+    function updateOsPipButtons(active) {
+        osPipActive = !!active;
+        [osPipBtn, osPipFocusBtn, osPipCamBtn].forEach((btn) => {
+            if (!btn) return;
+            btn.classList.toggle('is-os-pip', osPipActive);
+            btn.title = osPipActive ? 'إغلاق النافذة العائمة' : (btn.title || 'نافذة عائمة فوق التبويبات والتطبيقات');
+        });
+    }
+    function lkMainHost() {
+        return shell?.querySelector('.lk-main') || shell;
+    }
+    function primaryStageVideo() {
+        const hostTile = stage?.querySelector('.lk-tile.is-host video');
+        if (hostTile?.srcObject) return hostTile;
+        const any = stage?.querySelector('.lk-tile video');
+        return any?.srcObject ? any : null;
+    }
+    function injectOsPipStyles(doc) {
+        if (!doc) return;
+        const style = doc.createElement('style');
+        style.textContent = `
+            html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#020617}
+            .lk-os-pip-shell{position:fixed;inset:0;background:#020617;color:#e2e8f0;display:flex;flex-direction:column;font-family:Cairo,Tajawal,system-ui,sans-serif}
+            .lk-os-pip-shell .lk-focus{flex:1;min-height:0;display:flex!important;flex-direction:column;background:#020617}
+            .lk-os-pip-shell .lk-focus.hidden{display:none!important}
+            .lk-os-pip-shell .lk-focus__viewport{flex:1;min-height:0;overflow:auto;background:#020617}
+            .lk-os-pip-shell .lk-focus__scaler{display:flex;align-items:center;justify-content:center;min-height:100%;padding:.35rem}
+            .lk-os-pip-shell .lk-focus__scaler video{max-width:100%;max-height:100%;object-fit:contain;background:#000;border-radius:8px}
+            .lk-os-pip-shell .lk-focus__bar{display:flex;align-items:center;justify-content:space-between;padding:.35rem .55rem;border-top:1px solid #1e293b;background:rgba(15,23,42,.95);font-size:.68rem;font-weight:800}
+            .lk-os-pip-shell .lk-pip{position:relative!important;inset:auto!important;width:100%;max-height:38vh;border-radius:0;border:0;border-top:1px solid #1e293b;box-shadow:none;background:rgba(15,23,42,.98)}
+            .lk-os-pip-shell .lk-pip.hidden{display:none!important}
+            .lk-os-pip-shell .lk-pip__body{max-height:160px}
+            .lk-os-pip-compact{flex:1;display:flex;align-items:center;justify-content:center;padding:.35rem;background:#020617}
+            .lk-os-pip-compact video{width:100%;height:100%;max-height:100%;object-fit:contain;background:#000;border-radius:8px}
+        `;
+        doc.head.appendChild(style);
+    }
+    function restoreOsPipDom() {
+        const host = lkMainHost();
+        if (!host) return;
+        if (osPipRestore) {
+            const { focusParent, focusNext, pipParent, pipNext, compactParent } = osPipRestore;
+            if (focusBox && focusParent) {
+                if (focusNext) focusParent.insertBefore(focusBox, focusNext);
+                else focusParent.appendChild(focusBox);
+            } else if (focusBox && host && focusBox.parentElement !== host) {
+                host.insertBefore(focusBox, stage);
+            }
+            if (pip && pipParent) {
+                if (pipNext) pipParent.insertBefore(pip, pipNext);
+                else pipParent.appendChild(pip);
+            } else if (pip && host && pip.parentElement !== host) {
+                host.appendChild(pip);
+            }
+            if (osPipCompact && compactParent) compactParent.removeChild(osPipCompact);
+            osPipRestore = null;
+        }
+        osPipShell = null;
+        osPipCompact = null;
+        updateOsPipButtons(false);
+    }
+    function buildOsPipCompact() {
+        const wrap = document.createElement('div');
+        wrap.className = 'lk-os-pip-compact';
+        const video = document.createElement('video');
+        video.autoplay = true;
+        video.playsInline = true;
+        video.muted = true;
+        const src = (shell?.classList.contains('is-screen-focus') && focusVideo?.srcObject)
+            ? focusVideo
+            : primaryStageVideo();
+        if (src?.srcObject) video.srcObject = src.srcObject;
+        wrap.appendChild(video);
+        return wrap;
+    }
+    async function closeOsFloatingWindow() {
+        if (documentPictureInPicture?.window) {
+            documentPictureInPicture.window.close();
+            return;
+        }
+        if (document.pictureInPictureElement) {
+            await document.exitPictureInPicture();
+        }
+        restoreOsPipDom();
+    }
+    async function openVideoPiP() {
+        const video = (shell?.classList.contains('is-screen-focus') && focusVideo?.srcObject)
+            ? focusVideo
+            : primaryStageVideo();
+        if (!video || !supportsVideoPiP()) {
+            setStatus('المتصفح لا يدعم النافذة العائمة — جرّب Chrome أو Edge', true);
+            return false;
+        }
+        if (document.pictureInPictureElement === video) {
+            await document.exitPictureInPicture();
+            updateOsPipButtons(false);
+            return true;
+        }
+        await video.requestPictureInPicture();
+        updateOsPipButtons(true);
+        setStatus('النافذة العائمة نشطة — تبقى فوق التبويبات والتطبيقات');
+        hideStatusSoon();
+        return true;
+    }
+    async function openDocumentPiP() {
+        if (!supportsDocumentPiP()) return openVideoPiP();
+        if (documentPictureInPicture.window) {
+            documentPictureInPicture.window.focus();
+            updateOsPipButtons(true);
+            return true;
+        }
+        const inScreenFocus = shell?.classList.contains('is-screen-focus');
+        const pipWindow = await documentPictureInPicture.requestWindow({
+            width: inScreenFocus ? 520 : 380,
+            height: inScreenFocus ? 360 : 260,
+        });
+        injectOsPipStyles(pipWindow.document);
+        osPipShell = pipWindow.document.createElement('div');
+        osPipShell.className = 'lk-os-pip-shell';
+        pipWindow.document.body.appendChild(osPipShell);
+
+        osPipRestore = {
+            focusParent: focusBox?.parentElement || null,
+            focusNext: focusBox?.nextSibling || null,
+            pipParent: pip?.parentElement || null,
+            pipNext: pip?.nextSibling || null,
+            compactParent: null,
+        };
+
+        if (inScreenFocus && focusBox) {
+            focusBox.classList.remove('hidden');
+            osPipShell.appendChild(focusBox);
+            if (pip && pipBody?.children.length) osPipShell.appendChild(pip);
+        } else {
+            osPipCompact = buildOsPipCompact();
+            osPipRestore.compactParent = osPipShell;
+            osPipShell.appendChild(osPipCompact);
+            if (pip && pipBody?.children.length) osPipShell.appendChild(pip);
+        }
+
+        pipWindow.addEventListener('pagehide', restoreOsPipDom, { once: true });
+        updateOsPipButtons(true);
+        setStatus('النافذة العائمة نشطة — تبقى فوق التبويبات والتطبيقات');
+        hideStatusSoon();
+        return true;
+    }
+    async function toggleOsFloatingWindow() {
+        try {
+            if (osPipActive || documentPictureInPicture?.window || document.pictureInPictureElement) {
+                await closeOsFloatingWindow();
+                return;
+            }
+            await openDocumentPiP();
+        } catch (err) {
+            if (err?.name === 'NotAllowedError') {
+                setStatus('اسمح للموقع بفتح النافذة العائمة من إعدادات المتصفح', true);
+                return;
+            }
+            console.warn(err);
+            try { await openVideoPiP(); } catch (e2) {
+                setStatus(errMsg(e2, 'تعذر فتح النافذة العائمة'), true);
+            }
+        }
+    }
+    function maybeAutoOpenOsPip() {
+        if (osPipAutoTried || osPipActive) return;
+        if (!supportsDocumentPiP() && !supportsVideoPiP()) return;
+        osPipAutoTried = true;
+        openDocumentPiP().catch(() => {});
+    }
+    osPipBtn?.addEventListener('click', toggleOsFloatingWindow);
+    osPipFocusBtn?.addEventListener('click', toggleOsFloatingWindow);
+    osPipCamBtn?.addEventListener('click', toggleOsFloatingWindow);
+    document.addEventListener('leavepictureinpicture', () => updateOsPipButtons(false));
+    if (documentPictureInPicture) {
+        documentPictureInPicture.addEventListener('enter', () => updateOsPipButtons(true));
+    }
+
     // drag focus viewport while zoomed
     if (focusViewport) {
         let dragging = false, sx = 0, sy = 0, sl = 0, st = 0;
@@ -618,7 +832,7 @@
         }, { passive: false });
     }
 
-    // draggable pip
+    // draggable pip (fixed — يتحرك داخل نافذة المتصفح)
     if (pip) {
         const head = pip.querySelector('.lk-pip__head');
         let drag = false, ox = 0, oy = 0;
@@ -632,12 +846,10 @@
         });
         window.addEventListener('mousemove', (e) => {
             if (!drag) return;
-            const parent = shell?.getBoundingClientRect();
-            if (!parent) return;
-            let left = e.clientX - parent.left - ox;
-            let top = e.clientY - parent.top - oy;
-            left = Math.max(8, Math.min(parent.width - pip.offsetWidth - 8, left));
-            top = Math.max(8, Math.min(parent.height - pip.offsetHeight - 8, top));
+            let left = e.clientX - ox;
+            let top = e.clientY - oy;
+            left = Math.max(8, Math.min(window.innerWidth - pip.offsetWidth - 8, left));
+            top = Math.max(8, Math.min(window.innerHeight - pip.offsetHeight - 8, top));
             pip.style.left = left + 'px';
             pip.style.top = top + 'px';
             pip.style.right = 'auto';
@@ -647,7 +859,10 @@
         window.addEventListener('mouseup', () => { drag = false; });
     }
 
-    window.addEventListener('beforeunload', () => { try { room.disconnect(); } catch (e) {} });
+    window.addEventListener('beforeunload', () => {
+        try { if (documentPictureInPicture?.window) documentPictureInPicture.window.close(); } catch (e) {}
+        try { room.disconnect(); } catch (e) {}
+    });
     connect();
 })();
 </script>

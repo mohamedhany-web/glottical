@@ -119,6 +119,7 @@ class LiveKitRoomProviderTest extends TestCase
         $response->assertSee('lk-theme-instructor', false);
         $response->assertSee('id="lk-focus"', false);
         $response->assertSee('id="lk-pip"', false);
+        $response->assertSee('id="lk-toggle-os-pip"', false);
         $response->assertSee('id="lk-zoom-in"', false);
         $response->assertSee('الكاميرات', false);
         $response->assertSee('su-live-shell', false);
@@ -165,6 +166,7 @@ class LiveKitRoomProviderTest extends TestCase
         $response->assertSee('st-live-shell', false);
         $response->assertSee('id="lk-focus"', false);
         $response->assertSee('id="lk-pip"', false);
+        $response->assertSee('id="lk-toggle-os-pip"', false);
         $response->assertSee('id="lk-zoom-in"', false);
         $response->assertSee('layout-duo', false);
         $response->assertSee('layout-trio', false);
