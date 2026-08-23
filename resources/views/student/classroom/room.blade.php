@@ -181,12 +181,15 @@
 @php
     $academicObserverMode = !empty($academicObserverMode);
     $rp = ($useInstructorRoutes ?? false) ? 'instructor.' : 'student.';
+    $mxRoute = static function (string $name, $params = [], $absolute = true) {
+        return \Illuminate\Support\Facades\Route::has($name) ? route($name, $params, $absolute) : '';
+    };
     if ($academicObserverMode) {
         $roomExitUrl = $academicObserverExitUrl ?? route('employee.dashboard');
     } elseif (($useInstructorRoutes ?? false)) {
         $roomExitUrl = $meeting->consultation_request_id ? route('instructor.consultations.show', $meeting->consultation_request_id) : route('instructor.consultations.index');
     } else {
-        $roomExitUrl = route('dashboard');
+        $roomExitUrl = $roomExitUrl ?? route('dashboard');
     }
 @endphp
     {{-- شريط Glottical العلوي — على الهاتف: صف علوي + زر سايدبار؛ من md: شريط أدوات أفقي --}}
@@ -287,7 +290,7 @@
                 <span class="min-w-0 truncate">دخول محمي · بدون رابط ضيف</span>
             </span>
             @endif
-            <form method="POST" action="{{ route($rp.'classroom.end', $meeting) }}" class="inline w-full shrink-0 md:w-auto {{ empty($isHost) ? 'hidden' : '' }}" id="mx-end-meeting-form" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
+            <form method="POST" action="{{ $mxRoute($rp.'classroom.end', $meeting) }}" class="inline w-full shrink-0 md:w-auto {{ empty($isHost) || !\Illuminate\Support\Facades\Route::has($rp.'classroom.end') ? 'hidden' : '' }}" id="mx-end-meeting-form" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
                 @csrf
                 <button type="submit" id="mx-end-meeting-btn" class="classroom-room-toolbar-btn w-full justify-center bg-rose-600 hover:bg-rose-500 text-white font-semibold border border-rose-500/50 shadow-sm shadow-rose-900/20 md:w-auto md:justify-start">
                     <i class="fas fa-stop text-[10px]"></i><span class="hidden md:inline">إنهاء الاجتماع</span><span class="md:hidden">إنهاء</span>
@@ -407,7 +410,7 @@
         @unless(!empty($academicObserverMode))
         @include('partials.mx-share-annotation-overlay', [
             'mxAnnRole' => 'viewer_poll',
-            'mxAnnPollUrl' => route($rp . 'classroom.share-annotations', $meeting),
+            'mxAnnPollUrl' => $mxRoute($rp . 'classroom.share-annotations', $meeting),
         ])
         @endunless
     </div>
@@ -548,15 +551,15 @@
             var mxUploadModalRetry = document.getElementById('mx-upload-modal-retry');
             var mxUploadChip = document.getElementById('mx-upload-chip');
             var mxUploadChipText = document.getElementById('mx-upload-chip-text');
-            var uploadRecordingUrl = '{{ route($rp . 'classroom.recording.upload', $meeting) }}';
-            var presignRecordingUrl = '{{ route($rp . 'classroom.recording.presign', $meeting) }}';
-            var completeRecordingUrl = '{{ route($rp . 'classroom.recording.complete', $meeting) }}';
-            var presignAudioUrl = '{{ route($rp . 'classroom.recording-audio.presign', $meeting) }}';
-            var uploadAudioUrl = '{{ route($rp . 'classroom.recording-audio.upload', $meeting) }}';
-            var completeAudioUrl = '{{ route($rp . 'classroom.recording-audio.complete', $meeting) }}';
-            var recordingUploadTabBaseUrl = '{{ route($rp . 'classroom.recording.upload-tab', $meeting) }}';
+            var uploadRecordingUrl = @json($mxRoute($rp . 'classroom.recording.upload', $meeting));
+            var presignRecordingUrl = @json($mxRoute($rp . 'classroom.recording.presign', $meeting));
+            var completeRecordingUrl = @json($mxRoute($rp . 'classroom.recording.complete', $meeting));
+            var presignAudioUrl = @json($mxRoute($rp . 'classroom.recording-audio.presign', $meeting));
+            var uploadAudioUrl = @json($mxRoute($rp . 'classroom.recording-audio.upload', $meeting));
+            var completeAudioUrl = @json($mxRoute($rp . 'classroom.recording-audio.complete', $meeting));
+            var recordingUploadTabBaseUrl = @json($mxRoute($rp . 'classroom.recording.upload-tab', $meeting));
             var csrfToken = '{{ csrf_token() }}';
-            var participantWbUrl = '{{ route($rp . 'classroom.participant-whiteboard', $meeting) }}';
+            var participantWbUrl = @json($mxRoute($rp . 'classroom.participant-whiteboard', $meeting));
             var mxClassroomGuestWbToggle = document.getElementById('mx-classroom-toggle-guest-wb');
             var mxClassroomGuestWbSaving = false;
             if (mxClassroomGuestWbToggle) {
@@ -2230,12 +2233,12 @@
             function attachCurriculumPresenter() {
                 if (!window.MxClassroomCurriculumPresenter || window.__mxCurriculumPresenter) return;
                 window.__mxCurriculumPresenter = window.MxClassroomCurriculumPresenter.attach(null, {
-                    isHost: true,
-                    catalogUrl: @json(route($rp . 'classroom.curriculum.catalog', $meeting)),
-                    presentUrl: @json(route($rp . 'classroom.curriculum.present', $meeting)),
-                    stateUrl: @json(route($rp . 'classroom.curriculum.state', $meeting)),
-                    slideUpdateUrl: @json(route($rp . 'classroom.curriculum.slide.update', $meeting)),
-                    stopUrl: @json(route($rp . 'classroom.curriculum.stop', $meeting)),
+                    isHost: {{ !empty($isHost) ? 'true' : 'false' }},
+                    catalogUrl: @json($mxRoute($rp . 'classroom.curriculum.catalog', $meeting)),
+                    presentUrl: @json($mxRoute($rp . 'classroom.curriculum.present', $meeting)),
+                    stateUrl: @json($mxRoute($rp . 'classroom.curriculum.state', $meeting)),
+                    slideUpdateUrl: @json($mxRoute($rp . 'classroom.curriculum.slide.update', $meeting)),
+                    stopUrl: @json($mxRoute($rp . 'classroom.curriculum.stop', $meeting)),
                     pollIntervalMs: 1500,
                 });
             }

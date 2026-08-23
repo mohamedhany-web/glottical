@@ -1041,26 +1041,36 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             ->whereNumber('slide')
             ->name('student.classroom.curriculum.thumb');
 
-        Route::get('/classroom', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
-            ->middleware('student.no-meeting-host')->name('student.classroom.index');
-        Route::get('/classroom/create', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
-            ->middleware('student.no-meeting-host')->name('student.classroom.create');
-        Route::post('/classroom', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
-            ->middleware('student.no-meeting-host')->name('student.classroom.store');
-        Route::get('/classroom/whiteboard', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
-            ->middleware('student.no-meeting-host')->name('student.classroom.whiteboard');
-        Route::post('/classroom/start', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
-            ->middleware('student.no-meeting-host')->name('student.classroom.start');
-        Route::get('/classroom/{meeting}', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
-            ->middleware('student.no-meeting-host')->whereNumber('meeting')->name('student.classroom.show');
-        Route::get('/classroom/{meeting}/edit', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
-            ->middleware('student.no-meeting-host')->whereNumber('meeting')->name('student.classroom.edit');
-        Route::put('/classroom/{meeting}', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
-            ->middleware('student.no-meeting-host')->whereNumber('meeting')->name('student.classroom.update');
-        Route::delete('/classroom/{meeting}', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
-            ->middleware('student.no-meeting-host')->whereNumber('meeting')->name('student.classroom.destroy');
-        Route::post('/classroom/{meeting}/start', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
-            ->middleware('student.no-meeting-host')->whereNumber('meeting')->name('student.classroom.start-meeting');
+        // مسارات إدارة الغرفة — مسجّلة حتى يعمل room.blade.php (route generation)
+        // وممنوعة على الطالب عبر student.no-meeting-host + حارس الـ controller
+        Route::middleware('student.no-meeting-host')->group(function () use ($studentMeetingDenied) {
+            Route::get('/classroom', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))->name('student.classroom.index');
+            Route::get('/classroom/create', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))->name('student.classroom.create');
+            Route::post('/classroom', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))->name('student.classroom.store');
+            Route::get('/classroom/whiteboard', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))->name('student.classroom.whiteboard');
+            Route::post('/classroom/start', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))->name('student.classroom.start');
+            Route::get('/classroom/{meeting}', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))->whereNumber('meeting')->name('student.classroom.show');
+            Route::get('/classroom/{meeting}/edit', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))->whereNumber('meeting')->name('student.classroom.edit');
+            Route::put('/classroom/{meeting}', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))->whereNumber('meeting')->name('student.classroom.update');
+            Route::delete('/classroom/{meeting}', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))->whereNumber('meeting')->name('student.classroom.destroy');
+            Route::post('/classroom/{meeting}/start', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))->whereNumber('meeting')->name('student.classroom.start-meeting');
+
+            Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('student.classroom.end');
+            Route::get('/classroom/room/{meeting}/recording-upload', [\App\Http\Controllers\Student\ClassroomController::class, 'recordingUploadTab'])->name('student.classroom.recording.upload-tab');
+            Route::post('/classroom/{meeting}/participant-whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'updateParticipantWhiteboard'])->name('student.classroom.participant-whiteboard');
+            Route::post('/classroom/{meeting}/guest-join', [\App\Http\Controllers\Student\ClassroomController::class, 'updateGuestJoin'])->name('student.classroom.guest-join');
+            Route::post('/classroom/{meeting}/recording/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadRecording'])->name('student.classroom.recording.upload');
+            Route::post('/classroom/{meeting}/recording/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignRecordingUpload'])->name('student.classroom.recording.presign');
+            Route::post('/classroom/{meeting}/recording/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectRecordingUpload'])->name('student.classroom.recording.complete');
+            Route::post('/classroom/{meeting}/recording-audio/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignAudioUpload'])->name('student.classroom.recording-audio.presign');
+            Route::post('/classroom/{meeting}/recording-audio/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadAudioRecording'])->name('student.classroom.recording-audio.upload');
+            Route::post('/classroom/{meeting}/recording-audio/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectAudioUpload'])->name('student.classroom.recording-audio.complete');
+            Route::post('/classroom/{meeting}/ai-report', [\App\Http\Controllers\Student\ClassroomController::class, 'generateAiReport'])->name('student.classroom.ai-report');
+            Route::get('/classroom/{meeting}/curriculum/catalog', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumCatalog'])->name('student.classroom.curriculum.catalog');
+            Route::post('/classroom/{meeting}/curriculum/present', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumPresent'])->name('student.classroom.curriculum.present');
+            Route::post('/classroom/{meeting}/curriculum/slide', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumUpdateSlide'])->name('student.classroom.curriculum.slide.update');
+            Route::post('/classroom/{meeting}/curriculum/stop', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumStop'])->name('student.classroom.curriculum.stop');
+        });
     });
 
     // ملفات مناهج X (عرض/تحميل/شرائح) — طالب أو معلم معتمد
