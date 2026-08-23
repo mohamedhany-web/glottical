@@ -426,27 +426,7 @@
     </div>
     @endif
 
-    {{-- نافذة رفع التسجيل — للمعلم/المضيف فقط --}}
-    @if(!empty($canManageMeeting))
-    <div id="mx-upload-modal" class="hidden fixed inset-0 z-[180] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm" aria-hidden="true">
-        <div class="w-full max-w-md rounded-2xl border border-slate-600 bg-slate-900 shadow-2xl p-5 sm:p-6" role="dialog" aria-labelledby="mx-upload-modal-title" aria-modal="true">
-            <h3 id="mx-upload-modal-title" class="text-lg font-bold text-white m-0 mb-1">جاري رفع التسجيل</h3>
-            <p id="mx-upload-modal-sub" class="text-xs text-slate-500 m-0 mb-4">يتم رفع وحفظ التسجيل. يمكنك تصغير هذه النافذة والمتابعة في الاجتماع.</p>
-            <div class="h-2.5 rounded-full bg-slate-700 overflow-hidden mb-2">
-                <div id="mx-upload-modal-bar" class="h-full w-0 bg-cyan-500 transition-[width] duration-150"></div>
-            </div>
-            <p id="mx-upload-modal-status" class="text-sm text-slate-300 mb-4 min-h-[2.75rem] whitespace-pre-wrap m-0"></p>
-            <div class="flex flex-wrap gap-2">
-                <button type="button" id="mx-upload-modal-bg" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-100 text-sm font-medium border border-slate-600">متابعة في الخلفية</button>
-                <button type="button" id="mx-upload-modal-retry" class="hidden inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600/90 hover:bg-amber-600 text-white text-sm font-medium border border-amber-500/40">إعادة المحاولة</button>
-            </div>
-        </div>
-    </div>
-    <button type="button" id="mx-upload-chip" class="hidden fixed bottom-4 start-4 z-[185] max-w-[min(calc(100vw-2rem),18rem)] inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800/95 text-slate-100 text-xs font-medium border border-slate-600 shadow-xl hover:bg-slate-700 transition-colors" title="عرض تقدم الرفع">
-        <i class="fas fa-cloud-arrow-up text-cyan-400"></i>
-        <span id="mx-upload-chip-text" class="truncate">رفع التسجيل</span>
-    </button>
-    @endif
+    {{-- رفع التسجيل للمعلم صامت تلقائياً — بدون مودال أو تاب --}}
 
     @php
         $mxBp = rtrim((string) request()->getBasePath(), '/');

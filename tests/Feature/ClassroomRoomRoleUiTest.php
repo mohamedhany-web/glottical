@@ -165,7 +165,6 @@ class ClassroomRoomRoleUiTest extends TestCase
         $response->assertSee('عرض منهج', false);
         $response->assertDontSee('id="btn-record-menu"', false);
         $response->assertDontSee('id="mx-record-dd-wrap"', false);
-        $response->assertDontSee('رفع وحفظ التسجيل', false);
         $response->assertDontSee('العودة للوحة', false);
     }
 }
