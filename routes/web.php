@@ -1937,10 +1937,11 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         Route::get('/student-lesson-cleanup', [\App\Http\Controllers\Admin\StudentLessonCleanupController::class, 'index'])->name('student-lesson-cleanup.index');
         Route::post('/student-lesson-cleanup/bulk', [\App\Http\Controllers\Admin\StudentLessonCleanupController::class, 'bulkDestroy'])->name('student-lesson-cleanup.bulk');
-        Route::delete('/student-lesson-cleanup/one-to-one/{oneToOneSession}', [\App\Http\Controllers\Admin\StudentLessonCleanupController::class, 'destroyOneToOne'])->name('student-lesson-cleanup.destroy-one-to-one');
-        Route::delete('/student-lesson-cleanup/group/{tutoringGroupBooking}', [\App\Http\Controllers\Admin\StudentLessonCleanupController::class, 'destroyGroup'])->name('student-lesson-cleanup.destroy-group');
-        Route::delete('/student-lesson-cleanup/meetings/{classroomMeeting}', [\App\Http\Controllers\Admin\StudentLessonCleanupController::class, 'destroyMeeting'])->name('student-lesson-cleanup.destroy-meeting');
-        Route::delete('/student-lesson-cleanup/live/{liveSession}', [\App\Http\Controllers\Admin\StudentLessonCleanupController::class, 'destroyLive'])->name('student-lesson-cleanup.destroy-live');
+        // POST (not DELETE) so single-row deletes work reliably without method spoof / nested forms.
+        Route::post('/student-lesson-cleanup/one-to-one/{oneToOneSession}', [\App\Http\Controllers\Admin\StudentLessonCleanupController::class, 'destroyOneToOne'])->name('student-lesson-cleanup.destroy-one-to-one');
+        Route::post('/student-lesson-cleanup/group/{tutoringGroupBooking}', [\App\Http\Controllers\Admin\StudentLessonCleanupController::class, 'destroyGroup'])->name('student-lesson-cleanup.destroy-group');
+        Route::post('/student-lesson-cleanup/meetings/{classroomMeeting}', [\App\Http\Controllers\Admin\StudentLessonCleanupController::class, 'destroyMeeting'])->name('student-lesson-cleanup.destroy-meeting');
+        Route::post('/student-lesson-cleanup/live/{liveSession}', [\App\Http\Controllers\Admin\StudentLessonCleanupController::class, 'destroyLive'])->name('student-lesson-cleanup.destroy-live');
 
         Route::get('/one-to-one-sessions', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'index'])->name('one-to-one-sessions.index');
         Route::get('/one-to-one-sessions/create', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'create'])->name('one-to-one-sessions.create');

@@ -209,4 +209,27 @@ class StudentLessonCleanupTest extends TestCase
         $this->assertDatabaseMissing('one_to_one_sessions', ['id' => $a->id]);
         $this->assertDatabaseMissing('one_to_one_sessions', ['id' => $b->id]);
     }
+
+    public function test_single_row_destroy_uses_post_not_delete_route(): void
+    {
+        $admin = $this->admin();
+        $instructor = User::factory()->create(['role' => 'instructor', 'is_active' => true]);
+        $student = User::factory()->create(['role' => 'student', 'is_active' => true]);
+
+        $session = OneToOneSession::create([
+            'instructor_id' => $instructor->id,
+            'student_id' => $student->id,
+            'session_number' => 1,
+            'status' => OneToOneSession::STATUS_CANCELLED,
+            'notes' => 'تجريب',
+        ]);
+
+        $this->withoutMiddleware()
+            ->actingAs($admin)
+            ->from(route('admin.student-lesson-cleanup.index'))
+            ->post(route('admin.student-lesson-cleanup.destroy-one-to-one', $session))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('one_to_one_sessions', ['id' => $session->id]);
+    }
 }
