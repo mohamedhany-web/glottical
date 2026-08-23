@@ -1,5 +1,5 @@
-{{-- غرفة LiveKit — $livekitUrl + $livekitToken + $user — اختياري: $lkTheme instructor|student --}}
-@php
+
+<?php
     $lkRole = $lkRole ?? 'participant';
     $lkLeaveUrl = $lkLeaveUrl ?? url('/');
     $displayName = $user->name ?? ('User #'.($user->id ?? ''));
@@ -8,8 +8,8 @@
     $lkAllowScreenShare = $lkAllowScreenShare ?? true;
     $lkTheme = $lkTheme ?? 'default';
     $lkHideLeave = $lkHideLeave ?? false;
-@endphp
-<div id="lk-room-shell" class="lk-room lk-theme-{{ $lkTheme }} relative flex-1 min-h-0 flex flex-col" data-lk-theme="{{ $lkTheme }}" data-lk-role="{{ $lkRole }}">
+?>
+<div id="lk-room-shell" class="lk-room lk-theme-<?php echo e($lkTheme); ?> relative flex-1 min-h-0 flex flex-col" data-lk-theme="<?php echo e($lkTheme); ?>" data-lk-role="<?php echo e($lkRole); ?>">
     <div id="lk-status" class="lk-status hidden" role="status"></div>
 
     <div class="lk-body flex-1 min-h-0 flex flex-col md:flex-row">
@@ -34,7 +34,7 @@
             </div>
             <div id="lk-stage" class="lk-stage flex-1 min-h-0"></div>
 
-            {{-- نافذة عائمة للكاميرات أثناء الشير --}}
+            
             <div id="lk-pip" class="lk-pip hidden" aria-label="كاميرات المشاركين">
                 <div class="lk-pip__head">
                     <span><i class="fas fa-video"></i> الكاميرات</span>
@@ -49,15 +49,15 @@
     </div>
 
     <div class="lk-toolbar shrink-0">
-        <button type="button" id="lk-toggle-mic" class="lk-btn{{ $lkStartAudio ? '' : ' is-off' }}"><i class="fas fa-microphone"></i><span>ميكروفون</span></button>
-        <button type="button" id="lk-toggle-cam" class="lk-btn{{ $lkStartVideo ? '' : ' is-off' }}"><i class="fas fa-video"></i><span>كاميرا</span></button>
-        @if($lkAllowScreenShare)
+        <button type="button" id="lk-toggle-mic" class="lk-btn<?php echo e($lkStartAudio ? '' : ' is-off'); ?>"><i class="fas fa-microphone"></i><span>ميكروفون</span></button>
+        <button type="button" id="lk-toggle-cam" class="lk-btn<?php echo e($lkStartVideo ? '' : ' is-off'); ?>"><i class="fas fa-video"></i><span>كاميرا</span></button>
+        <?php if($lkAllowScreenShare): ?>
         <button type="button" id="lk-toggle-screen" class="lk-btn"><i class="fas fa-desktop"></i><span>مشاركة الشاشة</span></button>
-        @endif
+        <?php endif; ?>
         <button type="button" id="lk-toggle-os-pip" class="lk-btn" title="نافذة عائمة فوق التبويبات والتطبيقات"><i class="fas fa-external-link-alt"></i><span>عائمة</span></button>
-        @unless($lkHideLeave)
-        <a href="{{ $lkLeaveUrl }}" id="lk-leave" class="lk-btn lk-btn--danger"><i class="fas fa-phone-slash"></i><span>مغادرة</span></a>
-        @endunless
+        <?php if (! ($lkHideLeave)): ?>
+        <a href="<?php echo e($lkLeaveUrl); ?>" id="lk-leave" class="lk-btn lk-btn--danger"><i class="fas fa-phone-slash"></i><span>مغادرة</span></a>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -150,13 +150,13 @@
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.9.1/dist/livekit-client.umd.min.js"></script>
 <script>
 (function () {
-    const url = @json($livekitUrl);
-    const token = @json($livekitToken);
-    const displayName = @json($displayName);
-    const role = @json($lkRole);
-    const startAudio = @json($lkStartAudio);
-    const startVideo = @json($lkStartVideo);
-    const allowScreenShare = @json($lkAllowScreenShare);
+    const url = <?php echo json_encode($livekitUrl, 15, 512) ?>;
+    const token = <?php echo json_encode($livekitToken, 15, 512) ?>;
+    const displayName = <?php echo json_encode($displayName, 15, 512) ?>;
+    const role = <?php echo json_encode($lkRole, 15, 512) ?>;
+    const startAudio = <?php echo json_encode($lkStartAudio, 15, 512) ?>;
+    const startVideo = <?php echo json_encode($lkStartVideo, 15, 512) ?>;
+    const allowScreenShare = <?php echo json_encode($lkAllowScreenShare, 15, 512) ?>;
     const shell = document.getElementById('lk-room-shell');
     const stage = document.getElementById('lk-stage');
     const focusBox = document.getElementById('lk-focus');
@@ -869,3 +869,4 @@
     connect();
 })();
 </script>
+<?php /**PATH /Users/cityphone/Documents/glottical/resources/views/partials/livekit-room.blade.php ENDPATH**/ ?>

@@ -141,6 +141,7 @@ class ClassroomRoomRoleUiTest extends TestCase
         $response->assertOk();
         $response->assertSee('st-live-shell', false);
         $response->assertSee('حصة خاصة', false);
+        $response->assertSee('data.ended', false);
         $response->assertDontSee('بث إداري', false);
         $response->assertDontSee('بث مباشر', false);
         $response->assertSee('lk-theme-student', false);
@@ -151,6 +152,25 @@ class ClassroomRoomRoleUiTest extends TestCase
         $response->assertDontSee('id="btn-record-menu"', false);
         $response->assertDontSee('id="mx-end-meeting-form"', false);
         $response->assertDontSee('عرض منهج', false);
+    }
+
+    public function test_student_room_status_reflects_instructor_end(): void
+    {
+        [$instructor, $student, $meeting] = $this->seedOneToOneMeeting();
+
+        $this->actingAs($student)
+            ->getJson(route('student.classroom.room.status', $meeting))
+            ->assertOk()
+            ->assertJson(['ended' => false, 'started' => true]);
+
+        $this->actingAs($instructor)
+            ->post(route('instructor.classroom.end', $meeting))
+            ->assertRedirect();
+
+        $this->actingAs($student)
+            ->getJson(route('student.classroom.room.status', $meeting))
+            ->assertOk()
+            ->assertJson(['ended' => true]);
     }
 
     public function test_instructor_room_shows_host_toolbar_controls(): void

@@ -35,6 +35,7 @@ class ClassroomController extends Controller
 
             $allowed = [
                 'student.classroom.room',
+                'student.classroom.room.status',
                 'student.classroom.recording',
                 'student.classroom.share-annotations',
                 'student.classroom.curriculum.state',
@@ -519,6 +520,23 @@ class ClassroomController extends Controller
         }
 
         return response()->json(array_merge(['ok' => true], $state));
+    }
+
+    /**
+     * فحص حالة الغرفة (polling من الطالب/المشارك عند إنهاء المعلم للاجتماع).
+     */
+    public function roomStatus(ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingCanEnter($meeting, $user);
+
+        $meeting->refresh();
+
+        return response()->json([
+            'ended' => filled($meeting->ended_at),
+            'started' => filled($meeting->started_at),
+            'allow_participant_whiteboard' => $meeting->allowsParticipantWhiteboard(),
+        ]);
     }
 
     public function curriculumUpdateSlide(Request $request, ClassroomMeeting $meeting, ClassroomCurriculumPresentService $present)

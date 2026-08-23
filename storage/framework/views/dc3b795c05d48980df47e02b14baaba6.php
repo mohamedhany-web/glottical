@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $meeting->roomChromeTitle() }} — حصة خاصة</title>
-    @include('partials.favicon-links')
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <title><?php echo e($meeting->roomChromeTitle()); ?> — حصة خاصة</title>
+    <?php echo $__env->make('partials.favicon-links', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-live-private-1">
-    <link rel="stylesheet" href="{{ asset('css/classroom-curriculum-presenter.css') }}">
-    <script src="{{ asset('js/classroom-curriculum-presenter.js') }}" defer></script>
+    <link rel="stylesheet" href="<?php echo e(route('assets.student-timeline.css')); ?>?v=st-live-private-1">
+    <link rel="stylesheet" href="<?php echo e(asset('css/classroom-curriculum-presenter.css')); ?>">
+    <script src="<?php echo e(asset('js/classroom-curriculum-presenter.js')); ?>" defer></script>
     <style>
         :root {
             --st-bg: #f8f9fa;
@@ -191,7 +191,7 @@
     </style>
 </head>
 <body>
-@php
+<?php
     $roomExitUrl = $roomExitUrl ?? route('dashboard');
     $annPollUrl = \Illuminate\Support\Facades\Route::has('student.classroom.share-annotations')
         ? route('student.classroom.share-annotations', $meeting)
@@ -202,7 +202,7 @@
     $roomStatusUrl = \Illuminate\Support\Facades\Route::has('student.classroom.room.status')
         ? route('student.classroom.room.status', $meeting)
         : '';
-@endphp
+?>
 
     <div id="mx-session-ended">
         <div class="mx-icon"><i class="fas fa-video"></i></div>
@@ -210,7 +210,7 @@
         <p>تم إنهاء الحصة الخاصة. يمكنك العودة للوحة الطالب.</p>
         <div id="mx-redir-bar"><div id="mx-redir-fill"></div></div>
         <p style="font-size:12px;">سيتم توجيهك تلقائياً...</p>
-        <a href="{{ $roomExitUrl }}" class="st-live-pill st-live-pill--gold">
+        <a href="<?php echo e($roomExitUrl); ?>" class="st-live-pill st-live-pill--gold">
             <i class="fas fa-arrow-left"></i> العودة الآن
         </a>
     </div>
@@ -218,36 +218,37 @@
     <div class="st-live-shell">
         <header class="st-live-top">
             <div class="flex items-center gap-3 min-w-0">
-                <a href="{{ $roomExitUrl }}" class="st-live-brand">
+                <a href="<?php echo e($roomExitUrl); ?>" class="st-live-brand">
                     <span class="st-live-brand__mark"><i class="fas fa-video"></i></span>
-                    <span class="hidden sm:inline">{{ config('app.name') }}</span>
+                    <span class="hidden sm:inline"><?php echo e(config('app.name')); ?></span>
                 </a>
-                @php
+                <?php
                     $roomHostName = $meeting->user?->name
                         ?? $meeting->oneToOneSession?->instructor?->name
                         ?? null;
-                @endphp
+                ?>
                 <div class="st-live-meta">
                     <p class="st-live-meta__kicker"><span class="st-live-live-dot"></span> حصة خاصة</p>
-                    <h1 class="st-live-meta__title">{{ $meeting->roomChromeTitle() }}</h1>
+                    <h1 class="st-live-meta__title"><?php echo e($meeting->roomChromeTitle()); ?></h1>
                     <p class="st-live-meta__sub hidden sm:block" id="meeting-timer-chip">
-                        @if($roomHostName)
-                            {{ $roomHostName }}
+                        <?php if($roomHostName): ?>
+                            <?php echo e($roomHostName); ?>
+
                             <span aria-hidden="true"> · </span>
-                        @endif
-                        مدة الحصة: {{ (int) ($effectiveDurationMinutes ?? 50) }} دقيقة
+                        <?php endif; ?>
+                        مدة الحصة: <?php echo e((int) ($effectiveDurationMinutes ?? 50)); ?> دقيقة
                     </p>
                 </div>
             </div>
             <div class="st-live-actions">
-                <span class="st-live-pill st-live-pill--soft" id="meeting-timer-chip-mobile">{{ (int) ($effectiveDurationMinutes ?? 50) }} د</span>
-                <div id="mx-student-wb-wrap" class="{{ !empty($meeting->allowsParticipantWhiteboard()) ? '' : 'hidden' }}">
+                <span class="st-live-pill st-live-pill--soft" id="meeting-timer-chip-mobile"><?php echo e((int) ($effectiveDurationMinutes ?? 50)); ?> د</span>
+                <div id="mx-student-wb-wrap" class="<?php echo e(!empty($meeting->allowsParticipantWhiteboard()) ? '' : 'hidden'); ?>">
                     <button type="button" id="btn-mx-share-draw" class="st-live-pill st-live-pill--ghost" title="رسم فوق العرض" style="border-color:rgba(245,184,0,.55);background:rgba(245,184,0,.18)">
                         <i class="fas fa-pen-fancy"></i>
                         <span class="hidden sm:inline">رسم فوق العرض</span>
                     </button>
                 </div>
-                <a href="{{ $roomExitUrl }}" class="st-live-pill st-live-pill--ghost" id="student-classroom-leave">
+                <a href="<?php echo e($roomExitUrl); ?>" class="st-live-pill st-live-pill--ghost" id="student-classroom-leave">
                     <i class="fas fa-sign-out-alt"></i> مغادرة
                 </a>
             </div>
@@ -255,8 +256,8 @@
 
         <div class="st-live-body">
             <div id="mx-video-stack" class="st-live-stage">
-                @if(!empty($livekitConfigured) && !empty($livekitToken) && !empty($livekitUrl))
-                    @include('partials.livekit-room', [
+                <?php if(!empty($livekitConfigured) && !empty($livekitToken) && !empty($livekitUrl)): ?>
+                    <?php echo $__env->make('partials.livekit-room', [
                         'livekitUrl' => $livekitUrl,
                         'livekitToken' => $livekitToken,
                         'user' => $user,
@@ -265,35 +266,35 @@
                         'lkLeaveUrl' => $roomExitUrl,
                         'lkAllowScreenShare' => false,
                         'lkHideLeave' => false,
-                    ])
-                @else
+                    ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                <?php else: ?>
                     <div class="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center text-slate-200">
                         <i class="fas fa-exclamation-triangle text-amber-400 text-3xl"></i>
                         <p class="font-bold text-lg">إعدادات البث غير مكتملة</p>
                         <p class="text-sm text-slate-400 max-w-md">تحقق من مفاتيح LiveKit من لوحة الإدارة → سيرفرات البث.</p>
-                        <a href="{{ $roomExitUrl }}" class="st-live-pill st-live-pill--gold mt-2">العودة</a>
+                        <a href="<?php echo e($roomExitUrl); ?>" class="st-live-pill st-live-pill--gold mt-2">العودة</a>
                     </div>
-                @endif
+                <?php endif; ?>
 
-                @if($annPollUrl)
-                    @include('partials.mx-share-annotation-overlay', [
+                <?php if($annPollUrl): ?>
+                    <?php echo $__env->make('partials.mx-share-annotation-overlay', [
                         'mxAnnRole' => 'viewer_poll',
                         'mxAnnPollUrl' => $annPollUrl,
-                    ])
-                @endif
+                    ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 
     <script>
         (function () {
-            var roomExitUrl = @json($roomExitUrl);
-            var roomStatusUrl = @json($roomStatusUrl);
-            var meetingEndsAt = {!! json_encode(optional($meetingEndsAt ?? null)->toIso8601String()) !!};
+            var roomExitUrl = <?php echo json_encode($roomExitUrl, 15, 512) ?>;
+            var roomStatusUrl = <?php echo json_encode($roomStatusUrl, 15, 512) ?>;
+            var meetingEndsAt = <?php echo json_encode(optional($meetingEndsAt ?? null)->toIso8601String()); ?>;
             var timerChip = document.getElementById('meeting-timer-chip');
             var timerChipMobile = document.getElementById('meeting-timer-chip-mobile');
-            var curriculumStateUrl = @json($curriculumStateUrl);
-            var allowWbInitially = {{ !empty($meeting->allowsParticipantWhiteboard()) ? 'true' : 'false' }};
+            var curriculumStateUrl = <?php echo json_encode($curriculumStateUrl, 15, 512) ?>;
+            var allowWbInitially = <?php echo e(!empty($meeting->allowsParticipantWhiteboard()) ? 'true' : 'false'); ?>;
             var sessionEnded = false;
 
             var leaveLink = document.getElementById('student-classroom-leave');
@@ -401,3 +402,4 @@
     </script>
 </body>
 </html>
+<?php /**PATH /Users/cityphone/Documents/glottical/resources/views/student/classroom/room-student.blade.php ENDPATH**/ ?>
