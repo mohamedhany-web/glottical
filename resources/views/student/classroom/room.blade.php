@@ -251,34 +251,6 @@
                 <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse shrink-0"></span>
                 <span class="font-semibold text-xs">REC</span>
             </span>
-            <div class="relative hidden flex w-full flex-wrap items-center gap-2 md:inline-flex md:w-auto md:flex-nowrap md:gap-0" id="mx-record-dd-wrap" aria-hidden="true">
-                <div id="mx-record-idle-wrap" class="inline-flex w-full min-w-0 items-center rounded-lg border border-slate-600 overflow-hidden bg-slate-700/80 hover:bg-slate-600/90 transition-colors md:w-auto">
-                    <button type="button" id="btn-record-menu" class="classroom-room-toolbar-btn w-full min-w-0 justify-between rounded-none border-0 bg-transparent text-slate-200 hover:bg-transparent md:w-auto" title="تسجيل المحاضرة أو تقرير صوتي" aria-expanded="false" aria-haspopup="true">
-                        <i class="fas fa-circle-dot text-rose-400 text-[10px]" id="record-icon-idle"></i>
-                        <span id="record-label-idle" class="min-w-0 flex-1 truncate sm:max-w-[9.5rem] lg:max-w-none">تسجيل أو تقرير</span>
-                        <i class="fas fa-chevron-down text-[9px] text-slate-400 shrink-0 transition-transform duration-200" id="record-dd-chevron" aria-hidden="true"></i>
-                    </button>
-                </div>
-                <button type="button" id="btn-record-stop" class="hidden classroom-room-toolbar-btn w-full justify-center rounded-lg bg-rose-600/90 hover:bg-rose-600 text-white font-semibold border border-rose-500/40 shadow-sm shadow-rose-900/25 md:w-auto md:max-w-[11rem]" title="إيقاف التسجيل">
-                    <i class="fas fa-stop text-[10px] shrink-0" id="record-icon-active"></i>
-                    <span id="record-label-active" class="truncate text-right">إيقاف</span>
-                </button>
-                <button type="button" id="btn-lecture-add-screen" class="hidden classroom-room-toolbar-btn w-full justify-center rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-100 font-medium border border-cyan-500/35 md:w-auto md:max-w-[13rem]" title="إضافة تبويب الاجتماع أو الشاشة إلى الفيديو المسجّل">
-                    <i class="fas fa-desktop text-[10px] shrink-0 text-cyan-300"></i>
-                    <span class="truncate hidden sm:inline">إضافة شاشة للتسجيل</span><span class="sm:hidden">+شاشة</span>
-                </button>
-                <div id="mx-record-dd-panel" class="hidden w-[min(100vw-1.5rem,18.5rem)] max-w-[calc(100vw-1rem)] rounded-lg border border-slate-600 bg-slate-900/98 backdrop-blur-md overflow-hidden" role="menu">
-                    <p class="px-2.5 py-1.5 text-[10px] leading-snug text-slate-500 border-b border-slate-700/80 m-0">يبدأ التسجيل بالصوت فقط. أثناء التسجيل اضغط «إضافة شاشة للتسجيل» واختر <strong class="text-slate-400">تبويب الاجتماع</strong> ليظهر العرض والمشاركة في الفيديو.</p>
-                    <button type="button" role="menuitem" data-mx-rec-mode="lecture" class="w-full text-right px-2.5 py-2 text-xs text-slate-200 hover:bg-slate-700/80 border-0 border-b border-slate-700/50 bg-transparent cursor-pointer flex items-center gap-2">
-                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-rose-500/15 text-rose-300"><i class="fas fa-display text-[11px]"></i></span>
-                        <span class="min-w-0 flex-1 leading-snug"><strong class="block text-slate-100 text-xs">تسجيل المحاضرة</strong><span class="text-[10px] text-slate-500">فيديو (اختياري) + ميكروفون</span></span>
-                    </button>
-                    <button type="button" role="menuitem" data-mx-rec-mode="report" class="w-full text-right px-2.5 py-2 text-xs text-slate-200 hover:bg-slate-700/80 border-0 bg-transparent cursor-pointer flex items-center gap-2">
-                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-cyan-500/15 text-cyan-300"><i class="fas fa-file-audio text-[11px]"></i></span>
-                        <span class="min-w-0 flex-1 leading-snug"><strong class="block text-slate-100 text-xs">إنشاء تقرير</strong><span class="text-[10px] text-slate-500">صوت فقط</span></span>
-                    </button>
-                </div>
-            </div>
             @if(!empty($guestJoinEnabled))
             <button type="button" id="btn-classroom-copy-join" class="classroom-room-toolbar-btn w-full justify-center gap-2 bg-slate-700/80 hover:bg-slate-600 text-slate-200 border border-slate-600 md:w-auto md:justify-start" title="نسخ رابط الانضمام" data-join-url="{{ url('classroom/join/' . $meeting->code) }}">
                 <i class="fas fa-link text-[10px] btn-copy-join-ic"></i>
@@ -1191,6 +1163,8 @@
             }
 
             function mxOpenRecordingUploadTab(jobId) {
+                // التسجيل التلقائي للمعلم: لا تفتح تاب الرفع أبداً
+                if (mxSilentAutoRecording) return null;
                 if (!jobId || !recordingUploadTabBaseUrl) return null;
                 var sep = recordingUploadTabBaseUrl.indexOf('?') >= 0 ? '&' : '?';
                 var url = recordingUploadTabBaseUrl + sep + 'job=' + encodeURIComponent(jobId);
@@ -1603,16 +1577,18 @@
                 mxCurrentUploadJob = job;
                 mxLastFailedJob = null;
                 if (mxUploadModalRetry) mxUploadModalRetry.classList.add('hidden');
-                mxShowUploadModal(true);
-                if (mxUploadModalTitle) {
-                    mxUploadModalTitle.textContent = job.kind === 'report' ? 'جاري رفع التقرير الصوتي' : 'جاري رفع تسجيل المحاضرة';
+                if (!mxSilentAutoRecording) {
+                    mxShowUploadModal(true);
+                    if (mxUploadModalTitle) {
+                        mxUploadModalTitle.textContent = job.kind === 'report' ? 'جاري رفع التقرير الصوتي' : 'جاري رفع تسجيل المحاضرة';
+                    }
+                    mxSetUploadBar(0);
+                    mxReportUploadProgress({
+                        text: 'جاري حفظ نسخة محلية ثم رفع التسجيل...',
+                        percent: 1,
+                        toChip: true,
+                    });
                 }
-                mxSetUploadBar(0);
-                mxReportUploadProgress({
-                    text: 'جاري حفظ نسخة محلية ثم رفع التسجيل...',
-                    percent: 1,
-                    toChip: true,
-                });
 
                 var persisted = Object.assign({}, job, { status: 'uploading', updatedAt: Date.now() });
                 try {
@@ -1622,7 +1598,7 @@
                 }
 
                 var onProg = function(o) {
-                    mxReportUploadProgress(o);
+                    if (!mxSilentAutoRecording) mxReportUploadProgress(o);
                 };
 
                 try {
@@ -1638,11 +1614,13 @@
                         }
                     }
                     await mxIdbDeleteJob(job.id);
-                    mxReportUploadProgress({ text: 'تم رفع وحفظ التسجيل بنجاح.', percent: 100, toChip: true });
-                    setRecordStatus(job.kind === 'report' ? 'تم رفع التقرير الصوتي.' : 'تم رفع تسجيل المحاضرة.', false);
-                    setTimeout(function() {
-                        mxHideUploadUi();
-                    }, 2200);
+                    if (!mxSilentAutoRecording) {
+                        mxReportUploadProgress({ text: 'تم رفع وحفظ التسجيل بنجاح.', percent: 100, toChip: true });
+                        setRecordStatus(job.kind === 'report' ? 'تم رفع التقرير الصوتي.' : 'تم رفع تسجيل المحاضرة.', false);
+                        setTimeout(function() {
+                            mxHideUploadUi();
+                        }, 2200);
+                    }
                 } catch (err) {
                     console.error('mxRunUploadJob:', err);
                     var msg = (err && err.message) ? err.message : 'فشل الرفع.';
@@ -1653,15 +1631,17 @@
                         await mxIdbPutJob(persisted);
                     } catch (idbErr2) {}
                     mxLastFailedJob = persisted;
-                    mxReportUploadProgress({
-                        text: msg + '\n\nيمكنك الضغط على «إعادة المحاولة» أو انتظار عودة الإنترنت لإعادة المحاولة تلقائياً.',
-                        percent: null,
-                        isError: true,
-                        shortStatus: 'فشل الرفع — يمكن إعادة المحاولة من النافذة أو الشريط.',
-                        toChip: true,
-                    });
-                    if (mxUploadModalRetry) mxUploadModalRetry.classList.remove('hidden');
-                    setRecordStatus('فشل الرفع — أعد المحاولة أو انتظر الاتصال.', true);
+                    if (!mxSilentAutoRecording) {
+                        mxReportUploadProgress({
+                            text: msg + '\n\nيمكنك الضغط على «إعادة المحاولة» أو انتظار عودة الإنترنت لإعادة المحاولة تلقائياً.',
+                            percent: null,
+                            isError: true,
+                            shortStatus: 'فشل الرفع — يمكن إعادة المحاولة من النافذة أو الشريط.',
+                            toChip: true,
+                        });
+                        if (mxUploadModalRetry) mxUploadModalRetry.classList.remove('hidden');
+                        setRecordStatus('فشل الرفع — أعد المحاولة أو انتظر الاتصال.', true);
+                    }
                     throw err;
                 }
             }
@@ -1677,6 +1657,17 @@
                     status: 'pending',
                     createdAt: Date.now(),
                 };
+                // المعلم: رفع صامت في الخلفية بدون تاب/مودال
+                if (mxSilentAutoRecording) {
+                    mxIdbPutJob(job).catch(function() {});
+                    mxRunUploadJob(Object.assign({}, job, { status: 'pending' })).catch(function(err) {
+                        console.warn('Silent auto-upload failed:', err);
+                        setTimeout(function() {
+                            mxRunUploadJob(Object.assign({}, job, { status: 'pending' })).catch(function() {});
+                        }, 4000);
+                    });
+                    return;
+                }
                 mxIdbPutJob(job).then(function() {
                     var w = mxOpenRecordingUploadTab(job.id);
                     if (!w) {

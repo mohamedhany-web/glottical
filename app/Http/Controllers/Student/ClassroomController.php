@@ -383,21 +383,17 @@ class ClassroomController extends Controller
     }
 
     /**
-     * تاب منفصل لرفع التسجيل إلى R2 (نفس أصل الغرفة — يقرأ المهمة من IndexedDB).
+     * تاب منفصل لرفع التسجيل — معطّل للمضيف (الرفع تلقائي صامت من الغرفة).
      */
     public function recordingUploadTab(Request $request, ClassroomMeeting $meeting)
     {
         $user = Auth::user();
         $this->ensureMeetingOwnership($meeting, $user);
-        $jobId = (string) $request->query('job', '');
-        $useInstructorRoutes = request()->routeIs('instructor.*');
-        $rp = $useInstructorRoutes ? 'instructor.' : 'student.';
 
-        return view('student.classroom.recording-upload-tab', [
-            'meeting' => $meeting,
-            'jobId' => $jobId,
-            'rp' => $rp,
-        ]);
+        // المعلم/المضيف: لا نعرض صفحة الرفع — التسجيل يُرفع تلقائياً من الغرفة
+        return redirect()
+            ->to($this->classroomRoomUrl($meeting))
+            ->with('info', 'التسجيل يُرفع تلقائياً في الخلفية دون الحاجة لهذه الصفحة.');
     }
 
     public function updateParticipantWhiteboard(Request $request, ClassroomMeeting $meeting)
