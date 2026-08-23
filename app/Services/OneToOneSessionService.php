@@ -466,7 +466,8 @@ class OneToOneSessionService
             'one_to_one_session_id' => $session->id,
             'code' => ClassroomMeeting::generateCode(),
             'room_name' => 'one-to-one-'.$session->id.'-'.Str::lower(Str::random(6)),
-            'title' => 'حصة 1:1: '.$courseTitle.' — '.$studentName,
+            // بدون اسم الطالب في عنوان الغرفة (يظهر للمعلم والطالب)
+            'title' => 'حصة 1:1: '.$courseTitle,
             'scheduled_for' => $scheduledAt,
             'planned_duration_minutes' => $durationMinutes,
             'max_participants' => 4,

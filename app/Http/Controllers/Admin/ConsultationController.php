@@ -171,7 +171,7 @@ class ConsultationController extends Controller
             'consultation_request_id' => $consultation->id,
             'code' => ClassroomMeeting::generateCode(),
             'room_name' => 'consultation-' . $consultation->id . '-' . Str::lower(Str::random(6)),
-            'title' => 'استشارة: ' . ($consultation->student->name ?? 'طالب'),
+            'title' => 'استشارة',
             'scheduled_for' => $scheduledAt,
             'planned_duration_minutes' => $duration,
             'max_participants' => 12,

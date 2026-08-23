@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Glottical Classroom — {{ $meeting->title ?: $meeting->code }}</title>
+    <title>Glottical Classroom — {{ $meeting->roomChromeTitle() }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -205,7 +205,7 @@
             <span class="w-px h-5 bg-slate-600 hidden sm:block shrink-0"></span>
             <div class="flex items-center gap-1.5 min-w-0">
                 <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow shadow-emerald-400/40 shrink-0"></span>
-                <span class="text-white font-semibold text-xs sm:text-sm truncate">{{ $meeting->title ?: 'غرفة ' . $meeting->code }}</span>
+                <span class="text-white font-semibold text-xs sm:text-sm truncate">{{ $meeting->roomChromeTitle() }}</span>
                 <span class="text-slate-400 text-[10px] sm:text-xs px-1.5 py-0.5 rounded bg-slate-700/80 font-mono shrink-0">{{ $meeting->code }}</span>
             </div>
             </div>

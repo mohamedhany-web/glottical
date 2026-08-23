@@ -594,7 +594,7 @@ class TeacherControlController extends Controller
             'one_to_one_session_id' => $session->id,
             'code' => ClassroomMeeting::generateCode(),
             'room_name' => 'one-to-one-'.$session->id.'-'.Str::lower(Str::random(6)),
-            'title' => 'حصة 1:1 — '.($session->student->name ?? 'طالب'),
+            'title' => 'حصة 1:1',
             'scheduled_for' => $scheduledAt,
             'planned_duration_minutes' => $duration,
             'max_participants' => 4,

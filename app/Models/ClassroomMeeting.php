@@ -111,6 +111,65 @@ class ClassroomMeeting extends Model
         return self::canonicalRoomName((string) $this->code);
     }
 
+    /**
+     * عنوان شريط الغرفة بدون أسماء طلاب (للمعلم والطالب معاً).
+     */
+    public function roomChromeTitle(): string
+    {
+        $title = trim((string) ($this->title ?: ''));
+        if ($title === '') {
+            return 'غرفة '.(string) $this->code;
+        }
+
+        $names = [];
+        if ($this->relationLoaded('oneToOneSession') || $this->one_to_one_session_id) {
+            $session = $this->relationLoaded('oneToOneSession')
+                ? $this->oneToOneSession
+                : $this->oneToOneSession()->with('student:id,name')->first();
+            if ($session?->student?->name) {
+                $names[] = (string) $session->student->name;
+            }
+        }
+        if ($this->relationLoaded('tutoringGroupBooking') || $this->tutoring_group_booking_id) {
+            $booking = $this->relationLoaded('tutoringGroupBooking')
+                ? $this->tutoringGroupBooking
+                : $this->tutoringGroupBooking()->with('user:id,name')->first();
+            if ($booking?->user?->name) {
+                $names[] = (string) $booking->user->name;
+            }
+            if (method_exists($booking, 'contactName') && filled($booking?->contactName())) {
+                $names[] = (string) $booking->contactName();
+            }
+        }
+        if ($this->relationLoaded('consultationRequest') || $this->consultation_request_id) {
+            $consultation = $this->relationLoaded('consultationRequest')
+                ? $this->consultationRequest
+                : $this->consultationRequest()->with('student:id,name')->first();
+            if ($consultation?->student?->name) {
+                $names[] = (string) $consultation->student->name;
+            }
+        }
+
+        foreach (array_unique(array_filter($names)) as $name) {
+            $escaped = preg_quote($name, '/');
+            $title = preg_replace('/\s*[—–-]\s*'.$escaped.'\s*$/u', '', $title) ?? $title;
+            $title = preg_replace('/^'.$escaped.'\s*[—–-]\s*/u', '', $title) ?? $title;
+            $title = preg_replace('/\s*'.$escaped.'\s*/u', ' ', $title) ?? $title;
+        }
+
+        // عناوين قديمة شائعة بدون ربط واضح
+        if (preg_match('/^حصة\s*1\s*:\s*1\s*[—–-]\s*.+$/u', $title)) {
+            $title = 'حصة 1:1';
+        }
+        if ($this->consultation_request_id && preg_match('/^استشارة\s*:\s*.+$/u', $title)) {
+            $title = 'استشارة';
+        }
+
+        $title = trim(preg_replace('/\s{2,}/u', ' ', $title) ?? $title, " \t\n\r\0\x0B—–-");
+
+        return $title !== '' ? $title : ('غرفة '.(string) $this->code);
+    }
+
     public static function generateCode(): string
     {
         do {
