@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.student-timeline')
 
 @section('title', $exam->title)
 @section('header', $exam->title)

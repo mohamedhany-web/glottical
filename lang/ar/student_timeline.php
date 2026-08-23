@@ -550,6 +550,13 @@ return [
     'cancel' => 'إلغاء',
 
     'nav_learn' => 'تعلّمي',
+    'nav_live_sessions' => 'البث المباشر',
+    'watch_recording' => 'مشاهدة التسجيل',
+    'nav_exams' => 'الامتحانات',
+    'nav_invoices' => 'الفواتير',
+    'nav_wallet' => 'المحفظة',
+    'nav_certificates' => 'الشهادات',
+    'nav_support' => 'الدعم الفني',
     'learn_kicker' => 'احجز من داخل حسابك',
     'learn_title' => 'تعلّم فردي ومجموعات',
     'learn_hint' => 'اختر معلماً أو مجموعة واحجز مباشرة برصيدك — بدون الخروج للموقع العام',

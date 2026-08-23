@@ -730,22 +730,60 @@ Route::post('/api/n8n/classroom-meeting-reports/{report}', [\App\Http\Controller
 Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // مسارات الطلاب
-    Route::get('/academic-years', [\App\Http\Controllers\Student\AcademicYearController::class, 'index'])->name('academic-years');
-    Route::get('/academic-years/{academicYear}/subjects', [\App\Http\Controllers\Student\AcademicYearController::class, 'subjects'])->name('academic-years.subjects');
-    Route::get('/subjects/{academicSubject}/courses', [\App\Http\Controllers\Student\SubjectController::class, 'courses'])->name('subjects.courses');
-    Route::get('/courses/{advancedCourse}', [\App\Http\Controllers\Student\CourseController::class, 'show'])->name('courses.show');
+    // كتالوج الكورسات — مخفي افتراضياً (config/student_ui.php → show_courses)
+    Route::get('/academic-years', function () {
+        if (! student_ui('show_courses', false)) {
+            return redirect()->route('dashboard')->with('info', 'نظام الكورسات غير متاح حالياً من لوحة الطالب.');
+        }
 
-    // كورساتي المفعلة - محمية للطلاب فقط
+        return app(\App\Http\Controllers\Student\AcademicYearController::class)->index();
+    })->name('academic-years');
+    Route::get('/academic-years/{academicYear}/subjects', function (\App\Models\AcademicYear $academicYear) {
+        if (! student_ui('show_courses', false)) {
+            return redirect()->route('dashboard')->with('info', 'نظام الكورسات غير متاح حالياً من لوحة الطالب.');
+        }
+
+        return app(\App\Http\Controllers\Student\AcademicYearController::class)->subjects($academicYear);
+    })->name('academic-years.subjects');
+    Route::get('/subjects/{academicSubject}/courses', function (\App\Models\AcademicSubject $academicSubject) {
+        if (! student_ui('show_courses', false)) {
+            return redirect()->route('dashboard')->with('info', 'نظام الكورسات غير متاح حالياً من لوحة الطالب.');
+        }
+
+        return app(\App\Http\Controllers\Student\SubjectController::class)->courses($academicSubject);
+    })->name('subjects.courses');
+    Route::get('/courses/{advancedCourse}', function (\App\Models\AdvancedCourse $advancedCourse) {
+        if (! student_ui('show_courses', false)) {
+            return redirect()->route('dashboard')->with('info', 'نظام الكورسات غير متاح حالياً من لوحة الطالب.');
+        }
+
+        return app(\App\Http\Controllers\Student\CourseController::class)->show($advancedCourse);
+    })->name('courses.show');
+
+    // كورساتي — القائمة مخفية؛ الروابط المباشرة تُعاد للرئيسية ما دام show_courses = false
     Route::middleware(['role:student'])->group(function () {
-        Route::get('/my-courses', [\App\Http\Controllers\Student\MyCourseController::class, 'index'])->name('my-courses.index');
-        Route::get('/my-courses/{course}', [\App\Http\Controllers\Student\MyCourseController::class, 'show'])
-            ->middleware(['ownership:course,course'])
-            ->name('my-courses.show');
+        Route::get('/my-courses', function () {
+            if (! student_ui('show_courses', false)) {
+                return redirect()->route('dashboard');
+            }
 
-        Route::get('/my-courses/{course}/learn', [\App\Http\Controllers\Student\MyCourseController::class, 'learn'])
-            ->middleware(['ownership:course,course'])
-            ->name('my-courses.learn');
+            return redirect()->route('student.learn.index');
+        })->name('my-courses.index');
+        Route::get('/my-courses/{course}', function ($course) {
+            if (! student_ui('show_courses', false)) {
+                return redirect()->route('dashboard')->with('info', 'نظام الكورسات غير متاح حالياً من لوحة الطالب.');
+            }
+
+            return app(\App\Http\Controllers\Student\MyCourseController::class)->show($course);
+        })->middleware(['ownership:course,course'])->name('my-courses.show');
+
+        Route::get('/my-courses/{course}/learn', function ($course, \Illuminate\Http\Request $request) {
+            if (! student_ui('show_courses', false)) {
+                return redirect()->route('dashboard')->with('info', 'نظام الكورسات غير متاح حالياً من لوحة الطالب.');
+            }
+
+            return app(\App\Http\Controllers\Student\MyCourseController::class)->learn($course, $request);
+        })->middleware(['ownership:course,course'])->name('my-courses.learn');
         Route::get('/my-courses/{course}/lectures/{lecture}', [\App\Http\Controllers\Student\MyCourseController::class, 'getLectureData'])
             ->middleware(['ownership:course,course'])
             ->name('my-courses.lectures.show');
@@ -761,8 +799,13 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/my-courses/{course}/lectures/{lecture}/progress', [\App\Http\Controllers\Student\MyCourseController::class, 'updateLectureProgress'])
             ->middleware(['ownership:course,course'])
             ->name('my-courses.lectures.progress');
-        Route::get('/my-courses/{course}/lessons/{lesson}/watch', [\App\Http\Controllers\Student\MyCourseController::class, 'watchLesson'])
-            ->middleware([\App\Http\Middleware\VideoProtectionMiddleware::class, 'ownership:course,course'])
+        Route::get('/my-courses/{course}/lessons/{lesson}/watch', function ($course, $lesson) {
+            if (! student_ui('show_courses', false)) {
+                return redirect()->route('dashboard')->with('info', 'نظام الكورسات غير متاح حالياً من لوحة الطالب.');
+            }
+
+            return app(\App\Http\Controllers\Student\MyCourseController::class)->watchLesson($course, $lesson);
+        })->middleware([\App\Http\Middleware\VideoProtectionMiddleware::class, 'ownership:course,course'])
             ->name('my-courses.lesson.watch');
         Route::post('/my-courses/{course}/lessons/{lesson}/progress', [\App\Http\Controllers\Student\MyCourseController::class, 'updateLessonProgress'])
             ->middleware(['ownership:course,course'])
@@ -984,42 +1027,40 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/tutoring-subscriptions/{subscription}', [\App\Http\Controllers\Student\TutoringSubscriptionController::class, 'show'])->name('student.tutoring-subscriptions.show');
         Route::get('/service-entitlements', [\App\Http\Controllers\Student\ServiceEntitlementController::class, 'index'])->name('student.service-entitlements.index');
 
-        // Glottical Classroom — جلسات حية للدورات والمجموعات
-        Route::get('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'index'])->name('student.classroom.index');
-        Route::get('/classroom/create', [\App\Http\Controllers\Student\ClassroomController::class, 'create'])->name('student.classroom.create');
-        Route::post('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'store'])->name('student.classroom.store');
-        Route::get('/classroom/whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'whiteboardStandalone'])->name('student.classroom.whiteboard');
-        Route::get('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'show'])->name('student.classroom.show');
-        Route::get('/classroom/{meeting}/edit', [\App\Http\Controllers\Student\ClassroomController::class, 'edit'])->name('student.classroom.edit');
-        Route::put('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'update'])->name('student.classroom.update');
-        Route::delete('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'destroy'])->name('student.classroom.destroy');
-        Route::post('/classroom/start', [\App\Http\Controllers\Student\ClassroomController::class, 'start'])->name('student.classroom.start');
-        Route::post('/classroom/{meeting}/start', [\App\Http\Controllers\Student\ClassroomController::class, 'startMeeting'])->name('student.classroom.start-meeting');
-        Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('student.classroom.room');
-        Route::get('/classroom/room/{meeting}/recording-upload', [\App\Http\Controllers\Student\ClassroomController::class, 'recordingUploadTab'])->name('student.classroom.recording.upload-tab');
-        Route::post('/classroom/{meeting}/participant-whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'updateParticipantWhiteboard'])->name('student.classroom.participant-whiteboard');
-        Route::post('/classroom/{meeting}/guest-join', [\App\Http\Controllers\Student\ClassroomController::class, 'updateGuestJoin'])->name('student.classroom.guest-join');
-        Route::get('/classroom/{meeting}/share-annotations', [\App\Http\Controllers\Student\ClassroomController::class, 'shareAnnotations'])->name('student.classroom.share-annotations');
-        Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('student.classroom.end');
-        Route::post('/classroom/{meeting}/recording/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadRecording'])->name('student.classroom.recording.upload');
-        Route::post('/classroom/{meeting}/recording/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignRecordingUpload'])->name('student.classroom.recording.presign');
-        Route::post('/classroom/{meeting}/recording/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectRecordingUpload'])->name('student.classroom.recording.complete');
-        Route::post('/classroom/{meeting}/recording-audio/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignAudioUpload'])->name('student.classroom.recording-audio.presign');
-        Route::post('/classroom/{meeting}/recording-audio/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadAudioRecording'])->name('student.classroom.recording-audio.upload');
-        Route::post('/classroom/{meeting}/recording-audio/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectAudioUpload'])->name('student.classroom.recording-audio.complete');
-        Route::post('/classroom/{meeting}/ai-report', [\App\Http\Controllers\Student\ClassroomController::class, 'generateAiReport'])->name('student.classroom.ai-report');
+        // Glottical Classroom — الطالب: دخول الغرفة فقط (بدون إنشاء/إدارة اجتماعات)
+        $studentMeetingDenied = 'لا يمكن للطلاب إنشاء أو إدارة اجتماعات مباشرة. انضم من جدولك أو من حصصك/فصولك.';
 
-        Route::get('/classroom/{meeting}/curriculum/catalog', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumCatalog'])->name('student.classroom.curriculum.catalog');
-        Route::post('/classroom/{meeting}/curriculum/present', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumPresent'])->name('student.classroom.curriculum.present');
+        Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('student.classroom.room');
+        Route::get('/classroom/room/{meeting}/recording', [\App\Http\Controllers\Student\ClassroomController::class, 'watchRecording'])->name('student.classroom.recording');
+        Route::get('/classroom/{meeting}/share-annotations', [\App\Http\Controllers\Student\ClassroomController::class, 'shareAnnotations'])->name('student.classroom.share-annotations');
         Route::get('/classroom/{meeting}/curriculum/state', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumState'])->name('student.classroom.curriculum.state');
-        Route::post('/classroom/{meeting}/curriculum/slide', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumUpdateSlide'])->name('student.classroom.curriculum.slide.update');
-        Route::post('/classroom/{meeting}/curriculum/stop', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumStop'])->name('student.classroom.curriculum.stop');
         Route::get('/classroom/{meeting}/curriculum/{sessionId}/slide/{slide}', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumSlide'])
             ->whereNumber('slide')
             ->name('student.classroom.curriculum.slide');
         Route::get('/classroom/{meeting}/curriculum/{sessionId}/thumb/{slide}', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumThumb'])
             ->whereNumber('slide')
             ->name('student.classroom.curriculum.thumb');
+
+        Route::get('/classroom', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
+            ->middleware('student.no-meeting-host')->name('student.classroom.index');
+        Route::get('/classroom/create', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
+            ->middleware('student.no-meeting-host')->name('student.classroom.create');
+        Route::post('/classroom', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
+            ->middleware('student.no-meeting-host')->name('student.classroom.store');
+        Route::get('/classroom/whiteboard', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
+            ->middleware('student.no-meeting-host')->name('student.classroom.whiteboard');
+        Route::post('/classroom/start', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
+            ->middleware('student.no-meeting-host')->name('student.classroom.start');
+        Route::get('/classroom/{meeting}', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
+            ->middleware('student.no-meeting-host')->whereNumber('meeting')->name('student.classroom.show');
+        Route::get('/classroom/{meeting}/edit', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
+            ->middleware('student.no-meeting-host')->whereNumber('meeting')->name('student.classroom.edit');
+        Route::put('/classroom/{meeting}', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
+            ->middleware('student.no-meeting-host')->whereNumber('meeting')->name('student.classroom.update');
+        Route::delete('/classroom/{meeting}', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
+            ->middleware('student.no-meeting-host')->whereNumber('meeting')->name('student.classroom.destroy');
+        Route::post('/classroom/{meeting}/start', fn () => redirect()->route('dashboard')->with('error', $studentMeetingDenied))
+            ->middleware('student.no-meeting-host')->whereNumber('meeting')->name('student.classroom.start-meeting');
     });
 
     // ملفات مناهج X (عرض/تحميل/شرائح) — طالب أو معلم معتمد

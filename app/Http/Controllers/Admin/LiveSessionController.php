@@ -141,7 +141,7 @@ class LiveSessionController extends Controller
         unset($validated['timezone']);
 
         $validated['is_recorded'] = $request->boolean('is_recorded');
-        $validated['allow_chat'] = $request->boolean('allow_chat', true);
+        $validated['allow_chat'] = false;
         $validated['allow_screen_share'] = $request->boolean('allow_screen_share', true);
         $validated['require_enrollment'] = $request->boolean('require_enrollment', true);
         $validated['mute_on_join'] = $request->boolean('mute_on_join', true);
@@ -200,7 +200,7 @@ class LiveSessionController extends Controller
         unset($validated['timezone']);
 
         $validated['is_recorded'] = $request->boolean('is_recorded');
-        $validated['allow_chat'] = $request->boolean('allow_chat', true);
+        $validated['allow_chat'] = false;
         $validated['allow_screen_share'] = $request->boolean('allow_screen_share', true);
         $validated['require_enrollment'] = $request->boolean('require_enrollment', true);
         $validated['mute_on_join'] = $request->boolean('mute_on_join', true);
@@ -259,7 +259,7 @@ class LiveSessionController extends Controller
             'status' => 'scheduled',
             'max_participants' => 200,
             'is_recorded' => false,
-            'allow_chat' => true,
+            'allow_chat' => false,
             'allow_screen_share' => true,
             'require_enrollment' => false,
             'mute_on_join' => false,

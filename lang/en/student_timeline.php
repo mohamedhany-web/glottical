@@ -550,6 +550,13 @@ return [
     'cancel' => 'Cancel',
 
     'nav_learn' => 'Learn',
+    'nav_live_sessions' => 'Live sessions',
+    'watch_recording' => 'Watch recording',
+    'nav_exams' => 'Exams',
+    'nav_invoices' => 'Invoices',
+    'nav_wallet' => 'Wallet',
+    'nav_certificates' => 'Certificates',
+    'nav_support' => 'Support',
     'learn_kicker' => 'Book from your account',
     'learn_title' => 'Private & group learning',
     'learn_hint' => 'Pick a teacher or group and book with your credits — stay inside the student app',

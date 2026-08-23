@@ -123,6 +123,12 @@
             $awaiting = $session->isAwaitingTeacherStart();
             $canJoin = $session->status === \App\Models\OneToOneSession::STATUS_SCHEDULED && $session->classroomMeeting;
             $joinHref = $canJoin ? route('student.classroom.room', $session->classroomMeeting) : null;
+            $recordingHref = ($session->status === \App\Models\OneToOneSession::STATUS_COMPLETED
+                && $session->classroomMeeting
+                && $session->classroomMeeting->hasBrowserRecording()
+                && Route::has('student.classroom.recording'))
+                ? route('student.classroom.recording', $session->classroomMeeting)
+                : null;
             $ends = $session->scheduled_at ? $session->scheduled_at->copy()->addMinutes($dur) : null;
             $tone = $tones[$i % count($tones)];
             $instructor = $session->instructor;
@@ -158,6 +164,11 @@
                     <a href="{{ $joinHref }}" class="st-pill st-pill--solid">
                         <i class="fas fa-video" aria-hidden="true"></i>
                         {{ __('student_timeline.join_now') }}
+                    </a>
+                @elseif($recordingHref ?? null)
+                    <a href="{{ $recordingHref }}" class="st-pill st-pill--outline" target="_blank" rel="noopener">
+                        <i class="fas fa-play-circle" aria-hidden="true"></i>
+                        {{ __('student_timeline.watch_recording') }}
                     </a>
                 @elseif($awaiting)
                     <span class="st-lesson-card__status is-warn">{{ __('student_timeline.teacher_starting') }}</span>

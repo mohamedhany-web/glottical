@@ -46,6 +46,12 @@
                     ? route('student.classroom.room', $session->classroomMeeting)
                     : $session->joinUrl())
                 : null;
+            $recordingHref = ($session->status === \App\Models\OneToOneSession::STATUS_COMPLETED
+                && $session->classroomMeeting
+                && $session->classroomMeeting->hasBrowserRecording()
+                && Route::has('student.classroom.recording'))
+                ? route('student.classroom.recording', $session->classroomMeeting)
+                : null;
             $tone = $tones[$i % count($tones)];
             $instructor = $session->instructor;
             $avatar = $instructor?->avatarDisplayUrl() ?? $avatarFallback;
@@ -77,6 +83,11 @@
                     <a href="{{ $joinHref }}" class="st-pill st-pill--solid">
                         <i class="fas fa-video" aria-hidden="true"></i>
                         {{ __('student_timeline.join_now') }}
+                    </a>
+                @elseif($recordingHref ?? null)
+                    <a href="{{ $recordingHref }}" class="st-pill st-pill--outline" target="_blank" rel="noopener">
+                        <i class="fas fa-play-circle" aria-hidden="true"></i>
+                        {{ __('student_timeline.watch_recording') }}
                     </a>
                 @endif
                 <a href="{{ route('student.one-to-one-sessions.show', $session) }}" class="st-pill st-pill--outline">{{ __('public.view_details') }}</a>

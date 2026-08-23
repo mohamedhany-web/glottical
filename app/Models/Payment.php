@@ -9,6 +9,40 @@ class Payment extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::creating(function (Payment $payment) {
+            if (empty($payment->payment_number) || self::where('payment_number', $payment->payment_number)->exists()) {
+                $payment->payment_number = self::generateUniquePaymentNumber();
+            }
+        });
+    }
+
+    /**
+     * رقم دفع فريد — يعتمد على أعلى رقم PAY-* موجود وليس على count() (يتجنب التكرار بعد الحذف أو التزامن).
+     */
+    public static function generateUniquePaymentNumber(): string
+    {
+        $maxSuffix = self::query()
+            ->where('payment_number', 'like', 'PAY-%')
+            ->pluck('payment_number')
+            ->map(static function (string $number): int {
+                if (preg_match('/PAY-(\d+)/', $number, $matches)) {
+                    return (int) $matches[1];
+                }
+
+                return 0;
+            })
+            ->max() ?? 0;
+
+        do {
+            $maxSuffix++;
+            $candidate = 'PAY-'.str_pad((string) $maxSuffix, 8, '0', STR_PAD_LEFT);
+        } while (self::where('payment_number', $candidate)->exists());
+
+        return $candidate;
+    }
+
     protected $fillable = [
         'payment_number',
         'invoice_id',

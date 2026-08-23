@@ -46,7 +46,6 @@ class LiveMeetingProvider
     {
         $server = $session->server ?: $this->preferredLiveKitServer();
         $allowScreenShare = $isHost || (bool) ($session->allow_screen_share ?? true);
-        $allowChat = (bool) ($session->allow_chat ?? true);
 
         $payload = [
             'provider' => 'livekit',
@@ -55,14 +54,14 @@ class LiveMeetingProvider
             'livekitHost' => $this->liveKit->publicHost($server),
             'livekitConfigured' => $this->liveKit->isConfigured(),
             'allowScreenShare' => $allowScreenShare,
-            'allowChat' => $allowChat,
+            'allowChat' => false,
         ];
 
         if ($this->liveKit->isConfigured()) {
             $grants = [
                 'canPublish' => true,
                 'canSubscribe' => true,
-                'canPublishData' => $allowChat,
+                'canPublishData' => false,
                 'roomAdmin' => $isHost,
             ];
 
@@ -74,7 +73,13 @@ class LiveMeetingProvider
             $payload['livekitToken'] = $this->liveKit->createJoinToken(
                 $session->room_name,
                 $user,
-                $grants
+                array_merge($grants, [
+                    'metadata' => [
+                        'user_id' => $user->id,
+                        'role' => $user->role ?? null,
+                        'is_host' => $isHost,
+                    ],
+                ])
             );
         }
 
@@ -96,7 +101,7 @@ class LiveMeetingProvider
             'livekitConfigured' => $this->liveKit->isConfigured(),
             'roomName' => $roomName,
             'allowScreenShare' => true,
-            'allowChat' => true,
+            'allowChat' => false,
         ];
 
         if ($this->liveKit->isConfigured()) {
@@ -106,8 +111,11 @@ class LiveMeetingProvider
                 array_merge([
                     'canPublish' => true,
                     'canSubscribe' => true,
-                    'canPublishData' => true,
+                    'canPublishData' => false,
                     'roomAdmin' => $isHost,
+                    'metadata' => [
+                        'is_host' => $isHost,
+                    ],
                 ], $grants)
             );
         }
@@ -129,7 +137,7 @@ class LiveMeetingProvider
             'livekitConfigured' => $this->liveKit->isConfigured(),
             'roomName' => $roomName,
             'allowScreenShare' => true,
-            'allowChat' => true,
+            'allowChat' => false,
         ];
 
         if ($this->liveKit->isConfigured()) {
@@ -140,7 +148,7 @@ class LiveMeetingProvider
                 [
                     'canPublish' => true,
                     'canSubscribe' => true,
-                    'canPublishData' => true,
+                    'canPublishData' => false,
                     'metadata' => ['guest' => true, 'display_name' => $displayName],
                 ]
             );

@@ -114,9 +114,61 @@ class LiveKitRoomProviderTest extends TestCase
         $response->assertSee('livekit-client', false);
         $response->assertSee('live.glottical.com', false);
         $response->assertSee('مشاركة الشاشة', false);
-        $response->assertSee('الدردشة', false);
+        $response->assertDontSee('id="lk-chat-panel"', false);
+        $response->assertDontSee('الدردشة', false);
+        $response->assertSee('lk-theme-instructor', false);
+        $response->assertSee('id="lk-focus"', false);
+        $response->assertSee('id="lk-pip"', false);
+        $response->assertSee('id="lk-zoom-in"', false);
+        $response->assertSee('الكاميرات', false);
+        $response->assertSee('su-live-shell', false);
+        $response->assertSee('instructor-panel.css', false);
         $response->assertDontSee('external_api.js', false);
         $response->assertDontSee('JitsiMeetExternalAPI', false);
+    }
+
+    public function test_student_room_uses_student_theme_and_share_tools(): void
+    {
+        $instructor = User::factory()->create([
+            'role' => 'instructor',
+            'is_active' => true,
+            'password' => Hash::make('secret'),
+        ]);
+        $student = User::factory()->create([
+            'role' => 'student',
+            'is_active' => true,
+            'password' => Hash::make('secret'),
+        ]);
+        $server = LiveServer::create([
+            'name' => 'Glottical LiveKit',
+            'domain' => 'live.glottical.com',
+            'provider' => 'livekit',
+            'status' => 'active',
+        ]);
+        $session = LiveSession::create([
+            'instructor_id' => $instructor->id,
+            'server_id' => $server->id,
+            'title' => 'جلسة طالب',
+            'room_name' => 'glottical-student-theme',
+            'status' => 'live',
+            'started_at' => now(),
+            'require_enrollment' => false,
+            'allow_screen_share' => true,
+            'allow_chat' => true,
+        ]);
+
+        $response = $this->actingAs($student)
+            ->post(route('student.live-sessions.join', $session));
+
+        $response->assertOk();
+        $response->assertSee('lk-theme-student', false);
+        $response->assertSee('st-live-shell', false);
+        $response->assertSee('id="lk-focus"', false);
+        $response->assertSee('id="lk-pip"', false);
+        $response->assertSee('id="lk-zoom-in"', false);
+        $response->assertSee('layout-duo', false);
+        $response->assertSee('layout-trio', false);
+        $response->assertSee('مشاركة الشاشة', false);
     }
 
     public function test_student_room_hides_screen_share_when_disabled(): void
@@ -154,7 +206,39 @@ class LiveKitRoomProviderTest extends TestCase
 
         $response->assertOk();
         $response->assertDontSee('id="lk-toggle-screen"', false);
-        $response->assertSee('الدردشة', false);
-        $response->assertSee('id="lk-chat-panel"', false);
+        $response->assertDontSee('id="lk-chat-panel"', false);
+        $response->assertDontSee('الدردشة', false);
+    }
+
+    public function test_live_meeting_tokens_never_allow_data_publish(): void
+    {
+        $instructor = User::factory()->create([
+            'role' => 'instructor',
+            'is_active' => true,
+            'password' => Hash::make('secret'),
+        ]);
+        LiveServer::create([
+            'name' => 'Glottical LiveKit',
+            'domain' => 'live.glottical.com',
+            'provider' => 'livekit',
+            'status' => 'active',
+        ]);
+        $session = LiveSession::create([
+            'instructor_id' => $instructor->id,
+            'title' => 'شات مفعّل في DB',
+            'room_name' => 'glottical-chat-blocked',
+            'status' => 'live',
+            'started_at' => now(),
+            'require_enrollment' => false,
+            'allow_chat' => true,
+        ]);
+
+        $payload = app(\App\Services\LiveMeetingProvider::class)->roomPayload($session, $instructor, true);
+
+        $this->assertFalse($payload['allowChat']);
+        $this->assertNotEmpty($payload['livekitToken']);
+        $parts = explode('.', $payload['livekitToken']);
+        $claims = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
+        $this->assertFalse($claims['video']['canPublishData'] ?? true);
     }
 }

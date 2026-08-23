@@ -109,7 +109,7 @@ class PaymentController extends Controller
         }
 
         $payment = Payment::create([
-            'payment_number' => 'PAY-' . str_pad(Payment::count() + 1, 8, '0', STR_PAD_LEFT),
+            'payment_number' => Payment::generateUniquePaymentNumber(),
             'invoice_id' => $invoice->id,
             'user_id' => $validated['user_id'],
             'payment_method' => $validated['payment_method'],

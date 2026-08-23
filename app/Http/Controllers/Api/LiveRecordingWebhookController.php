@@ -43,10 +43,12 @@ class LiveRecordingWebhookController extends Controller
             'is_published'      => false,
         ]);
 
+        \App\Services\LiveRecordingAutoPublishService::publishForSession($rec, $session);
+
         return response()->json([
             'success' => true,
             'recording_id' => $rec->id,
-            'message' => 'تم تسجيل التسجيل بنجاح. يمكنك نشره من لوحة الإدارة.',
+            'message' => 'تم حفظ التسجيل ونشره للطلاب.',
         ], 201);
     }
 }

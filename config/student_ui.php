@@ -5,18 +5,20 @@
  * غيّر أي قيمة إلى true لإعادة إظهار القسم في السايدبار/اللوحة.
  */
 return [
-    // أقسام غير مستخدمة حالياً
+    // أقسام غير مستخدمة حالياً (نظام الكورسات وما يتبعه)
     'show_courses' => false,
     'show_exams' => false,
     'show_certificates' => false,
     'show_achievements' => false,
     'show_wallet' => false,
+    'show_invoices' => false,
     'show_orders' => true,
     'show_referrals' => true,
     'show_consultations' => false,
     'show_legacy_calendar' => false,
     'show_course_progress' => false,
-    'show_live_broadcast' => false,
+    'show_live_broadcast' => true,
+    'show_support' => true,
 
     // أقسام نشطة
     'show_school' => true,

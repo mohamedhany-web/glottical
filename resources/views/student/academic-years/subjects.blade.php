@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.student-timeline')
 
 @section('title', $academicYear->name . ' - المجموعات المهارية')
 @section('header', 'مجموعات المهارات المتخصصة')

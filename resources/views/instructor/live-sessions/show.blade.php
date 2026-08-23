@@ -151,31 +151,6 @@
                 @endif
             </section>
 
-            @if($liveSession->recordings->count() > 0)
-                <section class="su-card su-card--flush" style="margin:0">
-                    <h3 class="su-card__title" style="padding:8px 8px 0">
-                        <i class="fas fa-play-circle" aria-hidden="true"></i>
-                        {{ __('instructor.ls_recordings') }}
-                    </h3>
-                    <div class="su-list">
-                        @foreach($liveSession->recordings as $rec)
-                            <div class="su-list-item">
-                                <span class="su-list-item__ico su-soft-3">
-                                    <i class="fas fa-film" aria-hidden="true"></i>
-                                </span>
-                                <div class="su-list-item__body">
-                                    <div class="su-list-item__title">{{ $rec->title ?? __('instructor.ls_recording') }}</div>
-                                </div>
-                                @if($rec->getUrl())
-                                    <a href="{{ $rec->getUrl() }}" target="_blank" rel="noopener" class="su-btn" style="height:32px">
-                                        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-                                    </a>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-                </section>
-            @endif
         </div>
     </div>
 </div>

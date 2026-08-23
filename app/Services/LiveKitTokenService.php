@@ -55,12 +55,13 @@ class LiveKitTokenService
     {
         $identity = 'user-'.$user->id;
         $name = trim((string) ($user->name ?: $user->email ?: $identity));
+        $existingMeta = is_array($grants['metadata'] ?? null) ? $grants['metadata'] : [];
 
         return $this->createIdentityToken($roomName, $identity, $name, array_merge($grants, [
-            'metadata' => [
+            'metadata' => array_merge($existingMeta, [
                 'user_id' => $user->id,
                 'role' => $user->role ?? null,
-            ],
+            ]),
         ]));
     }
 

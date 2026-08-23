@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends(!empty($useInstructorRoutes) ? 'layouts.app' : 'layouts.student-timeline')
 
 @section('title', 'تفاصيل الاجتماع')
 @section('header', 'تفاصيل الاجتماع')
@@ -99,7 +99,7 @@
             </div>
         @endif
 
-        @if($meeting->ended_at)
+        @if($meeting->ended_at && !($useInstructorRoutes ?? false))
             @php
                 $hasVideo = (bool) $meeting->recording_path;
                 $hasAudio = (bool) $meeting->recording_audio_path;

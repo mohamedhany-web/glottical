@@ -79,8 +79,8 @@ class LiveSessionController extends Controller
         unset($validated['timezone']);
 
         $validated['instructor_id'] = auth()->id();
-        $validated['is_recorded'] = $request->boolean('is_recorded');
-        $validated['allow_chat'] = $request->boolean('allow_chat', true);
+        $validated['is_recorded'] = true;
+        $validated['allow_chat'] = false;
         $validated['allow_screen_share'] = true;
         $validated['require_enrollment'] = LiveSetting::get('require_enrollment', true);
         $validated['mute_on_join'] = LiveSetting::get('mute_students_on_join', true);
@@ -480,7 +480,7 @@ class LiveSessionController extends Controller
         ]);
 
         if (! $recording->exists) {
-            $recording->title = 'تسجيل صوتي منفصل - '.$liveSession->title;
+            $recording->title = 'تسجيل — '.$liveSession->title;
             $recording->status = 'ready';
             $recording->is_published = false;
         }
@@ -489,10 +489,11 @@ class LiveSessionController extends Controller
         $recording->duration_seconds = (int) ($validated['duration_seconds'] ?? 0);
         $recording->save();
 
+        \App\Services\LiveRecordingAutoPublishService::publishForSession($recording->fresh(), $liveSession);
+
         return response()->json([
             'success' => true,
             'recording_id' => $recording->id,
-            'message' => 'تم رفع التسجيل الصوتي المنفصل بنجاح.',
         ]);
     }
 

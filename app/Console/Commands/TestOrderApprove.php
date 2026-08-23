@@ -89,7 +89,7 @@ class TestOrderApprove extends Command
             $this->info("Step 4: Creating Payment...");
             $paymentMethodMap = ['bank_transfer' => 'bank_transfer', 'cash' => 'cash', 'other' => 'other'];
             $paymentMethod = $paymentMethodMap[$order->payment_method] ?? 'other';
-            $paymentNumber = 'PAY-' . str_pad(Payment::count() + 1, 8, '0', STR_PAD_LEFT);
+            $paymentNumber = Payment::generateUniquePaymentNumber();
             $payment = Payment::create([
                 'payment_number' => $paymentNumber,
                 'invoice_id' => $invoice->id,

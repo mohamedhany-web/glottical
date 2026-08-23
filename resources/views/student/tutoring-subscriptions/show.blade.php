@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.student-timeline')
 
 @section('title', 'تفاصيل الباقة')
 @section('page_title', 'تفاصيل الباقة')

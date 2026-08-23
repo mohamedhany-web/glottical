@@ -25,6 +25,30 @@ class ClassroomController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+        $this->middleware(function ($request, $next) {
+            $user = Auth::user();
+            if (! $user?->isStudent() || ! $request->routeIs('student.*')) {
+                return $next($request);
+            }
+
+            $allowed = [
+                'student.classroom.room',
+                'student.classroom.recording',
+                'student.classroom.share-annotations',
+                'student.classroom.curriculum.state',
+                'student.classroom.curriculum.slide',
+                'student.classroom.curriculum.thumb',
+            ];
+
+            $routeName = $request->route()?->getName();
+            if ($routeName && ! in_array($routeName, $allowed, true)) {
+                return redirect()
+                    ->route('dashboard')
+                    ->with('error', 'لا يمكن للطلاب إنشاء أو إدارة اجتماعات مباشرة. انضم من جدولك أو من حصصك/فصولك.');
+            }
+
+            return $next($request);
+        });
     }
 
     public function index(Request $request)
@@ -339,6 +363,21 @@ class ClassroomController extends Controller
             ),
             $meetingPayload
         ));
+    }
+
+    /**
+     * مشاهدة/تحميل تسجيل حصة منتهية — للطالب أو المعلم المصرّح له فقط.
+     */
+    public function watchRecording(ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        abort_unless(ClassroomMeetingAccessService::userCanEnter($meeting, $user), 403);
+        abort_unless($meeting->ended_at, 404);
+
+        $url = $meeting->recording_download_url ?? $meeting->recording_audio_download_url;
+        abort_unless($url, 404);
+
+        return redirect()->away($url);
     }
 
     /**
@@ -1402,10 +1441,6 @@ class ClassroomController extends Controller
 
         if ($isHost && request()->routeIs('instructor.*') && Route::has('instructor.classroom.index')) {
             return route('instructor.classroom.index');
-        }
-
-        if ((int) $meeting->user_id === (int) $user->id && Route::has('student.classroom.index')) {
-            return route('student.classroom.index');
         }
 
         return route('dashboard');

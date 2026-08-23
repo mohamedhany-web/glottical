@@ -994,7 +994,7 @@ class CheckoutController extends Controller
         $gross = (float) $order->amount;
         $split = PaymentGatewaySettings::computeFeeSplit($gross);
 
-        $paymentNumber = 'PAY-'.str_pad((string) (Payment::count() + 1), 8, '0', STR_PAD_LEFT);
+        $paymentNumber = Payment::generateUniquePaymentNumber();
         $payment = Payment::create([
             'payment_number' => $paymentNumber,
             'invoice_id' => $invoice->id,

@@ -12,6 +12,7 @@
         ['route' => 'student.learn.index', 'match' => ['student.learn.*'], 'label' => __('student_timeline.nav_learn'), 'icon' => 'lessons.svg', 'ui' => 'show_private_lessons'],
         ['route' => 'student.classes.index', 'match' => ['student.classes.*'], 'label' => __('student_timeline.nav_classes'), 'icon' => 'classes.svg', 'ui' => 'show_classes'],
         ['route' => 'calendar', 'match' => ['calendar', 'calendar.events'], 'label' => __('student_timeline.calendar'), 'fa' => 'fas fa-calendar-alt'],
+        ['route' => 'student.live-sessions.index', 'match' => ['student.live-sessions.*', 'student.live-recordings.*'], 'label' => __('student_timeline.nav_live_sessions'), 'fa' => 'fas fa-broadcast-tower', 'ui' => 'show_live_broadcast'],
         ['route' => 'student.private-messages.index', 'match' => ['student.private-messages.*'], 'label' => __('student_timeline.nav_feed'), 'icon' => 'community.svg'],
         ['route' => 'student.private-lectures.index', 'match' => ['student.private-lectures.*', 'student.one-to-one-sessions.*'], 'label' => __('student_timeline.nav_lessons'), 'icon' => 'lessons.svg', 'ui' => 'show_private_lessons'],
         ['route' => 'student.service-entitlements.index', 'match' => ['student.service-entitlements.*'], 'label' => __('student_timeline.nav_progress'), 'icon' => 'credits.svg', 'ui' => 'show_entitlements'],
@@ -22,6 +23,12 @@
         ['route' => 'student.assignments.index', 'match' => ['student.assignments.*'], 'label' => __('student_timeline.nav_assignments'), 'fa' => 'fas fa-tasks', 'ui' => 'show_assignments', 'needs_libraries' => true],
         ['route' => 'student.lectures.index', 'match' => ['student.lectures.*'], 'label' => __('student_timeline.nav_lectures'), 'fa' => 'fas fa-chalkboard', 'ui' => 'show_libraries'],
         ['route' => 'orders.index', 'match' => ['orders.*'], 'label' => __('student_timeline.nav_orders'), 'fa' => 'fas fa-receipt', 'ui' => 'show_orders'],
+        // أقسام نظام الكورسات — مخفية افتراضياً عبر config/student_ui.php
+        ['route' => 'student.exams.index', 'match' => ['student.exams.*'], 'label' => __('student_timeline.nav_exams'), 'fa' => 'fas fa-file-alt', 'ui' => 'show_exams'],
+        ['route' => 'student.invoices.index', 'match' => ['student.invoices.*'], 'label' => __('student_timeline.nav_invoices'), 'fa' => 'fas fa-file-invoice-dollar', 'ui' => 'show_invoices'],
+        ['route' => 'student.wallet.index', 'match' => ['student.wallet.*'], 'label' => __('student_timeline.nav_wallet'), 'fa' => 'fas fa-wallet', 'ui' => 'show_wallet'],
+        ['route' => 'student.certificates.index', 'match' => ['student.certificates.*'], 'label' => __('student_timeline.nav_certificates'), 'fa' => 'fas fa-certificate', 'ui' => 'show_certificates'],
+        ['route' => 'student.support.index', 'match' => ['student.support.*'], 'label' => __('student_timeline.nav_support'), 'fa' => 'fas fa-headset', 'ui' => 'show_support'],
         ['route' => 'notifications', 'match' => ['notifications*'], 'label' => __('student_timeline.nav_messages'), 'icon' => 'notifications.svg', 'ui' => 'show_notifications'],
         ['route' => 'settings', 'match' => ['settings'], 'label' => __('student_timeline.nav_settings'), 'icon' => 'settings.svg', 'ui' => 'show_settings'],
     ];

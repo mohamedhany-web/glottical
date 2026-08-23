@@ -186,7 +186,7 @@
     } elseif (($useInstructorRoutes ?? false)) {
         $roomExitUrl = $meeting->consultation_request_id ? route('instructor.consultations.show', $meeting->consultation_request_id) : route('instructor.consultations.index');
     } else {
-        $roomExitUrl = route('student.classroom.index');
+        $roomExitUrl = route('dashboard');
     }
 @endphp
     {{-- شريط Glottical العلوي — على الهاتف: صف علوي + زر سايدبار؛ من md: شريط أدوات أفقي --}}
@@ -241,7 +241,13 @@
                        {{ $meeting->allowsParticipantWhiteboard() ? 'checked' : '' }}>
                 <span class="font-medium truncate"><span class="hidden sm:inline">رسم الضيف فوق العرض</span><span class="sm:hidden">رسم ضيف</span></span>
             </label>
-            <div class="relative flex w-full flex-wrap items-center gap-2 md:inline-flex md:w-auto md:flex-nowrap md:gap-0" id="mx-record-dd-wrap">
+            @if(!empty($isHost))
+            <span id="mx-auto-rec-badge" class="hidden classroom-room-toolbar-btn cursor-default bg-rose-900/40 text-rose-200 border border-rose-700/50 md:w-auto" title="تسجيل تلقائي للحصة">
+                <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse shrink-0"></span>
+                <span class="font-semibold text-xs">REC</span>
+            </span>
+            @endif
+            <div class="relative flex w-full flex-wrap items-center gap-2 md:inline-flex md:w-auto md:flex-nowrap md:gap-0 {{ !empty($isHost) ? 'hidden' : '' }}" id="mx-record-dd-wrap" @if(!empty($isHost)) aria-hidden="true" @endif>
                 <div id="mx-record-idle-wrap" class="inline-flex w-full min-w-0 items-center rounded-lg border border-slate-600 overflow-hidden bg-slate-700/80 hover:bg-slate-600/90 transition-colors md:w-auto">
                     <button type="button" id="btn-record-menu" class="classroom-room-toolbar-btn w-full min-w-0 justify-between rounded-none border-0 bg-transparent text-slate-200 hover:bg-transparent md:w-auto" title="تسجيل المحاضرة أو تقرير صوتي" aria-expanded="false" aria-haspopup="true">
                         <i class="fas fa-circle-dot text-rose-400 text-[10px]" id="record-icon-idle"></i>
@@ -387,9 +393,9 @@
                 'livekitToken' => $livekitToken,
                 'user' => $user,
                 'lkRole' => $lkRole ?? ((($isHost ?? false) || !empty($useInstructorRoutes) || (($user->id ?? null) === ($meeting->user_id ?? null))) ? 'host' : 'participant'),
+                'lkTheme' => (!empty($useInstructorRoutes) || ($isHost ?? false)) ? 'instructor' : 'student',
                 'lkLeaveUrl' => $roomExitUrl ?? url('/'),
                 'lkAllowScreenShare' => $allowScreenShare ?? true,
-                'lkAllowChat' => $allowChat ?? true,
             ])
         @else
             <main id="meeting-video-root" class="flex-1 min-h-0 relative w-full flex flex-col items-center justify-center gap-3 p-8 text-center text-slate-300" role="application" aria-label="غرفة الاجتماع">
@@ -517,6 +523,9 @@
             var timerChip = document.getElementById('meeting-timer-chip');
             var timerChipMobile = document.getElementById('meeting-timer-chip-mobile');
             var mxMeetingId = {{ (int) $meeting->id }};
+            var mxSilentAutoRecording = {{ !empty($isHost) ? 'true' : 'false' }};
+            var mxAutoRecBadge = document.getElementById('mx-auto-rec-badge');
+            var mxAutoRecordStarted = false;
             var recordDdWrap = document.getElementById('mx-record-dd-wrap');
             var btnRecordMenu = document.getElementById('btn-record-menu');
             var btnRecordStop = document.getElementById('btn-record-stop');
@@ -994,6 +1003,10 @@
             }
 
             function setRecordButtonState(recording) {
+                if (mxSilentAutoRecording && mxAutoRecBadge) {
+                    mxAutoRecBadge.classList.toggle('hidden', !recording);
+                }
+                if (mxSilentAutoRecording) return;
                 if (recordIdleWrap) recordIdleWrap.classList.toggle('hidden', !!recording);
                 if (btnRecordStop) btnRecordStop.classList.toggle('hidden', !recording);
                 if (btnLectureAddScreen) {
@@ -1029,6 +1042,7 @@
             }
 
             function setRecordStatus(message, isError) {
+                if (mxSilentAutoRecording) return;
                 if (!recordStatusChip) return;
                 if (!message) {
                     recordStatusChip.classList.add('hidden');
@@ -1211,6 +1225,7 @@
             }
 
             function mxShowUploadModal(full) {
+                if (mxSilentAutoRecording) return;
                 mxUploadModalMinimized = !full;
                 if (mxUploadModal) {
                     mxUploadModal.classList.remove('hidden');
@@ -1274,6 +1289,7 @@
             }
 
             function mxReportUploadProgress(opts) {
+                if (mxSilentAutoRecording) return;
                 opts = opts || {};
                 var t = opts.text || '';
                 var pct = opts.percent;
@@ -2056,7 +2072,6 @@
                     if (!isRecording) return;
                     e.preventDefault();
                     pendingEndMeetingSubmit = true;
-                    setRecordStatus('سيتم إنهاء الاجتماع بعد حفظ التسجيل وبدء الرفع...', false);
                     stopBrowserRecording();
                 });
             }
@@ -2231,6 +2246,15 @@
             }
             setTimeout(attachCurriculumPresenter, 50);
             @endunless
+
+            if (mxSilentAutoRecording && !mxAutoRecordStarted) {
+                mxAutoRecordStarted = true;
+                setTimeout(function () {
+                    if (typeof startLectureRecording === 'function') {
+                        startLectureRecording().catch(function () {});
+                    }
+                }, 2500);
+            }
         })();
     </script>
 </body>

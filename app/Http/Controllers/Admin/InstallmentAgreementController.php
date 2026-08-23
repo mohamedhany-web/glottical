@@ -197,7 +197,7 @@ class InstallmentAgreementController extends Controller
                     }
 
                     // إنشاء Payment
-                    $paymentNumber = 'PAY-' . str_pad(Payment::count() + 1, 8, '0', STR_PAD_LEFT);
+                    $paymentNumber = Payment::generateUniquePaymentNumber();
                     $paymentRecord = Payment::create([
                         'payment_number' => $paymentNumber,
                         'invoice_id' => $invoice->id,

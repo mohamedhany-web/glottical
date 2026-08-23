@@ -113,6 +113,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'rbac.strict.admin' => \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
             'instructor.activated' => \App\Http\Middleware\EnsureInstructorPanelAccess::class,
             'curriculum.viewer' => \App\Http\Middleware\EnsureCurriculumLibraryViewer::class,
+            'student.no-meeting-host' => \App\Http\Middleware\PreventStudentMeetingHost::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

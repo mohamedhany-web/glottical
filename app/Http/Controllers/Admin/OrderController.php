@@ -354,7 +354,7 @@ class OrderController extends Controller
 
                 // إنشاء المدفوعات تلقائياً
                 Log::info('Order approve: creating payment', ['order_id' => $order->id]);
-                $paymentNumber = 'PAY-'.str_pad(Payment::count() + 1, 8, '0', STR_PAD_LEFT);
+                $paymentNumber = Payment::generateUniquePaymentNumber();
 
                 // تحويل طريقة الدفع من order إلى payment
                 $paymentMethodMap = [

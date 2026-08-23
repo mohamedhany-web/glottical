@@ -10,9 +10,9 @@
         <p class="st-join-hero__meta">الجلسات المباشرة والمجدولة المتاحة لك وفق كورساتك</p>
     </div>
     <div class="st-join-hero__actions">
-        @if(Route::has('my-courses.index'))
-        <a href="{{ route('my-courses.index') }}" class="st-pill st-pill--outline st-pill--lg">
-            <i class="fas fa-book-open"></i> كورساتي
+        @if(Route::has('student.learn.index'))
+        <a href="{{ route('student.learn.index') }}" class="st-pill st-pill--outline st-pill--lg">
+            <i class="fas fa-book-open"></i> تعلّمي
         </a>
         @endif
         @if(Route::has('student.live-recordings.index'))

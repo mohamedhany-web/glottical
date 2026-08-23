@@ -1,4 +1,4 @@
-{{-- غرفة LiveKit مضمّنة — يتطلب $livekitUrl و $livekitToken و $user --}}
+{{-- غرفة LiveKit — $livekitUrl + $livekitToken + $user — اختياري: $lkTheme instructor|student --}}
 @php
     $lkRole = $lkRole ?? 'participant';
     $lkLeaveUrl = $lkLeaveUrl ?? url('/');
@@ -6,49 +6,133 @@
     $lkStartAudio = $lkStartAudio ?? true;
     $lkStartVideo = $lkStartVideo ?? true;
     $lkAllowScreenShare = $lkAllowScreenShare ?? true;
-    $lkAllowChat = $lkAllowChat ?? true;
+    $lkTheme = $lkTheme ?? 'default';
+    $lkHideLeave = $lkHideLeave ?? false;
 @endphp
-<div id="lk-room-shell" class="relative flex-1 min-h-0 flex flex-col bg-slate-950">
-    <div id="lk-status" class="absolute top-3 left-1/2 -translate-x-1/2 z-20 px-4 py-1.5 rounded-full bg-slate-900/90 text-slate-200 text-xs font-semibold border border-slate-700 hidden"></div>
-    <div class="flex-1 min-h-0 flex flex-col md:flex-row">
-        <div id="lk-stage" class="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 p-2 overflow-auto"></div>
-        @if($lkAllowChat)
-        <aside id="lk-chat-panel" class="shrink-0 w-full md:w-72 border-t md:border-t-0 md:border-s border-slate-800 bg-slate-900/90 flex flex-col max-h-52 md:max-h-none">
-            <div class="px-3 py-2 border-b border-slate-800 text-xs font-bold text-slate-300 flex items-center gap-2">
-                <i class="fas fa-comments text-cyan-400"></i> الدردشة
+<div id="lk-room-shell" class="lk-room lk-theme-{{ $lkTheme }} relative flex-1 min-h-0 flex flex-col" data-lk-theme="{{ $lkTheme }}" data-lk-role="{{ $lkRole }}">
+    <div id="lk-status" class="lk-status hidden" role="status"></div>
+
+    <div class="lk-body flex-1 min-h-0 flex flex-col md:flex-row">
+        <div class="lk-main flex-1 min-h-0 flex flex-col relative">
+            <div id="lk-focus" class="lk-focus hidden" aria-live="polite">
+                <div class="lk-focus__viewport" id="lk-focus-viewport">
+                    <div class="lk-focus__scaler" id="lk-focus-scaler">
+                        <video id="lk-focus-video" autoplay playsinline></video>
+                    </div>
+                </div>
+                <div class="lk-focus__bar">
+                    <span class="lk-focus__title" id="lk-focus-title">مشاركة الشاشة</span>
+                    <div class="lk-focus__zoom">
+                        <button type="button" id="lk-zoom-out" class="lk-icon-btn" title="تصغير"><i class="fas fa-search-minus"></i></button>
+                        <span id="lk-zoom-label" class="lk-zoom-label">100%</span>
+                        <button type="button" id="lk-zoom-in" class="lk-icon-btn" title="تكبير"><i class="fas fa-search-plus"></i></button>
+                        <button type="button" id="lk-zoom-reset" class="lk-icon-btn" title="إعادة"><i class="fas fa-compress"></i></button>
+                        <button type="button" id="lk-zoom-fit" class="lk-icon-btn" title="ملاءمة"><i class="fas fa-expand"></i></button>
+                    </div>
+                </div>
             </div>
-            <div id="lk-chat-log" class="flex-1 overflow-y-auto px-3 py-2 space-y-2 text-xs text-slate-200"></div>
-            <form id="lk-chat-form" class="p-2 border-t border-slate-800 flex gap-2">
-                <input id="lk-chat-input" type="text" maxlength="500" autocomplete="off" placeholder="اكتب رسالة…"
-                       class="flex-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-100 text-xs px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-cyan-500">
-                <button type="submit" class="lk-btn shrink-0" title="إرسال"><i class="fas fa-paper-plane"></i></button>
-            </form>
-        </aside>
-        @endif
+            <div id="lk-stage" class="lk-stage flex-1 min-h-0"></div>
+
+            {{-- نافذة عائمة للكاميرات أثناء الشير --}}
+            <div id="lk-pip" class="lk-pip hidden" aria-label="كاميرات المشاركين">
+                <div class="lk-pip__head">
+                    <span><i class="fas fa-video"></i> الكاميرات</span>
+                    <button type="button" id="lk-pip-toggle" class="lk-icon-btn" title="طي/فتح"><i class="fas fa-chevron-down"></i></button>
+                </div>
+                <div class="lk-pip__body" id="lk-pip-body"></div>
+            </div>
+        </div>
     </div>
-    <div class="shrink-0 border-t border-slate-800 bg-slate-900/95 px-4 py-3 flex flex-wrap items-center justify-center gap-2">
-        <button type="button" id="lk-toggle-mic" class="lk-btn{{ $lkStartAudio ? '' : ' is-off' }}"><i class="fas fa-microphone"></i> ميكروفون</button>
-        <button type="button" id="lk-toggle-cam" class="lk-btn{{ $lkStartVideo ? '' : ' is-off' }}"><i class="fas fa-video"></i> كاميرا</button>
+
+    <div class="lk-toolbar shrink-0">
+        <button type="button" id="lk-toggle-mic" class="lk-btn{{ $lkStartAudio ? '' : ' is-off' }}"><i class="fas fa-microphone"></i><span>ميكروفون</span></button>
+        <button type="button" id="lk-toggle-cam" class="lk-btn{{ $lkStartVideo ? '' : ' is-off' }}"><i class="fas fa-video"></i><span>كاميرا</span></button>
         @if($lkAllowScreenShare)
-        <button type="button" id="lk-toggle-screen" class="lk-btn"><i class="fas fa-desktop"></i> مشاركة الشاشة</button>
+        <button type="button" id="lk-toggle-screen" class="lk-btn"><i class="fas fa-desktop"></i><span>مشاركة الشاشة</span></button>
         @endif
-        <a href="{{ $lkLeaveUrl }}" id="lk-leave" class="lk-btn lk-btn-danger"><i class="fas fa-phone-slash"></i> مغادرة</a>
+        @unless($lkHideLeave)
+        <a href="{{ $lkLeaveUrl }}" id="lk-leave" class="lk-btn lk-btn--danger"><i class="fas fa-phone-slash"></i><span>مغادرة</span></a>
+        @endunless
     </div>
 </div>
+
 <style>
-    .lk-btn{display:inline-flex;align-items:center;gap:.5rem;border-radius:.75rem;background:#1e293b;color:#e2e8f0;padding:.55rem 1rem;font-size:.8rem;font-weight:600;border:1px solid #334155}
-    .lk-btn:hover{background:#334155}
-    .lk-btn.is-off{background:#7f1d1d;border-color:#991b1b;color:#fecaca}
-    .lk-btn.is-sharing{background:#0e7490;border-color:#06b6d4;color:#ecfeff}
-    .lk-btn-danger{background:#be123c;border-color:#e11d48;color:#fff}
-    .lk-tile{position:relative;background:#0f172a;border:1px solid #1e293b;border-radius:1rem;overflow:hidden;min-height:180px}
-    .lk-tile.is-screen{grid-column:1 / -1;min-height:260px}
-    .lk-tile video{width:100%;height:100%;object-fit:cover;background:#020617}
-    .lk-tile.is-screen video{object-fit:contain;background:#020617}
-    .lk-tile-label{position:absolute;left:.75rem;bottom:.75rem;background:rgba(15,23,42,.85);color:#e2e8f0;font-size:.7rem;font-weight:700;padding:.25rem .55rem;border-radius:.5rem}
-    .lk-chat-bubble{background:#1e293b;border:1px solid #334155;border-radius:.75rem;padding:.45rem .65rem}
-    .lk-chat-bubble strong{display:block;color:#67e8f9;font-size:.65rem;margin-bottom:.15rem}
+/* ─── Base room ─── */
+.lk-room{--lk-bg:#0b1220;--lk-surface:#111827;--lk-panel:#0f172a;--lk-line:#1e293b;--lk-text:#e2e8f0;--lk-muted:#94a3b8;--lk-accent:#0B3D91;--lk-gold:#F5B800;--lk-danger:#ef4444;--lk-ok:#22c55e;background:var(--lk-bg);color:var(--lk-text)}
+.lk-theme-instructor{--lk-bg:#0c0c0c;--lk-surface:#181818;--lk-panel:#141414;--lk-line:rgba(255,255,255,.1);--lk-text:#f5f5f5;--lk-muted:rgba(245,245,245,.45);--lk-accent:#95a4fc;--lk-gold:#ffcb9a;--lk-danger:#ef4444;font-family:"Inter","Cairo","IBM Plex Sans Arabic",system-ui,sans-serif}
+.lk-theme-student{--lk-bg:#071226;--lk-surface:#0b1a33;--lk-panel:#0f2447;--lk-line:rgba(255,255,255,.12);--lk-text:#f8fafc;--lk-muted:#a8b3c7;--lk-accent:#0B3D91;--lk-gold:#F5B800;font-family:"Cairo","Tajawal",system-ui,sans-serif}
+.lk-status{position:absolute;top:.75rem;left:50%;transform:translateX(-50%);z-index:30;padding:.4rem 1rem;border-radius:999px;background:rgba(15,23,42,.92);border:1px solid var(--lk-line);font-size:.75rem;font-weight:700}
+.lk-status.is-error{background:rgba(127,29,29,.92);border-color:#991b1b;color:#fecaca}
+.lk-body{min-height:0}
+.lk-main{min-height:0;background:var(--lk-surface)}
+.lk-stage{
+  display:grid;
+  flex:1;
+  min-height:0;
+  gap:.45rem;
+  padding:.45rem;
+  overflow:hidden;
+  align-content:stretch;
+  height:100%;
+}
+.lk-stage.layout-solo{grid-template-columns:1fr;grid-template-rows:1fr}
+.lk-stage.layout-duo{grid-template-columns:1fr 1fr;grid-template-rows:1fr}
+.lk-stage.layout-trio{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.lk-stage.layout-class{grid-template-columns:1fr 1fr;grid-auto-rows:1fr}
+.lk-stage.layout-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));grid-auto-rows:minmax(160px,1fr);overflow:auto;align-content:start}
+.lk-room.is-screen-focus .lk-stage{display:none}
+.lk-room.is-screen-focus #lk-focus{display:flex}
+.lk-focus{display:none;flex-direction:column;flex:1;min-height:0;background:#020617}
+.lk-focus__viewport{flex:1;min-height:0;overflow:auto;position:relative;cursor:grab;background:
+  radial-gradient(circle at 20% 20%, rgba(11,61,145,.18), transparent 45%),
+  radial-gradient(circle at 80% 0%, rgba(245,184,0,.12), transparent 40%),
+  #020617}
+.lk-focus__viewport.is-dragging{cursor:grabbing}
+.lk-focus__scaler{transform-origin:center center;transition:transform .12s ease;min-width:100%;min-height:100%;display:flex;align-items:center;justify-content:center;padding:.75rem}
+.lk-focus__scaler video{max-width:100%;max-height:calc(100vh - 220px);width:auto;height:auto;object-fit:contain;background:#000;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.45);border:1px solid var(--lk-line)}
+.lk-focus__bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem;padding:.55rem .85rem;border-top:1px solid var(--lk-line);background:rgba(15,23,42,.92)}
+.lk-focus__title{font-size:.8rem;font-weight:800;color:var(--lk-text)}
+.lk-focus__zoom{display:inline-flex;align-items:center;gap:.35rem}
+.lk-zoom-label{font-size:.72rem;font-weight:800;min-width:3.2rem;text-align:center;color:var(--lk-muted)}
+.lk-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;border-radius:8px;border:1px solid var(--lk-line);background:var(--lk-panel);color:var(--lk-text);cursor:pointer}
+.lk-icon-btn:hover{border-color:var(--lk-accent);color:var(--lk-gold)}
+
+/* tiles */
+.lk-tile{position:relative;background:var(--lk-panel);border:1px solid var(--lk-line);border-radius:14px;overflow:hidden;min-height:0;width:100%;height:100%}
+.lk-stage.layout-solo .lk-tile,
+.lk-stage.layout-duo .lk-tile,
+.lk-stage.layout-trio .lk-tile,
+.lk-stage.layout-class .lk-tile{aspect-ratio:unset;min-height:0}
+.lk-tile video{width:100%;height:100%;object-fit:cover;background:#020617}
+.lk-tile.is-screen{grid-column:1/-1;min-height:280px;aspect-ratio:auto}
+.lk-tile.is-screen video{object-fit:contain;background:#000}
+.lk-tile-label{position:absolute;inset-inline-start:.65rem;bottom:.65rem;background:rgba(2,6,23,.82);color:var(--lk-text);font-size:.68rem;font-weight:800;padding:.2rem .5rem;border-radius:.45rem;z-index:2}
+.lk-tile.is-local{outline:2px solid color-mix(in srgb, var(--lk-accent) 55%, transparent)}
+.lk-tile.is-host{outline:2px solid color-mix(in srgb, var(--lk-gold) 70%, transparent)}
+.lk-tile.is-host .lk-tile-label::after{content:' · مضيف';color:var(--lk-gold)}
+
+/* floating pip */
+.lk-pip{position:absolute;z-index:25;inset-inline-end:12px;bottom:12px;width:min(280px,46vw);border-radius:16px;border:1px solid var(--lk-line);background:rgba(15,23,42,.94);backdrop-filter:blur(10px);box-shadow:0 16px 40px rgba(0,0,0,.35);overflow:hidden}
+.lk-pip.hidden{display:none!important}
+.lk-pip.is-collapsed .lk-pip__body{display:none}
+.lk-pip__head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.45rem .65rem;font-size:.72rem;font-weight:800;border-bottom:1px solid var(--lk-line);cursor:move;user-select:none}
+.lk-pip__body{display:grid;grid-template-columns:1fr 1fr;gap:.35rem;padding:.45rem;max-height:220px;overflow:auto}
+.lk-pip-tile{position:relative;border-radius:10px;overflow:hidden;background:#000;border:1px solid var(--lk-line);aspect-ratio:4/3}
+.lk-pip-tile video{width:100%;height:100%;object-fit:cover}
+.lk-pip-tile span{position:absolute;inset-inline-start:.3rem;bottom:.3rem;font-size:.58rem;font-weight:800;background:rgba(0,0,0,.7);padding:.1rem .3rem;border-radius:.3rem}
+
+/* toolbar */
+.lk-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.45rem;padding:.7rem .85rem;border-top:1px solid var(--lk-line);background:color-mix(in srgb, var(--lk-panel) 92%, #000)}
+.lk-btn{display:inline-flex;align-items:center;gap:.45rem;border-radius:999px;background:var(--lk-surface);color:var(--lk-text);padding:.55rem 1rem;font-size:.78rem;font-weight:800;border:1px solid var(--lk-line);cursor:pointer;text-decoration:none}
+.lk-btn:hover{border-color:var(--lk-accent)}
+.lk-btn.is-sharing{background:color-mix(in srgb, var(--lk-accent) 35%, var(--lk-surface));border-color:var(--lk-accent);color:#fff}
+.lk-btn--danger{background:var(--lk-danger);border-color:var(--lk-danger);color:#fff}
+.lk-btn--accent{background:var(--lk-accent);border-color:var(--lk-accent);color:#fff}
+.lk-theme-student .lk-btn--accent,.lk-theme-student .lk-btn.is-sharing{background:linear-gradient(135deg,#0B3D91,#0997d9);border:0}
+.lk-theme-instructor .lk-btn{border-radius:12px}
+@media(max-width:640px){.lk-btn span{display:none}.lk-pip{width:min(200px,52vw)}}
 </style>
+
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.9.1/dist/livekit-client.umd.min.js"></script>
 <script>
 (function () {
@@ -59,78 +143,199 @@
     const startAudio = @json($lkStartAudio);
     const startVideo = @json($lkStartVideo);
     const allowScreenShare = @json($lkAllowScreenShare);
-    const allowChat = @json($lkAllowChat);
+    const shell = document.getElementById('lk-room-shell');
     const stage = document.getElementById('lk-stage');
+    const focusBox = document.getElementById('lk-focus');
+    const focusVideo = document.getElementById('lk-focus-video');
+    const focusScaler = document.getElementById('lk-focus-scaler');
+    const focusViewport = document.getElementById('lk-focus-viewport');
+    const focusTitle = document.getElementById('lk-focus-title');
+    const pip = document.getElementById('lk-pip');
+    const pipBody = document.getElementById('lk-pip-body');
     const statusEl = document.getElementById('lk-status');
     const micBtn = document.getElementById('lk-toggle-mic');
     const camBtn = document.getElementById('lk-toggle-cam');
     const screenBtn = document.getElementById('lk-toggle-screen');
-    const chatLog = document.getElementById('lk-chat-log');
-    const chatForm = document.getElementById('lk-chat-form');
-    const chatInput = document.getElementById('lk-chat-input');
-
-    if (!window.LivekitClient) {
-        setStatus('تعذر تحميل مكتبة LiveKit', true);
-        return;
-    }
-    if (!url || !token) {
-        setStatus('إعدادات LiveKit غير مكتملة (رابط أو توكن)', true);
-        return;
-    }
-
-    const {
-        Room,
-        RoomEvent,
-        Track,
-        createLocalTracks,
-        createLocalScreenTracks,
-    } = window.LivekitClient;
-
-    const room = new Room({
-        adaptiveStream: true,
-        dynacast: true,
-        videoCaptureDefaults: { resolution: { width: 1280, height: 720, frameRate: 30 } },
-    });
-    const tiles = new Map();
-    let micOn = !!startAudio;
-    let camOn = !!startVideo;
-    let screenOn = false;
-    let screenTrack = null;
-    let connected = false;
+    const zoomLabel = document.getElementById('lk-zoom-label');
 
     function setStatus(msg, isError) {
         if (!statusEl) return;
         statusEl.textContent = msg;
         statusEl.classList.remove('hidden');
-        statusEl.classList.toggle('bg-rose-900/90', !!isError);
-        statusEl.classList.toggle('border-rose-700', !!isError);
+        statusEl.classList.toggle('is-error', !!isError);
     }
+    function hideStatusSoon() {
+        setTimeout(() => statusEl?.classList.add('hidden'), 2200);
+    }
+
+    if (!window.LivekitClient) { setStatus('تعذر تحميل مكتبة LiveKit', true); return; }
+    if (!url || !token) { setStatus('إعدادات LiveKit غير مكتملة (رابط أو توكن)', true); return; }
+
+    const { Room, RoomEvent, Track, createLocalTracks, createLocalScreenTracks } = window.LivekitClient;
+    const room = new Room({
+        adaptiveStream: true,
+        dynacast: true,
+        videoCaptureDefaults: { resolution: { width: 1280, height: 720, frameRate: 30 } },
+    });
+
+    const tiles = new Map();
+    const pipTiles = new Map();
+    let micOn = !!startAudio;
+    let camOn = !!startVideo;
+    let screenOn = false;
+    let screenTrack = null;
+    let focusTrack = null;
+    let connected = false;
+    let zoom = 1;
+    const ZOOM_MIN = 0.75;
+    const ZOOM_MAX = 3;
+    const ZOOM_STEP = 0.25;
 
     function errMsg(err, fallback) {
         if (!err) return fallback;
         const name = err.name || '';
         const message = err.message || String(err);
         if (name === 'NotAllowedError' || /Permission|NotAllowed|denied/i.test(message)) {
-            return 'تم رفض الإذن من المتصفح — اسمح بالوصول من شريط العنوان ثم أعد المحاولة';
+            return 'تم رفض الإذن من المتصفح — اسمح بالوصول ثم أعد المحاولة';
         }
-        if (name === 'NotFoundError') {
-            return 'لم يُعثر على جهاز (ميكروفون/كاميرا)';
-        }
-        if (/AbortError|cancelled|canceled/i.test(name + message)) {
-            return 'تم إلغاء مشاركة الشاشة';
-        }
+        if (/AbortError|cancelled|canceled/i.test(name + message)) return 'تم إلغاء مشاركة الشاشة';
         return fallback + (message ? ': ' + message : '');
     }
-
     function tileKey(participant, source) {
         return participant.identity + ':' + source;
+    }
+
+    function parseParticipantMeta(participant) {
+        if (!participant?.metadata) return {};
+        try { return JSON.parse(participant.metadata); } catch (e) { return {}; }
+    }
+
+    function isHostParticipant(participant) {
+        if (!participant) return false;
+        if (participant.isLocal && role === 'host') return true;
+        const meta = parseParticipantMeta(participant);
+        const r = String(meta.role || '').toLowerCase();
+        if (meta.is_host === true || meta.is_host === 'true') return true;
+        return r === 'instructor' || r === 'admin' || r === 'teacher';
+    }
+
+    function cameraTiles() {
+        return [...tiles.values()].filter((ref) => {
+            return ref.source !== Track.Source.ScreenShare
+                && ref.el.style.display !== 'none'
+                && ref.source !== Track.Source.ScreenShareAudio;
+        });
+    }
+
+    function findHostTile(list) {
+        const host = list.find((t) => isHostParticipant(t.participant));
+        if (host) return host;
+        if (role === 'host') {
+            const local = list.find((t) => t.participant.isLocal);
+            if (local) return local;
+        }
+        return list[0];
+    }
+
+    function resetTilePlacement(ref) {
+        ref.el.classList.remove('is-host');
+        ref.el.style.gridColumn = '';
+        ref.el.style.gridRow = '';
+    }
+
+    function updateStageLayout() {
+        if (!stage || shell?.classList.contains('is-screen-focus')) return;
+
+        const list = cameraTiles();
+        const layouts = ['layout-solo', 'layout-duo', 'layout-trio', 'layout-class', 'layout-grid'];
+        stage.classList.remove(...layouts);
+        list.forEach(resetTilePlacement);
+
+        const n = list.length;
+        if (n === 0) return;
+
+        if (n === 1) {
+            stage.classList.add('layout-solo');
+            return;
+        }
+
+        if (n === 2) {
+            stage.classList.add('layout-duo');
+            return;
+        }
+
+        if (n === 3) {
+            stage.classList.add('layout-trio');
+            const hostTile = findHostTile(list);
+            const others = list.filter((t) => t !== hostTile);
+            hostTile.el.classList.add('is-host');
+            hostTile.el.style.gridColumn = '1';
+            hostTile.el.style.gridRow = '1 / -1';
+            if (others[0]) {
+                others[0].el.style.gridColumn = '2';
+                others[0].el.style.gridRow = '1';
+            }
+            if (others[1]) {
+                others[1].el.style.gridColumn = '2';
+                others[1].el.style.gridRow = '2';
+            }
+            return;
+        }
+
+        // 4+ — المعلم/المضيف نصف الشاشة والباقي عمودياً في النصف الآخر
+        stage.classList.add('layout-class');
+        const hostTile = findHostTile(list);
+        const others = list.filter((t) => t !== hostTile);
+        hostTile.el.classList.add('is-host');
+        hostTile.el.style.gridColumn = '1';
+        hostTile.el.style.gridRow = '1 / -1';
+        others.forEach((t, i) => {
+            t.el.style.gridColumn = '2';
+            t.el.style.gridRow = String(i + 1);
+        });
+    }
+
+    function applyZoom() {
+        if (!focusScaler) return;
+        focusScaler.style.transform = 'scale(' + zoom + ')';
+        if (zoomLabel) zoomLabel.textContent = Math.round(zoom * 100) + '%';
+    }
+    function setScreenFocus(on, title) {
+        shell?.classList.toggle('is-screen-focus', !!on);
+        if (focusBox) focusBox.classList.toggle('hidden', !on);
+        if (pip) pip.classList.toggle('hidden', !on);
+        if (title && focusTitle) focusTitle.textContent = title;
+        if (!on) {
+            zoom = 1;
+            applyZoom();
+            if (focusVideo) {
+                focusVideo.srcObject = null;
+                focusVideo.removeAttribute('src');
+            }
+            focusTrack = null;
+            updateStageLayout();
+        } else {
+            rebuildPip();
+        }
+    }
+    function attachToFocus(track, label) {
+        focusTrack = track;
+        if (focusVideo) {
+            track.attach(focusVideo);
+            focusVideo.muted = true;
+            focusVideo.playsInline = true;
+            focusVideo.play?.().catch(() => {});
+        }
+        setScreenFocus(true, label || 'مشاركة الشاشة');
+        zoom = 1;
+        applyZoom();
     }
 
     function ensureTile(participant, source) {
         const key = tileKey(participant, source);
         if (tiles.has(key)) return tiles.get(key);
         const el = document.createElement('div');
-        el.className = 'lk-tile' + (source === Track.Source.ScreenShare ? ' is-screen' : '');
+        el.className = 'lk-tile' + (source === Track.Source.ScreenShare ? ' is-screen' : '') + (participant.isLocal ? ' is-local' : '');
         el.dataset.key = key;
         const video = document.createElement('video');
         video.autoplay = true;
@@ -138,22 +343,49 @@
         video.muted = !!participant.isLocal;
         const label = document.createElement('div');
         label.className = 'lk-tile-label';
-        label.textContent = (participant.name || participant.identity)
-            + (source === Track.Source.ScreenShare ? ' · شاشة' : '');
+        label.textContent = (participant.name || participant.identity) + (source === Track.Source.ScreenShare ? ' · شاشة' : '');
         el.appendChild(video);
         el.appendChild(label);
         stage.appendChild(el);
-        const ref = { el, video };
+        const ref = { el, video, participant, source };
         tiles.set(key, ref);
+        updateStageLayout();
         return ref;
     }
-
     function removeTile(participant, source) {
         const key = tileKey(participant, source);
         const ref = tiles.get(key);
         if (!ref) return;
         ref.el.remove();
         tiles.delete(key);
+        updateStageLayout();
+    }
+
+    function rebuildPip() {
+        if (!pipBody) return;
+        pipBody.innerHTML = '';
+        pipTiles.clear();
+        tiles.forEach((ref, key) => {
+            if (ref.source === Track.Source.ScreenShare) return;
+            const videoEl = ref.video;
+            if (!videoEl || !videoEl.srcObject) return;
+            const wrap = document.createElement('div');
+            wrap.className = 'lk-pip-tile';
+            const v = document.createElement('video');
+            v.autoplay = true;
+            v.playsInline = true;
+            v.muted = true;
+            v.srcObject = videoEl.srcObject;
+            const name = document.createElement('span');
+            name.textContent = (ref.participant.name || ref.participant.identity || '').slice(0, 18);
+            wrap.appendChild(v);
+            wrap.appendChild(name);
+            pipBody.appendChild(wrap);
+            pipTiles.set(key, wrap);
+        });
+        if (pip && shell?.classList.contains('is-screen-focus')) {
+            pip.classList.toggle('hidden', pipBody.children.length === 0);
+        }
     }
 
     function attachTrack(track, participant) {
@@ -166,15 +398,35 @@
             return;
         }
         if (track.kind !== Track.Kind.Video) return;
+
+        if (track.source === Track.Source.ScreenShare) {
+            const label = (participant.name || participant.identity) + ' · شاشة';
+            attachToFocus(track, label);
+            // keep a hidden tile for stream reference / cleanup
+            const tile = ensureTile(participant, track.source);
+            track.attach(tile.video);
+            tile.el.style.display = 'none';
+            return;
+        }
+
         const tile = ensureTile(participant, track.source);
         track.attach(tile.video);
+        updateStageLayout();
+        if (shell?.classList.contains('is-screen-focus')) rebuildPip();
     }
 
     function detachTrack(track, participant) {
         if (!track) return;
         track.detach().forEach((el) => el.remove());
         if (track.kind === Track.Kind.Video) {
+            if (track.source === Track.Source.ScreenShare) {
+                if (focusTrack === track || (participant && focusTitle)) {
+                    setScreenFocus(false);
+                }
+            }
             removeTile(participant, track.source);
+            updateStageLayout();
+            if (shell?.classList.contains('is-screen-focus')) rebuildPip();
         }
     }
 
@@ -198,23 +450,14 @@
             }
         });
         document.querySelectorAll('audio[data-lk-audio^="' + participant.identity + ':"]').forEach((el) => el.remove());
-    }
-
-    function appendChat(name, text, isLocal) {
-        if (!chatLog) return;
-        const bubble = document.createElement('div');
-        bubble.className = 'lk-chat-bubble';
-        if (isLocal) bubble.style.borderColor = '#0e7490';
-        bubble.innerHTML = '<strong></strong><span></span>';
-        bubble.querySelector('strong').textContent = name || 'مشارك';
-        bubble.querySelector('span').textContent = text;
-        chatLog.appendChild(bubble);
-        chatLog.scrollTop = chatLog.scrollHeight;
+        updateStageLayout();
+        if (shell?.classList.contains('is-screen-focus')) rebuildPip();
     }
 
     room
         .on(RoomEvent.TrackSubscribed, (track, publication, participant) => attachTrack(track, participant))
         .on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => detachTrack(track, participant))
+        .on(RoomEvent.ParticipantConnected, () => updateStageLayout())
         .on(RoomEvent.LocalTrackPublished, (publication, participant) => {
             if (publication.track) attachTrack(publication.track, participant);
         })
@@ -224,31 +467,18 @@
                 screenOn = false;
                 screenTrack = null;
                 screenBtn?.classList.remove('is-sharing');
+                setScreenFocus(false);
             }
         })
         .on(RoomEvent.ParticipantDisconnected, (participant) => clearParticipantTiles(participant))
-        .on(RoomEvent.Disconnected, () => {
-            connected = false;
-            setStatus('تم قطع الاتصال بالغرفة', true);
-        })
-        .on(RoomEvent.DataReceived, (payload, participant) => {
-            if (!allowChat) return;
-            try {
-                const raw = new TextDecoder().decode(payload);
-                const data = JSON.parse(raw);
-                if (data && data.type === 'chat' && data.text) {
-                    appendChat(data.name || participant?.name || participant?.identity || 'مشارك', String(data.text).slice(0, 500), false);
-                }
-            } catch (e) {}
-        });
+        .on(RoomEvent.Disconnected, () => { connected = false; setStatus('تم قطع الاتصال بالغرفة', true); });
 
     async function connect() {
         try {
-            setStatus('جارٍ الاتصال بـ LiveKit…');
+            setStatus('جارٍ الاتصال…');
             await room.connect(url, token);
             connected = true;
             attachExistingRemoteTracks();
-
             try {
                 const wantAudio = !!startAudio;
                 const wantVideo = !!startVideo;
@@ -257,16 +487,15 @@
                     await Promise.all(localTracks.map((t) => room.localParticipant.publishTrack(t)));
                     localTracks.forEach((t) => attachTrack(t, room.localParticipant));
                 }
-                micOn = wantAudio;
-                camOn = wantVideo;
+                micOn = wantAudio; camOn = wantVideo;
                 micBtn?.classList.toggle('is-off', !micOn);
                 camBtn?.classList.toggle('is-off', !camOn);
                 setStatus('متصل · ' + (role === 'host' ? 'مضيف' : 'مشارك') + ' · ' + displayName);
-                setTimeout(() => statusEl?.classList.add('hidden'), 2500);
+                hideStatusSoon();
+                updateStageLayout();
             } catch (mediaErr) {
-                console.warn('Local media unavailable, joining without mic/cam', mediaErr);
-                micOn = false;
-                camOn = false;
+                console.warn(mediaErr);
+                micOn = false; camOn = false;
                 micBtn?.classList.add('is-off');
                 camBtn?.classList.add('is-off');
                 setStatus('متصل بدون ميكروفون/كاميرا — فعّل الأذونات من الأزرار', true);
@@ -284,11 +513,8 @@
             await room.localParticipant.setMicrophoneEnabled(next);
             micOn = next;
             micBtn.classList.toggle('is-off', !micOn);
-        } catch (e) {
-            setStatus(errMsg(e, 'تعذر تفعيل الميكروفون'), true);
-        }
+        } catch (e) { setStatus(errMsg(e, 'تعذر تفعيل الميكروفون'), true); }
     });
-
     camBtn?.addEventListener('click', async () => {
         if (!connected) return;
         try {
@@ -296,9 +522,9 @@
             await room.localParticipant.setCameraEnabled(next);
             camOn = next;
             camBtn.classList.toggle('is-off', !camOn);
-        } catch (e) {
-            setStatus(errMsg(e, 'تعذر تفعيل الكاميرا'), true);
-        }
+            updateStageLayout();
+            if (shell?.classList.contains('is-screen-focus')) setTimeout(rebuildPip, 200);
+        } catch (e) { setStatus(errMsg(e, 'تعذر تفعيل الكاميرا'), true); }
     });
 
     async function stopScreenShare() {
@@ -308,18 +534,15 @@
             }
         } catch (e) {}
         if (screenTrack) {
-            try {
-                await room.localParticipant.unpublishTrack(screenTrack);
-            } catch (e) {}
+            try { await room.localParticipant.unpublishTrack(screenTrack); } catch (e) {}
             try { screenTrack.stop(); } catch (e) {}
             screenTrack = null;
         }
         screenOn = false;
         screenBtn?.classList.remove('is-sharing');
+        setScreenFocus(false);
     }
-
     async function startScreenShare() {
-        // API الحديث أولاً
         if (typeof room.localParticipant.setScreenShareEnabled === 'function') {
             await room.localParticipant.setScreenShareEnabled(true, { audio: true });
             screenOn = true;
@@ -327,31 +550,22 @@
             return;
         }
         let tracks;
-        try {
-            tracks = await createLocalScreenTracks({ audio: true });
-        } catch (e) {
-            tracks = await createLocalScreenTracks({ audio: false });
-        }
+        try { tracks = await createLocalScreenTracks({ audio: true }); }
+        catch (e) { tracks = await createLocalScreenTracks({ audio: false }); }
         screenTrack = tracks[0];
         await room.localParticipant.publishTrack(screenTrack);
-        if (tracks[1]) {
-            try { await room.localParticipant.publishTrack(tracks[1]); } catch (e) {}
-        }
+        if (tracks[1]) { try { await room.localParticipant.publishTrack(tracks[1]); } catch (e) {} }
         attachTrack(screenTrack, room.localParticipant);
         screenOn = true;
         screenBtn?.classList.add('is-sharing');
     }
-
     screenBtn?.addEventListener('click', async () => {
         if (!connected || !allowScreenShare) return;
         try {
-            if (screenOn) {
-                await stopScreenShare();
-                return;
-            }
+            if (screenOn) { await stopScreenShare(); return; }
             await startScreenShare();
-            setStatus('جارٍ مشاركة الشاشة');
-            setTimeout(() => statusEl?.classList.add('hidden'), 2000);
+            setStatus('مشاركة الشاشة مفعّلة — استخدم الزووم والنافذة العائمة');
+            hideStatusSoon();
         } catch (err) {
             console.error(err);
             screenOn = false;
@@ -360,32 +574,80 @@
         }
     });
 
-    chatForm?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!connected || !allowChat || !chatInput) return;
-        const text = (chatInput.value || '').trim();
-        if (!text) return;
-        const payload = JSON.stringify({
-            type: 'chat',
-            text: text.slice(0, 500),
-            name: displayName,
-            at: Date.now(),
+    document.getElementById('lk-zoom-in')?.addEventListener('click', () => {
+        zoom = Math.min(ZOOM_MAX, zoom + ZOOM_STEP); applyZoom();
+    });
+    document.getElementById('lk-zoom-out')?.addEventListener('click', () => {
+        zoom = Math.max(ZOOM_MIN, zoom - ZOOM_STEP); applyZoom();
+    });
+    document.getElementById('lk-zoom-reset')?.addEventListener('click', () => {
+        zoom = 1; applyZoom();
+        if (focusViewport) focusViewport.scrollTo({ left: 0, top: 0 });
+    });
+    document.getElementById('lk-zoom-fit')?.addEventListener('click', () => {
+        zoom = 1; applyZoom();
+    });
+    document.getElementById('lk-pip-toggle')?.addEventListener('click', () => {
+        pip?.classList.toggle('is-collapsed');
+    });
+
+    // drag focus viewport while zoomed
+    if (focusViewport) {
+        let dragging = false, sx = 0, sy = 0, sl = 0, st = 0;
+        focusViewport.addEventListener('mousedown', (e) => {
+            if (zoom <= 1) return;
+            dragging = true;
+            focusViewport.classList.add('is-dragging');
+            sx = e.clientX; sy = e.clientY;
+            sl = focusViewport.scrollLeft; st = focusViewport.scrollTop;
         });
-        try {
-            const bytes = new TextEncoder().encode(payload);
-            await room.localParticipant.publishData(bytes, { reliable: true });
-            appendChat(displayName, text, true);
-            chatInput.value = '';
-        } catch (err) {
-            console.error(err);
-            setStatus('تعذر إرسال الرسالة', true);
-        }
-    });
+        window.addEventListener('mousemove', (e) => {
+            if (!dragging) return;
+            focusViewport.scrollLeft = sl - (e.clientX - sx);
+            focusViewport.scrollTop = st - (e.clientY - sy);
+        });
+        window.addEventListener('mouseup', () => {
+            dragging = false;
+            focusViewport.classList.remove('is-dragging');
+        });
+        focusViewport.addEventListener('wheel', (e) => {
+            if (!e.ctrlKey && !e.metaKey) return;
+            e.preventDefault();
+            zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom + (e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP)));
+            applyZoom();
+        }, { passive: false });
+    }
 
-    window.addEventListener('beforeunload', () => {
-        try { room.disconnect(); } catch (e) {}
-    });
+    // draggable pip
+    if (pip) {
+        const head = pip.querySelector('.lk-pip__head');
+        let drag = false, ox = 0, oy = 0;
+        head?.addEventListener('mousedown', (e) => {
+            if (e.target.closest('button')) return;
+            drag = true;
+            const r = pip.getBoundingClientRect();
+            ox = e.clientX - r.left;
+            oy = e.clientY - r.top;
+            e.preventDefault();
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (!drag) return;
+            const parent = shell?.getBoundingClientRect();
+            if (!parent) return;
+            let left = e.clientX - parent.left - ox;
+            let top = e.clientY - parent.top - oy;
+            left = Math.max(8, Math.min(parent.width - pip.offsetWidth - 8, left));
+            top = Math.max(8, Math.min(parent.height - pip.offsetHeight - 8, top));
+            pip.style.left = left + 'px';
+            pip.style.top = top + 'px';
+            pip.style.right = 'auto';
+            pip.style.bottom = 'auto';
+            pip.style.insetInlineEnd = 'auto';
+        });
+        window.addEventListener('mouseup', () => { drag = false; });
+    }
 
+    window.addEventListener('beforeunload', () => { try { room.disconnect(); } catch (e) {} });
     connect();
 })();
 </script>

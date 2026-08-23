@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends(!empty($useInstructorRoutes) ? 'layouts.app' : 'layouts.student-timeline')
 
 @section('title', 'إنشاء اجتماع جديد')
 @section('header', 'إنشاء اجتماع جديد')

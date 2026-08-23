@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.student-timeline')
 
 @section('title', 'الدعم الفني')
 @section('header', 'الدعم الفني')

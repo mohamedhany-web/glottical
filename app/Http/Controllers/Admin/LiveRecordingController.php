@@ -87,7 +87,7 @@ class LiveRecordingController extends Controller
             ]);
 
             if (!$recording->exists) {
-                $recording->title = 'تسجيل صوتي منفصل - ' . $session->title;
+                $recording->title = 'تسجيل — ' . $session->title;
                 $recording->status = 'ready';
                 $recording->is_published = false;
             }
@@ -105,6 +105,10 @@ class LiveRecordingController extends Controller
             }
 
             $recording->save();
+
+            if (! $recording->is_published && $session) {
+                \App\Services\LiveRecordingAutoPublishService::publishForSession($recording->fresh(), $session);
+            }
         }
     }
 

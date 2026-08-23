@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.student-timeline')
 
 @php
     $isRtl = app()->getLocale() === 'ar';

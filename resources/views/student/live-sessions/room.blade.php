@@ -148,18 +148,10 @@
             border-radius: 18px;
             overflow: hidden;
             border: 1px solid var(--st-line);
-            background: #0f172a;
+            background: #071226;
             box-shadow: 0 14px 36px rgba(7, 18, 38, .12);
             position: relative;
         }
-        #lk-room-shell { background: #0b1220 !important; }
-        #lk-stage { background: linear-gradient(180deg, #0b1220, #111827); }
-        .lk-btn {
-            border-radius: 999px !important;
-            font-family: inherit !important;
-            font-weight: 800 !important;
-        }
-        .lk-btn-danger { background: #ce6262 !important; border-color: #ce6262 !important; }
         #mx-session-ended {
             display: none;
             position: fixed; inset: 0; z-index: 9999;
@@ -242,11 +234,11 @@
                         'livekitToken' => $livekitToken,
                         'user' => $user,
                         'lkRole' => 'participant',
+                        'lkTheme' => 'student',
                         'lkLeaveUrl' => route('student.live-sessions.index'),
                         'lkStartAudio' => !($liveSession->mute_on_join ?? false),
                         'lkStartVideo' => !($liveSession->video_off_on_join ?? false),
                         'lkAllowScreenShare' => $allowScreenShare ?? true,
-                        'lkAllowChat' => $allowChat ?? true,
                     ])
                 @else
                     <div class="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center text-slate-200">
