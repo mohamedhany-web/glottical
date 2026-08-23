@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\ClassroomMeeting;
 use App\Models\ClassroomMeetingReport;
 use App\Models\IntegrationSetting;
+use App\Models\OneToOneSession;
 use App\Models\TutoringGroupBooking;
 use App\Services\ClassroomCurriculumPresentService;
 use App\Services\ClassroomMeetingAccessService;
+use App\Services\OneToOneSessionService;
 use App\Services\TutoringGroupOrchestrationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -584,6 +586,7 @@ class ClassroomController extends Controller
         }
 
         $completedTutoring = $this->completeLinkedTutoringBookingIfNeeded($meeting);
+        $this->completeLinkedOneToOneIfNeeded($meeting);
 
         if (request()->routeIs('instructor.*')) {
             if ($meeting->tutoring_group_booking_id) {
@@ -654,6 +657,47 @@ class ClassroomController extends Controller
             Log::error('Tutoring auto-complete failed: '.$e->getMessage(), [
                 'meeting_id' => $meeting->id,
                 'booking_id' => $booking->id,
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
+     * عند إنهاء غرفة حصة 1:1: تعليم الحصة كمكتملة حتى يظهر التسجيل للطالب.
+     */
+    private function completeLinkedOneToOneIfNeeded(ClassroomMeeting $meeting): bool
+    {
+        $sessionId = $meeting->one_to_one_session_id;
+        if (! $sessionId) {
+            $sessionId = OneToOneSession::query()
+                ->where('classroom_meeting_id', $meeting->id)
+                ->value('id');
+        }
+        if (! $sessionId || ! $meeting->started_at) {
+            return false;
+        }
+
+        $session = OneToOneSession::query()->find($sessionId);
+        if (! $session || $session->status === OneToOneSession::STATUS_COMPLETED) {
+            return false;
+        }
+
+        try {
+            OneToOneSessionService::markCompleted($session, true);
+
+            return true;
+        } catch (\InvalidArgumentException $e) {
+            Log::info('One-to-one auto-complete skipped: '.$e->getMessage(), [
+                'meeting_id' => $meeting->id,
+                'session_id' => $session->id,
+            ]);
+
+            return false;
+        } catch (\Throwable $e) {
+            Log::error('One-to-one auto-complete failed: '.$e->getMessage(), [
+                'meeting_id' => $meeting->id,
+                'session_id' => $session->id,
             ]);
 
             return false;
@@ -1124,6 +1168,7 @@ class ClassroomController extends Controller
             'recording_audio_mime_type' => $finalMime,
             'recording_audio_size' => $finalSize,
             'recording_audio_duration_seconds' => (int) ($validated['duration_seconds'] ?? 0),
+            'recording_uploaded_at' => now(),
         ]);
 
         return response()->json([
@@ -1245,6 +1290,7 @@ class ClassroomController extends Controller
             'recording_audio_mime_type' => $finalMime,
             'recording_audio_size' => $finalSize,
             'recording_audio_duration_seconds' => (int) ($validated['duration_seconds'] ?? 0),
+            'recording_uploaded_at' => now(),
         ]);
 
         return response()->json([

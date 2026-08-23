@@ -46,9 +46,12 @@
                     ? route('student.classroom.room', $session->classroomMeeting)
                     : $session->joinUrl())
                 : null;
-            $recordingHref = ($session->status === \App\Models\OneToOneSession::STATUS_COMPLETED
-                && $session->classroomMeeting
+            $recordingHref = ($session->classroomMeeting
                 && $session->classroomMeeting->hasBrowserRecording()
+                && (
+                    $session->status === \App\Models\OneToOneSession::STATUS_COMPLETED
+                    || $session->classroomMeeting->ended_at
+                )
                 && Route::has('student.classroom.recording'))
                 ? route('student.classroom.recording', $session->classroomMeeting)
                 : null;

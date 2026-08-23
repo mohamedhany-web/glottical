@@ -1637,16 +1637,22 @@
                     status: 'pending',
                     createdAt: Date.now(),
                 };
-                // المعلم: رفع صامت في الخلفية بدون تاب/مودال
+                // المعلم: رفع صامت في الخلفية بدون تاب/مودال — نعيد Promise لننتظره قبل إنهاء الاجتماع
                 if (mxSilentAutoRecording) {
                     mxIdbPutJob(job).catch(function() {});
-                    mxRunUploadJob(Object.assign({}, job, { status: 'pending' })).catch(function(err) {
-                        console.warn('Silent auto-upload failed:', err);
-                        setTimeout(function() {
-                            mxRunUploadJob(Object.assign({}, job, { status: 'pending' })).catch(function() {});
-                        }, 4000);
+                    return mxRunUploadJob(Object.assign({}, job, { status: 'pending' })).catch(function(err) {
+                        console.warn('Silent auto-upload failed, retrying once:', err);
+                        return new Promise(function(resolve) {
+                            setTimeout(function() {
+                                mxRunUploadJob(Object.assign({}, job, { status: 'pending' }))
+                                    .then(resolve)
+                                    .catch(function(err2) {
+                                        console.warn('Silent auto-upload retry failed:', err2);
+                                        resolve(null);
+                                    });
+                            }, 2500);
+                        });
                     });
-                    return;
                 }
                 mxIdbPutJob(job).then(function() {
                     var w = mxOpenRecordingUploadTab(job.id);
@@ -1660,6 +1666,21 @@
                     console.warn('IndexedDB before upload tab:', idbErr);
                     mxRunUploadJob(Object.assign({}, job, { status: 'pending' })).catch(function() {});
                 });
+                return Promise.resolve();
+            }
+
+            function mxFinishPendingEndMeeting() {
+                if (!pendingEndMeetingSubmit || !endMeetingForm) return;
+                pendingEndMeetingSubmit = false;
+                try { endMeetingForm.submit(); } catch (e) {}
+            }
+
+            function mxAlert(msg) {
+                if (mxSilentAutoRecording) {
+                    console.warn('[classroom-auto-rec]', msg);
+                    return;
+                }
+                alert(msg);
             }
 
             function cleanupLectureRecordingVisuals() {
@@ -1756,11 +1777,11 @@
 
             async function startLectureRecording() {
                 if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
-                    alert('المتصفح لا يدعم تسجيل الصوت من الميكروفون.');
+                    mxAlert('المتصفح لا يدعم تسجيل الصوت من الميكروفون.');
                     return;
                 }
                 if (!hasJoinedConference) {
-                    alert('ادخل الغرفة أولاً ثم أعد محاولة التسجيل.');
+                    mxAlert('ادخل الغرفة أولاً ثم أعد محاولة التسجيل.');
                     return;
                 }
 
@@ -1780,7 +1801,7 @@
                     setRecordButtonBusy(false);
                     recordingKind = null;
                     micStream = null;
-                    alert('لم يُسمح بالميكروفون أو تعذر تشغيله. تحقق من أذونات المتصفح.');
+                    mxAlert('لم يُسمح بالميكروفون أو تعذر تشغيله. تحقق من أذونات المتصفح.');
                     return;
                 }
 
@@ -1799,7 +1820,7 @@
                     cleanupLectureRecordingVisuals();
                     setRecordButtonBusy(false);
                     recordingKind = null;
-                    alert('تعذر تهيئة مسار الفيديو. جرّب Chrome أو Edge بإصدار حديث.');
+                    mxAlert('تعذر تهيئة مسار الفيديو. جرّب Chrome أو Edge بإصدار حديث.');
                     return;
                 }
 
@@ -1811,7 +1832,7 @@
                     cleanupLectureRecordingVisuals();
                     setRecordButtonBusy(false);
                     recordingKind = null;
-                    alert('تعذر إنشاء مسار الفيديو للتسجيل.');
+                    mxAlert('تعذر إنشاء مسار الفيديو للتسجيل.');
                     return;
                 }
                 if (!micTracks.length) {
@@ -1820,7 +1841,7 @@
                     cleanupLectureRecordingVisuals();
                     setRecordButtonBusy(false);
                     recordingKind = null;
-                    alert('لم يُسمح بمسار الصوت للتسجيل.');
+                    mxAlert('لم يُسمح بمسار الصوت للتسجيل.');
                     return;
                 }
 
@@ -1842,7 +1863,7 @@
                         cleanupLectureRecordingVisuals();
                         setRecordButtonBusy(false);
                         recordingKind = null;
-                        alert('تعذر بدء تسجيل الفيديو. جرّب Chrome أو Edge بإصدار حديث.');
+                        mxAlert('تعذر بدء تسجيل الفيديو. جرّب Chrome أو Edge بإصدار حديث.');
                         return;
                     }
                 }
@@ -1874,21 +1895,21 @@
                     if (!blob.size) {
                         setRecordButtonBusy(false);
                         setRecordStatus('لا يوجد محتوى في تسجيل المحاضرة.', true);
-                        alert('لا يوجد محتوى في التسجيل. تأكد من عمل الميكروفون ثم أعد المحاولة.');
+                        mxAlert('لا يوجد محتوى في التسجيل. تأكد من عمل الميكروفون ثم أعد المحاولة.');
                         recordedChunks = [];
+                        mxFinishPendingEndMeeting();
                         return;
                     }
 
                     setRecordButtonBusy(false);
-                    setRecordStatus('تم إيقاف تسجيل المحاضرة. جاري فتح تاب الرفع...', false);
-                    mxQueueBlobUpload(blob, durationSeconds, 'lecture', null);
-                    recordedChunks = [];
-                    if (pendingEndMeetingSubmit && endMeetingForm) {
-                        pendingEndMeetingSubmit = false;
-                        setTimeout(function() {
-                            endMeetingForm.submit();
-                        }, 400);
+                    setRecordStatus(mxSilentAutoRecording ? '' : 'تم إيقاف تسجيل المحاضرة. جاري الرفع...', false);
+                    try {
+                        await mxQueueBlobUpload(blob, durationSeconds, 'lecture', null);
+                    } catch (uploadErr) {
+                        console.warn(uploadErr);
                     }
+                    recordedChunks = [];
+                    mxFinishPendingEndMeeting();
                 });
 
                 mediaRecorder.start(3000);
@@ -1900,11 +1921,11 @@
 
             async function startMicRecording() {
                 if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
-                    alert('المتصفح لا يدعم تسجيل الصوت من الميكروفون.');
+                    mxAlert('المتصفح لا يدعم تسجيل الصوت من الميكروفون.');
                     return;
                 }
                 if (!hasJoinedConference) {
-                    alert('ادخل الغرفة أولاً ثم أعد محاولة التسجيل.');
+                    mxAlert('ادخل الغرفة أولاً ثم أعد محاولة التسجيل.');
                     return;
                 }
 
@@ -1917,7 +1938,7 @@
                 } catch (err) {
                     setRecordButtonBusy(false);
                     recordingKind = null;
-                    alert('لم يُسمح بالميكروفون أو تعذر تشغيله. تحقق من أذونات المتصفح.');
+                    mxAlert('لم يُسمح بالميكروفون أو تعذر تشغيله. تحقق من أذونات المتصفح.');
                     return;
                 }
 
@@ -1933,7 +1954,7 @@
                         activeRecordingStream = null;
                         setRecordButtonBusy(false);
                         recordingKind = null;
-                        alert('تعذر بدء التسجيل الصوتي. جرّب Chrome أو Edge بإصدار حديث.');
+                        mxAlert('تعذر بدء التسجيل الصوتي. جرّب Chrome أو Edge بإصدار حديث.');
                         return;
                     }
                 }
@@ -1962,21 +1983,21 @@
                     if (!blob.size) {
                         setRecordButtonBusy(false);
                         setRecordStatus('لا يوجد محتوى في التسجيل.', true);
-                        alert('لا يوجد محتوى في التسجيل الصوتي.');
+                        mxAlert('لا يوجد محتوى في التسجيل الصوتي.');
                         recordedChunks = [];
+                        mxFinishPendingEndMeeting();
                         return;
                     }
 
                     setRecordButtonBusy(false);
-                    setRecordStatus('تم إيقاف تسجيل التقرير. جاري فتح تاب الرفع...', false);
-                    mxQueueBlobUpload(blob, durationSeconds, 'report', null);
-                    recordedChunks = [];
-                    if (pendingEndMeetingSubmit && endMeetingForm) {
-                        pendingEndMeetingSubmit = false;
-                        setTimeout(function() {
-                            endMeetingForm.submit();
-                        }, 400);
+                    setRecordStatus(mxSilentAutoRecording ? '' : 'تم إيقاف تسجيل التقرير. جاري الرفع...', false);
+                    try {
+                        await mxQueueBlobUpload(blob, durationSeconds, 'report', null);
+                    } catch (uploadErr) {
+                        console.warn(uploadErr);
                     }
+                    recordedChunks = [];
+                    mxFinishPendingEndMeeting();
                 });
 
                 mediaRecorder.start(4000);
@@ -1988,10 +2009,7 @@
 
             function stopBrowserRecording() {
                 if (!mediaRecorder || mediaRecorder.state !== 'recording') {
-                    if (pendingEndMeetingSubmit && endMeetingForm) {
-                        pendingEndMeetingSubmit = false;
-                        endMeetingForm.submit();
-                    }
+                    mxFinishPendingEndMeeting();
                     return;
                 }
                 setRecordButtonBusy(true);
