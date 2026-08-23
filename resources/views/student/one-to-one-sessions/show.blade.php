@@ -15,6 +15,15 @@
     $joinHref = ($isScheduled && $session->classroomMeeting)
         ? route('classroom.secure-enter', $session->classroomMeeting)
         : null;
+    $recordingHref = ($session->classroomMeeting
+        && $session->classroomMeeting->hasBrowserRecording()
+        && (
+            $isCompleted
+            || $session->classroomMeeting->ended_at
+        )
+        && Route::has('student.classroom.recording'))
+        ? route('student.classroom.recording', $session->classroomMeeting)
+        : null;
     $duration = (int) ($session->duration_minutes ?: 50);
     $instructor = $session->instructor;
     $title = $session->course->title ?? __('student_timeline.private_lesson');
@@ -174,7 +183,7 @@
             </section>
         @endif
 
-        @if($isCompleted)
+        @if($isCompleted || $recordingHref)
             <div class="st-empty-panel">
                 <h3>{{ $session->statusLabel() }}</h3>
                 <p>
@@ -182,6 +191,14 @@
                         <x-app-datetime :at="$session->scheduled_at" :timezone="$viewerTz" :pattern="$isRtl ? 'l، d M · g:i A' : 'D, M j · g:i A'" />
                     @endif
                 </p>
+                @if($recordingHref)
+                    <div class="st-biz-banner__actions" style="margin-top:14px">
+                        <a href="{{ $recordingHref }}" class="st-pill st-pill--solid" target="_blank" rel="noopener">
+                            <i class="fas fa-play-circle" aria-hidden="true"></i>
+                            {{ __('student_timeline.watch_recording') }}
+                        </a>
+                    </div>
+                @endif
             </div>
         @endif
     </div>
@@ -195,7 +212,13 @@
                 </div>
             </div>
             <div class="st-event-card__actions" style="margin-top:0;flex-direction:column">
-                <a href="{{ $lessonsUrl }}" class="st-pill st-pill--solid st-pill--block">{{ __('student_timeline.nav_lessons') }}</a>
+                @if($recordingHref)
+                    <a href="{{ $recordingHref }}" class="st-pill st-pill--solid st-pill--block" target="_blank" rel="noopener">
+                        <i class="fas fa-play-circle" aria-hidden="true"></i>
+                        {{ __('student_timeline.watch_recording') }}
+                    </a>
+                @endif
+                <a href="{{ $lessonsUrl }}" class="st-pill st-pill--{{ $recordingHref ? 'outline' : 'solid' }} st-pill--block">{{ __('student_timeline.nav_lessons') }}</a>
                 @if(Route::has('calendar'))
                     <a href="{{ route('calendar') }}" class="st-pill st-pill--outline st-pill--block">{{ __('student.calendar_title') }}</a>
                 @endif

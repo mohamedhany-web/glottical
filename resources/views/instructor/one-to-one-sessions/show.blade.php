@@ -118,6 +118,32 @@
                     </button>
                 </div>
             </form>
+        @elseif($session->status === \App\Models\OneToOneSession::STATUS_COMPLETED && $session->classroomMeeting)
+            @php $m = $session->classroomMeeting; @endphp
+            <div class="su-card su-soft-3" style="padding:16px;margin-bottom:16px">
+                <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:var(--su-ink)">
+                    {{ __('instructor.cons_appointment') }}:
+                    @if($session->scheduled_at)
+                        <x-app-datetime :at="$session->scheduled_at" />
+                    @endif
+                </p>
+                @if($m->hasBrowserRecording())
+                    <p style="margin:0 0 12px;font-size:13px;color:#15803d">
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
+                        تم رفع التسجيل — متاح للطالب من صفحة الحصة.
+                    </p>
+                    @if($m->recording_download_url || $m->recording_audio_download_url)
+                        <a href="{{ $m->recording_download_url ?: $m->recording_audio_download_url }}" target="_blank" rel="noopener" class="su-btn su-btn--ok">
+                            <i class="fas fa-play-circle" aria-hidden="true"></i>
+                            مشاهدة التسجيل
+                        </a>
+                    @endif
+                @else
+                    <p style="margin:0;font-size:13px;color:var(--su-ink-40)">
+                        لا يوجد تسجيل مرفوع لهذه الحصة بعد.
+                    </p>
+                @endif
+            </div>
         @endif
     </section>
 </div>

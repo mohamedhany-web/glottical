@@ -630,6 +630,14 @@ class ClassroomController extends Controller
                     ->with('success', 'تم إنهاء جلسة الاستشارة.');
             }
 
+            $oneToOneId = $meeting->one_to_one_session_id
+                ?: OneToOneSession::query()->where('classroom_meeting_id', $meeting->id)->value('id');
+            if ($oneToOneId && Route::has('instructor.one-to-one-sessions.show')) {
+                return redirect()
+                    ->route('instructor.one-to-one-sessions.show', $oneToOneId)
+                    ->with('success', 'تم إنهاء الاجتماع ورفع التسجيل للطالب.');
+            }
+
             return redirect()->route('instructor.consultations.index')->with('success', 'تم إنهاء الاجتماع.');
         }
 
@@ -639,6 +647,14 @@ class ClassroomController extends Controller
                 ->with('success', $completedTutoring
                     ? 'تم إنهاء الحصة وخصم وحدة من رصيدك.'
                     : 'تم إنهاء الاجتماع.');
+        }
+
+        $oneToOneId = $meeting->one_to_one_session_id
+            ?: OneToOneSession::query()->where('classroom_meeting_id', $meeting->id)->value('id');
+        if ($oneToOneId && Route::has('student.one-to-one-sessions.show')) {
+            return redirect()
+                ->route('student.one-to-one-sessions.show', $oneToOneId)
+                ->with('success', 'تم إنهاء الاجتماع. سيظهر التسجيل عند اكتمال رفعه.');
         }
 
         return redirect()->route('student.classroom.show', $meeting)->with('success', 'تم إنهاء الاجتماع.');

@@ -125,7 +125,7 @@ class ClassroomEndCompletesOneToOneTest extends TestCase
 
         $this->actingAs($instructor)
             ->post(route('instructor.classroom.end', $meeting))
-            ->assertRedirect();
+            ->assertRedirect(route('instructor.one-to-one-sessions.show', $session));
 
         $this->assertNotNull($meeting->fresh()->ended_at);
         $this->assertSame(OneToOneSession::STATUS_COMPLETED, $session->fresh()->status);
@@ -173,5 +173,10 @@ class ClassroomEndCompletesOneToOneTest extends TestCase
         // إما redirect away للرابط أو 404 إن فشل temporaryUrl — المهم ليس 403
         $this->assertNotSame(403, $response->status());
         $this->assertTrue(in_array($response->status(), [302, 404, 500], true));
+
+        $this->actingAs($student)
+            ->get(route('student.one-to-one-sessions.show', $session))
+            ->assertOk()
+            ->assertSee(route('student.classroom.recording', $meeting), false);
     }
 }

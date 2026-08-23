@@ -596,6 +596,8 @@
             var mxCurrentUploadJob = null;
             var mxLastFailedJob = null;
             var pendingEndMeetingSubmit = false;
+            var mxUploadsInFlight = 0;
+            var mxUploadChain = Promise.resolve();
             var lectureCanvas = null;
             var lectureCtx = null;
             var lectureCanvasStream = null;
@@ -1626,6 +1628,17 @@
                 }
             }
 
+            function mxTrackUploadPromise(p) {
+                mxUploadsInFlight++;
+                var tracked = Promise.resolve(p).catch(function () {
+                    return null;
+                }).finally(function () {
+                    mxUploadsInFlight = Math.max(0, mxUploadsInFlight - 1);
+                });
+                mxUploadChain = mxUploadChain.then(function () { return tracked; }, function () { return tracked; });
+                return tracked;
+            }
+
             function mxQueueBlobUpload(blob, durationSeconds, kind, secondaryBlob) {
                 var job = {
                     id: mxMakeUploadJobId(),
@@ -1640,37 +1653,48 @@
                 // المعلم: رفع صامت في الخلفية بدون تاب/مودال — نعيد Promise لننتظره قبل إنهاء الاجتماع
                 if (mxSilentAutoRecording) {
                     mxIdbPutJob(job).catch(function() {});
-                    return mxRunUploadJob(Object.assign({}, job, { status: 'pending' })).catch(function(err) {
-                        console.warn('Silent auto-upload failed, retrying once:', err);
-                        return new Promise(function(resolve) {
-                            setTimeout(function() {
-                                mxRunUploadJob(Object.assign({}, job, { status: 'pending' }))
-                                    .then(resolve)
-                                    .catch(function(err2) {
-                                        console.warn('Silent auto-upload retry failed:', err2);
-                                        resolve(null);
-                                    });
-                            }, 2500);
-                        });
-                    });
+                    return mxTrackUploadPromise(
+                        mxRunUploadJob(Object.assign({}, job, { status: 'pending' })).catch(function(err) {
+                            console.warn('Silent auto-upload failed, retrying once:', err);
+                            return new Promise(function(resolve) {
+                                setTimeout(function() {
+                                    mxRunUploadJob(Object.assign({}, job, { status: 'pending' }))
+                                        .then(resolve)
+                                        .catch(function(err2) {
+                                            console.warn('Silent auto-upload retry failed:', err2);
+                                            resolve(null);
+                                        });
+                                }, 2500);
+                            });
+                        })
+                    );
                 }
                 mxIdbPutJob(job).then(function() {
                     var w = mxOpenRecordingUploadTab(job.id);
                     if (!w) {
                         setRecordStatus('المتصفح منع التاب الجديد — سيتم الرفع من هذه الصفحة.', true);
-                        mxRunUploadJob(Object.assign({}, job, { status: 'pending' })).catch(function() {});
+                        mxTrackUploadPromise(mxRunUploadJob(Object.assign({}, job, { status: 'pending' })));
                         return;
                     }
                     setRecordStatus('تم فتح تاب الرفع في نافذة جديدة — أكمل الرفع هناك وتابع الاجتماع في هذا التاب.', false);
                 }).catch(function(idbErr) {
                     console.warn('IndexedDB before upload tab:', idbErr);
-                    mxRunUploadJob(Object.assign({}, job, { status: 'pending' })).catch(function() {});
+                    mxTrackUploadPromise(mxRunUploadJob(Object.assign({}, job, { status: 'pending' })));
                 });
                 return Promise.resolve();
             }
 
             function mxFinishPendingEndMeeting() {
                 if (!pendingEndMeetingSubmit || !endMeetingForm) return;
+                if (mxUploadsInFlight > 0) {
+                    setRecordStatus('جاري رفع التسجيل قبل إنهاء الاجتماع...', false);
+                    mxUploadChain.finally(function () {
+                        if (!pendingEndMeetingSubmit || !endMeetingForm) return;
+                        pendingEndMeetingSubmit = false;
+                        try { endMeetingForm.submit(); } catch (e) {}
+                    });
+                    return;
+                }
                 pendingEndMeetingSubmit = false;
                 try { endMeetingForm.submit(); } catch (e) {}
             }
@@ -2072,10 +2096,21 @@
 
             if (endMeetingForm && endMeetingBtn) {
                 endMeetingForm.addEventListener('submit', function(e) {
-                    if (!isRecording) return;
-                    e.preventDefault();
-                    pendingEndMeetingSubmit = true;
-                    stopBrowserRecording();
+                    if (isRecording) {
+                        e.preventDefault();
+                        pendingEndMeetingSubmit = true;
+                        setRecordStatus('جاري إيقاف التسجيل ورفعه قبل إنهاء الاجتماع...', false);
+                        stopBrowserRecording();
+                        return;
+                    }
+                    if (mxUploadsInFlight > 0) {
+                        e.preventDefault();
+                        pendingEndMeetingSubmit = true;
+                        setRecordStatus('جاري رفع التسجيل قبل إنهاء الاجتماع...', false);
+                        mxUploadChain.finally(function () {
+                            mxFinishPendingEndMeeting();
+                        });
+                    }
                 });
             }
 
