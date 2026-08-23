@@ -268,6 +268,7 @@
                     || request()->routeIs('admin.support-inquiry-categories.*')
                     || request()->routeIs('admin.consultations.*')
                     || request()->routeIs('admin.one-to-one-sessions.*')
+                    || request()->routeIs('admin.student-lesson-cleanup.*')
                     || request()->routeIs('admin.placement.*')
                     || request()->routeIs('admin.student-entitlements.*')
                     || request()->routeIs('admin.tutoring-subscriptions.*')
@@ -333,6 +334,14 @@
                     <li>
                         <a href="{{ route('admin.one-to-one-sessions.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.one-to-one-sessions.*') ? 'active' : '' }}">
                             <i class="fas fa-user-clock"></i><span>حصص 1:1</span>
+                        </a>
+                    </li>
+                    @endif
+
+                    @if(($isFull || $u->hasPermission('manage.tutoring-groups') || $u->hasPermission('manage.courses') || $u->hasPermission('manage.live-sessions')) && Route::has('admin.student-lesson-cleanup.index'))
+                    <li>
+                        <a href="{{ route('admin.student-lesson-cleanup.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.student-lesson-cleanup.*') ? 'active' : '' }}">
+                            <i class="fas fa-broom"></i><span>تنظيف الحصص والتجارب</span>
                         </a>
                     </li>
                     @endif
