@@ -143,8 +143,17 @@ class ClassroomMeetingAccessService
 
     public static function userIsHost(ClassroomMeeting $meeting, User $user): bool
     {
-        if ((int) $meeting->user_id === (int) $user->id) {
+        if ($user->isAdmin()) {
             return true;
+        }
+
+        // الطالب لا يُعامل كمضيف حتى لو كان user_id على الاجتماع (بيانات قديمة).
+        if ($user->isStudent() && ! $user->isInstructor()) {
+            return false;
+        }
+
+        if ((int) $meeting->user_id === (int) $user->id) {
+            return $user->isInstructor();
         }
 
         if ($meeting->one_to_one_session_id) {

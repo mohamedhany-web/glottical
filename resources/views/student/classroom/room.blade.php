@@ -216,9 +216,11 @@
         <div id="mx-toolbar-desktop-slot" class="hidden md:block w-full md:w-auto mx-mobile-toolbar-scroll overflow-x-auto overflow-y-visible pb-0.5 md:pb-0 touch-pan-x">
         <div id="mx-classroom-toolbar-inner" class="flex w-full flex-col items-stretch gap-3 md:w-auto md:min-w-max md:flex-row md:flex-nowrap md:items-center md:justify-end md:gap-1 md:gap-2 md:max-w-[min(100%,42rem)] lg:max-w-none pe-1 ps-0.5">
             <div class="flex flex-wrap items-center gap-1.5 md:flex-nowrap">
+            @if(!empty($canManageMeeting))
             <span class="hidden sm:inline-flex text-slate-300 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-slate-700/80 whitespace-nowrap">
                 طلاب: {{ (int) ($meeting->max_participants ?? 25) }}
             </span>
+            @endif
             <span class="inline-flex sm:hidden text-amber-200 text-[10px] px-1.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 whitespace-nowrap" id="meeting-timer-chip-mobile">
                 {{ (int) $effectiveDurationMinutes }} د
             </span>
@@ -230,6 +232,7 @@
             <span class="hidden xl:block w-px h-4 bg-slate-600/50 shrink-0 rounded-full" aria-hidden="true"></span>
             <div class="flex w-full flex-col gap-2 md:w-auto md:flex-row md:flex-nowrap md:items-center md:justify-end md:gap-1.5">
             @unless($academicObserverMode)
+            @if(!empty($canManageMeeting))
             <button type="button" id="mx-ml-btn-curriculum" class="classroom-room-toolbar-btn w-full justify-center gap-2 bg-indigo-600/25 hover:bg-indigo-600/35 text-indigo-100 border border-indigo-500/40 md:w-auto md:justify-start" title="عرض منهج تفاعلي" aria-pressed="false">
                 <i class="fas fa-book-open text-indigo-300 text-[11px]"></i>
                 <span class="sm:inline">عرض منهج</span>
@@ -244,13 +247,11 @@
                        {{ $meeting->allowsParticipantWhiteboard() ? 'checked' : '' }}>
                 <span class="font-medium truncate"><span class="hidden sm:inline">رسم الضيف فوق العرض</span><span class="sm:hidden">رسم ضيف</span></span>
             </label>
-            @if(!empty($isHost))
             <span id="mx-auto-rec-badge" class="hidden classroom-room-toolbar-btn cursor-default bg-rose-900/40 text-rose-200 border border-rose-700/50 md:w-auto" title="تسجيل تلقائي للحصة">
                 <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse shrink-0"></span>
                 <span class="font-semibold text-xs">REC</span>
             </span>
-            @endif
-            <div class="relative flex w-full flex-wrap items-center gap-2 md:inline-flex md:w-auto md:flex-nowrap md:gap-0 {{ !empty($isHost) ? 'hidden' : '' }}" id="mx-record-dd-wrap" @if(!empty($isHost)) aria-hidden="true" @endif>
+            <div class="relative hidden flex w-full flex-wrap items-center gap-2 md:inline-flex md:w-auto md:flex-nowrap md:gap-0" id="mx-record-dd-wrap" aria-hidden="true">
                 <div id="mx-record-idle-wrap" class="inline-flex w-full min-w-0 items-center rounded-lg border border-slate-600 overflow-hidden bg-slate-700/80 hover:bg-slate-600/90 transition-colors md:w-auto">
                     <button type="button" id="btn-record-menu" class="classroom-room-toolbar-btn w-full min-w-0 justify-between rounded-none border-0 bg-transparent text-slate-200 hover:bg-transparent md:w-auto" title="تسجيل المحاضرة أو تقرير صوتي" aria-expanded="false" aria-haspopup="true">
                         <i class="fas fa-circle-dot text-rose-400 text-[10px]" id="record-icon-idle"></i>
@@ -278,24 +279,30 @@
                     </button>
                 </div>
             </div>
-            @if(!empty($guestJoinEnabled) && !empty($isHost))
+            @if(!empty($guestJoinEnabled))
             <button type="button" id="btn-classroom-copy-join" class="classroom-room-toolbar-btn w-full justify-center gap-2 bg-slate-700/80 hover:bg-slate-600 text-slate-200 border border-slate-600 md:w-auto md:justify-start" title="نسخ رابط الانضمام" data-join-url="{{ url('classroom/join/' . $meeting->code) }}">
                 <i class="fas fa-link text-[10px] btn-copy-join-ic"></i>
                 <span class="btn-copy-join-tx min-w-0 truncate">مشاركة الرابط</span>
                 <span class="btn-copy-join-tx-sm hidden min-w-0 truncate" aria-hidden="true">رابط</span>
             </button>
-            @elseif(!empty($isHost))
+            @else
             <span class="classroom-room-toolbar-btn w-full justify-center gap-2 bg-emerald-900/40 text-emerald-200 border border-emerald-700/50 md:w-auto md:justify-start cursor-default" title="الدخول محمي داخل المنصة">
                 <i class="fas fa-shield-alt text-[10px]"></i>
                 <span class="min-w-0 truncate">دخول محمي · بدون رابط ضيف</span>
             </span>
             @endif
-            <form method="POST" action="{{ $mxRoute($rp.'classroom.end', $meeting) }}" class="inline w-full shrink-0 md:w-auto {{ empty($isHost) || !\Illuminate\Support\Facades\Route::has($rp.'classroom.end') ? 'hidden' : '' }}" id="mx-end-meeting-form" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
+            <form method="POST" action="{{ $mxRoute($rp.'classroom.end', $meeting) }}" class="inline w-full shrink-0 md:w-auto {{ !\Illuminate\Support\Facades\Route::has($rp.'classroom.end') ? 'hidden' : '' }}" id="mx-end-meeting-form" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
                 @csrf
                 <button type="submit" id="mx-end-meeting-btn" class="classroom-room-toolbar-btn w-full justify-center bg-rose-600 hover:bg-rose-500 text-white font-semibold border border-rose-500/50 shadow-sm shadow-rose-900/20 md:w-auto md:justify-start">
                     <i class="fas fa-stop text-[10px]"></i><span class="hidden md:inline">إنهاء الاجتماع</span><span class="md:hidden">إنهاء</span>
                 </button>
             </form>
+            @else
+            <a href="{{ $roomExitUrl ?? route('dashboard') }}" class="classroom-room-toolbar-btn w-full justify-center gap-2 bg-slate-700/80 hover:bg-slate-600 text-slate-100 border border-slate-600 md:w-auto md:justify-start" title="العودة للوحة">
+                <i class="fas fa-arrow-right text-[10px]"></i>
+                <span>العودة للوحة</span>
+            </a>
+            @endif
             @else
             <span class="text-amber-200 text-[11px] px-2 py-1 rounded-md bg-amber-500/15 border border-amber-500/30 font-semibold">
                 <i class="fas fa-eye text-[10px] ms-0.5"></i> مراقبة
@@ -395,10 +402,10 @@
                 'livekitUrl' => $livekitUrl,
                 'livekitToken' => $livekitToken,
                 'user' => $user,
-                'lkRole' => $lkRole ?? ((($isHost ?? false) || !empty($useInstructorRoutes) || (($user->id ?? null) === ($meeting->user_id ?? null))) ? 'host' : 'participant'),
-                'lkTheme' => (!empty($useInstructorRoutes) || ($isHost ?? false)) ? 'instructor' : 'student',
+                'lkRole' => $lkRole ?? 'participant',
+                'lkTheme' => (!empty($canManageMeeting) || !empty($useInstructorRoutes)) ? 'instructor' : 'student',
                 'lkLeaveUrl' => $roomExitUrl ?? url('/'),
-                'lkAllowScreenShare' => $allowScreenShare ?? true,
+                'lkAllowScreenShare' => (!empty($canManageMeeting) || !empty($useInstructorRoutes)) ? ($allowScreenShare ?? true) : false,
             ])
         @else
             <main id="meeting-video-root" class="flex-1 min-h-0 relative w-full flex flex-col items-center justify-center gap-3 p-8 text-center text-slate-300" role="application" aria-label="غرفة الاجتماع">
@@ -416,7 +423,8 @@
     </div>
     </div>
 
-    {{-- لوحة بيضاء منبثقة بشاشة كبيرة --}}
+    {{-- لوحة بيضاء منبثقة — للمعلم/المضيف فقط --}}
+    @if(!empty($canManageMeeting))
     <div id="wb-popup" class="hidden fixed inset-0 p-2 sm:p-4" inert aria-hidden="true" role="dialog" aria-labelledby="wb-popup-title" aria-modal="true">
         <div id="wb-popup-backdrop" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm cursor-pointer" aria-hidden="true"></div>
         <div id="wb-popup-panel" class="relative z-[141] flex flex-col w-full max-w-[min(1680px,99vw)] h-[min(92vh,calc(100dvh-1rem))] rounded-2xl border border-slate-600 bg-slate-900 shadow-2xl overflow-hidden">
@@ -444,8 +452,10 @@
             </div>
         </div>
     </div>
+    @endif
 
-    {{-- نافذة رفع التسجيل — يمكن تصغيرها والمتابعة داخل الغرفة --}}
+    {{-- نافذة رفع التسجيل — للمعلم/المضيف فقط --}}
+    @if(!empty($canManageMeeting))
     <div id="mx-upload-modal" class="hidden fixed inset-0 z-[180] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm" aria-hidden="true">
         <div class="w-full max-w-md rounded-2xl border border-slate-600 bg-slate-900 shadow-2xl p-5 sm:p-6" role="dialog" aria-labelledby="mx-upload-modal-title" aria-modal="true">
             <h3 id="mx-upload-modal-title" class="text-lg font-bold text-white m-0 mb-1">جاري رفع التسجيل</h3>
@@ -464,6 +474,7 @@
         <i class="fas fa-cloud-arrow-up text-cyan-400"></i>
         <span id="mx-upload-chip-text" class="truncate">رفع التسجيل</span>
     </button>
+    @endif
 
     @php
         $mxBp = rtrim((string) request()->getBasePath(), '/');
@@ -526,7 +537,7 @@
             var timerChip = document.getElementById('meeting-timer-chip');
             var timerChipMobile = document.getElementById('meeting-timer-chip-mobile');
             var mxMeetingId = {{ (int) $meeting->id }};
-            var mxSilentAutoRecording = {{ !empty($isHost) ? 'true' : 'false' }};
+            var mxSilentAutoRecording = {{ !empty($canManageMeeting) ? 'true' : 'false' }};
             var mxAutoRecBadge = document.getElementById('mx-auto-rec-badge');
             var mxAutoRecordStarted = false;
             var recordDdWrap = document.getElementById('mx-record-dd-wrap');
@@ -2233,7 +2244,7 @@
             function attachCurriculumPresenter() {
                 if (!window.MxClassroomCurriculumPresenter || window.__mxCurriculumPresenter) return;
                 window.__mxCurriculumPresenter = window.MxClassroomCurriculumPresenter.attach(null, {
-                    isHost: {{ !empty($isHost) ? 'true' : 'false' }},
+                    isHost: {{ !empty($canManageMeeting) ? 'true' : 'false' }},
                     catalogUrl: @json($mxRoute($rp . 'classroom.curriculum.catalog', $meeting)),
                     presentUrl: @json($mxRoute($rp . 'classroom.curriculum.present', $meeting)),
                     stateUrl: @json($mxRoute($rp . 'classroom.curriculum.state', $meeting)),

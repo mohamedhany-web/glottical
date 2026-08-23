@@ -136,6 +136,8 @@ class SecureClassroomJoinTest extends TestCase
         $this->assertTrue(ClassroomMeetingAccessService::userCanEnter($meeting, $student));
         $this->assertTrue(ClassroomMeetingAccessService::userCanEnter($meeting, $instructor));
         $this->assertFalse(ClassroomMeetingAccessService::userCanEnter($meeting, $outsider));
+        $this->assertFalse(ClassroomMeetingAccessService::userIsHost($meeting, $student));
+        $this->assertTrue(ClassroomMeetingAccessService::userIsHost($meeting, $instructor));
 
         $this->postJson(route('classroom.join.enter', ['code' => $meeting->code]), [
             'display_name' => 'متطفل',

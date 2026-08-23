@@ -259,6 +259,7 @@ class ClassroomController extends Controller
         $user = Auth::user();
         $this->ensureMeetingCanEnter($meeting, $user);
         $isHost = ClassroomMeetingAccessService::userIsHost($meeting, $user);
+        $canManageMeeting = $isHost && ($user->isInstructor() || $user->isAdmin());
 
         if ($meeting->ended_at) {
             if (request()->routeIs('instructor.*')) {
@@ -335,16 +336,16 @@ class ClassroomController extends Controller
         $meetingPayload = app(\App\Services\LiveMeetingProvider::class)->classroomPayload(
             $meeting->liveRoomName(),
             $user,
-            $isHost
+            $canManageMeeting
         );
         $meetingEndsAt = $meeting->started_at ? $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes) : null;
-        $useInstructorRoutes = request()->routeIs('instructor.*') || ($isHost && ($user->isInstructor() || $user->isAdmin()));
+        $useInstructorRoutes = request()->routeIs('instructor.*') || $canManageMeeting;
         $subscriptionFeatureMenuItems = [];
         $subscriptionPackageLabel = null;
         $guestJoinEnabled = ClassroomMeetingAccessService::allowsGuestJoin($meeting);
-        $lkRole = $isHost ? 'host' : 'participant';
+        $lkRole = $canManageMeeting ? 'host' : 'participant';
 
-        $roomExitUrl = $this->classroomRoomExitUrl($meeting, $user, $isHost);
+        $roomExitUrl = $this->classroomRoomExitUrl($meeting, $user, $canManageMeeting);
 
         return view('student.classroom.room', array_merge(
             compact(
@@ -354,6 +355,7 @@ class ClassroomController extends Controller
                 'effectiveDurationMinutes',
                 'meetingEndsAt',
                 'useInstructorRoutes',
+                'canManageMeeting',
                 'subscriptionFeatureMenuItems',
                 'subscriptionPackageLabel',
                 'guestJoinEnabled',
