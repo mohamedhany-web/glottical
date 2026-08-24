@@ -37,6 +37,7 @@ class ClassroomController extends Controller
                 'student.classroom.room',
                 'student.classroom.room.status',
                 'student.classroom.recording',
+                'student.classroom.recording.status',
                 'student.classroom.share-annotations',
                 'student.classroom.share-annotation',
                 'student.classroom.curriculum.state',
@@ -570,7 +571,28 @@ class ClassroomController extends Controller
         return response()->json([
             'ended' => filled($meeting->ended_at),
             'started' => filled($meeting->started_at),
+            'has_recording' => $meeting->hasBrowserRecording(),
             'allow_participant_whiteboard' => $meeting->allowsParticipantWhiteboard(),
+        ]);
+    }
+
+    /**
+     * حالة جاهزية التسجيل للطالب بعد انتهاء الحصة (polling من لوحة الحصة).
+     */
+    public function recordingStatus(ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        abort_unless(ClassroomMeetingAccessService::userCanEnter($meeting, $user), 403);
+
+        $meeting->refresh();
+        $ready = $meeting->hasBrowserRecording() && filled($meeting->ended_at);
+
+        return response()->json([
+            'ready' => $ready,
+            'ended' => filled($meeting->ended_at),
+            'watch_url' => $ready && Route::has('student.classroom.recording')
+                ? route('student.classroom.recording', $meeting)
+                : null,
         ]);
     }
 

@@ -267,7 +267,7 @@
                 <span class="min-w-0 truncate">دخول محمي · بدون رابط ضيف</span>
             </span>
             @endif
-            <form method="POST" action="{{ $mxRoute($rp.'classroom.end', $meeting) }}" class="inline w-full shrink-0 md:w-auto {{ !\Illuminate\Support\Facades\Route::has($rp.'classroom.end') ? 'hidden' : '' }}" id="mx-end-meeting-form" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
+            <form method="POST" action="{{ $mxRoute($rp.'classroom.end', $meeting) }}" class="inline w-full shrink-0 md:w-auto {{ !\Illuminate\Support\Facades\Route::has($rp.'classroom.end') ? 'hidden' : '' }}" id="mx-end-meeting-form" onsubmit="return (typeof window.__mxClassroomConfirmEnd === 'function') ? window.__mxClassroomConfirmEnd() : confirm('إنهاء الاجتماع للجميع؟');">
                 @csrf
                 <button type="submit" id="mx-end-meeting-btn" class="classroom-room-toolbar-btn w-full justify-center bg-rose-600 hover:bg-rose-500 text-white font-semibold border border-rose-500/50 shadow-sm shadow-rose-900/20 md:w-auto md:justify-start">
                     <i class="fas fa-stop text-[10px]"></i><span class="hidden md:inline">إنهاء الاجتماع</span><span class="md:hidden">إنهاء</span>
@@ -619,7 +619,15 @@
             var lectureDisplayStream = null;
             var lectureDisplayVideo = null;
             var lectureRafId = null;
+            var lectureCompositeInterval = null;
+            var mxSkipEndConfirm = false;
+            var mxAutoEndingMeeting = false;
             var btnLectureAddScreen = document.getElementById('btn-lecture-add-screen');
+
+            window.__mxClassroomConfirmEnd = function () {
+                if (mxSkipEndConfirm) return true;
+                return confirm('إنهاء الاجتماع للجميع؟');
+            };
 
             var wbCanvas = null;
             var wbCtx = null;
@@ -1706,12 +1714,31 @@
                     mxUploadChain.finally(function () {
                         if (!pendingEndMeetingSubmit || !endMeetingForm) return;
                         pendingEndMeetingSubmit = false;
+                        mxSkipEndConfirm = true;
                         try { endMeetingForm.submit(); } catch (e) {}
                     });
                     return;
                 }
                 pendingEndMeetingSubmit = false;
+                mxSkipEndConfirm = true;
                 try { endMeetingForm.submit(); } catch (e) {}
+            }
+
+            function mxGracefulEndMeeting(reason) {
+                if (mxAutoEndingMeeting) return;
+                mxAutoEndingMeeting = true;
+                mxSkipEndConfirm = true;
+                if (!endMeetingForm) {
+                    window.location.href = roomExitUrl;
+                    return;
+                }
+                pendingEndMeetingSubmit = true;
+                setRecordStatus((reason || 'جاري حفظ التسجيل وإنهاء الاجتماع') + '...', false);
+                if (isRecording) {
+                    stopBrowserRecording();
+                    return;
+                }
+                mxFinishPendingEndMeeting();
             }
 
             function mxAlert(msg) {
@@ -1727,6 +1754,10 @@
                     cancelAnimationFrame(lectureRafId);
                     lectureRafId = null;
                 }
+                if (lectureCompositeInterval != null) {
+                    clearInterval(lectureCompositeInterval);
+                    lectureCompositeInterval = null;
+                }
                 stopCaptureTracks(lectureDisplayStream);
                 lectureDisplayStream = null;
                 if (lectureDisplayVideo) {
@@ -1740,7 +1771,7 @@
                 lectureCanvas = null;
             }
 
-            function lectureCompositeTick() {
+            function lectureCompositeDraw() {
                 if (!lectureCtx || !lectureCanvas) return;
                 var w = lectureCanvas.width;
                 var h = lectureCanvas.height;
@@ -1770,7 +1801,33 @@
                     lectureCtx.textBaseline = 'middle';
                     lectureCtx.fillText('التسجيل صوتي — اضغط «إضافة شاشة» لإظهار التبويب في الفيديو', w / 2, h / 2);
                 }
-                lectureRafId = requestAnimationFrame(lectureCompositeTick);
+            }
+
+            function scheduleLectureComposite() {
+                if (lectureRafId != null) {
+                    cancelAnimationFrame(lectureRafId);
+                    lectureRafId = null;
+                }
+                if (lectureCompositeInterval != null) {
+                    clearInterval(lectureCompositeInterval);
+                    lectureCompositeInterval = null;
+                }
+                if (!lectureCtx || !lectureCanvas) return;
+                // في التاب الخلفي المتصفح يوقف requestAnimationFrame — نستخدم interval لإبقاء التسجيل حيّاً
+                if (document.hidden) {
+                    lectureCompositeDraw();
+                    lectureCompositeInterval = setInterval(lectureCompositeDraw, 200);
+                    return;
+                }
+                function loop() {
+                    lectureCompositeDraw();
+                    lectureRafId = requestAnimationFrame(loop);
+                }
+                loop();
+            }
+
+            function lectureCompositeTick() {
+                scheduleLectureComposite();
             }
 
             async function attachLectureDisplayStream() {
@@ -2202,9 +2259,15 @@
 
             mxIdbListMeetingJobs().then(function(list) {
                 if (!list || !list.length) return;
-                var failed = list.filter(function(j) { return j.status === 'failed' || j.status === 'uploading'; });
+                var failed = list.filter(function(j) { return j.status === 'failed' || j.status === 'uploading' || j.status === 'pending'; });
                 if (!failed.length) return;
                 mxLastFailedJob = failed.sort(function(a, b) { return (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0); })[0];
+                if (mxSilentAutoRecording && mxLastFailedJob && mxLastFailedJob.blob) {
+                    mxTrackUploadPromise(
+                        mxRunUploadJob(Object.assign({}, mxLastFailedJob, { status: 'pending' })).catch(function () { return null; })
+                    );
+                    return;
+                }
                 if (mxUploadChip && mxUploadChipText) {
                     mxUploadChipText.textContent = 'رفع معلّق — اضغط للمتابعة';
                     mxUploadChip.classList.remove('hidden');
@@ -2251,21 +2314,23 @@
 
             function tickMeetingTimer() {
                 if (!meetingEndsAt || (!timerChip && !timerChipMobile)) return;
+                if (mxAutoEndingMeeting) return;
                 var end = new Date(meetingEndsAt).getTime();
                 var nowTs = Date.now();
                 var diff = end - nowTs;
                 if (diff <= 0) {
                     if (timerChip) {
-                        timerChip.textContent = 'انتهت المدة المسموح بها';
+                        timerChip.textContent = 'انتهت المدة — جاري الحفظ';
                         timerChip.classList.remove('bg-amber-500/20', 'border-amber-500/30', 'text-amber-200');
                         timerChip.classList.add('bg-rose-600/20', 'border-rose-500/30', 'text-rose-200');
                     }
                     if (timerChipMobile) {
-                        timerChipMobile.textContent = 'انتهت المدة';
+                        timerChipMobile.textContent = 'حفظ وإنهاء';
                         timerChipMobile.classList.remove('bg-amber-500/20', 'border-amber-500/30', 'text-amber-200');
                         timerChipMobile.classList.add('bg-rose-600/20', 'border-rose-500/30', 'text-rose-200');
                     }
-                    window.location.href = roomExitUrl;
+                    // لا نغادر الصفحة قبل إيقاف/رفع التسجيل ثم إنهاء الاجتماع رسمياً
+                    mxGracefulEndMeeting('انتهت المدة المسموح بها — جاري حفظ التسجيل وإنهاء الاجتماع');
                     return;
                 }
                 var mins = Math.floor(diff / 60000);
@@ -2277,6 +2342,20 @@
             }
             setInterval(tickMeetingTimer, 1000);
             tickMeetingTimer();
+
+            document.addEventListener('visibilitychange', function () {
+                if (isRecording && recordingKind === 'lecture' && lectureCtx && lectureCanvas) {
+                    scheduleLectureComposite();
+                }
+            });
+
+            window.addEventListener('beforeunload', function (e) {
+                if (mxAutoEndingMeeting) return;
+                if (isRecording || mxUploadsInFlight > 0) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
 
 
             @unless(!empty($academicObserverMode))

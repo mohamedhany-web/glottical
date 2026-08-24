@@ -1033,6 +1033,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('student.classroom.room');
         Route::get('/classroom/room/{meeting}/status', [\App\Http\Controllers\Student\ClassroomController::class, 'roomStatus'])->name('student.classroom.room.status');
         Route::get('/classroom/room/{meeting}/recording', [\App\Http\Controllers\Student\ClassroomController::class, 'watchRecording'])->name('student.classroom.recording');
+        Route::get('/classroom/room/{meeting}/recording-status', [\App\Http\Controllers\Student\ClassroomController::class, 'recordingStatus'])->name('student.classroom.recording.status');
         Route::get('/classroom/{meeting}/share-annotations', [\App\Http\Controllers\Student\ClassroomController::class, 'shareAnnotations'])->name('student.classroom.share-annotations');
         Route::post('/classroom/{meeting}/share-annotation', [\App\Http\Controllers\Student\ClassroomController::class, 'pushShareAnnotation'])->name('student.classroom.share-annotation');
         Route::get('/classroom/{meeting}/curriculum/state', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumState'])->name('student.classroom.curriculum.state');

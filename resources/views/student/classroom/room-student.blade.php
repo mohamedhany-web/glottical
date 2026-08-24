@@ -224,7 +224,7 @@
     <div id="mx-session-ended">
         <div class="mx-icon"><i class="fas fa-video"></i></div>
         <h2>انتهت الحصة</h2>
-        <p>تم إنهاء الحصة الخاصة. يمكنك العودة للوحة الطالب.</p>
+        <p>تم إنهاء الحصة الخاصة. سيظهر التسجيل في صفحة الحصة عند اكتمال رفعه.</p>
         <div id="mx-redir-bar"><div id="mx-redir-fill"></div></div>
         <p style="font-size:12px;">سيتم توجيهك تلقائياً...</p>
         <a href="{{ $roomExitUrl }}" class="st-live-pill st-live-pill--gold">

@@ -24,6 +24,15 @@
         && Route::has('student.classroom.recording'))
         ? route('student.classroom.recording', $session->classroomMeeting)
         : null;
+    $recordingStatusUrl = ($session->classroomMeeting
+        && (
+            $isCompleted
+            || $session->classroomMeeting->ended_at
+        )
+        && ! $recordingHref
+        && Route::has('student.classroom.recording.status'))
+        ? route('student.classroom.recording.status', $session->classroomMeeting)
+        : null;
     $duration = (int) ($session->duration_minutes ?: 50);
     $instructor = $session->instructor;
     $title = $session->course->title ?? __('student_timeline.private_lesson');
@@ -183,8 +192,8 @@
             </section>
         @endif
 
-        @if($isCompleted || $recordingHref)
-            <div class="st-empty-panel">
+        @if($isCompleted || $recordingHref || $recordingStatusUrl)
+            <div class="st-empty-panel" id="mx-oto-recording-panel">
                 <h3>{{ $session->statusLabel() }}</h3>
                 <p>
                     @if($session->scheduled_at)
@@ -192,11 +201,18 @@
                     @endif
                 </p>
                 @if($recordingHref)
-                    <div class="st-biz-banner__actions" style="margin-top:14px">
+                    <div class="st-biz-banner__actions" style="margin-top:14px" id="mx-oto-recording-actions">
                         <a href="{{ $recordingHref }}" class="st-pill st-pill--solid" target="_blank" rel="noopener">
                             <i class="fas fa-play-circle" aria-hidden="true"></i>
                             {{ __('student_timeline.watch_recording') }}
                         </a>
+                    </div>
+                @elseif($recordingStatusUrl)
+                    <div class="st-biz-banner__actions" style="margin-top:14px" id="mx-oto-recording-actions">
+                        <span class="st-pill st-pill--outline" id="mx-oto-recording-wait">
+                            <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                            {{ $isRtl ? 'جاري تجهيز التسجيل… سيظهر هنا تلقائياً' : 'Preparing recording… it will appear here shortly' }}
+                        </span>
                     </div>
                 @endif
             </div>
@@ -211,14 +227,19 @@
                     <p>{{ __('student_timeline.private_lessons_hint') }}</p>
                 </div>
             </div>
-            <div class="st-event-card__actions" style="margin-top:0;flex-direction:column">
+            <div class="st-event-card__actions" style="margin-top:0;flex-direction:column" id="mx-oto-recording-side">
                 @if($recordingHref)
                     <a href="{{ $recordingHref }}" class="st-pill st-pill--solid st-pill--block" target="_blank" rel="noopener">
                         <i class="fas fa-play-circle" aria-hidden="true"></i>
                         {{ __('student_timeline.watch_recording') }}
                     </a>
+                @elseif($recordingStatusUrl)
+                    <span class="st-pill st-pill--outline st-pill--block" id="mx-oto-recording-side-wait">
+                        <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                        {{ $isRtl ? 'جاري تجهيز التسجيل…' : 'Preparing recording…' }}
+                    </span>
                 @endif
-                <a href="{{ $lessonsUrl }}" class="st-pill st-pill--{{ $recordingHref ? 'outline' : 'solid' }} st-pill--block">{{ __('student_timeline.nav_lessons') }}</a>
+                <a href="{{ $lessonsUrl }}" class="st-pill st-pill--{{ ($recordingHref || $recordingStatusUrl) ? 'outline' : 'solid' }} st-pill--block">{{ __('student_timeline.nav_lessons') }}</a>
                 @if(Route::has('calendar'))
                     <a href="{{ route('calendar') }}" class="st-pill st-pill--outline st-pill--block">{{ __('student.calendar_title') }}</a>
                 @endif
@@ -231,4 +252,45 @@
         </section>
     </aside>
 </div>
+@if($recordingStatusUrl)
+<script>
+(function () {
+    var statusUrl = @json($recordingStatusUrl);
+    var label = @json(__('student_timeline.watch_recording'));
+    var tries = 0;
+    var maxTries = 60;
+    function paint(url) {
+        if (!url) return;
+        var main = document.getElementById('mx-oto-recording-actions');
+        if (main) {
+            main.innerHTML = '<a href="' + url + '" class="st-pill st-pill--solid" target="_blank" rel="noopener"><i class="fas fa-play-circle" aria-hidden="true"></i> ' + label + '</a>';
+        }
+        var sideWait = document.getElementById('mx-oto-recording-side-wait');
+        if (sideWait && sideWait.parentNode) {
+            var a = document.createElement('a');
+            a.href = url;
+            a.className = 'st-pill st-pill--solid st-pill--block';
+            a.target = '_blank';
+            a.rel = 'noopener';
+            a.innerHTML = '<i class="fas fa-play-circle" aria-hidden="true"></i> ' + label;
+            sideWait.parentNode.replaceChild(a, sideWait);
+        }
+    }
+    function tick() {
+        if (tries++ >= maxTries) return;
+        fetch(statusUrl, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (data) {
+                if (data && data.ready && data.watch_url) {
+                    paint(data.watch_url);
+                    return;
+                }
+                setTimeout(tick, 3000);
+            })
+            .catch(function () { setTimeout(tick, 4000); });
+    }
+    setTimeout(tick, 1500);
+})();
+</script>
+@endif
 @endsection

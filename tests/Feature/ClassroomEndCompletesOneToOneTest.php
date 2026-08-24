@@ -178,5 +178,57 @@ class ClassroomEndCompletesOneToOneTest extends TestCase
             ->get(route('student.one-to-one-sessions.show', $session))
             ->assertOk()
             ->assertSee(route('student.classroom.recording', $meeting), false);
+
+        $this->actingAs($student)
+            ->getJson(route('student.classroom.recording.status', $meeting))
+            ->assertOk()
+            ->assertJson([
+                'ready' => true,
+                'ended' => true,
+            ])
+            ->assertJsonPath('watch_url', route('student.classroom.recording', $meeting));
+    }
+
+    public function test_student_recording_status_waits_until_media_ready(): void
+    {
+        $instructor = User::factory()->create(['role' => 'instructor', 'is_active' => true]);
+        $student = User::factory()->create(['role' => 'student', 'is_active' => true]);
+
+        $session = OneToOneSession::create([
+            'instructor_id' => $instructor->id,
+            'student_id' => $student->id,
+            'session_number' => 2,
+            'scheduled_at' => now()->subHour(),
+            'duration_minutes' => 50,
+            'status' => OneToOneSession::STATUS_COMPLETED,
+        ]);
+
+        $meeting = ClassroomMeeting::create([
+            'user_id' => $instructor->id,
+            'one_to_one_session_id' => $session->id,
+            'code' => 'WAIT'.strtoupper(substr(uniqid(), -4)),
+            'room_name' => 'Glottical-WAITREC',
+            'title' => 'حصة 1:1',
+            'started_at' => now()->subHour(),
+            'ended_at' => now()->subMinute(),
+            'settings' => ['allow_guest_join' => false],
+        ]);
+        $session->update(['classroom_meeting_id' => $meeting->id]);
+
+        $this->actingAs($student)
+            ->getJson(route('student.classroom.recording.status', $meeting))
+            ->assertOk()
+            ->assertJson([
+                'ready' => false,
+                'ended' => true,
+                'watch_url' => null,
+            ]);
+
+        $this->actingAs($student)
+            ->get(route('student.one-to-one-sessions.show', $session))
+            ->assertOk()
+            ->assertSee('جاري تجهيز التسجيل', false)
+            ->assertSee('recording-status', false)
+            ->assertSee('mx-oto-recording-wait', false);
     }
 }
