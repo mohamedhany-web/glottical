@@ -8,6 +8,8 @@
     $lkAllowScreenShare = $lkAllowScreenShare ?? true;
     $lkTheme = $lkTheme ?? 'default';
     $lkHideLeave = $lkHideLeave ?? false;
+    $lkZoomMax = $lkZoomMax ?? (($lkTheme === 'student' || ($lkRole ?? '') === 'participant') ? 5 : 3);
+    $lkDefaultScreenZoom = $lkDefaultScreenZoom ?? (($lkTheme === 'student' || ($lkRole ?? '') === 'participant') ? 1.35 : 1);
 @endphp
 <div id="lk-room-shell" class="lk-room lk-theme-{{ $lkTheme }} relative flex-1 min-h-0 flex flex-col" data-lk-theme="{{ $lkTheme }}" data-lk-role="{{ $lkRole }}">
     <div id="lk-status" class="lk-status hidden" role="status"></div>
@@ -25,10 +27,12 @@
                     <div class="lk-focus__zoom">
                         <button type="button" id="lk-os-pip" class="lk-icon-btn" title="نافذة عائمة فوق التبويبات والتطبيقات"><i class="fas fa-external-link-alt"></i></button>
                         <button type="button" id="lk-zoom-out" class="lk-icon-btn" title="تصغير"><i class="fas fa-search-minus"></i></button>
+                        <input type="range" id="lk-zoom-slider" class="lk-zoom-slider" min="75" max="{{ (int) round($lkZoomMax * 100) }}" step="5" value="100" aria-label="مستوى التكبير">
                         <span id="lk-zoom-label" class="lk-zoom-label">100%</span>
                         <button type="button" id="lk-zoom-in" class="lk-icon-btn" title="تكبير"><i class="fas fa-search-plus"></i></button>
                         <button type="button" id="lk-zoom-reset" class="lk-icon-btn" title="إعادة"><i class="fas fa-compress"></i></button>
-                        <button type="button" id="lk-zoom-fit" class="lk-icon-btn" title="ملاءمة"><i class="fas fa-expand"></i></button>
+                        <button type="button" id="lk-zoom-fit" class="lk-icon-btn" title="ملء المساحة"><i class="fas fa-expand"></i></button>
+                        <button type="button" id="lk-zoom-fill" class="lk-icon-btn lk-icon-btn--accent" title="أقصى تكبير"><i class="fas fa-up-right-and-down-left-from-center"></i></button>
                     </div>
                 </div>
             </div>
@@ -49,6 +53,13 @@
     </div>
 
     <div class="lk-toolbar shrink-0">
+        <div id="lk-toolbar-zoom" class="lk-toolbar-zoom hidden" aria-label="تحكم التكبير">
+            <button type="button" id="lk-toolbar-zoom-out" class="lk-icon-btn" title="تصغير"><i class="fas fa-search-minus"></i></button>
+            <input type="range" id="lk-toolbar-zoom-slider" class="lk-zoom-slider lk-zoom-slider--toolbar" min="75" max="{{ (int) round($lkZoomMax * 100) }}" step="5" value="100" aria-label="مستوى التكبير">
+            <span id="lk-toolbar-zoom-label" class="lk-zoom-label">100%</span>
+            <button type="button" id="lk-toolbar-zoom-in" class="lk-icon-btn" title="تكبير"><i class="fas fa-search-plus"></i></button>
+            <button type="button" id="lk-toolbar-zoom-fit" class="lk-icon-btn" title="ملء المساحة"><i class="fas fa-expand"></i></button>
+        </div>
         <button type="button" id="lk-toggle-mic" class="lk-btn{{ $lkStartAudio ? '' : ' is-off' }}"><i class="fas fa-microphone"></i><span>ميكروفون</span></button>
         <button type="button" id="lk-toggle-cam" class="lk-btn{{ $lkStartVideo ? '' : ' is-off' }}"><i class="fas fa-video"></i><span>كاميرا</span></button>
         @if($lkAllowScreenShare)
@@ -91,16 +102,24 @@
 .lk-focus__viewport{flex:1;min-height:0;overflow:auto;position:relative;cursor:grab;background:
   radial-gradient(circle at 20% 20%, rgba(11,61,145,.18), transparent 45%),
   radial-gradient(circle at 80% 0%, rgba(245,184,0,.12), transparent 40%),
-  #020617}
+  #020617;display:flex;flex-direction:column}
 .lk-focus__viewport.is-dragging{cursor:grabbing}
-.lk-focus__scaler{transform-origin:center center;transition:transform .12s ease;min-width:100%;min-height:100%;display:flex;align-items:center;justify-content:center;padding:.75rem}
-.lk-focus__scaler video{max-width:100%;max-height:calc(100vh - 220px);width:auto;height:auto;object-fit:contain;background:#000;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.45);border:1px solid var(--lk-line)}
+.lk-focus__scaler{transform-origin:center center;transition:transform .12s ease;flex:1;width:100%;height:100%;min-height:0;display:flex;align-items:center;justify-content:center;padding:.35rem;box-sizing:border-box}
+.lk-focus__scaler video{width:100%;height:100%;max-width:100%;max-height:100%;min-width:0;min-height:0;object-fit:contain;background:#000;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.45);border:1px solid var(--lk-line)}
+.lk-theme-student .lk-focus__scaler{padding:.2rem}
+.lk-theme-student .lk-focus__scaler video{border-radius:10px}
 .lk-focus__bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem;padding:.55rem .85rem;border-top:1px solid var(--lk-line);background:rgba(15,23,42,.92)}
 .lk-focus__title{font-size:.8rem;font-weight:800;color:var(--lk-text)}
-.lk-focus__zoom{display:inline-flex;align-items:center;gap:.35rem}
+.lk-focus__zoom{display:inline-flex;align-items:center;gap:.35rem;flex-wrap:wrap}
 .lk-zoom-label{font-size:.72rem;font-weight:800;min-width:3.2rem;text-align:center;color:var(--lk-muted)}
+.lk-zoom-slider{width:min(120px,28vw);height:4px;accent-color:var(--lk-gold);cursor:pointer}
+.lk-zoom-slider--toolbar{width:min(96px,22vw)}
+.lk-toolbar-zoom{display:none;align-items:center;gap:.35rem;padding:.15rem .45rem;border-radius:999px;border:1px solid var(--lk-line);background:color-mix(in srgb, var(--lk-panel) 88%, #000)}
+.lk-toolbar-zoom:not(.hidden){display:inline-flex}
+.lk-room.is-screen-focus .lk-toolbar{flex-wrap:wrap;gap:.55rem}
 .lk-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;border-radius:8px;border:1px solid var(--lk-line);background:var(--lk-panel);color:var(--lk-text);cursor:pointer}
 .lk-icon-btn:hover{border-color:var(--lk-accent);color:var(--lk-gold)}
+.lk-icon-btn--accent{border-color:var(--lk-gold);color:var(--lk-gold);background:color-mix(in srgb, var(--lk-gold) 16%, var(--lk-panel))}
 
 /* tiles */
 .lk-tile{position:relative;background:var(--lk-panel);border:1px solid var(--lk-line);border-radius:14px;overflow:hidden;min-height:0;width:100%;height:100%}
@@ -109,8 +128,10 @@
 .lk-stage.layout-trio .lk-tile,
 .lk-stage.layout-class .lk-tile{aspect-ratio:unset;min-height:0}
 .lk-tile video{width:100%;height:100%;object-fit:cover;background:#020617}
-.lk-tile.is-screen{grid-column:1/-1;min-height:280px;aspect-ratio:auto}
+.lk-tile.is-screen{grid-column:1/-1;min-height:min(72vh,560px);aspect-ratio:auto}
+.lk-theme-student .lk-tile.is-screen{min-height:min(78vh,640px)}
 .lk-tile.is-screen video{object-fit:contain;background:#000}
+.lk-theme-student .lk-stage.layout-solo .lk-tile video{object-fit:contain}
 .lk-tile-label{position:absolute;inset-inline-start:.65rem;bottom:.65rem;background:rgba(2,6,23,.82);color:var(--lk-text);font-size:.68rem;font-weight:800;padding:.2rem .5rem;border-radius:.45rem;z-index:2}
 .lk-tile.is-local{outline:2px solid color-mix(in srgb, var(--lk-accent) 55%, transparent)}
 .lk-tile.is-host{outline:2px solid color-mix(in srgb, var(--lk-gold) 70%, transparent)}
@@ -144,7 +165,14 @@
 .lk-btn--accent{background:var(--lk-accent);border-color:var(--lk-accent);color:#fff}
 .lk-theme-student .lk-btn--accent,.lk-theme-student .lk-btn.is-sharing{background:linear-gradient(135deg,#0B3D91,#0997d9);border:0}
 .lk-theme-instructor .lk-btn{border-radius:12px}
-@media(max-width:640px){.lk-btn span{display:none}.lk-pip{width:min(200px,52vw)}}
+@media(max-width:640px){
+  .lk-btn span{display:none}
+  .lk-pip{width:min(200px,52vw)}
+  .lk-zoom-slider{width:min(88px,24vw)}
+  .lk-focus__zoom .lk-icon-btn:nth-child(n+6){display:none}
+}
+.lk-room.is-screen-focus .lk-main{min-height:min(72vh,720px)}
+.lk-theme-student.is-screen-focus .lk-main{min-height:min(78vh,780px)}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.9.1/dist/livekit-client.umd.min.js"></script>
@@ -157,6 +185,9 @@
     const startAudio = @json($lkStartAudio);
     const startVideo = @json($lkStartVideo);
     const allowScreenShare = @json($lkAllowScreenShare);
+    const lkTheme = @json($lkTheme);
+    const lkDefaultScreenZoom = @json($lkDefaultScreenZoom);
+    const ZOOM_MAX = @json($lkZoomMax);
     const shell = document.getElementById('lk-room-shell');
     const stage = document.getElementById('lk-stage');
     const focusBox = document.getElementById('lk-focus');
@@ -171,6 +202,10 @@
     const camBtn = document.getElementById('lk-toggle-cam');
     const screenBtn = document.getElementById('lk-toggle-screen');
     const zoomLabel = document.getElementById('lk-zoom-label');
+    const zoomSlider = document.getElementById('lk-zoom-slider');
+    const toolbarZoom = document.getElementById('lk-toolbar-zoom');
+    const toolbarZoomSlider = document.getElementById('lk-toolbar-zoom-slider');
+    const toolbarZoomLabel = document.getElementById('lk-toolbar-zoom-label');
 
     function setStatus(msg, isError) {
         if (!statusEl) return;
@@ -202,8 +237,45 @@
     let connected = false;
     let zoom = 1;
     const ZOOM_MIN = 0.75;
-    const ZOOM_MAX = 3;
-    const ZOOM_STEP = 0.25;
+    const ZOOM_STEP = lkTheme === 'student' ? 0.15 : 0.25;
+    const isStudentView = lkTheme === 'student' || role === 'participant';
+
+    function syncZoomUi() {
+        const pct = Math.round(zoom * 100);
+        if (zoomLabel) zoomLabel.textContent = pct + '%';
+        if (toolbarZoomLabel) toolbarZoomLabel.textContent = pct + '%';
+        if (zoomSlider) zoomSlider.value = String(pct);
+        if (toolbarZoomSlider) toolbarZoomSlider.value = String(pct);
+    }
+
+    function setZoom(next, opts) {
+        opts = opts || {};
+        zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, next));
+        applyZoom();
+        if (opts.scrollReset && focusViewport) {
+            focusViewport.scrollTo({ left: 0, top: 0 });
+        }
+    }
+
+    function computeFitZoom() {
+        if (!focusVideo || !focusViewport) return lkDefaultScreenZoom || 1;
+        const vw = focusVideo.videoWidth || focusVideo.clientWidth;
+        const vh = focusVideo.videoHeight || focusVideo.clientHeight;
+        const cw = focusViewport.clientWidth;
+        const ch = focusViewport.clientHeight;
+        if (!vw || !vh || !cw || !ch) return lkDefaultScreenZoom || 1;
+        const contained = Math.min(cw / vw, ch / vh);
+        const boost = isStudentView ? 1.08 : 1.02;
+        return Math.min(ZOOM_MAX, Math.max(lkDefaultScreenZoom || 1, contained * boost));
+    }
+
+    function autoFitZoom() {
+        setZoom(computeFitZoom());
+    }
+
+    function maxFillZoom() {
+        setZoom(ZOOM_MAX);
+    }
 
     function errMsg(err, fallback) {
         if (!err) return fallback;
@@ -312,16 +384,16 @@
     function applyZoom() {
         if (!focusScaler) return;
         focusScaler.style.transform = 'scale(' + zoom + ')';
-        if (zoomLabel) zoomLabel.textContent = Math.round(zoom * 100) + '%';
+        syncZoomUi();
     }
     function setScreenFocus(on, title) {
         shell?.classList.toggle('is-screen-focus', !!on);
         if (focusBox) focusBox.classList.toggle('hidden', !on);
         if (pip) pip.classList.toggle('hidden', !on);
+        if (toolbarZoom) toolbarZoom.classList.toggle('hidden', !on);
         if (title && focusTitle) focusTitle.textContent = title;
         if (!on) {
-            zoom = 1;
-            applyZoom();
+            setZoom(1);
             if (focusVideo) {
                 focusVideo.srcObject = null;
                 focusVideo.removeAttribute('src');
@@ -344,10 +416,18 @@
             focusVideo.muted = true;
             focusVideo.playsInline = true;
             focusVideo.play?.().catch(() => {});
+            if (!focusVideo.__mxZoomBound) {
+                focusVideo.__mxZoomBound = true;
+                focusVideo.addEventListener('loadedmetadata', function onMeta() {
+                    if (shell?.classList.contains('is-screen-focus')) {
+                        setTimeout(autoFitZoom, 80);
+                    }
+                });
+            }
         }
         setScreenFocus(true, label || 'مشاركة الشاشة');
-        zoom = 1;
-        applyZoom();
+        setZoom(isStudentView ? (lkDefaultScreenZoom || 1.35) : 1);
+        setTimeout(autoFitZoom, 120);
     }
 
     function ensureTile(participant, source) {
@@ -594,18 +674,31 @@
     });
 
     document.getElementById('lk-zoom-in')?.addEventListener('click', () => {
-        zoom = Math.min(ZOOM_MAX, zoom + ZOOM_STEP); applyZoom();
+        setZoom(zoom + ZOOM_STEP);
     });
     document.getElementById('lk-zoom-out')?.addEventListener('click', () => {
-        zoom = Math.max(ZOOM_MIN, zoom - ZOOM_STEP); applyZoom();
+        setZoom(zoom - ZOOM_STEP);
     });
     document.getElementById('lk-zoom-reset')?.addEventListener('click', () => {
-        zoom = 1; applyZoom();
-        if (focusViewport) focusViewport.scrollTo({ left: 0, top: 0 });
+        setZoom(1, { scrollReset: true });
     });
     document.getElementById('lk-zoom-fit')?.addEventListener('click', () => {
-        zoom = 1; applyZoom();
+        autoFitZoom();
     });
+    document.getElementById('lk-zoom-fill')?.addEventListener('click', () => {
+        maxFillZoom();
+    });
+    function bindZoomSlider(el) {
+        if (!el) return;
+        el.addEventListener('input', function () {
+            setZoom(parseInt(el.value, 10) / 100);
+        });
+    }
+    bindZoomSlider(zoomSlider);
+    bindZoomSlider(toolbarZoomSlider);
+    document.getElementById('lk-toolbar-zoom-in')?.addEventListener('click', () => setZoom(zoom + ZOOM_STEP));
+    document.getElementById('lk-toolbar-zoom-out')?.addEventListener('click', () => setZoom(zoom - ZOOM_STEP));
+    document.getElementById('lk-toolbar-zoom-fit')?.addEventListener('click', () => autoFitZoom());
     document.getElementById('lk-pip-toggle')?.addEventListener('click', () => {
         pip?.classList.toggle('is-collapsed');
     });
@@ -827,9 +920,15 @@
         focusViewport.addEventListener('wheel', (e) => {
             if (!e.ctrlKey && !e.metaKey) return;
             e.preventDefault();
-            zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom + (e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP)));
-            applyZoom();
+            setZoom(zoom + (e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP));
         }, { passive: false });
+        focusViewport.addEventListener('dblclick', () => {
+            if (zoom >= ZOOM_MAX * 0.95) {
+                autoFitZoom();
+            } else {
+                maxFillZoom();
+            }
+        });
     }
 
     // draggable pip (fixed — يتحرك داخل نافذة المتصفح)

@@ -138,19 +138,33 @@
             min-height: 0;
             display: flex;
             flex-direction: column;
-            padding: 12px;
+            padding: 6px;
         }
         .st-live-stage {
             flex: 1;
             min-height: 0;
             display: flex;
             flex-direction: column;
-            border-radius: 18px;
+            border-radius: 14px;
             overflow: hidden;
             border: 1px solid var(--st-line);
             background: #071226;
             box-shadow: 0 14px 36px rgba(7, 18, 38, .12);
             position: relative;
+        }
+        .st-live-stage .lk-room {
+            flex: 1;
+            min-height: 0;
+            height: 100%;
+            border-radius: inherit;
+        }
+        .st-live-stage .lk-main,
+        .st-live-stage .lk-body {
+            min-height: 0;
+            flex: 1;
+        }
+        @media (min-width: 768px) {
+            .st-live-body { padding: 8px; }
         }
         #mx-session-ended {
             display: none;
