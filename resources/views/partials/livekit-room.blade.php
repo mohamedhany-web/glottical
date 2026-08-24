@@ -39,15 +39,21 @@
             <div id="lk-stage" class="lk-stage flex-1 min-h-0"></div>
 
             {{-- نافذة عائمة للكاميرات أثناء الشير --}}
-            <div id="lk-pip" class="lk-pip hidden" aria-label="كاميرات المشاركين">
+            <div id="lk-pip" class="lk-pip lk-pip--cols-2 hidden" data-pip-cols="2" aria-label="كاميرات المشاركين">
                 <div class="lk-pip__head">
-                    <span><i class="fas fa-video"></i> الكاميرات</span>
+                    <span class="lk-pip__title"><i class="fas fa-video"></i> <span id="lk-pip-count-label">الكاميرات</span></span>
                     <div class="lk-pip__actions">
-                        <button type="button" id="lk-pip-os" class="lk-icon-btn" title="نافذة عائمة فوق التبويبات"><i class="fas fa-external-link-alt"></i></button>
+                        <div class="lk-pip__grid-switch" role="group" aria-label="تخطيط الشبكة">
+                            <button type="button" class="lk-icon-btn lk-pip-cols-btn" data-pip-cols="1" title="عمود واحد"><i class="fas fa-square"></i></button>
+                            <button type="button" class="lk-icon-btn lk-pip-cols-btn is-active" data-pip-cols="2" title="شبكتان"><i class="fas fa-th-large"></i></button>
+                            <button type="button" class="lk-icon-btn lk-pip-cols-btn" data-pip-cols="3" title="شبكة 3"><i class="fas fa-th"></i></button>
+                        </div>
+                        <button type="button" id="lk-pip-os" class="lk-icon-btn" title="نافذة عائمة فوق الجهاز كله"><i class="fas fa-external-link-alt"></i></button>
                         <button type="button" id="lk-pip-toggle" class="lk-icon-btn" title="طي/فتح"><i class="fas fa-chevron-down"></i></button>
                     </div>
                 </div>
                 <div class="lk-pip__body" id="lk-pip-body"></div>
+                <div class="lk-pip__empty hidden" id="lk-pip-empty">لا توجد كاميرات مفتوحة حالياً</div>
             </div>
         </div>
     </div>
@@ -65,7 +71,7 @@
         @if($lkAllowScreenShare)
         <button type="button" id="lk-toggle-screen" class="lk-btn"><i class="fas fa-desktop"></i><span>مشاركة الشاشة</span></button>
         @endif
-        <button type="button" id="lk-toggle-os-pip" class="lk-btn" title="نافذة عائمة فوق التبويبات والتطبيقات"><i class="fas fa-external-link-alt"></i><span>عائمة</span></button>
+        <button type="button" id="lk-toggle-os-pip" class="lk-btn" title="نافذة عائمة للكاميرات فوق الجهاز كله"><i class="fas fa-external-link-alt"></i><span>عائمة</span></button>
         @unless($lkHideLeave)
         <a href="{{ $lkLeaveUrl }}" id="lk-leave" class="lk-btn lk-btn--danger"><i class="fas fa-phone-slash"></i><span>مغادرة</span></a>
         @endunless
@@ -139,23 +145,43 @@
 .lk-tile.is-host .lk-tile-label::after{content:' · مضيف';color:var(--lk-gold)}
 
 /* floating pip — fixed داخل الصفحة + Document PiP للتبويبات/الجهاز */
-.lk-pip{position:fixed;z-index:99990;inset-inline-end:12px;bottom:calc(72px + env(safe-area-inset-bottom,0px));width:min(280px,46vw);border-radius:16px;border:1px solid var(--lk-line);background:rgba(15,23,42,.94);backdrop-filter:blur(10px);box-shadow:0 16px 40px rgba(0,0,0,.35);overflow:hidden}
+.lk-pip{position:fixed;z-index:99990;inset-inline-end:12px;bottom:calc(72px + env(safe-area-inset-bottom,0px));width:min(320px,52vw);border-radius:16px;border:1px solid var(--lk-line);background:rgba(15,23,42,.96);backdrop-filter:blur(12px);box-shadow:0 16px 40px rgba(0,0,0,.4);overflow:hidden}
+.lk-theme-instructor .lk-pip{width:min(360px,56vw);border-color:rgba(255,255,255,.14);background:rgba(20,20,20,.96)}
 .lk-pip.hidden{display:none!important}
-.lk-pip.is-collapsed .lk-pip__body{display:none}
-.lk-pip__head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.45rem .65rem;font-size:.72rem;font-weight:800;border-bottom:1px solid var(--lk-line);cursor:move;user-select:none}
-.lk-pip__actions{display:inline-flex;align-items:center;gap:.25rem}
-.lk-pip__body{display:grid;grid-template-columns:1fr 1fr;gap:.35rem;padding:.45rem;max-height:220px;overflow:auto}
-.lk-pip-tile{position:relative;border-radius:10px;overflow:hidden;background:#000;border:1px solid var(--lk-line);aspect-ratio:4/3}
-.lk-pip-tile video{width:100%;height:100%;object-fit:cover}
-.lk-pip-tile span{position:absolute;inset-inline-start:.3rem;bottom:.3rem;font-size:.58rem;font-weight:800;background:rgba(0,0,0,.7);padding:.1rem .3rem;border-radius:.3rem}
+.lk-pip.is-collapsed .lk-pip__body,.lk-pip.is-collapsed .lk-pip__empty{display:none}
+.lk-pip__head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.5rem .65rem;font-size:.72rem;font-weight:800;border-bottom:1px solid var(--lk-line);cursor:move;user-select:none}
+.lk-pip__title{display:inline-flex;align-items:center;gap:.4rem;min-width:0}
+.lk-pip__actions{display:inline-flex;align-items:center;gap:.25rem;flex-shrink:0}
+.lk-pip__grid-switch{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:8px;background:rgba(0,0,0,.25);border:1px solid var(--lk-line)}
+.lk-pip__grid-switch .lk-icon-btn{width:1.65rem;height:1.65rem;border:0;background:transparent;opacity:.65}
+.lk-pip__grid-switch .lk-icon-btn.is-active{opacity:1;background:color-mix(in srgb, var(--lk-accent) 35%, transparent);color:var(--lk-gold)}
+.lk-pip__body{display:grid;gap:.4rem;padding:.5rem;max-height:min(42vh,320px);overflow:auto;align-content:start}
+.lk-pip--cols-1 .lk-pip__body{grid-template-columns:1fr}
+.lk-pip--cols-2 .lk-pip__body{grid-template-columns:1fr 1fr}
+.lk-pip--cols-3 .lk-pip__body{grid-template-columns:1fr 1fr 1fr}
+.lk-pip__empty{padding:.75rem .65rem;font-size:.7rem;font-weight:700;color:var(--lk-muted);text-align:center}
+.lk-pip__empty.hidden{display:none!important}
+.lk-pip-tile{position:relative;border-radius:10px;overflow:hidden;background:#000;border:1px solid var(--lk-line);aspect-ratio:4/3;min-height:72px}
+.lk-pip--cols-1 .lk-pip-tile{aspect-ratio:16/10;min-height:110px}
+.lk-pip-tile.is-local{outline:1px solid color-mix(in srgb, var(--lk-accent) 60%, transparent)}
+.lk-pip-tile.is-host{outline:1px solid color-mix(in srgb, var(--lk-gold) 70%, transparent)}
+.lk-pip-tile video{width:100%;height:100%;object-fit:cover;display:block;background:#020617}
+.lk-pip-tile span{position:absolute;inset-inline-start:.3rem;bottom:.3rem;font-size:.58rem;font-weight:800;background:rgba(0,0,0,.72);padding:.12rem .35rem;border-radius:.3rem;max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lk-btn.is-os-pip{background:color-mix(in srgb, var(--lk-gold) 28%, var(--lk-surface));border-color:var(--lk-gold);color:#fff}
-.lk-os-pip-shell{position:fixed;inset:0;background:#020617;color:var(--lk-text);display:flex;flex-direction:column;overflow:hidden;font-family:inherit}
+.lk-os-pip-shell{position:fixed;inset:0;background:#0c0c0c;color:var(--lk-text);display:flex;flex-direction:column;overflow:hidden;font-family:inherit}
+.lk-os-pip-shell.is-cameras-only{background:#111}
 .lk-os-pip-shell .lk-focus{flex:1;min-height:0;display:flex!important}
 .lk-os-pip-shell .lk-focus__viewport{flex:1}
-.lk-os-pip-shell .lk-pip{position:relative;inset:auto;bottom:auto;right:auto;width:100%;max-height:38vh;border-radius:0;border-inline:0;border-bottom:0;box-shadow:none}
-.lk-os-pip-shell .lk-pip__head{cursor:default}
+.lk-os-pip-shell .lk-pip{position:relative;inset:auto;bottom:auto;right:auto;width:100%;max-height:none;flex:1;border-radius:0;border:0;box-shadow:none;display:flex!important;flex-direction:column}
+.lk-os-pip-shell.is-cameras-only .lk-pip{max-height:none}
+.lk-os-pip-shell .lk-pip__head{cursor:default;flex-shrink:0}
+.lk-os-pip-shell .lk-pip__body{flex:1;max-height:none;overflow:auto}
 .lk-os-pip-compact{flex:1;display:flex;align-items:center;justify-content:center;padding:.5rem;background:#020617}
 .lk-os-pip-compact video{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px;background:#000}
+@media(max-width:640px){
+  .lk-pip{width:min(240px,68vw)}
+  .lk-pip__grid-switch .lk-icon-btn[data-pip-cols="3"]{display:none}
+}
 
 /* toolbar */
 .lk-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.45rem;padding:.7rem .85rem;border-top:1px solid var(--lk-line);background:color-mix(in srgb, var(--lk-panel) 92%, #000)}
@@ -172,7 +198,8 @@
 .lk-theme-instructor .lk-btn{border-radius:12px}
 @media(max-width:640px){
   .lk-btn span{display:none}
-  .lk-pip{width:min(200px,52vw)}
+  .lk-pip{width:min(240px,68vw)}
+  .lk-pip__grid-switch .lk-icon-btn[data-pip-cols="3"]{display:none}
   .lk-zoom-slider{width:min(88px,24vw)}
   .lk-focus__zoom .lk-icon-btn:nth-child(n+6){display:none}
 }
@@ -202,6 +229,9 @@
     const focusTitle = document.getElementById('lk-focus-title');
     const pip = document.getElementById('lk-pip');
     const pipBody = document.getElementById('lk-pip-body');
+    const pipEmpty = document.getElementById('lk-pip-empty');
+    const pipCountLabel = document.getElementById('lk-pip-count-label');
+    let pipCols = Math.min(3, Math.max(1, parseInt(pip?.dataset?.pipCols || '2', 10) || 2));
     const statusEl = document.getElementById('lk-status');
     const micBtn = document.getElementById('lk-toggle-mic');
     const camBtn = document.getElementById('lk-toggle-cam');
@@ -502,30 +532,78 @@
         updateStageLayout();
     }
 
+    function applyPipCols(cols) {
+        pipCols = Math.min(3, Math.max(1, parseInt(cols, 10) || 2));
+        if (!pip) return;
+        pip.dataset.pipCols = String(pipCols);
+        pip.classList.remove('lk-pip--cols-1', 'lk-pip--cols-2', 'lk-pip--cols-3');
+        pip.classList.add('lk-pip--cols-' + pipCols);
+        pip.querySelectorAll('.lk-pip-cols-btn').forEach((btn) => {
+            btn.classList.toggle('is-active', String(btn.getAttribute('data-pip-cols')) === String(pipCols));
+        });
+    }
+
+    function cameraTrackIsLive(ref) {
+        if (!ref || ref.source === Track.Source.ScreenShare) return false;
+        if (ref.source === Track.Source.ScreenShareAudio) return false;
+        const videoEl = ref.video;
+        if (!videoEl || !videoEl.srcObject) return false;
+        const stream = videoEl.srcObject;
+        if (!(stream instanceof MediaStream)) return false;
+        const tracks = stream.getVideoTracks();
+        if (!tracks.length) return false;
+        return tracks.some((t) => t.readyState === 'live' && t.enabled !== false);
+    }
+
     function rebuildPip() {
         if (!pipBody) return;
         pipBody.innerHTML = '';
         pipTiles.clear();
-        tiles.forEach((ref, key) => {
-            if (ref.source === Track.Source.ScreenShare) return;
-            const videoEl = ref.video;
-            if (!videoEl || !videoEl.srcObject) return;
+        const liveCams = [...tiles.entries()]
+            .filter(([, ref]) => cameraTrackIsLive(ref))
+            .sort((a, b) => {
+                const aHost = isHostParticipant(a[1].participant) ? 0 : 1;
+                const bHost = isHostParticipant(b[1].participant) ? 0 : 1;
+                if (aHost !== bHost) return aHost - bHost;
+                const aLocal = a[1].participant.isLocal ? 0 : 1;
+                const bLocal = b[1].participant.isLocal ? 0 : 1;
+                return aLocal - bLocal;
+            });
+
+        liveCams.forEach(([key, ref]) => {
             const wrap = document.createElement('div');
-            wrap.className = 'lk-pip-tile';
+            wrap.className = 'lk-pip-tile'
+                + (ref.participant.isLocal ? ' is-local' : '')
+                + (isHostParticipant(ref.participant) ? ' is-host' : '');
             const v = document.createElement('video');
             v.autoplay = true;
             v.playsInline = true;
             v.muted = true;
-            v.srcObject = videoEl.srcObject;
+            v.srcObject = ref.video.srcObject;
             const name = document.createElement('span');
-            name.textContent = (ref.participant.name || ref.participant.identity || '').slice(0, 18);
+            let label = (ref.participant.name || ref.participant.identity || '').slice(0, 18);
+            if (isHostParticipant(ref.participant)) label += ' · مضيف';
+            name.textContent = label;
             wrap.appendChild(v);
             wrap.appendChild(name);
             pipBody.appendChild(wrap);
             pipTiles.set(key, wrap);
         });
-        if (pip && shell?.classList.contains('is-screen-focus')) {
-            pip.classList.toggle('hidden', pipBody.children.length === 0);
+
+        const count = liveCams.length;
+        if (pipCountLabel) {
+            pipCountLabel.textContent = count ? ('الكاميرات · ' + count) : 'الكاميرات';
+        }
+        if (pipEmpty) pipEmpty.classList.toggle('hidden', count > 0);
+        if (pipBody) pipBody.classList.toggle('hidden', count === 0);
+
+        const showPip = shell?.classList.contains('is-screen-focus') || osPipActive;
+        if (pip && showPip) {
+            pip.classList.toggle('hidden', false);
+            if (count === 0 && !osPipActive) {
+                // أثناء الشير نبقي اللوحة ظاهرة برسالة فارغة عند المدرب
+                pip.classList.toggle('hidden', lkTheme !== 'instructor' && role !== 'host');
+            }
         }
     }
 
@@ -614,25 +692,33 @@
         .on(RoomEvent.ParticipantDisconnected, (participant) => clearParticipantTiles(participant))
         .on(RoomEvent.Disconnected, () => { connected = false; setStatus('تم قطع الاتصال بالغرفة', true); })
         .on(RoomEvent.TrackMuted, (publication, participant) => {
-            if (!participant?.isLocal) return;
-            if (publication?.source === Track.Source.Microphone) {
-                micOn = false;
-                syncMicButton();
+            if (participant?.isLocal) {
+                if (publication?.source === Track.Source.Microphone) {
+                    micOn = false;
+                    syncMicButton();
+                }
+                if (publication?.source === Track.Source.Camera) {
+                    camOn = false;
+                    syncCamButton();
+                }
             }
-            if (publication?.source === Track.Source.Camera) {
-                camOn = false;
-                syncCamButton();
+            if (publication?.source === Track.Source.Camera || publication?.kind === Track.Kind.Video) {
+                if (shell?.classList.contains('is-screen-focus') || osPipActive) rebuildPip();
             }
         })
         .on(RoomEvent.TrackUnmuted, (publication, participant) => {
-            if (!participant?.isLocal) return;
-            if (publication?.source === Track.Source.Microphone) {
-                micOn = true;
-                syncMicButton();
+            if (participant?.isLocal) {
+                if (publication?.source === Track.Source.Microphone) {
+                    micOn = true;
+                    syncMicButton();
+                }
+                if (publication?.source === Track.Source.Camera) {
+                    camOn = true;
+                    syncCamButton();
+                }
             }
-            if (publication?.source === Track.Source.Camera) {
-                camOn = true;
-                syncCamButton();
+            if (publication?.source === Track.Source.Camera || publication?.kind === Track.Kind.Video) {
+                if (shell?.classList.contains('is-screen-focus') || osPipActive) rebuildPip();
             }
         })
         .on(RoomEvent.LocalTrackPublished, (publication, participant) => {
@@ -789,6 +875,12 @@
     document.getElementById('lk-pip-toggle')?.addEventListener('click', () => {
         pip?.classList.toggle('is-collapsed');
     });
+    pip?.querySelectorAll('.lk-pip-cols-btn').forEach((btn) => {
+        btn.addEventListener('click', function () {
+            applyPipCols(btn.getAttribute('data-pip-cols'));
+        });
+    });
+    applyPipCols(pipCols);
 
     const osPipBtn = document.getElementById('lk-toggle-os-pip');
     const osPipFocusBtn = document.getElementById('lk-os-pip');
@@ -828,17 +920,33 @@
         if (!doc) return;
         const style = doc.createElement('style');
         style.textContent = `
-            html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#020617}
-            .lk-os-pip-shell{position:fixed;inset:0;background:#020617;color:#e2e8f0;display:flex;flex-direction:column;font-family:Cairo,Tajawal,system-ui,sans-serif}
+            html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#0c0c0c}
+            .lk-os-pip-shell{position:fixed;inset:0;background:#0c0c0c;color:#f5f5f5;display:flex;flex-direction:column;font-family:Inter,Cairo,Tajawal,system-ui,sans-serif}
+            .lk-os-pip-shell.is-cameras-only{background:#111}
             .lk-os-pip-shell .lk-focus{flex:1;min-height:0;display:flex!important;flex-direction:column;background:#020617}
             .lk-os-pip-shell .lk-focus.hidden{display:none!important}
             .lk-os-pip-shell .lk-focus__viewport{flex:1;min-height:0;overflow:auto;background:#020617}
             .lk-os-pip-shell .lk-focus__scaler{display:flex;align-items:center;justify-content:center;min-height:100%;padding:.35rem}
             .lk-os-pip-shell .lk-focus__scaler video{max-width:100%;max-height:100%;object-fit:contain;background:#000;border-radius:8px}
-            .lk-os-pip-shell .lk-focus__bar{display:flex;align-items:center;justify-content:space-between;padding:.35rem .55rem;border-top:1px solid #1e293b;background:rgba(15,23,42,.95);font-size:.68rem;font-weight:800}
-            .lk-os-pip-shell .lk-pip{position:relative!important;inset:auto!important;width:100%;max-height:38vh;border-radius:0;border:0;border-top:1px solid #1e293b;box-shadow:none;background:rgba(15,23,42,.98)}
+            .lk-os-pip-shell .lk-focus__bar{display:flex;align-items:center;justify-content:space-between;padding:.35rem .55rem;border-top:1px solid rgba(255,255,255,.1);background:rgba(20,20,20,.95);font-size:.68rem;font-weight:800}
+            .lk-os-pip-shell .lk-pip{position:relative!important;inset:auto!important;width:100%;max-height:42vh;border-radius:0;border:0;border-top:1px solid rgba(255,255,255,.1);box-shadow:none;background:rgba(20,20,20,.98);display:flex!important;flex-direction:column}
+            .lk-os-pip-shell.is-cameras-only .lk-pip{max-height:none;flex:1;border-top:0}
             .lk-os-pip-shell .lk-pip.hidden{display:none!important}
-            .lk-os-pip-shell .lk-pip__body{max-height:160px}
+            .lk-os-pip-shell .lk-pip__head{cursor:default;flex-shrink:0;padding:.55rem .7rem;border-bottom:1px solid rgba(255,255,255,.1)}
+            .lk-os-pip-shell .lk-pip__body{flex:1;max-height:none;overflow:auto;padding:.55rem;gap:.45rem;display:grid;align-content:start}
+            .lk-os-pip-shell .lk-pip--cols-1 .lk-pip__body{grid-template-columns:1fr}
+            .lk-os-pip-shell .lk-pip--cols-2 .lk-pip__body{grid-template-columns:1fr 1fr}
+            .lk-os-pip-shell .lk-pip--cols-3 .lk-pip__body{grid-template-columns:1fr 1fr 1fr}
+            .lk-os-pip-shell .lk-pip-tile{position:relative;border-radius:10px;overflow:hidden;background:#000;border:1px solid rgba(255,255,255,.12);aspect-ratio:4/3;min-height:78px}
+            .lk-os-pip-shell .lk-pip--cols-1 .lk-pip-tile{aspect-ratio:16/10;min-height:120px}
+            .lk-os-pip-shell .lk-pip-tile video{width:100%;height:100%;object-fit:cover;display:block}
+            .lk-os-pip-shell .lk-pip-tile span{position:absolute;inset-inline-start:.35rem;bottom:.35rem;font-size:.62rem;font-weight:800;background:rgba(0,0,0,.72);padding:.12rem .35rem;border-radius:.3rem}
+            .lk-os-pip-shell .lk-pip__empty{padding:1rem;text-align:center;color:rgba(245,245,245,.55);font-size:.75rem;font-weight:700}
+            .lk-os-pip-shell .lk-pip__empty.hidden{display:none!important}
+            .lk-os-pip-shell .lk-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:#181818;color:#f5f5f5;cursor:pointer}
+            .lk-os-pip-shell .lk-pip__grid-switch{display:inline-flex;gap:2px;padding:2px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3)}
+            .lk-os-pip-shell .lk-pip__grid-switch .lk-icon-btn{width:1.55rem;height:1.55rem;border:0;background:transparent;opacity:.65}
+            .lk-os-pip-shell .lk-pip__grid-switch .lk-icon-btn.is-active{opacity:1;background:rgba(149,164,252,.35);color:#ffcb9a}
             .lk-os-pip-compact{flex:1;display:flex;align-items:center;justify-content:center;padding:.35rem;background:#020617}
             .lk-os-pip-compact video{width:100%;height:100%;max-height:100%;object-fit:contain;background:#000;border-radius:8px}
         `;
@@ -911,21 +1019,30 @@
         hideStatusSoon();
         return true;
     }
-    async function openDocumentPiP() {
+    async function openDocumentPiP(opts) {
+        opts = opts || {};
+        const camerasOnly = !!opts.camerasOnly || (lkTheme === 'instructor' || role === 'host');
         if (!supportsDocumentPiP()) return openVideoPiP();
         if (documentPictureInPicture.window) {
             documentPictureInPicture.window.focus();
             updateOsPipButtons(true);
             return true;
         }
+        rebuildPip();
+        const camCount = pipBody ? pipBody.children.length : 0;
         const inScreenFocus = shell?.classList.contains('is-screen-focus');
-        const pipWindow = await documentPictureInPicture.requestWindow({
-            width: inScreenFocus ? 520 : 380,
-            height: inScreenFocus ? 360 : 260,
-        });
+        const wantCamerasOnly = camerasOnly || !inScreenFocus;
+        const width = wantCamerasOnly
+            ? (pipCols >= 3 ? 540 : (pipCols === 1 ? 280 : 420))
+            : 560;
+        const height = wantCamerasOnly
+            ? Math.min(520, Math.max(220, 120 + camCount * (pipCols === 1 ? 140 : 110)))
+            : 380;
+
+        const pipWindow = await documentPictureInPicture.requestWindow({ width, height });
         injectOsPipStyles(pipWindow.document);
         osPipShell = pipWindow.document.createElement('div');
-        osPipShell.className = 'lk-os-pip-shell';
+        osPipShell.className = 'lk-os-pip-shell' + (wantCamerasOnly ? ' is-cameras-only' : '');
         pipWindow.document.body.appendChild(osPipShell);
 
         osPipRestore = {
@@ -936,30 +1053,45 @@
             compactParent: null,
         };
 
-        if (inScreenFocus && focusBox) {
+        if (wantCamerasOnly) {
+            if (pip) {
+                pip.classList.remove('hidden');
+                osPipShell.appendChild(pip);
+            }
+        } else if (inScreenFocus && focusBox) {
             focusBox.classList.remove('hidden');
             osPipShell.appendChild(focusBox);
-            if (pip && pipBody?.children.length) osPipShell.appendChild(pip);
+            if (pip) {
+                pip.classList.remove('hidden');
+                osPipShell.appendChild(pip);
+            }
         } else {
             osPipCompact = buildOsPipCompact();
             osPipRestore.compactParent = osPipShell;
             osPipShell.appendChild(osPipCompact);
-            if (pip && pipBody?.children.length) osPipShell.appendChild(pip);
+            if (pip && pipBody?.children.length) {
+                pip.classList.remove('hidden');
+                osPipShell.appendChild(pip);
+            }
         }
 
         pipWindow.addEventListener('pagehide', restoreOsPipDom, { once: true });
         updateOsPipButtons(true);
-        setStatus('النافذة العائمة نشطة — تبقى فوق التبويبات والتطبيقات');
+        setStatus(wantCamerasOnly
+            ? 'نافذة الكاميرات العائمة نشطة — تتنقل معك فوق كل التطبيقات'
+            : 'النافذة العائمة نشطة — تبقى فوق التبويبات والتطبيقات');
         hideStatusSoon();
         return true;
     }
-    async function toggleOsFloatingWindow() {
+    async function toggleOsFloatingWindow(forceCamerasOnly) {
         try {
             if (osPipActive || documentPictureInPicture?.window || document.pictureInPictureElement) {
                 await closeOsFloatingWindow();
                 return;
             }
-            await openDocumentPiP();
+            await openDocumentPiP({
+                camerasOnly: forceCamerasOnly === true || lkTheme === 'instructor' || role === 'host',
+            });
         } catch (err) {
             if (err?.name === 'NotAllowedError') {
                 setStatus('اسمح للموقع بفتح النافذة العائمة من إعدادات المتصفح', true);
@@ -974,12 +1106,14 @@
     function maybeAutoOpenOsPip() {
         if (osPipAutoTried || osPipActive) return;
         if (!supportsDocumentPiP() && !supportsVideoPiP()) return;
+        // لا نفتح تلقائياً إلا عند المدرب أثناء الشير — شبكة الكاميرات فوق الجهاز
+        if (lkTheme !== 'instructor' && role !== 'host') return;
         osPipAutoTried = true;
-        openDocumentPiP().catch(() => {});
+        openDocumentPiP({ camerasOnly: true }).catch(() => {});
     }
-    osPipBtn?.addEventListener('click', toggleOsFloatingWindow);
-    osPipFocusBtn?.addEventListener('click', toggleOsFloatingWindow);
-    osPipCamBtn?.addEventListener('click', toggleOsFloatingWindow);
+    osPipBtn?.addEventListener('click', () => toggleOsFloatingWindow(true));
+    osPipFocusBtn?.addEventListener('click', () => toggleOsFloatingWindow(false));
+    osPipCamBtn?.addEventListener('click', () => toggleOsFloatingWindow(true));
     document.addEventListener('leavepictureinpicture', () => updateOsPipButtons(false));
     if (documentPictureInPicture) {
         documentPictureInPicture.addEventListener('enter', () => updateOsPipButtons(true));

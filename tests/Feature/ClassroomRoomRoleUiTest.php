@@ -194,6 +194,8 @@ class ClassroomRoomRoleUiTest extends TestCase
         $response->assertSee('id="btn-wb-popup-open"', false);
         $response->assertSee('id="mx-end-meeting-form"', false);
         $response->assertSee('عرض منهج', false);
+        $response->assertSee('lk-pip-cols-btn', false);
+        $response->assertSee('الكاميرات', false);
         $response->assertDontSee('id="btn-record-menu"', false);
         $response->assertDontSee('id="mx-record-dd-wrap"', false);
         $response->assertDontSee('العودة للوحة', false);
