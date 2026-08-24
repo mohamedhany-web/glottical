@@ -1,0 +1,198 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\ClassroomMeeting;
+use App\Models\OneToOneSession;
+use App\Models\User;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Tests\Support\BuildsFeatureSchema;
+use Tests\TestCase;
+
+class ClassroomRecordingR2UploadTest extends TestCase
+{
+    use BuildsFeatureSchema;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->buildFeatureSchema();
+        $this->ensureTables();
+        Storage::fake('live_recordings_r2');
+    }
+
+    protected function ensureTables(): void
+    {
+        if (! Schema::hasTable('classroom_meetings')) {
+            Schema::create('classroom_meetings', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->nullable();
+                $table->unsignedBigInteger('one_to_one_session_id')->nullable();
+                $table->string('code', 32)->unique();
+                $table->string('room_name', 64)->nullable();
+                $table->string('title')->nullable();
+                $table->unsignedInteger('planned_duration_minutes')->nullable();
+                $table->unsignedInteger('max_participants')->nullable();
+                $table->timestamp('started_at')->nullable();
+                $table->timestamp('ended_at')->nullable();
+                $table->string('recording_disk')->nullable();
+                $table->string('recording_path')->nullable();
+                $table->string('recording_mime_type')->nullable();
+                $table->unsignedBigInteger('recording_size')->nullable();
+                $table->string('recording_audio_path')->nullable();
+                $table->string('recording_audio_mime_type')->nullable();
+                $table->unsignedBigInteger('recording_audio_size')->nullable();
+                $table->unsignedInteger('recording_duration_seconds')->nullable();
+                $table->unsignedInteger('recording_audio_duration_seconds')->nullable();
+                $table->timestamp('recording_uploaded_at')->nullable();
+                $table->json('settings')->nullable();
+                $table->timestamps();
+            });
+        } else {
+            Schema::table('classroom_meetings', function (Blueprint $table) {
+                foreach ([
+                    'recording_disk', 'recording_path', 'recording_mime_type', 'recording_size',
+                    'recording_audio_path', 'recording_audio_mime_type', 'recording_audio_size',
+                    'recording_duration_seconds', 'recording_audio_duration_seconds', 'recording_uploaded_at',
+                ] as $col) {
+                    if (! Schema::hasColumn('classroom_meetings', $col)) {
+                        if (str_contains($col, '_at')) {
+                            $table->timestamp($col)->nullable();
+                        } elseif (str_contains($col, '_size') || str_contains($col, '_seconds')) {
+                            $table->unsignedBigInteger($col)->nullable();
+                        } else {
+                            $table->string($col)->nullable();
+                        }
+                    }
+                }
+            });
+        }
+
+        if (! Schema::hasTable('one_to_one_sessions')) {
+            Schema::create('one_to_one_sessions', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('instructor_id');
+                $table->foreignId('student_id');
+                $table->unsignedInteger('session_number')->default(1);
+                $table->timestamp('scheduled_at')->nullable();
+                $table->unsignedSmallInteger('duration_minutes')->default(50);
+                $table->string('status', 32)->default('scheduled');
+                $table->unsignedBigInteger('classroom_meeting_id')->nullable();
+                $table->timestamps();
+            });
+        }
+    }
+
+    /**
+     * @return array{0: User, 1: User, 2: ClassroomMeeting, 3: OneToOneSession}
+     */
+    protected function seedMeetingPair(bool $ended = false): array
+    {
+        $instructor = User::factory()->create([
+            'role' => 'instructor',
+            'is_active' => true,
+            'password' => Hash::make('secret'),
+        ]);
+        $student = User::factory()->create([
+            'role' => 'student',
+            'is_active' => true,
+            'password' => Hash::make('secret'),
+        ]);
+
+        $session = OneToOneSession::create([
+            'instructor_id' => $instructor->id,
+            'student_id' => $student->id,
+            'session_number' => 1,
+            'scheduled_at' => now()->subHour(),
+            'duration_minutes' => 50,
+            'status' => $ended ? OneToOneSession::STATUS_COMPLETED : OneToOneSession::STATUS_SCHEDULED,
+        ]);
+
+        $meeting = ClassroomMeeting::create([
+            'user_id' => $instructor->id,
+            'one_to_one_session_id' => $session->id,
+            'code' => 'R2'.strtoupper(substr(uniqid(), -4)),
+            'room_name' => 'Glottical-R2TEST',
+            'title' => 'حصة 1:1',
+            'started_at' => now()->subMinutes(30),
+            'ended_at' => $ended ? now()->subMinutes(2) : null,
+            'settings' => ['allow_guest_join' => false],
+        ]);
+        $session->update(['classroom_meeting_id' => $meeting->id]);
+
+        return [$instructor, $student, $meeting, $session];
+    }
+
+    public function test_instructor_can_complete_direct_r2_upload_after_meeting_ended(): void
+    {
+        [$instructor, $student, $meeting] = $this->seedMeetingPair(ended: true);
+
+        $path = 'classroom-recordings/'.now()->format('Y/m').'/meeting-'.$meeting->id.'-test.webm';
+        Storage::disk('live_recordings_r2')->put($path, 'fake-webm-content');
+
+        $token = Str::random(64);
+        Cache::put('classroom_recording_presign:'.$token, [
+            'path' => $path,
+            'meeting_id' => $meeting->id,
+            'user_id' => $instructor->id,
+            'mime' => 'video/webm',
+        ], now()->addHour());
+
+        $this->actingAs($instructor)
+            ->postJson(route('instructor.classroom.recording.complete', $meeting), [
+                'upload_token' => $token,
+                'duration_seconds' => 120,
+            ])
+            ->assertOk()
+            ->assertJsonPath('message', 'تم رفع وحفظ تسجيل المحاضرة بنجاح.');
+
+        $meeting->refresh();
+        $this->assertSame('live_recordings_r2', $meeting->recording_disk);
+        $this->assertSame($path, $meeting->recording_path);
+        $this->assertNotNull($meeting->recording_uploaded_at);
+        $this->assertTrue($meeting->hasBrowserRecording());
+
+        $this->actingAs($student)
+            ->get(route('student.one-to-one-sessions.show', $meeting->one_to_one_session_id))
+            ->assertOk()
+            ->assertSee(route('student.classroom.recording', $meeting), false);
+    }
+
+    public function test_concurrent_meetings_get_unique_presign_paths(): void
+    {
+        [$instructorA, , $meetingA] = $this->seedMeetingPair();
+        [$instructorB, , $meetingB] = $this->seedMeetingPair();
+
+        $responseA = $this->actingAs($instructorA)
+            ->postJson(route('instructor.classroom.recording.presign', $meetingA), [
+                'content_type' => 'video/webm',
+            ]);
+
+        $responseB = $this->actingAs($instructorB)
+            ->postJson(route('instructor.classroom.recording.presign', $meetingB), [
+                'content_type' => 'video/webm',
+            ]);
+
+        if ($responseA->json('direct_upload') === false) {
+            $this->markTestSkipped('Fake disk does not support temporary upload URLs in this environment.');
+        }
+
+        $responseA->assertOk();
+        $responseB->assertOk();
+
+        $tokenA = (string) $responseA->json('upload_token');
+        $tokenB = (string) $responseB->json('upload_token');
+        $this->assertNotSame($tokenA, $tokenB);
+
+        $payloadA = Cache::get('classroom_recording_presign:'.$tokenA);
+        $payloadB = Cache::get('classroom_recording_presign:'.$tokenB);
+        $this->assertNotSame($payloadA['path'], $payloadB['path']);
+        $this->assertSame($meetingA->id, $payloadA['meeting_id']);
+        $this->assertSame($meetingB->id, $payloadB['meeting_id']);
+    }
+}

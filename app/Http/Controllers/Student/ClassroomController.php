@@ -755,8 +755,8 @@ class ClassroomController extends Controller
 
         $user = Auth::user();
         $this->ensureMeetingOwnership($meeting, $user);
-        if (! $meeting->started_at) {
-            return response()->json(['message' => 'لا يمكن رفع تسجيل لاجتماع لم يبدأ بعد.'], 422);
+        if ($blocked = $this->ensureRecordingUploadAllowed($meeting)) {
+            return $blocked;
         }
 
         try {
@@ -853,8 +853,8 @@ class ClassroomController extends Controller
 
         $user = Auth::user();
         $this->ensureMeetingOwnership($meeting, $user);
-        if (! $meeting->started_at) {
-            return response()->json(['message' => 'لا يمكن رفع تسجيل لاجتماع لم يبدأ بعد.'], 422);
+        if ($blocked = $this->ensureRecordingUploadAllowed($meeting)) {
+            return $blocked;
         }
 
         $disk = Storage::disk('live_recordings_r2');
@@ -876,8 +876,8 @@ class ClassroomController extends Controller
         $fileName = sprintf(
             'meeting-%d-%s-%s.%s',
             $meeting->id,
-            now()->format('Ymd-His'),
-            Str::lower(Str::random(8)),
+            now()->format('Ymd-His-u'),
+            Str::lower(Str::random(10)),
             $ext
         );
         $newPath = $directory.'/'.$fileName;
@@ -933,8 +933,8 @@ class ClassroomController extends Controller
 
         $user = Auth::user();
         $this->ensureMeetingOwnership($meeting, $user);
-        if (! $meeting->started_at) {
-            return response()->json(['message' => 'لا يمكن رفع تسجيل لاجتماع لم يبدأ بعد.'], 422);
+        if ($blocked = $this->ensureRecordingUploadAllowed($meeting)) {
+            return $blocked;
         }
 
         $validated = $request->validate([
@@ -959,7 +959,7 @@ class ClassroomController extends Controller
         }
 
         $disk = Storage::disk('live_recordings_r2');
-        if (! $disk->exists($path)) {
+        if (! $this->waitForStorageObject($disk, $path)) {
             return response()->json([
                 'message' => 'الملف غير ظاهر على التخزين بعد. انتظر ثانية ثم أعد تأكيد الرفع، أو أعد الرفع من جديد.',
             ], 422);
@@ -1014,8 +1014,8 @@ class ClassroomController extends Controller
 
         $user = Auth::user();
         $this->ensureMeetingOwnership($meeting, $user);
-        if (! $meeting->started_at) {
-            return response()->json(['message' => 'لا يمكن رفع تسجيل صوتي لاجتماع لم يبدأ بعد.'], 422);
+        if ($blocked = $this->ensureRecordingUploadAllowed($meeting)) {
+            return $blocked;
         }
 
         $disk = Storage::disk('live_recordings_r2');
@@ -1036,8 +1036,8 @@ class ClassroomController extends Controller
         $fileName = sprintf(
             'meeting-%d-audio-%s-%s.%s',
             $meeting->id,
-            now()->format('Ymd-His'),
-            Str::lower(Str::random(8)),
+            now()->format('Ymd-His-u'),
+            Str::lower(Str::random(10)),
             $ext
         );
         $newPath = $directory.'/'.$fileName;
@@ -1230,8 +1230,8 @@ class ClassroomController extends Controller
 
         $user = Auth::user();
         $this->ensureMeetingOwnership($meeting, $user);
-        if (! $meeting->started_at) {
-            return response()->json(['message' => 'لا يمكن رفع تسجيل صوتي لاجتماع لم يبدأ بعد.'], 422);
+        if ($blocked = $this->ensureRecordingUploadAllowed($meeting)) {
+            return $blocked;
         }
 
         $validated = $request->validate([
@@ -1256,7 +1256,7 @@ class ClassroomController extends Controller
         }
 
         $disk = Storage::disk('live_recordings_r2');
-        if (! $disk->exists($path)) {
+        if (! $this->waitForStorageObject($disk, $path)) {
             return response()->json([
                 'message' => 'ملف الصوت غير ظاهر على التخزين بعد. انتظر ثانية ثم أعد التأكيد.',
             ], 422);
@@ -1541,6 +1541,31 @@ class ClassroomController extends Controller
             && ! $user->isAdmin()) {
             abort(403);
         }
+    }
+
+    /**
+     * يسمح برفع/إكمال التسجيل بعد بدء الاجتماع — حتى بعد الإنهاء لإتاحة الرفع الجاري.
+     * الرفع المباشر إلى R2 يتم من المتصفح (عدة اجتماعات متزامنة دون ضغط على Laravel).
+     */
+    private function ensureRecordingUploadAllowed(ClassroomMeeting $meeting): ?\Illuminate\Http\JsonResponse
+    {
+        if (! $meeting->started_at) {
+            return response()->json(['message' => 'لا يمكن رفع تسجيل لاجتماع لم يبدأ بعد.'], 422);
+        }
+
+        return null;
+    }
+
+    private function waitForStorageObject($disk, string $path, int $attempts = 6): bool
+    {
+        for ($i = 0; $i < $attempts; $i++) {
+            if ($disk->exists($path)) {
+                return true;
+            }
+            usleep(350000);
+        }
+
+        return $disk->exists($path);
     }
 
     private function ensureMeetingCanEnter(ClassroomMeeting $meeting, $user): void

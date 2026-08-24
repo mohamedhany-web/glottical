@@ -60,8 +60,8 @@
             <button type="button" id="lk-toolbar-zoom-in" class="lk-icon-btn" title="تكبير"><i class="fas fa-search-plus"></i></button>
             <button type="button" id="lk-toolbar-zoom-fit" class="lk-icon-btn" title="ملء المساحة"><i class="fas fa-expand"></i></button>
         </div>
-        <button type="button" id="lk-toggle-mic" class="lk-btn{{ $lkStartAudio ? '' : ' is-off' }}"><i class="fas fa-microphone"></i><span>ميكروفون</span></button>
-        <button type="button" id="lk-toggle-cam" class="lk-btn{{ $lkStartVideo ? '' : ' is-off' }}"><i class="fas fa-video"></i><span>كاميرا</span></button>
+        <button type="button" id="lk-toggle-mic" class="lk-btn{{ $lkStartAudio ? ' is-on-active' : ' is-off' }}" aria-pressed="{{ $lkStartAudio ? 'true' : 'false' }}" title="{{ $lkStartAudio ? 'إيقاف الميكروفون' : 'تشغيل الميكروفون' }}"><i class="fas fa-{{ $lkStartAudio ? 'microphone' : 'microphone-slash' }}"></i><span>{{ $lkStartAudio ? 'ميكروفون' : 'ميكروفون مقفول' }}</span></button>
+        <button type="button" id="lk-toggle-cam" class="lk-btn{{ $lkStartVideo ? ' is-on-active' : ' is-off' }}" aria-pressed="{{ $lkStartVideo ? 'true' : 'false' }}" title="{{ $lkStartVideo ? 'إيقاف الكاميرا' : 'تشغيل الكاميرا' }}"><i class="fas fa-{{ $lkStartVideo ? 'video' : 'video-slash' }}"></i><span>{{ $lkStartVideo ? 'كاميرا' : 'كاميرا مقفولة' }}</span></button>
         @if($lkAllowScreenShare)
         <button type="button" id="lk-toggle-screen" class="lk-btn"><i class="fas fa-desktop"></i><span>مشاركة الشاشة</span></button>
         @endif
@@ -161,6 +161,10 @@
 .lk-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.45rem;padding:.7rem .85rem;border-top:1px solid var(--lk-line);background:color-mix(in srgb, var(--lk-panel) 92%, #000)}
 .lk-btn{display:inline-flex;align-items:center;gap:.45rem;border-radius:999px;background:var(--lk-surface);color:var(--lk-text);padding:.55rem 1rem;font-size:.78rem;font-weight:800;border:1px solid var(--lk-line);cursor:pointer;text-decoration:none}
 .lk-btn:hover{border-color:var(--lk-accent)}
+.lk-btn.is-off{background:color-mix(in srgb, var(--lk-danger) 24%, var(--lk-surface));border-color:color-mix(in srgb, var(--lk-danger) 72%, var(--lk-line));color:#fecaca;box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--lk-danger) 35%, transparent)}
+.lk-btn.is-off i{color:#fca5a5}
+.lk-btn.is-on-active{background:color-mix(in srgb, var(--lk-ok) 16%, var(--lk-surface));border-color:color-mix(in srgb, var(--lk-ok) 55%, var(--lk-line));color:#ecfdf5}
+.lk-btn.is-on-active i{color:#86efac}
 .lk-btn.is-sharing{background:color-mix(in srgb, var(--lk-accent) 35%, var(--lk-surface));border-color:var(--lk-accent);color:#fff}
 .lk-btn--danger{background:var(--lk-danger);border-color:var(--lk-danger);color:#fff}
 .lk-btn--accent{background:var(--lk-accent);border-color:var(--lk-accent);color:#fff}
@@ -276,6 +280,40 @@
 
     function maxFillZoom() {
         setZoom(ZOOM_MAX);
+    }
+
+    function syncMicButton() {
+        if (!micBtn) return;
+        micBtn.classList.toggle('is-off', !micOn);
+        micBtn.classList.toggle('is-on-active', !!micOn);
+        micBtn.setAttribute('aria-pressed', micOn ? 'true' : 'false');
+        micBtn.setAttribute('title', micOn ? 'إيقاف الميكروفون' : 'تشغيل الميكروفون');
+        const icon = micBtn.querySelector('i');
+        const label = micBtn.querySelector('span');
+        if (icon) icon.className = micOn ? 'fas fa-microphone' : 'fas fa-microphone-slash';
+        if (label) label.textContent = micOn ? 'ميكروفون' : 'ميكروفون مقفول';
+    }
+
+    function syncCamButton() {
+        if (!camBtn) return;
+        camBtn.classList.toggle('is-off', !camOn);
+        camBtn.classList.toggle('is-on-active', !!camOn);
+        camBtn.setAttribute('aria-pressed', camOn ? 'true' : 'false');
+        camBtn.setAttribute('title', camOn ? 'إيقاف الكاميرا' : 'تشغيل الكاميرا');
+        const icon = camBtn.querySelector('i');
+        const label = camBtn.querySelector('span');
+        if (icon) icon.className = camOn ? 'fas fa-video' : 'fas fa-video-slash';
+        if (label) label.textContent = camOn ? 'كاميرا' : 'كاميرا مقفولة';
+    }
+
+    function syncLocalMediaStateFromRoom() {
+        if (!room?.localParticipant) return;
+        try {
+            micOn = room.localParticipant.isMicrophoneEnabled;
+            camOn = room.localParticipant.isCameraEnabled;
+        } catch (e) {}
+        syncMicButton();
+        syncCamButton();
     }
 
     function errMsg(err, fallback) {
@@ -574,7 +612,51 @@
             }
         })
         .on(RoomEvent.ParticipantDisconnected, (participant) => clearParticipantTiles(participant))
-        .on(RoomEvent.Disconnected, () => { connected = false; setStatus('تم قطع الاتصال بالغرفة', true); });
+        .on(RoomEvent.Disconnected, () => { connected = false; setStatus('تم قطع الاتصال بالغرفة', true); })
+        .on(RoomEvent.TrackMuted, (publication, participant) => {
+            if (!participant?.isLocal) return;
+            if (publication?.source === Track.Source.Microphone) {
+                micOn = false;
+                syncMicButton();
+            }
+            if (publication?.source === Track.Source.Camera) {
+                camOn = false;
+                syncCamButton();
+            }
+        })
+        .on(RoomEvent.TrackUnmuted, (publication, participant) => {
+            if (!participant?.isLocal) return;
+            if (publication?.source === Track.Source.Microphone) {
+                micOn = true;
+                syncMicButton();
+            }
+            if (publication?.source === Track.Source.Camera) {
+                camOn = true;
+                syncCamButton();
+            }
+        })
+        .on(RoomEvent.LocalTrackPublished, (publication, participant) => {
+            if (!participant?.isLocal || !publication) return;
+            if (publication.source === Track.Source.Microphone) {
+                micOn = true;
+                syncMicButton();
+            }
+            if (publication.source === Track.Source.Camera) {
+                camOn = true;
+                syncCamButton();
+            }
+        })
+        .on(RoomEvent.LocalTrackUnpublished, (publication, participant) => {
+            if (!participant?.isLocal || !publication) return;
+            if (publication.source === Track.Source.Microphone) {
+                micOn = false;
+                syncMicButton();
+            }
+            if (publication.source === Track.Source.Camera) {
+                camOn = false;
+                syncCamButton();
+            }
+        });
 
     async function connect() {
         try {
@@ -591,18 +673,19 @@
                     localTracks.forEach((t) => attachTrack(t, room.localParticipant));
                 }
                 micOn = wantAudio; camOn = wantVideo;
-                micBtn?.classList.toggle('is-off', !micOn);
-                camBtn?.classList.toggle('is-off', !camOn);
+                syncMicButton();
+                syncCamButton();
                 setStatus('متصل · ' + (role === 'host' ? 'مضيف' : 'مشارك') + ' · ' + displayName);
                 hideStatusSoon();
                 updateStageLayout();
             } catch (mediaErr) {
                 console.warn(mediaErr);
                 micOn = false; camOn = false;
-                micBtn?.classList.add('is-off');
-                camBtn?.classList.add('is-off');
+                syncMicButton();
+                syncCamButton();
                 setStatus('متصل بدون ميكروفون/كاميرا — فعّل الأذونات من الأزرار', true);
             }
+            syncLocalMediaStateFromRoom();
         } catch (err) {
             console.error(err);
             setStatus(errMsg(err, 'فشل الاتصال بـ LiveKit'), true);
@@ -615,7 +698,7 @@
             const next = !micOn;
             await room.localParticipant.setMicrophoneEnabled(next);
             micOn = next;
-            micBtn.classList.toggle('is-off', !micOn);
+            syncMicButton();
         } catch (e) { setStatus(errMsg(e, 'تعذر تفعيل الميكروفون'), true); }
     });
     camBtn?.addEventListener('click', async () => {
@@ -624,7 +707,7 @@
             const next = !camOn;
             await room.localParticipant.setCameraEnabled(next);
             camOn = next;
-            camBtn.classList.toggle('is-off', !camOn);
+            syncCamButton();
             updateStageLayout();
             if (shell?.classList.contains('is-screen-focus')) setTimeout(rebuildPip, 200);
         } catch (e) { setStatus(errMsg(e, 'تعذر تفعيل الكاميرا'), true); }

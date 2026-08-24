@@ -145,6 +145,8 @@ class ClassroomRoomRoleUiTest extends TestCase
         $response->assertDontSee('بث إداري', false);
         $response->assertDontSee('بث مباشر', false);
         $response->assertSee('lk-theme-student', false);
+        $response->assertSee('microphone-slash', false);
+        $response->assertSee('syncMicButton', false);
         $response->assertSee('id="lk-zoom-slider"', false);
         $response->assertSee('id="lk-toolbar-zoom"', false);
         $response->assertSee('id="lk-zoom-fill"', false);
