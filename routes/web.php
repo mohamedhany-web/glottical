@@ -1034,6 +1034,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/classroom/room/{meeting}/status', [\App\Http\Controllers\Student\ClassroomController::class, 'roomStatus'])->name('student.classroom.room.status');
         Route::get('/classroom/room/{meeting}/recording', [\App\Http\Controllers\Student\ClassroomController::class, 'watchRecording'])->name('student.classroom.recording');
         Route::get('/classroom/{meeting}/share-annotations', [\App\Http\Controllers\Student\ClassroomController::class, 'shareAnnotations'])->name('student.classroom.share-annotations');
+        Route::post('/classroom/{meeting}/share-annotation', [\App\Http\Controllers\Student\ClassroomController::class, 'pushShareAnnotation'])->name('student.classroom.share-annotation');
         Route::get('/classroom/{meeting}/curriculum/state', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumState'])->name('student.classroom.curriculum.state');
         Route::get('/classroom/{meeting}/curriculum/{sessionId}/slide/{slide}', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumSlide'])
             ->whereNumber('slide')
@@ -2335,6 +2336,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/classroom/{meeting}/participant-whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'updateParticipantWhiteboard'])->name('classroom.participant-whiteboard');
         Route::post('/classroom/{meeting}/guest-join', [\App\Http\Controllers\Student\ClassroomController::class, 'updateGuestJoin'])->name('classroom.guest-join');
         Route::get('/classroom/{meeting}/share-annotations', [\App\Http\Controllers\Student\ClassroomController::class, 'shareAnnotations'])->name('classroom.share-annotations');
+        Route::post('/classroom/{meeting}/share-annotation', [\App\Http\Controllers\Student\ClassroomController::class, 'pushShareAnnotation'])->name('classroom.share-annotation');
         Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('classroom.end');
         Route::post('/classroom/{meeting}/recording/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadRecording'])->name('classroom.recording.upload');
         Route::post('/classroom/{meeting}/recording/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignRecordingUpload'])->name('classroom.recording.presign');

@@ -121,6 +121,8 @@ class LiveKitRoomProviderTest extends TestCase
         $response->assertSee('id="lk-pip"', false);
         $response->assertSee('lk-pip-cols-btn', false);
         $response->assertSee('data-pip-cols="2"', false);
+        $response->assertSee('track.attach', false);
+        $response->assertSee('playPipVideo', false);
         $response->assertSee('id="lk-toggle-os-pip"', false);
         $response->assertSee('id="lk-zoom-in"', false);
         $response->assertSee('id="lk-toggle-mic"', false);

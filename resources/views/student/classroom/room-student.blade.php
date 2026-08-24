@@ -216,6 +216,9 @@
     $roomStatusUrl = \Illuminate\Support\Facades\Route::has('student.classroom.room.status')
         ? route('student.classroom.room.status', $meeting)
         : '';
+    $annPostUrl = \Illuminate\Support\Facades\Route::has('student.classroom.share-annotation')
+        ? route('student.classroom.share-annotation', $meeting)
+        : '';
 @endphp
 
     <div id="mx-session-ended">
@@ -291,8 +294,10 @@
 
                 @if($annPollUrl)
                     @include('partials.mx-share-annotation-overlay', [
-                        'mxAnnRole' => 'viewer_poll',
+                        'mxAnnRole' => 'emit_and_poll',
+                        'mxAnnPostUrl' => $annPostUrl,
                         'mxAnnPollUrl' => $annPollUrl,
+                        'mxAnnSelfKey' => (string) ($user->id ?? auth()->id() ?? ''),
                     ])
                 @endif
             </div>

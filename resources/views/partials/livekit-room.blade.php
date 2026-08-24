@@ -518,7 +518,7 @@
         el.appendChild(video);
         el.appendChild(label);
         stage.appendChild(el);
-        const ref = { el, video, participant, source };
+        const ref = { el, video, participant, source, track: null };
         tiles.set(key, ref);
         updateStageLayout();
         return ref;
@@ -527,6 +527,9 @@
         const key = tileKey(participant, source);
         const ref = tiles.get(key);
         if (!ref) return;
+        if (ref.track && ref.pipVideo) {
+            try { ref.track.detach(ref.pipVideo); } catch (e) {}
+        }
         ref.el.remove();
         tiles.delete(key);
         updateStageLayout();
@@ -546,6 +549,10 @@
     function cameraTrackIsLive(ref) {
         if (!ref || ref.source === Track.Source.ScreenShare) return false;
         if (ref.source === Track.Source.ScreenShareAudio) return false;
+        const mediaTrack = ref.track?.mediaStreamTrack;
+        if (mediaTrack) {
+            return mediaTrack.readyState === 'live' && mediaTrack.enabled !== false && !ref.track.isMuted;
+        }
         const videoEl = ref.video;
         if (!videoEl || !videoEl.srcObject) return false;
         const stream = videoEl.srcObject;
@@ -555,8 +562,21 @@
         return tracks.some((t) => t.readyState === 'live' && t.enabled !== false);
     }
 
+    function playPipVideo(v) {
+        if (!v) return;
+        const p = v.play?.();
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+    }
+
     function rebuildPip() {
         if (!pipBody) return;
+        // detach previous pip attaches
+        tiles.forEach((ref) => {
+            if (ref.track && ref.pipVideo) {
+                try { ref.track.detach(ref.pipVideo); } catch (e) {}
+            }
+            ref.pipVideo = null;
+        });
         pipBody.innerHTML = '';
         pipTiles.clear();
         const liveCams = [...tiles.entries()]
@@ -579,7 +599,19 @@
             v.autoplay = true;
             v.playsInline = true;
             v.muted = true;
-            v.srcObject = ref.video.srcObject;
+            v.setAttribute('playsinline', '');
+            v.setAttribute('autoplay', '');
+            if (ref.track && typeof ref.track.attach === 'function') {
+                try {
+                    ref.track.attach(v);
+                    ref.pipVideo = v;
+                } catch (attachErr) {
+                    if (ref.video?.srcObject) v.srcObject = ref.video.srcObject;
+                }
+            } else if (ref.video?.srcObject) {
+                v.srcObject = ref.video.srcObject;
+            }
+            playPipVideo(v);
             const name = document.createElement('span');
             let label = (ref.participant.name || ref.participant.identity || '').slice(0, 18);
             if (isHostParticipant(ref.participant)) label += ' · مضيف';
@@ -588,6 +620,10 @@
             wrap.appendChild(name);
             pipBody.appendChild(wrap);
             pipTiles.set(key, wrap);
+            // re-kick play after layout / Document PiP move
+            requestAnimationFrame(function () { playPipVideo(v); });
+            setTimeout(function () { playPipVideo(v); }, 120);
+            setTimeout(function () { playPipVideo(v); }, 400);
         });
 
         const count = liveCams.length;
@@ -601,7 +637,6 @@
         if (pip && showPip) {
             pip.classList.toggle('hidden', false);
             if (count === 0 && !osPipActive) {
-                // أثناء الشير نبقي اللوحة ظاهرة برسالة فارغة عند المدرب
                 pip.classList.toggle('hidden', lkTheme !== 'instructor' && role !== 'host');
             }
         }
@@ -623,15 +658,17 @@
             attachToFocus(track, label);
             // keep a hidden tile for stream reference / cleanup
             const tile = ensureTile(participant, track.source);
+            tile.track = track;
             track.attach(tile.video);
             tile.el.style.display = 'none';
             return;
         }
 
         const tile = ensureTile(participant, track.source);
+        tile.track = track;
         track.attach(tile.video);
         updateStageLayout();
-        if (shell?.classList.contains('is-screen-focus')) rebuildPip();
+        if (shell?.classList.contains('is-screen-focus') || osPipActive) rebuildPip();
     }
 
     function detachTrack(track, participant) {
@@ -1076,6 +1113,15 @@
         }
 
         pipWindow.addEventListener('pagehide', restoreOsPipDom, { once: true });
+        // إعادة ربط فيديوهات الكاميرا بعد نقل الـ DOM لنافذة PiP (حتى لا تتجمد كصورة)
+        requestAnimationFrame(function () {
+            rebuildPip();
+            pipBody?.querySelectorAll('video').forEach(playPipVideo);
+        });
+        setTimeout(function () {
+            rebuildPip();
+            pipBody?.querySelectorAll('video').forEach(playPipVideo);
+        }, 250);
         updateOsPipButtons(true);
         setStatus(wantCamerasOnly
             ? 'نافذة الكاميرات العائمة نشطة — تتنقل معك فوق كل التطبيقات'

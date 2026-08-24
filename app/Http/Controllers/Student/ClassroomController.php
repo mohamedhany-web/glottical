@@ -38,6 +38,7 @@ class ClassroomController extends Controller
                 'student.classroom.room.status',
                 'student.classroom.recording',
                 'student.classroom.share-annotations',
+                'student.classroom.share-annotation',
                 'student.classroom.curriculum.state',
                 'student.classroom.curriculum.slide',
                 'student.classroom.curriculum.thumb',
@@ -454,7 +455,7 @@ class ClassroomController extends Controller
     public function shareAnnotations(ClassroomMeeting $meeting)
     {
         $user = Auth::user();
-        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureMeetingCanEnter($meeting, $user);
         if (! $meeting->started_at || $meeting->ended_at) {
             return response()->json(['layers' => []]);
         }
@@ -462,6 +463,40 @@ class ClassroomController extends Controller
         $layers = Cache::get('mx_share_ann_classroom_'.$meeting->id, []);
 
         return response()->json(['layers' => $layers]);
+    }
+
+    /**
+     * رفع طبقة رسم فوق البث (معلم أو طالب مصرّح) لمزامنة فورية مع الطرف الآخر.
+     */
+    public function pushShareAnnotation(Request $request, ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingCanEnter($meeting, $user);
+
+        if (! $meeting->started_at || $meeting->ended_at) {
+            return response()->json(['message' => 'الاجتماع غير نشط حالياً.'], 422);
+        }
+
+        $isHost = ClassroomMeetingAccessService::userIsHost($meeting, $user)
+            || (int) $meeting->user_id === (int) $user->id
+            || $user->isAdmin();
+
+        if (! $isHost && ! $meeting->allowsParticipantWhiteboard()) {
+            return response()->json(['message' => 'الرسم غير مفعّل للمشاركين حالياً.'], 422);
+        }
+
+        $clean = \App\Support\ShareAnnotationSanitizer::polylines($request->input('polylines'));
+        $key = 'mx_share_ann_classroom_'.$meeting->id;
+        $all = Cache::get($key, []);
+        $all[(string) $user->id] = [
+            'name' => $user->name,
+            'polylines' => $clean,
+            'ts' => now()->timestamp,
+            'is_host' => $isHost,
+        ];
+        Cache::put($key, $all, now()->addHours(6));
+
+        return response()->json(['ok' => true]);
     }
 
     public function curriculumCatalog(ClassroomMeeting $meeting, ClassroomCurriculumPresentService $present)
