@@ -145,6 +145,10 @@ class ClassroomRoomRoleUiTest extends TestCase
         $response->assertDontSee('بث إداري', false);
         $response->assertDontSee('بث مباشر', false);
         $response->assertSee('lk-theme-student', false);
+        $response->assertSee('id="lk-zoom-slider"', false);
+        $response->assertSee('id="lk-toolbar-zoom"', false);
+        $response->assertSee('id="lk-zoom-fill"', false);
+        $response->assertSee('max="500"', false);
         $response->assertDontSee('id="mx-ml-btn-curriculum"', false);
         $response->assertDontSee('id="btn-wb-popup-open"', false);
         $response->assertDontSee('id="mx-classroom-toggle-guest-wb"', false);
@@ -182,6 +186,8 @@ class ClassroomRoomRoleUiTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('lk-theme-instructor', false);
+        $response->assertSee('max="300"', false);
+        $response->assertDontSee('max="500"', false);
         $response->assertSee('id="mx-ml-btn-curriculum"', false);
         $response->assertSee('id="btn-wb-popup-open"', false);
         $response->assertSee('id="mx-end-meeting-form"', false);

@@ -102,12 +102,13 @@
 .lk-focus__viewport{flex:1;min-height:0;overflow:auto;position:relative;cursor:grab;background:
   radial-gradient(circle at 20% 20%, rgba(11,61,145,.18), transparent 45%),
   radial-gradient(circle at 80% 0%, rgba(245,184,0,.12), transparent 40%),
-  #020617;display:flex;flex-direction:column}
+  #020617}
 .lk-focus__viewport.is-dragging{cursor:grabbing}
-.lk-focus__scaler{transform-origin:center center;transition:transform .12s ease;flex:1;width:100%;height:100%;min-height:0;display:flex;align-items:center;justify-content:center;padding:.35rem;box-sizing:border-box}
-.lk-focus__scaler video{width:100%;height:100%;max-width:100%;max-height:100%;min-width:0;min-height:0;object-fit:contain;background:#000;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.45);border:1px solid var(--lk-line)}
-.lk-theme-student .lk-focus__scaler{padding:.2rem}
-.lk-theme-student .lk-focus__scaler video{border-radius:10px}
+.lk-focus__scaler{transform-origin:center center;transition:transform .12s ease;min-width:100%;min-height:100%;display:flex;align-items:center;justify-content:center;padding:.75rem}
+.lk-focus__scaler video{max-width:100%;max-height:calc(100vh - 220px);width:auto;height:auto;object-fit:contain;background:#000;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.45);border:1px solid var(--lk-line)}
+.lk-theme-student .lk-focus__viewport{display:flex;flex-direction:column}
+.lk-theme-student .lk-focus__scaler{flex:1;width:100%;height:100%;min-height:0;padding:.2rem;box-sizing:border-box}
+.lk-theme-student .lk-focus__scaler video{width:100%;height:100%;max-width:100%;max-height:100%;min-width:0;min-height:0;border-radius:10px}
 .lk-focus__bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem;padding:.55rem .85rem;border-top:1px solid var(--lk-line);background:rgba(15,23,42,.92)}
 .lk-focus__title{font-size:.8rem;font-weight:800;color:var(--lk-text)}
 .lk-focus__zoom{display:inline-flex;align-items:center;gap:.35rem;flex-wrap:wrap}
@@ -128,7 +129,7 @@
 .lk-stage.layout-trio .lk-tile,
 .lk-stage.layout-class .lk-tile{aspect-ratio:unset;min-height:0}
 .lk-tile video{width:100%;height:100%;object-fit:cover;background:#020617}
-.lk-tile.is-screen{grid-column:1/-1;min-height:min(72vh,560px);aspect-ratio:auto}
+.lk-tile.is-screen{grid-column:1/-1;min-height:280px;aspect-ratio:auto}
 .lk-theme-student .lk-tile.is-screen{min-height:min(78vh,640px)}
 .lk-tile.is-screen video{object-fit:contain;background:#000}
 .lk-theme-student .lk-stage.layout-solo .lk-tile video{object-fit:contain}
@@ -171,7 +172,7 @@
   .lk-zoom-slider{width:min(88px,24vw)}
   .lk-focus__zoom .lk-icon-btn:nth-child(n+6){display:none}
 }
-.lk-room.is-screen-focus .lk-main{min-height:min(72vh,720px)}
+.lk-room.is-screen-focus .lk-main{min-height:0}
 .lk-theme-student.is-screen-focus .lk-main{min-height:min(78vh,780px)}
 </style>
 
@@ -419,15 +420,18 @@
             if (!focusVideo.__mxZoomBound) {
                 focusVideo.__mxZoomBound = true;
                 focusVideo.addEventListener('loadedmetadata', function onMeta() {
-                    if (shell?.classList.contains('is-screen-focus')) {
-                        setTimeout(autoFitZoom, 80);
-                    }
+                    if (!isStudentView || !shell?.classList.contains('is-screen-focus')) return;
+                    setTimeout(autoFitZoom, 80);
                 });
             }
         }
         setScreenFocus(true, label || 'مشاركة الشاشة');
-        setZoom(isStudentView ? (lkDefaultScreenZoom || 1.35) : 1);
-        setTimeout(autoFitZoom, 120);
+        if (isStudentView) {
+            setZoom(lkDefaultScreenZoom || 1.35);
+            setTimeout(autoFitZoom, 120);
+        } else {
+            setZoom(1);
+        }
     }
 
     function ensureTile(participant, source) {
