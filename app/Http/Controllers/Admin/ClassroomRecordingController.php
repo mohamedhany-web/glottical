@@ -4,12 +4,17 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ClassroomMeeting;
+use App\Services\LiveMeetingProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class ClassroomRecordingController extends Controller
 {
+    private const CLASSROOM_MAX_DURATION_MINUTES = 180;
+
+    private const CLASSROOM_DEFAULT_DURATION_MINUTES = 60;
+
     public function index(Request $request)
     {
         $status = (string) $request->get('status', 'all');
@@ -64,6 +69,76 @@ class ClassroomRecordingController extends Controller
         $meetings = $query->paginate(20)->withQueryString();
 
         return view('admin.classroom-recordings.index', compact('meetings', 'status', 'hasRecording', 'search'));
+    }
+
+    /**
+     * دخول صامت لاجتماع Classroom مباشر — مخفي عن المعلم والطالب (LiveKit hidden).
+     */
+    public function observe(ClassroomMeeting $meeting)
+    {
+        if (! $meeting->isLive()) {
+            return redirect()
+                ->route('admin.classroom-recordings.index', ['status' => 'live'])
+                ->with('error', 'الاجتماع غير مباشر حالياً.');
+        }
+
+        $maxDurationMinutes = self::CLASSROOM_MAX_DURATION_MINUTES;
+        $effectiveDurationMinutes = (int) ($meeting->planned_duration_minutes ?: self::CLASSROOM_DEFAULT_DURATION_MINUTES);
+        if ($effectiveDurationMinutes > $maxDurationMinutes) {
+            $effectiveDurationMinutes = $maxDurationMinutes;
+        }
+
+        if ($meeting->started_at && $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes)->isPast()) {
+            if (! $meeting->ended_at) {
+                $meeting->update(['ended_at' => now()]);
+            }
+
+            return redirect()
+                ->route('admin.classroom-recordings.index')
+                ->with('error', 'انتهت مدة الاجتماع.');
+        }
+
+        $admin = auth()->user();
+        $meetingPayload = app(LiveMeetingProvider::class)->classroomPayload(
+            $meeting->liveRoomName(),
+            $admin,
+            false,
+            [
+                'canPublish' => false,
+                'canSubscribe' => true,
+                'canPublishData' => false,
+                'hidden' => true,
+                'roomAdmin' => false,
+            ]
+        );
+
+        $meetingEndsAt = $meeting->started_at
+            ? $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes)
+            : null;
+        $useInstructorRoutes = false;
+        $user = $admin;
+        $academicObserverMode = true;
+        $academicObserverExitUrl = route('admin.classroom-recordings.index', ['status' => 'live']);
+        $subscriptionFeatureMenuItems = [];
+        $subscriptionPackageLabel = null;
+        $canManageMeeting = false;
+
+        return view('student.classroom.room', array_merge(
+            compact(
+                'meeting',
+                'user',
+                'maxDurationMinutes',
+                'effectiveDurationMinutes',
+                'meetingEndsAt',
+                'useInstructorRoutes',
+                'academicObserverMode',
+                'academicObserverExitUrl',
+                'subscriptionFeatureMenuItems',
+                'subscriptionPackageLabel',
+                'canManageMeeting'
+            ),
+            $meetingPayload
+        ));
     }
 
     /**

@@ -2202,6 +2202,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         Route::prefix('classroom-recordings')->name('classroom-recordings.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\ClassroomRecordingController::class, 'index'])->name('index');
+            Route::get('/{meeting}/observe', [\App\Http\Controllers\Admin\ClassroomRecordingController::class, 'observe'])->name('observe');
             Route::delete('/{meeting}', [\App\Http\Controllers\Admin\ClassroomRecordingController::class, 'destroy'])->name('destroy');
         });
 

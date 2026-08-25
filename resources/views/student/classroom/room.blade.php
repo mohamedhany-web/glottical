@@ -233,6 +233,11 @@
             <span class="hidden sm:inline-flex text-amber-200 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 whitespace-nowrap" id="meeting-timer-chip">
                 مدة الاجتماع: {{ (int) $effectiveDurationMinutes }} دقيقة (الحد {{ (int) $maxDurationMinutes }})
             </span>
+            @if($academicObserverMode)
+            <span class="inline-flex text-violet-200 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-violet-500/20 border border-violet-500/30 whitespace-nowrap" title="لا كاميرا ولا مايك — غير ظاهر للمشاركين">
+                <i class="fas fa-user-secret ml-1"></i> مراقبة صامتة
+            </span>
+            @endif
             <span class="hidden text-sky-200 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-sky-500/20 border border-sky-500/30 max-w-[10rem] sm:max-w-[14rem] truncate" id="record-status-chip"></span>
             </div>
             <span class="hidden xl:block w-px h-4 bg-slate-600/50 shrink-0 rounded-full" aria-hidden="true"></span>
@@ -387,7 +392,11 @@
                 'lkRole' => $lkRole ?? 'participant',
                 'lkTheme' => (!empty($canManageMeeting) || !empty($useInstructorRoutes)) ? 'instructor' : 'student',
                 'lkLeaveUrl' => $roomExitUrl ?? url('/'),
-                'lkAllowScreenShare' => (!empty($canManageMeeting) || !empty($useInstructorRoutes)) ? ($allowScreenShare ?? true) : false,
+                'lkAllowScreenShare' => $academicObserverMode
+                    ? false
+                    : ((!empty($canManageMeeting) || !empty($useInstructorRoutes)) ? ($allowScreenShare ?? true) : false),
+                'lkStartAudio' => $academicObserverMode ? false : ($lkStartAudio ?? true),
+                'lkStartVideo' => $academicObserverMode ? false : ($lkStartVideo ?? true),
             ])
         @else
             <main id="meeting-video-root" class="flex-1 min-h-0 relative w-full flex flex-col items-center justify-center gap-3 p-8 text-center text-slate-300" role="application" aria-label="غرفة الاجتماع">

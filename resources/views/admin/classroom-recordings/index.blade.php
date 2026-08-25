@@ -6,7 +6,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-800 dark:text-white"><i class="fas fa-chalkboard text-indigo-500 ml-2"></i>تسجيلات Classroom</h1>
-            <p class="text-sm text-slate-500 mt-1">عرض كل اجتماعات Classroom مع روابط تحميل التسجيلات من Cloudflare R2.</p>
+            <p class="text-sm text-slate-500 mt-1">عرض اجتماعات Classroom، الدخول الصامت للجلسات المباشرة، وروابط تحميل التسجيلات من Cloudflare R2.</p>
         </div>
     </div>
 
@@ -82,6 +82,13 @@
                         </td>
                         <td class="px-4 py-3 text-center">
                             <div class="inline-flex flex-wrap items-center justify-center gap-2">
+                                @if($meeting->isLive())
+                                    <a href="{{ route('admin.classroom-recordings.observe', $meeting) }}"
+                                       class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold"
+                                       title="دخول بدون كاميرا/مايك وبدون ظهور في قائمة المشاركين">
+                                        <i class="fas fa-user-secret ml-1"></i> دخول صامت
+                                    </a>
+                                @endif
                                 @if($meeting->recording_download_url)
                                     <a href="{{ $meeting->recording_download_url }}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">
                                         <i class="fas fa-download ml-1"></i> تحميل الفيديو
@@ -91,7 +98,9 @@
                                         <i class="fas fa-download ml-1"></i> تحميل الصوت
                                     </a>
                                 @else
-                                    <span class="text-xs text-slate-400">لا يوجد تسجيل</span>
+                                    @unless($meeting->isLive())
+                                        <span class="text-xs text-slate-400">لا يوجد تسجيل</span>
+                                    @endunless
                                 @endif
                                 @if($meeting->hasBrowserRecording() || $meeting->recording_path || $meeting->recording_audio_path)
                                     <form method="POST" action="{{ route('admin.classroom-recordings.destroy', $meeting) }}" class="inline"

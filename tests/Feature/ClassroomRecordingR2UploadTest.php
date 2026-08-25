@@ -28,6 +28,22 @@ class ClassroomRecordingR2UploadTest extends TestCase
 
     protected function ensureTables(): void
     {
+        if (! Schema::hasTable('live_servers')) {
+            Schema::create('live_servers', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('domain');
+                $table->string('provider', 32)->default('livekit');
+                $table->string('status')->default('active');
+                $table->string('ip_address')->nullable();
+                $table->unsignedInteger('max_participants')->default(100);
+                $table->unsignedInteger('current_load')->default(0);
+                $table->json('config')->nullable();
+                $table->text('notes')->nullable();
+                $table->timestamps();
+            });
+        }
+
         if (! Schema::hasTable('classroom_meetings')) {
             Schema::create('classroom_meetings', function (Blueprint $table) {
                 $table->id();
@@ -259,5 +275,79 @@ class ClassroomRecordingR2UploadTest extends TestCase
             ->assertOk()
             ->assertSee('تسجيلات Classroom', false)
             ->assertDontSee($destroyUrl, false);
+    }
+
+    public function test_admin_can_silently_observe_live_classroom_meeting(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => true,
+            'password' => Hash::make('secret'),
+        ]);
+        [, , $meeting] = $this->seedMeetingPair(ended: false);
+
+        config([
+            'livekit.livekit.api_key' => 'devkey',
+            'livekit.livekit.api_secret' => 'secret',
+            'livekit.livekit.url' => 'wss://live.example.test',
+            'livekit.livekit.host' => 'live.example.test',
+        ]);
+
+        $observeUrl = route('admin.classroom-recordings.observe', $meeting);
+
+        $this->actingAs($admin)
+            ->withoutMiddleware([
+                \App\Http\Middleware\EnsurePermission::class,
+                \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+            ])
+            ->get(route('admin.classroom-recordings.index', ['status' => 'live']))
+            ->assertOk()
+            ->assertSee('دخول صامت', false)
+            ->assertSee($observeUrl, false);
+
+        $response = $this->actingAs($admin)
+            ->withoutMiddleware([
+                \App\Http\Middleware\EnsurePermission::class,
+                \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+            ])
+            ->get($observeUrl);
+
+        $response->assertOk()
+            ->assertSee('مراقبة صامتة', false)
+            ->assertDontSee('id="mx-end-meeting-form"', false);
+
+        $html = $response->getContent();
+        $this->assertStringContainsString('const token =', $html);
+        $this->assertMatchesRegularExpression('/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/', $html);
+        preg_match('/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/', $html, $m);
+        $jwt = $m[0];
+
+        $parts = explode('.', $jwt);
+        $this->assertCount(3, $parts);
+        $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
+        $this->assertIsArray($payload);
+        $this->assertFalse((bool) ($payload['video']['canPublish'] ?? true));
+        $this->assertTrue((bool) ($payload['video']['canSubscribe'] ?? false));
+        $this->assertTrue((bool) ($payload['video']['hidden'] ?? false));
+        $this->assertFalse((bool) ($payload['video']['canPublishData'] ?? true));
+    }
+
+    public function test_admin_cannot_observe_ended_classroom_meeting(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => true,
+            'password' => Hash::make('secret'),
+        ]);
+        [, , $meeting] = $this->seedMeetingPair(ended: true);
+
+        $this->actingAs($admin)
+            ->withoutMiddleware([
+                \App\Http\Middleware\EnsurePermission::class,
+                \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+            ])
+            ->get(route('admin.classroom-recordings.observe', $meeting))
+            ->assertRedirect(route('admin.classroom-recordings.index', ['status' => 'live']))
+            ->assertSessionHas('error');
     }
 }
