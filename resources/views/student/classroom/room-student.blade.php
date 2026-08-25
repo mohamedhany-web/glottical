@@ -14,6 +14,19 @@
     <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-live-private-1">
     <link rel="stylesheet" href="{{ asset('css/classroom-curriculum-presenter.css') }}">
     <script src="{{ asset('js/classroom-curriculum-presenter.js') }}" defer></script>
+    <script src="{{ asset('js/classroom-whiteboard-sync.js') }}?v=wb-sync-1" defer></script>
+    <style>
+        .mx-excalidraw-host { width: 100%; height: 100%; min-height: 280px; }
+        .mx-excalidraw-host .excalidraw { width: 100% !important; height: 100% !important; }
+        .mx-excalidraw-loading {
+            position: absolute; inset: 0; z-index: 5; display: none;
+            align-items: center; justify-content: center;
+            background: rgba(15,23,42,0.75); color: #94a3b8; font-size: 14px;
+        }
+        .mx-wb-student-draw-lite .excalidraw button[data-testid^="toolbar-"]:not([data-testid="toolbar-freedraw"]):not([data-testid="toolbar-eraser"]):not([data-testid="toolbar-hand"]) {
+            display: none !important;
+        }
+    </style>
     <style>
         :root {
             --st-bg: #f8f9fa;
@@ -258,6 +271,10 @@
             </div>
             <div class="st-live-actions">
                 <span class="st-live-pill st-live-pill--soft" id="meeting-timer-chip-mobile">{{ (int) ($effectiveDurationMinutes ?? 50) }} د</span>
+                <button type="button" id="btn-wb-popup-open" class="st-live-pill st-live-pill--ghost" title="السبورة التفاعلية" style="border-color:rgba(245,184,0,.55);background:rgba(245,184,0,.18)">
+                    <i class="fas fa-chalkboard"></i>
+                    <span class="hidden sm:inline">السبورة</span>
+                </button>
                 <div id="mx-student-wb-wrap" class="{{ !empty($meeting->allowsParticipantWhiteboard()) ? '' : 'hidden' }}">
                     <button type="button" id="btn-mx-share-draw" class="st-live-pill st-live-pill--ghost" title="رسم فوق العرض" style="border-color:rgba(245,184,0,.55);background:rgba(245,184,0,.18)">
                         <i class="fas fa-pen-fancy"></i>
@@ -303,6 +320,31 @@
             </div>
         </div>
     </div>
+
+    @php
+        $studentCanDrawWb = !empty($meeting->allowsParticipantWhiteboard());
+        $mxWbUiMode = $studentCanDrawWb ? 'student_lite' : 'full';
+        $wbStateUrl = \Illuminate\Support\Facades\Route::has('student.classroom.whiteboard.state')
+            ? route('student.classroom.whiteboard.state', $meeting)
+            : '';
+        $wbPushUrl = \Illuminate\Support\Facades\Route::has('student.classroom.whiteboard.push')
+            ? route('student.classroom.whiteboard.push', $meeting)
+            : '';
+    @endphp
+    @include('partials.mx-muallimx-excalidraw-popup', ['mxWbUiMode' => $mxWbUiMode])
+
+    <script>
+        window.__mxWbSyncOptions = {
+            role: 'participant',
+            canEmit: {{ $studentCanDrawWb ? 'true' : 'false' }},
+            canReceive: true,
+            mergeRemote: {{ $studentCanDrawWb ? 'true' : 'false' }},
+            viewOnly: {{ $studentCanDrawWb ? 'false' : 'true' }},
+            stateUrl: @json($wbStateUrl),
+            pushUrl: @json($wbPushUrl),
+            csrf: @json(csrf_token()),
+        };
+    </script>
 
     <script>
         (function () {
@@ -387,6 +429,13 @@
                 if (typeof window.__mxShareAnnSetAllowed === 'function') {
                     window.__mxShareAnnSetAllowed(!!on);
                 }
+                if (window.__mxWbSyncOptions) {
+                    window.__mxWbSyncOptions.canEmit = !!on;
+                    window.__mxWbSyncOptions.mergeRemote = !!on;
+                    window.__mxWbSyncOptions.viewOnly = !on;
+                }
+                var root = document.getElementById('mx-excalidraw-root');
+                if (root) root.setAttribute('data-view-only', on ? '0' : '1');
                 if (!wrap) return;
                 if (on) wrap.classList.remove('hidden');
                 else wrap.classList.add('hidden');

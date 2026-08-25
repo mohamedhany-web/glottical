@@ -40,6 +40,8 @@ class ClassroomController extends Controller
                 'student.classroom.recording.status',
                 'student.classroom.share-annotations',
                 'student.classroom.share-annotation',
+                'student.classroom.whiteboard.state',
+                'student.classroom.whiteboard.push',
                 'student.classroom.curriculum.state',
                 'student.classroom.curriculum.slide',
                 'student.classroom.curriculum.thumb',
@@ -432,6 +434,101 @@ class ClassroomController extends Controller
             'ok' => true,
             'allow_participant_whiteboard' => $meeting->allowsParticipantWhiteboard(),
         ]);
+    }
+
+    /**
+     * لقطة السبورة التفاعلية (Excalidraw) — للطالب/المضيف للحاق بالمحتوى.
+     */
+    public function whiteboardState(ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingCanEnter($meeting, $user);
+
+        $payload = Cache::get($this->classroomWhiteboardCacheKey($meeting), [
+            'v' => 0,
+            'elements' => [],
+            'appState' => null,
+            'files' => null,
+            'ts' => null,
+        ]);
+
+        return response()->json($payload);
+    }
+
+    /**
+     * حفظ لقطة السبورة في الكاش (احتياط لمزامنة LiveKit + متأخري الدخول).
+     */
+    public function pushWhiteboardState(Request $request, ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingCanEnter($meeting, $user);
+
+        if (! $meeting->started_at || $meeting->ended_at) {
+            return response()->json(['message' => 'الاجتماع غير نشط حالياً.'], 422);
+        }
+
+        $isHost = ClassroomMeetingAccessService::userIsHost($meeting, $user)
+            || (int) $meeting->user_id === (int) $user->id
+            || $user->isAdmin();
+
+        if (! $isHost && ! $meeting->allowsParticipantWhiteboard()) {
+            return response()->json(['message' => 'السبورة غير مفعّلة للمشاركين حالياً.'], 422);
+        }
+
+        $validated = $request->validate([
+            'v' => ['nullable', 'integer', 'min:0'],
+            'elements' => ['required', 'array', 'max:8000'],
+            'appState' => ['nullable', 'array'],
+            'files' => ['nullable', 'array'],
+        ]);
+
+        $elements = $validated['elements'];
+        // حافظ على حجم معقول في الكاش
+        $encoded = json_encode($elements, JSON_UNESCAPED_UNICODE);
+        if (is_string($encoded) && strlen($encoded) > 2_500_000) {
+            return response()->json(['message' => 'محتوى السبورة كبير جداً.'], 422);
+        }
+
+        $v = (int) ($validated['v'] ?? (int) (microtime(true) * 1000));
+        $key = $this->classroomWhiteboardCacheKey($meeting);
+        $existing = Cache::get($key);
+        if (is_array($existing) && (int) ($existing['v'] ?? 0) > $v) {
+            return response()->json(['ok' => true, 'skipped' => true, 'v' => (int) $existing['v']]);
+        }
+
+        $appState = $validated['appState'] ?? null;
+        if (is_array($appState)) {
+            $appState = array_intersect_key($appState, array_flip([
+                'viewBackgroundColor',
+                'gridSize',
+                'theme',
+            ]));
+        }
+
+        $files = $validated['files'] ?? null;
+        if (is_array($files)) {
+            $filesJson = json_encode($files);
+            if (is_string($filesJson) && strlen($filesJson) > 1_500_000) {
+                $files = null;
+            }
+        }
+
+        Cache::put($key, [
+            'v' => $v,
+            'elements' => $elements,
+            'appState' => $appState,
+            'files' => $files,
+            'ts' => now()->timestamp,
+            'from' => (int) $user->id,
+            'is_host' => $isHost,
+        ], now()->addHours(6));
+
+        return response()->json(['ok' => true, 'v' => $v]);
+    }
+
+    private function classroomWhiteboardCacheKey(ClassroomMeeting $meeting): string
+    {
+        return 'mx_wb_classroom_'.$meeting->id;
     }
 
     public function updateGuestJoin(Request $request, ClassroomMeeting $meeting)

@@ -808,6 +808,26 @@
         })
         .on(RoomEvent.ParticipantDisconnected, (participant) => clearParticipantTiles(participant))
         .on(RoomEvent.Disconnected, () => { connected = false; setStatus('تم قطع الاتصال بالغرفة', true); })
+        .on(RoomEvent.DataReceived, (payload, participant, kind, topic) => {
+            try {
+                let data = null;
+                if (payload != null) {
+                    const text = (typeof TextDecoder !== 'undefined')
+                        ? new TextDecoder().decode(payload)
+                        : String.fromCharCode.apply(null, payload instanceof Uint8Array ? payload : new Uint8Array(payload));
+                    try { data = JSON.parse(text); } catch (eParse) { data = text; }
+                }
+                window.dispatchEvent(new CustomEvent('mx-lk-data', {
+                    detail: {
+                        data,
+                        payload,
+                        topic: topic || ((data && (data.t === 'wb' || data.t === 'wb_chunk' || data.t === 'wb_req')) ? 'mx-wb' : ''),
+                        participantIdentity: participant?.identity || null,
+                        kind,
+                    },
+                }));
+            } catch (eData) {}
+        })
         .on(RoomEvent.TrackMuted, (publication, participant) => {
             if (participant?.isLocal) {
                 if (publication?.source === Track.Source.Microphone) {
@@ -1806,6 +1826,40 @@
         try {
             window.dispatchEvent(new CustomEvent('mx-lk-record-capture-changed'));
         } catch (e) {}
+    };
+
+    /** نشر بيانات خفيفة للغرفة (سبورة / إشارات) عبر LiveKit Data Channel */
+    window.__mxLkPublishData = function (data, opts) {
+        opts = opts || {};
+        if (!connected || !room?.localParticipant) return false;
+        try {
+            const topic = opts.topic || '';
+            let bytes;
+            if (data instanceof Uint8Array) {
+                bytes = data;
+            } else if (typeof data === 'string') {
+                bytes = new TextEncoder().encode(data);
+            } else {
+                bytes = new TextEncoder().encode(JSON.stringify(data));
+            }
+            const reliable = opts.reliable !== false;
+            const dest = Array.isArray(opts.destinationIdentities) ? opts.destinationIdentities : undefined;
+            const pub = room.localParticipant.publishData(bytes, {
+                reliable,
+                topic: topic || undefined,
+                destinationIdentities: dest,
+            });
+            if (pub && typeof pub.then === 'function') {
+                pub.catch(function () {});
+            }
+            return true;
+        } catch (ePub) {
+            return false;
+        }
+    };
+
+    window.__mxLkIsConnected = function () {
+        return !!connected;
     };
 
     connect();

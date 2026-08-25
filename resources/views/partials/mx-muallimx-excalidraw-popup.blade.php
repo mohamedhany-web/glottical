@@ -129,9 +129,9 @@
         <div id="wb-popup-toolbar" class="flex flex-wrap items-center justify-center gap-2 px-4 py-2.5 border-t border-slate-700 bg-slate-800/95 shrink-0">
             <span class="text-slate-400 text-[11px] leading-relaxed text-center max-w-3xl">
                 @if($mxWbUiMode === 'student_lite')
-                <strong class="text-slate-200">وضع المشارك</strong> — قلم رسم، ممحاة، ويد لتحريك اللوحة. الرسم محلي على جهازك.
+                <strong class="text-slate-200">سبورة متزامنة</strong> — ترى رسم المعلّم مباشرة، ويمكنك الرسم عند السماح.
                 @else
-                <strong class="text-slate-200">نفس السبورة المستخدمة في Glottical Classroom</strong> — أشكال، نص، تصدير PNG/SVG من القائمة. الرسم محلي على جهازك.
+                <strong class="text-slate-200">سبورة تفاعلية مباشرة</strong> — المزامنة فورية مع الطرف الآخر عبر البث.
                 @endif
             </span>
         </div>
@@ -161,6 +161,11 @@
     var excMountPromise = null;
     var wbPopupClosing = false;
     var excVendorPromise = null;
+    var syncOpts = window.__mxWbSyncOptions || null;
+
+    if (excRoot && syncOpts && syncOpts.viewOnly) {
+        excRoot.setAttribute('data-view-only', '1');
+    }
 
     function excShowLoading(on) {
         if (excLoading) excLoading.style.display = on ? 'flex' : 'none';
@@ -294,8 +299,39 @@
                             var uiMode = excRoot.getAttribute('data-wb-ui-mode') || 'full';
                             var props = {
                                 viewModeEnabled: viewOnly,
+                                onChange: function () {
+                                    if (window.__mxGlotticalWbSync && typeof window.__mxGlotticalWbSync.onLocalChange === 'function') {
+                                        window.__mxGlotticalWbSync.onLocalChange();
+                                    }
+                                },
                                 excalidrawAPI: function (api) {
                                     window.__mxGlotticalExcalidrawAPI = api;
+                                    (function bindGlotticalWbSync(tries) {
+                                        try {
+                                            var opt = window.__mxWbSyncOptions || null;
+                                            if (!opt) return;
+                                            if (window.__mxGlotticalWbSync) {
+                                                if (typeof window.__mxGlotticalWbSync.requestRemote === 'function') {
+                                                    window.__mxGlotticalWbSync.requestRemote();
+                                                }
+                                                return;
+                                            }
+                                            if (!window.MxClassroomWhiteboardSync) {
+                                                if (tries < 40) setTimeout(function () { bindGlotticalWbSync(tries + 1); }, 100);
+                                                return;
+                                            }
+                                            window.__mxGlotticalWbSync = window.MxClassroomWhiteboardSync.attach({
+                                                getApi: function () { return window.__mxGlotticalExcalidrawAPI; },
+                                                role: opt.role || 'participant',
+                                                canEmit: !!opt.canEmit,
+                                                canReceive: opt.canReceive !== false,
+                                                mergeRemote: !!opt.mergeRemote,
+                                                stateUrl: opt.stateUrl || '',
+                                                pushUrl: opt.pushUrl || '',
+                                                csrf: opt.csrf || '',
+                                            });
+                                        } catch (eSync) {}
+                                    })(0);
                                 }
                             };
                             if (lang.indexOf('ar') === 0) props.langCode = 'ar-SA';

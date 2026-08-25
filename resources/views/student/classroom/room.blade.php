@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="{{ asset('css/classroom-curriculum-presenter.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="{{ asset('js/classroom-curriculum-presenter.js') }}" defer></script>
+    <script src="{{ asset('js/classroom-whiteboard-sync.js') }}?v=wb-sync-1" defer></script>
     <style>
         * { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
         html { height: 100%; height: 100dvh; }
@@ -425,7 +426,7 @@
             </div>
             <div id="wb-popup-toolbar" class="flex flex-wrap items-center justify-center gap-2 px-4 py-2.5 border-t border-slate-700 bg-slate-800/95 shrink-0">
                 <span class="text-slate-400 text-[11px] leading-relaxed text-center max-w-3xl">
-                    <strong class="text-slate-200">Glottical Whiteboard</strong> — لوحة محلية للتجهيز. لقلم الشاشة مثل زوم (فوق فيسبوك وغيره ويظهر للطالب في الشير) استخدم «قلم الشاشة» أو مشاركة الشاشة.
+                    <strong class="text-slate-200">سبورة تفاعلية مباشرة</strong> — ما ترسمه يظهر فوراً عند الطالب عبر البث. لقلم فوق الشاشة (شير) استخدم «قلم الشاشة».
                 </span>
             </div>
         </div>
@@ -783,8 +784,37 @@
                                     var lang = excRoot.getAttribute('data-lang') || '';
                                     var props = {
                                         viewModeEnabled: viewOnly,
+                                        onChange: function () {
+                                            if (window.__mxClassroomWbSync && typeof window.__mxClassroomWbSync.onLocalChange === 'function') {
+                                                window.__mxClassroomWbSync.onLocalChange();
+                                            }
+                                        },
                                         excalidrawAPI: function(api) {
                                             window.__mxClassroomExcalidrawAPI = api;
+                                            (function bindWbSync(tries) {
+                                                try {
+                                                    if (window.__mxClassroomWbSync) {
+                                                        if (typeof window.__mxClassroomWbSync.requestRemote === 'function') {
+                                                            window.__mxClassroomWbSync.requestRemote();
+                                                        }
+                                                        return;
+                                                    }
+                                                    if (!window.MxClassroomWhiteboardSync) {
+                                                        if (tries < 40) setTimeout(function () { bindWbSync(tries + 1); }, 100);
+                                                        return;
+                                                    }
+                                                    window.__mxClassroomWbSync = window.MxClassroomWhiteboardSync.attach({
+                                                        getApi: function () { return window.__mxClassroomExcalidrawAPI; },
+                                                        role: 'host',
+                                                        canEmit: true,
+                                                        canReceive: true,
+                                                        mergeRemote: {{ !empty($meeting->allowsParticipantWhiteboard()) ? 'true' : 'false' }},
+                                                        stateUrl: @json($mxRoute($rp . 'classroom.whiteboard.state', $meeting)),
+                                                        pushUrl: @json($mxRoute($rp . 'classroom.whiteboard.push', $meeting)),
+                                                        csrf: csrfToken,
+                                                    });
+                                                } catch (eWb) {}
+                                            })(0);
                                         }
                                     };
                                     if (lang.indexOf('ar') === 0) props.langCode = 'ar-SA';
