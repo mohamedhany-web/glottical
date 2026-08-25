@@ -633,6 +633,7 @@
             var lectureAudioCtx = null;
             var lectureAudioDest = null;
             var lectureAudioSources = [];
+            var lectureAudioTrackIds = {};
             var mxSkipEndConfirm = false;
             var mxAutoEndingMeeting = false;
             var btnLectureAddScreen = document.getElementById('btn-lecture-add-screen');
@@ -1844,6 +1845,7 @@
                     });
                 } catch (e2) {}
                 lectureAudioSources = [];
+                lectureAudioTrackIds = {};
                 // لا نغلق AudioContext بالكامل حتى لا نكسر جلسات لاحقة في نفس الصفحة
             }
 
@@ -1938,6 +1940,8 @@
                 var lk = (typeof window.__mxLkGetRecordCapture === 'function')
                     ? window.__mxLkGetRecordCapture()
                     : null;
+                var wbPopupEl = document.getElementById('wb-popup');
+                var wbOpen = !!(wbPopupEl && !wbPopupEl.classList.contains('hidden'));
 
                 // 1) شير LiveKit المركّب (شاشة + قلم) — أولوية عند وجوده
                 if (lk && lk.canvas && lk.canvas.width > 0) {
@@ -1952,32 +1956,48 @@
                 if (!drawn && v && v.srcObject && v.readyState >= 2 && v.videoWidth > 0) {
                     drawn = drawLectureFrameFromSource(v, w, h);
                 }
-                // 4) كاميرات الغرفة من أول لحظة — بدون انتظار شير
-                if (!drawn && lk && lk.cameraVideos && lk.cameraVideos.length) {
-                    drawn = drawLectureCameraGrid(lk.cameraVideos, w, h);
+
+                // أثناء الشير: أضف كاميرات صغيرة فوق الزاوية حتى لا يضيع وجه المعلم/الطالب
+                if (drawn && lk && lk.screenSharing && lk.cameraVideos && lk.cameraVideos.length) {
+                    var cams = lk.cameraVideos.filter(function (item) {
+                        var vv = item && (item.video || item);
+                        return vv && vv.readyState >= 2 && ((vv.videoWidth || vv.width || 0) > 0);
+                    }).slice(0, 3);
+                    var pipW = Math.floor(w * 0.22);
+                    var pipH = Math.floor(h * 0.22);
+                    var gap = 10;
+                    cams.forEach(function (item, idx) {
+                        var x = w - gap - pipW;
+                        var y = h - gap - (pipH + gap) * (idx + 1) + gap;
+                        lectureCtx.fillStyle = 'rgba(15,23,42,0.85)';
+                        lectureCtx.fillRect(x - 2, y - 2, pipW + 4, pipH + 4);
+                        drawLectureFrameCover(item.video || item, x, y, pipW, pipH);
+                    });
                 }
-                // 5) إن كانت السبورة مفتوحة: التقط لوحاتها ضمن التسجيل
-                if (!drawn) {
-                    var wbPopupEl = document.getElementById('wb-popup');
-                    var wbOpen = wbPopupEl && !wbPopupEl.classList.contains('hidden');
-                    if (wbOpen) {
-                        var wbHost = document.getElementById('classroom-excalidraw-root')
-                            || document.getElementById('mx-excalidraw-root');
-                        if (wbHost) {
-                            var best = null;
-                            var bestArea = 0;
-                            wbHost.querySelectorAll('canvas').forEach(function (c) {
-                                var area = (c.width || 0) * (c.height || 0);
-                                if (area > bestArea) {
-                                    bestArea = area;
-                                    best = c;
-                                }
-                            });
-                            if (best && bestArea > 0) {
-                                drawn = drawLectureFrameFromSource(best, w, h);
+
+                // 4) السبورة إن كانت مفتوحة (درس على اللوحة)
+                if (!drawn && wbOpen) {
+                    var wbHost = document.getElementById('classroom-excalidraw-root')
+                        || document.getElementById('mx-excalidraw-root');
+                    if (wbHost) {
+                        var best = null;
+                        var bestArea = 0;
+                        wbHost.querySelectorAll('canvas').forEach(function (c) {
+                            var area = (c.width || 0) * (c.height || 0);
+                            if (area > bestArea) {
+                                bestArea = area;
+                                best = c;
                             }
+                        });
+                        if (best && bestArea > 0) {
+                            drawn = drawLectureFrameFromSource(best, w, h);
                         }
                     }
+                }
+
+                // 5) كاميرات الغرفة من أول لحظة — بدون انتظار شير
+                if (!drawn && lk && lk.cameraVideos && lk.cameraVideos.length) {
+                    drawn = drawLectureCameraGrid(lk.cameraVideos, w, h);
                 }
 
                 if (!drawn) {
@@ -1990,7 +2010,7 @@
                     lectureCtx.fillText('التسجيل يعمل — جاري التقاط الغرفة…', w / 2, h / 2 - 12);
                     lectureCtx.font = '500 14px Cairo, Tajawal, sans-serif';
                     lectureCtx.fillStyle = 'rgba(148,163,184,0.55)';
-                    lectureCtx.fillText('الكاميرات ومشاركة الشاشة تُضاف تلقائياً عند توفرها', w / 2, h / 2 + 18);
+                    lectureCtx.fillText('الكاميرات ومشاركة الشاشة والسبورة تُضاف تلقائياً', w / 2, h / 2 + 18);
                 }
             }
 
@@ -2026,10 +2046,13 @@
             function mxConnectTrackToLectureAudio(track) {
                 if (!lectureAudioCtx || !lectureAudioDest || !track) return;
                 if (track.readyState !== 'live') return;
+                var tid = track.id || '';
+                if (tid && lectureAudioTrackIds[tid]) return;
                 try {
                     var src = lectureAudioCtx.createMediaStreamSource(new MediaStream([track]));
                     src.connect(lectureAudioDest);
                     lectureAudioSources.push(src);
+                    if (tid) lectureAudioTrackIds[tid] = true;
                 } catch (e) {
                     console.warn('lecture audio connect:', e);
                 }
@@ -2047,17 +2070,9 @@
                 }
                 lectureAudioDest = lectureAudioCtx.createMediaStreamDestination();
                 lectureAudioSources = [];
+                lectureAudioTrackIds = {};
 
-                // ميكروفون المتصفح
-                try {
-                    micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                    micStream.getAudioTracks().forEach(mxConnectTrackToLectureAudio);
-                } catch (micErr) {
-                    console.warn('lecture mic getUserMedia:', micErr);
-                    micStream = null;
-                }
-
-                // مسارات LiveKit (ميك المعلم + صوت الشير إن وُجد)
+                // 1) أولوية لمسارات LiveKit (الميكروفون غالباً مشغول بها — لا نطلب getUserMedia أولاً)
                 var lk = (typeof window.__mxLkGetRecordCapture === 'function')
                     ? window.__mxLkGetRecordCapture()
                     : null;
@@ -2069,6 +2084,30 @@
                             mxConnectTrackToLectureAudio(t);
                         }
                     });
+                }
+
+                // 2) احتياط: ميكروفون المتصفح إن لم يتوفر صوت من LiveKit بعد
+                if (!lectureAudioDest.stream.getAudioTracks().length) {
+                    try {
+                        micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                        micStream.getAudioTracks().forEach(mxConnectTrackToLectureAudio);
+                    } catch (micErr) {
+                        console.warn('lecture mic getUserMedia:', micErr);
+                        micStream = null;
+                    }
+                }
+
+                // 3) مسار صامت جداً حتى لا يفشل MediaRecorder إن تأخر الصوت لحظياً
+                if (!lectureAudioDest.stream.getAudioTracks().length) {
+                    try {
+                        var osc = lectureAudioCtx.createOscillator();
+                        var gain = lectureAudioCtx.createGain();
+                        gain.gain.value = 0.00001;
+                        osc.connect(gain);
+                        gain.connect(lectureAudioDest);
+                        osc.start();
+                        lectureAudioSources.push(gain);
+                    } catch (eSilent) {}
                 }
 
                 var out = lectureAudioDest.stream.getAudioTracks()[0];
@@ -2135,6 +2174,9 @@
             }
 
             async function startLectureRecording() {
+                if (isRecording || (mediaRecorder && mediaRecorder.state === 'recording')) {
+                    return;
+                }
                 if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
                     mxAlert('المتصفح لا يدعم تسجيل الصوت من الميكروفون.');
                     return;
@@ -2268,7 +2310,9 @@
                 mediaRecorder.start(2000);
                 isRecording = true;
                 setRecordButtonState(true);
-                setRecordStatus('جاري تسجيل المحاضرة (الشير + الصوت يُلتقطان تلقائياً).', false);
+                setRecordStatus(mxSilentAutoRecording
+                    ? ''
+                    : 'جاري تسجيل الحصة (كاميرات + شير + صوت تلقائياً).', false);
                 setRecordButtonBusy(false);
             }
 
@@ -2638,11 +2682,66 @@
 
             if (mxSilentAutoRecording && !mxAutoRecordStarted) {
                 mxAutoRecordStarted = true;
-                setTimeout(function () {
-                    if (typeof startLectureRecording === 'function') {
-                        startLectureRecording().catch(function () {});
+                var mxSilentRecAttempts = 0;
+                var mxSilentRecMaxAttempts = 30;
+                var mxSilentRecInFlight = false;
+                var mxSilentRecTimer = null;
+
+                function mxScheduleSilentRecording(delayMs) {
+                    if (!mxSilentAutoRecording || isRecording || mxSilentRecInFlight) return;
+                    if (mxSilentRecAttempts >= mxSilentRecMaxAttempts) return;
+                    if (mxSilentRecTimer) clearTimeout(mxSilentRecTimer);
+                    mxSilentRecTimer = setTimeout(mxTryStartSilentRecording, delayMs || 0);
+                }
+
+                function mxTryStartSilentRecording() {
+                    mxSilentRecTimer = null;
+                    if (!mxSilentAutoRecording || isRecording || mxSilentRecInFlight) return;
+                    if (mxSilentRecAttempts >= mxSilentRecMaxAttempts) return;
+                    mxSilentRecAttempts += 1;
+
+                    var lkReady = typeof window.__mxLkIsConnected !== 'function' || window.__mxLkIsConnected();
+                    var lk = (typeof window.__mxLkGetRecordCapture === 'function')
+                        ? window.__mxLkGetRecordCapture()
+                        : null;
+                    var hasVisual = !!(lk && (
+                        (lk.cameraVideos && lk.cameraVideos.length) ||
+                        lk.canvas ||
+                        lk.videoElement ||
+                        lk.screenSharing
+                    ));
+                    var hasAudio = !!(lk && lk.audioTracks && lk.audioTracks.length);
+
+                    // انتظر اتصال الغرفة أو ظهور كاميرا/صوت قبل البدء (مع حد أقصى للمحاولات)
+                    if ((!lkReady || (!hasVisual && !hasAudio)) && mxSilentRecAttempts < mxSilentRecMaxAttempts) {
+                        mxScheduleSilentRecording(1000);
+                        return;
                     }
-                }, 2500);
+
+                    mxSilentRecInFlight = true;
+                    startLectureRecording().then(function () {
+                        mxSilentRecInFlight = false;
+                        if (!isRecording && mxSilentRecAttempts < mxSilentRecMaxAttempts) {
+                            mxScheduleSilentRecording(2000);
+                        }
+                    }).catch(function (err) {
+                        mxSilentRecInFlight = false;
+                        console.warn('[classroom-auto-rec] start failed', err);
+                        if (mxSilentRecAttempts < mxSilentRecMaxAttempts) {
+                            mxScheduleSilentRecording(2000);
+                        }
+                    });
+                }
+
+                // ابدأ المحاولة بعد مهلة قصيرة؛ الدالة تنتظر جاهزية LiveKit داخلياً
+                mxScheduleSilentRecording(1500);
+
+                // إن اتصلت الغرفة لاحقاً وما زال التسجيل متوقفاً — أعد المحاولة (debounced)
+                window.addEventListener('mx-lk-record-capture-changed', function () {
+                    if (mxSilentAutoRecording && !isRecording && !mxSilentRecInFlight) {
+                        mxScheduleSilentRecording(400);
+                    }
+                });
             }
 
             window.addEventListener('mx-lk-record-capture-changed', function () {
@@ -2654,6 +2753,7 @@
             setInterval(function () {
                 if (recordingKind !== 'lecture' || !isRecording) return;
                 lectureCompositeDraw();
+                mxRefreshLectureAudioFromLiveKit();
             }, 1500);
         })();
     </script>

@@ -202,9 +202,12 @@ class ClassroomPrivateLessonSmokeTest extends TestCase
         // تسجيل صامت من فتح الغرفة بدون انتظار شير
         $this->assertStringContainsString('mxSilentAutoRecording', $html);
         $this->assertStringContainsString('startLectureRecording', $html);
+        $this->assertStringContainsString('mxTryStartSilentRecording', $html);
+        $this->assertStringContainsString('__mxLkIsConnected', $html);
         $this->assertStringContainsString('drawLectureCameraGrid', $html);
         $this->assertStringContainsString('cameraVideos', $html);
         $this->assertStringContainsString('التسجيل يعمل — جاري التقاط الغرفة', $html);
+        $this->assertStringContainsString('الكاميرات ومشاركة الشاشة والسبورة تُضاف تلقائياً', $html);
         $this->assertStringContainsString('__mxLkGetRecordCapture', $html);
         $this->assertStringContainsString('__mxLkPublishData', $html);
         $this->assertStringContainsString('RoomEvent.DataReceived', $html);
