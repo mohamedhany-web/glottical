@@ -116,7 +116,7 @@ class ClassroomRecordingR2UploadTest extends TestCase
         $meeting = ClassroomMeeting::create([
             'user_id' => $instructor->id,
             'one_to_one_session_id' => $session->id,
-            'code' => 'R2'.strtoupper(substr(uniqid(), -4)),
+            'code' => 'R2'.strtoupper(substr(uniqid(), -5)),
             'room_name' => 'Glottical-R2TEST',
             'title' => 'حصة 1:1',
             'started_at' => now()->subMinutes(30),
@@ -210,30 +210,24 @@ class ClassroomRecordingR2UploadTest extends TestCase
         Storage::disk('live_recordings_r2')->put($path, 'video-bytes');
         Storage::disk('live_recordings_r2')->put($audioPath, 'audio-bytes');
 
-        $meeting->update([
+        $meeting->forceFill([
             'recording_disk' => 'live_recordings_r2',
             'recording_path' => $path,
             'recording_audio_path' => $audioPath,
             'recording_uploaded_at' => now(),
-        ]);
+        ])->save();
 
-        $response = $this->withoutMiddleware()
-            ->actingAs($admin)
+        $this->assertTrue($meeting->fresh()->hasBrowserRecording());
+
+        $this->actingAs($admin)
+            ->withoutMiddleware([
+                \App\Http\Middleware\EnsurePermission::class,
+                \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+            ])
             ->from(route('admin.classroom-recordings.index'))
-            ->delete(route('admin.classroom-recordings.destroy', $meeting));
-
-        if ($response->exception) {
-            throw $response->exception;
-        }
-        dump([
-            'status' => $response->status(),
-            'location' => $response->headers->get('Location'),
-            'session' => session()->all(),
-            'content' => substr($response->getContent(), 0, 500),
-        ]);
-
-        $response->assertRedirect();
-        $response->assertSessionHas('success');
+            ->delete(route('admin.classroom-recordings.destroy', $meeting))
+            ->assertRedirect(route('admin.classroom-recordings.index'))
+            ->assertSessionHas('success');
 
         $meeting->refresh();
         $this->assertNull($meeting->recording_path);
@@ -244,8 +238,11 @@ class ClassroomRecordingR2UploadTest extends TestCase
         Storage::disk('live_recordings_r2')->assertMissing($path);
         Storage::disk('live_recordings_r2')->assertMissing($audioPath);
 
-        $this->withoutMiddleware()
-            ->actingAs($admin)
+        $this->actingAs($admin)
+            ->withoutMiddleware([
+                \App\Http\Middleware\EnsurePermission::class,
+                \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+            ])
             ->get(route('admin.classroom-recordings.index'))
             ->assertOk()
             ->assertSee('مسح', false);

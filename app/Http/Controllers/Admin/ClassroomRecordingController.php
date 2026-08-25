@@ -69,37 +69,44 @@ class ClassroomRecordingController extends Controller
     /**
      * حذف ملف/ملفات التسجيل من R2 ومسح حقول التسجيل من الاجتماع.
      */
-    public function destroy(ClassroomMeeting $meeting)
+    public function destroy(int $meeting)
     {
-        if (! $meeting->hasRecordingMediaOnR2()
-            && empty($meeting->recording_path)
-            && empty($meeting->recording_audio_path)) {
-            return back()->with('error', 'لا يوجد تسجيل لحذفه لهذا الاجتماع.');
-        }
+        $meeting = ClassroomMeeting::query()->findOrFail($meeting);
 
         $paths = array_values(array_filter([
             $meeting->recording_path,
             $meeting->recording_audio_path,
         ]));
 
-        if ($meeting->recording_disk === 'live_recordings_r2' && $paths !== []) {
-            $disk = Storage::disk('live_recordings_r2');
-            foreach ($paths as $path) {
-                try {
-                    if ($disk->exists($path)) {
-                        $disk->delete($path);
+        if ($paths === [] && empty($meeting->recording_disk)) {
+            return back()->with('error', 'لا يوجد تسجيل لحذفه لهذا الاجتماع.');
+        }
+
+        if ($paths !== []) {
+            try {
+                $disk = Storage::disk('live_recordings_r2');
+                foreach ($paths as $path) {
+                    try {
+                        if ($disk->exists($path)) {
+                            $disk->delete($path);
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning('Failed deleting classroom recording object from R2', [
+                            'meeting_id' => $meeting->id,
+                            'path' => $path,
+                            'error' => $e->getMessage(),
+                        ]);
                     }
-                } catch (\Throwable $e) {
-                    Log::warning('Failed deleting classroom recording object from R2', [
-                        'meeting_id' => $meeting->id,
-                        'path' => $path,
-                        'error' => $e->getMessage(),
-                    ]);
                 }
+            } catch (\Throwable $e) {
+                Log::warning('R2 disk unavailable while deleting classroom recording', [
+                    'meeting_id' => $meeting->id,
+                    'error' => $e->getMessage(),
+                ]);
             }
         }
 
-        $meeting->update([
+        $meeting->forceFill([
             'recording_disk' => null,
             'recording_path' => null,
             'recording_mime_type' => null,
@@ -110,7 +117,7 @@ class ClassroomRecordingController extends Controller
             'recording_duration_seconds' => null,
             'recording_audio_duration_seconds' => null,
             'recording_uploaded_at' => null,
-        ]);
+        ])->save();
 
         return back()->with('success', 'تم حذف تسجيل الاجتماع من التخزين ولوحة التحكم.');
     }
