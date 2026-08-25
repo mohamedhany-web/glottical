@@ -217,10 +217,23 @@ class ClassroomRecordingR2UploadTest extends TestCase
             'recording_uploaded_at' => now(),
         ]);
 
-        $this->withoutMiddleware()
+        $response = $this->withoutMiddleware()
             ->actingAs($admin)
-            ->delete(route('admin.classroom-recordings.destroy', $meeting))
-            ->assertRedirect();
+            ->from(route('admin.classroom-recordings.index'))
+            ->delete(route('admin.classroom-recordings.destroy', $meeting));
+
+        if ($response->exception) {
+            throw $response->exception;
+        }
+        dump([
+            'status' => $response->status(),
+            'location' => $response->headers->get('Location'),
+            'session' => session()->all(),
+            'content' => substr($response->getContent(), 0, 500),
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
 
         $meeting->refresh();
         $this->assertNull($meeting->recording_path);
