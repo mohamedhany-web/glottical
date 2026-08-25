@@ -1844,11 +1844,22 @@
             }
             const reliable = opts.reliable !== false;
             const dest = Array.isArray(opts.destinationIdentities) ? opts.destinationIdentities : undefined;
-            const pub = room.localParticipant.publishData(bytes, {
-                reliable,
-                topic: topic || undefined,
-                destinationIdentities: dest,
-            });
+            let pub;
+            try {
+                pub = room.localParticipant.publishData(bytes, {
+                    reliable,
+                    topic: topic || undefined,
+                    destinationIdentities: dest,
+                });
+            } catch (eOpt) {
+                // توافق مع واجهات أقدم من LiveKit
+                const kind = (window.LivekitClient && window.LivekitClient.DataPacket_Kind)
+                    ? (reliable ? window.LivekitClient.DataPacket_Kind.RELIABLE : window.LivekitClient.DataPacket_Kind.LOSSY)
+                    : undefined;
+                pub = kind != null
+                    ? room.localParticipant.publishData(bytes, kind)
+                    : room.localParticipant.publishData(bytes, reliable);
+            }
             if (pub && typeof pub.then === 'function') {
                 pub.catch(function () {});
             }

@@ -3,11 +3,17 @@
     $mxWbUiMode = $mxWbUiMode ?? 'full';
 @endphp
 <style>
-    #wb-popup { z-index: 140; }
+    /* فوق كاميرات LiveKit العائمة (z-index: 99990) وأشرطة التحكم */
+    #wb-popup { z-index: 100120 !important; }
     #wb-popup.is-open {
-        display: flex;
+        display: flex !important;
         align-items: center;
         justify-content: center;
+    }
+    body.mx-wb-open .lk-pip,
+    body.mx-wb-open #lk-pip {
+        visibility: hidden !important;
+        pointer-events: none !important;
     }
     #pkg-features-dd-panel { z-index: 130; }
     .pkg-features-dd-panel-inner { box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(34, 211, 238, 0.06); }
@@ -21,6 +27,7 @@
         inset: 0;
         width: 100%;
         height: 100%;
+        min-height: 240px;
     }
     .mx-excalidraw-host .excalidraw {
         --color-surface-lowest: #0f172a;
@@ -265,7 +272,7 @@
         excMountPromise = ensureExcalidrawVendorLoaded()
             .then(function () {
                 return new Promise(function (resolve, reject) {
-                    var deadline = Date.now() + 5000;
+                    var deadline = Date.now() + 12000;
                     function tryMount() {
                         var Lib = getExcalidrawLib();
                         var ReactMod = window.React;
@@ -278,12 +285,21 @@
                         var rect = excRoot.getBoundingClientRect();
                         if (rect.width < 8 || rect.height < 8) {
                             if (Date.now() > deadline) {
-                                failMount(new Error('الحاوية بلا أبعاد كافية.'));
-                                reject(new Error('container size'));
+                                // فرض أبعاد دنيا ثم إعادة المحاولة مرة أخيرة
+                                try {
+                                    excRoot.style.minHeight = '60vh';
+                                    if (wbPopupStage) wbPopupStage.style.minHeight = '60vh';
+                                } catch (eDim) {}
+                                rect = excRoot.getBoundingClientRect();
+                                if (rect.width < 8 || rect.height < 8) {
+                                    failMount(new Error('الحاوية بلا أبعاد كافية.'));
+                                    reject(new Error('container size'));
+                                    return;
+                                }
+                            } else {
+                                requestAnimationFrame(tryMount);
                                 return;
                             }
-                            requestAnimationFrame(tryMount);
-                            return;
                         }
                         try {
                             var Excalidraw = Lib.Excalidraw;
@@ -391,10 +407,22 @@
         wbPopup.classList.add('is-open');
         wbPopup.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
-        mountGlotticalExcalidrawOnce().then(function () {
-            setTimeout(nudgeExcalidrawLayout, 80);
-            setTimeout(nudgeExcalidrawLayout, 400);
-        }).catch(function () {});
+        document.body.classList.add('mx-wb-open');
+        // امنح المتصفح إطار تخطيط قبل القياس/التركيب
+        requestAnimationFrame(function () {
+            mountGlotticalExcalidrawOnce().then(function () {
+                setTimeout(nudgeExcalidrawLayout, 80);
+                setTimeout(nudgeExcalidrawLayout, 400);
+                setTimeout(nudgeExcalidrawLayout, 900);
+                try {
+                    if (window.__mxGlotticalWbSync && typeof window.__mxGlotticalWbSync.requestRemote === 'function') {
+                        window.__mxGlotticalWbSync.requestRemote();
+                    }
+                } catch (eReq) {}
+            }).catch(function (err) {
+                console.error('[السبورة]', err);
+            });
+        });
     }
 
     function closeWbPopup() {
@@ -417,6 +445,7 @@
             wbPopup.setAttribute('aria-hidden', 'true');
             wbPopup.setAttribute('inert', '');
             document.body.style.overflow = '';
+            document.body.classList.remove('mx-wb-open');
 
             var reopenBtn = document.getElementById('btn-wb-popup-open');
             if (reopenBtn && typeof reopenBtn.focus === 'function') {
@@ -481,6 +510,11 @@
                 }
             }).observe(wbPopupStage);
         }
+
+        // تحميل مسبق لأصول السبورة
+        setTimeout(function () {
+            try { ensureExcalidrawVendorLoaded().catch(function () {}); } catch (ePre) {}
+        }, 1200);
     }
 })();
 </script>

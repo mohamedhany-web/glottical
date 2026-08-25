@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="{{ asset('css/classroom-curriculum-presenter.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="{{ asset('js/classroom-curriculum-presenter.js') }}" defer></script>
-    <script src="{{ asset('js/classroom-whiteboard-sync.js') }}?v=wb-sync-1" defer></script>
+    <script src="{{ asset('js/classroom-whiteboard-sync.js') }}?v=wb-sync-2"></script>
     <style>
         * { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
         html { height: 100%; height: 100dvh; }
@@ -42,12 +42,17 @@
         }
         #meeting-video-root iframe { width: 100% !important; height: 100% !important; border: none; }
         #meeting-stage { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; width: 100%; }
-        #wb-popup { z-index: 140; }
+        #wb-popup { z-index: 100120 !important; }
         /* عدم خلط display مع Tailwind: عند الإغلاق لا يبقى flex يتعارض مع hidden */
         #wb-popup.is-open {
-            display: flex;
+            display: flex !important;
             align-items: center;
             justify-content: center;
+        }
+        body.mx-wb-open .lk-pip,
+        body.mx-wb-open #lk-pip {
+            visibility: hidden !important;
+            pointer-events: none !important;
         }
         /* القوائم: fixed + فوق الدرج والـ iframe قدر الإمكان */
         #mx-record-dd-panel {
@@ -750,7 +755,7 @@
                 excMountPromise = ensureExcalidrawVendorLoaded()
                     .then(function() {
                         return new Promise(function(resolve, reject) {
-                            var deadline = Date.now() + 5000;
+                            var deadline = Date.now() + 12000;
                             function tryMount() {
                                 var Lib = getExcalidrawLib();
                                 var ReactMod = window.React;
@@ -763,12 +768,20 @@
                                 var rect = excRoot.getBoundingClientRect();
                                 if (rect.width < 8 || rect.height < 8) {
                                     if (Date.now() > deadline) {
-                                        failMount(new Error('الحاوية بلا أبعاد كافية بعد فتح النافذة.'));
-                                        reject(new Error('container size'));
+                                        try {
+                                            excRoot.style.minHeight = '60vh';
+                                            if (wbPopupStage) wbPopupStage.style.minHeight = '60vh';
+                                        } catch (eDim) {}
+                                        rect = excRoot.getBoundingClientRect();
+                                        if (rect.width < 8 || rect.height < 8) {
+                                            failMount(new Error('الحاوية بلا أبعاد كافية بعد فتح النافذة.'));
+                                            reject(new Error('container size'));
+                                            return;
+                                        }
+                                    } else {
+                                        requestAnimationFrame(tryMount);
                                         return;
                                     }
-                                    requestAnimationFrame(tryMount);
-                                    return;
                                 }
                                 try {
                                     var Excalidraw = Lib.Excalidraw;
@@ -905,10 +918,23 @@
                 wbPopup.classList.add('is-open');
                 wbPopup.setAttribute('aria-hidden', 'false');
                 document.body.style.overflow = 'hidden';
-                mountClassroomExcalidrawOnce().then(function() {
-                    setTimeout(nudgeClassroomExLayout, 80);
-                    setTimeout(nudgeClassroomExLayout, 400);
-                }).catch(function() {});
+                document.body.classList.add('mx-wb-open');
+                requestAnimationFrame(function () {
+                    mountClassroomExcalidrawOnce().then(function() {
+                        setTimeout(nudgeClassroomExLayout, 80);
+                        setTimeout(nudgeClassroomExLayout, 400);
+                        setTimeout(nudgeClassroomExLayout, 900);
+                        try {
+                            if (window.__mxClassroomWbSync && typeof window.__mxClassroomWbSync.requestRemote === 'function') {
+                                window.__mxClassroomWbSync.requestRemote();
+                            } else if (window.__mxClassroomWbSync && typeof window.__mxClassroomWbSync.flush === 'function') {
+                                window.__mxClassroomWbSync.flush();
+                            }
+                        } catch (eReq) {}
+                    }).catch(function (err) {
+                        console.error('[Glottical Whiteboard]', err);
+                    });
+                });
             }
 
             function closeWbPopup() {
@@ -933,6 +959,7 @@
                     wbPopup.setAttribute('aria-hidden', 'true');
                     wbPopup.setAttribute('inert', '');
                     document.body.style.overflow = '';
+                    document.body.classList.remove('mx-wb-open');
 
                     var reopenBtn = document.getElementById('btn-wb-popup-open');
                     if (reopenBtn && typeof reopenBtn.focus === 'function') {
@@ -998,6 +1025,11 @@
                         }
                     }).observe(wbPopupStage);
                 }
+
+                // تحميل مسبق لمكتبة السبورة حتى تفتح فوراً عند الضغط
+                setTimeout(function () {
+                    try { ensureExcalidrawVendorLoaded().catch(function () {}); } catch (ePre) {}
+                }, 1200);
             }
 
             function showError() {

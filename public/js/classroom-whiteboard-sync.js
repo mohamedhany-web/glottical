@@ -170,11 +170,16 @@
             }
             applying = true;
             try {
-                var scene = { elements: nextEls };
-                if (payload.appState) {
-                    scene.appState = Object.assign({}, payload.appState, {
-                        collaborators: new Map(),
-                    });
+                var scene = {
+                    elements: nextEls,
+                    commitToHistory: false,
+                };
+                if (payload.appState && typeof payload.appState === 'object') {
+                    scene.appState = {
+                        viewBackgroundColor: payload.appState.viewBackgroundColor || '#ffffff',
+                        gridSize: payload.appState.gridSize || null,
+                        theme: payload.appState.theme || 'light',
+                    };
                 }
                 if (payload.files && typeof payload.files === 'object') {
                     scene.files = payload.files;
@@ -183,7 +188,12 @@
                 if (v) lastAppliedV = Math.max(lastAppliedV, v);
                 lastSig = elementsSignature(nextEls);
             } catch (e) {
-                /* ignore apply errors */
+                try {
+                    // مسار احتياطي بدون appState إن فشل التطبيق الكامل
+                    a.updateScene({ elements: nextEls, commitToHistory: false });
+                    if (v) lastAppliedV = Math.max(lastAppliedV, v);
+                    lastSig = elementsSignature(nextEls);
+                } catch (e2) {}
             } finally {
                 setTimeout(function () {
                     applying = false;

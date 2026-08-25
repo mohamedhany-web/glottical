@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="{{ route('assets.student-timeline.css') }}?v=st-live-private-1">
     <link rel="stylesheet" href="{{ asset('css/classroom-curriculum-presenter.css') }}">
     <script src="{{ asset('js/classroom-curriculum-presenter.js') }}" defer></script>
-    <script src="{{ asset('js/classroom-whiteboard-sync.js') }}?v=wb-sync-1" defer></script>
+    <script src="{{ asset('js/classroom-whiteboard-sync.js') }}?v=wb-sync-2"></script>
     <style>
         .mx-excalidraw-host { width: 100%; height: 100%; min-height: 280px; }
         .mx-excalidraw-host .excalidraw { width: 100% !important; height: 100% !important; }
@@ -331,8 +331,7 @@
             ? route('student.classroom.whiteboard.push', $meeting)
             : '';
     @endphp
-    @include('partials.mx-muallimx-excalidraw-popup', ['mxWbUiMode' => $mxWbUiMode])
-
+    {{-- يجب تعريف خيارات المزامنة قبل تضمين السبورة --}}
     <script>
         window.__mxWbSyncOptions = {
             role: 'participant',
@@ -345,6 +344,7 @@
             csrf: @json(csrf_token()),
         };
     </script>
+    @include('partials.mx-muallimx-excalidraw-popup', ['mxWbUiMode' => $mxWbUiMode])
 
     <script>
         (function () {
