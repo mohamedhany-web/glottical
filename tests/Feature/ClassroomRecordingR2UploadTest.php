@@ -219,13 +219,25 @@ class ClassroomRecordingR2UploadTest extends TestCase
 
         $this->assertTrue($meeting->fresh()->hasBrowserRecording());
 
+        $destroyUrl = route('admin.classroom-recordings.destroy', $meeting);
+
+        $this->actingAs($admin)
+            ->withoutMiddleware([
+                \App\Http\Middleware\EnsurePermission::class,
+                \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+            ])
+            ->get(route('admin.classroom-recordings.index'))
+            ->assertOk()
+            ->assertSee('مسح', false)
+            ->assertSee($destroyUrl, false);
+
         $this->actingAs($admin)
             ->withoutMiddleware([
                 \App\Http\Middleware\EnsurePermission::class,
                 \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
             ])
             ->from(route('admin.classroom-recordings.index'))
-            ->delete(route('admin.classroom-recordings.destroy', $meeting))
+            ->delete($destroyUrl)
             ->assertRedirect(route('admin.classroom-recordings.index'))
             ->assertSessionHas('success');
 
@@ -245,6 +257,7 @@ class ClassroomRecordingR2UploadTest extends TestCase
             ])
             ->get(route('admin.classroom-recordings.index'))
             ->assertOk()
-            ->assertSee('مسح', false);
+            ->assertSee('تسجيلات Classroom', false)
+            ->assertDontSee($destroyUrl, false);
     }
 }
