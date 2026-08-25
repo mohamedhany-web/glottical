@@ -749,6 +749,7 @@
         track.attach(tile.video);
         updateStageLayout();
         if (shell?.classList.contains('is-screen-focus') || osPipActive) rebuildPip();
+        try { window.__mxLkNotifyRecordingCaptureChanged?.(); } catch (eN) {}
     }
 
     function detachTrack(track, participant) {
@@ -763,6 +764,7 @@
             removeTile(participant, track.source);
             updateStageLayout();
             if (shell?.classList.contains('is-screen-focus')) rebuildPip();
+            try { window.__mxLkNotifyRecordingCaptureChanged?.(); } catch (eN2) {}
         }
     }
 
@@ -1789,7 +1791,7 @@
         try { room.disconnect(); } catch (e) {}
     };
 
-    /** مصادر التسجيل الصامت: فيديو الشير (مع القلم) + مسارات الصوت المحلية */
+    /** مصادر التسجيل الصامت: شير إن وُجد، وإلا كاميرات الغرفة + الصوت */
     window.__mxLkGetRecordCapture = function () {
         const audioTracks = [];
         const pushTrack = function (t) {
@@ -1809,8 +1811,48 @@
             });
         } catch (e) {}
         try {
+            room.remoteParticipants?.forEach(function (participant) {
+                participant.audioTrackPublications?.forEach(function (pub) {
+                    if (pub?.isMuted) return;
+                    pushTrack(pub.track?.mediaStreamTrack);
+                });
+                participant.trackPublications?.forEach(function (pub) {
+                    if (pub?.source === Track.Source.ScreenShareAudio) {
+                        pushTrack(pub.track?.mediaStreamTrack);
+                    }
+                });
+            });
+        } catch (eRemote) {}
+        try {
             annDisplayStream?.getAudioTracks()?.forEach(pushTrack);
         } catch (e2) {}
+
+        const cameraVideos = [];
+        try {
+            tiles.forEach(function (ref) {
+                if (!ref || !ref.video) return;
+                if (ref.source === Track.Source.ScreenShare) return;
+                const v = ref.video;
+                if (v.readyState < 2 || !(v.videoWidth > 0)) return;
+                cameraVideos.push({
+                    video: v,
+                    label: (ref.participant && (ref.participant.name || ref.participant.identity)) || '',
+                    isLocal: !!(ref.participant && ref.participant.isLocal),
+                });
+            });
+        } catch (eCam) {}
+
+        // فيديوهات ظاهرة في الواجهة كاحتياط (إن لم تُسجَّل في tiles)
+        try {
+            if (shell) {
+                shell.querySelectorAll('video').forEach(function (v) {
+                    if (!v || v.id === 'lk-focus-video') return;
+                    if (v.readyState < 2 || !(v.videoWidth > 0)) return;
+                    const already = cameraVideos.some(function (c) { return c.video === v; });
+                    if (!already) cameraVideos.push({ video: v, label: '', isLocal: false });
+                });
+            }
+        } catch (eDom) {}
 
         const sharing = !!screenOn;
         return {
@@ -1819,7 +1861,9 @@
             videoElement: (sharing && focusVideo && (focusVideo.srcObject || focusVideo.readyState >= 2))
                 ? focusVideo
                 : null,
+            cameraVideos: cameraVideos,
             audioTracks: audioTracks,
+            roomShell: shell || null,
         };
     };
     window.__mxLkNotifyRecordingCaptureChanged = function () {

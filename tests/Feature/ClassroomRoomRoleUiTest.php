@@ -215,6 +215,9 @@ class ClassroomRoomRoleUiTest extends TestCase
         $response->assertSee('mxGracefulEndMeeting', false);
         $response->assertSee('scheduleLectureComposite', false);
         $response->assertSee('__mxLkGetRecordCapture', false);
+        $response->assertSee('drawLectureCameraGrid', false);
+        $response->assertSee('cameraVideos', false);
+        $response->assertSee('التسجيل يعمل — جاري التقاط الغرفة', false);
         $response->assertSee('mxBuildLectureAudioTrack', false);
         $response->assertSee('الكاميرات', false);
         $response->assertDontSee('id="btn-record-menu"', false);

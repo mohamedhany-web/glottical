@@ -1867,6 +1867,69 @@
                 }
             }
 
+            function drawLectureFrameCover(sourceEl, dx, dy, dw, dh) {
+                if (!sourceEl || !lectureCtx) return false;
+                var vw = sourceEl.videoWidth || sourceEl.width || 0;
+                var vh = sourceEl.videoHeight || sourceEl.height || 0;
+                if (!vw || !vh || !dw || !dh) return false;
+                var scale = Math.max(dw / vw, dh / vh);
+                var sw = Math.floor(dw / scale);
+                var sh = Math.floor(dh / scale);
+                var sx = Math.floor((vw - sw) / 2);
+                var sy = Math.floor((vh - sh) / 2);
+                try {
+                    lectureCtx.drawImage(sourceEl, sx, sy, sw, sh, dx, dy, dw, dh);
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            function drawLectureCameraGrid(cameraVideos, w, h) {
+                if (!lectureCtx || !Array.isArray(cameraVideos) || !cameraVideos.length) return false;
+                var videos = cameraVideos.filter(function (item) {
+                    var v = item && (item.video || item);
+                    return v && (v.readyState >= 2) && ((v.videoWidth || v.width || 0) > 0);
+                });
+                if (!videos.length) return false;
+
+                lectureCtx.fillStyle = '#0b1220';
+                lectureCtx.fillRect(0, 0, w, h);
+
+                var n = videos.length;
+                var cols = n === 1 ? 1 : (n <= 4 ? 2 : 3);
+                var rows = Math.ceil(n / cols);
+                var gap = 8;
+                var cellW = Math.floor((w - gap * (cols + 1)) / cols);
+                var cellH = Math.floor((h - gap * (rows + 1)) / rows);
+                var drawnAny = false;
+
+                for (var i = 0; i < n; i++) {
+                    var col = i % cols;
+                    var row = Math.floor(i / cols);
+                    var x = gap + col * (cellW + gap);
+                    var y = gap + row * (cellH + gap);
+                    var item = videos[i];
+                    var v = item.video || item;
+                    lectureCtx.fillStyle = '#111827';
+                    lectureCtx.fillRect(x, y, cellW, cellH);
+                    if (drawLectureFrameCover(v, x, y, cellW, cellH)) {
+                        drawnAny = true;
+                    }
+                    var label = (item && item.label) ? String(item.label) : '';
+                    if (label) {
+                        lectureCtx.fillStyle = 'rgba(2,6,23,0.72)';
+                        lectureCtx.fillRect(x + 8, y + cellH - 34, Math.min(cellW - 16, 220), 26);
+                        lectureCtx.fillStyle = '#e2e8f0';
+                        lectureCtx.font = '600 13px Cairo, Tajawal, sans-serif';
+                        lectureCtx.textAlign = 'right';
+                        lectureCtx.textBaseline = 'middle';
+                        lectureCtx.fillText(label, x + Math.min(cellW - 16, 220) - 4, y + cellH - 21);
+                    }
+                }
+                return drawnAny;
+            }
+
             function lectureCompositeDraw() {
                 if (!lectureCtx || !lectureCanvas) return;
                 var w = lectureCanvas.width;
@@ -1876,7 +1939,7 @@
                     ? window.__mxLkGetRecordCapture()
                     : null;
 
-                // 1) شير LiveKit المركّب (شاشة + قلم)
+                // 1) شير LiveKit المركّب (شاشة + قلم) — أولوية عند وجوده
                 if (lk && lk.canvas && lk.canvas.width > 0) {
                     drawn = drawLectureFrameFromSource(lk.canvas, w, h);
                 }
@@ -1889,21 +1952,45 @@
                 if (!drawn && v && v.srcObject && v.readyState >= 2 && v.videoWidth > 0) {
                     drawn = drawLectureFrameFromSource(v, w, h);
                 }
+                // 4) كاميرات الغرفة من أول لحظة — بدون انتظار شير
+                if (!drawn && lk && lk.cameraVideos && lk.cameraVideos.length) {
+                    drawn = drawLectureCameraGrid(lk.cameraVideos, w, h);
+                }
+                // 5) إن كانت السبورة مفتوحة: التقط لوحاتها ضمن التسجيل
+                if (!drawn) {
+                    var wbPopupEl = document.getElementById('wb-popup');
+                    var wbOpen = wbPopupEl && !wbPopupEl.classList.contains('hidden');
+                    if (wbOpen) {
+                        var wbHost = document.getElementById('classroom-excalidraw-root')
+                            || document.getElementById('mx-excalidraw-root');
+                        if (wbHost) {
+                            var best = null;
+                            var bestArea = 0;
+                            wbHost.querySelectorAll('canvas').forEach(function (c) {
+                                var area = (c.width || 0) * (c.height || 0);
+                                if (area > bestArea) {
+                                    bestArea = area;
+                                    best = c;
+                                }
+                            });
+                            if (best && bestArea > 0) {
+                                drawn = drawLectureFrameFromSource(best, w, h);
+                            }
+                        }
+                    }
+                }
 
                 if (!drawn) {
                     lectureCtx.fillStyle = '#0f172a';
                     lectureCtx.fillRect(0, 0, w, h);
-                    lectureCtx.fillStyle = 'rgba(148,163,184,0.55)';
-                    lectureCtx.font = '600 18px sans-serif';
+                    lectureCtx.fillStyle = 'rgba(148,163,184,0.75)';
+                    lectureCtx.font = '600 20px Cairo, Tajawal, sans-serif';
                     lectureCtx.textAlign = 'center';
                     lectureCtx.textBaseline = 'middle';
-                    lectureCtx.fillText(
-                        (lk && lk.screenSharing)
-                            ? 'جاري التقاط الشير…'
-                            : 'التسجيل يعمل — ابدأ مشاركة الشاشة ليظهر الشرح في الملف',
-                        w / 2,
-                        h / 2
-                    );
+                    lectureCtx.fillText('التسجيل يعمل — جاري التقاط الغرفة…', w / 2, h / 2 - 12);
+                    lectureCtx.font = '500 14px Cairo, Tajawal, sans-serif';
+                    lectureCtx.fillStyle = 'rgba(148,163,184,0.55)';
+                    lectureCtx.fillText('الكاميرات ومشاركة الشاشة تُضاف تلقائياً عند توفرها', w / 2, h / 2 + 18);
                 }
             }
 

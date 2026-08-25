@@ -130,6 +130,7 @@ class LiveKitRoomProviderTest extends TestCase
         $response->assertSee('__mxLkToggleScreenAnnotate', false);
         $response->assertSee('startAnnotatedScreenShare', false);
         $response->assertSee('__mxLkGetRecordCapture', false);
+        $response->assertSee('cameraVideos', false);
         $response->assertSee('id="lk-zoom-in"', false);
         $response->assertSee('id="lk-toggle-mic"', false);
         $response->assertSee('microphone-slash', false);
