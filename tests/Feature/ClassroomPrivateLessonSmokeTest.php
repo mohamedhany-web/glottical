@@ -204,6 +204,7 @@ class ClassroomPrivateLessonSmokeTest extends TestCase
         $this->assertStringContainsString('startLectureRecording', $html);
         $this->assertStringContainsString('mxTryStartSilentRecording', $html);
         $this->assertStringContainsString('__mxLkIsConnected', $html);
+        $this->assertStringContainsString('mxCommitEndMeeting', $html);
         $this->assertStringContainsString('drawLectureCameraGrid', $html);
         $this->assertStringContainsString('cameraVideos', $html);
         $this->assertStringContainsString('التسجيل يعمل — جاري التقاط الغرفة', $html);

@@ -1752,24 +1752,26 @@
                     status: 'pending',
                     createdAt: Date.now(),
                 };
-                // المعلم: رفع صامت في الخلفية بدون تاب/مودال — نعيد Promise لننتظره قبل إنهاء الاجتماع
+                // المعلم: رفع صامت في الخلفية — نحفظ في IndexedDB أولاً ثم نرفع
                 if (mxSilentAutoRecording) {
-                    mxIdbPutJob(job).catch(function() {});
-                    return mxTrackUploadPromise(
-                        mxRunUploadJob(Object.assign({}, job, { status: 'pending' })).catch(function(err) {
+                    var silentUpload = mxIdbPutJob(job).catch(function () {
+                        return null;
+                    }).then(function () {
+                        return mxRunUploadJob(Object.assign({}, job, { status: 'pending' })).catch(function (err) {
                             console.warn('Silent auto-upload failed, retrying once:', err);
-                            return new Promise(function(resolve) {
-                                setTimeout(function() {
+                            return new Promise(function (resolve) {
+                                setTimeout(function () {
                                     mxRunUploadJob(Object.assign({}, job, { status: 'pending' }))
                                         .then(resolve)
-                                        .catch(function(err2) {
+                                        .catch(function (err2) {
                                             console.warn('Silent auto-upload retry failed:', err2);
                                             resolve(null);
                                         });
                                 }, 2500);
                             });
-                        })
-                    );
+                        });
+                    });
+                    return mxTrackUploadPromise(silentUpload);
                 }
                 mxIdbPutJob(job).then(function() {
                     var w = mxOpenRecordingUploadTab(job.id);
@@ -1786,32 +1788,110 @@
                 return Promise.resolve();
             }
 
-            function mxFinishPendingEndMeeting() {
-                if (!pendingEndMeetingSubmit || !endMeetingForm) return;
-                if (mxUploadsInFlight > 0) {
-                    setRecordStatus('جاري رفع التسجيل قبل إنهاء الاجتماع...', false);
-                    mxUploadChain.finally(function () {
-                        if (!pendingEndMeetingSubmit || !endMeetingForm) return;
-                        pendingEndMeetingSubmit = false;
-                        mxSkipEndConfirm = true;
-                        try { endMeetingForm.submit(); } catch (e) {}
-                    });
-                    return;
+            var mxEndMeetingCommitPromise = null;
+            var mxEndMeetingStopWatch = null;
+            var mxEndMeetingUploadWaitMs = 45000;
+            var mxEndMeetingStopWaitMs = 4000;
+            var mxRecordingFinalizedForEnd = false;
+
+            function mxSetEndMeetingUiBusy(on) {
+                if (!endMeetingBtn) return;
+                endMeetingBtn.disabled = !!on;
+                endMeetingBtn.classList.toggle('opacity-70', !!on);
+                endMeetingBtn.classList.toggle('cursor-not-allowed', !!on);
+                if (on) {
+                    endMeetingBtn.setAttribute('data-mx-end-busy', '1');
+                    var label = endMeetingBtn.querySelector('span.md\\:hidden') || endMeetingBtn.querySelector('span');
+                    if (label) label.textContent = 'جاري الإنهاء…';
                 }
+            }
+
+            function mxResolveEndRedirectUrl(response) {
+                try {
+                    if (response && response.url) return response.url;
+                } catch (e) {}
+                return roomExitUrl || '/';
+            }
+
+            /**
+             * إنهاء الاجتماع فوراً عبر fetch ثم انتظار رفع قصير (بدون تعليق لا نهائي).
+             */
+            function mxCommitEndMeeting() {
+                if (mxEndMeetingCommitPromise) return mxEndMeetingCommitPromise;
+                if (!endMeetingForm) {
+                    window.location.href = roomExitUrl || '/';
+                    return Promise.resolve();
+                }
+
                 pendingEndMeetingSubmit = false;
+                mxAutoEndingMeeting = true;
                 mxSkipEndConfirm = true;
-                try { endMeetingForm.submit(); } catch (e) {}
+                mxSetEndMeetingUiBusy(true);
+                setRecordStatus('جاري إنهاء الاجتماع...', false);
+
+                var action = endMeetingForm.getAttribute('action') || endMeetingForm.action;
+                var fd = new FormData(endMeetingForm);
+
+                mxEndMeetingCommitPromise = fetch(action, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html,application/xhtml+xml,application/json',
+                    },
+                    body: fd,
+                    redirect: 'follow',
+                }).then(function (res) {
+                    var redirectTo = mxResolveEndRedirectUrl(res);
+                    if (mxUploadsInFlight > 0) {
+                        setRecordStatus('تم إنهاء الاجتماع. جاري رفع التسجيل ثم المغادرة...', false);
+                        return Promise.race([
+                            mxUploadChain.catch(function () { return null; }),
+                            new Promise(function (resolve) {
+                                setTimeout(resolve, mxEndMeetingUploadWaitMs);
+                            }),
+                        ]).then(function () {
+                            return redirectTo;
+                        });
+                    }
+                    return redirectTo;
+                }).catch(function (err) {
+                    console.warn('end meeting fetch failed, falling back to form submit', err);
+                    try {
+                        endMeetingForm.submit();
+                    } catch (e2) {
+                        window.location.href = roomExitUrl || '/';
+                    }
+                    return null;
+                }).then(function (redirectTo) {
+                    if (!redirectTo) return;
+                    window.location.href = redirectTo;
+                });
+
+                return mxEndMeetingCommitPromise;
+            }
+
+            function mxFinishPendingEndMeeting() {
+                if (!pendingEndMeetingSubmit) return;
+                if (mxEndMeetingStopWatch) {
+                    clearTimeout(mxEndMeetingStopWatch);
+                    mxEndMeetingStopWatch = null;
+                }
+                // لا نعلّق على اكتمال الرفع قبل الإنهاء — الإنهاء أولاً ثم رفع بمهلة
+                mxCommitEndMeeting();
             }
 
             function mxGracefulEndMeeting(reason) {
-                if (mxAutoEndingMeeting) return;
-                mxAutoEndingMeeting = true;
+                if (mxAutoEndingMeeting || mxEndMeetingCommitPromise) return;
                 mxSkipEndConfirm = true;
                 if (!endMeetingForm) {
                     window.location.href = roomExitUrl;
                     return;
                 }
                 pendingEndMeetingSubmit = true;
+                mxRecordingFinalizedForEnd = false;
+                mxSetEndMeetingUiBusy(true);
                 setRecordStatus((reason || 'جاري حفظ التسجيل وإنهاء الاجتماع') + '...', false);
                 if (isRecording) {
                     stopBrowserRecording();
@@ -2285,6 +2365,10 @@
                     isRecording = false;
                     setRecordButtonState(false);
                     recordingKind = null;
+                    if (mxEndMeetingStopWatch) {
+                        clearTimeout(mxEndMeetingStopWatch);
+                        mxEndMeetingStopWatch = null;
+                    }
 
                     stopCaptureTracks(activeRecordingStream);
                     activeRecordingStream = null;
@@ -2307,6 +2391,17 @@
 
                     setRecordButtonBusy(false);
                     setRecordStatus(mxSilentAutoRecording ? '' : 'تم إيقاف تسجيل المحاضرة. جاري الرفع...', false);
+
+                    // عند الإنهاء: ابدأ الرفع ولا تنتظر اكتماله قبل إغلاق الاجتماع
+                    if (pendingEndMeetingSubmit) {
+                        if (mxRecordingFinalizedForEnd) return;
+                        mxRecordingFinalizedForEnd = true;
+                        mxQueueBlobUpload(blob, durationSeconds, 'lecture', null);
+                        recordedChunks = [];
+                        mxFinishPendingEndMeeting();
+                        return;
+                    }
+
                     try {
                         await mxQueueBlobUpload(blob, durationSeconds, 'lecture', null);
                     } catch (uploadErr) {
@@ -2378,6 +2473,10 @@
                     isRecording = false;
                     setRecordButtonState(false);
                     recordingKind = null;
+                    if (mxEndMeetingStopWatch) {
+                        clearTimeout(mxEndMeetingStopWatch);
+                        mxEndMeetingStopWatch = null;
+                    }
 
                     stopCaptureTracks(activeRecordingStream);
                     activeRecordingStream = null;
@@ -2397,6 +2496,14 @@
 
                     setRecordButtonBusy(false);
                     setRecordStatus(mxSilentAutoRecording ? '' : 'تم إيقاف تسجيل التقرير. جاري الرفع...', false);
+                    if (pendingEndMeetingSubmit) {
+                        if (mxRecordingFinalizedForEnd) return;
+                        mxRecordingFinalizedForEnd = true;
+                        mxQueueBlobUpload(blob, durationSeconds, 'report', null);
+                        recordedChunks = [];
+                        mxFinishPendingEndMeeting();
+                        return;
+                    }
                     try {
                         await mxQueueBlobUpload(blob, durationSeconds, 'report', null);
                     } catch (uploadErr) {
@@ -2411,6 +2518,42 @@
                 setRecordButtonState(true);
                 setRecordStatus('تسجيل تقرير صوتي (يمكنك متابعة الاجتماع)...', false);
                 setRecordButtonBusy(false);
+            }
+
+            function mxForceStopRecordingForEnd() {
+                if (mxEndMeetingCommitPromise || mxRecordingFinalizedForEnd) {
+                    mxFinishPendingEndMeeting();
+                    return;
+                }
+                mxRecordingFinalizedForEnd = true;
+                if (mxEndMeetingStopWatch) {
+                    clearTimeout(mxEndMeetingStopWatch);
+                    mxEndMeetingStopWatch = null;
+                }
+                try {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                    }
+                } catch (e) {}
+                isRecording = false;
+                setRecordButtonState(false);
+                var kind = recordingKind || 'lecture';
+                recordingKind = null;
+                stopCaptureTracks(activeRecordingStream);
+                activeRecordingStream = null;
+                stopCaptureTracks(micStream);
+                micStream = null;
+                cleanupLectureRecordingVisuals();
+                var durationSeconds = recordingStartedAt ? Math.max(1, Math.round((Date.now() - recordingStartedAt) / 1000)) : 0;
+                var outType = kind === 'report'
+                    ? normalizeAudioMimeType((mediaRecorder && mediaRecorder.mimeType) ? mediaRecorder.mimeType : 'audio/webm')
+                    : ((mediaRecorder && mediaRecorder.mimeType) ? mediaRecorder.mimeType : 'video/webm');
+                var blob = new Blob(recordedChunks || [], { type: outType });
+                recordedChunks = [];
+                if (blob.size > 0) {
+                    mxQueueBlobUpload(blob, durationSeconds, kind === 'report' ? 'report' : 'lecture', null);
+                }
+                mxFinishPendingEndMeeting();
             }
 
             function stopBrowserRecording() {
@@ -2433,7 +2576,22 @@
                 if (audioRecorder && audioRecorder.state === 'recording') {
                     audioRecorder.stop();
                 }
-                mediaRecorder.stop();
+                if (pendingEndMeetingSubmit) {
+                    if (mxEndMeetingStopWatch) clearTimeout(mxEndMeetingStopWatch);
+                    mxEndMeetingStopWatch = setTimeout(function () {
+                        mxEndMeetingStopWatch = null;
+                        if (pendingEndMeetingSubmit && (isRecording || (mediaRecorder && mediaRecorder.state === 'recording'))) {
+                            console.warn('[classroom-end] MediaRecorder stop timed out — forcing end');
+                            mxForceStopRecordingForEnd();
+                        }
+                    }, mxEndMeetingStopWaitMs);
+                }
+                try {
+                    mediaRecorder.stop();
+                } catch (stopErr) {
+                    console.warn('mediaRecorder.stop:', stopErr);
+                    if (pendingEndMeetingSubmit) mxForceStopRecordingForEnd();
+                }
             }
 
             if (btnRecordMenu && recordDdPanel && recordDdWrap) {
@@ -2478,21 +2636,24 @@
 
             if (endMeetingForm && endMeetingBtn) {
                 endMeetingForm.addEventListener('submit', function(e) {
-                    if (isRecording) {
+                    if (mxEndMeetingCommitPromise || mxAutoEndingMeeting) {
                         e.preventDefault();
-                        pendingEndMeetingSubmit = true;
-                        setRecordStatus('جاري إيقاف التسجيل ورفعه قبل إنهاء الاجتماع...', false);
+                        return;
+                    }
+                    // دائماً نتحكم بالمسار حتى لا يعلّق المتصفح على رفع طويل
+                    e.preventDefault();
+                    pendingEndMeetingSubmit = true;
+                    mxRecordingFinalizedForEnd = false;
+                    mxSetEndMeetingUiBusy(true);
+                    if (isRecording) {
+                        setRecordStatus('جاري إيقاف التسجيل وإنهاء الاجتماع...', false);
                         stopBrowserRecording();
                         return;
                     }
                     if (mxUploadsInFlight > 0) {
-                        e.preventDefault();
-                        pendingEndMeetingSubmit = true;
-                        setRecordStatus('جاري رفع التسجيل قبل إنهاء الاجتماع...', false);
-                        mxUploadChain.finally(function () {
-                            mxFinishPendingEndMeeting();
-                        });
+                        setRecordStatus('جاري إنهاء الاجتماع مع إكمال الرفع...', false);
                     }
+                    mxFinishPendingEndMeeting();
                 });
             }
 
