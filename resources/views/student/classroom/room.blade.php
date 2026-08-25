@@ -241,9 +241,9 @@
                 <i class="fas fa-expand text-amber-300 text-[11px]"></i>
                 <span class="sm:inline">الوايت بورد</span>
             </button>
-            <button type="button" id="btn-mx-host-share-draw" class="classroom-room-toolbar-btn w-full justify-center gap-2 bg-sky-600/25 hover:bg-sky-600/35 text-sky-100 border border-sky-500/40 md:w-auto md:justify-start" title="رسم فوق البث يظهر للطالب فوراً">
+            <button type="button" id="btn-mx-host-share-draw" class="classroom-room-toolbar-btn w-full justify-center gap-2 bg-sky-600/25 hover:bg-sky-600/35 text-sky-100 border border-sky-500/40 md:w-auto md:justify-start" title="قلم على الشاشة المشتركة (مثل زوم) — يبقى فوق التطبيقات ويظهر للطالب">
                 <i class="fas fa-pen-fancy text-sky-300 text-[11px]"></i>
-                <span class="sm:inline">رسم فوق العرض</span>
+                <span class="sm:inline">قلم الشاشة</span>
             </button>
             <label class="classroom-room-toolbar-btn w-full justify-between bg-slate-700/50 border border-slate-600 cursor-pointer select-none text-slate-200 md:w-auto md:max-w-[13rem]"
                    title="الضيف يرسم قلم/ممحاة فوق عرض الاجتماع؛ يظهر عندك فوق نفس الشاشة">
@@ -425,7 +425,7 @@
             </div>
             <div id="wb-popup-toolbar" class="flex flex-wrap items-center justify-center gap-2 px-4 py-2.5 border-t border-slate-700 bg-slate-800/95 shrink-0">
                 <span class="text-slate-400 text-[11px] leading-relaxed text-center max-w-3xl">
-                    <strong class="text-slate-200">Glottical Whiteboard</strong> — لوحة محلية للتجهيز. للرسم المباشر فوق البث مع الطالب استخدم «رسم فوق العرض» من الأدوات (مزامنة فورية).
+                    <strong class="text-slate-200">Glottical Whiteboard</strong> — لوحة محلية للتجهيز. لقلم الشاشة مثل زوم (فوق فيسبوك وغيره ويظهر للطالب في الشير) استخدم «قلم الشاشة» أو مشاركة الشاشة.
                 </span>
             </div>
         </div>
@@ -552,6 +552,10 @@
             var hostShareDrawBtn = document.getElementById('btn-mx-host-share-draw');
             if (hostShareDrawBtn) {
                 hostShareDrawBtn.addEventListener('click', function () {
+                    if (typeof window.__mxLkToggleScreenAnnotate === 'function') {
+                        window.__mxLkToggleScreenAnnotate();
+                        return;
+                    }
                     if (typeof window.__mxShareAnnOpenToolbar === 'function') {
                         window.__mxShareAnnSetAllowed?.(true);
                         window.__mxShareAnnOpenToolbar();

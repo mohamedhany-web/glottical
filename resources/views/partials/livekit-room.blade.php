@@ -134,7 +134,7 @@
 .lk-stage.layout-duo .lk-tile,
 .lk-stage.layout-trio .lk-tile,
 .lk-stage.layout-class .lk-tile{aspect-ratio:unset;min-height:0}
-.lk-tile video{width:100%;height:100%;object-fit:cover;background:#020617}
+    .lk-tile video{width:100%;height:100%;object-fit:cover;background:#020617}
 .lk-tile.is-screen{grid-column:1/-1;min-height:280px;aspect-ratio:auto}
 .lk-theme-student .lk-tile.is-screen{min-height:min(78vh,640px)}
 .lk-tile.is-screen video{object-fit:contain;background:#000}
@@ -255,7 +255,7 @@
     if (!window.LivekitClient) { setStatus('تعذر تحميل مكتبة LiveKit', true); return; }
     if (!url || !token) { setStatus('إعدادات LiveKit غير مكتملة (رابط أو توكن)', true); return; }
 
-    const { Room, RoomEvent, Track, createLocalTracks, createLocalScreenTracks } = window.LivekitClient;
+    const { Room, RoomEvent, Track, createLocalTracks, createLocalScreenTracks, LocalVideoTrack, LocalAudioTrack } = window.LivekitClient;
     const room = new Room({
         adaptiveStream: true,
         dynacast: true,
@@ -268,6 +268,7 @@
     let camOn = !!startVideo;
     let screenOn = false;
     let screenTrack = null;
+    let screenAudioTrack = null;
     let focusTrack = null;
     let connected = false;
     let zoom = 1;
@@ -277,6 +278,21 @@
     let osPipActive = false;
     let osPipAutoTried = false;
     let osPipOpening = false;
+    // شير + قلم مثل زوم: الرسم يُدمَج في فيديو الشاشة ويظهر للطالب، والأدوات في نافذة عائمة فوق النظام
+    let annDisplayStream = null;
+    let annDisplayVideo = null;
+    let annOutCanvas = null;
+    let annOutCtx = null;
+    let annLoopId = null;
+    let annLoopInterval = null;
+    let annStrokes = [];
+    let annTool = 'pen';
+    let annDrawing = false;
+    let annCurrent = null;
+    let annPipWindow = null;
+    let annPipCanvas = null;
+    let annPipVideo = null;
+    let annotateActive = false;
     const ZOOM_MIN = 0.75;
     const ZOOM_STEP = lkTheme === 'student' ? 0.15 : 0.25;
     const isStudentView = lkTheme === 'student' || role === 'participant';
@@ -899,9 +915,288 @@
         } catch (e) { setStatus(errMsg(e, 'تعذر تفعيل الكاميرا'), true); }
     });
 
+    function isScreenAnnotateHost() {
+        return lkTheme === 'instructor' || role === 'host';
+    }
+
+    function stopAnnCompositeLoop() {
+        if (annLoopId != null) {
+            cancelAnimationFrame(annLoopId);
+            annLoopId = null;
+        }
+        if (annLoopInterval != null) {
+            clearInterval(annLoopInterval);
+            annLoopInterval = null;
+        }
+    }
+
+    function paintAnnStrokes(ctx, w, h) {
+        if (!ctx || !w || !h) return;
+        annStrokes.forEach(function (stroke) {
+            if (!stroke || !stroke.points || stroke.points.length < 2) return;
+            ctx.beginPath();
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = stroke.color || '#F5B800';
+            ctx.lineWidth = Math.max(2, (stroke.width || 4) * (Math.min(w, h) / 720));
+            stroke.points.forEach(function (pt, i) {
+                var x = pt[0] * w;
+                var y = pt[1] * h;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+        });
+        if (annCurrent && annCurrent.points && annCurrent.points.length > 1) {
+            ctx.beginPath();
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = annCurrent.color || '#F5B800';
+            ctx.lineWidth = Math.max(2, (annCurrent.width || 4) * (Math.min(w, h) / 720));
+            annCurrent.points.forEach(function (pt, i) {
+                var x = pt[0] * w;
+                var y = pt[1] * h;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+        }
+    }
+
+    function eraseAnnNear(nx, ny, radius) {
+        var r2 = radius * radius;
+        annStrokes = annStrokes.filter(function (stroke) {
+            if (!stroke.points) return false;
+            return !stroke.points.some(function (pt) {
+                var dx = pt[0] - nx;
+                var dy = pt[1] - ny;
+                return (dx * dx + dy * dy) < r2;
+            });
+        });
+    }
+
+    function renderAnnCompositeFrame() {
+        if (!annOutCanvas || !annOutCtx || !annDisplayVideo) return;
+        var vw = annDisplayVideo.videoWidth || 1280;
+        var vh = annDisplayVideo.videoHeight || 720;
+        if (annOutCanvas.width !== vw || annOutCanvas.height !== vh) {
+            annOutCanvas.width = vw;
+            annOutCanvas.height = vh;
+        }
+        annOutCtx.fillStyle = '#0f172a';
+        annOutCtx.fillRect(0, 0, vw, vh);
+        try {
+            if (annDisplayVideo.readyState >= 2) {
+                annOutCtx.drawImage(annDisplayVideo, 0, 0, vw, vh);
+            }
+        } catch (e) {}
+        paintAnnStrokes(annOutCtx, vw, vh);
+        // نبضة خفيفة حتى لا يوقف كروم إرسال الإطارات عند ثبات الصورة
+        annOutCtx.fillStyle = 'rgba(0,0,0,0.01)';
+        annOutCtx.fillRect((Date.now() / 40) % Math.max(1, vw - 1), 0, 1, 1);
+
+        if (annPipCanvas && annPipWindow && !annPipWindow.closed) {
+            var pw = annPipCanvas.clientWidth || annPipCanvas.width;
+            var ph = annPipCanvas.clientHeight || annPipCanvas.height;
+            if (pw > 0 && ph > 0) {
+                if (annPipCanvas.width !== pw || annPipCanvas.height !== ph) {
+                    annPipCanvas.width = pw;
+                    annPipCanvas.height = ph;
+                }
+                var pctx = annPipCanvas.getContext('2d');
+                if (pctx) {
+                    pctx.fillStyle = '#020617';
+                    pctx.fillRect(0, 0, pw, ph);
+                    var scale = Math.min(pw / vw, ph / vh);
+                    var dw = Math.floor(vw * scale);
+                    var dh = Math.floor(vh * scale);
+                    var ox = Math.floor((pw - dw) / 2);
+                    var oy = Math.floor((ph - dh) / 2);
+                    try { pctx.drawImage(annOutCanvas, ox, oy, dw, dh); } catch (e2) {}
+                }
+            }
+        }
+    }
+
+    function startAnnCompositeLoop() {
+        stopAnnCompositeLoop();
+        function tick() {
+            renderAnnCompositeFrame();
+            annLoopId = requestAnimationFrame(tick);
+        }
+        tick();
+        // احتياطي عندما يكون التبويب في الخلفية (rAF يتباطأ)
+        annLoopInterval = setInterval(renderAnnCompositeFrame, 66);
+    }
+
+    function closeScreenAnnotatePip() {
+        try {
+            if (annPipWindow && !annPipWindow.closed) annPipWindow.close();
+        } catch (e) {}
+        annPipWindow = null;
+        annPipCanvas = null;
+        annPipVideo = null;
+        annotateActive = false;
+    }
+
+    function bindAnnPipDrawing(canvasEl, doc) {
+        if (!canvasEl) return;
+        function normFromEvent(ev) {
+            var rect = canvasEl.getBoundingClientRect();
+            var cx = ev.clientX;
+            var cy = ev.clientY;
+            if (ev.touches && ev.touches[0]) {
+                cx = ev.touches[0].clientX;
+                cy = ev.touches[0].clientY;
+            }
+            var vw = annOutCanvas?.width || rect.width || 1;
+            var vh = annOutCanvas?.height || rect.height || 1;
+            var scale = Math.min(rect.width / vw, rect.height / vh);
+            var dw = vw * scale;
+            var dh = vh * scale;
+            var ox = (rect.width - dw) / 2;
+            var oy = (rect.height - dh) / 2;
+            var x = (cx - rect.left - ox) / dw;
+            var y = (cy - rect.top - oy) / dh;
+            return [
+                Math.min(1, Math.max(0, x)),
+                Math.min(1, Math.max(0, y)),
+            ];
+        }
+        function onDown(ev) {
+            ev.preventDefault();
+            annDrawing = true;
+            var p = normFromEvent(ev);
+            if (annTool === 'eraser') {
+                eraseAnnNear(p[0], p[1], 0.03);
+                renderAnnCompositeFrame();
+                return;
+            }
+            annCurrent = { color: '#F5B800', width: 5, points: [p] };
+            try { canvasEl.setPointerCapture(ev.pointerId); } catch (e) {}
+        }
+        function onMove(ev) {
+            if (!annDrawing) return;
+            ev.preventDefault();
+            var p = normFromEvent(ev);
+            if (annTool === 'eraser') {
+                eraseAnnNear(p[0], p[1], 0.03);
+                renderAnnCompositeFrame();
+                return;
+            }
+            if (annCurrent) {
+                annCurrent.points.push(p);
+                renderAnnCompositeFrame();
+            }
+        }
+        function onUp(ev) {
+            if (!annDrawing) return;
+            annDrawing = false;
+            try { canvasEl.releasePointerCapture(ev.pointerId); } catch (e) {}
+            if (annTool === 'pen' && annCurrent && annCurrent.points.length > 1) {
+                annStrokes.push(annCurrent);
+                if (annStrokes.length > 80) annStrokes.shift();
+            }
+            annCurrent = null;
+            renderAnnCompositeFrame();
+        }
+        canvasEl.addEventListener('pointerdown', onDown);
+        canvasEl.addEventListener('pointermove', onMove);
+        canvasEl.addEventListener('pointerup', onUp);
+        canvasEl.addEventListener('pointercancel', onUp);
+        doc?.defaultView?.addEventListener('mouseup', onUp);
+    }
+
+    async function openScreenAnnotatePip() {
+        if (!supportsDocumentPiP()) {
+            setStatus('المتصفح لا يدعم نافذة القلم فوق النظام — جرّب Chrome أو Edge', true);
+            return false;
+        }
+        if (documentPictureInPicture.window) {
+            // نافذة واحدة فقط: نغلق الكاميرات العائمة ونفتح قلم الشاشة
+            try { documentPictureInPicture.window.close(); } catch (e) {}
+            await new Promise(function (r) { setTimeout(r, 120); });
+        }
+        if (document.pictureInPictureElement) {
+            try { await document.exitPictureInPicture(); } catch (e) {}
+        }
+
+        const pipWindow = await documentPictureInPicture.requestWindow({ width: 720, height: 520 });
+        annPipWindow = pipWindow;
+        const doc = pipWindow.document;
+        doc.head.innerHTML = '';
+        const style = doc.createElement('style');
+        style.textContent = `
+            html,body{margin:0;height:100%;background:#0b1220;color:#f8fafc;font-family:Cairo,Tajawal,system-ui,sans-serif;overflow:hidden}
+            .shell{display:flex;flex-direction:column;height:100%}
+            .bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 10px;background:#111827;border-bottom:1px solid rgba(255,255,255,.12);flex-shrink:0}
+            .bar button{border:1px solid rgba(255,255,255,.14);background:#1e293b;color:#f8fafc;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:800;cursor:pointer}
+            .bar button.is-on{background:rgba(245,184,0,.22);border-color:#F5B800;color:#ffe08a}
+            .bar .hint{font-size:11px;font-weight:700;color:rgba(248,250,252,.55);margin-inline-start:auto}
+            .stage{position:relative;flex:1;min-height:0;background:#020617;cursor:crosshair}
+            canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+        `;
+        doc.head.appendChild(style);
+        doc.body.innerHTML = `
+            <div class="shell">
+              <div class="bar">
+                <button type="button" data-ann="pen" class="is-on">قلم</button>
+                <button type="button" data-ann="eraser">ممحاة</button>
+                <button type="button" data-ann="clear">مسح الكل</button>
+                <span class="hint">ارسم هنا — يظهر مباشرة للطالب على الشير</span>
+              </div>
+              <div class="stage"><canvas id="ann-draw"></canvas></div>
+            </div>
+        `;
+        annPipCanvas = doc.getElementById('ann-draw');
+        bindAnnPipDrawing(annPipCanvas, doc);
+        doc.querySelectorAll('[data-ann]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var act = btn.getAttribute('data-ann');
+                if (act === 'clear') {
+                    annStrokes = [];
+                    annCurrent = null;
+                    renderAnnCompositeFrame();
+                    return;
+                }
+                annTool = act;
+                doc.querySelectorAll('[data-ann="pen"],[data-ann="eraser"]').forEach(function (b) {
+                    b.classList.toggle('is-on', b.getAttribute('data-ann') === annTool);
+                });
+            });
+        });
+        pipWindow.addEventListener('pagehide', function () {
+            annPipWindow = null;
+            annPipCanvas = null;
+            annotateActive = false;
+        }, { once: true });
+        annotateActive = true;
+        renderAnnCompositeFrame();
+        setStatus('نافذة القلم فوق النظام نشطة — تنقّل بحرية وارسم عليها ليظهر للطالب');
+        hideStatusSoon();
+        return true;
+    }
+
+    async function cleanupAnnotatedShareMedia() {
+        stopAnnCompositeLoop();
+        closeScreenAnnotatePip();
+        if (annDisplayStream) {
+            try { annDisplayStream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
+        }
+        annDisplayStream = null;
+        if (annDisplayVideo) {
+            try { annDisplayVideo.pause(); annDisplayVideo.srcObject = null; } catch (e) {}
+        }
+        annDisplayVideo = null;
+        annOutCanvas = null;
+        annOutCtx = null;
+        annStrokes = [];
+        annCurrent = null;
+    }
+
     async function stopScreenShare() {
         try {
-            if (typeof room.localParticipant.setScreenShareEnabled === 'function') {
+            if (typeof room.localParticipant.setScreenShareEnabled === 'function' && !annOutCanvas) {
                 await room.localParticipant.setScreenShareEnabled(false);
             }
         } catch (e) {}
@@ -910,11 +1205,125 @@
             try { screenTrack.stop(); } catch (e) {}
             screenTrack = null;
         }
+        if (screenAudioTrack) {
+            try { await room.localParticipant.unpublishTrack(screenAudioTrack); } catch (e) {}
+            try { screenAudioTrack.stop(); } catch (e) {}
+            screenAudioTrack = null;
+        }
+        await cleanupAnnotatedShareMedia();
         screenOn = false;
         screenBtn?.classList.remove('is-sharing');
         setScreenFocus(false);
     }
+
+    async function publishMediaTrackAsScreen(mediaTrack, isAudio) {
+        const source = isAudio ? Track.Source.ScreenShareAudio : Track.Source.ScreenShare;
+        try {
+            if (!isAudio && typeof LocalVideoTrack === 'function') {
+                const local = new LocalVideoTrack(mediaTrack);
+                local.source = source;
+                await room.localParticipant.publishTrack(local, { source: source, name: 'screen' });
+                return local;
+            }
+            if (isAudio && typeof LocalAudioTrack === 'function') {
+                const local = new LocalAudioTrack(mediaTrack);
+                local.source = source;
+                await room.localParticipant.publishTrack(local, { source: source, name: 'screen-audio' });
+                return local;
+            }
+        } catch (wrapErr) {
+            console.warn('LocalTrack wrap failed, publishing raw track', wrapErr);
+        }
+        const pub = await room.localParticipant.publishTrack(mediaTrack, {
+            source: source,
+            name: isAudio ? 'screen-audio' : 'screen',
+        });
+        return pub?.track || mediaTrack;
+    }
+
+    async function startAnnotatedScreenShare() {
+        if (!navigator.mediaDevices?.getDisplayMedia) {
+            throw new Error('getDisplayMedia unsupported');
+        }
+        await stopScreenShare();
+
+        const displayStream = await navigator.mediaDevices.getDisplayMedia({
+            video: { frameRate: 15, displaySurface: 'monitor' },
+            audio: true,
+        });
+        annDisplayStream = displayStream;
+        const rawVideo = displayStream.getVideoTracks()[0];
+        if (!rawVideo) throw new Error('no display video');
+
+        rawVideo.addEventListener('ended', function () {
+            stopScreenShare().catch(function () {});
+        });
+
+        annDisplayVideo = document.createElement('video');
+        annDisplayVideo.playsInline = true;
+        annDisplayVideo.muted = true;
+        annDisplayVideo.srcObject = new MediaStream([rawVideo]);
+        await annDisplayVideo.play().catch(function () {});
+
+        // انتظر أبعاد الشاشة
+        for (var i = 0; i < 40 && (!annDisplayVideo.videoWidth); i++) {
+            await new Promise(function (r) { setTimeout(r, 50); });
+        }
+
+        annOutCanvas = document.createElement('canvas');
+        annOutCanvas.width = annDisplayVideo.videoWidth || 1280;
+        annOutCanvas.height = annDisplayVideo.videoHeight || 720;
+        annOutCtx = annOutCanvas.getContext('2d', { alpha: false });
+        startAnnCompositeLoop();
+
+        const outStream = annOutCanvas.captureStream(15);
+        const outVideoTrack = outStream.getVideoTracks()[0];
+        if (!outVideoTrack) throw new Error('canvas capture failed');
+
+        screenTrack = await publishMediaTrackAsScreen(outVideoTrack, false);
+        if (screenTrack && typeof attachTrack === 'function') {
+            try {
+                if (!screenTrack.source) screenTrack.source = Track.Source.ScreenShare;
+                attachTrack(screenTrack, room.localParticipant);
+            } catch (attachErr) {
+                // LocalTrackPublished قد يتولى الربط
+                console.warn(attachErr);
+                if (focusVideo) {
+                    focusVideo.srcObject = outStream;
+                    focusVideo.muted = true;
+                    focusVideo.play?.().catch(function () {});
+                    setScreenFocus(true, 'مشاركة الشاشة + قلم');
+                }
+            }
+        }
+
+        const rawAudio = displayStream.getAudioTracks()[0];
+        if (rawAudio) {
+            try {
+                screenAudioTrack = await publishMediaTrackAsScreen(rawAudio, true);
+            } catch (audioErr) {
+                console.warn(audioErr);
+            }
+        }
+
+        screenOn = true;
+        screenBtn?.classList.add('is-sharing');
+        annStrokes = [];
+        annTool = 'pen';
+
+        try {
+            await openScreenAnnotatePip();
+        } catch (pipErr) {
+            console.warn(pipErr);
+            setStatus('الشير يعمل — اضغط «قلم الشاشة» لفتح أدوات الرسم فوق النظام', true);
+        }
+    }
+
     async function startScreenShare() {
+        if (isScreenAnnotateHost()) {
+            await startAnnotatedScreenShare();
+            return;
+        }
         if (typeof room.localParticipant.setScreenShareEnabled === 'function') {
             await room.localParticipant.setScreenShareEnabled(true, { audio: true });
             screenOn = true;
@@ -926,25 +1335,57 @@
         catch (e) { tracks = await createLocalScreenTracks({ audio: false }); }
         screenTrack = tracks[0];
         await room.localParticipant.publishTrack(screenTrack);
-        if (tracks[1]) { try { await room.localParticipant.publishTrack(tracks[1]); } catch (e) {} }
+        if (tracks[1]) {
+            try {
+                await room.localParticipant.publishTrack(tracks[1]);
+                screenAudioTrack = tracks[1];
+            } catch (e) {}
+        }
         attachTrack(screenTrack, room.localParticipant);
         screenOn = true;
         screenBtn?.classList.add('is-sharing');
     }
+
     screenBtn?.addEventListener('click', async () => {
         if (!connected || !allowScreenShare) return;
         try {
             if (screenOn) { await stopScreenShare(); return; }
             await startScreenShare();
-            setStatus('مشاركة الشاشة مفعّلة — استخدم الزووم والنافذة العائمة');
+            setStatus(isScreenAnnotateHost()
+                ? 'مشاركة الشاشة + قلم عائم — ارسم ليظهر للطالب فوراً'
+                : 'مشاركة الشاشة مفعّلة — استخدم الزووم والنافذة العائمة');
             hideStatusSoon();
         } catch (err) {
             console.error(err);
             screenOn = false;
             screenBtn?.classList.remove('is-sharing');
+            await cleanupAnnotatedShareMedia().catch(function () {});
             setStatus(errMsg(err, 'تعذر مشاركة الشاشة'), true);
         }
     });
+
+    window.__mxLkToggleScreenAnnotate = async function () {
+        if (!connected || !allowScreenShare || !isScreenAnnotateHost()) {
+            setStatus('قلم الشاشة متاح للمضيف أثناء الشير', true);
+            return;
+        }
+        try {
+            if (!screenOn) {
+                await startAnnotatedScreenShare();
+                setStatus('شير + قلم فوق النظام — ارسم لتظهر الكتابة للطالب');
+                hideStatusSoon();
+                return;
+            }
+            if (annotateActive && annPipWindow && !annPipWindow.closed) {
+                annPipWindow.focus();
+                return;
+            }
+            await openScreenAnnotatePip();
+        } catch (err) {
+            console.warn(err);
+            setStatus(errMsg(err, 'تعذر فتح قلم الشاشة'), true);
+        }
+    };
 
     document.getElementById('lk-zoom-in')?.addEventListener('click', () => {
         setZoom(zoom + ZOOM_STEP);

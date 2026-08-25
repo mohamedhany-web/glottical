@@ -127,6 +127,8 @@ class LiveKitRoomProviderTest extends TestCase
         $response->assertSee('byIdentity', false);
         $response->assertSee('osPipOpening', false);
         $response->assertSee('id="lk-toggle-os-pip"', false);
+        $response->assertSee('__mxLkToggleScreenAnnotate', false);
+        $response->assertSee('startAnnotatedScreenShare', false);
         $response->assertSee('id="lk-zoom-in"', false);
         $response->assertSee('id="lk-toggle-mic"', false);
         $response->assertSee('microphone-slash', false);
