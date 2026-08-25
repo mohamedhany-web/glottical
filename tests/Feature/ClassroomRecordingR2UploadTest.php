@@ -195,4 +195,46 @@ class ClassroomRecordingR2UploadTest extends TestCase
         $this->assertSame($meetingA->id, $payloadA['meeting_id']);
         $this->assertSame($meetingB->id, $payloadB['meeting_id']);
     }
+
+    public function test_admin_can_delete_classroom_recording_from_r2(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => true,
+            'password' => Hash::make('secret'),
+        ]);
+        [, , $meeting] = $this->seedMeetingPair(ended: true);
+
+        $path = 'classroom-recordings/'.now()->format('Y/m').'/meeting-'.$meeting->id.'-delete.webm';
+        $audioPath = 'classroom-recordings-audio/'.now()->format('Y/m').'/meeting-'.$meeting->id.'-delete.webm';
+        Storage::disk('live_recordings_r2')->put($path, 'video-bytes');
+        Storage::disk('live_recordings_r2')->put($audioPath, 'audio-bytes');
+
+        $meeting->update([
+            'recording_disk' => 'live_recordings_r2',
+            'recording_path' => $path,
+            'recording_audio_path' => $audioPath,
+            'recording_uploaded_at' => now(),
+        ]);
+
+        $this->withoutMiddleware()
+            ->actingAs($admin)
+            ->delete(route('admin.classroom-recordings.destroy', $meeting))
+            ->assertRedirect();
+
+        $meeting->refresh();
+        $this->assertNull($meeting->recording_path);
+        $this->assertNull($meeting->recording_audio_path);
+        $this->assertNull($meeting->recording_disk);
+        $this->assertNull($meeting->recording_uploaded_at);
+        $this->assertFalse($meeting->hasBrowserRecording());
+        Storage::disk('live_recordings_r2')->assertMissing($path);
+        Storage::disk('live_recordings_r2')->assertMissing($audioPath);
+
+        $this->withoutMiddleware()
+            ->actingAs($admin)
+            ->get(route('admin.classroom-recordings.index'))
+            ->assertOk()
+            ->assertSee('مسح', false);
+    }
 }

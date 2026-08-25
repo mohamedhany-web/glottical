@@ -81,13 +81,27 @@
                             {{ $meeting->recording_uploaded_at ? $meeting->recording_uploaded_at->format('Y-m-d H:i') : '—' }}
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <div class="inline-flex items-center gap-2">
+                            <div class="inline-flex flex-wrap items-center justify-center gap-2">
                                 @if($meeting->recording_download_url)
-                                    <a href="{{ $meeting->recording_download_url }}" target="_blank" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">
-                                        <i class="fas fa-download ml-1"></i> تحميل
+                                    <a href="{{ $meeting->recording_download_url }}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">
+                                        <i class="fas fa-download ml-1"></i> تحميل الفيديو
+                                    </a>
+                                @elseif($meeting->recording_audio_download_url)
+                                    <a href="{{ $meeting->recording_audio_download_url }}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">
+                                        <i class="fas fa-download ml-1"></i> تحميل الصوت
                                     </a>
                                 @else
                                     <span class="text-xs text-slate-400">لا يوجد تسجيل</span>
+                                @endif
+                                @if($meeting->hasBrowserRecording() || $meeting->recording_path || $meeting->recording_audio_path)
+                                    <form method="POST" action="{{ route('admin.classroom-recordings.destroy', $meeting) }}" class="inline"
+                                          onsubmit="return confirm('حذف تسجيل هذا الاجتماع نهائياً من التخزين؟ لا يمكن التراجع.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold">
+                                            <i class="fas fa-trash-alt ml-1"></i> مسح
+                                        </button>
+                                    </form>
                                 @endif
                                 <button type="button" onclick="navigator.clipboard.writeText('{{ url('classroom/join/' . $meeting->code) }}'); this.textContent='تم النسخ'; setTimeout(()=>this.textContent='نسخ رابط الدخول', 1200)" class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold">نسخ رابط الدخول</button>
                             </div>
