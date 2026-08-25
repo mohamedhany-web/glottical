@@ -61,6 +61,7 @@ class LiveMeetingProvider
             $grants = [
                 'canPublish' => true,
                 'canSubscribe' => true,
+                // البث الجماعي: لا نسمح بـ data channel (دردشة/إشارات غير مرغوبة)
                 'canPublishData' => false,
                 'roomAdmin' => $isHost,
             ];
@@ -111,7 +112,8 @@ class LiveMeetingProvider
                 array_merge([
                     'canPublish' => true,
                     'canSubscribe' => true,
-                    'canPublishData' => false,
+                    // حصص Classroom الخاصة تحتاج data channel لمزامنة السبورة الفورية
+                    'canPublishData' => true,
                     'roomAdmin' => $isHost,
                     'metadata' => [
                         'is_host' => $isHost,
@@ -148,7 +150,8 @@ class LiveMeetingProvider
                 [
                     'canPublish' => true,
                     'canSubscribe' => true,
-                    'canPublishData' => false,
+                    // ضيوف الحصة الخاصة: السماح بمزامنة السبورة عند التفعيل
+                    'canPublishData' => true,
                     'metadata' => ['guest' => true, 'display_name' => $displayName],
                 ]
             );
