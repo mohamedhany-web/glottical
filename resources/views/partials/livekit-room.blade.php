@@ -271,6 +271,12 @@
     let focusTrack = null;
     let connected = false;
     let zoom = 1;
+    let osPipShell = null;
+    let osPipCompact = null;
+    let osPipRestore = null;
+    let osPipActive = false;
+    let osPipAutoTried = false;
+    let osPipOpening = false;
     const ZOOM_MIN = 0.75;
     const ZOOM_STEP = lkTheme === 'student' ? 0.15 : 0.25;
     const isStudentView = lkTheme === 'student' || role === 'participant';
@@ -458,7 +464,6 @@
     function setScreenFocus(on, title) {
         shell?.classList.toggle('is-screen-focus', !!on);
         if (focusBox) focusBox.classList.toggle('hidden', !on);
-        if (pip) pip.classList.toggle('hidden', !on);
         if (toolbarZoom) toolbarZoom.classList.toggle('hidden', !on);
         if (title && focusTitle) focusTitle.textContent = title;
         if (!on) {
@@ -468,14 +473,16 @@
                 focusVideo.removeAttribute('src');
             }
             focusTrack = null;
-            if (documentPictureInPicture?.window || osPipActive) {
+            if (documentPictureInPicture?.window || osPipActive || document.pictureInPictureElement) {
                 closeOsFloatingWindow().catch(() => restoreOsPipDom());
             }
             osPipAutoTried = false;
+            syncFloatingPipExclusive();
             updateStageLayout();
         } else {
+            // نافذة كاميرات واحدة فقط داخل الصفحة أثناء الشير — النافذة فوق النظام بضغطة يدوية
             rebuildPip();
-            maybeAutoOpenOsPip();
+            syncFloatingPipExclusive();
         }
     }
     function attachToFocus(track, label) {
@@ -568,6 +575,49 @@
         if (p && typeof p.catch === 'function') p.catch(() => {});
     }
 
+    function isPipHostedInOsWindow() {
+        return !!(pip && osPipShell && pip.parentElement === osPipShell);
+    }
+
+    function isOsDocumentPipOpen() {
+        try {
+            return !!(typeof documentPictureInPicture !== 'undefined' && documentPictureInPicture.window);
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * ضمان نافذة عائمة واحدة فقط:
+     * - إما شريط الكاميرات داخل الصفحة
+     * - أو نفس الشريط داخل Document PiP
+     * ولا نفتح Video PiP للشاشة بالتوازي مع شريط الكاميرات.
+     */
+    function syncFloatingPipExclusive() {
+        if (!pip) return;
+        const screenFocus = !!shell?.classList.contains('is-screen-focus');
+        const inOs = isPipHostedInOsWindow();
+
+        if (inOs) {
+            pip.classList.remove('hidden');
+            return;
+        }
+
+        // نافذة نظام مفتوحة لكن العنصر رُدّ للصفحة بالخطأ → أخفِ النسخة داخل الصفحة لتفادي التكرار
+        if (isOsDocumentPipOpen() && !inOs) {
+            pip.classList.add('hidden');
+            return;
+        }
+
+        // لا نسمح بـ Video PiP للشاشة + شريط كاميرات داخل الصفحة معاً
+        if (screenFocus && document.pictureInPictureElement && focusVideo
+            && document.pictureInPictureElement === focusVideo) {
+            document.exitPictureInPicture().catch(() => {});
+        }
+
+        pip.classList.toggle('hidden', !screenFocus && !osPipActive);
+    }
+
     function rebuildPip() {
         if (!pipBody) return;
         // detach previous pip attaches
@@ -579,22 +629,36 @@
         });
         pipBody.innerHTML = '';
         pipTiles.clear();
-        const liveCams = [...tiles.entries()]
-            .filter(([, ref]) => cameraTrackIsLive(ref))
-            .sort((a, b) => {
-                const aHost = isHostParticipant(a[1].participant) ? 0 : 1;
-                const bHost = isHostParticipant(b[1].participant) ? 0 : 1;
-                if (aHost !== bHost) return aHost - bHost;
-                const aLocal = a[1].participant.isLocal ? 0 : 1;
-                const bLocal = b[1].participant.isLocal ? 0 : 1;
-                return aLocal - bLocal;
-            });
+
+        // كاميرا واحدة لكل مشارك (تفادي تكرار نفس الشخص من مصادر فيديو متعددة)
+        const byIdentity = new Map();
+        tiles.forEach((ref, key) => {
+            if (!cameraTrackIsLive(ref)) return;
+            const id = String(ref.participant?.identity || key);
+            const prev = byIdentity.get(id);
+            if (!prev) {
+                byIdentity.set(id, [key, ref]);
+                return;
+            }
+            const preferNew = ref.source === Track.Source.Camera && prev[1].source !== Track.Source.Camera;
+            if (preferNew) byIdentity.set(id, [key, ref]);
+        });
+
+        const liveCams = [...byIdentity.values()].sort((a, b) => {
+            const aHost = isHostParticipant(a[1].participant) ? 0 : 1;
+            const bHost = isHostParticipant(b[1].participant) ? 0 : 1;
+            if (aHost !== bHost) return aHost - bHost;
+            const aLocal = a[1].participant.isLocal ? 0 : 1;
+            const bLocal = b[1].participant.isLocal ? 0 : 1;
+            return aLocal - bLocal;
+        });
 
         liveCams.forEach(([key, ref]) => {
             const wrap = document.createElement('div');
             wrap.className = 'lk-pip-tile'
                 + (ref.participant.isLocal ? ' is-local' : '')
                 + (isHostParticipant(ref.participant) ? ' is-host' : '');
+            wrap.dataset.pipIdentity = String(ref.participant?.identity || key);
             const v = document.createElement('video');
             v.autoplay = true;
             v.playsInline = true;
@@ -633,9 +697,8 @@
         if (pipEmpty) pipEmpty.classList.toggle('hidden', count > 0);
         if (pipBody) pipBody.classList.toggle('hidden', count === 0);
 
-        const showPip = shell?.classList.contains('is-screen-focus') || osPipActive;
-        if (pip && showPip) {
-            pip.classList.toggle('hidden', false);
+        syncFloatingPipExclusive();
+        if (pip && shell?.classList.contains('is-screen-focus') && !isPipHostedInOsWindow() && !isOsDocumentPipOpen()) {
             if (count === 0 && !osPipActive) {
                 pip.classList.toggle('hidden', lkTheme !== 'instructor' && role !== 'host');
             }
@@ -922,11 +985,6 @@
     const osPipBtn = document.getElementById('lk-toggle-os-pip');
     const osPipFocusBtn = document.getElementById('lk-os-pip');
     const osPipCamBtn = document.getElementById('lk-pip-os');
-    let osPipShell = null;
-    let osPipCompact = null;
-    let osPipRestore = null;
-    let osPipActive = false;
-    let osPipAutoTried = false;
 
     function supportsDocumentPiP() {
         return typeof window.documentPictureInPicture !== 'undefined'
@@ -1012,6 +1070,7 @@
         osPipShell = null;
         osPipCompact = null;
         updateOsPipButtons(false);
+        syncFloatingPipExclusive();
     }
     function buildOsPipCompact() {
         const wrap = document.createElement('div');
@@ -1058,13 +1117,29 @@
     }
     async function openDocumentPiP(opts) {
         opts = opts || {};
+        if (osPipOpening) return false;
         const camerasOnly = !!opts.camerasOnly || (lkTheme === 'instructor' || role === 'host');
-        if (!supportsDocumentPiP()) return openVideoPiP();
+        // للكاميرات فقط: لا نفتح Video PiP للشاشة (يتسبب بنافذتين)
+        if (!supportsDocumentPiP()) {
+            if (camerasOnly) {
+                syncFloatingPipExclusive();
+                setStatus('استخدم شريط الكاميرات العائم داخل الصفحة — المتصفح لا يدعم نافذة النظام للكاميرات', true);
+                return false;
+            }
+            return openVideoPiP();
+        }
         if (documentPictureInPicture.window) {
             documentPictureInPicture.window.focus();
             updateOsPipButtons(true);
+            syncFloatingPipExclusive();
             return true;
         }
+        if (document.pictureInPictureElement) {
+            try { await document.exitPictureInPicture(); } catch (e) {}
+        }
+
+        osPipOpening = true;
+        try {
         rebuildPip();
         const camCount = pipBody ? pipBody.children.length : 0;
         const inScreenFocus = shell?.classList.contains('is-screen-focus');
@@ -1117,22 +1192,30 @@
         requestAnimationFrame(function () {
             rebuildPip();
             pipBody?.querySelectorAll('video').forEach(playPipVideo);
+            syncFloatingPipExclusive();
         });
         setTimeout(function () {
             rebuildPip();
             pipBody?.querySelectorAll('video').forEach(playPipVideo);
+            syncFloatingPipExclusive();
         }, 250);
         updateOsPipButtons(true);
+        syncFloatingPipExclusive();
         setStatus(wantCamerasOnly
             ? 'نافذة الكاميرات العائمة نشطة — تتنقل معك فوق كل التطبيقات'
             : 'النافذة العائمة نشطة — تبقى فوق التبويبات والتطبيقات');
         hideStatusSoon();
         return true;
+        } finally {
+            osPipOpening = false;
+        }
     }
     async function toggleOsFloatingWindow(forceCamerasOnly) {
         try {
+            if (osPipOpening) return;
             if (osPipActive || documentPictureInPicture?.window || document.pictureInPictureElement) {
                 await closeOsFloatingWindow();
+                syncFloatingPipExclusive();
                 return;
             }
             await openDocumentPiP({
@@ -1141,28 +1224,37 @@
         } catch (err) {
             if (err?.name === 'NotAllowedError') {
                 setStatus('اسمح للموقع بفتح النافذة العائمة من إعدادات المتصفح', true);
+                syncFloatingPipExclusive();
                 return;
             }
             console.warn(err);
+            // لا نفتح Video PiP كبديل للمدرب حتى لا تتكرر النوافذ مع شريط الكاميرات
+            if (lkTheme === 'instructor' || role === 'host' || forceCamerasOnly === true) {
+                syncFloatingPipExclusive();
+                setStatus(errMsg(err, 'تعذر فتح نافذة النظام — شريط الكاميرات يبقى داخل الصفحة'), true);
+                return;
+            }
             try { await openVideoPiP(); } catch (e2) {
                 setStatus(errMsg(e2, 'تعذر فتح النافذة العائمة'), true);
             }
         }
     }
     function maybeAutoOpenOsPip() {
-        if (osPipAutoTried || osPipActive) return;
-        if (!supportsDocumentPiP() && !supportsVideoPiP()) return;
-        // لا نفتح تلقائياً إلا عند المدرب أثناء الشير — شبكة الكاميرات فوق الجهاز
-        if (lkTheme !== 'instructor' && role !== 'host') return;
-        osPipAutoTried = true;
-        openDocumentPiP({ camerasOnly: true }).catch(() => {});
+        // معطّل عمداً: الفتح التلقائي يسبب نافذة نظام + شريط داخل الصفحة أو فشلاً صامتاً
+        return;
     }
     osPipBtn?.addEventListener('click', () => toggleOsFloatingWindow(true));
-    osPipFocusBtn?.addEventListener('click', () => toggleOsFloatingWindow(false));
+    osPipFocusBtn?.addEventListener('click', () => toggleOsFloatingWindow(true));
     osPipCamBtn?.addEventListener('click', () => toggleOsFloatingWindow(true));
-    document.addEventListener('leavepictureinpicture', () => updateOsPipButtons(false));
+    document.addEventListener('leavepictureinpicture', () => {
+        updateOsPipButtons(false);
+        syncFloatingPipExclusive();
+    });
     if (documentPictureInPicture) {
-        documentPictureInPicture.addEventListener('enter', () => updateOsPipButtons(true));
+        documentPictureInPicture.addEventListener('enter', () => {
+            updateOsPipButtons(true);
+            syncFloatingPipExclusive();
+        });
     }
 
     // drag focus viewport while zoomed

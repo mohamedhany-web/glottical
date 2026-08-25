@@ -199,6 +199,7 @@ class ClassroomRoomRoleUiTest extends TestCase
         $response->assertSee('btn-mx-host-share-draw', false);
         $response->assertSee('host_emit', false);
         $response->assertSee('lk-pip-cols-btn', false);
+        $response->assertSee('syncFloatingPipExclusive', false);
         $response->assertSee('mxGracefulEndMeeting', false);
         $response->assertSee('scheduleLectureComposite', false);
         $response->assertSee('الكاميرات', false);
