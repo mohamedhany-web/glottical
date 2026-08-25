@@ -517,6 +517,7 @@
             }
         }
         setScreenFocus(true, label || 'مشاركة الشاشة');
+        try { window.__mxLkNotifyRecordingCaptureChanged?.(); } catch (e) {}
         if (isStudentView) {
             setZoom(lkDefaultScreenZoom || 1.35);
             setTimeout(autoFitZoom, 120);
@@ -1214,6 +1215,7 @@
         screenOn = false;
         screenBtn?.classList.remove('is-sharing');
         setScreenFocus(false);
+        try { window.__mxLkNotifyRecordingCaptureChanged?.(); } catch (e) {}
     }
 
     async function publishMediaTrackAsScreen(mediaTrack, isAudio) {
@@ -1310,6 +1312,7 @@
         screenBtn?.classList.add('is-sharing');
         annStrokes = [];
         annTool = 'pen';
+        try { window.__mxLkNotifyRecordingCaptureChanged?.(); } catch (e) {}
 
         try {
             await openScreenAnnotatePip();
@@ -1765,6 +1768,46 @@
     window.__mxLkLeaveRoom = function () {
         try { room.disconnect(); } catch (e) {}
     };
+
+    /** مصادر التسجيل الصامت: فيديو الشير (مع القلم) + مسارات الصوت المحلية */
+    window.__mxLkGetRecordCapture = function () {
+        const audioTracks = [];
+        const pushTrack = function (t) {
+            if (!t || t.readyState !== 'live' || t.enabled === false) return;
+            if (audioTracks.indexOf(t) >= 0) return;
+            audioTracks.push(t);
+        };
+        try {
+            room.localParticipant?.audioTrackPublications?.forEach(function (pub) {
+                if (pub?.isMuted) return;
+                pushTrack(pub.track?.mediaStreamTrack);
+            });
+            room.localParticipant?.trackPublications?.forEach(function (pub) {
+                if (pub?.source === Track.Source.ScreenShareAudio) {
+                    pushTrack(pub.track?.mediaStreamTrack);
+                }
+            });
+        } catch (e) {}
+        try {
+            annDisplayStream?.getAudioTracks()?.forEach(pushTrack);
+        } catch (e2) {}
+
+        const sharing = !!screenOn;
+        return {
+            screenSharing: sharing,
+            canvas: (sharing && annOutCanvas && annOutCanvas.width > 0) ? annOutCanvas : null,
+            videoElement: (sharing && focusVideo && (focusVideo.srcObject || focusVideo.readyState >= 2))
+                ? focusVideo
+                : null,
+            audioTracks: audioTracks,
+        };
+    };
+    window.__mxLkNotifyRecordingCaptureChanged = function () {
+        try {
+            window.dispatchEvent(new CustomEvent('mx-lk-record-capture-changed'));
+        } catch (e) {}
+    };
+
     connect();
 })();
 </script>
