@@ -147,6 +147,7 @@ class ClassroomRoomRoleUiTest extends TestCase
         $response->assertSee('lk-theme-student', false);
         $response->assertSee('emit_and_poll', false);
         $response->assertSee('share-annotation', false);
+        $response->assertSee('mx-ann-above-media', false);
         $response->assertSee('microphone-slash', false);
         $response->assertSee('syncMicButton', false);
         $response->assertSee('id="lk-zoom-slider"', false);

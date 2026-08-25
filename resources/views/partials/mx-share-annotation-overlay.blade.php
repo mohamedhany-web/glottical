@@ -9,19 +9,61 @@
     $mxAnnSelfKey = $mxAnnSelfKey ?? (string) (auth()->id() ?? '');
 @endphp
 <style>
-    #mx-share-ann-layer { pointer-events: none; }
+    #mx-share-ann-layer {
+        pointer-events: none;
+        position: absolute;
+        inset-inline: 0;
+        top: 0;
+        /* اترك شريط LiveKit (ميك/كاميرا/مغادرة) قابلاً للضغط وغير مغطى */
+        bottom: var(--mx-ann-above-media, 5.35rem);
+        z-index: 25;
+    }
     #mx-share-ann-layer.mx-share-ann-drawing { pointer-events: auto; }
     #mx-share-ann-layer.mx-share-ann-drawing #mx-share-ann-canvas { touch-action: none; }
-    #mx-share-ann-toolbar { pointer-events: auto; }
+    #mx-share-ann-toolbar {
+        pointer-events: auto;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 0.45rem;
+        z-index: 26;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 1rem;
+        background: rgba(15, 23, 42, 0.94);
+        border: 1px solid rgb(71, 85, 105);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+        max-width: min(95vw, 42rem);
+    }
+    @media (max-width: 640px) {
+        #mx-share-ann-layer {
+            bottom: var(--mx-ann-above-media-mobile, 6.75rem);
+        }
+        #mx-share-ann-toolbar {
+            gap: 0.35rem;
+            padding: 0.4rem 0.55rem;
+            max-width: 96vw;
+        }
+    }
+    /* ثيم الطالب: شريط الوسائط أوضح وأطول أحياناً */
+    .lk-theme-student ~ #mx-share-ann-layer,
+    .st-live-stage #mx-share-ann-layer {
+        --mx-ann-above-media: 5.6rem;
+        --mx-ann-above-media-mobile: 7.1rem;
+    }
 </style>
-<div id="mx-share-ann-layer" class="absolute inset-0 z-[25] hidden"
+<div id="mx-share-ann-layer" class="hidden"
      data-role="{{ $mxAnnRole }}"
      data-post-url="{{ e($mxAnnPostUrl) }}"
      data-poll-url="{{ e($mxAnnPollUrl) }}"
      data-self-key="{{ e($mxAnnSelfKey) }}"
      data-guest-token="">
     <canvas id="mx-share-ann-canvas" class="absolute inset-0 w-full h-full block"></canvas>
-    <div id="mx-share-ann-toolbar" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex flex-wrap items-center justify-center gap-2 px-3 py-2 rounded-2xl bg-slate-900/92 border border-slate-600 shadow-xl max-w-[95vw]">
+    <div id="mx-share-ann-toolbar">
         <span class="text-slate-400 text-[11px] px-1 hidden sm:inline">فوق عرض البث</span>
         <button type="button" data-mx-ann-tool="pen" class="mx-ann-tool-btn inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-600/30 text-amber-100 text-xs font-semibold border border-amber-500/50 ring-2 ring-amber-400/60">
             <i class="fas fa-pen"></i> قلم
@@ -333,6 +375,8 @@
     window.__mxShareAnnOpenToolbar = function () {
         if (!allowed || !isEmitter()) return;
         layer.classList.remove('hidden');
+        var toolbar = layer.querySelector('#mx-share-ann-toolbar');
+        if (toolbar) toolbar.style.display = '';
         setDrawActive(true);
         resizeCanvas();
     };
@@ -343,12 +387,20 @@
 
     if (isEmitter()) {
         bindEmitter();
-        if (role === 'host_emit' || role === 'emit_and_poll') {
+        if (role === 'host_emit') {
+            // المعلم: أدوات الرسم جاهزة فوق منطقة الفيديو فقط (فوق شريط الوسائط)
             allowed = true;
             layer.classList.remove('hidden');
-            var toolbar = layer.querySelector('#mx-share-ann-toolbar');
-            if (toolbar) toolbar.style.display = '';
+            var hostTb = layer.querySelector('#mx-share-ann-toolbar');
+            if (hostTb) hostTb.style.display = '';
             setDrawActive(true);
+        } else if (role === 'emit_and_poll') {
+            // الطالب: يرى رسوم المعلم؛ شريط القلم يظهر فقط عند ضغط «رسم فوق العرض»
+            allowed = true;
+            layer.classList.remove('hidden');
+            var studentTb = layer.querySelector('#mx-share-ann-toolbar');
+            if (studentTb) studentTb.style.display = 'none';
+            setDrawActive(false);
         }
     } else if (role === 'viewer_poll') {
         var tb = layer.querySelector('#mx-share-ann-toolbar');
