@@ -5,6 +5,13 @@
 
 @section('content')
 <div class="space-y-5">
+    @if(session('success'))
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+    @endif
+
     <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
             <p class="text-xs text-muted">الطلاب والخدمات</p>
@@ -54,17 +61,46 @@
             </div>
             <div class="divide-y divide-line">
                 @forelse($recentPrivate as $session)
-                    <div class="flex items-center justify-between gap-3 py-3 text-sm">
-                        <a href="{{ route('admin.one-to-one-sessions.show', $session) }}" class="min-w-0 flex-1 hover:bg-slate-50/60 rounded-lg px-1 py-0.5">
-                            <p class="truncate font-medium text-ink">{{ $session->student?->name }} ← {{ $session->instructor?->name }}</p>
-                            <p class="text-xs text-muted">{{ $session->statusLabel() }} · {{ optional($session->scheduled_at ?? $session->created_at)->format('Y-m-d H:i') }}</p>
-                        </a>
+                    @php
+                        $instructorTz = \App\Support\AppTimezone::forUser($session->instructor);
+                        $scheduledLocal = \App\Support\AppTimezone::datetimeLocalValue($session->scheduled_at, $instructorTz);
+                    @endphp
+                    <div class="py-3 text-sm space-y-2">
+                        <div class="flex items-center justify-between gap-3">
+                            <a href="{{ route('admin.one-to-one-sessions.show', $session) }}" class="min-w-0 flex-1 hover:bg-slate-50/60 rounded-lg px-1 py-0.5">
+                                <p class="truncate font-medium text-ink">{{ $session->student?->name }} ← {{ $session->instructor?->name }}</p>
+                                <p class="text-xs text-muted">{{ $session->statusLabel() }} · {{ optional($session->scheduled_at ?? $session->created_at)->format('Y-m-d H:i') }}</p>
+                            </a>
+                            @if($session->isOpenPlacement())
+                                <form method="POST" action="{{ route('admin.placement.destroy-private', $session) }}" class="shrink-0"
+                                      onsubmit="return confirm(@json($session->series_id ? 'حذف التسكين؟ سيتم إلغاء كل الحصص غير المكتملة في هذا التسكين وإرجاع الرصيد المحجوز.' : 'حذف هذا التسكين؟ سيُلغى الموعد ويُعاد الرصيد المحجوز.'));">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-xs font-medium text-danger hover:underline">حذف التسكين</button>
+                                </form>
+                            @endif
+                        </div>
                         @if($session->isOpenPlacement())
-                            <form method="POST" action="{{ route('admin.placement.destroy-private', $session) }}" class="shrink-0"
-                                  onsubmit="return confirm(@json($session->series_id ? 'حذف التسكين؟ سيتم إلغاء كل الحصص غير المكتملة في هذا التسكين وإرجاع الرصيد المحجوز.' : 'حذف هذا التسكين؟ سيُلغى الموعد ويُعاد الرصيد المحجوز.'));">
+                            <form method="POST" action="{{ route('admin.placement.update-private-schedule', $session) }}"
+                                  class="flex flex-wrap items-end gap-2 rounded-xl border border-line/80 bg-canvas/40 p-2.5">
                                 @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-xs font-medium text-danger hover:underline">حذف التسكين</button>
+                                @method('PATCH')
+                                <div class="min-w-[11rem] flex-1">
+                                    <label class="mb-1 block text-[10px] font-medium text-muted">موعد الحصة (توقيت المعلم)</label>
+                                    <input type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at', $scheduledLocal) }}"
+                                           required dir="ltr"
+                                           class="h-9 w-full rounded-lg border border-line bg-surface px-2.5 text-xs text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">
+                                </div>
+                                <div class="w-20">
+                                    <label class="mb-1 block text-[10px] font-medium text-muted">المدة (د)</label>
+                                    <input type="number" name="duration_minutes" min="15" max="180" step="5"
+                                           value="{{ old('duration_minutes', (int) ($session->duration_minutes ?: 50)) }}"
+                                           class="h-9 w-full rounded-lg border border-line bg-surface px-2.5 text-xs text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">
+                                </div>
+                                <input type="hidden" name="timezone" value="{{ $instructorTz }}">
+                                <button type="submit" class="btn-press inline-flex h-9 items-center rounded-lg bg-accent px-3 text-xs font-semibold text-white">
+                                    حفظ الموعد
+                                </button>
                             </form>
                         @endif
                     </div>
@@ -81,17 +117,40 @@
             </div>
             <div class="divide-y divide-line">
                 @forelse($recentGroups as $booking)
-                    <div class="flex items-center justify-between gap-3 py-3 text-sm">
-                        <a href="{{ route('admin.tutoring-group-bookings.show', $booking) }}" class="min-w-0 flex-1 hover:bg-slate-50/60 rounded-lg px-1 py-0.5">
-                            <p class="truncate font-medium text-ink">{{ $booking->user?->name }} · {{ $booking->tutoringGroup?->title }}</p>
-                            <p class="text-xs text-muted">{{ $booking->statusLabel() }} · {{ optional($booking->starts_at)->format('Y-m-d H:i') }}</p>
-                        </a>
+                    @php
+                        $groupInstructorTz = \App\Support\AppTimezone::forUser($booking->instructor);
+                        $startsLocal = \App\Support\AppTimezone::datetimeLocalValue($booking->starts_at, $groupInstructorTz);
+                    @endphp
+                    <div class="py-3 text-sm space-y-2">
+                        <div class="flex items-center justify-between gap-3">
+                            <a href="{{ route('admin.tutoring-group-bookings.show', $booking) }}" class="min-w-0 flex-1 hover:bg-slate-50/60 rounded-lg px-1 py-0.5">
+                                <p class="truncate font-medium text-ink">{{ $booking->user?->name }} · {{ $booking->tutoringGroup?->title }}</p>
+                                <p class="text-xs text-muted">{{ $booking->statusLabel() }} · {{ optional($booking->starts_at)->format('Y-m-d H:i') }}</p>
+                            </a>
+                            @if($booking->isOpenPlacement())
+                                <form method="POST" action="{{ route('admin.placement.destroy-group', $booking) }}" class="shrink-0"
+                                      onsubmit="return confirm('حذف تسكين المجموعة؟ سيُلغى الحجز ويُعاد الرصيد المحجوز.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-xs font-medium text-danger hover:underline">حذف التسكين</button>
+                                </form>
+                            @endif
+                        </div>
                         @if($booking->isOpenPlacement())
-                            <form method="POST" action="{{ route('admin.placement.destroy-group', $booking) }}" class="shrink-0"
-                                  onsubmit="return confirm('حذف تسكين المجموعة؟ سيُلغى الحجز ويُعاد الرصيد المحجوز.');">
+                            <form method="POST" action="{{ route('admin.placement.update-group-schedule', $booking) }}"
+                                  class="flex flex-wrap items-end gap-2 rounded-xl border border-line/80 bg-canvas/40 p-2.5">
                                 @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-xs font-medium text-danger hover:underline">حذف التسكين</button>
+                                @method('PATCH')
+                                <div class="min-w-[11rem] flex-1">
+                                    <label class="mb-1 block text-[10px] font-medium text-muted">موعد الحصة (توقيت المعلم)</label>
+                                    <input type="datetime-local" name="starts_at" value="{{ old('starts_at', $startsLocal) }}"
+                                           required dir="ltr"
+                                           class="h-9 w-full rounded-lg border border-line bg-surface px-2.5 text-xs text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">
+                                </div>
+                                <input type="hidden" name="timezone" value="{{ $groupInstructorTz }}">
+                                <button type="submit" class="btn-press inline-flex h-9 items-center rounded-lg bg-accent px-3 text-xs font-semibold text-white">
+                                    حفظ الموعد
+                                </button>
                             </form>
                         @endif
                     </div>

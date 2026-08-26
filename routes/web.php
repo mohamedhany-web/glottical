@@ -1938,6 +1938,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/placement/student-context', [\App\Http\Controllers\Admin\PlacementController::class, 'studentContext'])->name('placement.student-context');
         Route::get('/placement/slots', [\App\Http\Controllers\Admin\PlacementController::class, 'slots'])->name('placement.slots');
         Route::delete('/placement/private/{oneToOneSession}', [\App\Http\Controllers\Admin\PlacementController::class, 'destroyPrivate'])->name('placement.destroy-private');
+        Route::patch('/placement/private/{oneToOneSession}/schedule', [\App\Http\Controllers\Admin\PlacementController::class, 'updatePrivateSchedule'])->name('placement.update-private-schedule');
+        Route::patch('/placement/group/{tutoringGroupBooking}/schedule', [\App\Http\Controllers\Admin\PlacementController::class, 'updateGroupSchedule'])->name('placement.update-group-schedule');
         Route::delete('/placement/group/{tutoringGroupBooking}', [\App\Http\Controllers\Admin\PlacementController::class, 'destroyGroup'])->name('placement.destroy-group');
 
         Route::get('/student-lesson-cleanup', [\App\Http\Controllers\Admin\StudentLessonCleanupController::class, 'index'])->name('student-lesson-cleanup.index');
@@ -1952,6 +1954,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/one-to-one-sessions/create', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'create'])->name('one-to-one-sessions.create');
         Route::post('/one-to-one-sessions', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'store'])->name('one-to-one-sessions.store');
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'show'])->name('one-to-one-sessions.show');
+        Route::patch('/one-to-one-sessions/{oneToOneSession}/schedule', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'updateSchedule'])->name('one-to-one-sessions.update-schedule');
         Route::delete('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'destroy'])->name('one-to-one-sessions.destroy');
 
         Route::get('/accounting/instructor-accounts', [\App\Http\Controllers\Admin\InstructorAccountController::class, 'index'])->name('accounting.instructor-accounts.index');

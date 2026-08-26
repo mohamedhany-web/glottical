@@ -209,6 +209,9 @@ class ClassroomRoomRoleUiTest extends TestCase
         $response->assertSee('قلم الشاشة', false);
         $response->assertSee('__mxLkToggleScreenAnnotate', false);
         $response->assertSee('startAnnotatedScreenShare', false);
+        $response->assertSee('lk-local-share-placeholder', false);
+        $response->assertSee('preferScreenShareQuality', false);
+        $response->assertSee('selfBrowserSurface', false);
         $response->assertSee('host_emit', false);
         $response->assertSee('lk-pip-cols-btn', false);
         $response->assertSee('syncFloatingPipExclusive', false);

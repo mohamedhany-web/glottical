@@ -840,4 +840,71 @@ class OneToOneMonthlyBookingTest extends TestCase
         $this->assertSame(0, (int) $entitlement->fresh()->units_used);
         $this->assertSame(1, StudentEntitlementService::bookableUnitsLeft($entitlement->fresh()));
     }
+
+    public function test_admin_can_reschedule_private_placement_from_placement_page(): void
+    {
+        [$student, $instructor, $entitlement] = $this->seedActors(4);
+        $instructor->update(['timezone' => 'Africa/Cairo']);
+        $admin = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => true,
+            'password' => Hash::make('password'),
+        ]);
+
+        $sessions = OneToOneSessionService::bookMonthlySeriesWithInstructor(
+            $student,
+            $instructor,
+            [['day_of_week' => 1, 'time' => '18:00']],
+            1,
+            $entitlement,
+            $admin
+        );
+        $session = $sessions->first()->fresh(['classroomMeeting']);
+        $this->assertNotNull($session->scheduled_at);
+        $this->assertNotNull($session->classroomMeeting);
+        $originalMeetingId = $session->classroom_meeting_id;
+
+        $newLocal = '2026-08-25T14:30';
+
+        $this->actingAs($admin)
+            ->withoutMiddleware([
+                \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+                \App\Http\Middleware\EnsurePermission::class,
+                \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+                \App\Http\Middleware\CheckActiveStatus::class,
+            ])
+            ->from(route('admin.placement.index'))
+            ->patch(route('admin.placement.update-private-schedule', $session), [
+                'scheduled_at' => $newLocal,
+                'duration_minutes' => 55,
+                'timezone' => 'Africa/Cairo',
+            ])
+            ->assertRedirect(route('admin.placement.index'))
+            ->assertSessionHas('success');
+
+        $session->refresh();
+        $meeting = $session->classroomMeeting?->fresh();
+
+        $this->assertSame($originalMeetingId, $session->classroom_meeting_id, 'Reschedule must update existing meeting, not create a new one.');
+        $this->assertSame(OneToOneSession::STATUS_SCHEDULED, $session->status);
+        $this->assertSame(55, (int) $session->duration_minutes);
+        $this->assertNotNull($meeting);
+        $this->assertSame(55, (int) $meeting->planned_duration_minutes);
+
+        $expectedUtc = \App\Support\AppTimezone::parseAppointmentInput($newLocal, 'Africa/Cairo');
+        $this->assertNotNull($expectedUtc);
+        $this->assertTrue($session->scheduled_at->equalTo($expectedUtc));
+        $this->assertTrue($meeting->scheduled_for->equalTo($expectedUtc));
+
+        $this->actingAs($admin)
+            ->withoutMiddleware([
+                \App\Http\Middleware\EnsurePermission::class,
+                \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+                \App\Http\Middleware\CheckActiveStatus::class,
+            ])
+            ->get(route('admin.placement.index'))
+            ->assertOk()
+            ->assertSee('حفظ الموعد', false)
+            ->assertSee(route('admin.placement.update-private-schedule', $session), false);
+    }
 }

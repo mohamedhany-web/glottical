@@ -9,6 +9,9 @@
     @if(session('success'))
         <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
     @endif
+    @if(session('error'))
+        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ session('error') }}</div>
+    @endif
 
     <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6 space-y-4">
         <div class="flex flex-wrap justify-between gap-2">
@@ -103,6 +106,36 @@
             </div>
         @endif
     </div>
+
+    @if($session->isOpenPlacement())
+        @php
+            $instructorTz = \App\Support\AppTimezone::forUser($session->instructor);
+            $scheduledLocal = \App\Support\AppTimezone::datetimeLocalValue($session->scheduled_at, $instructorTz);
+        @endphp
+        <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6 space-y-4">
+            <h3 class="font-bold text-slate-900">تعديل موعد الحصة</h3>
+            <p class="text-sm text-slate-500">اكتب اليوم والساعة بحرية — يُحدَّث موعد Classroom تلقائياً ويُشعَر الطالب والمعلم.</p>
+            <form method="POST" action="{{ route('admin.one-to-one-sessions.update-schedule', $session) }}" class="flex flex-wrap items-end gap-3">
+                @csrf
+                @method('PATCH')
+                <div class="min-w-[14rem] flex-1">
+                    <label class="mb-1 block text-xs font-medium text-slate-500">الموعد (توقيت المعلم: {{ $instructorTz }})</label>
+                    <input type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at', $scheduledLocal) }}" required dir="ltr"
+                           class="h-10 w-full rounded-xl border border-slate-300 px-3 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200">
+                </div>
+                <div class="w-24">
+                    <label class="mb-1 block text-xs font-medium text-slate-500">المدة (د)</label>
+                    <input type="number" name="duration_minutes" min="15" max="180" step="5"
+                           value="{{ old('duration_minutes', (int) ($session->duration_minutes ?: 50)) }}"
+                           class="h-10 w-full rounded-xl border border-slate-300 px-3 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200">
+                </div>
+                <input type="hidden" name="timezone" value="{{ $instructorTz }}">
+                <button type="submit" class="inline-flex h-10 items-center rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white hover:bg-sky-500">
+                    حفظ الموعد
+                </button>
+            </form>
+        </div>
+    @endif
 
     <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6 space-y-4">
         <h3 class="font-bold text-slate-900">{{ __('student.one_to_one_instructor_schedule') }}</h3>

@@ -20,6 +20,11 @@
                 <div class="lk-focus__viewport" id="lk-focus-viewport">
                     <div class="lk-focus__scaler" id="lk-focus-scaler">
                         <video id="lk-focus-video" autoplay playsinline></video>
+                        <div id="lk-local-share-placeholder" class="lk-local-share-placeholder hidden" role="status">
+                            <i class="fas fa-desktop" aria-hidden="true"></i>
+                            <strong>أنت تشارك شاشتك الآن</strong>
+                            <span>لا نعرض معاينة حية هنا حتى لا تتكرر الشاشة عند مشاركة الشاشة كاملة. الطالب يرى شاشتك مباشرة — بدون سبورة.</span>
+                        </div>
                     </div>
                 </div>
                 <div class="lk-focus__bar">
@@ -110,11 +115,17 @@
   radial-gradient(circle at 80% 0%, rgba(245,184,0,.12), transparent 40%),
   #020617}
 .lk-focus__viewport.is-dragging{cursor:grabbing}
-.lk-focus__scaler{transform-origin:center center;transition:transform .12s ease;min-width:100%;min-height:100%;display:flex;align-items:center;justify-content:center;padding:.75rem}
-.lk-focus__scaler video{max-width:100%;max-height:calc(100vh - 220px);width:auto;height:auto;object-fit:contain;background:#000;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.45);border:1px solid var(--lk-line)}
+.lk-focus__scaler{transform-origin:center center;transition:transform .12s ease;min-width:100%;min-height:100%;display:flex;align-items:center;justify-content:center;padding:.75rem;position:relative}
+.lk-focus__scaler video{max-width:100%;max-height:calc(100vh - 220px);width:auto;height:auto;object-fit:contain;background:#000;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.45);border:1px solid var(--lk-line);transform:none}
+.lk-focus__scaler video.lk-local-share-hidden{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden}
+.lk-local-share-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.75rem;text-align:center;width:min(28rem,92%);padding:1.5rem 1.25rem;border-radius:16px;border:1px dashed rgba(245,184,0,.45);background:rgba(15,23,42,.92);color:#e2e8f0;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.lk-local-share-placeholder.hidden{display:none!important}
+.lk-local-share-placeholder i{font-size:1.75rem;color:var(--lk-gold)}
+.lk-local-share-placeholder strong{font-size:.95rem;font-weight:800}
+.lk-local-share-placeholder span{font-size:.78rem;line-height:1.55;color:var(--lk-muted);font-weight:600}
 .lk-theme-student .lk-focus__viewport{display:flex;flex-direction:column}
 .lk-theme-student .lk-focus__scaler{flex:1;width:100%;height:100%;min-height:0;padding:.2rem;box-sizing:border-box}
-.lk-theme-student .lk-focus__scaler video{width:100%;height:100%;max-width:100%;max-height:100%;min-width:0;min-height:0;border-radius:10px}
+.lk-theme-student .lk-focus__scaler video{width:100%;height:100%;max-width:100%;max-height:100%;min-width:0;min-height:0;border-radius:10px;transform:none}
 .lk-focus__bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem;padding:.55rem .85rem;border-top:1px solid var(--lk-line);background:rgba(15,23,42,.92)}
 .lk-focus__title{font-size:.8rem;font-weight:800;color:var(--lk-text)}
 .lk-focus__zoom{display:inline-flex;align-items:center;gap:.35rem;flex-wrap:wrap}
@@ -134,10 +145,13 @@
 .lk-stage.layout-duo .lk-tile,
 .lk-stage.layout-trio .lk-tile,
 .lk-stage.layout-class .lk-tile{aspect-ratio:unset;min-height:0}
-    .lk-tile video{width:100%;height:100%;object-fit:cover;background:#020617}
+    .lk-tile video{width:100%;height:100%;object-fit:cover;background:#020617;transform:none}
+/* مرآة للكاميرا المحلية فقط (معاينة طبيعية مثل زوم) — الشير والبعيد بدون مرآة */
+.lk-tile.is-local:not(.is-screen) video,
+.lk-pip-tile.is-local video{transform:scaleX(-1)}
 .lk-tile.is-screen{grid-column:1/-1;min-height:280px;aspect-ratio:auto}
 .lk-theme-student .lk-tile.is-screen{min-height:min(78vh,640px)}
-.lk-tile.is-screen video{object-fit:contain;background:#000}
+.lk-tile.is-screen video{object-fit:contain;background:#000;transform:none!important}
 .lk-theme-student .lk-stage.layout-solo .lk-tile video{object-fit:contain}
 .lk-tile-label{position:absolute;inset-inline-start:.65rem;bottom:.65rem;background:rgba(2,6,23,.82);color:var(--lk-text);font-size:.68rem;font-weight:800;padding:.2rem .5rem;border-radius:.45rem;z-index:2}
 .lk-tile.is-local{outline:2px solid color-mix(in srgb, var(--lk-accent) 55%, transparent)}
@@ -165,7 +179,8 @@
 .lk-pip--cols-1 .lk-pip-tile{aspect-ratio:16/10;min-height:110px}
 .lk-pip-tile.is-local{outline:1px solid color-mix(in srgb, var(--lk-accent) 60%, transparent)}
 .lk-pip-tile.is-host{outline:1px solid color-mix(in srgb, var(--lk-gold) 70%, transparent)}
-.lk-pip-tile video{width:100%;height:100%;object-fit:cover;display:block;background:#020617}
+.lk-pip-tile video{width:100%;height:100%;object-fit:cover;display:block;background:#020617;transform:none}
+.lk-pip-tile.is-local video{transform:scaleX(-1)}
 .lk-pip-tile span{position:absolute;inset-inline-start:.3rem;bottom:.3rem;font-size:.58rem;font-weight:800;background:rgba(0,0,0,.72);padding:.12rem .35rem;border-radius:.3rem;max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lk-btn.is-os-pip{background:color-mix(in srgb, var(--lk-gold) 28%, var(--lk-surface));border-color:var(--lk-gold);color:#fff}
 .lk-os-pip-shell{position:fixed;inset:0;background:#0c0c0c;color:var(--lk-text);display:flex;flex-direction:column;overflow:hidden;font-family:inherit}
@@ -255,11 +270,36 @@
     if (!window.LivekitClient) { setStatus('تعذر تحميل مكتبة LiveKit', true); return; }
     if (!url || !token) { setStatus('إعدادات LiveKit غير مكتملة (رابط أو توكن)', true); return; }
 
-    const { Room, RoomEvent, Track, createLocalTracks, createLocalScreenTracks, LocalVideoTrack, LocalAudioTrack } = window.LivekitClient;
+    const { Room, RoomEvent, Track, createLocalTracks, createLocalScreenTracks, LocalVideoTrack, LocalAudioTrack, VideoQuality, VideoPresets } = window.LivekitClient;
     const room = new Room({
+        // مثل زوم: يقلّل الجودة تلقائياً عند ضعف النت بدل تقطيع الجلسة
         adaptiveStream: true,
         dynacast: true,
-        videoCaptureDefaults: { resolution: { width: 1280, height: 720, frameRate: 30 } },
+        reconnectPolicy: {
+            nextRetryDelayInMs: function (context) {
+                return Math.min(1000 * Math.pow(2, context.retryCount || 0), 10000);
+            },
+        },
+        videoCaptureDefaults: {
+            resolution: (VideoPresets && VideoPresets.h720)
+                ? VideoPresets.h720.resolution
+                : { width: 1280, height: 720, frameRate: 24 },
+            facingMode: 'user',
+        },
+        publishDefaults: {
+            dtx: true,
+            red: true,
+            forceStereo: false,
+            videoSimulcastLayers: (VideoPresets)
+                ? [VideoPresets.h180, VideoPresets.h360].filter(Boolean)
+                : undefined,
+            videoEncoding: (VideoPresets && VideoPresets.h720)
+                ? VideoPresets.h720.encoding
+                : { maxBitrate: 1_200_000, maxFramerate: 24 },
+            screenShareEncoding: { maxBitrate: 2_500_000, maxFramerate: 15 },
+            screenShareSimulcastLayers: [],
+            videoCodec: 'vp8',
+        },
     });
 
     const tiles = new Map();
@@ -270,6 +310,7 @@
     let screenTrack = null;
     let screenAudioTrack = null;
     let focusTrack = null;
+    let localSharePlaceholderMode = false;
     let connected = false;
     let zoom = 1;
     let osPipShell = null;
@@ -477,16 +518,49 @@
         focusScaler.style.transform = 'scale(' + zoom + ')';
         syncZoomUi();
     }
+    function setLocalSharePlaceholder(on) {
+        localSharePlaceholderMode = !!on;
+        const ph = document.getElementById('lk-local-share-placeholder');
+        if (ph) ph.classList.toggle('hidden', !on);
+        if (focusVideo) {
+            focusVideo.classList.toggle('lk-local-share-hidden', !!on);
+            if (on) {
+                try {
+                    focusVideo.pause?.();
+                    focusVideo.srcObject = null;
+                    focusVideo.removeAttribute('src');
+                } catch (e) {}
+            }
+        }
+    }
+
+    function preferScreenShareQuality(publication) {
+        if (!publication) return;
+        try {
+            if (typeof publication.setVideoQuality === 'function' && VideoQuality) {
+                publication.setVideoQuality(VideoQuality.HIGH);
+            }
+        } catch (e) {}
+        try {
+            // إبقاء الاشتراك نشطاً حتى لو العنصر صغيراً لحظياً
+            if (typeof publication.setSubscribed === 'function') {
+                publication.setSubscribed(true);
+            }
+        } catch (e2) {}
+    }
+
     function setScreenFocus(on, title) {
         shell?.classList.toggle('is-screen-focus', !!on);
         if (focusBox) focusBox.classList.toggle('hidden', !on);
         if (toolbarZoom) toolbarZoom.classList.toggle('hidden', !on);
         if (title && focusTitle) focusTitle.textContent = title;
         if (!on) {
+            setLocalSharePlaceholder(false);
             setZoom(1);
             if (focusVideo) {
                 focusVideo.srcObject = null;
                 focusVideo.removeAttribute('src');
+                focusVideo.classList.remove('lk-local-share-hidden');
             }
             focusTrack = null;
             if (documentPictureInPicture?.window || osPipActive || document.pictureInPictureElement) {
@@ -501,12 +575,24 @@
             syncFloatingPipExclusive();
         }
     }
-    function attachToFocus(track, label) {
+    function attachToFocus(track, label, opts) {
+        opts = opts || {};
+        const isLocalShare = !!opts.localSharePlaceholder;
         focusTrack = track;
+        if (isLocalShare) {
+            // لا نعرض معاينة الشير الحي للمضيف — يمنع تكرار الشاشة عند مشاركة الشاشة كاملة
+            setLocalSharePlaceholder(true);
+            setScreenFocus(true, label || 'مشاركة الشاشة');
+            setZoom(1);
+            try { window.__mxLkNotifyRecordingCaptureChanged?.(); } catch (e) {}
+            return;
+        }
+        setLocalSharePlaceholder(false);
         if (focusVideo) {
             track.attach(focusVideo);
             focusVideo.muted = true;
             focusVideo.playsInline = true;
+            focusVideo.style.transform = 'none';
             focusVideo.play?.().catch(() => {});
             if (!focusVideo.__mxZoomBound) {
                 focusVideo.__mxZoomBound = true;
@@ -722,7 +808,7 @@
         }
     }
 
-    function attachTrack(track, participant) {
+    function attachTrack(track, participant, publication) {
         if (!track) return;
         if (track.kind === Track.Kind.Audio && !participant.isLocal) {
             const audio = track.attach();
@@ -735,18 +821,33 @@
 
         if (track.source === Track.Source.ScreenShare) {
             const label = (participant.name || participant.identity) + ' · شاشة';
-            attachToFocus(track, label);
-            // keep a hidden tile for stream reference / cleanup
+            if (!participant.isLocal) {
+                preferScreenShareQuality(publication);
+            }
+            // المضيف: placeholder بدل معاينة حية (يمنع تكرار الشاشة عند شير الشاشة كاملة)
+            // الطالب: يشوف الشاشة مباشرة — لا علاقة بالوايت بورد
+            attachToFocus(track, label, { localSharePlaceholder: !!participant.isLocal });
             const tile = ensureTile(participant, track.source);
             tile.track = track;
-            track.attach(tile.video);
+            tile.publication = publication || null;
+            if (!participant.isLocal) {
+                try {
+                    track.attach(tile.video);
+                    tile.video.style.transform = 'none';
+                } catch (eAtt) {}
+            }
             tile.el.style.display = 'none';
             return;
         }
 
         const tile = ensureTile(participant, track.source);
         tile.track = track;
+        tile.publication = publication || null;
         track.attach(tile.video);
+        // مرآة للكاميرا المحلية فقط عبر CSS؛ البعيد بدون قلب
+        if (!participant.isLocal) {
+            tile.video.style.transform = 'none';
+        }
         updateStageLayout();
         if (shell?.classList.contains('is-screen-focus') || osPipActive) rebuildPip();
         try { window.__mxLkNotifyRecordingCaptureChanged?.(); } catch (eN) {}
@@ -771,11 +872,12 @@
     function attachExistingRemoteTracks() {
         room.remoteParticipants.forEach((participant) => {
             participant.trackPublications.forEach((pub) => {
-                if (pub.track) attachTrack(pub.track, participant);
+                if (pub.track) attachTrack(pub.track, participant, pub);
+                if (pub.source === Track.Source.ScreenShare) preferScreenShareQuality(pub);
             });
         });
         room.localParticipant.trackPublications.forEach((pub) => {
-            if (pub.track) attachTrack(pub.track, room.localParticipant);
+            if (pub.track) attachTrack(pub.track, room.localParticipant, pub);
         });
     }
 
@@ -793,11 +895,14 @@
     }
 
     room
-        .on(RoomEvent.TrackSubscribed, (track, publication, participant) => attachTrack(track, participant))
+        .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+            if (publication?.source === Track.Source.ScreenShare) preferScreenShareQuality(publication);
+            attachTrack(track, participant, publication);
+        })
         .on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => detachTrack(track, participant))
         .on(RoomEvent.ParticipantConnected, () => updateStageLayout())
         .on(RoomEvent.LocalTrackPublished, (publication, participant) => {
-            if (publication.track) attachTrack(publication.track, participant);
+            if (publication.track) attachTrack(publication.track, participant, publication);
         })
         .on(RoomEvent.LocalTrackUnpublished, (publication, participant) => {
             if (publication.track) detachTrack(publication.track, participant);
@@ -808,8 +913,20 @@
                 setScreenFocus(false);
             }
         })
+        .on(RoomEvent.TrackPublished, (publication, participant) => {
+            // تأكد أن شير الطالب يبقى على أعلى جودة ممكنة عند توفره
+            if (!participant?.isLocal && publication?.source === Track.Source.ScreenShare) {
+                preferScreenShareQuality(publication);
+            }
+        })
         .on(RoomEvent.ParticipantDisconnected, (participant) => clearParticipantTiles(participant))
         .on(RoomEvent.Disconnected, () => { connected = false; setStatus('تم قطع الاتصال بالغرفة', true); })
+        .on(RoomEvent.Reconnecting, () => setStatus('إعادة الاتصال بسبب ضعف الشبكة…', true))
+        .on(RoomEvent.Reconnected, () => {
+            setStatus('تم استعادة الاتصال');
+            hideStatusSoon();
+            attachExistingRemoteTracks();
+        })
         .on(RoomEvent.DataReceived, (payload, participant, kind, topic) => {
             try {
                 let data = null;
@@ -893,7 +1010,19 @@
                 const wantAudio = !!startAudio;
                 const wantVideo = !!startVideo;
                 if (wantAudio || wantVideo) {
-                    const localTracks = await createLocalTracks({ audio: wantAudio, video: wantVideo });
+                    const localTracks = await createLocalTracks({
+                        audio: wantAudio ? {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true,
+                        } : false,
+                        video: wantVideo ? {
+                            resolution: (VideoPresets && VideoPresets.h720)
+                                ? VideoPresets.h720.resolution
+                                : { width: 1280, height: 720, frameRate: 24 },
+                            facingMode: 'user',
+                        } : false,
+                    });
                     await Promise.all(localTracks.map((t) => room.localParticipant.publishTrack(t)));
                     localTracks.forEach((t) => attachTrack(t, room.localParticipant));
                 }
@@ -1243,16 +1372,28 @@
     async function publishMediaTrackAsScreen(mediaTrack, isAudio) {
         const source = isAudio ? Track.Source.ScreenShareAudio : Track.Source.ScreenShare;
         try {
+            if (!isAudio && mediaTrack && typeof mediaTrack.contentHint !== 'undefined') {
+                try { mediaTrack.contentHint = 'detail'; } catch (eHint) {}
+            }
+            const publishOpts = {
+                source: source,
+                name: isAudio ? 'screen-audio' : 'screen',
+                simulcast: false,
+            };
+            if (!isAudio) {
+                publishOpts.screenShareEncoding = { maxBitrate: 2_500_000, maxFramerate: 15 };
+                publishOpts.videoCodec = 'vp8';
+            }
             if (!isAudio && typeof LocalVideoTrack === 'function') {
                 const local = new LocalVideoTrack(mediaTrack);
-                local.source = source;
-                await room.localParticipant.publishTrack(local, { source: source, name: 'screen' });
+                try { local.source = source; } catch (eSrc) {}
+                await room.localParticipant.publishTrack(local, publishOpts);
                 return local;
             }
             if (isAudio && typeof LocalAudioTrack === 'function') {
                 const local = new LocalAudioTrack(mediaTrack);
-                local.source = source;
-                await room.localParticipant.publishTrack(local, { source: source, name: 'screen-audio' });
+                try { local.source = source; } catch (eSrc2) {}
+                await room.localParticipant.publishTrack(local, publishOpts);
                 return local;
             }
         } catch (wrapErr) {
@@ -1261,6 +1402,8 @@
         const pub = await room.localParticipant.publishTrack(mediaTrack, {
             source: source,
             name: isAudio ? 'screen-audio' : 'screen',
+            simulcast: false,
+            screenShareEncoding: isAudio ? undefined : { maxBitrate: 2_500_000, maxFramerate: 15 },
         });
         return pub?.track || mediaTrack;
     }
@@ -1271,13 +1414,25 @@
         }
         await stopScreenShare();
 
+        // يفضّل نافذة/تبويب على الشاشة كاملة؛ استبعاد تبويب المتصفح الحالي يقلل التكرار
         const displayStream = await navigator.mediaDevices.getDisplayMedia({
-            video: { frameRate: 15, displaySurface: 'monitor' },
+            video: {
+                frameRate: 15,
+                width: { ideal: 1920, max: 1920 },
+                height: { ideal: 1080, max: 1080 },
+                displaySurface: 'window',
+            },
             audio: true,
+            // Chromium: لا تلتقط نافذة هذا التبويب ضمن الشير
+            preferCurrentTab: false,
+            selfBrowserSurface: 'exclude',
+            surfaceSwitching: 'include',
+            systemAudio: 'include',
         });
         annDisplayStream = displayStream;
         const rawVideo = displayStream.getVideoTracks()[0];
         if (!rawVideo) throw new Error('no display video');
+        try { rawVideo.contentHint = 'detail'; } catch (eHint) {}
 
         rawVideo.addEventListener('ended', function () {
             stopScreenShare().catch(function () {});
@@ -1295,14 +1450,15 @@
         }
 
         annOutCanvas = document.createElement('canvas');
-        annOutCanvas.width = annDisplayVideo.videoWidth || 1280;
-        annOutCanvas.height = annDisplayVideo.videoHeight || 720;
-        annOutCtx = annOutCanvas.getContext('2d', { alpha: false });
+        annOutCanvas.width = Math.min(1920, annDisplayVideo.videoWidth || 1280);
+        annOutCanvas.height = Math.min(1080, annDisplayVideo.videoHeight || 720);
+        annOutCtx = annOutCanvas.getContext('2d', { alpha: false, desynchronized: true });
         startAnnCompositeLoop();
 
         const outStream = annOutCanvas.captureStream(15);
         const outVideoTrack = outStream.getVideoTracks()[0];
         if (!outVideoTrack) throw new Error('canvas capture failed');
+        try { outVideoTrack.contentHint = 'detail'; } catch (eHint2) {}
 
         screenTrack = await publishMediaTrackAsScreen(outVideoTrack, false);
         if (screenTrack && typeof attachTrack === 'function') {
@@ -1310,14 +1466,10 @@
                 if (!screenTrack.source) screenTrack.source = Track.Source.ScreenShare;
                 attachTrack(screenTrack, room.localParticipant);
             } catch (attachErr) {
-                // LocalTrackPublished قد يتولى الربط
                 console.warn(attachErr);
-                if (focusVideo) {
-                    focusVideo.srcObject = outStream;
-                    focusVideo.muted = true;
-                    focusVideo.play?.().catch(function () {});
-                    setScreenFocus(true, 'مشاركة الشاشة + قلم');
-                }
+                // حتى لو فشل الربط: placeholder للمضيف (لا نعرض الشير الحي لتجنب التكرار)
+                setLocalSharePlaceholder(true);
+                setScreenFocus(true, 'مشاركة الشاشة + قلم');
             }
         }
 
@@ -1340,7 +1492,7 @@
             await openScreenAnnotatePip();
         } catch (pipErr) {
             console.warn(pipErr);
-            setStatus('الشير يعمل — اضغط «قلم الشاشة» لفتح أدوات الرسم فوق النظام', true);
+            setStatus('الشير يعمل للطالب — اضغط «قلم الشاشة» لفتح أدوات الرسم فوق النظام', true);
         }
     }
 
@@ -1350,19 +1502,38 @@
             return;
         }
         if (typeof room.localParticipant.setScreenShareEnabled === 'function') {
-            await room.localParticipant.setScreenShareEnabled(true, { audio: true });
+            await room.localParticipant.setScreenShareEnabled(true, {
+                audio: true,
+                resolution: { width: 1920, height: 1080, frameRate: 15 },
+                contentHint: 'detail',
+            });
             screenOn = true;
             screenBtn?.classList.add('is-sharing');
             return;
         }
         let tracks;
-        try { tracks = await createLocalScreenTracks({ audio: true }); }
-        catch (e) { tracks = await createLocalScreenTracks({ audio: false }); }
+        try {
+            tracks = await createLocalScreenTracks({
+                audio: true,
+                resolution: { width: 1920, height: 1080, frameRate: 15 },
+                contentHint: 'detail',
+            });
+        } catch (e) {
+            tracks = await createLocalScreenTracks({ audio: false });
+        }
         screenTrack = tracks[0];
-        await room.localParticipant.publishTrack(screenTrack);
+        await room.localParticipant.publishTrack(screenTrack, {
+            source: Track.Source.ScreenShare,
+            name: 'screen',
+            simulcast: false,
+            screenShareEncoding: { maxBitrate: 2_500_000, maxFramerate: 15 },
+        });
         if (tracks[1]) {
             try {
-                await room.localParticipant.publishTrack(tracks[1]);
+                await room.localParticipant.publishTrack(tracks[1], {
+                    source: Track.Source.ScreenShareAudio,
+                    name: 'screen-audio',
+                });
                 screenAudioTrack = tracks[1];
             } catch (e) {}
         }
@@ -1377,7 +1548,7 @@
             if (screenOn) { await stopScreenShare(); return; }
             await startScreenShare();
             setStatus(isScreenAnnotateHost()
-                ? 'مشاركة الشاشة + قلم عائم — ارسم ليظهر للطالب فوراً'
+                ? 'مشاركة الشاشة للطالب مفعّلة — بدون تكرار هنا. اختر «نافذة» بدل الشاشة كاملة إن أمكن'
                 : 'مشاركة الشاشة مفعّلة — استخدم الزووم والنافذة العائمة');
             hideStatusSoon();
         } catch (err) {

@@ -9,6 +9,7 @@ use App\Models\OneToOneSession;
 use App\Models\ServicePackage;
 use App\Models\StudentCourseEnrollment;
 use App\Models\User;
+use App\Support\AppTimezone;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -526,6 +527,126 @@ class OneToOneSessionService
             'action_url' => route('instructor.one-to-one-sessions.show', $session),
             'action_text' => 'تفاصيل الحصة',
         ]);
+    }
+
+    /**
+     * تعديل موعد حصة 1:1 (تسكين قائم) — الإدارة تكتب الوقت بحرية دون اشتراط جدول المعلم.
+     */
+    public static function rescheduleSession(
+        OneToOneSession $session,
+        Carbon $scheduledAt,
+        int $durationMinutes,
+        ?User $rescheduledBy = null,
+        bool $requireAvailability = false,
+        bool $mustBeFuture = false,
+        bool $notify = true
+    ): void {
+        $session = OneToOneSession::query()
+            ->with(['classroomMeeting', 'student', 'instructor'])
+            ->findOrFail($session->id);
+
+        if (! in_array($session->status, [OneToOneSession::STATUS_PENDING, OneToOneSession::STATUS_SCHEDULED], true)) {
+            throw new \InvalidArgumentException('لا يمكن تعديل موعد حصة في حالتها الحالية.');
+        }
+
+        $meeting = $session->classroomMeeting;
+        if ($meeting?->started_at && ! $meeting->ended_at) {
+            throw new \InvalidArgumentException('لا يمكن تعديل موعد حصة بدأت بالفعل.');
+        }
+
+        $durationMinutes = max(15, min(180, $durationMinutes));
+
+        if ($mustBeFuture && $scheduledAt->lte(now())) {
+            throw new \InvalidArgumentException('الموعد يجب أن يكون في المستقبل.');
+        }
+
+        $excludeSessionId = $session->status === OneToOneSession::STATUS_SCHEDULED ? $session->id : null;
+        $endsAt = $scheduledAt->copy()->addMinutes($durationMinutes);
+
+        if (OneToOneAvailabilityService::hasConflict(
+            (int) $session->instructor_id,
+            $scheduledAt,
+            $endsAt,
+            $excludeSessionId
+        )) {
+            throw new \InvalidArgumentException('هذا الموعد متعارض مع حصة أخرى عند المعلم.');
+        }
+
+        if ($requireAvailability && ! OneToOneAvailabilityService::isSlotAvailable(
+            (int) $session->instructor_id,
+            $scheduledAt,
+            $durationMinutes,
+            $excludeSessionId
+        )) {
+            throw new \InvalidArgumentException('هذا الموعد غير متاح في جدول المعلم.');
+        }
+
+        if (! $meeting) {
+            self::scheduleSession(
+                $session,
+                $scheduledAt,
+                $durationMinutes,
+                $rescheduledBy,
+                $requireAvailability,
+                $notify
+            );
+
+            return;
+        }
+
+        DB::transaction(function () use ($session, $meeting, $scheduledAt, $durationMinutes, $rescheduledBy, $notify) {
+            $session->update([
+                'status' => OneToOneSession::STATUS_SCHEDULED,
+                'scheduled_at' => $scheduledAt,
+                'duration_minutes' => $durationMinutes,
+            ]);
+
+            $meeting->update([
+                'scheduled_for' => $scheduledAt,
+                'planned_duration_minutes' => $durationMinutes,
+            ]);
+
+            if (! $notify) {
+                return;
+            }
+
+            $session->loadMissing(['student', 'instructor']);
+            $studentWhen = AppTimezone::formatFor(
+                $scheduledAt,
+                AppTimezone::forUser($session->student),
+                'D j M · g:i A'
+            );
+            $instructorWhen = AppTimezone::formatFor(
+                $scheduledAt,
+                AppTimezone::forUser($session->instructor),
+                'D j M · g:i A'
+            );
+            $joinUrl = \App\Services\ClassroomMeetingAccessService::platformEnterUrl($meeting->fresh());
+
+            Notification::create([
+                'user_id' => $session->student_id,
+                'sender_id' => $rescheduledBy?->id,
+                'title' => 'تم تعديل موعد حصتك الفردية',
+                'message' => 'الموعد الجديد بتوقيتك: '.$studentWhen.' — رابط الدخول: '.$joinUrl,
+                'type' => 'reminder',
+                'priority' => 'high',
+                'audience' => 'student',
+                'action_url' => route('student.one-to-one-sessions.show', $session),
+                'action_text' => 'تفاصيل الحصة',
+            ]);
+
+            Notification::create([
+                'user_id' => $session->instructor_id,
+                'sender_id' => $rescheduledBy?->id,
+                'title' => 'تعديل موعد حصة 1:1',
+                'message' => 'الطالب: '.($session->student?->name ?? 'طالب').' — الموعد الجديد بتوقيتك: '.$instructorWhen,
+                'type' => 'reminder',
+                'priority' => 'normal',
+                'audience' => 'instructor',
+                'action_url' => route('instructor.one-to-one-sessions.show', $session),
+                'action_text' => 'تفاصيل الحصة',
+            ]);
+        });
     }
 
     /**

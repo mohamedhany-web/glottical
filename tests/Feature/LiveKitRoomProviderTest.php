@@ -129,6 +129,12 @@ class LiveKitRoomProviderTest extends TestCase
         $response->assertSee('id="lk-toggle-os-pip"', false);
         $response->assertSee('__mxLkToggleScreenAnnotate', false);
         $response->assertSee('startAnnotatedScreenShare', false);
+        $response->assertSee('lk-local-share-placeholder', false);
+        $response->assertSee('selfBrowserSurface', false);
+        $response->assertSee('preferScreenShareQuality', false);
+        $response->assertSee('scaleX(-1)', false);
+        $response->assertSee('screenShareEncoding', false);
+        $response->assertSee('adaptiveStream: true', false);
         $response->assertSee('__mxLkGetRecordCapture', false);
         $response->assertSee('cameraVideos', false);
         $response->assertSee('id="lk-zoom-in"', false);

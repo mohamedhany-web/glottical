@@ -148,6 +148,47 @@ class OneToOneSessionController extends Controller
         ]);
     }
 
+    public function updateSchedule(Request $request, OneToOneSession $oneToOneSession): RedirectResponse
+    {
+        if (! $oneToOneSession->isOpenPlacement()) {
+            return back()->with('error', 'لا يمكن تعديل موعد حصة مكتملة أو ملغاة.');
+        }
+
+        $data = $request->validate([
+            'scheduled_at' => ['required', 'date'],
+            'duration_minutes' => ['nullable', 'integer', 'min:15', 'max:180'],
+            'timezone' => AppTimezone::inputRules(),
+        ]);
+
+        $oneToOneSession->loadMissing('instructor');
+        $clockTz = AppTimezone::resolveInput(
+            is_string($data['timezone'] ?? null) ? $data['timezone'] : null,
+            $oneToOneSession->instructor
+        );
+        $scheduledAt = AppTimezone::parseAppointmentInput((string) $data['scheduled_at'], $clockTz);
+        if (! $scheduledAt) {
+            return back()->withInput()->with('error', 'صيغة الموعد غير صالحة.');
+        }
+
+        $duration = (int) ($data['duration_minutes'] ?? $oneToOneSession->duration_minutes ?? OneToOneSession::defaultDurationMinutes());
+
+        try {
+            OneToOneSessionService::rescheduleSession(
+                $oneToOneSession,
+                $scheduledAt,
+                $duration,
+                $request->user(),
+                requireAvailability: false,
+                mustBeFuture: false,
+                notify: true
+            );
+        } catch (\InvalidArgumentException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'تم تحديث موعد الحصة.');
+    }
+
     public function destroy(Request $request, OneToOneSession $oneToOneSession): RedirectResponse
     {
         try {

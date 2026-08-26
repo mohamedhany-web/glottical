@@ -47,13 +47,13 @@ class PlacementController extends Controller
             ->sum(fn (StudentServiceEntitlement $e) => StudentEntitlementService::bookableUnitsLeft($e));
 
         $recentPrivate = OneToOneSession::query()
-            ->with(['student:id,name', 'instructor:id,name'])
+            ->with(['student:id,name', 'instructor:id,name,timezone', 'classroomMeeting'])
             ->where('status', '!=', OneToOneSession::STATUS_CANCELLED)
             ->orderByDesc('created_at')
             ->limit(8)
             ->get();
         $recentGroups = TutoringGroupBooking::query()
-            ->with(['user:id,name', 'instructor:id,name', 'tutoringGroup:id,title'])
+            ->with(['user:id,name', 'instructor:id,name,timezone', 'tutoringGroup:id,title,duration_minutes', 'classroomMeeting'])
             ->where('status', '!=', TutoringGroupBooking::STATUS_CANCELLED)
             ->orderByDesc('created_at')
             ->limit(8)
@@ -592,6 +592,95 @@ class PlacementController extends Controller
             ->orderBy('starts_at')
             ->orderBy('id')
             ->first();
+    }
+
+    public function updatePrivateSchedule(Request $request, OneToOneSession $oneToOneSession): RedirectResponse
+    {
+        if (! $oneToOneSession->isOpenPlacement()) {
+            return back()->with('error', 'لا يمكن تعديل موعد حصة مكتملة أو ملغاة.');
+        }
+
+        $data = $request->validate([
+            'scheduled_at' => ['required', 'date'],
+            'duration_minutes' => ['nullable', 'integer', 'min:15', 'max:180'],
+            'timezone' => AppTimezone::inputRules(),
+        ]);
+
+        $oneToOneSession->loadMissing('instructor');
+        $instructor = $oneToOneSession->instructor;
+        $clockTz = AppTimezone::resolveInput(
+            is_string($data['timezone'] ?? null) ? $data['timezone'] : null,
+            $instructor
+        );
+        $scheduledAt = AppTimezone::parseAppointmentInput((string) $data['scheduled_at'], $clockTz);
+        if (! $scheduledAt) {
+            return back()->withInput()->with('error', 'صيغة الموعد غير صالحة.');
+        }
+
+        $duration = (int) ($data['duration_minutes'] ?? $oneToOneSession->duration_minutes ?? OneToOneSession::defaultDurationMinutes());
+
+        try {
+            OneToOneSessionService::rescheduleSession(
+                $oneToOneSession,
+                $scheduledAt,
+                $duration,
+                $request->user(),
+                requireAvailability: false,
+                mustBeFuture: false,
+                notify: true
+            );
+        } catch (\InvalidArgumentException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'تم تحديث موعد الحصة ومزامنة غرفة Live.');
+    }
+
+    public function updateGroupSchedule(Request $request, TutoringGroupBooking $tutoringGroupBooking): RedirectResponse
+    {
+        if (! $tutoringGroupBooking->isOpenPlacement()) {
+            return back()->with('error', 'لا يمكن تعديل موعد حجز مكتمل أو ملغي.');
+        }
+
+        $data = $request->validate([
+            'starts_at' => ['required', 'date'],
+            'timezone' => AppTimezone::inputRules(),
+        ]);
+
+        $tutoringGroupBooking->loadMissing(['instructor', 'tutoringGroup']);
+        $instructor = $tutoringGroupBooking->instructor;
+        $clockTz = AppTimezone::resolveInput(
+            is_string($data['timezone'] ?? null) ? $data['timezone'] : null,
+            $instructor
+        );
+        $startsAt = AppTimezone::parseAppointmentInput((string) $data['starts_at'], $clockTz)
+            ?? Carbon::parse($data['starts_at'])->utc();
+        $duration = max(30, (int) ($tutoringGroupBooking->tutoringGroup?->duration_minutes ?: 60));
+        $endsAt = $startsAt->copy()->addMinutes($duration);
+
+        if ($tutoringGroupBooking->classroomMeeting?->started_at && ! $tutoringGroupBooking->classroomMeeting?->ended_at) {
+            return back()->with('error', 'لا يمكن تعديل موعد حصة بدأت بالفعل.');
+        }
+
+        try {
+            DB::transaction(function () use ($tutoringGroupBooking, $startsAt, $endsAt, $duration) {
+                $tutoringGroupBooking->update([
+                    'starts_at' => $startsAt,
+                    'ends_at' => $endsAt,
+                ]);
+
+                if ($tutoringGroupBooking->classroomMeeting) {
+                    $tutoringGroupBooking->classroomMeeting->update([
+                        'scheduled_for' => $startsAt,
+                        'planned_duration_minutes' => $duration,
+                    ]);
+                }
+            });
+        } catch (\InvalidArgumentException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'تم تحديث موعد حجز المجموعة ومزامنة غرفة Live.');
     }
 
     public function destroyPrivate(OneToOneSession $oneToOneSession): RedirectResponse
