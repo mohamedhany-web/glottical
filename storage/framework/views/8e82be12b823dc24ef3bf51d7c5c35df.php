@@ -3,20 +3,64 @@
     $mxAnnRole = $mxAnnRole ?? 'student_emit';
     $mxAnnPostUrl = $mxAnnPostUrl ?? '';
     $mxAnnPollUrl = $mxAnnPollUrl ?? '';
+    $mxAnnSelfKey = $mxAnnSelfKey ?? (string) (auth()->id() ?? '');
 ?>
 <style>
-    #mx-share-ann-layer { pointer-events: none; }
+    #mx-share-ann-layer {
+        pointer-events: none;
+        position: absolute;
+        inset-inline: 0;
+        top: 0;
+        /* اترك شريط LiveKit (ميك/كاميرا/مغادرة) قابلاً للضغط وغير مغطى */
+        bottom: var(--mx-ann-above-media, 5.35rem);
+        z-index: 25;
+    }
     #mx-share-ann-layer.mx-share-ann-drawing { pointer-events: auto; }
     #mx-share-ann-layer.mx-share-ann-drawing #mx-share-ann-canvas { touch-action: none; }
-    #mx-share-ann-toolbar { pointer-events: auto; }
+    #mx-share-ann-toolbar {
+        pointer-events: auto;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 0.45rem;
+        z-index: 26;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 1rem;
+        background: rgba(15, 23, 42, 0.94);
+        border: 1px solid rgb(71, 85, 105);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+        max-width: min(95vw, 42rem);
+    }
+    @media (max-width: 640px) {
+        #mx-share-ann-layer {
+            bottom: var(--mx-ann-above-media-mobile, 6.75rem);
+        }
+        #mx-share-ann-toolbar {
+            gap: 0.35rem;
+            padding: 0.4rem 0.55rem;
+            max-width: 96vw;
+        }
+    }
+    /* ثيم الطالب: شريط الوسائط أوضح وأطول أحياناً */
+    .lk-theme-student ~ #mx-share-ann-layer,
+    .st-live-stage #mx-share-ann-layer {
+        --mx-ann-above-media: 5.6rem;
+        --mx-ann-above-media-mobile: 7.1rem;
+    }
 </style>
-<div id="mx-share-ann-layer" class="absolute inset-0 z-[25] hidden"
+<div id="mx-share-ann-layer" class="hidden"
      data-role="<?php echo e($mxAnnRole); ?>"
      data-post-url="<?php echo e(e($mxAnnPostUrl)); ?>"
      data-poll-url="<?php echo e(e($mxAnnPollUrl)); ?>"
+     data-self-key="<?php echo e(e($mxAnnSelfKey)); ?>"
      data-guest-token="">
     <canvas id="mx-share-ann-canvas" class="absolute inset-0 w-full h-full block"></canvas>
-    <div id="mx-share-ann-toolbar" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex flex-wrap items-center justify-center gap-2 px-3 py-2 rounded-2xl bg-slate-900/92 border border-slate-600 shadow-xl max-w-[95vw]">
+    <div id="mx-share-ann-toolbar">
         <span class="text-slate-400 text-[11px] px-1 hidden sm:inline">فوق عرض البث</span>
         <button type="button" data-mx-ann-tool="pen" class="mx-ann-tool-btn inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-600/30 text-amber-100 text-xs font-semibold border border-amber-500/50 ring-2 ring-amber-400/60">
             <i class="fas fa-pen"></i> قلم
@@ -41,6 +85,7 @@
     var role = layer.getAttribute('data-role') || '';
     var postUrl = layer.getAttribute('data-post-url') || '';
     var pollUrl = layer.getAttribute('data-poll-url') || '';
+    var selfKey = String(layer.getAttribute('data-self-key') || '');
     var ctx = canvas.getContext('2d');
 
     var polylines = [];
@@ -51,14 +96,19 @@
     var postTimer = null;
     var pollTimer = null;
     var allowed = false;
+    var lastRemotePayload = null;
+    var lastPollSig = '';
     var csrfMeta = document.querySelector('meta[name="csrf-token"]');
     var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
 
     function isEmitter() {
-        return role === 'student_emit' || role === 'classroom_guest_emit';
+        return role === 'student_emit' || role === 'classroom_guest_emit' || role === 'host_emit' || role === 'emit_and_poll';
     }
     function isViewer() {
-        return role === 'viewer_poll';
+        return role === 'viewer_poll' || role === 'host_emit' || role === 'emit_and_poll' || role === 'student_emit';
+    }
+    function shouldPoll() {
+        return !!pollUrl && isViewer();
     }
 
     function resizeCanvas() {
@@ -71,11 +121,8 @@
         canvas.style.width = w + 'px';
         canvas.style.height = h + 'px';
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        redrawLocal();
-        if (isViewer()) redrawRemote(lastRemotePayload);
+        paintAll();
     }
-
-    var lastRemotePayload = null;
 
     function normToPx(nx, ny) {
         var rect = layer.getBoundingClientRect();
@@ -88,26 +135,6 @@
         return [x / rect.width, y / rect.height];
     }
 
-    function redrawLocal() {
-        var rect = layer.getBoundingClientRect();
-        ctx.clearRect(0, 0, rect.width, rect.height);
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        polylines.forEach(function (line) {
-            if (!line || line.length < 2) return;
-            ctx.beginPath();
-            var p0 = normToPx(line[0][0], line[0][1]);
-            ctx.moveTo(p0[0], p0[1]);
-            for (var i = 1; i < line.length; i++) {
-                var pi = normToPx(line[i][0], line[i][1]);
-                ctx.lineTo(pi[0], pi[1]);
-            }
-            ctx.strokeStyle = 'rgba(250, 204, 21, 0.92)';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-        });
-    }
-
     function hueFromKey(key) {
         var s = String(key);
         var h = 0;
@@ -115,34 +142,48 @@
         return h;
     }
 
-    function redrawRemote(payload) {
-        lastRemotePayload = payload;
-        if (!isViewer()) return;
+    function strokeLine(line, color, width) {
+        if (!line || line.length < 2) return;
+        ctx.beginPath();
+        var p0 = normToPx(line[0][0], line[0][1]);
+        ctx.moveTo(p0[0], p0[1]);
+        for (var i = 1; i < line.length; i++) {
+            var pi = normToPx(line[i][0], line[i][1]);
+            ctx.lineTo(pi[0], pi[1]);
+        }
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width || 3;
+        ctx.globalAlpha = 0.92;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+    }
+
+    function paintAll() {
         var rect = layer.getBoundingClientRect();
         ctx.clearRect(0, 0, rect.width, rect.height);
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        if (!payload || !payload.layers) return;
-        Object.keys(payload.layers).forEach(function (k) {
-            var L = payload.layers[k];
-            if (!L || !L.polylines) return;
-            var col = 'hsl(' + hueFromKey(k) + ', 82%, 62%)';
-            L.polylines.forEach(function (line) {
-                if (!line || line.length < 2) return;
-                ctx.beginPath();
-                var p0 = normToPx(line[0][0], line[0][1]);
-                ctx.moveTo(p0[0], p0[1]);
-                for (var i = 1; i < line.length; i++) {
-                    var pi = normToPx(line[i][0], line[i][1]);
-                    ctx.lineTo(pi[0], pi[1]);
-                }
-                ctx.strokeStyle = col;
-                ctx.lineWidth = 3;
-                ctx.globalAlpha = 0.9;
-                ctx.stroke();
-                ctx.globalAlpha = 1;
+
+        if (lastRemotePayload && lastRemotePayload.layers) {
+            Object.keys(lastRemotePayload.layers).forEach(function (k) {
+                if (selfKey && String(k) === selfKey) return;
+                var L = lastRemotePayload.layers[k];
+                if (!L || !L.polylines) return;
+                var col = L.is_host
+                    ? 'rgba(56, 189, 248, 0.95)'
+                    : ('hsl(' + hueFromKey(k) + ', 82%, 62%)');
+                L.polylines.forEach(function (line) { strokeLine(line, col, 3); });
             });
-        });
+        }
+
+        if (isEmitter()) {
+            polylines.forEach(function (line) {
+                strokeLine(line, 'rgba(250, 204, 21, 0.95)', 3);
+            });
+            if (currentPts && currentPts.length > 1) {
+                strokeLine(currentPts, 'rgba(250, 204, 21, 0.95)', 3);
+            }
+        }
     }
 
     function distPointSeg(px, py, x1, y1, x2, y2) {
@@ -171,9 +212,10 @@
         });
     }
 
-    function schedulePost() {
+    function schedulePost(immediate) {
         if (!isEmitter() || !postUrl || !allowed) return;
         if (postTimer) clearTimeout(postTimer);
+        var delay = immediate ? 40 : 120;
         postTimer = setTimeout(function () {
             postTimer = null;
             var body = { polylines: polylines };
@@ -186,8 +228,8 @@
             if (role === 'classroom_guest_emit') {
                 body.token = layer.getAttribute('data-guest-token') || '';
             }
-            fetch(postUrl, { method: 'POST', headers: headers, body: JSON.stringify(body) }).catch(function () {});
-        }, 380);
+            fetch(postUrl, { method: 'POST', headers: headers, body: JSON.stringify(body), keepalive: true }).catch(function () {});
+        }, delay);
     }
 
     function setDrawActive(on) {
@@ -195,10 +237,12 @@
         if (!isEmitter()) return;
         if (drawEnabled) {
             layer.classList.add('mx-share-ann-drawing');
+            layer.classList.remove('hidden');
         } else {
             layer.classList.remove('mx-share-ann-drawing');
             drawing = false;
             currentPts = null;
+            if (!shouldPoll()) layer.classList.add('hidden');
         }
     }
 
@@ -224,8 +268,8 @@
         });
         layer.querySelector('[data-mx-ann-action="clear"]').addEventListener('click', function () {
             polylines = [];
-            redrawLocal();
-            schedulePost();
+            paintAll();
+            schedulePost(true);
         });
         layer.querySelector('[data-mx-ann-action="close"]').addEventListener('click', function () {
             setDrawActive(false);
@@ -251,7 +295,7 @@
                 currentPts = [pxToNorm(p[0], p[1])];
             } else {
                 eraseAt(p[0], p[1], 14);
-                redrawLocal();
+                paintAll();
                 schedulePost();
             }
         });
@@ -261,10 +305,11 @@
             var p = pos(ev);
             if (tool === 'pen' && currentPts) {
                 currentPts.push(pxToNorm(p[0], p[1]));
-                redrawLocal();
+                paintAll();
+                if (currentPts.length % 4 === 0) schedulePost();
             } else if (tool === 'eraser') {
                 eraseAt(p[0], p[1], 14);
-                redrawLocal();
+                paintAll();
                 schedulePost();
             }
         });
@@ -277,35 +322,58 @@
                 if (polylines.length > 120) polylines.shift();
             }
             currentPts = null;
-            redrawLocal();
-            schedulePost();
+            paintAll();
+            schedulePost(true);
         });
         updateToolbarTools();
     }
 
-    function bindViewer() {
-        layer.querySelector('#mx-share-ann-toolbar').style.display = 'none';
+    function startPolling() {
+        if (!shouldPoll()) return;
+        function poll() {
+            fetch(pollUrl, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (data) {
+                    if (!data || !data.layers) return;
+                    var sig = JSON.stringify(data.layers);
+                    if (sig === lastPollSig) return;
+                    lastPollSig = sig;
+                    lastRemotePayload = data;
+                    paintAll();
+                })
+                .catch(function () {});
+        }
+        poll();
+        pollTimer = setInterval(poll, 450);
+        window.addEventListener('beforeunload', function () {
+            if (pollTimer) clearInterval(pollTimer);
+        });
     }
 
     window.__mxShareAnnSetAllowed = function (on) {
         allowed = !!on;
         if (!allowed) {
             setDrawActive(false);
-            layer.classList.add('hidden');
-            polylines = [];
-            redrawLocal();
-            if (isEmitter()) schedulePost();
+            if (isEmitter() && !shouldPoll()) layer.classList.add('hidden');
+            if (isEmitter()) {
+                polylines = [];
+                paintAll();
+                schedulePost(true);
+            }
             return;
         }
         if (isEmitter()) {
             layer.classList.add('hidden');
             setDrawActive(false);
         }
+        if (shouldPoll()) layer.classList.remove('hidden');
     };
 
     window.__mxShareAnnOpenToolbar = function () {
         if (!allowed || !isEmitter()) return;
         layer.classList.remove('hidden');
+        var toolbar = layer.querySelector('#mx-share-ann-toolbar');
+        if (toolbar) toolbar.style.display = '';
         setDrawActive(true);
         resizeCanvas();
     };
@@ -316,33 +384,38 @@
 
     if (isEmitter()) {
         bindEmitter();
-    } else if (isViewer()) {
-        bindViewer();
-        layer.classList.remove('hidden');
-        function poll() {
-            if (!pollUrl) return;
-            fetch(pollUrl, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(function (r) { return r.ok ? r.json() : null; })
-                .then(function (data) {
-                    if (data && data.layers) redrawRemote(data);
-                })
-                .catch(function () {});
+        if (role === 'host_emit') {
+            // المعلم: أدوات الرسم جاهزة فوق منطقة الفيديو فقط (فوق شريط الوسائط)
+            allowed = true;
+            layer.classList.remove('hidden');
+            var hostTb = layer.querySelector('#mx-share-ann-toolbar');
+            if (hostTb) hostTb.style.display = '';
+            setDrawActive(true);
+        } else if (role === 'emit_and_poll') {
+            // الطالب: يرى رسوم المعلم؛ شريط القلم يظهر فقط عند ضغط «رسم فوق العرض»
+            allowed = true;
+            layer.classList.remove('hidden');
+            var studentTb = layer.querySelector('#mx-share-ann-toolbar');
+            if (studentTb) studentTb.style.display = 'none';
+            setDrawActive(false);
         }
-        poll();
-        pollTimer = setInterval(poll, 1400);
-        window.addEventListener('beforeunload', function () {
-            if (pollTimer) clearInterval(pollTimer);
-        });
+    } else if (role === 'viewer_poll') {
+        var tb = layer.querySelector('#mx-share-ann-toolbar');
+        if (tb) tb.style.display = 'none';
+        layer.classList.remove('hidden');
+    }
+
+    if (shouldPoll()) {
+        if (role === 'viewer_poll' || role === 'host_emit' || role === 'emit_and_poll' || role === 'student_emit') {
+            layer.classList.remove('hidden');
+        }
+        startPolling();
     }
 
     var ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(function () { resizeCanvas(); }) : null;
     if (ro) ro.observe(layer);
-
     window.addEventListener('resize', function () { resizeCanvas(); });
-
-    if (isViewer() || isEmitter()) {
-        requestAnimationFrame(function () { resizeCanvas(); });
-    }
+    requestAnimationFrame(function () { resizeCanvas(); });
 })();
 </script>
 <?php /**PATH /Users/cityphone/Documents/glottical/resources/views/partials/mx-share-annotation-overlay.blade.php ENDPATH**/ ?>

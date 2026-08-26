@@ -1012,9 +1012,8 @@ class CheckoutController extends Controller
             'notes' => 'دفع عبر '.$gatewayDisplayName.' - طلب #'.$order->id,
         ]);
 
-        $transactionNumber = 'TXN-'.str_pad((string) (Transaction::count() + 1), 8, '0', STR_PAD_LEFT);
         Transaction::create([
-            'transaction_number' => $transactionNumber,
+            'transaction_number' => Transaction::generateUniqueTransactionNumber(),
             'user_id' => $order->user_id,
             'payment_id' => $payment->id,
             'invoice_id' => $invoice->id,

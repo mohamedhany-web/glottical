@@ -418,14 +418,13 @@ class OrderController extends Controller
 
                 // إنشاء معاملة مالية (إيراد)
                 Log::info('Order approve: creating transaction', ['order_id' => $order->id]);
-                $transactionNumber = 'TXN-'.str_pad(Transaction::count() + 1, 8, '0', STR_PAD_LEFT);
                 $transactionDescription = $order->advanced_course_id
                     ? 'دفعة مقابل تسجيل في الكورس: '.($order->course?->title ?? 'كورس')
                     : 'دفعة مقابل طلب قديم: '.$orderTitle;
                 $transactionDescription .= ' - طلب رقم: '.$order->id.' - فاتورة: '.$invoice->invoice_number.($wallet ? ' - محفظة: '.(optional($wallet)->name ?? $wallet->id) : '');
 
                 $transaction = Transaction::create([
-                    'transaction_number' => $transactionNumber,
+                    'transaction_number' => Transaction::generateUniqueTransactionNumber(),
                     'user_id' => $order->user_id,
                     'payment_id' => $payment->id,
                     'invoice_id' => $invoice->id,

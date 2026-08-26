@@ -223,9 +223,8 @@ class ExpenseController extends Controller
         ]);
 
         // إنشاء معاملة مالية (مصروف)
-        $transactionNumber = 'TXN-' . str_pad(\App\Models\Transaction::count() + 1, 8, '0', STR_PAD_LEFT);
         \App\Models\Transaction::create([
-            'transaction_number' => $transactionNumber,
+            'transaction_number' => \App\Models\Transaction::generateUniqueTransactionNumber(),
             'user_id' => $expense->created_by ?? auth()->id(),
             'payment_id' => null,
             'type' => 'debit', // مدين (مصروف)

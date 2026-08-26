@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class Transaction extends Model
 {
@@ -35,23 +34,36 @@ class Transaction extends Model
     protected static function booted(): void
     {
         static::creating(function (Transaction $transaction) {
-            if (!filled($transaction->transaction_number)) {
-                // Temporary unique value to satisfy unique constraint before we have an ID.
-                $transaction->transaction_number = 'TXN-TMP-' . Str::uuid()->toString();
-            }
-        });
-
-        static::created(function (Transaction $transaction) {
-            if (is_string($transaction->transaction_number) && Str::startsWith($transaction->transaction_number, 'TXN-TMP-')) {
-                $transaction->transaction_number = self::humanTransactionNumber($transaction->id);
-                $transaction->saveQuietly();
+            // Prevent duplicates from legacy count-based generators (gaps after deletes / id-based numbers).
+            if (empty($transaction->transaction_number) || self::where('transaction_number', $transaction->transaction_number)->exists()) {
+                $transaction->transaction_number = self::generateUniqueTransactionNumber();
             }
         });
     }
 
-    public static function humanTransactionNumber(int $id): string
+    /**
+     * رقم معاملة فريد — يعتمد على أعلى رقم TXN-* رقمي موجود وليس على count().
+     */
+    public static function generateUniqueTransactionNumber(): string
     {
-        return 'TXN-' . str_pad((string) $id, 8, '0', STR_PAD_LEFT);
+        $maxSuffix = self::query()
+            ->where('transaction_number', 'like', 'TXN-%')
+            ->pluck('transaction_number')
+            ->map(static function (string $number): int {
+                if (preg_match('/^TXN-(\d+)$/', $number, $matches)) {
+                    return (int) $matches[1];
+                }
+
+                return 0;
+            })
+            ->max() ?? 0;
+
+        do {
+            $maxSuffix++;
+            $candidate = 'TXN-'.str_pad((string) $maxSuffix, 8, '0', STR_PAD_LEFT);
+        } while (self::where('transaction_number', $candidate)->exists());
+
+        return $candidate;
     }
 
     public function user()

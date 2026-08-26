@@ -138,7 +138,7 @@ class AccountingSystemSeeder extends Seeder
 
                 // إنشاء Transaction (credit - إيراد)
                 $transaction = Transaction::create([
-                    'transaction_number' => 'TXN-' . str_pad(Transaction::count() + 1, 8, '0', STR_PAD_LEFT),
+                    'transaction_number' => Transaction::generateUniqueTransactionNumber(),
                     'user_id' => $student->id,
                     'payment_id' => $payment->id,
                     'invoice_id' => $invoice->id,
@@ -228,7 +228,7 @@ class AccountingSystemSeeder extends Seeder
 
                 // إنشاء Transaction (debit - مصروف)
                 $expenseTransaction = Transaction::create([
-                    'transaction_number' => 'TXN-' . str_pad(Transaction::count() + 1, 8, '0', STR_PAD_LEFT),
+                    'transaction_number' => Transaction::generateUniqueTransactionNumber(),
                     'user_id' => $adminId,
                     'payment_id' => null,
                     'invoice_id' => null,
@@ -341,7 +341,7 @@ class AccountingSystemSeeder extends Seeder
                         ]);
 
                         $installmentTransaction = Transaction::create([
-                            'transaction_number' => 'TXN-' . str_pad(Transaction::count() + 1, 8, '0', STR_PAD_LEFT),
+                            'transaction_number' => Transaction::generateUniqueTransactionNumber(),
                             'user_id' => $order->user_id,
                             'payment_id' => $installmentPayment->id,
                             'invoice_id' => $installmentInvoice->id,
@@ -387,7 +387,7 @@ class AccountingSystemSeeder extends Seeder
                         ]);
 
                         $partialTransaction = Transaction::create([
-                            'transaction_number' => 'TXN-' . str_pad(Transaction::count() + 1, 8, '0', STR_PAD_LEFT),
+                            'transaction_number' => Transaction::generateUniqueTransactionNumber(),
                             'user_id' => $invoice->user_id,
                             'payment_id' => $partialPayment->id,
                             'invoice_id' => $invoice->id,

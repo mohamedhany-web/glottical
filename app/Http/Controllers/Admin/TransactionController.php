@@ -106,7 +106,7 @@ class TransactionController extends Controller
         ]);
 
         Transaction::create([
-            'transaction_number' => 'TXN-' . str_pad(Transaction::count() + 1, 8, '0', STR_PAD_LEFT),
+            'transaction_number' => Transaction::generateUniqueTransactionNumber(),
             'user_id' => $validated['user_id'],
             'payment_id' => $validated['payment_id'] ?? null,
             'invoice_id' => $validated['invoice_id'] ?? null,

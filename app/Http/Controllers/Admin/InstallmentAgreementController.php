@@ -213,9 +213,8 @@ class InstallmentAgreementController extends Controller
                     ]);
 
                     // إنشاء Transaction
-                    $transactionNumber = 'TXN-' . str_pad(Transaction::count() + 1, 8, '0', STR_PAD_LEFT);
                     Transaction::create([
-                        'transaction_number' => $transactionNumber,
+                        'transaction_number' => Transaction::generateUniqueTransactionNumber(),
                         'user_id' => $agreement->user_id,
                         'payment_id' => $paymentRecord->id,
                         'invoice_id' => $invoice->id,

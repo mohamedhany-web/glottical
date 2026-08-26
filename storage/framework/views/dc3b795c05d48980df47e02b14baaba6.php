@@ -14,6 +14,19 @@
     <link rel="stylesheet" href="<?php echo e(route('assets.student-timeline.css')); ?>?v=st-live-private-1">
     <link rel="stylesheet" href="<?php echo e(asset('css/classroom-curriculum-presenter.css')); ?>">
     <script src="<?php echo e(asset('js/classroom-curriculum-presenter.js')); ?>" defer></script>
+    <script src="<?php echo e(asset('js/classroom-whiteboard-sync.js')); ?>?v=wb-sync-2"></script>
+    <style>
+        .mx-excalidraw-host { width: 100%; height: 100%; min-height: 280px; }
+        .mx-excalidraw-host .excalidraw { width: 100% !important; height: 100% !important; }
+        .mx-excalidraw-loading {
+            position: absolute; inset: 0; z-index: 5; display: none;
+            align-items: center; justify-content: center;
+            background: rgba(15,23,42,0.75); color: #94a3b8; font-size: 14px;
+        }
+        .mx-wb-student-draw-lite .excalidraw button[data-testid^="toolbar-"]:not([data-testid="toolbar-freedraw"]):not([data-testid="toolbar-eraser"]):not([data-testid="toolbar-hand"]) {
+            display: none !important;
+        }
+    </style>
     <style>
         :root {
             --st-bg: #f8f9fa;
@@ -145,19 +158,33 @@
             min-height: 0;
             display: flex;
             flex-direction: column;
-            padding: 12px;
+            padding: 6px;
         }
         .st-live-stage {
             flex: 1;
             min-height: 0;
             display: flex;
             flex-direction: column;
-            border-radius: 18px;
+            border-radius: 14px;
             overflow: hidden;
             border: 1px solid var(--st-line);
             background: #071226;
             box-shadow: 0 14px 36px rgba(7, 18, 38, .12);
             position: relative;
+        }
+        .st-live-stage .lk-room {
+            flex: 1;
+            min-height: 0;
+            height: 100%;
+            border-radius: inherit;
+        }
+        .st-live-stage .lk-main,
+        .st-live-stage .lk-body {
+            min-height: 0;
+            flex: 1;
+        }
+        @media (min-width: 768px) {
+            .st-live-body { padding: 8px; }
         }
         #mx-session-ended {
             display: none;
@@ -202,12 +229,15 @@
     $roomStatusUrl = \Illuminate\Support\Facades\Route::has('student.classroom.room.status')
         ? route('student.classroom.room.status', $meeting)
         : '';
+    $annPostUrl = \Illuminate\Support\Facades\Route::has('student.classroom.share-annotation')
+        ? route('student.classroom.share-annotation', $meeting)
+        : '';
 ?>
 
     <div id="mx-session-ended">
         <div class="mx-icon"><i class="fas fa-video"></i></div>
         <h2>انتهت الحصة</h2>
-        <p>تم إنهاء الحصة الخاصة. يمكنك العودة للوحة الطالب.</p>
+        <p>تم إنهاء الحصة الخاصة. سيظهر التسجيل في صفحة الحصة عند اكتمال رفعه.</p>
         <div id="mx-redir-bar"><div id="mx-redir-fill"></div></div>
         <p style="font-size:12px;">سيتم توجيهك تلقائياً...</p>
         <a href="<?php echo e($roomExitUrl); ?>" class="st-live-pill st-live-pill--gold">
@@ -242,6 +272,10 @@
             </div>
             <div class="st-live-actions">
                 <span class="st-live-pill st-live-pill--soft" id="meeting-timer-chip-mobile"><?php echo e((int) ($effectiveDurationMinutes ?? 50)); ?> د</span>
+                <button type="button" id="btn-wb-popup-open" class="st-live-pill st-live-pill--ghost" title="السبورة التفاعلية" style="border-color:rgba(245,184,0,.55);background:rgba(245,184,0,.18)">
+                    <i class="fas fa-chalkboard"></i>
+                    <span class="hidden sm:inline">السبورة</span>
+                </button>
                 <div id="mx-student-wb-wrap" class="<?php echo e(!empty($meeting->allowsParticipantWhiteboard()) ? '' : 'hidden'); ?>">
                     <button type="button" id="btn-mx-share-draw" class="st-live-pill st-live-pill--ghost" title="رسم فوق العرض" style="border-color:rgba(245,184,0,.55);background:rgba(245,184,0,.18)">
                         <i class="fas fa-pen-fancy"></i>
@@ -278,13 +312,40 @@
 
                 <?php if($annPollUrl): ?>
                     <?php echo $__env->make('partials.mx-share-annotation-overlay', [
-                        'mxAnnRole' => 'viewer_poll',
+                        'mxAnnRole' => 'emit_and_poll',
+                        'mxAnnPostUrl' => $annPostUrl,
                         'mxAnnPollUrl' => $annPollUrl,
+                        'mxAnnSelfKey' => (string) ($user->id ?? auth()->id() ?? ''),
                     ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                 <?php endif; ?>
             </div>
         </div>
     </div>
+
+    <?php
+        $studentCanDrawWb = !empty($meeting->allowsParticipantWhiteboard());
+        $mxWbUiMode = $studentCanDrawWb ? 'student_lite' : 'full';
+        $wbStateUrl = \Illuminate\Support\Facades\Route::has('student.classroom.whiteboard.state')
+            ? route('student.classroom.whiteboard.state', $meeting)
+            : '';
+        $wbPushUrl = \Illuminate\Support\Facades\Route::has('student.classroom.whiteboard.push')
+            ? route('student.classroom.whiteboard.push', $meeting)
+            : '';
+    ?>
+    
+    <script>
+        window.__mxWbSyncOptions = {
+            role: 'participant',
+            canEmit: <?php echo e($studentCanDrawWb ? 'true' : 'false'); ?>,
+            canReceive: true,
+            mergeRemote: <?php echo e($studentCanDrawWb ? 'true' : 'false'); ?>,
+            viewOnly: <?php echo e($studentCanDrawWb ? 'false' : 'true'); ?>,
+            stateUrl: <?php echo json_encode($wbStateUrl, 15, 512) ?>,
+            pushUrl: <?php echo json_encode($wbPushUrl, 15, 512) ?>,
+            csrf: <?php echo json_encode(csrf_token(), 15, 512) ?>,
+        };
+    </script>
+    <?php echo $__env->make('partials.mx-muallimx-excalidraw-popup', ['mxWbUiMode' => $mxWbUiMode], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <script>
         (function () {
@@ -369,6 +430,13 @@
                 if (typeof window.__mxShareAnnSetAllowed === 'function') {
                     window.__mxShareAnnSetAllowed(!!on);
                 }
+                if (window.__mxWbSyncOptions) {
+                    window.__mxWbSyncOptions.canEmit = !!on;
+                    window.__mxWbSyncOptions.mergeRemote = !!on;
+                    window.__mxWbSyncOptions.viewOnly = !on;
+                }
+                var root = document.getElementById('mx-excalidraw-root');
+                if (root) root.setAttribute('data-view-only', on ? '0' : '1');
                 if (!wrap) return;
                 if (on) wrap.classList.remove('hidden');
                 else wrap.classList.add('hidden');

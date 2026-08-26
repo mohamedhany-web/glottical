@@ -123,9 +123,8 @@ class PaymentController extends Controller
         ]);
 
         // إنشاء معاملة مالية تلقائياً (إيراد)
-        $transactionNumber = 'TXN-' . str_pad(\App\Models\Transaction::count() + 1, 8, '0', STR_PAD_LEFT);
         \App\Models\Transaction::create([
-            'transaction_number' => $transactionNumber,
+            'transaction_number' => \App\Models\Transaction::generateUniqueTransactionNumber(),
             'user_id' => $validated['user_id'],
             'payment_id' => $payment->id,
             'invoice_id' => $invoice->id,
