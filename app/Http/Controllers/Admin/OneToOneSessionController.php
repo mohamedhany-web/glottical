@@ -11,6 +11,7 @@ use App\Services\OneToOneAvailabilityService;
 use App\Services\OneToOneSessionService;
 use App\Services\StudentEntitlementService;
 use App\Support\AppTimezone;
+use App\Services\OneToOneSessionUnlockService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -129,7 +130,7 @@ class OneToOneSessionController extends Controller
 
     public function show(OneToOneSession $oneToOneSession): View
     {
-        $oneToOneSession->load(['student', 'instructor', 'course', 'classroomMeeting', 'enrollment', 'bookedBy', 'entitlement.order']);
+        $oneToOneSession->load(['student', 'instructor', 'course', 'classroomMeeting', 'enrollment', 'bookedBy', 'entitlement.order', 'studentUnlockedBy']);
 
         $availability = OneToOneAvailabilityService::rulesForInstructor((int) $oneToOneSession->instructor_id);
         $upcomingSlots = OneToOneAvailabilityService::availableSlots(
@@ -187,6 +188,24 @@ class OneToOneSessionController extends Controller
         }
 
         return back()->with('success', 'تم تحديث موعد الحصة.');
+    }
+
+    public function unlockForStudent(OneToOneSession $oneToOneSession): RedirectResponse
+    {
+        if ($oneToOneSession->status !== OneToOneSession::STATUS_SCHEDULED) {
+            return back()->with('error', 'يمكن فتح حصص مجدولة فقط.');
+        }
+
+        OneToOneSessionUnlockService::adminUnlockForStudent($oneToOneSession, auth()->user());
+
+        return back()->with('success', 'تم فتح الحصة للطالب — يمكنه الدخول حتى لو لم تكتمل الحصة السابقة.');
+    }
+
+    public function revokeUnlockForStudent(OneToOneSession $oneToOneSession): RedirectResponse
+    {
+        OneToOneSessionUnlockService::adminRevokeUnlock($oneToOneSession);
+
+        return back()->with('success', 'تم إلغاء الفتح اليدوي — يعود التسلسل التلقائي.');
     }
 
     public function destroy(Request $request, OneToOneSession $oneToOneSession): RedirectResponse

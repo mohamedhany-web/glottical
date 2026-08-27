@@ -11,8 +11,10 @@
     $isScheduled = $status === \App\Models\OneToOneSession::STATUS_SCHEDULED;
     $isPending = $status === \App\Models\OneToOneSession::STATUS_PENDING;
     $isCompleted = $status === \App\Models\OneToOneSession::STATUS_COMPLETED;
+    $canJoinSession = $canJoinSession ?? false;
+    $sessionLockReason = $sessionLockReason ?? null;
     $awaiting = method_exists($session, 'isAwaitingTeacherStart') && $session->isAwaitingTeacherStart();
-    $joinHref = ($isScheduled && $session->classroomMeeting)
+    $joinHref = ($isScheduled && $session->classroomMeeting && $canJoinSession)
         ? route('classroom.secure-enter', $session->classroomMeeting)
         : null;
     $recordingHref = ($session->classroomMeeting
@@ -94,10 +96,15 @@
                 </a>
             @elseif($awaiting)
                 <span class="st-pill st-pill--outline">{{ __('student_timeline.teacher_starting') }}</span>
+            @elseif($sessionLockReason)
+                <span class="st-pill st-pill--outline" title="{{ $sessionLockReason }}">الحصة مقفلة</span>
             @endif
             <a href="{{ $lessonsUrl }}" class="st-pill st-pill--outline">{{ __('student_timeline.nav_lessons') }}</a>
         </div>
     </section>
+    @if($sessionLockReason && ! $joinHref)
+        <div class="st-flash st-flash--warn mb-4">{{ $sessionLockReason }}</div>
+    @endif
 @endif
 
 <section class="st-stats st-stats--classes" aria-label="{{ __('student_timeline.oto_session_details') }}">

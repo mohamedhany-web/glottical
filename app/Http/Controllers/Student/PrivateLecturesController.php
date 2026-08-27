@@ -7,6 +7,7 @@ use App\Models\OneToOneSession;
 use App\Models\PrivateLessonThread;
 use App\Models\StudentReception;
 use App\Models\User;
+use App\Services\OneToOneSessionUnlockService;
 use App\Services\PrivateCoursesCoreService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,20 +52,7 @@ class PrivateLecturesController extends Controller
 
         $reception = StudentReception::query()->where('student_id', $user->id)->first();
 
-        $nextJoinable = OneToOneSession::query()
-            ->where('student_id', $user->id)
-            ->where(function ($query) {
-                $query->where('is_private_lecture', true)
-                    ->orWhereNull('is_private_lecture')
-                    ->orWhere('system_channel', 'private_courses');
-            })
-            ->where('status', OneToOneSession::STATUS_SCHEDULED)
-            ->whereNotNull('scheduled_at')
-            ->where('scheduled_at', '<=', now()->addMinutes(30))
-            ->where('scheduled_at', '>=', now()->subMinutes(50))
-            ->with(['course:id,title', 'instructor:id,name', 'classroomMeeting'])
-            ->orderBy('scheduled_at')
-            ->first();
+        $nextJoinable = OneToOneSessionUnlockService::nextJoinableForStudent($user);
 
         $upcomingCount = OneToOneSession::query()
             ->where('student_id', $user->id)

@@ -467,6 +467,18 @@
                     </div>
 
                     @if($order->status == 'pending')
+                        @if($order->payment_method === 'online')
+                            <form method="POST" action="{{ route('admin.orders.reconcile-fawaterak', $order) }}" class="mb-4 space-y-2 rounded-xl border border-sky-200 bg-sky-50/60 p-4">
+                                @csrf
+                                <p class="text-sm font-semibold text-ink">تأكيد دفع فواتيرك</p>
+                                <p class="text-xs text-muted">إذا تم خصم المبلغ ولم تُنشأ فاتورة أو تُفعَّل الباقة، أدخل رقم فاتورة فواتيرك ثم اضغط تأكيد.</p>
+                                <input type="text" name="fawaterak_invoice_id" value="{{ old('fawaterak_invoice_id', $order->fawaterak_invoice_id) }}" dir="ltr" placeholder="رقم فاتورة فواتيرك"
+                                       class="h-10 w-full rounded-lg border border-line bg-white px-3 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20">
+                                <button type="submit" class="btn-press inline-flex h-10 w-full items-center justify-center rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white hover:bg-sky-500">
+                                    <i class="fas fa-sync-alt ml-2"></i> تأكيد الدفع من فواتيرك
+                                </button>
+                            </form>
+                        @endif
                         <script>
                             // تعريف الدوال مباشرة قبل الأزرار لضمان توفرها
                             (function() {

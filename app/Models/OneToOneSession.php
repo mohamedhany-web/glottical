@@ -32,6 +32,8 @@ class OneToOneSession extends Model
         'booked_by_user_id',
         'notes',
         'series_id',
+        'student_unlocked_at',
+        'student_unlocked_by_user_id',
     ];
 
     protected function casts(): array
@@ -41,6 +43,7 @@ class OneToOneSession extends Model
             'scheduled_at' => 'datetime',
             'duration_minutes' => 'integer',
             'is_private_lecture' => 'boolean',
+            'student_unlocked_at' => 'datetime',
         ];
     }
 
@@ -116,6 +119,11 @@ class OneToOneSession extends Model
     public function bookedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'booked_by_user_id');
+    }
+
+    public function studentUnlockedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'student_unlocked_by_user_id');
     }
 
     public function statusLabel(): string

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\OneToOneSession;
 use App\Models\User;
+use App\Services\OneToOneSessionUnlockService;
 use App\Services\OneToOneAvailabilityService;
 use App\Services\OneToOneSessionService;
 use App\Support\AppTimezone;
@@ -47,6 +48,8 @@ class OneToOneSessionController extends Controller
         return view('student.one-to-one-sessions.show', [
             'session' => $oneToOneSession,
             'availableSlots' => $availableSlots,
+            'canJoinSession' => OneToOneSessionUnlockService::canStudentJoin($oneToOneSession, auth()->user()),
+            'sessionLockReason' => OneToOneSessionUnlockService::lockReason($oneToOneSession, auth()->user()),
         ]);
     }
 

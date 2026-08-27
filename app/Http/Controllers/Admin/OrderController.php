@@ -11,6 +11,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Services\CourseSubscriptionService;
+use App\Services\FawaterakPaymentVerifier;
 use App\Services\OrderWalletAndCouponFinalizer;
 use App\Support\SearchInput;
 use Illuminate\Http\Request;
@@ -172,6 +173,61 @@ class OrderController extends Controller
             Log::error('Admin tutoring refulfill failed: '.$e->getMessage(), ['order_id' => $order->id]);
 
             return back()->with('error', 'تعذر التفعيل: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * تأكيد دفع فواتيرك يدوياً لطلب معلّق (عند نجاح الدفع دون تفعيل تلقائي).
+     */
+    public function reconcileFawaterak(Request $request, Order $order)
+    {
+        if ($order->status !== Order::STATUS_PENDING) {
+            return back()->with('error', 'يمكن تأكيد فواتيرك للطلبات المعلّقة فقط.');
+        }
+        if ($order->payment_method !== 'online') {
+            return back()->with('error', 'هذا الطلب ليس دفعاً إلكترونياً.');
+        }
+
+        $data = $request->validate([
+            'fawaterak_invoice_id' => ['nullable', 'string', 'max:64'],
+        ]);
+
+        $invoiceId = trim((string) ($data['fawaterak_invoice_id'] ?? $order->fawaterak_invoice_id ?? ''));
+        if ($invoiceId === '') {
+            return back()->with('error', 'أدخل رقم فاتورة فواتيرك أو تأكد أنه محفوظ على الطلب.');
+        }
+
+        try {
+            DB::transaction(function () use ($order, $invoiceId) {
+                $locked = Order::query()->whereKey($order->id)->lockForUpdate()->first();
+                if (! $locked || $locked->status !== Order::STATUS_PENDING) {
+                    return;
+                }
+
+                app(FawaterakPaymentVerifier::class)->assertOrderPaid($locked, null, [
+                    'invoice_id' => $invoiceId,
+                ]);
+
+                app(\App\Http\Controllers\Public\CheckoutController::class)
+                    ->approveOrderAfterOnlinePaymentPublic(
+                        $locked,
+                        'fawaterak',
+                        $invoiceId,
+                        ['source' => 'admin_reconcile', 'invoice_id' => $invoiceId],
+                        'فواتيرك (تأكيد يدوي)'
+                    );
+            });
+
+            return back()->with('success', 'تم تأكيد الدفع وتفعيل الطلب والباقة وإنشاء الفاتورة والمعاملة.');
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Admin Fawaterak reconcile failed', [
+                'order_id' => $order->id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'تعذر التأكيد: '.$e->getMessage());
         }
     }
 

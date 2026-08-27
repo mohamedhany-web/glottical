@@ -109,6 +109,49 @@
 
     @if($session->isOpenPlacement())
         @php
+            $currentInSeries = \App\Services\OneToOneSessionUnlockService::currentSessionInSeries($session);
+            $isCurrent = $currentInSeries && (int) $currentInSeries->id === (int) $session->id;
+            $isManuallyUnlocked = \App\Services\OneToOneSessionUnlockService::isManuallyUnlocked($session);
+        @endphp
+        <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6 space-y-4">
+            <h3 class="font-bold text-slate-900">فتح الحصة للطالب</h3>
+            <p class="text-sm text-slate-500">
+                الحصص تُفتح للطالب بالتسلسل — الحصة الحالية في التسكين هي رقم
+                <strong>{{ $currentInSeries?->session_number ?? '—' }}</strong>.
+                يمكنك فتح هذه الحصة يدوياً لتجاوز التسلسل.
+            </p>
+            @if($isManuallyUnlocked)
+                <p class="text-sm text-emerald-700">
+                    مفتوحة يدوياً
+                    @if($session->student_unlocked_at)
+                        · {{ $session->student_unlocked_at->format('Y-m-d H:i') }}
+                    @endif
+                    @if($session->studentUnlockedBy)
+                        · بواسطة {{ $session->studentUnlockedBy->name }}
+                    @endif
+                </p>
+                <form method="POST" action="{{ route('admin.one-to-one-sessions.revoke-unlock', $session) }}">
+                    @csrf
+                    <button type="submit" class="inline-flex h-10 items-center rounded-xl border border-slate-200 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                        إلغاء الفتح اليدوي
+                    </button>
+                </form>
+            @elseif($session->status === \App\Models\OneToOneSession::STATUS_SCHEDULED)
+                <form method="POST" action="{{ route('admin.one-to-one-sessions.unlock-for-student', $session) }}">
+                    @csrf
+                    <button type="submit" class="inline-flex h-10 items-center rounded-xl bg-emerald-600 px-4 text-sm font-medium text-white hover:bg-emerald-700">
+                        فتح الحصة للطالب
+                    </button>
+                </form>
+            @endif
+            @if($isCurrent && ! $isManuallyUnlocked)
+                <p class="text-xs text-slate-400">هذه هي الحصة الحالية — مفتوحة تلقائياً للطالب.</p>
+            @endif
+        </div>
+    @endif
+
+    @if($session->isOpenPlacement())
+        @php
             $instructorTz = \App\Support\AppTimezone::forUser($session->instructor);
             $scheduledLocal = \App\Support\AppTimezone::datetimeLocalValue($session->scheduled_at, $instructorTz);
         @endphp

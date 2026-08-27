@@ -13,6 +13,7 @@ use App\Models\Wallet;
 use App\Services\AdminPanelBranding;
 use App\Services\CourseCheckoutPricingService;
 use App\Services\FawaterakApiService;
+use App\Services\FawaterakOrderResolver;
 use App\Services\FawaterakService;
 use App\Services\InstructorCoursePercentageService;
 use App\Services\KashierService;
@@ -795,18 +796,13 @@ class CheckoutController extends Controller
      */
     public function fawaterakReturn(Request $request, string $status): RedirectResponse
     {
-        $orderId = (int) $request->session()->get('fawaterak_order_id');
-        if ($orderId < 1) {
+        $order = $this->resolveFawaterakReturnOrder($request);
+        if (! $order) {
             return redirect()->route('orders.index')
-                ->with('error', 'انتهت جلسة الدفع. إن اكتمل الدفع لدى فواتيرك ولم يُفعَّل الطلب، تواصل مع الدعم برقم الطلب.');
+                ->with('error', 'انتهت جلسة الدفع. إن اكتمل الدفع لدى فواتيرك ولم يُفعَّل الطلب، تواصل مع الدعم برقم الطلب أو رقم فاتورة فواتيرك.');
         }
 
-        $order = Order::with(['course', 'servicePackage'])->find($orderId);
-        if (! $order || $order->user_id !== Auth::id()) {
-            $request->session()->forget('fawaterak_order_id');
-
-            return redirect()->route('orders.index')->with('error', 'طلب غير صالح.');
-        }
+        $orderId = (int) $order->id;
 
         $isServicePackageOrder = in_array($order->order_type, [
             Order::TYPE_SERVICE_PACKAGE,
@@ -945,9 +941,9 @@ class CheckoutController extends Controller
     }
 
     /**
-     * يُنشئ فاتورة مدفوعة، وسجل دفع، ومعاملة محاسبية، ويحدّث الطلب إلى مقبول، ويُفعّل التسجيل في الكورس.
+     * يُنشئ فاتورة مدفوعة، وسجل دفع، ومعاملة محاسبية، ويحدّث الطلب إلى مقبول، ويُفعّل الكورس/الباقة.
      *
-     * @param  'kashier'|'other'  $paymentGateway
+     * @param  'kashier'|'fawaterak'|'paypal'|'other'  $paymentGateway
      */
     private function approveOrderAfterOnlinePayment(
         Order $order,
@@ -956,9 +952,30 @@ class CheckoutController extends Controller
         array $gatewayResponse,
         string $gatewayDisplayName
     ): Invoice {
-        $order->loadMissing(['course']);
+        $order->loadMissing(['course', 'servicePackage']);
 
-        $orderTitle = $order->course->title ?? 'كورس';
+        $isPackageOrder = in_array($order->order_type, [
+            Order::TYPE_SERVICE_PACKAGE,
+            Order::TYPE_CUSTOM_SERVICE_PACKAGE,
+        ], true);
+
+        if ($isPackageOrder) {
+            $orderTitle = $order->order_type === Order::TYPE_CUSTOM_SERVICE_PACKAGE
+                ? (string) ($order->custom_package_data['name'] ?? 'باقة مخصصة')
+                : (string) ($order->servicePackage?->name ?? 'باقة حصص');
+            $invoiceType = 'subscription';
+            $invoiceDescription = 'شراء باقة: '.$orderTitle;
+            $itemDescription = 'باقة: '.$orderTitle;
+            $transactionCategory = 'subscription';
+            $transactionDescription = 'دفع باقة: '.$orderTitle.' - طلب #'.$order->id;
+        } else {
+            $orderTitle = (string) ($order->course?->title ?? 'كورس');
+            $invoiceType = 'course';
+            $invoiceDescription = 'تسجيل في الكورس: '.$orderTitle;
+            $itemDescription = 'الكورس: '.$orderTitle;
+            $transactionCategory = 'course_payment';
+            $transactionDescription = 'دفع كورس: '.$orderTitle.' - طلب #'.$order->id;
+        }
 
         $currency = $order->currencyCode() ?: (string) config('currency.code', 'USD');
 
@@ -967,12 +984,11 @@ class CheckoutController extends Controller
         $walletDisc = (float) ($order->wallet_credit_amount ?? 0);
         $invDiscount = round($couponDisc + $walletDisc, 2);
 
-        $invoiceNumber = 'INV-'.str_pad((string) (Invoice::count() + 1), 8, '0', STR_PAD_LEFT);
         $invoice = Invoice::create([
-            'invoice_number' => $invoiceNumber,
+            'invoice_number' => Invoice::generateUniqueInvoiceNumber(),
             'user_id' => $order->user_id,
-            'type' => 'course',
-            'description' => 'تسجيل في الكورس: '.$orderTitle,
+            'type' => $invoiceType,
+            'description' => $invoiceDescription,
             'subtotal' => $orig,
             'tax_amount' => 0,
             'discount_amount' => $invDiscount,
@@ -983,7 +999,7 @@ class CheckoutController extends Controller
             'notes' => 'دفع عبر '.$gatewayDisplayName.' - طلب #'.$order->id,
             'items' => [
                 [
-                    'description' => 'الكورس: '.$orderTitle,
+                    'description' => $itemDescription,
                     'quantity' => 1,
                     'price' => $orig,
                     'total' => $orig,
@@ -1012,6 +1028,18 @@ class CheckoutController extends Controller
             'notes' => 'دفع عبر '.$gatewayDisplayName.' - طلب #'.$order->id,
         ]);
 
+        $transactionMetadata = [
+            'order_id' => $order->id,
+            'invoice_id' => $invoice->id,
+            'payment_id' => $payment->id,
+        ];
+        if ($isPackageOrder) {
+            $transactionMetadata['service_package_id'] = $order->service_package_id;
+            $transactionMetadata['order_type'] = $order->order_type;
+        } else {
+            $transactionMetadata['course_id'] = $order->advanced_course_id;
+        }
+
         Transaction::create([
             'transaction_number' => Transaction::generateUniqueTransactionNumber(),
             'user_id' => $order->user_id,
@@ -1020,17 +1048,12 @@ class CheckoutController extends Controller
             'expense_id' => null,
             'subscription_id' => null,
             'type' => 'credit',
-            'category' => 'course_payment',
+            'category' => $transactionCategory,
             'amount' => $gross,
             'currency' => $currency,
-            'description' => 'دفع كورس: '.$orderTitle.' - طلب #'.$order->id,
+            'description' => $transactionDescription,
             'status' => 'completed',
-            'metadata' => [
-                'order_id' => $order->id,
-                'invoice_id' => $invoice->id,
-                'payment_id' => $payment->id,
-                'course_id' => $order->advanced_course_id,
-            ],
+            'metadata' => $transactionMetadata,
         ]);
 
         if ($split['fee'] > 0.0001) {
@@ -1110,6 +1133,49 @@ class CheckoutController extends Controller
         OrderWalletAndCouponFinalizer::run($order->fresh());
 
         return $invoice;
+    }
+
+    private function resolveFawaterakReturnOrder(Request $request): ?Order
+    {
+        $userId = (int) Auth::id();
+        if ($userId < 1) {
+            return null;
+        }
+
+        $orderId = (int) $request->session()->get('fawaterak_order_id');
+        if ($orderId > 0) {
+            $order = Order::with(['course', 'servicePackage'])->find($orderId);
+            if ($order && (int) $order->user_id === $userId) {
+                return $order;
+            }
+        }
+
+        $queryPayload = array_merge(
+            $request->query(),
+            FawaterakOrderResolver::normalizedPayLoad($request->query())
+        );
+        $invoiceId = FawaterakOrderResolver::extractInvoiceId($queryPayload);
+
+        if ($invoiceId) {
+            $order = Order::with(['course', 'servicePackage'])
+                ->where('fawaterak_invoice_id', $invoiceId)
+                ->where('user_id', $userId)
+                ->first();
+            if ($order) {
+                $request->session()->put('fawaterak_order_id', $order->id);
+
+                return $order;
+            }
+        }
+
+        $resolved = FawaterakOrderResolver::resolvePendingOrder($queryPayload, $invoiceId);
+        if ($resolved && (int) $resolved->user_id === $userId) {
+            $request->session()->put('fawaterak_order_id', $resolved->id);
+
+            return $resolved->loadMissing(['course', 'servicePackage']);
+        }
+
+        return null;
     }
 
     /**

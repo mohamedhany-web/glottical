@@ -10,6 +10,7 @@ use App\Models\OneToOneSession;
 use App\Models\TutoringGroupBooking;
 use App\Services\ClassroomCurriculumPresentService;
 use App\Services\ClassroomMeetingAccessService;
+use App\Services\OneToOneSessionUnlockService;
 use App\Services\OneToOneSessionService;
 use App\Services\TutoringGroupOrchestrationService;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -1724,9 +1726,29 @@ class ClassroomController extends Controller
 
     private function ensureMeetingCanEnter(ClassroomMeeting $meeting, $user): void
     {
-        if (! ClassroomMeetingAccessService::userCanEnter($meeting, $user)) {
-            abort(403, 'غير مصرح لك بدخول هذه الغرفة. الدخول من حسابك داخل المنصة فقط.');
+        if (ClassroomMeetingAccessService::userCanEnter($meeting, $user)) {
+            return;
         }
+
+        if ($user?->isStudent() && Schema::hasTable('one_to_one_sessions')) {
+            $session = null;
+            if ($meeting->one_to_one_session_id) {
+                $session = OneToOneSession::query()->find($meeting->one_to_one_session_id);
+            }
+            if (! $session) {
+                $session = OneToOneSession::query()
+                    ->where('classroom_meeting_id', $meeting->id)
+                    ->first();
+            }
+            if ($session) {
+                $reason = OneToOneSessionUnlockService::lockReason($session, $user);
+                if ($reason) {
+                    abort(403, $reason);
+                }
+            }
+        }
+
+        abort(403, 'غير مصرح لك بدخول هذه الغرفة. الدخول من حسابك داخل المنصة فقط.');
     }
 
     private function normalizeRecordingMime(string $mime): string

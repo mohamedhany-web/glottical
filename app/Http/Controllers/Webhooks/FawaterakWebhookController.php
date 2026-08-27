@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Webhooks;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\FawaterakOrderResolver;
 use App\Services\FawaterakPaymentVerifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,57 +20,39 @@ class FawaterakWebhookController extends Controller
     public function handle(Request $request): JsonResponse
     {
         $payload = $request->all();
-        Log::info('Fawaterak webhook received', ['keys' => array_keys($payload)]);
+        Log::info('Fawaterak webhook received', [
+            'keys' => array_keys($payload),
+            'invoice_id' => FawaterakOrderResolver::extractInvoiceId($payload),
+            'status' => FawaterakOrderResolver::extractPaidStatus($payload),
+        ]);
 
-        $invoiceId = $payload['invoice_id']
-            ?? $payload['invoiceId']
-            ?? $payload['InvoiceId']
-            ?? data_get($payload, 'data.invoice_id')
-            ?? data_get($payload, 'data.invoiceId');
+        $invoiceId = FawaterakOrderResolver::extractInvoiceId($payload);
+        $status = FawaterakOrderResolver::extractPaidStatus($payload);
 
-        $status = strtolower((string) (
-            $payload['invoice_status']
-            ?? $payload['status']
-            ?? data_get($payload, 'data.status')
-            ?? ''
-        ));
-
-        if (! $invoiceId) {
-            return response()->json(['ok' => false, 'message' => 'missing invoice_id'], 422);
+        if (! $invoiceId && ! FawaterakOrderResolver::isPaidStatus($status)) {
+            return response()->json(['ok' => true, 'message' => 'ignored: no invoice']);
         }
 
-        if (! in_array($status, ['paid', 'success', 'completed', '1', 'true'], true)) {
+        if ($invoiceId && ! FawaterakOrderResolver::isPaidStatus($status)) {
             return response()->json(['ok' => true, 'message' => 'ignored status']);
         }
 
-        $invoiceId = (string) $invoiceId;
-
-        $order = Order::query()
-            ->where('fawaterak_invoice_id', $invoiceId)
-            ->where('status', Order::STATUS_PENDING)
-            ->first();
-
-        // Iframe may not have stored invoice id yet — fall back to session-less lookup via pay_load/order id
+        $order = FawaterakOrderResolver::resolvePendingOrder($payload, $invoiceId);
         if (! $order) {
-            $orderKey = data_get($payload, 'pay_load.order_id')
-                ?? data_get($payload, 'data.pay_load.order_id')
-                ?? data_get($payload, 'cartItems.0.description');
-            if (is_numeric($orderKey)) {
-                $order = Order::query()
-                    ->whereKey((int) $orderKey)
-                    ->where('status', Order::STATUS_PENDING)
-                    ->first();
-            }
+            Log::warning('Fawaterak webhook: no matching pending order', [
+                'invoice_id' => $invoiceId,
+                'pay_load' => FawaterakOrderResolver::normalizedPayLoad($payload),
+            ]);
+
+            return response()->json(['ok' => true, 'message' => 'no matching pending record']);
         }
 
-        if ($order) {
-            return $this->approveCourseOrder($order, $invoiceId, $payload);
-        }
+        $invoiceId = $invoiceId ?: (string) ($order->fawaterak_invoice_id ?? '');
 
-        return response()->json(['ok' => true, 'message' => 'no matching pending record']);
+        return $this->approvePendingOrder($order, $invoiceId, $payload);
     }
 
-    private function approveCourseOrder(Order $order, string $invoiceId, array $payload): JsonResponse
+    private function approvePendingOrder(Order $order, string $invoiceId, array $payload): JsonResponse
     {
         try {
             DB::transaction(function () use ($order, $invoiceId, $payload) {
@@ -79,20 +62,20 @@ class FawaterakWebhookController extends Controller
                 }
 
                 app(FawaterakPaymentVerifier::class)->assertOrderPaid($locked, null, array_merge($payload, [
-                    'invoice_id' => $invoiceId,
+                    'invoice_id' => $invoiceId ?: FawaterakOrderResolver::extractInvoiceId($payload),
                 ]));
 
                 app(\App\Http\Controllers\Public\CheckoutController::class)
                     ->approveOrderAfterOnlinePaymentPublic(
                         $locked,
                         'fawaterak',
-                        $invoiceId,
+                        $invoiceId ?: FawaterakOrderResolver::extractInvoiceId($payload),
                         $payload,
                         'فواتيرك (Webhook)'
                     );
             });
 
-            return response()->json(['ok' => true, 'type' => 'course_order']);
+            return response()->json(['ok' => true, 'type' => 'order', 'order_id' => $order->id]);
         } catch (InvalidArgumentException $e) {
             Log::warning('Fawaterak webhook payment not verified', [
                 'order_id' => $order->id,

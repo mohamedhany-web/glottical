@@ -83,6 +83,12 @@ class ClassroomMeetingAccessService
                 (int) $session->student_id === (int) $user->id
                 || (int) $session->instructor_id === (int) $user->id
             )) {
+                if ((int) $session->student_id === (int) $user->id
+                    && $user->isStudent()
+                    && ! OneToOneSessionUnlockService::canStudentJoin($session, $user)) {
+                    return false;
+                }
+
                 return true;
             }
         }

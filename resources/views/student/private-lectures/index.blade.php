@@ -49,7 +49,9 @@
         $dur = (int) ($nextJoinable->duration_minutes ?: 50);
         if ($dur !== 50) { $dur = 50; }
         $awaiting = $nextJoinable->isAwaitingTeacherStart();
-        $canJoin = $nextJoinable->status === \App\Models\OneToOneSession::STATUS_SCHEDULED && $nextJoinable->classroomMeeting;
+        $canJoin = $nextJoinable->status === \App\Models\OneToOneSession::STATUS_SCHEDULED
+            && $nextJoinable->classroomMeeting
+            && \App\Services\OneToOneSessionUnlockService::canStudentJoin($nextJoinable, auth()->user());
         $joinHref = $canJoin
             ? route('student.classroom.room', $nextJoinable->classroomMeeting)
             : null;
@@ -121,7 +123,10 @@
             $dur = (int) ($session->duration_minutes ?: 50);
             if ($dur !== 50) { $dur = 50; }
             $awaiting = $session->isAwaitingTeacherStart();
-            $canJoin = $session->status === \App\Models\OneToOneSession::STATUS_SCHEDULED && $session->classroomMeeting;
+            $canJoin = $session->status === \App\Models\OneToOneSession::STATUS_SCHEDULED
+                && $session->classroomMeeting
+                && \App\Services\OneToOneSessionUnlockService::canStudentJoin($session, auth()->user());
+            $lockReason = \App\Services\OneToOneSessionUnlockService::lockReason($session, auth()->user());
             $joinHref = $canJoin ? route('student.classroom.room', $session->classroomMeeting) : null;
             $recordingHref = ($session->classroomMeeting
                 && $session->classroomMeeting->hasBrowserRecording()
@@ -175,6 +180,8 @@
                     </a>
                 @elseif($awaiting)
                     <span class="st-lesson-card__status is-warn">{{ __('student_timeline.teacher_starting') }}</span>
+                @elseif($lockReason && $session->status === \App\Models\OneToOneSession::STATUS_SCHEDULED)
+                    <span class="st-lesson-card__status is-warn" title="{{ $lockReason }}">مقفلة</span>
                 @else
                     <span class="st-lesson-card__status">{{ $statusLabel }}</span>
                 @endif

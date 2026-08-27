@@ -174,12 +174,17 @@ class StudentScheduleService
     public static function resolveJoinUrl(User $user, string $type, int $id): ?string
     {
         if ($type === 'private') {
-            return OneToOneSession::query()
+            $session = OneToOneSession::query()
                 ->with('classroomMeeting')
                 ->where('student_id', $user->id)
                 ->where('id', $id)
-                ->first()
-                ?->joinUrl();
+                ->first();
+
+            if (! $session || ! OneToOneSessionUnlockService::canStudentJoin($session, $user)) {
+                return null;
+            }
+
+            return $session->joinUrl();
         }
 
         if ($type === 'class') {

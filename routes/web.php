@@ -1504,6 +1504,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/orders/{order}/refulfill-tutoring', [\App\Http\Controllers\Admin\OrderController::class, 'refulfillTutoring'])
             ->middleware('throttle:10,1')
             ->name('orders.refulfill-tutoring');
+        Route::post('/orders/{order}/reconcile-fawaterak', [\App\Http\Controllers\Admin\OrderController::class, 'reconcileFawaterak'])
+            ->middleware('throttle:10,1')
+            ->name('orders.reconcile-fawaterak');
         Route::post('/orders/{order}/reject', [\App\Http\Controllers\Admin\OrderController::class, 'reject'])
             ->middleware('throttle:10,1')
             ->name('orders.reject');
@@ -1955,6 +1958,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/one-to-one-sessions', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'store'])->name('one-to-one-sessions.store');
         Route::get('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'show'])->name('one-to-one-sessions.show');
         Route::patch('/one-to-one-sessions/{oneToOneSession}/schedule', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'updateSchedule'])->name('one-to-one-sessions.update-schedule');
+        Route::post('/one-to-one-sessions/{oneToOneSession}/unlock-for-student', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'unlockForStudent'])->name('one-to-one-sessions.unlock-for-student');
+        Route::post('/one-to-one-sessions/{oneToOneSession}/revoke-unlock', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'revokeUnlockForStudent'])->name('one-to-one-sessions.revoke-unlock');
         Route::delete('/one-to-one-sessions/{oneToOneSession}', [\App\Http\Controllers\Admin\OneToOneSessionController::class, 'destroy'])->name('one-to-one-sessions.destroy');
 
         Route::get('/accounting/instructor-accounts', [\App\Http\Controllers\Admin\InstructorAccountController::class, 'index'])->name('accounting.instructor-accounts.index');
