@@ -276,15 +276,23 @@
     const mxLkAudioCapture = {
         echoCancellation: true,
         noiseSuppression: true,
-        autoGainControl: false,
+        autoGainControl: true,
+        voiceIsolation: true,
     };
     const mxLkAudioPublish = {
         dtx: false,
         red: true,
         forceStereo: false,
-        audioPreset: (AudioPresets && AudioPresets.music) ? AudioPresets.music : { maxBitrate: 48_000 },
+        audioPreset: (AudioPresets && AudioPresets.musicHighQuality)
+            ? AudioPresets.musicHighQuality
+            : { maxBitrate: 96_000 },
     };
+    const localMicGain = (role === 'host') ? 1.0 : 1.35;
+    const remotePlaybackGain = 1.4;
     const audioSink = document.getElementById('lk-audio-sink') || document.body;
+    let playbackAudioCtx = null;
+    let localMicBoostCtx = null;
+    const remoteAudioChains = new Map();
     const room = new Room({
         // مثل زوم: يقلّل الجودة تلقائياً عند ضعف النت بدل تقطيع الجلسة
         adaptiveStream: true,
@@ -820,6 +828,43 @@
         }
     }
 
+    function boostMediaStreamTrack(inputTrack, gainValue) {
+        if (!inputTrack || gainValue <= 1) return inputTrack;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return inputTrack;
+        try {
+            if (!localMicBoostCtx) localMicBoostCtx = new AudioCtx();
+            if (localMicBoostCtx.state === 'suspended') {
+                localMicBoostCtx.resume().catch(function () {});
+            }
+            const src = localMicBoostCtx.createMediaStreamSource(new MediaStream([inputTrack]));
+            const gain = localMicBoostCtx.createGain();
+            gain.gain.value = gainValue;
+            const dest = localMicBoostCtx.createMediaStreamDestination();
+            src.connect(gain);
+            gain.connect(dest);
+            const boosted = dest.stream.getAudioTracks()[0];
+            return boosted || inputTrack;
+        } catch (eBoost) {
+            console.warn('mic gain boost failed', eBoost);
+            return inputTrack;
+        }
+    }
+
+    async function prepareLocalAudioForPublish(track) {
+        if (!track || track.kind !== Track.Kind.Audio || localMicGain <= 1) return track;
+        const mst = track.mediaStreamTrack;
+        if (!mst) return track;
+        const boosted = boostMediaStreamTrack(mst, localMicGain);
+        if (boosted === mst) return track;
+        try {
+            if (typeof LocalAudioTrack === 'function') {
+                return new LocalAudioTrack(boosted);
+            }
+        } catch (eLocal) {}
+        return track;
+    }
+
     function attachRemoteAudio(track, participant) {
         if (!track || participant?.isLocal) return;
         const key = tileKey(participant, track.source || 'mic');
@@ -827,7 +872,39 @@
         if (existing) {
             try { existing.remove(); } catch (eRm) {}
         }
-        const audio = track.attach();
+        if (remoteAudioChains.has(key)) {
+            try { remoteAudioChains.get(key).source?.disconnect(); } catch (eDisc) {}
+            remoteAudioChains.delete(key);
+        }
+
+        let audio = null;
+        const mst = track.mediaStreamTrack;
+        const useBoost = remotePlaybackGain > 1 && mst && track.source !== Track.Source.ScreenShareAudio;
+        if (useBoost) {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    if (!playbackAudioCtx) playbackAudioCtx = new AudioCtx();
+                    if (playbackAudioCtx.state === 'suspended') {
+                        playbackAudioCtx.resume().catch(function () {});
+                    }
+                    const source = playbackAudioCtx.createMediaStreamSource(new MediaStream([mst]));
+                    const gainNode = playbackAudioCtx.createGain();
+                    gainNode.gain.value = remotePlaybackGain;
+                    const dest = playbackAudioCtx.createMediaStreamDestination();
+                    source.connect(gainNode);
+                    gainNode.connect(dest);
+                    remoteAudioChains.set(key, { source: source, gainNode: gainNode });
+                    audio = new Audio();
+                    audio.srcObject = dest.stream;
+                }
+            } catch (ePlayBoost) {
+                console.warn('remote audio boost failed', ePlayBoost);
+            }
+        }
+        if (!audio) {
+            audio = track.attach();
+        }
         audio.autoplay = true;
         audio.playsInline = true;
         audio.dataset.lkAudio = key;
@@ -920,6 +997,12 @@
                 const ref = tiles.get(key);
                 if (ref) ref.el.remove();
                 tiles.delete(key);
+            }
+        });
+        [...remoteAudioChains.keys()].forEach(function (chainKey) {
+            if (chainKey.startsWith(participant.identity + ':')) {
+                try { remoteAudioChains.get(chainKey)?.source?.disconnect(); } catch (eChain) {}
+                remoteAudioChains.delete(chainKey);
             }
         });
         (audioSink.querySelectorAll ? audioSink : document).querySelectorAll('audio[data-lk-audio^="' + participant.identity + ':"]').forEach((el) => el.remove());
@@ -1052,8 +1135,24 @@
                             facingMode: 'user',
                         } : false,
                     });
-                    await Promise.all(localTracks.map((t) => room.localParticipant.publishTrack(t)));
-                    localTracks.forEach((t) => attachTrack(t, room.localParticipant));
+                    const publishTracks = [];
+                    for (const t of localTracks) {
+                        if (t.kind === Track.Kind.Audio) {
+                            const prepared = await prepareLocalAudioForPublish(t);
+                            if (prepared !== t) {
+                                try { t.stop?.(); } catch (eStop) {}
+                            }
+                            publishTracks.push(prepared);
+                        } else {
+                            publishTracks.push(t);
+                        }
+                    }
+                    await Promise.all(publishTracks.map(function (t) {
+                        return t.kind === Track.Kind.Audio
+                            ? room.localParticipant.publishTrack(t, mxLkAudioPublish)
+                            : room.localParticipant.publishTrack(t);
+                    }));
+                    publishTracks.forEach(function (t) { attachTrack(t, room.localParticipant); });
                 }
                 micOn = wantAudio; camOn = wantVideo;
                 syncMicButton();

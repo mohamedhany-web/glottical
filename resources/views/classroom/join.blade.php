@@ -181,13 +181,16 @@
             const mxLkAudioCapture = {
                 echoCancellation: true,
                 noiseSuppression: true,
-                autoGainControl: false,
+                autoGainControl: true,
+                voiceIsolation: true,
             };
             const mxLkAudioPublish = {
                 dtx: false,
                 red: true,
                 forceStereo: false,
-                audioPreset: (AudioPresets && AudioPresets.music) ? AudioPresets.music : { maxBitrate: 48_000 },
+                audioPreset: (AudioPresets && AudioPresets.musicHighQuality)
+                    ? AudioPresets.musicHighQuality
+                    : { maxBitrate: 96_000 },
             };
             room = new Room({
                 adaptiveStream: true,
