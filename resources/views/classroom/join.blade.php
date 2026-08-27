@@ -182,21 +182,17 @@
                 echoCancellation: true,
                 noiseSuppression: true,
                 autoGainControl: true,
-                voiceIsolation: true,
-            };
-            const mxLkAudioPublish = {
-                dtx: false,
-                red: true,
-                forceStereo: false,
-                audioPreset: (AudioPresets && AudioPresets.musicHighQuality)
-                    ? AudioPresets.musicHighQuality
-                    : { maxBitrate: 96_000 },
             };
             room = new Room({
                 adaptiveStream: true,
                 dynacast: true,
                 audioCaptureDefaults: mxLkAudioCapture,
-                publishDefaults: mxLkAudioPublish,
+                publishDefaults: {
+                    dtx: false,
+                    red: true,
+                    forceStereo: false,
+                    audioPreset: (AudioPresets && AudioPresets.music) ? AudioPresets.music : { maxBitrate: 48_000 },
+                },
             });
             const stage = document.getElementById('lk-guest-stage');
             const tiles = new Map();
@@ -286,7 +282,7 @@
             document.getElementById('lk-toggle-mic')?.addEventListener('click', async function () {
                 try {
                     micOn = !micOn;
-                    await room.localParticipant.setMicrophoneEnabled(micOn, mxLkAudioCapture, mxLkAudioPublish);
+                    await room.localParticipant.setMicrophoneEnabled(micOn, mxLkAudioCapture);
                     this.classList.toggle('is-off', !micOn);
                 } catch (e) {
                     micOn = !micOn;

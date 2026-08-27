@@ -309,32 +309,14 @@
         async function startAutoAudioRecording() {
             if (audioRecorder || !window.MediaRecorder) return;
             try {
-                let attempts = 0;
-                while (attempts < 40) {
-                    const cap = (typeof window.__mxLkGetRecordCapture === 'function')
-                        ? window.__mxLkGetRecordCapture()
-                        : null;
-                    const liveTracks = (cap?.audioTracks || []).filter(function (t) {
-                        return t && t.readyState === 'live' && t.enabled !== false;
-                    });
-                    if (liveTracks.length) {
-                        audioStream = new MediaStream(liveTracks);
-                        break;
-                    }
-                    await new Promise(function (resolve) { setTimeout(resolve, 500); });
-                    attempts++;
-                }
-                if (!audioStream && navigator.mediaDevices?.getUserMedia) {
-                    audioStream = await navigator.mediaDevices.getUserMedia({
-                        audio: {
-                            echoCancellation: true,
-                            noiseSuppression: true,
-                            autoGainControl: false,
-                        },
-                        video: false,
-                    });
-                }
-                if (!audioStream) return;
+                const cap = (typeof window.__mxLkGetRecordCapture === 'function')
+                    ? window.__mxLkGetRecordCapture()
+                    : null;
+                const tracks = (cap?.audioTracks || []).filter(function (t) {
+                    return t && t.readyState === 'live' && t.enabled !== false;
+                });
+                if (!tracks.length) return;
+                audioStream = new MediaStream([tracks[0]]);
                 const mimeType = pickAudioMimeType();
                 audioRecorder = mimeType ? new MediaRecorder(audioStream, { mimeType }) : new MediaRecorder(audioStream);
                 audioChunks = [];
@@ -388,7 +370,7 @@
             }
         }
 
-        startAutoAudioRecording();
+        setTimeout(function () { startAutoAudioRecording(); }, 10000);
 
         window.addEventListener('pagehide', function () {
             try {
