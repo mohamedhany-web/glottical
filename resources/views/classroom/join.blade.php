@@ -177,8 +177,24 @@
                 setStatus('توكن LiveKit غير متاح', true);
                 return;
             }
-            const { Room, RoomEvent, Track, createLocalTracks, createLocalScreenTracks } = window.LivekitClient;
-            room = new Room({ adaptiveStream: true, dynacast: true });
+            const { Room, RoomEvent, Track, createLocalTracks, createLocalScreenTracks, VideoPresets, AudioPresets } = window.LivekitClient;
+            const mxLkAudioCapture = {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: false,
+            };
+            const mxLkAudioPublish = {
+                dtx: false,
+                red: true,
+                forceStereo: false,
+                audioPreset: (AudioPresets && AudioPresets.music) ? AudioPresets.music : { maxBitrate: 48_000 },
+            };
+            room = new Room({
+                adaptiveStream: true,
+                dynacast: true,
+                audioCaptureDefaults: mxLkAudioCapture,
+                publishDefaults: mxLkAudioPublish,
+            });
             const stage = document.getElementById('lk-guest-stage');
             const tiles = new Map();
             let micOn = true, camOn = true, screenOn = false, screenTrack = null;
@@ -248,7 +264,10 @@
             setStatus('جاري الاتصال...');
             await room.connect(url, token);
             try {
-                const localTracks = await createLocalTracks({ audio: true, video: true });
+                const localTracks = await createLocalTracks({
+                    audio: mxLkAudioCapture,
+                    video: true,
+                });
                 await Promise.all(localTracks.map((t) => room.localParticipant.publishTrack(t)));
                 localTracks.forEach((t) => attachTrack(t, room.localParticipant));
                 setStatus('متصل');
@@ -264,7 +283,7 @@
             document.getElementById('lk-toggle-mic')?.addEventListener('click', async function () {
                 try {
                     micOn = !micOn;
-                    await room.localParticipant.setMicrophoneEnabled(micOn);
+                    await room.localParticipant.setMicrophoneEnabled(micOn, mxLkAudioCapture, mxLkAudioPublish);
                     this.classList.toggle('is-off', !micOn);
                 } catch (e) {
                     micOn = !micOn;

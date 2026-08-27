@@ -1,0 +1,19 @@
+# مثال إعداد LiveKit على VPS — انسخ إلى /etc/livekit.yaml وعدّل المفاتيح
+port: 7880
+
+rtc:
+  tcp_port: 7881
+  port_range_start: 50000
+  port_range_end: 60000
+  use_external_ip: true
+
+turn:
+  enabled: true
+  domain: live.glottical.com
+  tls_port: 5349
+
+keys:
+  YOUR_API_KEY: YOUR_API_SECRET
+
+# logging:
+#   level: info

@@ -13,6 +13,7 @@
 @endphp
 <div id="lk-room-shell" class="lk-room lk-theme-{{ $lkTheme }} relative flex-1 min-h-0 flex flex-col" data-lk-theme="{{ $lkTheme }}" data-lk-role="{{ $lkRole }}">
     <div id="lk-status" class="lk-status hidden" role="status"></div>
+    <div id="lk-audio-sink" class="sr-only" aria-hidden="true"></div>
 
     <div class="lk-body flex-1 min-h-0 flex flex-col md:flex-row">
         <div class="lk-main flex-1 min-h-0 flex flex-col relative">
@@ -220,6 +221,7 @@
 }
 .lk-room.is-screen-focus .lk-main{min-height:0}
 .lk-theme-student.is-screen-focus .lk-main{min-height:min(78vh,780px)}
+#lk-audio-sink{position:absolute;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.9.1/dist/livekit-client.umd.min.js"></script>
@@ -270,7 +272,19 @@
     if (!window.LivekitClient) { setStatus('تعذر تحميل مكتبة LiveKit', true); return; }
     if (!url || !token) { setStatus('إعدادات LiveKit غير مكتملة (رابط أو توكن)', true); return; }
 
-    const { Room, RoomEvent, Track, createLocalTracks, createLocalScreenTracks, LocalVideoTrack, LocalAudioTrack, VideoQuality, VideoPresets } = window.LivekitClient;
+    const { Room, RoomEvent, Track, createLocalTracks, createLocalScreenTracks, LocalVideoTrack, LocalAudioTrack, VideoQuality, VideoPresets, AudioPresets } = window.LivekitClient;
+    const mxLkAudioCapture = {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: false,
+    };
+    const mxLkAudioPublish = {
+        dtx: false,
+        red: true,
+        forceStereo: false,
+        audioPreset: (AudioPresets && AudioPresets.music) ? AudioPresets.music : { maxBitrate: 48_000 },
+    };
+    const audioSink = document.getElementById('lk-audio-sink') || document.body;
     const room = new Room({
         // مثل زوم: يقلّل الجودة تلقائياً عند ضعف النت بدل تقطيع الجلسة
         adaptiveStream: true,
@@ -280,16 +294,14 @@
                 return Math.min(1000 * Math.pow(2, context.retryCount || 0), 10000);
             },
         },
+        audioCaptureDefaults: mxLkAudioCapture,
         videoCaptureDefaults: {
             resolution: (VideoPresets && VideoPresets.h720)
                 ? VideoPresets.h720.resolution
                 : { width: 1280, height: 720, frameRate: 24 },
             facingMode: 'user',
         },
-        publishDefaults: {
-            dtx: true,
-            red: true,
-            forceStereo: false,
+        publishDefaults: Object.assign({}, mxLkAudioPublish, {
             videoSimulcastLayers: (VideoPresets)
                 ? [VideoPresets.h180, VideoPresets.h360].filter(Boolean)
                 : undefined,
@@ -299,7 +311,7 @@
             screenShareEncoding: { maxBitrate: 2_500_000, maxFramerate: 15 },
             screenShareSimulcastLayers: [],
             videoCodec: 'vp8',
-        },
+        }),
     });
 
     const tiles = new Map();
@@ -808,13 +820,34 @@
         }
     }
 
+    function attachRemoteAudio(track, participant) {
+        if (!track || participant?.isLocal) return;
+        const key = tileKey(participant, track.source || 'mic');
+        const existing = audioSink.querySelector('audio[data-lk-audio="' + key + '"]');
+        if (existing) {
+            try { existing.remove(); } catch (eRm) {}
+        }
+        const audio = track.attach();
+        audio.autoplay = true;
+        audio.playsInline = true;
+        audio.dataset.lkAudio = key;
+        audio.volume = 1;
+        audioSink.appendChild(audio);
+        const playRemote = function () {
+            const p = audio.play();
+            if (p && typeof p.catch === 'function') {
+                p.catch(function () {
+                    setTimeout(playRemote, 250);
+                });
+            }
+        };
+        playRemote();
+    }
+
     function attachTrack(track, participant, publication) {
         if (!track) return;
         if (track.kind === Track.Kind.Audio && !participant.isLocal) {
-            const audio = track.attach();
-            audio.autoplay = true;
-            audio.dataset.lkAudio = tileKey(participant, track.source || 'mic');
-            document.body.appendChild(audio);
+            attachRemoteAudio(track, participant);
             return;
         }
         if (track.kind !== Track.Kind.Video) return;
@@ -889,7 +922,7 @@
                 tiles.delete(key);
             }
         });
-        document.querySelectorAll('audio[data-lk-audio^="' + participant.identity + ':"]').forEach((el) => el.remove());
+        (audioSink.querySelectorAll ? audioSink : document).querySelectorAll('audio[data-lk-audio^="' + participant.identity + ':"]').forEach((el) => el.remove());
         updateStageLayout();
         if (shell?.classList.contains('is-screen-focus')) rebuildPip();
     }
@@ -1011,11 +1044,7 @@
                 const wantVideo = !!startVideo;
                 if (wantAudio || wantVideo) {
                     const localTracks = await createLocalTracks({
-                        audio: wantAudio ? {
-                            echoCancellation: true,
-                            noiseSuppression: true,
-                            autoGainControl: true,
-                        } : false,
+                        audio: wantAudio ? mxLkAudioCapture : false,
                         video: wantVideo ? {
                             resolution: (VideoPresets && VideoPresets.h720)
                                 ? VideoPresets.h720.resolution
@@ -1050,7 +1079,7 @@
         if (!connected) return;
         try {
             const next = !micOn;
-            await room.localParticipant.setMicrophoneEnabled(next);
+            await room.localParticipant.setMicrophoneEnabled(next, mxLkAudioCapture, mxLkAudioPublish);
             micOn = next;
             syncMicButton();
         } catch (e) { setStatus(errMsg(e, 'تعذر تفعيل الميكروفون'), true); }
@@ -1375,11 +1404,11 @@
             if (!isAudio && mediaTrack && typeof mediaTrack.contentHint !== 'undefined') {
                 try { mediaTrack.contentHint = 'detail'; } catch (eHint) {}
             }
-            const publishOpts = {
+            const publishOpts = Object.assign({
                 source: source,
                 name: isAudio ? 'screen-audio' : 'screen',
                 simulcast: false,
-            };
+            }, isAudio ? mxLkAudioPublish : {});
             if (!isAudio) {
                 publishOpts.screenShareEncoding = { maxBitrate: 2_500_000, maxFramerate: 15 };
                 publishOpts.videoCodec = 'vp8';
@@ -1399,12 +1428,12 @@
         } catch (wrapErr) {
             console.warn('LocalTrack wrap failed, publishing raw track', wrapErr);
         }
-        const pub = await room.localParticipant.publishTrack(mediaTrack, {
+        const pub = await room.localParticipant.publishTrack(mediaTrack, Object.assign({
             source: source,
             name: isAudio ? 'screen-audio' : 'screen',
             simulcast: false,
             screenShareEncoding: isAudio ? undefined : { maxBitrate: 2_500_000, maxFramerate: 15 },
-        });
+        }, isAudio ? mxLkAudioPublish : {}));
         return pub?.track || mediaTrack;
     }
 

@@ -2139,8 +2139,11 @@
                 if (tid && lectureAudioTrackIds[tid]) return;
                 try {
                     var src = lectureAudioCtx.createMediaStreamSource(new MediaStream([track]));
-                    src.connect(lectureAudioDest);
-                    lectureAudioSources.push(src);
+                    var gain = lectureAudioCtx.createGain();
+                    gain.gain.value = 0.75;
+                    src.connect(gain);
+                    gain.connect(lectureAudioDest);
+                    lectureAudioSources.push(gain);
                     if (tid) lectureAudioTrackIds[tid] = true;
                 } catch (e) {
                     console.warn('lecture audio connect:', e);
@@ -2150,7 +2153,14 @@
             async function mxBuildLectureAudioTrack() {
                 var AudioCtx = window.AudioContext || window.webkitAudioContext;
                 if (!AudioCtx) {
-                    micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    micStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: false,
+                        },
+                        video: false,
+                    });
                     return micStream.getAudioTracks()[0];
                 }
                 if (!lectureAudioCtx) lectureAudioCtx = new AudioCtx();
@@ -2178,7 +2188,14 @@
                 // 2) احتياط: ميكروفون المتصفح إن لم يتوفر صوت من LiveKit بعد
                 if (!lectureAudioDest.stream.getAudioTracks().length) {
                     try {
-                        micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                        micStream = await navigator.mediaDevices.getUserMedia({
+                            audio: {
+                                echoCancellation: true,
+                                noiseSuppression: true,
+                                autoGainControl: false,
+                            },
+                            video: false,
+                        });
                         micStream.getAudioTracks().forEach(mxConnectTrackToLectureAudio);
                     } catch (micErr) {
                         console.warn('lecture mic getUserMedia:', micErr);
@@ -2435,7 +2452,14 @@
                 recordingKind = 'report';
 
                 try {
-                    activeRecordingStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    activeRecordingStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: false,
+                        },
+                        video: false,
+                    });
                 } catch (err) {
                     setRecordButtonBusy(false);
                     recordingKind = null;
