@@ -247,6 +247,7 @@
                     'lkRole' => 'host',
                     'lkTheme' => 'instructor',
                     'lkLeaveUrl' => route('instructor.live-sessions.show', $liveSession),
+                    'lkHostEndFormId' => 'end-session-form',
                     'lkAllowScreenShare' => $allowScreenShare ?? true,
                 ])
                 @include('partials.mx-share-annotation-overlay', [
@@ -380,14 +381,20 @@
             } catch (e) {}
         });
 
-        async function handleEndSession(e) {
-            if (!confirm('هل تريد إنهاء البث المباشر؟')) return false;
-            e.preventDefault();
+        window.__mxLiveHostEndSession = async function (alreadyConfirmed) {
+            const fakeEvent = { preventDefault: function () {} };
+            return handleEndSession(fakeEvent, alreadyConfirmed);
+        };
+
+        async function handleEndSession(e, alreadyConfirmed) {
+            if (!alreadyConfirmed && !confirm('هل تريد إنهاء البث المباشر للجميع؟\n\nسيتم إغلاق الغرفة أمام الطلاب — لا تكتفي بمغادرة الصفحة.')) return false;
+            if (e && typeof e.preventDefault === 'function') e.preventDefault();
+            window.__mxLkHostSessionEnded = true;
             const form = document.getElementById('end-session-form');
-            const btn = form.querySelector('button[type="submit"]');
+            const btn = form?.querySelector('button[type="submit"]');
             if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإنهاء...'; }
             await stopAndUploadAutoAudio();
-            form.submit();
+            form?.submit();
             return false;
         }
 

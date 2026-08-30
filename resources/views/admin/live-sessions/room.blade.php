@@ -36,7 +36,7 @@
         <a href="{{ route('admin.live-sessions.show', $liveSession) }}" class="hidden sm:inline-flex h-9 items-center rounded-xl border border-slate-600 px-3 text-xs font-semibold text-slate-200 hover:bg-slate-800">
             التفاصيل
         </a>
-        <form method="POST" action="{{ route('admin.live-sessions.end', $liveSession) }}" onsubmit="return confirm('إنهاء البث للجميع؟')">
+        <form method="POST" action="{{ route('admin.live-sessions.end', $liveSession) }}" id="admin-end-session-form">
             @csrf
             <button type="submit" class="inline-flex h-9 items-center gap-2 rounded-xl bg-rose-600 px-3 text-xs font-bold text-white hover:bg-rose-500">
                 <i class="fas fa-stop"></i> إنهاء البث
@@ -53,6 +53,7 @@
             'user' => $user,
             'lkRole' => 'host',
             'lkLeaveUrl' => route('admin.live-sessions.show', $liveSession),
+            'lkHostEndFormId' => 'admin-end-session-form',
             'lkStartAudio' => true,
             'lkStartVideo' => true,
             'lkAllowScreenShare' => $allowScreenShare ?? true,
@@ -68,5 +69,15 @@
         </div>
     @endif
 </div>
+<script>
+    document.getElementById('admin-end-session-form')?.addEventListener('submit', function (e) {
+        if (window.__mxLkHostSessionEnded) return;
+        if (!confirm('إنهاء البث للجميع؟ سيتم إغلاق الغرفة أمام المشاركين.')) {
+            e.preventDefault();
+            return;
+        }
+        window.__mxLkHostSessionEnded = true;
+    });
+</script>
 </body>
 </html>

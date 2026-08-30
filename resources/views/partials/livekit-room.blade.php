@@ -8,6 +8,8 @@
     $lkAllowScreenShare = $lkAllowScreenShare ?? true;
     $lkTheme = $lkTheme ?? 'default';
     $lkHideLeave = $lkHideLeave ?? false;
+    $lkHostEndFormId = $lkHostEndFormId ?? null;
+    $lkHostLeaveWarn = $lkHostLeaveWarn ?? (! empty($lkHostEndFormId) && ($lkRole ?? '') === 'host');
     $lkZoomMax = $lkZoomMax ?? (($lkTheme === 'student' || ($lkRole ?? '') === 'participant') ? 5 : 3);
     $lkDefaultScreenZoom = $lkDefaultScreenZoom ?? (($lkTheme === 'student' || ($lkRole ?? '') === 'participant') ? 1.35 : 1);
 @endphp
@@ -77,6 +79,9 @@
         <button type="button" id="lk-toggle-screen" class="lk-btn"><i class="fas fa-desktop"></i><span>مشاركة الشاشة</span></button>
         @endif
         <button type="button" id="lk-toggle-os-pip" class="lk-btn" title="نافذة عائمة للكاميرات فوق الجهاز كله"><i class="fas fa-external-link-alt"></i><span>عائمة</span></button>
+        @if(!empty($lkHostEndFormId) && ($lkRole ?? '') === 'host')
+        <button type="button" id="lk-host-end" class="lk-btn lk-btn--danger" title="إنهاء البث للجميع"><i class="fas fa-stop"></i><span>إنهاء البث</span></button>
+        @endif
         @unless($lkHideLeave)
         <a href="{{ $lkLeaveUrl }}" id="lk-leave" class="lk-btn lk-btn--danger"><i class="fas fa-phone-slash"></i><span>مغادرة</span></a>
         @endunless
@@ -235,6 +240,11 @@
     const lkTheme = @json($lkTheme);
     const lkDefaultScreenZoom = @json($lkDefaultScreenZoom);
     const ZOOM_MAX = @json($lkZoomMax);
+    const lkHostEndFormId = @json($lkHostEndFormId);
+    const lkHostLeaveWarn = @json($lkHostLeaveWarn);
+    const lkLeaveUrl = @json($lkLeaveUrl);
+    let lkHostSessionEnded = false;
+    window.__mxLkHostSessionEnded = false;
     const shell = document.getElementById('lk-room-shell');
     const stage = document.getElementById('lk-stage');
     const focusBox = document.getElementById('lk-focus');
@@ -1997,6 +2007,61 @@
     window.__mxLkLeaveRoom = function () {
         try { room.disconnect(); } catch (e) {}
     };
+
+    function submitHostEndSession(alreadyConfirmed) {
+        if (!lkHostEndFormId) return false;
+        if (!alreadyConfirmed && !confirm('إنهاء البث للجميع؟ سيتم إغلاق الغرفة أمام المشاركين.')) {
+            return false;
+        }
+        window.__mxLkHostSessionEnded = true;
+        lkHostSessionEnded = true;
+        if (typeof window.__mxLiveHostEndSession === 'function') {
+            window.__mxLiveHostEndSession(alreadyConfirmed);
+            return true;
+        }
+        const form = document.getElementById(lkHostEndFormId);
+        if (!form) return false;
+        if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+        } else {
+            form.submit();
+        }
+        return true;
+    }
+    window.__mxLkSubmitHostEndSession = submitHostEndSession;
+
+    function confirmHostLeave(e) {
+        if (e) e.preventDefault();
+        if (confirm('⚠️ لإنهاء المحاضرة للجميع استخدم «إنهاء البث» — المغادرة وحدها تترك الغرفة مفتوحة.\n\nهل تريد إنهاء البث الآن؟')) {
+            submitHostEndSession(true);
+            return false;
+        }
+        if (confirm('المغادرة دون إنهاء البث؟ ستبقى الغرفة نشطة للطلاب.')) {
+            window.__mxLkHostSessionEnded = true;
+            lkHostSessionEnded = true;
+            window.__mxLkLeaveRoom();
+            window.location.href = lkLeaveUrl;
+        }
+        return false;
+    }
+
+    document.getElementById('lk-host-end')?.addEventListener('click', function (e) {
+        e.preventDefault();
+        submitHostEndSession(false);
+    });
+
+    const leaveBtn = document.getElementById('lk-leave');
+    if (leaveBtn && lkHostLeaveWarn && lkHostEndFormId && role === 'host') {
+        leaveBtn.addEventListener('click', confirmHostLeave);
+    }
+
+    if (lkHostEndFormId && role === 'host') {
+        window.addEventListener('beforeunload', function (e) {
+            if (window.__mxLkHostSessionEnded || lkHostSessionEnded) return;
+            e.preventDefault();
+            e.returnValue = '';
+        });
+    }
 
     /** مصادر التسجيل الصامت: شير إن وُجد، وإلا كاميرات الغرفة + الصوت */
     window.__mxLkGetRecordCapture = function () {
