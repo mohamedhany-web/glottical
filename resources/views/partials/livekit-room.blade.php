@@ -280,15 +280,17 @@
     if (!window.LivekitClient) { setStatus('تعذر تحميل مكتبة LiveKit', true); return; }
     if (!url || !token) { setStatus('إعدادات LiveKit غير مكتملة (رابط أو توكن)', true); return; }
 
-    const { Room, RoomEvent, Track, createLocalTracks, createLocalScreenTracks, LocalVideoTrack, LocalAudioTrack, VideoQuality, VideoPresets, AudioPresets } = window.LivekitClient;
+    const { Room, RoomEvent, Track, createLocalTracks, createLocalScreenTracks, LocalVideoTrack, LocalAudioTrack, VideoQuality, VideoPresets, AudioPresets, ConnectionQuality } = window.LivekitClient;
     const mxLkAudioCapture = {
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl: true,
     };
     const room = new Room({
-        adaptiveStream: true,
+        // إيقاف adaptiveStream/pause يمنع LiveKit من تقليل أو إيقاف الصوت بعد دقائق
+        adaptiveStream: false,
         dynacast: true,
+        subscriberAllowPause: false,
         reconnectPolicy: {
             nextRetryDelayInMs: function (context) {
                 return Math.min(1000 * Math.pow(2, context.retryCount || 0), 10000);
@@ -296,9 +298,9 @@
         },
         audioCaptureDefaults: mxLkAudioCapture,
         videoCaptureDefaults: {
-            resolution: (VideoPresets && VideoPresets.h720)
-                ? VideoPresets.h720.resolution
-                : { width: 1280, height: 720, frameRate: 24 },
+            resolution: (VideoPresets && VideoPresets.h360)
+                ? VideoPresets.h360.resolution
+                : { width: 640, height: 360, frameRate: 24 },
             facingMode: 'user',
         },
         publishDefaults: {
@@ -307,11 +309,11 @@
             forceStereo: false,
             audioPreset: (AudioPresets && AudioPresets.music) ? AudioPresets.music : { maxBitrate: 48_000 },
             videoSimulcastLayers: (VideoPresets)
-                ? [VideoPresets.h180, VideoPresets.h360].filter(Boolean)
+                ? [VideoPresets.h180].filter(Boolean)
                 : undefined,
-            videoEncoding: (VideoPresets && VideoPresets.h720)
-                ? VideoPresets.h720.encoding
-                : { maxBitrate: 1_200_000, maxFramerate: 24 },
+            videoEncoding: (VideoPresets && VideoPresets.h360)
+                ? VideoPresets.h360.encoding
+                : { maxBitrate: 600_000, maxFramerate: 24 },
             screenShareEncoding: { maxBitrate: 2_500_000, maxFramerate: 15 },
             screenShareSimulcastLayers: [],
             videoCodec: 'vp8',
@@ -824,6 +826,78 @@
         }
     }
 
+    function preferRemoteAudioSubscription(publication) {
+        if (!publication) return;
+        const isAudio = publication.kind === 'audio'
+            || publication.kind === Track.Kind.Audio
+            || publication.source === Track.Source.Microphone
+            || publication.source === Track.Source.ScreenShareAudio;
+        if (!isAudio) return;
+        try {
+            if (typeof publication.setSubscribed === 'function') {
+                publication.setSubscribed(true);
+            }
+        } catch (eSub) {}
+    }
+
+    function resubscribeAllRemoteAudio() {
+        if (!room) return;
+        room.remoteParticipants.forEach(function (participant) {
+            participant.trackPublications.forEach(function (pub) {
+                preferRemoteAudioSubscription(pub);
+            });
+        });
+    }
+
+    async function forceRefreshRemoteAudio(participant) {
+        if (!participant || participant.isLocal) return;
+        const pubs = [];
+        participant.trackPublications.forEach(function (pub) {
+            const isAudio = pub.kind === 'audio'
+                || pub.kind === Track.Kind.Audio
+                || pub.source === Track.Source.Microphone;
+            if (isAudio && pub.track) pubs.push(pub);
+        });
+        for (let i = 0; i < pubs.length; i++) {
+            const pub = pubs[i];
+            try {
+                if (typeof pub.setSubscribed === 'function') {
+                    await pub.setSubscribed(false);
+                    await pub.setSubscribed(true);
+                }
+                if (pub.track) attachRemoteAudio(pub.track, participant);
+            } catch (eRef) {}
+        }
+    }
+
+    async function recoverAudioPlayback(reason) {
+        await ensureAudioPlayback();
+        resubscribeAllRemoteAudio();
+        document.querySelectorAll('audio[data-lk-audio]').forEach(function (audio) {
+            if (audio.paused) {
+                audio.play().catch(function () {});
+            }
+        });
+        if (reason) console.info('[LiveKit] audio recovery:', reason);
+    }
+
+    let audioHealthTimer = null;
+    let remoteQualityPoorSince = null;
+
+    function startAudioHealthMonitor() {
+        if (audioHealthTimer) return;
+        audioHealthTimer = setInterval(function () {
+            if (!connected || !room) return;
+            recoverAudioPlayback('health-check');
+        }, 20000);
+    }
+
+    function stopAudioHealthMonitor() {
+        if (!audioHealthTimer) return;
+        clearInterval(audioHealthTimer);
+        audioHealthTimer = null;
+    }
+
     function attachRemoteAudio(track, participant) {
         if (!track || participant?.isLocal) return;
         const key = tileKey(participant, track.source || 'mic');
@@ -905,6 +979,7 @@
     function attachExistingRemoteTracks() {
         room.remoteParticipants.forEach((participant) => {
             participant.trackPublications.forEach((pub) => {
+                preferRemoteAudioSubscription(pub);
                 if (pub.track) attachTrack(pub.track, participant, pub);
                 if (pub.source === Track.Source.ScreenShare) preferScreenShareQuality(pub);
             });
@@ -930,7 +1005,15 @@
     room
         .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
             if (publication?.source === Track.Source.ScreenShare) preferScreenShareQuality(publication);
+            preferRemoteAudioSubscription(publication);
             attachTrack(track, participant, publication);
+        })
+        .on(RoomEvent.TrackSubscriptionStatusChanged, (publication, status, participant) => {
+            if (!publication || !participant || participant.isLocal) return;
+            preferRemoteAudioSubscription(publication);
+            if (status === 'subscribed' && publication.track) {
+                attachTrack(publication.track, participant, publication);
+            }
         })
         .on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => detachTrack(track, participant))
         .on(RoomEvent.ParticipantConnected, () => updateStageLayout())
@@ -953,12 +1036,36 @@
             }
         })
         .on(RoomEvent.ParticipantDisconnected, (participant) => clearParticipantTiles(participant))
-        .on(RoomEvent.Disconnected, () => { connected = false; setStatus('تم قطع الاتصال بالغرفة', true); })
+        .on(RoomEvent.Disconnected, () => {
+            connected = false;
+            stopAudioHealthMonitor();
+            setStatus('تم قطع الاتصال بالغرفة', true);
+        })
         .on(RoomEvent.Reconnecting, () => setStatus('إعادة الاتصال بسبب ضعف الشبكة…', true))
-        .on(RoomEvent.Reconnected, () => {
-            setStatus('تم استعادة الاتصال');
-            hideStatusSoon();
+        .on(RoomEvent.Reconnected, async () => {
+            setStatus('تم استعادة الاتصال — جاري إصلاح الصوت…');
+            await recoverAudioPlayback('reconnected');
             attachExistingRemoteTracks();
+            hideStatusSoon();
+        })
+        .on(RoomEvent.ConnectionQualityChanged, function (quality, participant) {
+            if (!participant || participant.isLocal || !ConnectionQuality) return;
+            const isPoor = quality === ConnectionQuality.Poor || quality === ConnectionQuality.Lost;
+            if (isPoor) {
+                if (!remoteQualityPoorSince) remoteQualityPoorSince = Date.now();
+                if (Date.now() - remoteQualityPoorSince >= 8000) {
+                    const who = participant.name || participant.identity || 'المشارك';
+                    setStatus('صوت ' + who + ' ضعيف — جاري إعادة الاتصال بالصوت…', true);
+                    forceRefreshRemoteAudio(participant).then(function () {
+                        return recoverAudioPlayback('quality-' + who);
+                    }).finally(function () {
+                        hideStatusSoon();
+                    });
+                    remoteQualityPoorSince = Date.now();
+                }
+                return;
+            }
+            remoteQualityPoorSince = null;
         })
         .on(RoomEvent.DataReceived, (payload, participant, kind, topic) => {
             try {
@@ -1053,7 +1160,9 @@
             await room.connect(url, token);
             connected = true;
             await ensureAudioPlayback();
+            resubscribeAllRemoteAudio();
             attachExistingRemoteTracks();
+            startAudioHealthMonitor();
             try {
                 const wantAudio = !!startAudio;
                 const wantVideo = !!startVideo;
@@ -1061,9 +1170,9 @@
                     const localTracks = await createLocalTracks({
                         audio: wantAudio ? mxLkAudioCapture : false,
                         video: wantVideo ? {
-                            resolution: (VideoPresets && VideoPresets.h720)
-                                ? VideoPresets.h720.resolution
-                                : { width: 1280, height: 720, frameRate: 24 },
+                            resolution: (VideoPresets && VideoPresets.h360)
+                                ? VideoPresets.h360.resolution
+                                : { width: 640, height: 360, frameRate: 24 },
                             facingMode: 'user',
                         } : false,
                     });

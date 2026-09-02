@@ -48,6 +48,23 @@ php artisan livekit:provision-glottical --set-default
 - `curl http://187.124.36.228:7880/` → `OK`
 - غرفة بث معلم/طالب وClassroom تحمّل عميل LiveKit من jsDelivr
 
+## 5) جدار ناري Hostinger (مهم جداً للصوت)
+في لوحة VPS → Firewall افتح:
+
+| البروتوكول | المنفذ | الغرض |
+|------------|--------|--------|
+| TCP | 443, 7880, 7881 | WebSocket + ICE-TCP |
+| UDP | 50000–60000 | وسائط WebRTC (صوت/فيديو) |
+| UDP | 34789 | TURN LiveKit |
+| TCP | 5351 | TURN TLS LiveKit |
+| UDP | 30000–40000 | TURN relay (احتياطي عند ضعف UDP المباشر) |
+
+بدون UDP 50000–60000 يبدأ الصوت جيداً ثم يتباطأ ويقطع بعد 10–15 دقيقة.
+
+## 6) TURN
+LiveKit يوزّع بيانات TURN تلقائياً على العملاء عند `turn.enabled: true` في `livekit.yaml`.
+شهادات `live.glottical.com` تُنسخ إلى `/opt/livekit/certs/` وتُربط في docker-compose.
+
 ## ملاحظات
 - LiveKit يعمل حالياً على المنفذ `7880` على الـ VPS.
 - بدون سجل DNS + شهادة SSL لن يعمل `wss://live.glottical.com` من المتصفح على HTTPS.

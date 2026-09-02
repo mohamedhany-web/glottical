@@ -184,8 +184,9 @@
                 autoGainControl: true,
             };
             room = new Room({
-                adaptiveStream: true,
+                adaptiveStream: false,
                 dynacast: true,
+                subscriberAllowPause: false,
                 audioCaptureDefaults: mxLkAudioCapture,
                 publishDefaults: {
                     dtx: false,

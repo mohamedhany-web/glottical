@@ -24,7 +24,20 @@ rtc:
       - veth+
   stun_servers:
     - stun.l.google.com:19302
-    - live.muallimx.com:3478
+    - live.glottical.com:3478
+
+# TURN مدمج — ضروري عندما UDP المباشر يتدهور بعد دقائق (شبكات مصر/موبايل)
+# منافذ بديلة لتجنب تعارض coturn الخاص بـ Jitsi على 3478/5349
+turn:
+  enabled: true
+  domain: live.glottical.com
+  cert_file: /etc/livekit/certs/fullchain.pem
+  key_file: /etc/livekit/certs/privkey.pem
+  udp_port: 34789
+  tls_port: 5351
+  external_tls: true
+
+# TURN relay يستخدم UDP 30000–40000 (يظهر في logs عند التشغيل)
 
 room:
   empty_timeout: 300
