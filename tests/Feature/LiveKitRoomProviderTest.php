@@ -134,7 +134,10 @@ class LiveKitRoomProviderTest extends TestCase
         $response->assertSee('preferScreenShareQuality', false);
         $response->assertSee('scaleX(-1)', false);
         $response->assertSee('screenShareEncoding', false);
-        $response->assertSee('adaptiveStream: true', false);
+        $response->assertSee('adaptiveStream: false', false);
+        $response->assertSee('subscriberAllowPause: false', false);
+        $response->assertSee('ensureParticipantPresence', false);
+        $response->assertSee('ParticipantConnected', false);
         $response->assertSee('__mxLkGetRecordCapture', false);
         $response->assertSee('cameraVideos', false);
         $response->assertSee('id="lk-zoom-in"', false);

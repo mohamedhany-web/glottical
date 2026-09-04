@@ -328,7 +328,12 @@ class ClassroomController extends Controller
                 $effectiveDurationMinutes = $maxDurationMinutes;
             }
         }
-        if ($meeting->started_at && $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes)->isPast()) {
+
+        // لا نُغلق الحصة تلقائياً عند دخول الطالب بعد انتهاء المدة المخططة —
+        // ذلك كان يطرد الطالب بينما المعلم يبقى داخل LiveKit وحيداً.
+        // الإغلاق الرسمي فقط عبر ended_at (زر إنهاء المضيف) أو مهلة طويلة جداً (stale).
+        $staleAfterMinutes = max($effectiveDurationMinutes + 180, 240);
+        if ($meeting->started_at && $meeting->started_at->copy()->addMinutes($staleAfterMinutes)->isPast()) {
             if (! $meeting->ended_at) {
                 $meeting->update(['ended_at' => now()]);
             }

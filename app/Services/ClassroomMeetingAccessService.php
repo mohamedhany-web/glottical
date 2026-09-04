@@ -214,8 +214,17 @@ class ClassroomMeetingAccessService
             return route('instructor.classroom.room', $meeting);
         }
 
+        // احتياط: بعض البيئات قد تُسجّل الاسم بدون بادئة instructor.
+        if ($isInstructorSide && Route::has('classroom.room') && ! Route::has('student.classroom.room')) {
+            return route('classroom.room', $meeting);
+        }
+
         if (Route::has('student.classroom.room')) {
             return route('student.classroom.room', $meeting);
+        }
+
+        if (Route::has('classroom.room')) {
+            return route('classroom.room', $meeting);
         }
 
         return self::platformEnterUrl($meeting);

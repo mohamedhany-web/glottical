@@ -162,6 +162,15 @@
 .lk-tile.is-local{outline:2px solid color-mix(in srgb, var(--lk-accent) 55%, transparent)}
 .lk-tile.is-host{outline:2px solid color-mix(in srgb, var(--lk-gold) 70%, transparent)}
 .lk-tile.is-host .lk-tile-label::after{content:' · مضيف';color:var(--lk-gold)}
+.lk-tile.is-presence video{opacity:0}
+.lk-tile-avatar{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.45rem;background:linear-gradient(160deg,#0f172a,#1e293b 55%,#0b3d91);color:#e2e8f0;z-index:1;pointer-events:none}
+.lk-tile-avatar.hidden{display:none!important}
+.lk-tile-avatar__circle{width:4.2rem;height:4.2rem;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:1.35rem;font-weight:900;background:color-mix(in srgb, var(--lk-accent) 55%, #0f172a);border:2px solid color-mix(in srgb, var(--lk-gold) 55%, transparent);color:#fff}
+.lk-tile-avatar__name{font-size:.78rem;font-weight:800;max-width:88%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lk-tile-avatar__hint{font-size:.65rem;font-weight:700;color:var(--lk-muted)}
+.lk-pip-tile.is-presence{display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#0f172a,#1e293b)}
+.lk-pip-tile.is-presence video{display:none}
+.lk-pip-tile__avatar{font-size:.85rem;font-weight:900;color:#fff;width:2.4rem;height:2.4rem;border-radius:999px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb, var(--lk-accent) 55%, #0f172a);border:1px solid color-mix(in srgb, var(--lk-gold) 45%, transparent)}
 
 /* floating pip — fixed داخل الصفحة + Document PiP للتبويبات/الجهاز */
 .lk-pip{position:fixed;z-index:99990;inset-inline-end:12px;bottom:calc(72px + env(safe-area-inset-bottom,0px));width:min(320px,52vw);border-radius:16px;border:1px solid var(--lk-line);background:rgba(15,23,42,.96);backdrop-filter:blur(12px);box-shadow:0 16px 40px rgba(0,0,0,.4);overflow:hidden}
@@ -630,9 +639,43 @@
         }
     }
 
+    function participantDisplayName(participant) {
+        return (participant?.name || participant?.identity || 'مشارك').trim() || 'مشارك';
+    }
+
+    function participantInitials(participant) {
+        const name = participantDisplayName(participant);
+        const parts = name.split(/\s+/).filter(Boolean);
+        if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+        return name.slice(0, 2).toUpperCase();
+    }
+
+    function syncTilePresence(ref) {
+        if (!ref?.el || ref.source === Track.Source.ScreenShare) return;
+        const hasLiveVideo = cameraTrackIsLive(ref);
+        ref.el.classList.toggle('is-presence', !hasLiveVideo);
+        if (ref.avatar) {
+            ref.avatar.classList.toggle('hidden', !!hasLiveVideo);
+            if (ref.avatarName) ref.avatarName.textContent = participantDisplayName(ref.participant);
+            if (ref.avatarCircle) ref.avatarCircle.textContent = participantInitials(ref.participant);
+            if (ref.avatarHint) {
+                ref.avatarHint.textContent = hasLiveVideo ? '' : 'متصل · بدون كاميرا';
+            }
+        }
+        if (ref.label) {
+            ref.label.textContent = participantDisplayName(ref.participant)
+                + (ref.source === Track.Source.ScreenShare ? ' · شاشة' : '');
+        }
+    }
+
     function ensureTile(participant, source) {
         const key = tileKey(participant, source);
-        if (tiles.has(key)) return tiles.get(key);
+        if (tiles.has(key)) {
+            const existing = tiles.get(key);
+            existing.participant = participant;
+            syncTilePresence(existing);
+            return existing;
+        }
         const el = document.createElement('div');
         el.className = 'lk-tile' + (source === Track.Source.ScreenShare ? ' is-screen' : '') + (participant.isLocal ? ' is-local' : '');
         el.dataset.key = key;
@@ -640,15 +683,45 @@
         video.autoplay = true;
         video.playsInline = true;
         video.muted = !!participant.isLocal;
+        const avatar = document.createElement('div');
+        avatar.className = 'lk-tile-avatar';
+        const avatarCircle = document.createElement('div');
+        avatarCircle.className = 'lk-tile-avatar__circle';
+        avatarCircle.textContent = participantInitials(participant);
+        const avatarName = document.createElement('div');
+        avatarName.className = 'lk-tile-avatar__name';
+        avatarName.textContent = participantDisplayName(participant);
+        const avatarHint = document.createElement('div');
+        avatarHint.className = 'lk-tile-avatar__hint';
+        avatarHint.textContent = 'متصل · بدون كاميرا';
+        avatar.appendChild(avatarCircle);
+        avatar.appendChild(avatarName);
+        avatar.appendChild(avatarHint);
         const label = document.createElement('div');
         label.className = 'lk-tile-label';
-        label.textContent = (participant.name || participant.identity) + (source === Track.Source.ScreenShare ? ' · شاشة' : '');
+        label.textContent = participantDisplayName(participant) + (source === Track.Source.ScreenShare ? ' · شاشة' : '');
         el.appendChild(video);
+        el.appendChild(avatar);
         el.appendChild(label);
         stage.appendChild(el);
-        const ref = { el, video, participant, source, track: null };
+        const ref = {
+            el, video, participant, source, track: null,
+            avatar, avatarCircle, avatarName, avatarHint, label,
+        };
         tiles.set(key, ref);
+        syncTilePresence(ref);
         updateStageLayout();
+        return ref;
+    }
+
+    function ensureParticipantPresence(participant) {
+        if (!participant || !stage) return null;
+        const source = Track.Source.Camera;
+        const ref = ensureTile(participant, source);
+        if (isHostParticipant(participant)) ref.el.classList.add('is-host');
+        syncTilePresence(ref);
+        updateStageLayout();
+        if (shell?.classList.contains('is-screen-focus') || osPipActive) rebuildPip();
         return ref;
     }
     function removeTile(participant, source) {
@@ -751,18 +824,21 @@
         pipBody.innerHTML = '';
         pipTiles.clear();
 
-        // كاميرا واحدة لكل مشارك (تفادي تكرار نفس الشخص من مصادر فيديو متعددة)
+        // مشارك واحد لكل هوية — حتى بدون كاميرا (presence) حتى يظهر للطالب/المعلم
         const byIdentity = new Map();
         tiles.forEach((ref, key) => {
-            if (!cameraTrackIsLive(ref)) return;
+            if (ref.source === Track.Source.ScreenShare || ref.source === Track.Source.ScreenShareAudio) return;
+            if (ref.el?.style?.display === 'none') return;
             const id = String(ref.participant?.identity || key);
             const prev = byIdentity.get(id);
+            const live = cameraTrackIsLive(ref);
             if (!prev) {
-                byIdentity.set(id, [key, ref]);
+                byIdentity.set(id, [key, ref, live]);
                 return;
             }
-            const preferNew = ref.source === Track.Source.Camera && prev[1].source !== Track.Source.Camera;
-            if (preferNew) byIdentity.set(id, [key, ref]);
+            const preferNew = (live && !prev[2])
+                || (ref.source === Track.Source.Camera && prev[1].source !== Track.Source.Camera);
+            if (preferNew) byIdentity.set(id, [key, ref, live]);
         });
 
         const liveCams = [...byIdentity.values()].sort((a, b) => {
@@ -774,41 +850,49 @@
             return aLocal - bLocal;
         });
 
-        liveCams.forEach(([key, ref]) => {
+        liveCams.forEach(([key, ref, live]) => {
             const wrap = document.createElement('div');
             wrap.className = 'lk-pip-tile'
                 + (ref.participant.isLocal ? ' is-local' : '')
-                + (isHostParticipant(ref.participant) ? ' is-host' : '');
+                + (isHostParticipant(ref.participant) ? ' is-host' : '')
+                + (live ? '' : ' is-presence');
             wrap.dataset.pipIdentity = String(ref.participant?.identity || key);
-            const v = document.createElement('video');
-            v.autoplay = true;
-            v.playsInline = true;
-            v.muted = true;
-            v.setAttribute('playsinline', '');
-            v.setAttribute('autoplay', '');
-            if (ref.track && typeof ref.track.attach === 'function') {
-                try {
-                    ref.track.attach(v);
-                    ref.pipVideo = v;
-                } catch (attachErr) {
-                    if (ref.video?.srcObject) v.srcObject = ref.video.srcObject;
+            if (live) {
+                const v = document.createElement('video');
+                v.autoplay = true;
+                v.playsInline = true;
+                v.muted = true;
+                v.setAttribute('playsinline', '');
+                v.setAttribute('autoplay', '');
+                if (ref.track && typeof ref.track.attach === 'function') {
+                    try {
+                        ref.track.attach(v);
+                        ref.pipVideo = v;
+                    } catch (attachErr) {
+                        if (ref.video?.srcObject) v.srcObject = ref.video.srcObject;
+                    }
+                } else if (ref.video?.srcObject) {
+                    v.srcObject = ref.video.srcObject;
                 }
-            } else if (ref.video?.srcObject) {
-                v.srcObject = ref.video.srcObject;
+                playPipVideo(v);
+                wrap.appendChild(v);
+                requestAnimationFrame(function () { playPipVideo(v); });
+                setTimeout(function () { playPipVideo(v); }, 120);
+                setTimeout(function () { playPipVideo(v); }, 400);
+            } else {
+                const av = document.createElement('div');
+                av.className = 'lk-pip-tile__avatar';
+                av.textContent = participantInitials(ref.participant);
+                wrap.appendChild(av);
             }
-            playPipVideo(v);
             const name = document.createElement('span');
-            let label = (ref.participant.name || ref.participant.identity || '').slice(0, 18);
+            let label = participantDisplayName(ref.participant).slice(0, 18);
             if (isHostParticipant(ref.participant)) label += ' · مضيف';
+            if (!live) label += ' · متصل';
             name.textContent = label;
-            wrap.appendChild(v);
             wrap.appendChild(name);
             pipBody.appendChild(wrap);
             pipTiles.set(key, wrap);
-            // re-kick play after layout / Document PiP move
-            requestAnimationFrame(function () { playPipVideo(v); });
-            setTimeout(function () { playPipVideo(v); }, 120);
-            setTimeout(function () { playPipVideo(v); }, 400);
         });
 
         const count = liveCams.length;
@@ -955,6 +1039,7 @@
         if (!participant.isLocal) {
             tile.video.style.transform = 'none';
         }
+        syncTilePresence(tile);
         updateStageLayout();
         if (shell?.classList.contains('is-screen-focus') || osPipActive) rebuildPip();
         try { window.__mxLkNotifyRecordingCaptureChanged?.(); } catch (eN) {}
@@ -968,8 +1053,15 @@
                 if (focusTrack === track || (participant && focusTitle)) {
                     setScreenFocus(false);
                 }
+                removeTile(participant, track.source);
+            } else if (participant) {
+                // أبقِ بلاطة الحضور حتى لو أُغلقت الكاميرا — لا نخفي المشارك
+                const ref = tiles.get(tileKey(participant, track.source || Track.Source.Camera));
+                if (ref) {
+                    ref.track = null;
+                    syncTilePresence(ref);
+                }
             }
-            removeTile(participant, track.source);
             updateStageLayout();
             if (shell?.classList.contains('is-screen-focus')) rebuildPip();
             try { window.__mxLkNotifyRecordingCaptureChanged?.(); } catch (eN2) {}
@@ -978,12 +1070,16 @@
 
     function attachExistingRemoteTracks() {
         room.remoteParticipants.forEach((participant) => {
+            ensureParticipantPresence(participant);
             participant.trackPublications.forEach((pub) => {
                 preferRemoteAudioSubscription(pub);
                 if (pub.track) attachTrack(pub.track, participant, pub);
                 if (pub.source === Track.Source.ScreenShare) preferScreenShareQuality(pub);
             });
         });
+        if (room.localParticipant) {
+            ensureParticipantPresence(room.localParticipant);
+        }
         room.localParticipant.trackPublications.forEach((pub) => {
             if (pub.track) attachTrack(pub.track, room.localParticipant, pub);
         });
@@ -1016,9 +1112,20 @@
             }
         })
         .on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => detachTrack(track, participant))
-        .on(RoomEvent.ParticipantConnected, () => updateStageLayout())
+        .on(RoomEvent.ParticipantConnected, (participant) => {
+            ensureParticipantPresence(participant);
+            const who = participantDisplayName(participant);
+            setStatus('انضم ' + who + ' إلى الحصة');
+            hideStatusSoon();
+            updateStageLayout();
+            if (shell?.classList.contains('is-screen-focus') || osPipActive) rebuildPip();
+        })
         .on(RoomEvent.LocalTrackPublished, (publication, participant) => {
             if (publication.track) attachTrack(publication.track, participant, publication);
+            if (participant) {
+                const camRef = tiles.get(tileKey(participant, Track.Source.Camera));
+                if (camRef) syncTilePresence(camRef);
+            }
         })
         .on(RoomEvent.LocalTrackUnpublished, (publication, participant) => {
             if (publication.track) detachTrack(publication.track, participant);
@@ -1099,6 +1206,10 @@
                 }
             }
             if (publication?.source === Track.Source.Camera || publication?.kind === Track.Kind.Video) {
+                const camRef = participant
+                    ? tiles.get(tileKey(participant, Track.Source.Camera))
+                    : null;
+                if (camRef) syncTilePresence(camRef);
                 if (shell?.classList.contains('is-screen-focus') || osPipActive) rebuildPip();
             }
         })
@@ -1114,6 +1225,10 @@
                 }
             }
             if (publication?.source === Track.Source.Camera || publication?.kind === Track.Kind.Video) {
+                const camRef = participant
+                    ? tiles.get(tileKey(participant, Track.Source.Camera))
+                    : null;
+                if (camRef) syncTilePresence(camRef);
                 if (shell?.classList.contains('is-screen-focus') || osPipActive) rebuildPip();
             }
         })
