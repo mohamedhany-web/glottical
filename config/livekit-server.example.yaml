@@ -23,8 +23,8 @@ rtc:
       - br-+
       - veth+
   stun_servers:
+    # لا تستخدم 3478 على هذا السيرفر — هو coturn الخاص بـ Jitsi/muallimx
     - stun.l.google.com:19302
-    - live.glottical.com:3478
 
 # TURN مدمج — ضروري عندما UDP المباشر يتدهور بعد دقائق (شبكات مصر/موبايل)
 # منافذ بديلة لتجنب تعارض coturn الخاص بـ Jitsi على 3478/5349
