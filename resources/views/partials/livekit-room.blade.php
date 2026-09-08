@@ -16,6 +16,20 @@
 <div id="lk-room-shell" class="lk-room lk-theme-{{ $lkTheme }} relative flex-1 min-h-0 flex flex-col" data-lk-theme="{{ $lkTheme }}" data-lk-role="{{ $lkRole }}">
     <div id="lk-status" class="lk-status hidden" role="status"></div>
 
+    {{-- بوابة دخول قبل الاتصال: ضرورية للموبايل/التابلت (gesture لتفعيل الميك والصوت) --}}
+    <div id="lk-prejoin" class="lk-prejoin" role="dialog" aria-modal="true" aria-labelledby="lk-prejoin-title">
+        <div class="lk-prejoin__card">
+            <div class="lk-prejoin__icon" aria-hidden="true"><i class="fas fa-video"></i></div>
+            <h2 id="lk-prejoin-title" class="lk-prejoin__title">جاهز للدخول؟</h2>
+            <p class="lk-prejoin__text">اضغط الزر للسماح بالميكروفون/الكاميرا والانضمام للحصة. على التليفون والتابلت لازم تضغط هنا أولاً.</p>
+            <p id="lk-prejoin-browser-hint" class="lk-prejoin__hint hidden"></p>
+            <button type="button" id="lk-prejoin-enter" class="lk-prejoin__btn">
+                <i class="fas fa-sign-in-alt"></i> دخول الحصة الآن
+            </button>
+            <p class="lk-prejoin__note">لو فتحت الرابط من واتساب/إنستجرام: افتحه في Chrome أو Safari من قائمة ⋮</p>
+        </div>
+    </div>
+
     <div class="lk-body flex-1 min-h-0 flex flex-col md:flex-row">
         <div class="lk-main flex-1 min-h-0 flex flex-col relative">
             <div id="lk-focus" class="lk-focus hidden" aria-live="polite">
@@ -95,6 +109,17 @@
 .lk-theme-student{--lk-bg:#071226;--lk-surface:#0b1a33;--lk-panel:#0f2447;--lk-line:rgba(255,255,255,.12);--lk-text:#f8fafc;--lk-muted:#a8b3c7;--lk-accent:#0B3D91;--lk-gold:#F5B800;font-family:"Cairo","Tajawal",system-ui,sans-serif}
 .lk-status{position:absolute;top:.75rem;left:50%;transform:translateX(-50%);z-index:30;padding:.4rem 1rem;border-radius:999px;background:rgba(15,23,42,.92);border:1px solid var(--lk-line);font-size:.75rem;font-weight:700}
 .lk-status.is-error{background:rgba(127,29,29,.92);border-color:#991b1b;color:#fecaca}
+.lk-prejoin{position:absolute;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(2,6,23,.88);backdrop-filter:blur(8px)}
+.lk-prejoin.hidden{display:none!important}
+.lk-prejoin__card{width:min(22rem,100%);border-radius:1.15rem;border:1px solid var(--lk-line);background:var(--lk-panel);padding:1.35rem 1.2rem;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.lk-prejoin__icon{width:3.2rem;height:3.2rem;margin:0 auto .85rem;border-radius:1rem;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb, var(--lk-accent) 28%, transparent);color:var(--lk-gold);font-size:1.25rem}
+.lk-prejoin__title{margin:0;font-size:1.15rem;font-weight:900;color:var(--lk-text)}
+.lk-prejoin__text{margin:.55rem 0 0;font-size:.82rem;line-height:1.55;font-weight:600;color:var(--lk-muted)}
+.lk-prejoin__hint{margin:.7rem 0 0;font-size:.75rem;line-height:1.45;font-weight:700;color:#fecaca;background:rgba(127,29,29,.35);border:1px solid #991b1b;border-radius:.75rem;padding:.55rem .7rem}
+.lk-prejoin__hint.hidden{display:none!important}
+.lk-prejoin__btn{margin-top:1rem;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border:0;border-radius:999px;padding:.85rem 1rem;font-size:.95rem;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#0B3D91,#0997d9);color:#fff}
+.lk-prejoin__btn:disabled{opacity:.65;cursor:wait}
+.lk-prejoin__note{margin:.75rem 0 0;font-size:.68rem;line-height:1.45;font-weight:600;color:var(--lk-muted)}
 .lk-body{min-height:0}
 .lk-main{min-height:0;background:var(--lk-surface)}
 .lk-stage{
@@ -231,12 +256,15 @@
   .lk-pip__grid-switch .lk-icon-btn[data-pip-cols="3"]{display:none}
   .lk-zoom-slider{width:min(88px,24vw)}
   .lk-focus__zoom .lk-icon-btn:nth-child(n+6){display:none}
+  .lk-stage.layout-duo,
+  .lk-stage.layout-trio,
+  .lk-stage.layout-class{grid-template-columns:1fr;grid-template-rows:none;grid-auto-rows:minmax(160px,1fr);overflow:auto}
+  .lk-toolbar{padding:.55rem .55rem calc(.55rem + env(safe-area-inset-bottom,0px));gap:.35rem}
 }
 .lk-room.is-screen-focus .lk-main{min-height:0}
 .lk-theme-student.is-screen-focus .lk-main{min-height:min(78vh,780px)}
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.9.1/dist/livekit-client.umd.min.js"></script>
 <script>
 (function () {
     const url = @json($livekitUrl);
@@ -275,6 +303,9 @@
     const toolbarZoom = document.getElementById('lk-toolbar-zoom');
     const toolbarZoomSlider = document.getElementById('lk-toolbar-zoom-slider');
     const toolbarZoomLabel = document.getElementById('lk-toolbar-zoom-label');
+    const prejoinEl = document.getElementById('lk-prejoin');
+    const prejoinBtn = document.getElementById('lk-prejoin-enter');
+    const prejoinHint = document.getElementById('lk-prejoin-browser-hint');
 
     function setStatus(msg, isError) {
         if (!statusEl) return;
@@ -286,6 +317,48 @@
         setTimeout(() => statusEl?.classList.add('hidden'), 2200);
     }
 
+    function isInAppBrowser() {
+        const ua = navigator.userAgent || '';
+        if (/FBAN|FBAV|Instagram|Line\/|WhatsApp|Snapchat|Twitter|TikTok|MicroMessenger/i.test(ua)) return true;
+        // iOS WebView داخل تطبيقات بدون Safari الكامل
+        if (/iPhone|iPod|iPad/i.test(ua) && /AppleWebKit/i.test(ua) && !/Safari/i.test(ua)) return true;
+        if (/\bwv\b|; wv\)/i.test(ua)) return true;
+        return false;
+    }
+
+    function loadLivekitClient() {
+        if (window.LivekitClient) return Promise.resolve();
+        const urls = [
+            'https://cdn.jsdelivr.net/npm/livekit-client@2.9.1/dist/livekit-client.umd.min.js',
+            'https://unpkg.com/livekit-client@2.9.1/dist/livekit-client.umd.min.js',
+        ];
+        return urls.reduce(function (chain, src) {
+            return chain.catch(function () {
+                return new Promise(function (resolve, reject) {
+                    const s = document.createElement('script');
+                    s.src = src;
+                    s.async = true;
+                    s.onload = function () {
+                        if (window.LivekitClient) resolve();
+                        else reject(new Error('LivekitClient missing after ' + src));
+                    };
+                    s.onerror = function () { reject(new Error('failed ' + src)); };
+                    document.head.appendChild(s);
+                });
+            });
+        }, Promise.reject());
+    }
+
+    // ننتظر تحميل SDK ثم نكمل التهيئة — لا نصل أوتوماتيك
+    loadLivekitClient().then(bootLivekitRoom).catch(function () {
+        setStatus('تعذر تحميل مكتبة LiveKit — تحقق من الإنترنت أو افتح من Chrome/Safari', true);
+        if (prejoinBtn) {
+            prejoinBtn.disabled = true;
+            prejoinBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> تعذر التحميل';
+        }
+    });
+
+    function bootLivekitRoom() {
     if (!window.LivekitClient) { setStatus('تعذر تحميل مكتبة LiveKit', true); return; }
     if (!url || !token) { setStatus('إعدادات LiveKit غير مكتملة (رابط أو توكن)', true); return; }
 
@@ -1269,9 +1342,49 @@
     shell?.addEventListener('click', function () { ensureAudioPlayback(); });
     shell?.querySelector('.lk-toolbar')?.addEventListener('click', function () { ensureAudioPlayback(); });
 
-    async function connect() {
+    async function createSoftLocalTracks(wantAudio, wantVideo) {
+        if (!wantAudio && !wantVideo) return [];
+        const videoIdeal = wantVideo ? {
+            resolution: (VideoPresets && VideoPresets.h360)
+                ? VideoPresets.h360.resolution
+                : { width: 640, height: 360, frameRate: 24 },
+            facingMode: 'user',
+        } : false;
+        try {
+            return await createLocalTracks({
+                audio: wantAudio ? mxLkAudioCapture : false,
+                video: videoIdeal,
+            });
+        } catch (e1) {
+            try {
+                return await createLocalTracks({
+                    audio: wantAudio ? true : false,
+                    video: wantVideo ? true : false,
+                });
+            } catch (e2) {
+                if (wantAudio) {
+                    return await createLocalTracks({ audio: true, video: false });
+                }
+                throw e2;
+            }
+        }
+    }
+
+    async function connect(preacquiredTracks) {
+        let localTracks = Array.isArray(preacquiredTracks) ? preacquiredTracks : [];
         try {
             setStatus('جارٍ الاتصال…');
+            const wantAudio = !!startAudio;
+            const wantVideo = !!startVideo;
+            // إن لم تُحضَّر المسارات من ضغطة الدخول، نحاول هنا (قد تفشل على iOS بدون gesture)
+            if (!localTracks.length && (wantAudio || wantVideo)) {
+                try {
+                    localTracks = await createSoftLocalTracks(wantAudio, wantVideo);
+                } catch (mediaWarmErr) {
+                    console.warn(mediaWarmErr);
+                    localTracks = [];
+                }
+            }
             await room.connect(url, token);
             connected = true;
             await ensureAudioPlayback();
@@ -1279,31 +1392,33 @@
             attachExistingRemoteTracks();
             startAudioHealthMonitor();
             try {
-                const wantAudio = !!startAudio;
-                const wantVideo = !!startVideo;
-                if (wantAudio || wantVideo) {
-                    const localTracks = await createLocalTracks({
-                        audio: wantAudio ? mxLkAudioCapture : false,
-                        video: wantVideo ? {
-                            resolution: (VideoPresets && VideoPresets.h360)
-                                ? VideoPresets.h360.resolution
-                                : { width: 640, height: 360, frameRate: 24 },
-                            facingMode: 'user',
-                        } : false,
-                    });
+                if (localTracks.length) {
                     await Promise.all(localTracks.map(function (t) {
                         return room.localParticipant.publishTrack(t);
                     }));
                     localTracks.forEach(function (t) { attachTrack(t, room.localParticipant); });
+                    micOn = localTracks.some(function (t) {
+                        return t.kind === Track.Kind.Audio || t.kind === 'audio';
+                    });
+                    camOn = localTracks.some(function (t) {
+                        return t.kind === Track.Kind.Video || t.kind === 'video';
+                    });
+                } else {
+                    micOn = false;
+                    camOn = false;
                 }
-                micOn = wantAudio; camOn = wantVideo;
                 syncMicButton();
                 syncCamButton();
-                setStatus('متصل · ' + (role === 'host' ? 'مضيف' : 'مشارك') + ' · ' + displayName);
-                hideStatusSoon();
+                if (!micOn && !camOn && (wantAudio || wantVideo)) {
+                    setStatus('متصل بدون ميكروفون/كاميرا — فعّل الأذونات من الأزرار', true);
+                } else {
+                    setStatus('متصل · ' + (role === 'host' ? 'مضيف' : 'مشارك') + ' · ' + displayName);
+                    hideStatusSoon();
+                }
                 updateStageLayout();
             } catch (mediaErr) {
                 console.warn(mediaErr);
+                localTracks.forEach(function (t) { try { t.stop(); } catch (eStop) {} });
                 micOn = false; camOn = false;
                 syncMicButton();
                 syncCamButton();
@@ -1312,9 +1427,44 @@
             syncLocalMediaStateFromRoom();
         } catch (err) {
             console.error(err);
+            localTracks.forEach(function (t) { try { t.stop(); } catch (eStop) {} });
             setStatus(errMsg(err, 'فشل الاتصال بـ LiveKit'), true);
+            if (prejoinEl) prejoinEl.classList.remove('hidden');
+            if (prejoinBtn) {
+                prejoinBtn.disabled = false;
+                prejoinBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> إعادة المحاولة';
+            }
         }
     }
+
+    let joining = false;
+    if (isInAppBrowser() && prejoinHint) {
+        prejoinHint.textContent = 'المتصفح داخل واتساب/إنستجرام غالباً يمنع البث. اضغط ⋮ ثم «فتح في المتصفح» (Chrome أو Safari).';
+        prejoinHint.classList.remove('hidden');
+    }
+    prejoinBtn?.addEventListener('click', async function () {
+        if (joining || connected) return;
+        joining = true;
+        prejoinBtn.disabled = true;
+        prejoinBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الدخول…';
+        let warmed = [];
+        try {
+            // طلب الأذونات داخل نفس اللمسة — ضروري للموبايل/التابلت
+            if (startAudio || startVideo) {
+                warmed = await createSoftLocalTracks(!!startAudio, !!startVideo);
+            }
+        } catch (warmErr) {
+            console.warn(warmErr);
+            warmed = [];
+        }
+        prejoinEl?.classList.add('hidden');
+        await connect(warmed);
+        joining = false;
+        if (!connected && prejoinBtn) {
+            prejoinBtn.disabled = false;
+            prejoinBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> إعادة المحاولة';
+        }
+    });
 
     micBtn?.addEventListener('click', async () => {
         if (!connected) return;
@@ -2157,8 +2307,8 @@
         updateOsPipButtons(false);
         syncFloatingPipExclusive();
     });
-    if (documentPictureInPicture) {
-        documentPictureInPicture.addEventListener('enter', () => {
+    if (window.documentPictureInPicture) {
+        window.documentPictureInPicture.addEventListener('enter', () => {
             updateOsPipButtons(true);
             syncFloatingPipExclusive();
         });
@@ -2413,6 +2563,7 @@
         return !!connected;
     };
 
-    connect();
+    // لا تتصل تلقائياً — الانتظار لضغطة «دخول الحصة» (موبايل/تابلت/سطح مكتب)
+    } // end bootLivekitRoom
 })();
 </script>

@@ -6,8 +6,10 @@ use App\Models\ClassroomMeeting;
 use App\Models\ClassroomMeetingParticipant;
 use App\Models\LiveSetting;
 use App\Services\ClassroomCurriculumPresentService;
+use App\Services\ClassroomMeetingAccessService;
 use App\Support\ShareAnnotationSanitizer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
@@ -34,9 +36,24 @@ class ClassroomJoinController extends Controller
         $maxParticipants = (int) ($meeting?->max_participants ?? 25);
         $meetingEnded = (bool) ($meeting && $meeting->ended_at);
         $meetingNotStarted = (bool) ($meeting && ! $meeting->started_at && ! $meeting->ended_at);
-        $guestJoinBlocked = (bool) ($meeting && ! \App\Services\ClassroomMeetingAccessService::allowsGuestJoin($meeting));
+        $guestJoinBlocked = (bool) ($meeting && ! ClassroomMeetingAccessService::allowsGuestJoin($meeting));
         $livekitConfigured = app(\App\Services\LiveKitTokenService::class)->isConfigured();
         $livekitHost = LiveSetting::getLiveKitHost();
+
+        // طالب/معلم مسجّل يفتح رابط الضيف المحظور → دخوله الآمن من المنصة
+        if ($meeting && $guestJoinBlocked && ! $meetingEnded) {
+            $user = Auth::user();
+            if ($user && ClassroomMeetingAccessService::userCanEnter($meeting, $user)) {
+                return redirect()->route('classroom.secure-enter', $meeting);
+            }
+            if (! $user) {
+                session(['url.intended' => route('classroom.secure-enter', $meeting)]);
+            }
+        }
+
+        $secureEnterUrl = ($meeting && \Illuminate\Support\Facades\Route::has('classroom.secure-enter'))
+            ? route('classroom.secure-enter', $meeting)
+            : null;
 
         return view('classroom.join', compact(
             'code',
@@ -48,7 +65,8 @@ class ClassroomJoinController extends Controller
             'meetingNotStarted',
             'guestJoinBlocked',
             'livekitConfigured',
-            'livekitHost'
+            'livekitHost',
+            'secureEnterUrl'
         ));
     }
 
