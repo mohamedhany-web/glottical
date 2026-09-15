@@ -251,8 +251,17 @@
 .lk-btn--accent{background:var(--lk-accent);border-color:var(--lk-accent);color:#fff}
 .lk-theme-student .lk-btn--accent,.lk-theme-student .lk-btn.is-sharing{background:linear-gradient(135deg,#0B3D91,#0997d9);border:0}
 .lk-theme-instructor .lk-btn{border-radius:12px}
+#lk-toggle-screen{order:3}
+.lk-theme-instructor #lk-toggle-screen{
+  background:color-mix(in srgb, var(--lk-gold) 18%, var(--lk-surface));
+  border-color:color-mix(in srgb, var(--lk-gold) 55%, var(--lk-line));
+  color:#fff;
+}
 @media(max-width:640px){
   .lk-btn span{display:none}
+  /* على التابلت/الموبايل: أبقِ نص الشير ظاهراً للمدرس حتى يسهل إيجاده */
+  .lk-theme-instructor #lk-toggle-screen span{display:inline}
+  .lk-theme-instructor #lk-toggle-screen{padding:.55rem .85rem;font-size:.72rem}
   .lk-pip{width:min(240px,68vw)}
   .lk-pip__grid-switch .lk-icon-btn[data-pip-cols="3"]{display:none}
   .lk-zoom-slider{width:min(88px,24vw)}
@@ -261,6 +270,10 @@
   .lk-stage.layout-trio,
   .lk-stage.layout-class{grid-template-columns:1fr;grid-template-rows:none;grid-auto-rows:minmax(160px,1fr);overflow:auto}
   .lk-toolbar{padding:.55rem .55rem calc(.55rem + env(safe-area-inset-bottom,0px));gap:.35rem}
+}
+@media(min-width:641px) and (max-width:1024px){
+  .lk-toolbar{flex-wrap:wrap;gap:.4rem;padding:.6rem .65rem calc(.6rem + env(safe-area-inset-bottom,0px))}
+  .lk-theme-instructor #lk-toggle-screen span{display:inline}
 }
 .lk-room.is-screen-focus .lk-main{min-height:0}
 .lk-theme-student.is-screen-focus .lk-main{min-height:min(78vh,780px)}
@@ -276,6 +289,7 @@
     const startVideo = @json($lkStartVideo);
     const allowScreenShare = @json($lkAllowScreenShare);
     const lkTheme = @json($lkTheme);
+    const isHostUi = (lkTheme === 'instructor' || role === 'host');
     const lkDefaultScreenZoom = @json($lkDefaultScreenZoom);
     const ZOOM_MAX = @json($lkZoomMax);
     const lkHostEndFormId = @json($lkHostEndFormId);
@@ -520,7 +534,10 @@
             return 'هذه الميزة غير متاحة على هذا المتصفح — شريط الكاميرات يبقى داخل الصفحة';
         }
         if (/getDisplayMedia|display-capture|screen.?share|unsupported/i.test(blob)) {
-            return 'مشاركة الشاشة غير متاحة على هذا الجهاز — استخدم الكمبيوتر';
+            if (isLikelyMobileDevice()) {
+                return 'مشاركة الشاشة على التابلت تحتاج Chrome — اسمح بالإذن عند الطلب، أو افتح من الكمبيوتر';
+            }
+            return 'مشاركة الشاشة غير متاحة على هذا المتصفح — جرّب Chrome أو استخدم الكمبيوتر';
         }
         if (name === 'NotAllowedError' || /Permission|NotAllowed|denied|Permission denied/i.test(blob)) {
             return 'تم رفض الإذن من المتصفح — اسمح بالوصول ثم أعد المحاولة';
@@ -545,10 +562,25 @@
 
     function supportsScreenShareApi() {
         try {
-            return !!(navigator.mediaDevices && typeof navigator.mediaDevices.getDisplayMedia === 'function');
-        } catch (e) {
-            return false;
-        }
+            if (navigator.mediaDevices && typeof navigator.mediaDevices.getDisplayMedia === 'function') {
+                return true;
+            }
+        } catch (e) {}
+        // بعض أجهزة التابلت/كروم تكشف الدعم بعد تهيئة LiveKit فقط
+        try {
+            if (room?.localParticipant && typeof room.localParticipant.setScreenShareEnabled === 'function') {
+                return true;
+            }
+        } catch (e2) {}
+        return typeof createLocalScreenTracks === 'function';
+    }
+
+    function canUseAnnotatedScreenShare() {
+        // مسار القلم المركّب يحتاج Document PiP + getDisplayMedia بخيارات Chromium — غالباً يفشل على التابلت
+        return isScreenAnnotateHost()
+            && supportsDocumentPiP()
+            && !!(navigator.mediaDevices && typeof navigator.mediaDevices.getDisplayMedia === 'function')
+            && !isLikelyMobileDevice();
     }
 
     function isLikelyMobileDevice() {
@@ -1440,6 +1472,7 @@
             }
             await room.connect(url, token);
             connected = true;
+            try { ensureHostScreenBtnVisible(); } catch (eBtn) {}
             await ensureAudioPlayback();
             resubscribeAllRemoteAudio();
             attachExistingRemoteTracks();
@@ -1894,21 +1927,39 @@
         }
         await stopScreenShare();
 
-        // يفضّل نافذة/تبويب على الشاشة كاملة؛ استبعاد تبويب المتصفح الحالي يقلل التكرار
-        const displayStream = await navigator.mediaDevices.getDisplayMedia({
-            video: {
-                frameRate: 15,
-                width: { ideal: 1920, max: 1920 },
-                height: { ideal: 1080, max: 1080 },
-                displaySurface: 'window',
-            },
-            audio: true,
-            // Chromium: لا تلتقط نافذة هذا التبويب ضمن الشير
-            preferCurrentTab: false,
-            selfBrowserSurface: 'exclude',
-            surfaceSwitching: 'include',
-            systemAudio: 'include',
-        });
+        let displayStream = null;
+        // أولاً قيود بسيطة (تابلت/موبايل/متصفحات محدودة)، ثم خيارات Chromium المتقدمة
+        try {
+            displayStream = await navigator.mediaDevices.getDisplayMedia({
+                video: true,
+                audio: true,
+            });
+        } catch (eSimple) {
+            try {
+                displayStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+                        frameRate: 15,
+                        width: { ideal: 1280, max: 1920 },
+                        height: { ideal: 720, max: 1080 },
+                    },
+                    audio: false,
+                });
+            } catch (eBasic) {
+                displayStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+                        frameRate: 15,
+                        width: { ideal: 1920, max: 1920 },
+                        height: { ideal: 1080, max: 1080 },
+                        displaySurface: 'window',
+                    },
+                    audio: true,
+                    preferCurrentTab: false,
+                    selfBrowserSurface: 'exclude',
+                    surfaceSwitching: 'include',
+                    systemAudio: 'include',
+                });
+            }
+        }
         annDisplayStream = displayStream;
         const rawVideo = displayStream.getVideoTracks()[0];
         if (!rawVideo) throw new Error('no display video');
@@ -1977,36 +2028,54 @@
     }
 
     async function startScreenShare() {
-        if (isScreenAnnotateHost()) {
-            await startAnnotatedScreenShare();
+        // المدرس على التابلت/الموبايل: شير بسيط (بدون مسار القلم المركّب الذي يعتمد على Document PiP)
+        if (canUseAnnotatedScreenShare()) {
+            try {
+                await startAnnotatedScreenShare();
                 return;
+            } catch (eAnn) {
+                console.warn('annotated share failed, falling back to simple share', eAnn);
+                await cleanupAnnotatedShareMedia().catch(function () {});
             }
+        }
+
+        // مسار LiveKit البسيط — الأنسب للتابلت
         if (typeof room.localParticipant.setScreenShareEnabled === 'function') {
-            await room.localParticipant.setScreenShareEnabled(true, {
-                audio: true,
-                resolution: { width: 1920, height: 1080, frameRate: 15 },
-                contentHint: 'detail',
-            });
+            try {
+                await room.localParticipant.setScreenShareEnabled(true, {
+                    audio: true,
+                    resolution: isLikelyMobileDevice()
+                        ? { width: 1280, height: 720, frameRate: 15 }
+                        : { width: 1920, height: 1080, frameRate: 15 },
+                    contentHint: 'detail',
+                });
+            } catch (eWithAudio) {
+                await room.localParticipant.setScreenShareEnabled(true, {
+                    audio: false,
+                    resolution: { width: 1280, height: 720, frameRate: 15 },
+                });
+            }
             screenOn = true;
             screenBtn?.classList.add('is-sharing');
             return;
         }
+
         let tracks;
         try {
             tracks = await createLocalScreenTracks({
                 audio: true,
-                resolution: { width: 1920, height: 1080, frameRate: 15 },
+                resolution: { width: 1280, height: 720, frameRate: 15 },
                 contentHint: 'detail',
             });
         } catch (e) {
             tracks = await createLocalScreenTracks({ audio: false });
         }
-            screenTrack = tracks[0];
+        screenTrack = tracks[0];
         await room.localParticipant.publishTrack(screenTrack, {
             source: Track.Source.ScreenShare,
             name: 'screen',
             simulcast: false,
-            screenShareEncoding: { maxBitrate: 2_500_000, maxFramerate: 15 },
+            screenShareEncoding: { maxBitrate: 1_800_000, maxFramerate: 15 },
         });
         if (tracks[1]) {
             try {
@@ -2017,7 +2086,7 @@
                 screenAudioTrack = tracks[1];
             } catch (e) {}
         }
-            attachTrack(screenTrack, room.localParticipant);
+        attachTrack(screenTrack, room.localParticipant);
         screenOn = true;
         screenBtn?.classList.add('is-sharing');
     }
@@ -2026,14 +2095,12 @@
         if (!connected || !allowScreenShare) return;
         try {
             if (screenOn) { await stopScreenShare(); return; }
-            if (!supportsScreenShareApi()) {
-                setStatus('مشاركة الشاشة غير متاحة على الموبايل — استخدم الكمبيوتر', false);
-                hideStatusSoon();
-                return;
-            }
+            // لا نمنع المحاولة مبكراً على التابلت — نجرّب ثم نعرض رسالة عربية عند الفشل فقط
             await startScreenShare();
             setStatus(isScreenAnnotateHost()
-                ? 'مشاركة الشاشة للطالب مفعّلة — بدون تكرار هنا. اختر «نافذة» بدل الشاشة كاملة إن أمكن'
+                ? (canUseAnnotatedScreenShare()
+                    ? 'مشاركة الشاشة للطالب مفعّلة — بدون تكرار هنا. اختر «نافذة» بدل الشاشة كاملة إن أمكن'
+                    : 'مشاركة الشاشة مفعّلة على التابلت — الطالب يرى شاشتك الآن')
                 : 'مشاركة الشاشة مفعّلة — استخدم الزووم والنافذة العائمة');
             hideStatusSoon();
         } catch (err) {
@@ -2041,7 +2108,7 @@
             screenOn = false;
             screenBtn?.classList.remove('is-sharing');
             await cleanupAnnotatedShareMedia().catch(function () {});
-            setStatus(errMsg(err, 'تعذر مشاركة الشاشة'), true);
+            setStatus(errMsg(err, 'تعذر مشاركة الشاشة — اسمح بالإذن من المتصفح أو جرّب Chrome'), true);
         }
     });
 
@@ -2433,7 +2500,39 @@
 
     // الشير والنافذة العائمة للمدرس تبقى ظاهرة.
     // نخفي فقط ما هو غير مدعوم فعلياً، أو للطالب على موبايل بدون Document PiP.
-    const isHostUi = (lkTheme === 'instructor' || role === 'host');
+    function ensureHostScreenBtnVisible() {
+        if (!screenBtn) return;
+        if (!allowScreenShare) {
+            screenBtn.classList.add('hidden');
+            screenBtn.setAttribute('aria-hidden', 'true');
+            screenBtn.tabIndex = -1;
+            screenBtn.style.display = 'none';
+            return;
+        }
+        if (isHostUi) {
+            screenBtn.classList.remove('hidden');
+            screenBtn.style.display = '';
+            screenBtn.style.visibility = 'visible';
+            screenBtn.style.opacity = '1';
+            screenBtn.removeAttribute('aria-hidden');
+            screenBtn.tabIndex = 0;
+            screenBtn.disabled = false;
+            screenBtn.title = isLikelyMobileDevice()
+                ? 'مشاركة الشاشة (تابلت — يُفضّل Chrome)'
+                : 'مشاركة الشاشة';
+            return;
+        }
+        if (!supportsScreenShareApi()) {
+            screenBtn.classList.add('hidden');
+            screenBtn.setAttribute('aria-hidden', 'true');
+            screenBtn.tabIndex = -1;
+            return;
+        }
+        screenBtn.classList.remove('hidden');
+        screenBtn.style.display = '';
+        screenBtn.removeAttribute('aria-hidden');
+        screenBtn.tabIndex = 0;
+    }
     if (!supportsDocumentPiP() && !isHostUi && isLikelyMobileDevice()) {
         [osPipBtn, osPipFocusBtn, osPipCamBtn].forEach(function (btn) {
             if (!btn) return;
@@ -2442,18 +2541,7 @@
             btn.tabIndex = -1;
         });
     }
-    // مشاركة الشاشة: تظهر للمدرس متى الـ API موجود — بدون إخفاء بسبب الموبايل وحده
-    if (screenBtn) {
-        if (!allowScreenShare || !supportsScreenShareApi()) {
-            screenBtn.classList.add('hidden');
-            screenBtn.setAttribute('aria-hidden', 'true');
-            screenBtn.tabIndex = -1;
-        } else {
-            screenBtn.classList.remove('hidden');
-            screenBtn.removeAttribute('aria-hidden');
-            screenBtn.tabIndex = 0;
-        }
-    }
+    ensureHostScreenBtnVisible();
     // تأكيد ظهور أزرار العائمة للمضيف حتى لو المتصفح لا يدعم Document PiP
     // (الضغط يعرض رسالة عربية هادئة بدل اختفاء الخيار)
     if (isHostUi) {
