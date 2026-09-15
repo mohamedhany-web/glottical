@@ -301,7 +301,7 @@
             room.on(RoomEvent.Disconnected, () => setStatus('انقطع الاتصال', true));
             room.on(RoomEvent.AudioPlaybackStatusChanged, function () {
                 if (room.canPlaybackAudio) return;
-                setStatus('اضغط أي مكان لتفعيل الصوت', true);
+                setStatus('اضغط أي مكان لتفعيل الصوت', false);
             });
 
             setStatus('جاري الاتصال...');
@@ -317,7 +317,7 @@
                 camOn = localTracks.some((t) => t.kind === Track.Kind.Video || t.kind === 'video');
                 document.getElementById('lk-toggle-mic')?.classList.toggle('is-off', !micOn);
                 document.getElementById('lk-toggle-cam')?.classList.toggle('is-off', !camOn);
-                setStatus(micOn || camOn ? 'متصل' : 'متصل بدون ميكروفون/كاميرا — فعّل من الأزرار', !(micOn || camOn));
+                setStatus(micOn || camOn ? 'متصل' : 'متصل بدون ميكروفون/كاميرا — فعّل من الأزرار', false);
             } catch (mediaErr) {
                 console.warn(mediaErr);
                 localTracks.forEach(function (t) { try { t.stop(); } catch (e) {} });
@@ -325,7 +325,7 @@
                 camOn = false;
                 document.getElementById('lk-toggle-mic')?.classList.add('is-off');
                 document.getElementById('lk-toggle-cam')?.classList.add('is-off');
-                setStatus('متصل بدون ميكروفون/كاميرا — فعّل الأذونات من الأزرار', true);
+                setStatus('متصل بدون ميكروفون/كاميرا — فعّل الأذونات من الأزرار', false);
             }
 
             document.getElementById('meeting-screen')?.addEventListener('click', function () {
@@ -354,6 +354,10 @@
             });
             document.getElementById('lk-toggle-screen')?.addEventListener('click', async function () {
                 try {
+                    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getDisplayMedia !== 'function') {
+                        setStatus('مشاركة الشاشة غير متاحة على هذا الجهاز', false);
+                        return;
+                    }
                     if (screenOn) {
                         if (typeof room.localParticipant.setScreenShareEnabled === 'function') {
                             await room.localParticipant.setScreenShareEnabled(false);
@@ -382,10 +386,29 @@
                     console.error(err);
                     screenOn = false;
                     this.classList.remove('is-sharing');
-                    setStatus('تعذر مشاركة الشاشة — اسمح من نافذة المتصفح', true);
+                    var msg = String(err && err.message ? err.message : '');
+                    if (/AbortError|cancel/i.test((err && err.name) + ' ' + msg)) {
+                        setStatus('تم إلغاء مشاركة الشاشة', false);
+                    } else if (/NotAllowed|denied|Permission/i.test((err && err.name) + ' ' + msg)) {
+                        setStatus('تم رفض إذن مشاركة الشاشة', true);
+                    } else {
+                        setStatus('تعذر مشاركة الشاشة على هذا الجهاز', true);
+                    }
                 }
             });
         }
+
+        // أخفِ مشاركة الشاشة على الموبايل
+        (function hideGuestScreenOnMobile() {
+            var ua = navigator.userAgent || '';
+            var mobile = /iPhone|iPod|iPad|Android/i.test(ua);
+            var canShare = !!(navigator.mediaDevices && typeof navigator.mediaDevices.getDisplayMedia === 'function');
+            var btn = document.getElementById('lk-toggle-screen');
+            if (btn && (mobile || !canShare)) {
+                btn.classList.add('hidden');
+                btn.style.display = 'none';
+            }
+        })();
 
         if (isInAppBrowser()) {
             var joinNote = document.createElement('p');
