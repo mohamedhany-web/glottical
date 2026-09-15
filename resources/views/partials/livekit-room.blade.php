@@ -27,8 +27,8 @@
                 <i class="fas fa-sign-in-alt"></i> دخول الحصة الآن
             </button>
             <p class="lk-prejoin__note">لو فتحت الرابط من واتساب/إنستجرام: افتحه في Chrome أو Safari من قائمة ⋮</p>
-        </div>
     </div>
+</div>
 
     <div class="lk-body flex-1 min-h-0 flex flex-col md:flex-row">
         <div class="lk-main flex-1 min-h-0 flex flex-col relative">
@@ -1114,11 +1114,11 @@
         document.querySelectorAll('audio[data-lk-audio="' + key + '"]').forEach(function (el) {
             try { el.remove(); } catch (eRm) {}
         });
-        const audio = track.attach();
-        audio.autoplay = true;
+            const audio = track.attach();
+            audio.autoplay = true;
         audio.playsInline = true;
         audio.dataset.lkAudio = key;
-        document.body.appendChild(audio);
+            document.body.appendChild(audio);
         const playRemote = function () {
             const p = audio.play();
             if (p && typeof p.catch === 'function') {
@@ -1144,12 +1144,12 @@
             // المضيف: placeholder بدل معاينة حية (يمنع تكرار الشاشة عند شير الشاشة كاملة)
             // الطالب: يشوف الشاشة مباشرة — لا علاقة بالوايت بورد
             attachToFocus(track, label, { localSharePlaceholder: !!participant.isLocal });
-            const tile = ensureTile(participant, track.source);
+        const tile = ensureTile(participant, track.source);
             tile.track = track;
             tile.publication = publication || null;
             if (!participant.isLocal) {
                 try {
-                    track.attach(tile.video);
+        track.attach(tile.video);
                     tile.video.style.transform = 'none';
                 } catch (eAtt) {}
             }
@@ -1179,7 +1179,7 @@
                 if (focusTrack === track || (participant && focusTitle)) {
                     setScreenFocus(false);
                 }
-                removeTile(participant, track.source);
+            removeTile(participant, track.source);
             } else if (participant) {
                 // أبقِ بلاطة الحضور حتى لو أُغلقت الكاميرا — لا نخفي المشارك
                 const ref = tiles.get(tileKey(participant, track.source || Track.Source.Camera));
@@ -1427,8 +1427,8 @@
         let localTracks = Array.isArray(preacquiredTracks) ? preacquiredTracks : [];
         try {
             setStatus('جارٍ الاتصال…');
-            const wantAudio = !!startAudio;
-            const wantVideo = !!startVideo;
+                const wantAudio = !!startAudio;
+                const wantVideo = !!startVideo;
             // إن لم تُحضَّر المسارات من ضغطة الدخول، نحاول هنا (قد تفشل على iOS بدون gesture)
             if (!localTracks.length && (wantAudio || wantVideo)) {
                 try {
@@ -1457,8 +1457,8 @@
                         return t.kind === Track.Kind.Video || t.kind === 'video';
                     });
                 } else {
-                    micOn = false;
-                    camOn = false;
+                micOn = false;
+                camOn = false;
                 }
                 syncMicButton();
                 syncCamButton();
@@ -1739,7 +1739,12 @@
             return false;
         }
         const docPipApi = getDocPiP();
-        if (docPipApi && docPipApi.window) {
+        if (!docPipApi || typeof docPipApi.requestWindow !== 'function') {
+            setStatus('قلم الشاشة فوق النظام متاح على Chrome/Edge للكمبيوتر فقط', false);
+            hideStatusSoon();
+            return false;
+        }
+        if (docPipApi.window) {
             // نافذة واحدة فقط: نغلق الكاميرات العائمة ونفتح قلم الشاشة
             try { docPipApi.window.close(); } catch (e) {}
             await new Promise(function (r) { setTimeout(r, 120); });
@@ -1748,7 +1753,7 @@
             try { await document.exitPictureInPicture(); } catch (e) {}
         }
 
-        const pipWindow = await getDocPiP().requestWindow({ width: 720, height: 520 });
+        const pipWindow = await docPipApi.requestWindow({ width: 720, height: 520 });
         annPipWindow = pipWindow;
         const doc = pipWindow.document;
         doc.head.innerHTML = '';
@@ -1827,10 +1832,10 @@
                 await room.localParticipant.setScreenShareEnabled(false);
             }
         } catch (e) {}
-        if (screenTrack) {
+            if (screenTrack) {
             try { await room.localParticipant.unpublishTrack(screenTrack); } catch (e) {}
             try { screenTrack.stop(); } catch (e) {}
-            screenTrack = null;
+                screenTrack = null;
         }
         if (screenAudioTrack) {
             try { await room.localParticipant.unpublishTrack(screenAudioTrack); } catch (e) {}
@@ -1974,8 +1979,8 @@
     async function startScreenShare() {
         if (isScreenAnnotateHost()) {
             await startAnnotatedScreenShare();
-            return;
-        }
+                return;
+            }
         if (typeof room.localParticipant.setScreenShareEnabled === 'function') {
             await room.localParticipant.setScreenShareEnabled(true, {
                 audio: true,
@@ -1996,7 +2001,7 @@
         } catch (e) {
             tracks = await createLocalScreenTracks({ audio: false });
         }
-        screenTrack = tracks[0];
+            screenTrack = tracks[0];
         await room.localParticipant.publishTrack(screenTrack, {
             source: Track.Source.ScreenShare,
             name: 'screen',
@@ -2012,7 +2017,7 @@
                 screenAudioTrack = tracks[1];
             } catch (e) {}
         }
-        attachTrack(screenTrack, room.localParticipant);
+            attachTrack(screenTrack, room.localParticipant);
         screenOn = true;
         screenBtn?.classList.add('is-sharing');
     }
@@ -2263,8 +2268,24 @@
                 }
             }
         const docPipApi = getDocPiP();
-        if (docPipApi && docPipApi.window) {
-            docPipApi.window.focus();
+        if (!docPipApi || typeof docPipApi.requestWindow !== 'function') {
+            if (camerasOnly) {
+                syncFloatingPipExclusive();
+                setStatus('شريط الكاميرات داخل الصفحة', false);
+                hideStatusSoon();
+                return false;
+            }
+            try {
+                return await openVideoPiP();
+            } catch (eVid) {
+                syncFloatingPipExclusive();
+                setStatus('شريط الكاميرات داخل الصفحة', false);
+                hideStatusSoon();
+                return false;
+            }
+        }
+        if (docPipApi.window) {
+            try { docPipApi.window.focus(); } catch (eFocus) {}
             updateOsPipButtons(true);
             syncFloatingPipExclusive();
             return true;
@@ -2286,7 +2307,7 @@
             ? Math.min(520, Math.max(220, 120 + camCount * (pipCols === 1 ? 140 : 110)))
             : 380;
 
-        const pipWindow = await getDocPiP().requestWindow({ width, height });
+        const pipWindow = await docPipApi.requestWindow({ width, height });
         injectOsPipStyles(pipWindow.document);
         osPipShell = pipWindow.document.createElement('div');
         osPipShell.className = 'lk-os-pip-shell' + (wantCamerasOnly ? ' is-cameras-only' : '');
@@ -2355,7 +2376,11 @@
             }
             if (!supportsDocumentPiP()) {
                 syncFloatingPipExclusive();
-                setStatus('على الموبايل شريط الكاميرات يبقى داخل الصفحة — نافذة النظام متاحة على Chrome سطح المكتب فقط', false);
+                setStatus(
+                    (lkTheme === 'instructor' || role === 'host')
+                        ? 'شريط الكاميرات داخل الصفحة — لنافذة النظام استخدم Chrome على الكمبيوتر'
+                        : 'شريط الكاميرات داخل الصفحة'
+                , false);
                 hideStatusSoon();
                 return;
             }
@@ -2371,8 +2396,8 @@
             console.warn(err);
             syncFloatingPipExclusive();
             const msg = String(err?.message || err || '');
-            if (/documentPictureInPicture|not defined|not supported/i.test(msg)) {
-                setStatus('شريط الكاميرات داخل الصفحة — المتصفح لا يدعم نافذة النظام', false);
+            if (/documentPictureInPicture|not defined|not supported|requestWindow/i.test(msg)) {
+                setStatus('شريط الكاميرات داخل الصفحة', false);
                 hideStatusSoon();
                 return;
             }
@@ -2406,8 +2431,10 @@
         });
     }
 
-    // على الموبايل/المتصفحات بدون Document PiP: أخفِ أزرار نافذة النظام لتجنب الخطأ
-    if (!supportsDocumentPiP()) {
+    // الشير والنافذة العائمة للمدرس تبقى ظاهرة.
+    // نخفي فقط ما هو غير مدعوم فعلياً، أو للطالب على موبايل بدون Document PiP.
+    const isHostUi = (lkTheme === 'instructor' || role === 'host');
+    if (!supportsDocumentPiP() && !isHostUi && isLikelyMobileDevice()) {
         [osPipBtn, osPipFocusBtn, osPipCamBtn].forEach(function (btn) {
             if (!btn) return;
             btn.classList.add('hidden');
@@ -2415,11 +2442,27 @@
             btn.tabIndex = -1;
         });
     }
-    // مشاركة الشاشة: أخفِ على الموبايل أو إن الـ API غير موجود
-    if (screenBtn && (!allowScreenShare || !supportsScreenShareApi() || isLikelyMobileDevice())) {
-        screenBtn.classList.add('hidden');
-        screenBtn.setAttribute('aria-hidden', 'true');
-        screenBtn.tabIndex = -1;
+    // مشاركة الشاشة: تظهر للمدرس متى الـ API موجود — بدون إخفاء بسبب الموبايل وحده
+    if (screenBtn) {
+        if (!allowScreenShare || !supportsScreenShareApi()) {
+            screenBtn.classList.add('hidden');
+            screenBtn.setAttribute('aria-hidden', 'true');
+            screenBtn.tabIndex = -1;
+        } else {
+            screenBtn.classList.remove('hidden');
+            screenBtn.removeAttribute('aria-hidden');
+            screenBtn.tabIndex = 0;
+        }
+    }
+    // تأكيد ظهور أزرار العائمة للمضيف حتى لو المتصفح لا يدعم Document PiP
+    // (الضغط يعرض رسالة عربية هادئة بدل اختفاء الخيار)
+    if (isHostUi) {
+        [osPipBtn, osPipFocusBtn, osPipCamBtn].forEach(function (btn) {
+            if (!btn) return;
+            btn.classList.remove('hidden');
+            btn.removeAttribute('aria-hidden');
+            btn.tabIndex = 0;
+        });
     }
 
     // drag focus viewport while zoomed
