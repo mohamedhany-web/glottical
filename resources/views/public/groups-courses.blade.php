@@ -20,7 +20,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <title>{{ __($g.'.catalog_group_title') }} — {{ $brand }}</title>
   <meta name="description" content="{{ __($g.'.catalog_group_desc') }}">
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   <link rel="canonical" href="{{ route('public.groups.courses') }}">
   @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog']])

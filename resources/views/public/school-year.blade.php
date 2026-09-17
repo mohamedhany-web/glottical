@@ -12,15 +12,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <title>{{ $year->name }} — {{ $brand }}</title>
   <meta name="description" content="{{ $year->tagline ?: $year->description }}">
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   <link rel="canonical" href="{{ route('public.school.year', $year->slug) }}">
   @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme']])
   <style>
-    .gl-sy { background: var(--bg, #F4F7FC); }
+    .gl-sy { background: var(--bg, #FFFBE6); }
     .gl-sy-hero {
       padding: clamp(96px, 12vw, 120px) 0 48px;
-      background: linear-gradient(175deg, #051F4D 0%, #072A66 42%, #0B3D91 100%);
+      background: linear-gradient(175deg, #2E234A 0%, #3A2C5C 42%, #4B3A78 100%);
       color: #fff;
     }
     .gl-sy-hero h1 {
@@ -28,7 +28,7 @@
       font-family: Cairo, Tajawal, sans-serif;
       font-size: clamp(1.6rem, 3.5vw, 2.3rem);
       font-weight: 900;
-      color: #F5B800;
+      color: #FFB7A5;
     }
     .gl-sy-hero p { margin: 0; max-width: 46ch; line-height: 1.75; color: rgba(255,255,255,.88); font-weight: 600; }
     .gl-sy-body { padding: clamp(32px, 5vw, 56px) 0; }
@@ -36,23 +36,23 @@
     @media (min-width: 768px) { .gl-sy-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (min-width: 1100px) { .gl-sy-grid { grid-template-columns: repeat(3, 1fr); } }
     .gl-sy-card {
-      background: #fff; border: 1.5px solid #D7DDE6; border-radius: 16px; padding: 1.15rem;
-      box-shadow: 0 10px 28px -22px rgba(11,61,145,.3);
+      background: #fff; border: 1.5px solid #E8DFC8; border-radius: 16px; padding: 1.15rem;
+      box-shadow: 0 10px 28px -22px rgba(75,58,120,.3);
       height: 100%;
       display: flex; flex-direction: column;
     }
-    .gl-sy-card h2 { margin: 0 0 .35rem; font-size: 1.05rem; font-weight: 900; color: #0B1220; }
+    .gl-sy-card h2 { margin: 0 0 .35rem; font-size: 1.05rem; font-weight: 900; color: #2E234A; }
     .gl-sy-card .meta { margin: 0 0 .85rem; font-size: .8rem; color: #5B6577; font-weight: 600; }
     .gl-sy-card .actions { margin-top: auto; display:flex; flex-wrap:wrap; gap:8px; }
     .gl-sy-cohorts { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: 8px; }
     .gl-sy-cohorts li {
       display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;
-      padding: 10px 12px; border-radius: 12px; background: #F4F7FC; border: 1px solid #E4E9F2;
-      font-size: .8rem; font-weight: 700; color: #0B1220;
+      padding: 10px 12px; border-radius: 12px; background: #FFFBE6; border: 1px solid #E4E9F2;
+      font-size: .8rem; font-weight: 700; color: #2E234A;
     }
     .gl-sy-empty {
       text-align: center; padding: 2rem 1rem; border-radius: 16px; background: #fff;
-      border: 1.5px dashed #D7DDE6; color: #5B6577; font-weight: 700;
+      border: 1.5px dashed #E8DFC8; color: #5B6577; font-weight: 700;
     }
     .gl-sy-hero .sana-container { max-width: 1200px; }
     .gl-sy-body .sana-container { max-width: 1200px; }
@@ -78,7 +78,7 @@
 
   <section class="gl-sy-body">
     <div class="sana-container">
-      <h2 style="margin:0 0 16px;font-family:Cairo,Tajawal,sans-serif;font-weight:900;font-size:1.25rem;color:#0B1220">
+      <h2 style="margin:0 0 16px;font-family:Cairo,Tajawal,sans-serif;font-weight:900;font-size:1.25rem;color:#2E234A">
         {{ $isRtl ? 'الفصول المتاحة لهذه السنة' : 'Available classes for this year' }}
       </h2>
 
@@ -113,7 +113,7 @@
                   {{ __($g.'.details_cta') }}
                 </a>
                 @if ($openCohorts->isNotEmpty())
-                  <a href="{{ route('public.groups.show', $class->slug) }}" class="sana-btn sana-btn--white-outline" style="padding:.55rem 1rem;font-size:.82rem;border-color:#0B3D91;color:#0B3D91">
+                  <a href="{{ route('public.groups.show', $class->slug) }}" class="sana-btn sana-btn--white-outline" style="padding:.55rem 1rem;font-size:.82rem;border-color:#4B3A78;color:#4B3A78">
                     {{ __($g.'.book_cta') }}
                   </a>
                 @endif
@@ -131,14 +131,14 @@
       <div class="sana-container">
         <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:end;margin-bottom:16px">
           <div>
-            <h2 style="margin:0 0 6px;font-family:Cairo,Tajawal,sans-serif;font-weight:900;font-size:1.25rem;color:#0B1220">
+            <h2 style="margin:0 0 6px;font-family:Cairo,Tajawal,sans-serif;font-weight:900;font-size:1.25rem;color:#2E234A">
               {{ $isRtl ? 'باقات حصص هذه السنة' : 'Session packages for this year' }}
             </h2>
             <p style="margin:0;color:#5B6577;font-size:.85rem;font-weight:600">
               {{ $isRtl ? 'اشترِ رصيداً ثم احجز أي فصل مناسب من هذه السنة.' : 'Buy credits, then book any matching class in this year.' }}
             </p>
           </div>
-          <a href="{{ route('public.service-packages.index', ['year' => $year->id, 'scope' => 'tutoring_collective']) }}" class="sana-btn sana-btn--white-outline" style="border-color:#0B3D91;color:#0B3D91;padding:.55rem 1rem;font-size:.82rem">
+          <a href="{{ route('public.service-packages.index', ['year' => $year->id, 'scope' => 'tutoring_collective']) }}" class="sana-btn sana-btn--white-outline" style="border-color:#4B3A78;color:#4B3A78;padding:.55rem 1rem;font-size:.82rem">
             {{ $isRtl ? 'كل باقات السنة' : 'All year packages' }}
           </a>
         </div>
@@ -162,7 +162,7 @@
               @if($package->savingsVsMonthlyLabel())
                 <p style="margin:0 0 .5rem;font-size:.75rem;font-weight:800;color:#047857">{{ $package->savingsVsMonthlyLabel() }}</p>
               @endif
-              <p style="margin:0 0 1rem;font-size:1.25rem;font-weight:900;color:#0B3D91">{{ $package->formattedPrice() }}</p>
+              <p style="margin:0 0 1rem;font-size:1.25rem;font-weight:900;color:#4B3A78">{{ $package->formattedPrice() }}</p>
               <div class="actions">
                 <a href="{{ route('public.service-packages.checkout', $package) }}" class="sana-btn sana-btn--yellow" style="padding:.55rem 1rem;font-size:.82rem">
                   {{ $isRtl ? 'اشترِ الباقة' : 'Buy package' }}

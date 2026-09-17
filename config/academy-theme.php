@@ -1,38 +1,52 @@
 <?php
 
 /**
- * هوية Glottical — تصميم فاتح مستوحى من site/ مع براند أكاديمي.
- * أزرق #0B3D91 · أصفر #F5B800 · سماوي هادئ · خلفية قماشية فاتحة.
+ * هوية Glottical العامة (الواجهات الخارجية)
+ * بنفسجي غامق #4B3A78 · بنفسجي فاتح #B77CFF · كريمي #FFFBE6 · نعناعي #C9FFD8 · خوخي #FFB7A5
  */
 return [
-    'navy' => '#0B1220',
-    'navy_mid' => '#1C2738',
-    'navy_gradient' => '#152238',
-    'navy_deep' => '#070E18',
-    'navy_drawer_start' => '#152238',
-    'navy_drawer_end' => '#0B1220',
-    'navy_hero_mid' => '#0B3D91',
-    'navy_rgb' => '11, 18, 32',
-    'navy_mid_rgb' => '28, 39, 56',
+    // Surfaces / ink
+    'navy' => '#4B3A78',
+    'navy_mid' => '#5C4A8C',
+    'navy_gradient' => '#3A2C5C',
+    'navy_deep' => '#2E234A',
+    'navy_drawer_start' => '#5C4A8C',
+    'navy_drawer_end' => '#4B3A78',
+    'navy_hero_mid' => '#4B3A78',
+    'navy_rgb' => '75, 58, 120',
+    'navy_mid_rgb' => '92, 74, 140',
 
-    'blue' => '#0B3D91',
-    'blue_dark' => '#072A66',
-    'blue_soft' => '#E8EEF8',
+    // Primary brand (was academy blue)
+    'blue' => '#4B3A78',
+    'blue_dark' => '#3A2C5C',
+    'blue_soft' => '#F3E9FF',
+    'blue_light' => '#B77CFF',
+    'blue_glow' => '#C9A0FF',
 
-    'cyan' => '#00A3C4',
-    'cyan_rgb' => '0, 163, 196',
-    'neon' => '#00A3C4',
+    // Soft mint accent
+    'cyan' => '#7DD9A0',
+    'cyan_rgb' => '125, 217, 160',
+    'neon' => '#C9FFD8',
+    'mint' => '#C9FFD8',
+    'mint_rgb' => '201, 255, 216',
 
-    'yellow' => '#F5B800',
-    'yellow_soft' => '#FFF6D6',
-    'yellow_rgb' => '245, 184, 0',
+    // Warm peach accent (replaces old gold CTAs)
+    'yellow' => '#FFB7A5',
+    'yellow_soft' => '#FFF0EB',
+    'yellow_rgb' => '255, 183, 165',
+    'peach' => '#FFB7A5',
+    'peach_dark' => '#F59A84',
 
-    'ink' => '#0B1220',
-    'gray' => '#F3F5F7',
+    // Lavender highlight
+    'lavender' => '#B77CFF',
+    'lavender_rgb' => '183, 124, 255',
 
-    // أسطح تصميم site
-    'canvas' => '#F3F5F7',
+    'ink' => '#2E234A',
+    'gray' => '#FFFBE6',
+
+    // Page surfaces
+    'canvas' => '#FFFBE6',
     'surface' => '#FFFFFF',
-    'muted' => '#5B6577',
-    'line' => '#D7DDE6',
+    'muted' => '#6B6280',
+    'line' => '#E8DFC8',
 ];

@@ -4,7 +4,7 @@
 
 .sana-btn--purple {
     background: linear-gradient(135deg, var(--p-dark), var(--p-light));
-    color: #fff; box-shadow: 0 10px 28px rgba(11,61,145,0.35);
+    color: #fff; box-shadow: 0 10px 28px rgba(75,58,120,0.35);
 }
 .sana-btn--purple:hover { transform: translateY(-2px); }
 .sana-btn--ghost-light {
@@ -19,9 +19,9 @@
 .sana-btn--wa:hover { transform: translateY(-2px); }
 .sana-btn--outline-purple {
     background: #fff; color: var(--p-dark);
-    border: 2px solid #C5D4F0; box-shadow: none;
+    border: 2px solid #E2D0FF; box-shadow: none;
 }
-.sana-btn--outline-purple:hover { background: #EEF3FB; border-color: var(--p-light); transform: translateY(-2px); }
+.sana-btn--outline-purple:hover { background: #F6F0FF; border-color: var(--p-light); transform: translateY(-2px); }
 .sana-section--soft { background: var(--bg); }
 .sana-head--center { text-align: center; }
 .sana-head__eyebrow { display: inline-block; font-size: 0.75rem; font-weight: 800; color: var(--p); margin-bottom: 8px; }
@@ -65,8 +65,8 @@
     margin: 0 auto 16px;
     padding: 12px 16px;
     border-radius: 14px;
-    background: #EEF3FB;
-    border: 1px solid #C5D4F0;
+    background: #F6F0FF;
+    border: 1px solid #E2D0FF;
     color: var(--p-dark);
     font-size: 0.84rem;
     font-weight: 700;
@@ -87,8 +87,8 @@
     position: relative; overflow: hidden;
     padding: clamp(48px, 8vw, 80px) 0 clamp(56px, 8vw, 88px);
     background:
-        radial-gradient(circle at 15% 90%, rgba(107,143,212,0.3), transparent 50%),
-        linear-gradient(168deg, #051F4D 0%, #0B3D91 50%, #1A56B0 100%);
+        radial-gradient(circle at 15% 90%, rgba(183,124,255,0.3), transparent 50%),
+        linear-gradient(168deg, #2E234A 0%, #4B3A78 50%, #5C4A8C 100%);
 }
 .sana-ct-hero__grid { display: grid; gap: 36px; align-items: center; }
 @media (min-width: 992px) { .sana-ct-hero__grid { grid-template-columns: 1fr 1fr; gap: 48px; } }
@@ -98,7 +98,7 @@
     display: inline-flex; align-items: center; gap: 8px;
     padding: 7px 16px; border-radius: 999px; margin-bottom: 16px;
     background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
-    font-size: 0.78rem; font-weight: 800; color: #FFE9A8;
+    font-size: 0.78rem; font-weight: 800; color: #FFE4DC;
 }
 .sana-ct-hero__title { font-size: clamp(2rem, 5vw, 3rem); font-weight: 900; color: #fff; line-height: 1.2; margin: 0 0 14px; }
 .sana-ct-hero__title .hl { color: var(--gold); }
@@ -125,10 +125,10 @@
     animation: sanaSpin 22s linear infinite;
 }
 .sana-ct-scene__blob { position: absolute; border-radius: 50%; }
-.sana-ct-scene__blob--1 { width: 100px; height: 100px; top: 0; left: 0; background: rgba(245,184,0,0.12); animation: sanaIllusPulse 6s ease-in-out infinite; }
+.sana-ct-scene__blob--1 { width: 100px; height: 100px; top: 0; left: 0; background: rgba(255,183,165,0.12); animation: sanaIllusPulse 6s ease-in-out infinite; }
 .sana-ct-scene__blob--2 { width: 70px; height: 70px; bottom: 10%; right: 0; background: rgba(26,86,176,0.28); animation: sanaIllusPulse 7s ease-in-out infinite 1s; }
 .sana-ct-scene__spark { position: absolute; top: 20%; left: 20%; color: rgba(255,255,255,0.45); animation: sanaIllusFloat 5s ease-in-out infinite; }
-.sana-ct-scene__main { width: 100%; height: auto; animation: sanaIllusFloat 5s ease-in-out infinite; filter: drop-shadow(0 16px 32px rgba(5,31,77,0.25)); }
+.sana-ct-scene__main { width: 100%; height: auto; animation: sanaIllusFloat 5s ease-in-out infinite; filter: drop-shadow(0 16px 32px rgba(46,35,74,0.25)); }
 .sana-ct-scene__chip {
     position: absolute; bottom: 8%; left: 50%; transform: translateX(-50%);
     display: inline-flex; align-items: center; gap: 8px;
@@ -145,45 +145,45 @@
 @media (min-width: 768px) { .sana-ct-channels { grid-template-columns: repeat(3, 1fr); } }
 .sana-ct-channel {
     display: flex; flex-direction: column; padding: 24px 20px; border-radius: 22px;
-    background: rgba(255,255,255,0.92); border: 1px solid #E8EEF8;
-    box-shadow: 0 10px 32px -14px rgba(11,61,145,0.12);
+    background: rgba(255,255,255,0.92); border: 1px solid #F3E9FF;
+    box-shadow: 0 10px 32px -14px rgba(75,58,120,0.12);
     backdrop-filter: blur(8px); transition: transform 0.28s, box-shadow 0.28s;
     text-decoration: none !important; color: inherit; height: 100%;
 }
 .sana-ct-channel:hover {
     transform: translateY(-6px);
-    box-shadow: 0 20px 48px -16px rgba(11,61,145,0.22);
+    box-shadow: 0 20px 48px -16px rgba(75,58,120,0.22);
 }
 .sana-ct-channel.is-disabled { opacity: 0.55; pointer-events: none; }
 .sana-ct-channel__icon {
     width: 52px; height: 52px; border-radius: 16px; margin-bottom: 14px;
     display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #fff;
 }
-.sana-ct-channel__icon--phone { background: linear-gradient(135deg, #D99E00, #D97706); }
+.sana-ct-channel__icon--phone { background: linear-gradient(135deg, #F59A84, #D97706); }
 .sana-ct-channel__icon--wa { background: linear-gradient(135deg, #25D366, #128C7E); }
 .sana-ct-channel__icon--email { background: linear-gradient(135deg, var(--p-dark), var(--p-light)); }
 .sana-ct-channel__icon--chat { background: linear-gradient(135deg, #06B6D4, #0891B2); }
 .sana-ct-channel__icon--social { background: linear-gradient(135deg, #EC4899, #DB2777); }
-.sana-ct-channel__icon--help { background: linear-gradient(135deg, #3D6BC4, #0B3D91); }
+.sana-ct-channel__icon--help { background: linear-gradient(135deg, #B77CFF, #4B3A78); }
 .sana-ct-channel strong { font-size: 0.95rem; font-weight: 900; margin-bottom: 6px; color: var(--text); display: block; }
 .sana-ct-channel p { font-size: 0.78rem; color: var(--muted); line-height: 1.6; margin: 0 0 12px; flex: 1; font-weight: 600; }
 .sana-ct-channel__info { font-size: 0.82rem; font-weight: 800; color: var(--p); margin-bottom: 14px; word-break: break-all; }
 .sana-ct-channel__btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     padding: 10px 16px; border-radius: 999px; font-size: 0.78rem; font-weight: 800;
-    background: #EEF3FB; color: var(--p-dark); border: none; cursor: pointer;
+    background: #F6F0FF; color: var(--p-dark); border: none; cursor: pointer;
     font-family: inherit; transition: background 0.2s; margin-top: auto; width: 100%;
     text-decoration: none !important;
 }
-.sana-ct-channel:hover .sana-ct-channel__btn { background: #E8EEF8; }
+.sana-ct-channel:hover .sana-ct-channel__btn { background: #F3E9FF; }
 .sana-ct-socials { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 .sana-ct-socials a {
     width: 36px; height: 36px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    background: #EEF3FB; color: var(--p); font-size: 0.85rem;
+    background: #F6F0FF; color: var(--p); font-size: 0.85rem;
     text-decoration: none !important; transition: background 0.2s, transform 0.2s;
 }
-.sana-ct-socials a:hover { background: #E8EEF8; transform: scale(1.08); }
+.sana-ct-socials a:hover { background: #F3E9FF; transform: scale(1.08); }
 
 /* Form section */
 .sana-ct-form-wrap {
@@ -194,22 +194,22 @@
 @media (min-width: 640px) { .sana-ct-categories { grid-template-columns: repeat(3, 1fr); } }
 .sana-ct-cat {
     padding: 16px 14px; border-radius: 16px; text-align: center; cursor: pointer;
-    background: #fff; border: 2px solid #E8EEF8;
+    background: #fff; border: 2px solid #F3E9FF;
     transition: border-color 0.2s, background 0.2s, transform 0.2s;
     font-family: inherit;
 }
 .sana-ct-cat:hover { border-color: var(--p-light); transform: translateY(-2px); }
 .sana-ct-cat.is-active {
-    border-color: var(--p); background: #EEF3FB;
-    box-shadow: 0 8px 24px -8px rgba(11,61,145,0.2);
+    border-color: var(--p); background: #F6F0FF;
+    box-shadow: 0 8px 24px -8px rgba(75,58,120,0.2);
 }
 .sana-ct-cat i { display: block; font-size: 1.1rem; color: var(--p); margin-bottom: 8px; }
 .sana-ct-cat span { font-size: 0.75rem; font-weight: 800; color: var(--text); }
 
 .sana-ct-form-card {
     padding: clamp(24px, 4vw, 36px); border-radius: 28px;
-    background: #fff; border: 1px solid #E8EEF8;
-    box-shadow: 0 16px 48px -20px rgba(11,61,145,0.15);
+    background: #fff; border: 1px solid #F3E9FF;
+    box-shadow: 0 16px 48px -20px rgba(75,58,120,0.15);
 }
 .sana-ct-alert {
     display: flex; align-items: center; gap: 12px;
@@ -233,7 +233,7 @@
 .sana-ct-field input:focus,
 .sana-ct-field textarea:focus {
     border-color: var(--p-light);
-    box-shadow: 0 0 0 4px rgba(11,61,145,0.1);
+    box-shadow: 0 0 0 4px rgba(75,58,120,0.1);
     background: #fff;
 }
 .sana-ct-field input.is-error,
@@ -267,8 +267,8 @@
 .sana-ct-response__card {
     text-align: center; padding: 24px 16px; border-radius: 22px;
     background: linear-gradient(145deg, #fff, #FAFAFF);
-    border: 1px solid #E8EEF8;
-    box-shadow: 0 8px 28px -12px rgba(11,61,145,0.1);
+    border: 1px solid #F3E9FF;
+    box-shadow: 0 8px 28px -12px rgba(75,58,120,0.1);
 }
 .sana-ct-response__card i { font-size: 1.25rem; color: var(--p-light); margin-bottom: 10px; }
 .sana-ct-response__card strong { display: block; font-size: 0.78rem; font-weight: 800; color: var(--muted); margin-bottom: 4px; }
@@ -282,8 +282,8 @@
 @media (min-width: 992px) { .sana-ct-location { grid-template-columns: 1fr 1.2fr; } }
 .sana-ct-location__info {
     padding: 28px; border-radius: 24px;
-    background: #fff; border: 1px solid #E8EEF8;
-    box-shadow: 0 10px 32px -14px rgba(11,61,145,0.1);
+    background: #fff; border: 1px solid #F3E9FF;
+    box-shadow: 0 10px 32px -14px rgba(75,58,120,0.1);
 }
 .sana-ct-location__info h3 { font-size: 1.1rem; font-weight: 900; margin: 0 0 16px; color: var(--text); }
 .sana-ct-location__row {
@@ -293,14 +293,14 @@
 .sana-ct-location__row i { color: var(--p); margin-top: 3px; width: 18px; text-align: center; }
 .sana-ct-location__map {
     border-radius: 24px; overflow: hidden; min-height: 280px;
-    border: 1px solid #E8EEF8; box-shadow: 0 10px 32px -14px rgba(11,61,145,0.1);
+    border: 1px solid #F3E9FF; box-shadow: 0 10px 32px -14px rgba(75,58,120,0.1);
 }
 .sana-ct-location__map iframe { width: 100%; height: 100%; min-height: 280px; border: 0; display: block; }
 
 /* Final CTA */
 .sana-ct-final {
     padding: clamp(56px, 8vw, 88px) 0;
-    background: linear-gradient(135deg, #051F4D, #0B3D91 55%, #1A56B0);
+    background: linear-gradient(135deg, #2E234A, #4B3A78 55%, #5C4A8C);
 }
 .sana-ct-final__box {
     text-align: center; color: #fff; padding: clamp(32px, 5vw, 48px);

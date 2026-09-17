@@ -18,12 +18,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <title>{{ $package->name }} — {{ $brand }}</title>
   <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog', 'pricing']])
   <style>
-    .gl-co-alert--sky { background:#EEF4FF; color:#0B3D91; border:1px solid #C9D8F5; }
+    .gl-co-alert--sky { background:#EEF4FF; color:#4B3A78; border:1px solid #C9D8F5; }
     .gl-co-alert--info { background:#F8FAFC; color:#334155; border:1px solid #E2E8F0; }
     .hidden { display:none !important; }
     /* .sana-cat-page already offsets the fixed navbar; drop the pricing-page offset. */
@@ -31,31 +31,31 @@
     .gl-co { padding: clamp(24px, 4vw, 40px) 0 72px; }
     .gl-co-grid { display: grid; gap: 1.25rem; }
     @media (min-width: 960px) { .gl-co-grid { grid-template-columns: 1fr .85fr; align-items: start; } }
-    .gl-co-card { background: #fff; border: 1.5px solid #D7DDE6; border-radius: 20px; box-shadow: 0 14px 34px -24px rgba(11,61,145,.4); overflow: hidden; }
+    .gl-co-card { background: #fff; border: 1.5px solid #E8DFC8; border-radius: 20px; box-shadow: 0 14px 34px -24px rgba(75,58,120,.4); overflow: hidden; }
     .gl-co-card__head { padding: 1.15rem 1.25rem; border-bottom: 1px dashed #E4E9F2; }
-    .gl-co-card__head h1, .gl-co-card__head h2 { margin: 0; font-family: Cairo, Tajawal, sans-serif; font-weight: 900; color: #0B1220; font-size: 1.2rem; }
+    .gl-co-card__head h1, .gl-co-card__head h2 { margin: 0; font-family: Cairo, Tajawal, sans-serif; font-weight: 900; color: #2E234A; font-size: 1.2rem; }
     .gl-co-card__body { padding: 1.15rem 1.25rem 1.35rem; }
 
     .gl-co-specs { list-style: none; margin: 0; padding: 0; display: grid; }
     .gl-co-specs li { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .6rem 0; border-bottom: 1px solid #F1F4F9; font-size: .86rem; }
     .gl-co-specs li:last-child { border-bottom: 0; }
     .gl-co-specs__k { display: inline-flex; align-items: center; gap: .45rem; color: #5B6577; font-weight: 700; }
-    .gl-co-specs__k i { color: #0B3D91; width: 1rem; text-align: center; font-size: .78rem; }
-    .gl-co-specs__v { color: #0B1220; font-weight: 900; text-align: end; }
+    .gl-co-specs__k i { color: #4B3A78; width: 1rem; text-align: center; font-size: .78rem; }
+    .gl-co-specs__v { color: #2E234A; font-weight: 900; text-align: end; }
     .gl-co-specs__v small { display: block; font-size: .72rem; font-weight: 700; color: #5B6577; }
 
-    .gl-co-total { margin-top: 1rem; padding: .9rem 1rem; border-radius: 14px; background: #F4F7FC; border: 1.5px solid #DCE5F5; display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+    .gl-co-total { margin-top: 1rem; padding: .9rem 1rem; border-radius: 14px; background: #FFFBE6; border: 1.5px solid #DCE5F5; display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
     .gl-co-total span { font-weight: 800; color: #5B6577; font-size: .85rem; }
-    .gl-co-total strong { font-family: Cairo, sans-serif; font-size: 1.6rem; font-weight: 900; color: #0B3D91; line-height: 1; }
+    .gl-co-total strong { font-family: Cairo, sans-serif; font-size: 1.6rem; font-weight: 900; color: #4B3A78; line-height: 1; }
 
     .gl-co-label { display: block; margin-bottom: .35rem; font-size: .76rem; font-weight: 800; color: #5B6577; }
-    .gl-co-select { width: 100%; border: 1.5px solid #D7DDE6; border-radius: 12px; padding: .7rem .85rem; font-size: .9rem; background: #fff; color: #0B1220; margin-bottom: .95rem; font-weight: 700; }
+    .gl-co-select { width: 100%; border: 1.5px solid #E8DFC8; border-radius: 12px; padding: .7rem .85rem; font-size: .9rem; background: #fff; color: #2E234A; margin-bottom: .95rem; font-weight: 700; }
     .gl-co-hint { font-size: .76rem; color: #5B6577; line-height: 1.7; margin: 0 0 1rem; }
     .gl-co-alert { padding: .75rem 1rem; border-radius: 12px; margin-bottom: 1rem; font-size: .85rem; font-weight: 700; }
     .gl-co-alert--err { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
     .gl-co-steps { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: .5rem; }
     .gl-co-steps li { display: flex; gap: .5rem; font-size: .8rem; color: #5B6577; line-height: 1.65; }
-    .gl-co-steps i { color: #0B3D91; margin-top: .25rem; }
+    .gl-co-steps i { color: #4B3A78; margin-top: .25rem; }
   </style>
 </head>
 <body class="sana-home sana-courses-page sana-pricing-page">
@@ -194,7 +194,7 @@
               </div>
             </div>
             <div id="fawaterk-api-error" class="hidden gl-co-alert gl-co-alert--err"></div>
-            <div id="fawaterk-api-loading" style="margin-bottom:1rem;font:700 .85rem Tajawal,sans-serif;color:#5B6577"><i class="fas fa-spinner fa-spin" style="color:#0B3D91"></i> {{ $isRtl ? 'جاري تحميل وسائل الدفع...' : 'Loading payment methods…' }}</div>
+            <div id="fawaterk-api-loading" style="margin-bottom:1rem;font:700 .85rem Tajawal,sans-serif;color:#5B6577"><i class="fas fa-spinner fa-spin" style="color:#4B3A78"></i> {{ $isRtl ? 'جاري تحميل وسائل الدفع...' : 'Loading payment methods…' }}</div>
             <div id="fawaterk-api-methods" class="hidden" style="display:grid;gap:.55rem;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));margin-bottom:1rem"></div>
             <div id="fawaterk-api-wallet-wrap" class="hidden" style="margin-bottom:.95rem">
               <label class="gl-co-label" for="fawaterk-api-wallet">{{ $isRtl ? 'رقم المحفظة (إن لزم لوسيلة فواتيرك)' : 'Wallet number (if required by Fawaterak)' }}</label>
@@ -397,7 +397,7 @@
             var name = (document.documentElement.getAttribute('dir') === 'rtl' && m.name_ar) ? m.name_ar : (m.name_en || m.name_ar || ('#' + id));
             var card = document.createElement('button');
             card.type = 'button';
-            card.style.cssText = 'display:flex;align-items:center;gap:.65rem;padding:.75rem;border-radius:12px;border:2px solid #D7DDE6;background:#fff;text-align:start;cursor:pointer;font:700 .82rem Tajawal,sans-serif;color:#0B1220';
+            card.style.cssText = 'display:flex;align-items:center;gap:.65rem;padding:.75rem;border-radius:12px;border:2px solid #E8DFC8;background:#fff;text-align:start;cursor:pointer;font:700 .82rem Tajawal,sans-serif;color:#2E234A';
             card.setAttribute('data-pid', String(id));
             if (m.logo && typeof m.logo === 'string') {
                 var img = document.createElement('img');
@@ -409,8 +409,8 @@
             title.textContent = name;
             card.appendChild(title);
             card.addEventListener('click', function() {
-                methodsEl.querySelectorAll('button').forEach(function(b) { b.style.borderColor = '#D7DDE6'; });
-                card.style.borderColor = '#F5B800';
+                methodsEl.querySelectorAll('button').forEach(function(b) { b.style.borderColor = '#E8DFC8'; });
+                card.style.borderColor = '#FFB7A5';
                 selectedId = id;
                 if (payBtn) payBtn.disabled = false;
             });

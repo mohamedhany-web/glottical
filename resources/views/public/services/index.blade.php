@@ -12,16 +12,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <title>{{ __('public.services_page_title') }} — {{ $brand }}</title>
   <meta name="description" content="{{ __('public.services_subtitle') }}">
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   <link rel="canonical" href="{{ route('public.services.index') }}">
   @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog', 'subpages']])
   <style>
     .gl-svci {
       background:
-        radial-gradient(ellipse 70% 45% at 100% 0%, rgba(11,61,145,.08), transparent 55%),
-        radial-gradient(ellipse 50% 35% at 0% 20%, rgba(245,184,0,.06), transparent 50%),
-        var(--bg, #F4F7FC);
+        radial-gradient(ellipse 70% 45% at 100% 0%, rgba(75,58,120,.08), transparent 55%),
+        radial-gradient(ellipse 50% 35% at 0% 20%, rgba(255,183,165,.06), transparent 50%),
+        var(--bg, #FFFBE6);
       padding-top: 72px;
     }
     @media (max-width: 991px) {
@@ -34,15 +34,15 @@
     .gl-svci-hero__eyebrow {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 5px 12px; border-radius: 999px; margin-bottom: .75rem;
-      background: #E8EEF8; color: #0B3D91; border: 1px solid #C5D4F0;
+      background: #F3E9FF; color: #4B3A78; border: 1px solid #E2D0FF;
       font-size: .7rem; font-weight: 800;
     }
     .gl-svci-hero h1 {
       margin: 0 0 .5rem; font-family: Cairo, Tajawal, sans-serif;
       font-size: clamp(1.55rem, 3.8vw, 2.35rem); font-weight: 900;
-      color: #0B1220; line-height: 1.25;
+      color: #2E234A; line-height: 1.25;
     }
-    .gl-svci-hero h1 .hl { color: #0B3D91; }
+    .gl-svci-hero h1 .hl { color: #4B3A78; }
     .gl-svci-hero > p {
       margin: 0 auto; max-width: 36rem;
       font-size: .88rem; line-height: 1.7; color: #5B6577; font-weight: 600;
@@ -55,12 +55,12 @@
       .gl-svci-metrics { grid-template-columns: 1fr; }
     }
     .gl-svci-metric {
-      background: #fff; border: 1.5px solid #D7DDE6; border-radius: 14px;
+      background: #fff; border: 1.5px solid #E8DFC8; border-radius: 14px;
       padding: .85rem .7rem; text-align: center;
-      box-shadow: 0 8px 22px -18px rgba(11,61,145,.28);
+      box-shadow: 0 8px 22px -18px rgba(75,58,120,.28);
     }
     .gl-svci-metric strong {
-      display: block; font-size: 1.35rem; font-weight: 900; color: #0B3D91; line-height: 1.2;
+      display: block; font-size: 1.35rem; font-weight: 900; color: #4B3A78; line-height: 1.2;
     }
     .gl-svci-metric span {
       display: block; margin-top: .25rem; font-size: .7rem; font-weight: 700; color: #5B6577;
@@ -80,18 +80,18 @@
     }
     .gl-svci-card {
       display: flex; flex-direction: column;
-      background: #fff; border: 1.5px solid #D7DDE6; border-radius: 16px;
+      background: #fff; border: 1.5px solid #E8DFC8; border-radius: 16px;
       overflow: hidden; text-decoration: none !important; color: inherit;
-      box-shadow: 0 10px 28px -20px rgba(11,61,145,.28);
+      box-shadow: 0 10px 28px -20px rgba(75,58,120,.28);
       transition: border-color .2s, box-shadow .2s, transform .2s;
     }
     .gl-svci-card:hover {
-      border-color: rgba(11,61,145,.35);
-      box-shadow: 0 16px 36px -20px rgba(11,61,145,.4);
+      border-color: rgba(75,58,120,.35);
+      box-shadow: 0 16px 36px -20px rgba(75,58,120,.4);
       transform: translateY(-3px);
     }
     .gl-svci-card__media {
-      height: 148px; background: linear-gradient(145deg, #051F4D, #0B3D91);
+      height: 148px; background: linear-gradient(145deg, #2E234A, #4B3A78);
       display: grid; place-items: center; color: rgba(255,255,255,.35); font-size: 2rem;
       overflow: hidden;
     }
@@ -103,7 +103,7 @@
     .gl-svci-card__body { padding: 1rem 1.05rem 1.1rem; flex: 1; display: flex; flex-direction: column; }
     .gl-svci-card__body h2 {
       margin: 0 0 .4rem; font-family: Cairo, Tajawal, sans-serif;
-      font-size: .98rem; font-weight: 900; color: #0B1220; line-height: 1.35;
+      font-size: .98rem; font-weight: 900; color: #2E234A; line-height: 1.35;
     }
     .gl-svci-card__body p {
       margin: 0 0 .85rem; flex: 1;
@@ -111,28 +111,28 @@
       display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
     }
     .gl-svci-card__more {
-      font-size: .74rem; font-weight: 800; color: #0B3D91;
+      font-size: .74rem; font-weight: 800; color: #4B3A78;
       display: inline-flex; align-items: center; gap: 6px;
     }
     .gl-svci-empty {
       text-align: center; padding: 3rem 1.25rem;
-      background: #fff; border: 1.5px dashed #D7DDE6; border-radius: 18px;
+      background: #fff; border: 1.5px dashed #E8DFC8; border-radius: 18px;
     }
     .gl-svci-empty i {
       width: 56px; height: 56px; border-radius: 16px; margin: 0 auto .85rem;
-      display: grid; place-items: center; background: #E8EEF8; color: #0B3D91; font-size: 1.35rem;
+      display: grid; place-items: center; background: #F3E9FF; color: #4B3A78; font-size: 1.35rem;
     }
     .gl-svci-empty h3 {
       margin: 0 0 .35rem; font-family: Cairo, Tajawal, sans-serif;
-      font-size: 1.15rem; font-weight: 900; color: #0B1220;
+      font-size: 1.15rem; font-weight: 900; color: #2E234A;
     }
     .gl-svci-empty p { margin: 0 0 1rem; font-size: .84rem; color: #5B6577; font-weight: 600; }
     .gl-svci-final {
       margin: 0 0 clamp(40px, 6vw, 64px);
       border-radius: 18px; padding: clamp(1.25rem, 3vw, 1.75rem);
-      background: linear-gradient(135deg, #051F4D 0%, #0B3D91 55%, #072A66 100%);
+      background: linear-gradient(135deg, #2E234A 0%, #4B3A78 55%, #3A2C5C 100%);
       color: #fff; text-align: center;
-      box-shadow: 0 16px 40px -24px rgba(11,61,145,.5);
+      box-shadow: 0 16px 40px -24px rgba(75,58,120,.5);
     }
     .gl-svci-final h2 {
       margin: 0 0 .4rem; font-family: Cairo, Tajawal, sans-serif;

@@ -33,19 +33,19 @@
       display: flex;
       flex-direction: column;
       border-radius: 18px;
-      border: 1.5px solid rgba(11, 61, 145, .12);
+      border: 1.5px solid rgba(75, 58, 120, .12);
       background: #fff;
-      box-shadow: 0 14px 36px -22px rgba(11, 61, 145, .35);
+      box-shadow: 0 14px 36px -22px rgba(75, 58, 120, .35);
       overflow: hidden;
       transition: transform .2s ease, box-shadow .2s ease;
     }
     .gl-prx-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 22px 44px -18px rgba(11, 61, 145, .4);
+      box-shadow: 0 22px 44px -18px rgba(75, 58, 120, .4);
     }
     .gl-prx-card.is-popular {
-      border-color: rgba(245, 184, 0, .55);
-      box-shadow: 0 18px 40px -16px rgba(245, 184, 0, .35);
+      border-color: rgba(255, 183, 165, .55);
+      box-shadow: 0 18px 40px -16px rgba(255, 183, 165, .35);
     }
     .gl-prx-card__body {
       padding: 1.25rem 1.2rem 1.35rem;
@@ -60,14 +60,14 @@
       font-weight: 800;
       padding: .28rem .65rem;
       border-radius: 999px;
-      background: var(--gold, #F5B800);
-      color: var(--p-deep, #051F4D);
+      background: var(--gold, #FFB7A5);
+      color: var(--p-deep, #2E234A);
     }
     .gl-prx-card__title {
       font-family: Cairo, Tajawal, sans-serif;
       font-weight: 900;
       font-size: 1.15rem;
-      color: var(--p-deep, #051F4D);
+      color: var(--p-deep, #2E234A);
       line-height: 1.35;
       margin: 0;
     }
@@ -80,7 +80,7 @@
       font-family: Cairo, sans-serif;
       font-weight: 900;
       font-size: 1.65rem;
-      color: var(--p, #0B3D91);
+      color: var(--p, #4B3A78);
       margin: 0;
       line-height: 1.2;
     }
@@ -129,11 +129,11 @@
       border-radius: 14px;
       overflow: hidden;
       flex-shrink: 0;
-      background: rgba(11, 61, 145, .08);
+      background: rgba(75, 58, 120, .08);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--p, #0B3D91);
+      color: var(--p, #4B3A78);
     }
     .gl-prx-thumb img { width: 100%; height: 100%; object-fit: cover; }
   </style>
@@ -329,7 +329,7 @@
 
   <section class="sana-section">
     <div class="sana-container">
-      <div class="sana-ab-final__box sana-reveal" style="text-align:center;padding:clamp(1.5rem,3vw,2.25rem);border-radius:22px;background:linear-gradient(135deg,#0B3D91,#072A66);color:#fff">
+      <div class="sana-ab-final__box sana-reveal" style="text-align:center;padding:clamp(1.5rem,3vw,2.25rem);border-radius:22px;background:linear-gradient(135deg,#4B3A78,#3A2C5C);color:#fff">
         <h2 style="font-family:Cairo,sans-serif;font-weight:900;font-size:clamp(1.25rem,2.5vw,1.75rem);margin:0 0 .65rem">{{ __('public.pricing_footer_cta_title') }}</h2>
         <p style="opacity:.75;max-width:36rem;margin:0 auto 1.15rem;line-height:1.7">{{ __('public.pricing_footer_cta_sub') }}</p>
         <div style="display:flex;flex-wrap:wrap;gap:.65rem;justify-content:center">

@@ -13,12 +13,12 @@
   @include('partials.landing.head', ['landingCss' => ['theme']])
   <style>
     .gl-tc { padding: 32px 0 64px; }
-    .gl-tc-card { background:#fff; border:1.5px solid #D7DDE6; border-radius:18px; padding:1.25rem; box-shadow:0 12px 28px -20px rgba(11,61,145,.3); max-width:560px; margin:0 auto; }
-    .gl-tc h1 { margin:0 0 .5rem; font-size:1.35rem; font-weight:900; color:#0B1220; }
-    .gl-tc-sum { background:#F4F7FC; border-radius:12px; padding:1rem; margin:1rem 0; }
-    .gl-tc-sum strong { color:#0B3D91; font-size:1.25rem; }
+    .gl-tc-card { background:#fff; border:1.5px solid #E8DFC8; border-radius:18px; padding:1.25rem; box-shadow:0 12px 28px -20px rgba(75,58,120,.3); max-width:560px; margin:0 auto; }
+    .gl-tc h1 { margin:0 0 .5rem; font-size:1.35rem; font-weight:900; color:#2E234A; }
+    .gl-tc-sum { background:#FFFBE6; border-radius:12px; padding:1rem; margin:1rem 0; }
+    .gl-tc-sum strong { color:#4B3A78; font-size:1.25rem; }
     .gl-tc label { display:block; font-size:.78rem; font-weight:700; color:#5B6577; margin:.75rem 0 .35rem; }
-    .gl-tc select, .gl-tc input { width:100%; border:1.5px solid #D7DDE6; border-radius:12px; padding:.7rem .85rem; }
+    .gl-tc select, .gl-tc input { width:100%; border:1.5px solid #E8DFC8; border-radius:12px; padding:.7rem .85rem; }
     .gl-tc-err { background:#FEF2F2; color:#991B1B; padding:.75rem; border-radius:12px; margin-bottom:1rem; font-size:.86rem; }
   </style>
 </head>

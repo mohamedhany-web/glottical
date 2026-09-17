@@ -14,16 +14,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <title>{{ __('public.testimonials_page_title') }} — {{ $brand }}</title>
   <meta name="description" content="{{ __('public.home_testimonials_sub') }}">
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   <link rel="canonical" href="{{ route('public.testimonials') }}">
   @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog', 'subpages']])
   <style>
     .gl-tm {
       background:
-        radial-gradient(ellipse 70% 45% at 100% 0%, rgba(11,61,145,.08), transparent 55%),
-        radial-gradient(ellipse 50% 35% at 0% 20%, rgba(245,184,0,.06), transparent 50%),
-        var(--bg, #F4F7FC);
+        radial-gradient(ellipse 70% 45% at 100% 0%, rgba(75,58,120,.08), transparent 55%),
+        radial-gradient(ellipse 50% 35% at 0% 20%, rgba(255,183,165,.06), transparent 50%),
+        var(--bg, #FFFBE6);
       padding-top: 72px;
     }
     @media (max-width: 991px) {
@@ -36,15 +36,15 @@
     .gl-tm-hero__eyebrow {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 5px 12px; border-radius: 999px; margin-bottom: .75rem;
-      background: #E8EEF8; color: #0B3D91; border: 1px solid #C5D4F0;
+      background: #F3E9FF; color: #4B3A78; border: 1px solid #E2D0FF;
       font-size: .7rem; font-weight: 800;
     }
     .gl-tm-hero h1 {
       margin: 0 0 .5rem; font-family: Cairo, Tajawal, sans-serif;
       font-size: clamp(1.55rem, 3.8vw, 2.35rem); font-weight: 900;
-      color: #0B1220; line-height: 1.25;
+      color: #2E234A; line-height: 1.25;
     }
-    .gl-tm-hero h1 .hl { color: #0B3D91; }
+    .gl-tm-hero h1 .hl { color: #4B3A78; }
     .gl-tm-hero > p {
       margin: 0 auto; max-width: 36rem;
       font-size: .88rem; line-height: 1.7; color: #5B6577; font-weight: 600;
@@ -57,12 +57,12 @@
       .gl-tm-metrics { grid-template-columns: 1fr; }
     }
     .gl-tm-metric {
-      background: #fff; border: 1.5px solid #D7DDE6; border-radius: 14px;
+      background: #fff; border: 1.5px solid #E8DFC8; border-radius: 14px;
       padding: .85rem .7rem; text-align: center;
-      box-shadow: 0 8px 22px -18px rgba(11,61,145,.28);
+      box-shadow: 0 8px 22px -18px rgba(75,58,120,.28);
     }
     .gl-tm-metric strong {
-      display: block; font-size: 1.35rem; font-weight: 900; color: #0B3D91; line-height: 1.2;
+      display: block; font-size: 1.35rem; font-weight: 900; color: #4B3A78; line-height: 1.2;
     }
     .gl-tm-metric span {
       display: block; margin-top: .25rem; font-size: .7rem; font-weight: 700; color: #5B6577;
@@ -80,25 +80,25 @@
     }
     .gl-tm-card {
       display: flex; flex-direction: column;
-      background: #fff; border: 1.5px solid #D7DDE6; border-radius: 16px;
+      background: #fff; border: 1.5px solid #E8DFC8; border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 10px 28px -20px rgba(11,61,145,.28);
+      box-shadow: 0 10px 28px -20px rgba(75,58,120,.28);
       transition: border-color .2s, box-shadow .2s, transform .2s;
     }
     .gl-tm-card:hover {
-      border-color: rgba(11,61,145,.3);
-      box-shadow: 0 16px 36px -20px rgba(11,61,145,.38);
+      border-color: rgba(75,58,120,.3);
+      box-shadow: 0 16px 36px -20px rgba(75,58,120,.38);
       transform: translateY(-2px);
     }
     .gl-tm-card--featured {
-      background: linear-gradient(155deg, #051F4D 0%, #0B3D91 60%, #072A66 100%);
-      border-color: #0B3D91;
+      background: linear-gradient(155deg, #2E234A 0%, #4B3A78 60%, #3A2C5C 100%);
+      border-color: #4B3A78;
       color: #fff;
     }
     .gl-tm-card__media {
       aspect-ratio: 4 / 3; max-height: 15rem;
       display: flex; align-items: center; justify-content: center;
-      overflow: hidden; background: #F4F7FC;
+      overflow: hidden; background: #FFFBE6;
     }
     .gl-tm-card--featured .gl-tm-card__media { background: rgba(255,255,255,.1); }
     .gl-tm-card__media img {
@@ -110,9 +110,9 @@
       flex: 1; display: flex; flex-direction: column;
     }
     .gl-tm-card__quote {
-      margin: 0 0 .35rem; color: #0B3D91; font-size: 1.1rem; opacity: .55;
+      margin: 0 0 .35rem; color: #4B3A78; font-size: 1.1rem; opacity: .55;
     }
-    .gl-tm-card--featured .gl-tm-card__quote { color: #F5B800; opacity: .85; }
+    .gl-tm-card--featured .gl-tm-card__quote { color: #FFB7A5; opacity: .85; }
     .gl-tm-card__text {
       margin: 0; flex: 1;
       font-size: .82rem; line-height: 1.75; font-weight: 600; color: #3D4656;
@@ -120,47 +120,47 @@
     .gl-tm-card--featured .gl-tm-card__text { color: rgba(255,255,255,.92); }
     .gl-tm-card__author {
       margin: 1rem 0 0; padding-top: .85rem;
-      border-top: 1px solid #E8EEF8;
+      border-top: 1px solid #F3E9FF;
       display: flex; align-items: center; gap: .65rem;
     }
     .gl-tm-card--featured .gl-tm-card__author { border-top-color: rgba(255,255,255,.18); }
     .gl-tm-card__avatar {
       width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
       display: grid; place-items: center;
-      background: #E8EEF8; color: #0B3D91;
+      background: #F3E9FF; color: #4B3A78;
       font-family: Cairo, Tajawal, sans-serif;
       font-size: .9rem; font-weight: 900;
     }
     .gl-tm-card--featured .gl-tm-card__avatar {
-      background: rgba(245,184,0,.2); color: #F5B800;
+      background: rgba(255,183,165,.2); color: #FFB7A5;
     }
     .gl-tm-card__author strong {
-      display: block; font-size: .84rem; font-weight: 900; color: #0B1220; line-height: 1.3;
+      display: block; font-size: .84rem; font-weight: 900; color: #2E234A; line-height: 1.3;
     }
-    .gl-tm-card--featured .gl-tm-card__author strong { color: #F5B800; }
+    .gl-tm-card--featured .gl-tm-card__author strong { color: #FFB7A5; }
     .gl-tm-card__author span {
       display: block; margin-top: 2px; font-size: .7rem; font-weight: 700; color: #5B6577;
     }
     .gl-tm-card--featured .gl-tm-card__author span { color: rgba(255,255,255,.72); }
     .gl-tm-empty {
       text-align: center; padding: 3rem 1.25rem;
-      background: #fff; border: 1.5px dashed #D7DDE6; border-radius: 18px;
+      background: #fff; border: 1.5px dashed #E8DFC8; border-radius: 18px;
     }
     .gl-tm-empty i {
       width: 56px; height: 56px; border-radius: 16px; margin: 0 auto .85rem;
-      display: grid; place-items: center; background: #E8EEF8; color: #0B3D91; font-size: 1.35rem;
+      display: grid; place-items: center; background: #F3E9FF; color: #4B3A78; font-size: 1.35rem;
     }
     .gl-tm-empty h3 {
       margin: 0 0 .35rem; font-family: Cairo, Tajawal, sans-serif;
-      font-size: 1.15rem; font-weight: 900; color: #0B1220;
+      font-size: 1.15rem; font-weight: 900; color: #2E234A;
     }
     .gl-tm-empty p { margin: 0 0 1rem; font-size: .84rem; color: #5B6577; font-weight: 600; }
     .gl-tm-final {
       margin: 0 0 clamp(40px, 6vw, 64px);
       border-radius: 18px; padding: clamp(1.25rem, 3vw, 1.75rem);
-      background: linear-gradient(135deg, #051F4D 0%, #0B3D91 55%, #072A66 100%);
+      background: linear-gradient(135deg, #2E234A 0%, #4B3A78 55%, #3A2C5C 100%);
       color: #fff; text-align: center;
-      box-shadow: 0 16px 40px -24px rgba(11,61,145,.5);
+      box-shadow: 0 16px 40px -24px rgba(75,58,120,.5);
     }
     .gl-tm-final h2 {
       margin: 0 0 .4rem; font-family: Cairo, Tajawal, sans-serif;
@@ -198,7 +198,7 @@
           <span>{{ $isRtl ? 'آراء مميزة' : 'Featured' }}</span>
         </article>
         <article class="gl-tm-metric">
-          <strong><i class="fas fa-star" style="font-size:1.1rem;color:#F5B800"></i></strong>
+          <strong><i class="fas fa-star" style="font-size:1.1rem;color:#FFB7A5"></i></strong>
           <span>{{ $isRtl ? 'تجارب حقيقية' : 'Real experiences' }}</span>
         </article>
       </div>

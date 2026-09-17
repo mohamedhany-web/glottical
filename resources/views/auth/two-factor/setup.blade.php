@@ -102,15 +102,15 @@
   .gl-auth-badge {
     width: 3.25rem; height: 3.25rem; margin: 0 auto .9rem;
     border-radius: 16px; display: grid; place-items: center;
-    background: linear-gradient(145deg, #0B3D91, #072A66);
+    background: linear-gradient(145deg, #4B3A78, #3A2C5C);
     color: #fff; font-size: 1.15rem;
-    box-shadow: 0 12px 28px -10px rgba(11,61,145,.55);
+    box-shadow: 0 12px 28px -10px rgba(75,58,120,.55);
   }
   .gl-auth-qr {
     display: grid; place-items: center;
     margin: .2rem auto 1rem; padding: .85rem;
     width: fit-content; border-radius: 16px;
-    background: #F4F7FC; border: 1.5px solid #D7DDE6;
+    background: #FFFBE6; border: 1.5px solid #E8DFC8;
   }
   .gl-auth-qr img { display: block; border-radius: 10px; }
   .gl-auth-secret {
@@ -120,7 +120,7 @@
   .gl-auth-secret code {
     display: inline-block; margin-top: .35rem;
     padding: .35rem .65rem; border-radius: 8px;
-    background: #E8EEF8; color: #0B3D91;
+    background: #F3E9FF; color: #4B3A78;
     font: 800 .78rem/1 ui-monospace, monospace;
   }
   .gl-auth-input--otp {

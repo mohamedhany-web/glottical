@@ -14,15 +14,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <title>{{ __($g.'.meta_title') }} — {{ $brand }}</title>
   <meta name="description" content="{{ __($g.'.meta_desc') }}">
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   <link rel="canonical" href="{{ route('public.groups') }}">
   @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme']])
   <style>
-    .gl-sch{background:var(--bg,#F4F7FC)}
+    .gl-sch{background:var(--bg,#FFFBE6)}
     .gl-sch-hero{
       padding:clamp(96px,12vw,120px) 0 clamp(36px,5vw,52px);
-      background:linear-gradient(175deg,#051F4D 0%,#072A66 42%,#0B3D91 100%);
+      background:linear-gradient(175deg,#2E234A 0%,#3A2C5C 42%,#4B3A78 100%);
       color:#fff;
     }
     .gl-sch-hero__inner{max-width:40rem}
@@ -30,54 +30,54 @@
       display:inline-flex;align-items:center;gap:8px;margin:0 0 14px;padding:7px 14px;border-radius:999px;
       background:rgba(7,24,58,.55);border:1px solid rgba(255,255,255,.14);font:700 .78rem Tajawal,sans-serif;
     }
-    .gl-sch-kicker i{color:#F5B800}
+    .gl-sch-kicker i{color:#FFB7A5}
     .gl-sch-hero h1{
-      margin:0 0 12px;font:900 clamp(1.55rem,3.8vw,2.35rem)/1.28 Cairo,Tajawal,sans-serif;color:#F5B800;
+      margin:0 0 12px;font:900 clamp(1.55rem,3.8vw,2.35rem)/1.28 Cairo,Tajawal,sans-serif;color:#FFB7A5;
     }
     .gl-sch-hero p{margin:0 0 20px;font:600 .95rem/1.75 Tajawal,sans-serif;color:rgba(255,255,255,.9)}
     .gl-sch-actions{display:flex;flex-wrap:wrap;gap:10px}
     .gl-sch-sec{padding:clamp(36px,5vw,56px) 0}
     .gl-sch-sec--white{background:#fff}
     .gl-sch-head{margin:0 0 1.15rem}
-    .gl-sch-head h2{margin:0 0 .35rem;font:900 clamp(1.2rem,2.6vw,1.55rem)/1.3 Cairo,Tajawal,sans-serif;color:#0B1220}
+    .gl-sch-head h2{margin:0 0 .35rem;font:900 clamp(1.2rem,2.6vw,1.55rem)/1.3 Cairo,Tajawal,sans-serif;color:#2E234A}
     .gl-sch-head p{margin:0;font:600 .88rem/1.6 Tajawal,sans-serif;color:#5B6577;max-width:36rem}
     .gl-sch-flow{display:grid;gap:10px;margin-bottom:1.5rem}
     @media(min-width:768px){.gl-sch-flow{grid-template-columns:repeat(3,1fr)}}
     .gl-sch-flow__item{
-      background:#fff;border:1.5px solid #D7DDE6;border-radius:16px;padding:1rem 1.05rem;
-      box-shadow:0 10px 28px -22px rgba(11,61,145,.28);
+      background:#fff;border:1.5px solid #E8DFC8;border-radius:16px;padding:1rem 1.05rem;
+      box-shadow:0 10px 28px -22px rgba(75,58,120,.28);
     }
     .gl-sch-flow__n{
       display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 8px;
-      border-radius:999px;background:#0B3D91;color:#fff;font:900 .72rem Tajawal,sans-serif;margin-bottom:.55rem;
+      border-radius:999px;background:#4B3A78;color:#fff;font:900 .72rem Tajawal,sans-serif;margin-bottom:.55rem;
     }
-    .gl-sch-flow__item h3{margin:0 0 .25rem;font:900 .9rem Tajawal,sans-serif;color:#0B1220}
+    .gl-sch-flow__item h3{margin:0 0 .25rem;font:900 .9rem Tajawal,sans-serif;color:#2E234A}
     .gl-sch-flow__item p{margin:0;font:600 .78rem/1.55 Tajawal,sans-serif;color:#5B6577}
     .gl-sch-years{display:grid;gap:12px;grid-template-columns:repeat(2,1fr)}
     @media(min-width:768px){.gl-sch-years{grid-template-columns:repeat(3,1fr)}}
     .gl-sch-year{
-      display:block;text-decoration:none!important;color:inherit;background:#fff;border:1.5px solid #D7DDE6;
-      border-radius:16px;padding:1.05rem 1rem 1.1rem;box-shadow:0 10px 28px -22px rgba(11,61,145,.3);
+      display:block;text-decoration:none!important;color:inherit;background:#fff;border:1.5px solid #E8DFC8;
+      border-radius:16px;padding:1.05rem 1rem 1.1rem;box-shadow:0 10px 28px -22px rgba(75,58,120,.3);
       transition:transform .15s ease,border-color .15s ease;
     }
-    .gl-sch-year:hover{transform:translateY(-2px);border-color:rgba(11,61,145,.35)}
+    .gl-sch-year:hover{transform:translateY(-2px);border-color:rgba(75,58,120,.35)}
     .gl-sch-year__num{
       display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;padding:0 10px;
-      margin-bottom:.55rem;border-radius:10px;background:#E8EEF8;color:#0B3D91;font:900 .78rem Tajawal,sans-serif;
+      margin-bottom:.55rem;border-radius:10px;background:#F3E9FF;color:#4B3A78;font:900 .78rem Tajawal,sans-serif;
     }
-    .gl-sch-year h3{margin:0 0 .3rem;font:900 .92rem/1.35 Tajawal,sans-serif;color:#0B1220}
+    .gl-sch-year h3{margin:0 0 .3rem;font:900 .92rem/1.35 Tajawal,sans-serif;color:#2E234A}
     .gl-sch-year p{margin:0;font:600 .76rem/1.5 Tajawal,sans-serif;color:#5B6577}
-    .gl-sch-year__cta{margin-top:.65rem;font:800 .75rem Tajawal,sans-serif;color:#0B3D91}
+    .gl-sch-year__cta{margin-top:.65rem;font:800 .75rem Tajawal,sans-serif;color:#4B3A78}
     .gl-sch-subjects{display:flex;flex-wrap:wrap;gap:.45rem}
     .gl-sch-sub{
       display:inline-flex;align-items:center;gap:8px;padding:.55rem .85rem;border-radius:999px;
-      background:#F4F7FC;border:1.5px solid #D7DDE6;font:800 .78rem Tajawal,sans-serif;color:#0B1220;
+      background:#FFFBE6;border:1.5px solid #E8DFC8;font:800 .78rem Tajawal,sans-serif;color:#2E234A;
     }
-    .gl-sch-sub i{color:#0B3D91}
+    .gl-sch-sub i{color:#4B3A78}
     .gl-sch-band{
       border-radius:18px;padding:clamp(1.25rem,3vw,1.85rem);text-align:center;color:#fff;
-      background:linear-gradient(145deg,#051F4D 0%,#0B3D91 55%,#1A56B0 100%);
-      box-shadow:0 18px 44px -18px rgba(11,61,145,.45);
+      background:linear-gradient(145deg,#2E234A 0%,#4B3A78 55%,#5C4A8C 100%);
+      box-shadow:0 18px 44px -18px rgba(75,58,120,.45);
     }
     .gl-sch-band h2{margin:0 0 .4rem;font:900 clamp(1.15rem,2.4vw,1.45rem)/1.35 Cairo,Tajawal,sans-serif}
     .gl-sch-band p{margin:0 auto 1rem;max-width:32rem;font:600 .88rem/1.65 Tajawal,sans-serif;color:rgba(255,255,255,.88)}

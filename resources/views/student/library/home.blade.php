@@ -7,6 +7,7 @@
     $locale = app()->getLocale();
     $sections = $sections ?? [];
     $hasLibraryEntitlement = (bool) ($hasLibraryEntitlement ?? false);
+    $curriculumAndVideosFree = (bool) ($curriculumAndVideosFree ?? false);
     $linkedTeacherCount = (int) ($linkedTeacherCount ?? 0);
     $academyFolderCount = (int) ($academyFolderCount ?? 0);
     $teacherFolderCount = (int) ($teacherFolderCount ?? 0);
@@ -54,7 +55,13 @@
     <div class="st-lib-package-banner" role="status">
         <div>
             <strong>{{ __('student_timeline.lib_need_package_title') }}</strong>
-            <p>{{ __('student_timeline.lib_need_package_hint') }}</p>
+            <p>
+                @if(!empty($curriculumAndVideosFree))
+                    ماتريال المحاضرات يحتاج باقة مكتبات. المناهج التفاعلية ومكتبة الفيديوهات متاحة مجاناً للجميع.
+                @else
+                    {{ __('student_timeline.lib_need_package_hint') }}
+                @endif
+            </p>
         </div>
         <a href="{{ $packagesUrl }}" class="st-pill st-pill--solid">{{ __('student_timeline.lib_browse_packages') }}</a>
     </div>

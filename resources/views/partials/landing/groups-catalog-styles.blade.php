@@ -1,6 +1,6 @@
 {{-- Shared styles + card grid for /groups/courses and /groups/one-to-one --}}
 <style>
-  .gl-gc-page { background: var(--bg, #F4F7FC); }
+  .gl-gc-page { background: var(--bg, #FFFBE6); }
   .gl-gc-page .sana-cat-hero {
     padding: clamp(28px, 4.5vw, 44px) 0 clamp(32px, 5vw, 48px);
   }
@@ -19,23 +19,23 @@
     display: flex;
     flex-direction: column;
     background: #fff;
-    border: 1.5px solid #D7DDE6;
+    border: 1.5px solid #E8DFC8;
     border-radius: 16px;
     overflow: hidden;
     text-decoration: none !important;
     color: inherit;
-    box-shadow: 0 10px 28px -18px rgba(11,61,145,.3);
+    box-shadow: 0 10px 28px -18px rgba(75,58,120,.3);
     transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
   }
   .gl-gc-card:hover {
     transform: translateY(-3px);
-    border-color: rgba(11,61,145,.28);
-    box-shadow: 0 18px 40px -16px rgba(11,61,145,.35);
+    border-color: rgba(75,58,120,.28);
+    box-shadow: 0 18px 40px -16px rgba(75,58,120,.35);
   }
   .gl-gc-card__media {
     position: relative;
     aspect-ratio: 16/10;
-    background: #E8EEF8;
+    background: #F3E9FF;
     overflow: hidden;
   }
   .gl-gc-card__media img {
@@ -47,12 +47,12 @@
     position: absolute; top: 10px; inset-inline-start: 10px; z-index: 1;
     display: inline-flex; align-items: center; gap: 5px;
     padding: 4px 9px; border-radius: 999px;
-    background: rgba(11,61,145,.92); color: #fff;
+    background: rgba(75,58,120,.92); color: #fff;
     font-size: .66rem; font-weight: 800;
   }
   .gl-gc-card__badge--gold {
-    background: linear-gradient(180deg, #FFD24D, #F5B800);
-    color: #0B1220;
+    background: linear-gradient(180deg, #FFCDBE, #FFB7A5);
+    color: #2E234A;
   }
   .gl-gc-card__body {
     display: flex; flex-direction: column; gap: .35rem;
@@ -60,24 +60,24 @@
   }
   .gl-gc-card__body h2 {
     margin: 0;
-    font-size: .92rem; font-weight: 900; color: #0B1220; line-height: 1.35;
+    font-size: .92rem; font-weight: 900; color: #2E234A; line-height: 1.35;
   }
   .gl-gc-card__meta {
     margin: 0;
     font-size: .74rem; color: #5B6577; font-weight: 600;
   }
-  .gl-gc-card__meta i { color: #0B3D91; margin-inline-end: 4px; }
+  .gl-gc-card__meta i { color: #4B3A78; margin-inline-end: 4px; }
   .gl-gc-card__foot {
     display: flex; align-items: center; justify-content: space-between;
     gap: .5rem; margin-top: auto; padding-top: .55rem;
-    border-top: 1px solid #E8EEF8;
+    border-top: 1px solid #F3E9FF;
   }
   .gl-gc-card__price {
-    font-size: .88rem; font-weight: 900; color: #0B3D91;
+    font-size: .88rem; font-weight: 900; color: #4B3A78;
   }
   .gl-gc-card__price--free { color: #047857; }
   .gl-gc-card__cta {
-    font-size: .72rem; font-weight: 800; color: #0B3D91;
+    font-size: .72rem; font-weight: 800; color: #4B3A78;
     display: inline-flex; align-items: center; gap: 5px;
   }
   .gl-gc-empty {
@@ -85,7 +85,7 @@
     padding: 2rem 1.25rem;
     border-radius: 16px;
     background: #fff;
-    border: 1.5px dashed #D7DDE6;
+    border: 1.5px dashed #E8DFC8;
     color: #5B6577;
     font-weight: 700;
   }
@@ -99,8 +99,8 @@
     border-radius: 18px;
     padding: clamp(1.2rem, 3vw, 1.65rem);
     background:
-      radial-gradient(circle at 90% 0%, rgba(245,184,0,.18), transparent 42%),
-      linear-gradient(145deg, #051F4D 0%, #0B3D91 55%, #1A56B0 100%);
+      radial-gradient(circle at 90% 0%, rgba(255,183,165,.18), transparent 42%),
+      linear-gradient(145deg, #2E234A 0%, #4B3A78 55%, #5C4A8C 100%);
     color: #fff;
   }
   .gl-gc-band__inner {

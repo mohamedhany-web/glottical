@@ -2,16 +2,16 @@
 name: glottical-site-design
 description: >-
   Applies Glottical public landing design from designs/public-pages structure with
-  academy blue #0B3D91 and yellow #F5B800 (sana-* CSS classes remapped). Use when
-  editing homepage, about, courses, contact, public marketing, landing CSS, تصميم,
-  لاندنج, or matching public UI. Admin stays on Atheer panel tokens unless asked.
+  platform palette #4B3A78 · #B77CFF · #FFFBE6 · #C9FFD8 · #FFB7A5 (sana-* CSS classes).
+  Use when editing homepage, about, courses, contact, public marketing, landing CSS,
+  تصميم, لاندنج, or matching public UI. Admin stays on Atheer panel tokens unless asked.
 ---
 
-# Glottical Public Landing (blue + yellow)
+# Glottical Public Landing (purple platform palette)
 
 **Structure SoT:** `designs/public-pages/` (layout, sections, `sana-*` patterns)  
-**Brand colors:** `config/academy-theme.php` — blue `#0B3D91` · yellow `#F5B800`  
-**Live CSS:** `public/css/landing/*.css` (rebranded from public-pages assets)  
+**Brand colors:** `config/academy-theme.php`  
+**Live CSS:** `public/css/landing/*.css`  
 **Live partials:** `partials/landing/{head,navbar,footer}.blade.php`
 
 Creatives: place brand art in `public/img/glottical/` (e.g. `hero.png`). Until then, pages fall back to Unsplash placeholders.
@@ -20,7 +20,7 @@ Creatives: place brand art in `public/img/glottical/` (e.g. `hero.png`). Until t
 
 الان جميع الصفحات التي سوف نرسلها من لوحة تحكم الادمن لابد ان تكون في التصميم متكافئة مع تصميم لوحة التحكم والموقع كامل لا نري صفحة ان تختلف عن صفحة اخري
 
-Public marketing pages must share this landing shell (blue/yellow). Admin `/admin` keeps Atheer admin chrome unless migrating later.
+Public marketing pages must share this landing shell. Admin `/admin` keeps Atheer admin chrome unless migrating later.
 
 ## When editing public pages
 
@@ -32,13 +32,15 @@ Public marketing pages must share this landing shell (blue/yellow). Admin `/admi
 
 ## Tokens
 
-| Role | Hex |
-|------|-----|
-| Blue `--p` | `#0B3D91` |
-| Blue dark | `#072A66` |
-| Yellow `--gold` | `#F5B800` |
-| Canvas | `#F4F7FC` |
-| Text | `#0B1220` |
+| Role | Hex | CSS |
+|------|-----|-----|
+| Primary | `#4B3A78` | `--p` |
+| Primary dark | `#3A2C5C` | `--p-dark` |
+| Lavender | `#B77CFF` | `--p-light` / `--lavender` |
+| Cream canvas | `#FFFBE6` | `--bg` / `--cream` |
+| Mint | `#C9FFD8` | `--mint` |
+| Peach accent | `#FFB7A5` | `--gold` / `--peach` |
+| Ink | `#2E234A` | `--text` |
 
 Fonts: Cairo (display) + Tajawal (body). Auth can stay IBM Plex / auth-geo remapped.
 

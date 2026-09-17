@@ -26,59 +26,59 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <title>{{ __('public.checkout_page_label') }} — {{ $itemTitle }} — {{ $appName }}</title>
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme']])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         [x-cloak]{display:none!important}
-    .gl-ck{background:var(--bg,#F4F7FC);padding:0 0 4rem}
+    .gl-ck{background:var(--bg,#FFFBE6);padding:0 0 4rem}
     .gl-ck-hero{
       padding:clamp(88px,11vw,110px) 0 1.25rem;
-      background:linear-gradient(175deg,#051F4D 0%,#072A66 45%,#0B3D91 100%);
+      background:linear-gradient(175deg,#2E234A 0%,#3A2C5C 45%,#4B3A78 100%);
       color:#fff;
     }
     .gl-ck-crumb{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font:700 .75rem Tajawal,sans-serif;color:rgba(255,255,255,.7);margin-bottom:.85rem}
-    .gl-ck-crumb a{color:#F5B800;text-decoration:none!important}
+    .gl-ck-crumb a{color:#FFB7A5;text-decoration:none!important}
     .gl-ck-hero h1{margin:0 0 .4rem;font:900 clamp(1.35rem,3vw,1.85rem)/1.3 Cairo,Tajawal,sans-serif}
     .gl-ck-hero p{margin:0;font:600 .9rem/1.6 Tajawal,sans-serif;color:rgba(255,255,255,.85);max-width:40rem}
     .gl-ck-steps{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:1rem}
     .gl-ck-step{display:inline-flex;align-items:center;gap:8px;padding:.4rem .75rem;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);font:800 .72rem Tajawal,sans-serif}
     .gl-ck-step.is-done{background:rgba(16,185,129,.18);border-color:rgba(16,185,129,.35)}
-    .gl-ck-step.is-on{background:rgba(245,184,0,.95);color:#072A66;border-color:transparent}
+    .gl-ck-step.is-on{background:rgba(255,183,165,.95);color:#3A2C5C;border-color:transparent}
     .gl-ck-wrap{margin-top:-1.25rem;position:relative;z-index:2}
     .gl-ck-grid{display:grid;gap:1rem}
     @media(min-width:992px){.gl-ck-grid{grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);align-items:start}}
     .gl-ck-card{
-      background:#fff;border:1.5px solid #D7DDE6;border-radius:18px;
-      box-shadow:0 14px 36px -22px rgba(11,61,145,.35);padding:1.15rem 1.2rem 1.3rem;
+      background:#fff;border:1.5px solid #E8DFC8;border-radius:18px;
+      box-shadow:0 14px 36px -22px rgba(75,58,120,.35);padding:1.15rem 1.2rem 1.3rem;
     }
-    .gl-ck-card h2{margin:0 0 .35rem;font:900 1.1rem/1.35 Cairo,Tajawal,sans-serif;color:#0B1220}
+    .gl-ck-card h2{margin:0 0 .35rem;font:900 1.1rem/1.35 Cairo,Tajawal,sans-serif;color:#2E234A}
     .gl-ck-card__sub{margin:0 0 1rem;font:600 .82rem/1.5 Tajawal,sans-serif;color:#5B6577}
     .gl-ck-alert{border-radius:14px;padding:.85rem 1rem;display:flex;gap:.65rem;align-items:flex-start;font:600 .84rem/1.5 Tajawal,sans-serif;margin-bottom:.9rem}
     .gl-ck-alert--err{background:#FEF2F2;border:1px solid #FECACA;color:#991B1B}
     .gl-ck-alert--ok{background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46}
-    .gl-ck-alert--info{background:#FFF8E6;border:1px solid #F5D56B;color:#8A6A00}
-    .gl-ck-alert--sky{background:#E8EEF8;border:1px solid #C5D4EF;color:#072A66}
+    .gl-ck-alert--info{background:#FFFBE6;border:1px solid #F5D56B;color:#8A6A00}
+    .gl-ck-alert--sky{background:#F3E9FF;border:1px solid #C5D4EF;color:#3A2C5C}
     .gl-ck-field{margin-bottom:.85rem}
     .gl-ck-field label{display:block;margin:0 0 .35rem;font:800 .78rem Tajawal,sans-serif;color:#5B6577}
     .gl-ck-input,.input-checkout{
-      width:100%;border-radius:12px;border:1.5px solid #D7DDE6;background:#F4F7FC;color:#0B1220;
+      width:100%;border-radius:12px;border:1.5px solid #E8DFC8;background:#FFFBE6;color:#2E234A;
       padding:.8rem .95rem;font:600 .9rem Tajawal,sans-serif;
     }
-    .gl-ck-input:focus,.input-checkout:focus{outline:none;border-color:#0B3D91;box-shadow:0 0 0 3px rgba(11,61,145,.12);background:#fff}
-    .gl-ck-panel{border:1px solid #E8EEF8;background:#F8FAFD;border-radius:14px;padding:1rem;margin-bottom:1rem}
-    .gl-ck-panel h3{margin:0 0 .35rem;font:800 .95rem Tajawal,sans-serif;color:#0B1220;display:flex;align-items:center;gap:8px}
+    .gl-ck-input:focus,.input-checkout:focus{outline:none;border-color:#4B3A78;box-shadow:0 0 0 3px rgba(75,58,120,.12);background:#fff}
+    .gl-ck-panel{border:1px solid #F3E9FF;background:#F8FAFD;border-radius:14px;padding:1rem;margin-bottom:1rem}
+    .gl-ck-panel h3{margin:0 0 .35rem;font:800 .95rem Tajawal,sans-serif;color:#2E234A;display:flex;align-items:center;gap:8px}
     .gl-ck-sum-row{display:flex;justify-content:space-between;gap:10px;font:700 .84rem Tajawal,sans-serif;color:#5B6577;margin:.35rem 0}
-    .gl-ck-sum-row strong,.gl-ck-sum-row #sum-original,#sum-final{color:#0B3D91;font-weight:900}
-    .gl-ck-sum-total{border-top:1px solid #E8EEF8;padding-top:.75rem;margin-top:.55rem;display:flex;justify-content:space-between;align-items:center}
-    .gl-ck-sum-total span{font:800 .9rem Tajawal,sans-serif;color:#0B1220}
-    .gl-ck-sum-total #sum-final{font:900 1.35rem Cairo,Tajawal,sans-serif;color:#0B3D91}
-    .gl-ck-item{display:flex;gap:12px;align-items:flex-start;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #E8EEF8}
-    .gl-ck-item img,.gl-ck-item__ph{width:64px;height:64px;border-radius:14px;object-fit:cover;flex-shrink:0;background:#E8EEF8}
-    .gl-ck-item__ph{display:grid;place-items:center;color:#0B3D91;font-size:1.25rem}
-    .gl-ck-item h3{margin:0;font:800 .95rem/1.4 Tajawal,sans-serif;color:#0B1220}
+    .gl-ck-sum-row strong,.gl-ck-sum-row #sum-original,#sum-final{color:#4B3A78;font-weight:900}
+    .gl-ck-sum-total{border-top:1px solid #F3E9FF;padding-top:.75rem;margin-top:.55rem;display:flex;justify-content:space-between;align-items:center}
+    .gl-ck-sum-total span{font:800 .9rem Tajawal,sans-serif;color:#2E234A}
+    .gl-ck-sum-total #sum-final{font:900 1.35rem Cairo,Tajawal,sans-serif;color:#4B3A78}
+    .gl-ck-item{display:flex;gap:12px;align-items:flex-start;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #F3E9FF}
+    .gl-ck-item img,.gl-ck-item__ph{width:64px;height:64px;border-radius:14px;object-fit:cover;flex-shrink:0;background:#F3E9FF}
+    .gl-ck-item__ph{display:grid;place-items:center;color:#4B3A78;font-size:1.25rem}
+    .gl-ck-item h3{margin:0;font:800 .95rem/1.4 Tajawal,sans-serif;color:#2E234A}
     .gl-ck-item p{margin:.25rem 0 0;font:600 .78rem Tajawal,sans-serif;color:#5B6577}
     .gl-ck-benefits{list-style:none;margin:0;padding:0;display:grid;gap:.45rem}
     .gl-ck-benefits li{display:flex;gap:8px;align-items:center;font:700 .78rem Tajawal,sans-serif;color:#5B6577}
@@ -86,22 +86,22 @@
     .btn-acad-primary,.gl-ck-btn{
       display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
       padding:.85rem 1.35rem;border-radius:14px;border:0;cursor:pointer;
-      background:#F5B800;color:#072A66;font:800 .9rem Tajawal,sans-serif;text-decoration:none!important;
+      background:#FFB7A5;color:#3A2C5C;font:800 .9rem Tajawal,sans-serif;text-decoration:none!important;
     }
     .btn-acad-primary:disabled{opacity:.55;cursor:not-allowed}
     .btn-acad-ghost,.gl-ck-btn--ghost{
       display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
-      padding:.85rem 1.35rem;border-radius:14px;border:1.5px solid #D7DDE6;background:#fff;
-      color:#0B3D91;font:800 .85rem Tajawal,sans-serif;text-decoration:none!important;
+      padding:.85rem 1.35rem;border-radius:14px;border:1.5px solid #E8DFC8;background:#fff;
+      color:#4B3A78;font:800 .85rem Tajawal,sans-serif;text-decoration:none!important;
     }
-    #fawaterkDivId{min-height:480px;width:100%;border-radius:14px;border:1.5px solid #D7DDE6;background:#fff;overflow:hidden}
+    #fawaterkDivId{min-height:480px;width:100%;border-radius:14px;border:1.5px solid #E8DFC8;background:#fff;overflow:hidden}
     .hidden{display:none!important}
     .flex{display:flex}.items-center{align-items:center}.justify-center{justify-content:center}
     .gap-3{gap:.75rem}.p-3{padding:.75rem}.rounded-xl{border-radius:12px}
     .border-2{border-width:2px;border-style:solid}.bg-white{background:#fff}
     .text-start{text-align:start}.font-bold{font-weight:800}.min-w-0{min-width:0}.flex-1{flex:1}
     .shrink-0{flex-shrink:0}.h-10{height:2.5rem}.w-10{width:2.5rem}.w-auto{width:auto}
-    .object-contain{object-fit:contain}.ring-2{box-shadow:0 0 0 2px rgba(245,184,0,.3)}
+    .object-contain{object-fit:contain}.ring-2{box-shadow:0 0 0 2px rgba(255,183,165,.3)}
     .transition-colors{transition:border-color .15s ease,box-shadow .15s ease}
     </style>
 </head>
@@ -154,23 +154,23 @@
         <div class="gl-ck-panel" id="checkout-discount-panel"
                                      data-quote-url="{{ route('public.course.checkout.quote', $course->id) }}"
                                      data-has-wallet="{{ $checkoutHasWalletBalance ? '1' : '0' }}">
-          <h3><i class="fas fa-tags" style="color:#F5B800"></i> {{ $checkoutHasWalletBalance ? ($isRtl ? 'كوبون ورصيد المحفظة' : 'Coupon & wallet') : ($isRtl ? 'كوبون الخصم' : 'Discount coupon') }}</h3>
+          <h3><i class="fas fa-tags" style="color:#FFB7A5"></i> {{ $checkoutHasWalletBalance ? ($isRtl ? 'كوبون ورصيد المحفظة' : 'Coupon & wallet') : ($isRtl ? 'كوبون الخصم' : 'Discount coupon') }}</h3>
           <p style="margin:0 0 .75rem;font:600 .78rem Tajawal,sans-serif;color:#5B6577">
             {{ $checkoutHasWalletBalance
               ? ($isRtl ? 'أضف كوبوناً و/أو استخدم رصيد محفظتك. الكوبون أولاً ثم المحفظة.' : 'Apply a coupon and/or wallet credit. Coupon first, then wallet.')
               : ($isRtl ? 'أدخل كوبوناً صالحاً إن وُجد، ثم حدّث السعر.' : 'Enter a valid coupon if you have one, then update the price.') }}
           </p>
           @if($isMonthlyCheckout)
-            <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-bottom:.75rem;padding:.65rem .75rem;border-radius:12px;background:#fff;border:1px solid #E8EEF8">
+            <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-bottom:.75rem;padding:.65rem .75rem;border-radius:12px;background:#fff;border:1px solid #F3E9FF">
               <input type="checkbox" name="auto_renew" value="1" form="manual-checkout-form" {{ old('auto_renew', '1') ? 'checked' : '' }} style="margin-top:3px">
               <span>
-                <strong style="display:block;color:#0B1220;font:800 .82rem Tajawal,sans-serif">{{ __('public.checkout_auto_renew_label') }}</strong>
+                <strong style="display:block;color:#2E234A;font:800 .82rem Tajawal,sans-serif">{{ __('public.checkout_auto_renew_label') }}</strong>
                 <span style="font:600 .72rem Tajawal,sans-serif;color:#5B6577">{{ __('public.checkout_auto_renew_hint') }}</span>
               </span>
             </label>
                                         @endif
                                         @if($checkoutHasWalletBalance)
-            <p style="margin:0 0 .75rem;font:800 .78rem Tajawal,sans-serif;color:#0B3D91">{{ $isRtl ? 'رصيدك:' : 'Balance:' }} {{ number_format($studentWalletBalance, 2) }} {{ __('public.currency_egp') }}</p>
+            <p style="margin:0 0 .75rem;font:800 .78rem Tajawal,sans-serif;color:#4B3A78">{{ $isRtl ? 'رصيدك:' : 'Balance:' }} {{ number_format($studentWalletBalance, 2) }} {{ __('public.currency_egp') }}</p>
                                         @endif
           <input type="hidden" id="checkout_currency" value="USD">
           <div style="display:grid;gap:.75rem;grid-template-columns:{{ $checkoutHasWalletBalance ? '1fr 1fr' : '1fr' }}">
@@ -211,13 +211,13 @@
                             @elseif($fawaterakActive && $fawaterakIntegration === 'api')
           <div class="gl-ck-alert gl-ck-alert--sky"><i class="fas fa-lock"></i><div><strong>{{ $isRtl ? 'الدفع الإلكتروني' : 'Online payment' }}</strong><p style="margin:.25rem 0 0">{{ $isRtl ? 'اختر وسيلة الدفع ثم تابع.' : 'Choose a payment method and continue.' }}</p></div></div>
           <div id="fawaterk-api-error" class="hidden gl-ck-alert gl-ck-alert--err"></div>
-          <div id="fawaterk-api-loading" style="margin-bottom:1rem;font:700 .85rem Tajawal,sans-serif;color:#5B6577"><i class="fas fa-spinner fa-spin" style="color:#0B3D91"></i> {{ $isRtl ? 'جاري تحميل وسائل الدفع...' : 'Loading payment methods…' }}</div>
+          <div id="fawaterk-api-loading" style="margin-bottom:1rem;font:700 .85rem Tajawal,sans-serif;color:#5B6577"><i class="fas fa-spinner fa-spin" style="color:#4B3A78"></i> {{ $isRtl ? 'جاري تحميل وسائل الدفع...' : 'Loading payment methods…' }}</div>
           <div id="fawaterk-api-methods" class="hidden" style="display:grid;gap:.55rem;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));margin-bottom:1rem"></div>
           <div id="fawaterk-api-wallet-wrap" class="hidden gl-ck-field">
             <label for="fawaterk-api-wallet">{{ $isRtl ? 'رقم المحفظة' : 'Wallet number' }}</label>
                                     <input type="text" id="fawaterk-api-wallet" dir="ltr" class="input-checkout" placeholder="01xxxxxxxxx" autocomplete="tel">
                                 </div>
-          <div id="fawaterk-api-result" class="hidden gl-ck-panel" style="font:600 .85rem Tajawal,sans-serif;color:#0B1220"></div>
+          <div id="fawaterk-api-result" class="hidden gl-ck-panel" style="font:600 .85rem Tajawal,sans-serif;color:#2E234A"></div>
           <button type="button" id="fawaterk-api-pay-btn" disabled class="btn-acad-primary" style="width:100%"><i class="fas fa-lock"></i> {{ $isRtl ? 'متابعة الدفع' : 'Continue payment' }}</button>
                             @elseif($fawaterakActive)
           <div class="gl-ck-alert gl-ck-alert--sky"><i class="fas fa-lock"></i><div><strong>{{ $isRtl ? 'الدفع عبر فواتيرك' : 'Pay with Fawaterak' }}</strong><p style="margin:.25rem 0 0">{{ $isRtl ? 'اختر وسيلة الدفع داخل الإطار. بعد النجاح يُفعَّل الاشتراك تلقائياً.' : 'Choose a method below. Access activates automatically after success.' }}</p></div></div>
@@ -348,7 +348,7 @@
             <span>{{ $isRtl ? 'خصم الكوبون' : 'Coupon' }}</span>
             <span id="sum-coupon">—</span>
           </div>
-          <div class="gl-ck-sum-row hidden" id="sum-wallet-row" style="color:#0B3D91">
+          <div class="gl-ck-sum-row hidden" id="sum-wallet-row" style="color:#4B3A78">
             <span>{{ $isRtl ? 'رصيد المحفظة' : 'Wallet' }}</span>
             <span id="sum-wallet">—</span>
           </div>

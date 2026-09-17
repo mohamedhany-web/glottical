@@ -14,7 +14,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <title>{{ __('public.instructors_page_title') }} — {{ $brand }}</title>
   <meta name="description" content="{{ __('public.instructors_subtitle') }}">
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   <link rel="canonical" href="{{ route('public.instructors.index') }}">
   @include('partials.favicon-links')
   @include('partials.seo-jsonld', ['jsonldType' => 'website'])

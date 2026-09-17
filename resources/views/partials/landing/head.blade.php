@@ -1,7 +1,7 @@
-{{-- رأس صفحات اللاندنج + ألوان Glottical أزرق/أصفر --}}
+{{-- رأس صفحات اللاندنج + ألوان المنصة الجديدة --}}
 @php
     $landingCss = $landingCss ?? ['theme'];
-    $themeColor = config('academy-theme.blue', '#0B3D91');
+    $themeColor = config('academy-theme.blue', '#4B3A78');
 @endphp
 <script>document.documentElement.classList.add('js');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,12 +21,16 @@
 @endforeach
 <style>
   :root {
-    --p: {{ config('academy-theme.blue', '#0B3D91') }};
-    --p-dark: {{ config('academy-theme.blue_dark', '#072A66') }};
-    --p-deep: #051F4D;
-    --p-light: #3D6BC4;
-    --p-glow: #6B8FD4;
-    --gold: {{ config('academy-theme.yellow', '#F5B800') }};
-    --gold-dark: #D99E00;
+    --p: {{ config('academy-theme.blue', '#4B3A78') }};
+    --p-dark: {{ config('academy-theme.blue_dark', '#3A2C5C') }};
+    --p-deep: {{ config('academy-theme.navy_deep', '#2E234A') }};
+    --p-light: {{ config('academy-theme.lavender', '#B77CFF') }};
+    --p-glow: {{ config('academy-theme.blue_glow', '#C9A0FF') }};
+    --gold: {{ config('academy-theme.peach', '#FFB7A5') }};
+    --gold-dark: {{ config('academy-theme.peach_dark', '#F59A84') }};
+    --mint: {{ config('academy-theme.mint', '#C9FFD8') }};
+    --cream: {{ config('academy-theme.canvas', '#FFFBE6') }};
+    --bg: {{ config('academy-theme.canvas', '#FFFBE6') }};
+    --text: {{ config('academy-theme.ink', '#2E234A') }};
   }
 </style>

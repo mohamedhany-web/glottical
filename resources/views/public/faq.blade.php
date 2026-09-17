@@ -17,7 +17,7 @@
         background: rgba(26, 45, 77, 0.55);
     }
     .faq-acc-item:hover {
-        border-color: rgba(245, 184, 0, 0.35);
+        border-color: rgba(255, 183, 165, 0.35);
         box-shadow: 0 14px 36px -18px rgba(0, 0, 0, 0.45);
     }
     .faq-acc-item.is-open {
@@ -31,10 +31,10 @@
         transform: rotate(180deg);
     }
     .filter-btn-faq.is-active {
-        background: #f5b800;
-        color: #0b3d91;
-        border-color: rgba(245, 184, 0, 0.9);
-        box-shadow: 0 8px 22px -10px rgba(245, 184, 0, 0.45);
+        background: #FFB7A5;
+        color: #4B3A78;
+        border-color: rgba(255, 183, 165, 0.9);
+        box-shadow: 0 8px 22px -10px rgba(255, 183, 165, 0.45);
     }
     .filter-btn-faq:not(.is-active) {
         background: rgba(255, 255, 255, 0.06);

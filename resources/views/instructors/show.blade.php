@@ -44,7 +44,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{{ $instrPageTitle }}</title>
   <meta name="description" content="{{ $instrPageDesc }}">
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   <link rel="canonical" href="{{ $instrPageUrl }}">
   <meta property="og:type" content="profile">
   <meta property="og:url" content="{{ $instrPageUrl }}">

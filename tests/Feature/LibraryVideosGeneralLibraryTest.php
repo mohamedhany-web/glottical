@@ -111,7 +111,7 @@ class LibraryVideosGeneralLibraryTest extends TestCase
             ->assertSee('فيديو عام تجريبي', false);
     }
 
-    public function test_student_without_package_cannot_see_unfoldered_general_video(): void
+    public function test_student_without_package_can_see_unfoldered_general_video(): void
     {
         $student = User::factory()->create([
             'role' => 'student',
@@ -120,7 +120,7 @@ class LibraryVideosGeneralLibraryTest extends TestCase
         ]);
 
         LibraryVideo::create([
-            'title' => 'فيديو مقفل بالباقة',
+            'title' => 'فيديو مجاني بدون باقة',
             'external_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
             'audience' => LibraryVideo::AUDIENCE_GENERAL,
             'is_published' => true,
@@ -130,12 +130,13 @@ class LibraryVideosGeneralLibraryTest extends TestCase
         $this->actingAs($student)
             ->get(route('student.library.videos'))
             ->assertOk()
-            ->assertDontSee('فيديو مقفل بالباقة', false);
+            ->assertSee('فيديو مجاني بدون باقة', false);
 
-        $video = LibraryVideo::query()->where('title', 'فيديو مقفل بالباقة')->first();
+        $video = LibraryVideo::query()->where('title', 'فيديو مجاني بدون باقة')->first();
         $this->actingAs($student)
             ->get(route('student.library.videos.show', $video))
-            ->assertForbidden();
+            ->assertOk()
+            ->assertSee('فيديو مجاني بدون باقة', false);
     }
 
     public function test_admin_can_store_link_video_without_live_session(): void

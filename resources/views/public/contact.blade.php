@@ -31,7 +31,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{{ __('public.contact_page_title') }} — {{ $brand }}</title>
   <meta name="description" content="{{ $isRtl ? 'تواصل مع '.$brand.' — واتساب، بريد، أو نموذج رسالة. تقييم مستوى مجاني ودعم للعائلات والمعلّمين.' : 'Contact '.$brand.' — WhatsApp, email, or message form. Free assessment and support for families and tutors.' }}">
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   <link rel="canonical" href="{{ route('public.contact') }}">
   @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog', 'contact']])
@@ -147,8 +147,8 @@
             </div>
             <svg class="sana-ct-scene__main" viewBox="0 0 360 320" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                <linearGradient id="ctGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1A56B0"/><stop offset="100%" stop-color="#0B3D91"/></linearGradient>
-                <linearGradient id="ctGold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD24D"/><stop offset="100%" stop-color="#F5B800"/></linearGradient>
+                <linearGradient id="ctGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#5C4A8C"/><stop offset="100%" stop-color="#4B3A78"/></linearGradient>
+                <linearGradient id="ctGold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFCDBE"/><stop offset="100%" stop-color="#FFB7A5"/></linearGradient>
               </defs>
               <g transform="translate(180 155)">
                 <circle cx="0" cy="0" r="72" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>

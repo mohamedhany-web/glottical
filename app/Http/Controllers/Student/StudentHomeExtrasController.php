@@ -47,6 +47,7 @@ class StudentHomeExtrasController extends Controller
         $themes = FamilyLibraryThemes::all();
 
         $hasLibraryEntitlement = LibraryFolderAccessService::hasAnyLibraryEntitlement($user);
+        $curriculumAndVideosFree = LibraryFolderAccessService::curriculumAndVideosAreFree();
         $teacherIds = \App\Services\StudentTeacherLinkService::instructorIdsForStudent($user);
         $linkedTeacherCount = count($teacherIds);
 
@@ -150,6 +151,7 @@ class StudentHomeExtrasController extends Controller
         return view('student.library.home', [
             'sections' => $sections,
             'hasLibraryEntitlement' => $hasLibraryEntitlement,
+            'curriculumAndVideosFree' => $curriculumAndVideosFree,
             'linkedTeacherCount' => $linkedTeacherCount,
             'academyFolderCount' => $academyFolderCount,
             'teacherFolderCount' => $teacherFolderCount,
@@ -179,6 +181,7 @@ class StudentHomeExtrasController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $hasLibraryEntitlement = LibraryFolderAccessService::hasAnyLibraryEntitlement($user);
+        $hasManahijAccess = LibraryFolderAccessService::curriculumAndVideosAreFree() || $hasLibraryEntitlement;
         $packagesUrl = Route::has('public.service-packages.index')
             ? route('public.service-packages.index')
             : (Route::has('public.pricing') ? route('public.pricing') : route('dashboard'));
@@ -244,8 +247,8 @@ class StudentHomeExtrasController extends Controller
                             ->orWhere('subject', 'like', "%{$q}%");
                     });
                 }
-                $manahijCards = $itemsQuery->limit($tab === 'manahij' ? 48 : 12)->get()->map(function ($item) use ($hasLibraryEntitlement, $usedFreePreview, $packagesUrl) {
-                    $locked = (! $hasLibraryEntitlement) && $usedFreePreview;
+                $manahijCards = $itemsQuery->limit($tab === 'manahij' ? 48 : 12)->get()->map(function ($item) use ($hasManahijAccess, $usedFreePreview, $packagesUrl) {
+                    $locked = (! $hasManahijAccess) && $usedFreePreview;
 
                     return [
                         'source' => 'manahij',
@@ -743,6 +746,7 @@ class StudentHomeExtrasController extends Controller
         }
 
         $hasLibraryEntitlement = LibraryFolderAccessService::hasAnyLibraryEntitlement($user);
+        $curriculumAndVideosFree = LibraryFolderAccessService::curriculumAndVideosAreFree();
         $linkedTeacherCount = count(\App\Services\StudentTeacherLinkService::instructorIdsForStudent($user));
 
         return view('student.library.videos', [
@@ -757,7 +761,8 @@ class StudentHomeExtrasController extends Controller
             'academyCount' => $academyCount,
             'teacherCount' => $teacherCount,
             'familyThemes' => FamilyLibraryThemes::all(),
-            'hasLibraryEntitlement' => $hasLibraryEntitlement,
+            // الفيديوهات مجانية — لا نعرض بانر الباقة هنا
+            'hasLibraryEntitlement' => $curriculumAndVideosFree || $hasLibraryEntitlement,
             'linkedTeacherCount' => $linkedTeacherCount,
             'packagesUrl' => Route::has('public.service-packages.index')
                 ? route('public.service-packages.index')

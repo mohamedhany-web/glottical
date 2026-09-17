@@ -23,7 +23,7 @@
                 'name' => $subject->name,
                 'icon' => $subject->faIcon(),
                 'url' => $groupsUrl.'#subjects',
-                'color' => $subject->color ?: '#0B3D91',
+                'color' => $subject->color ?: '#4B3A78',
             ];
         })
         : $schoolYears->map(function ($year) {
@@ -39,12 +39,12 @@
                 'name' => $year->name,
                 'icon' => $icon,
                 'url' => route('public.school.year', $year->slug),
-                'color' => $year->color ?: '#0B3D91',
+                'color' => $year->color ?: '#4B3A78',
             ];
         });
     $programGradients = [
-        'linear-gradient(145deg,#E8EEF8,#B8C9E8)',
-        'linear-gradient(145deg,#FFF6D6,#FFE08A)',
+        'linear-gradient(145deg,#F3E9FF,#B8C9E8)',
+        'linear-gradient(145deg,#FFF0EB,#FFE08A)',
         'linear-gradient(145deg,#DBEAFE,#93C5FD)',
         'linear-gradient(145deg,#D1FAE5,#6EE7B7)',
         'linear-gradient(145deg,#FFEDD5,#FDBA74)',
@@ -65,7 +65,7 @@
                 ?: ($isRtl ? 'استكشف المواد والفصول المتاحة' : 'Explore subjects and open classes'),
             'icon' => $icon,
             'url' => route('public.school.year', $year->slug),
-            'accent' => $year->color ?: '#0B3D91',
+            'accent' => $year->color ?: '#4B3A78',
         ];
     });
     if ($startTracks->isEmpty()) {
@@ -75,7 +75,7 @@
                 'sub' => $isRtl ? 'ضمن برامج المدرسة' : 'Part of the school programs',
                 'icon' => $subject->faIcon(),
                 'url' => $groupsUrl.'#subjects',
-                'accent' => $subject->color ?: '#0B3D91',
+                'accent' => $subject->color ?: '#4B3A78',
             ];
         });
     }
@@ -103,13 +103,13 @@
       <span class="sana-hero__cross sana-hero__cross--2"></span>
       <svg class="sana-hero__wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
         <path d="M0,64 C240,120 480,0 720,48 C960,96 1200,24 1440,64 L1440,120 L0,120 Z" fill="rgba(255,255,255,0.04)"/>
-        <path d="M0,88 C360,40 720,100 1080,56 C1260,36 1380,72 1440,80 L1440,120 L0,120 Z" fill="rgba(11,61,145,0.12)"/>
+        <path d="M0,88 C360,40 720,100 1080,56 C1260,36 1380,72 1440,80 L1440,120 L0,120 Z" fill="rgba(75,58,120,0.12)"/>
       </svg>
       <svg class="sana-hero__arc sana-hero__arc--1" viewBox="0 0 200 200" aria-hidden="true">
         <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="1.5" stroke-dasharray="6 10"/>
       </svg>
       <svg class="sana-hero__arc sana-hero__arc--2" viewBox="0 0 120 120" aria-hidden="true">
-        <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(245,184,0,0.18)" stroke-width="1.5" stroke-dasharray="4 8"/>
+        <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(255,183,165,0.18)" stroke-width="1.5" stroke-dasharray="4 8"/>
       </svg>
     </div>
     <div class="sana-container sana-hero__container">
@@ -332,7 +332,7 @@
     </div>
     <div class="sana-features-m">
       <article class="sana-feature-m sana-reveal">
-        <div class="sana-feature-m__icon" style="background:#E8EEF8">🎥</div>
+        <div class="sana-feature-m__icon" style="background:#F3E9FF">🎥</div>
         <h3>{{ $isRtl ? 'تعليم مباشر' : 'Live teaching' }}</h3>
         <p>{{ $isRtl ? 'حصص حية — فردية أو مجموعات منظّمة داخل دفعات.' : 'Live sessions — 1:1 or structured group cohorts.' }}</p>
       </article>
@@ -342,12 +342,12 @@
         <p>{{ $isRtl ? 'محادثة وممارسة يومية بدل الحفظ التقليدي — مسار واضح حتى الوظيفة.' : 'Daily conversation and practice — a clear path toward real career outcomes.' }}</p>
       </article>
       <article class="sana-feature-m sana-reveal">
-        <div class="sana-feature-m__icon" style="background:#FFF6D6">👨‍👩‍👧</div>
+        <div class="sana-feature-m__icon" style="background:#FFF0EB">👨‍👩‍👧</div>
         <h3>{{ $isRtl ? 'لوحة ولي الأمر' : 'Parent dashboard' }}</h3>
         <p>{{ $isRtl ? 'حضور وتقدّم وتقارير واضحة بعد الحصص — بدون تعقيد.' : 'Clear attendance, progress, and reports after sessions.' }}</p>
       </article>
       <article class="sana-feature-m sana-reveal">
-        <div class="sana-feature-m__icon" style="background:#E8EEF8">🗂️</div>
+        <div class="sana-feature-m__icon" style="background:#F3E9FF">🗂️</div>
         <h3>{{ $isRtl ? 'مسارات تعليمية' : 'Learning paths' }}</h3>
         <p>{{ $isRtl ? 'مسار عربي/إسلامي ومسار إنجليزي — أهداف ومراحل واضحة.' : 'Arabic/Islamic and English tracks with clear stages.' }}</p>
       </article>

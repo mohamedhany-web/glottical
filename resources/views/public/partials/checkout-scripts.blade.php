@@ -339,7 +339,7 @@
                 var name = (document.documentElement.getAttribute('dir') === 'rtl' && m.name_ar) ? m.name_ar : (m.name_en || m.name_ar || ('#' + id));
                 var card = document.createElement('button');
                 card.type = 'button';
-                card.className = 'flex items-center gap-3 p-3 rounded-xl border-2 border-[#D7DDE6] bg-white text-start hover:border-[#0B3D91]/40 transition-colors';
+                card.className = 'flex items-center gap-3 p-3 rounded-xl border-2 border-[#E8DFC8] bg-white text-start hover:border-[#4B3A78]/40 transition-colors';
                 card.setAttribute('data-pid', String(id));
                 if (m.logo && typeof m.logo === 'string') {
                     var img = document.createElement('img');
@@ -350,21 +350,21 @@
                     card.appendChild(img);
                 } else {
                     var ph = document.createElement('span');
-                    ph.className = 'w-10 h-10 rounded-xl bg-[#E8EEF8] flex items-center justify-center text-[#0B3D91] shrink-0';
+                    ph.className = 'w-10 h-10 rounded-xl bg-[#F3E9FF] flex items-center justify-center text-[#4B3A78] shrink-0';
                     ph.innerHTML = '<i class="fas fa-credit-card"></i>';
                     card.appendChild(ph);
                 }
                 var title = document.createElement('span');
-                title.className = 'font-bold text-[#0B1220] flex-1 min-w-0';
+                title.className = 'font-bold text-[#2E234A] flex-1 min-w-0';
                 title.textContent = name;
                 card.appendChild(title);
                 card.addEventListener('click', function() {
                     methodsEl.querySelectorAll('button').forEach(function(b) {
-                        b.classList.remove('border-[#F5B800]', 'ring-2', 'ring-[#F5B800]/30');
-                        b.classList.add('border-[#D7DDE6]');
+                        b.classList.remove('border-[#FFB7A5]', 'ring-2', 'ring-[#FFB7A5]/30');
+                        b.classList.add('border-[#E8DFC8]');
                     });
-                    card.classList.remove('border-[#D7DDE6]');
-                    card.classList.add('border-[#F5B800]', 'ring-2', 'ring-[#F5B800]/30');
+                    card.classList.remove('border-[#E8DFC8]');
+                    card.classList.add('border-[#FFB7A5]', 'ring-2', 'ring-[#FFB7A5]/30');
                     selectedId = id;
                     if (payBtn) payBtn.disabled = false;
                 });

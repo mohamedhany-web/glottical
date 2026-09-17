@@ -20,7 +20,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <title>{{ $isRtl ? 'خطط الاشتراك' : 'Subscription plans' }} — {{ $brand }}</title>
   <meta name="description" content="{{ $isRtl ? 'School و Private و Premier — اختر المدة 1 أو 3 أو 6 أشهر بالدولار مع إبراز الوفر.' : 'School, Private and Premier plans — choose 1, 3 or 6 months in USD with clear savings.' }}">
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   <link rel="canonical" href="{{ route('public.service-packages.index') }}">
   @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog', 'pricing']])
@@ -31,42 +31,42 @@
 
     .gl-pl-card {
       position:relative; display:flex; flex-direction:column;
-      background:#fff; border:1.5px solid #D7DDE6; border-radius:22px;
-      box-shadow:0 16px 36px -26px rgba(11,61,145,.45); overflow:hidden;
+      background:#fff; border:1.5px solid #E8DFC8; border-radius:22px;
+      box-shadow:0 16px 36px -26px rgba(75,58,120,.45); overflow:hidden;
     }
-    .gl-pl-card.is-featured { border-color:#F5B800; box-shadow:0 22px 44px -20px rgba(245,184,0,.45); }
+    .gl-pl-card.is-featured { border-color:#FFB7A5; box-shadow:0 22px 44px -20px rgba(255,183,165,.45); }
     .gl-pl-card__ribbon {
       position:absolute; inset-inline-end:-42px; top:18px; transform:rotate(45deg);
-      background:linear-gradient(180deg,#FFD24D,#F5B800); color:#0B1220;
+      background:linear-gradient(180deg,#FFCDBE,#FFB7A5); color:#2E234A;
       font-size:.68rem; font-weight:900; padding:.28rem 2.8rem;
     }
     .gl-pl-card__head { padding:1.25rem 1.25rem 1rem; border-bottom:1px dashed #E4E9F2; }
     .gl-pl-icon {
       width:42px; height:42px; border-radius:14px; display:flex; align-items:center; justify-content:center;
-      background:#EEF3FF; color:#0B3D91; font-size:1.05rem; margin-bottom:.75rem;
+      background:#EEF3FF; color:#4B3A78; font-size:1.05rem; margin-bottom:.75rem;
     }
-    .gl-pl-card.is-featured .gl-pl-icon { background:#FFF6D6; color:#9A7200; }
-    .gl-pl-name { margin:0; font-family:Cairo,Tajawal,sans-serif; font-size:1.35rem; font-weight:900; color:#0B1220; }
+    .gl-pl-card.is-featured .gl-pl-icon { background:#FFF0EB; color:#9A7200; }
+    .gl-pl-name { margin:0; font-family:Cairo,Tajawal,sans-serif; font-size:1.35rem; font-weight:900; color:#2E234A; }
     .gl-pl-tag { margin:.45rem 0 0; font-size:.84rem; line-height:1.7; color:#5B6577; font-weight:600; }
 
     .gl-pl-terms {
       display:grid; grid-template-columns:repeat(3,1fr); gap:.45rem; margin-top:1rem;
     }
     .gl-pl-term {
-      border:1.5px solid #D7DDE6; background:#F8FAFC; border-radius:12px;
+      border:1.5px solid #E8DFC8; background:#F8FAFC; border-radius:12px;
       padding:.55rem .35rem; text-align:center; cursor:pointer; font-weight:800; font-size:.78rem; color:#5B6577;
       transition:border-color .15s ease, background .15s ease, color .15s ease;
     }
     .gl-pl-term.is-active {
-      border-color:#0B3D91; background:#EEF3FF; color:#0B3D91;
+      border-color:#4B3A78; background:#EEF3FF; color:#4B3A78;
     }
     .gl-pl-card.is-featured .gl-pl-term.is-active {
-      border-color:#F5B800; background:#FFF8E1; color:#7A5C00;
+      border-color:#FFB7A5; background:#FFF8E1; color:#7A5C00;
     }
     .gl-pl-term small { display:block; font-size:.65rem; font-weight:700; opacity:.8; margin-top:.15rem; }
 
     .gl-pl-price { margin-top:1rem; display:flex; align-items:flex-end; gap:.4rem; flex-wrap:wrap; }
-    .gl-pl-price__now { font-family:Cairo,sans-serif; font-size:2.1rem; font-weight:900; color:#0B3D91; line-height:1; direction:ltr; }
+    .gl-pl-price__now { font-family:Cairo,sans-serif; font-size:2.1rem; font-weight:900; color:#4B3A78; line-height:1; direction:ltr; }
     .gl-pl-card.is-featured .gl-pl-price__now { color:#9A7200; }
     .gl-pl-price__cur { font-size:.85rem; font-weight:800; color:#5B6577; }
     .gl-pl-price__old { font-size:.85rem; color:#94A3B8; text-decoration:line-through; direction:ltr; }
@@ -84,13 +84,13 @@
     .gl-pl-features { list-style:none; margin:0; padding:0; display:grid; gap:.45rem; }
     .gl-pl-features li {
       display:flex; gap:.5rem; align-items:flex-start;
-      font-size:.82rem; line-height:1.55; color:#0B1220; font-weight:650;
+      font-size:.82rem; line-height:1.55; color:#2E234A; font-weight:650;
     }
-    .gl-pl-features i { color:#0B3D91; margin-top:.2rem; font-size:.75rem; }
+    .gl-pl-features i { color:#4B3A78; margin-top:.2rem; font-size:.75rem; }
     .gl-pl-gift {
-      margin-top:auto; border-radius:14px; background:#F4F7FC; border:1px solid #E4E9F2; padding:.85rem;
+      margin-top:auto; border-radius:14px; background:#FFFBE6; border:1px solid #E4E9F2; padding:.85rem;
     }
-    .gl-pl-gift strong { display:block; font-size:.78rem; color:#0B3D91; margin-bottom:.4rem; }
+    .gl-pl-gift strong { display:block; font-size:.78rem; color:#4B3A78; margin-bottom:.4rem; }
     .gl-pl-gift ul { margin:0; padding:0; list-style:none; display:grid; gap:.3rem; }
     .gl-pl-gift li { font-size:.75rem; color:#5B6577; font-weight:700; display:flex; gap:.4rem; }
     .gl-pl-gift i { color:#047857; }
@@ -98,10 +98,10 @@
     .gl-pl-cta { margin-top:.85rem; }
     .gl-pl-note { margin:.55rem 0 0; font-size:.72rem; color:#5B6577; text-align:center; font-weight:700; }
 
-    .gl-pl-compare { overflow-x:auto; border:1.5px solid #D7DDE6; border-radius:18px; background:#fff; }
+    .gl-pl-compare { overflow-x:auto; border:1.5px solid #E8DFC8; border-radius:18px; background:#fff; }
     .gl-pl-compare table { width:100%; border-collapse:collapse; min-width:640px; font-size:.84rem; }
     .gl-pl-compare th, .gl-pl-compare td { padding:.75rem 1rem; text-align:start; border-bottom:1px solid #EEF2F8; }
-    .gl-pl-compare thead th { background:#F4F7FC; color:#0B3D91; font-weight:900; font-size:.78rem; }
+    .gl-pl-compare thead th { background:#FFFBE6; color:#4B3A78; font-weight:900; font-size:.78rem; }
     .gl-pl-compare tbody tr:last-child td { border-bottom:0; }
     .gl-pl-yes { color:#047857; font-weight:900; }
     .gl-pl-no { color:#94A3B8; font-weight:800; }
@@ -111,42 +111,42 @@
     }
     .gl-pl-year a, .gl-pl-year span {
       display:inline-flex; align-items:center; gap:.35rem; padding:.4rem .75rem; border-radius:999px;
-      border:1.5px solid #D7DDE6; background:#fff; color:#0B3D91; font-size:.78rem; font-weight:800; text-decoration:none;
+      border:1.5px solid #E8DFC8; background:#fff; color:#4B3A78; font-size:.78rem; font-weight:800; text-decoration:none;
     }
-    .gl-pl-year a.is-active { background:#0B3D91; color:#fff; border-color:#0B3D91; }
+    .gl-pl-year a.is-active { background:#4B3A78; color:#fff; border-color:#4B3A78; }
 
     .gl-pl-steps { display:grid; gap:.9rem; grid-template-columns:1fr; }
     @media (min-width:800px) { .gl-pl-steps { grid-template-columns:repeat(4,1fr); } }
-    .gl-pl-step { background:#fff; border:1.5px solid #D7DDE6; border-radius:16px; padding:1rem; text-align:center; }
+    .gl-pl-step { background:#fff; border:1.5px solid #E8DFC8; border-radius:16px; padding:1rem; text-align:center; }
     .gl-pl-step__n {
       width:34px; height:34px; margin:0 auto .55rem; border-radius:50%;
-      background:#0B3D91; color:#fff; font-weight:900; display:flex; align-items:center; justify-content:center;
+      background:#4B3A78; color:#fff; font-weight:900; display:flex; align-items:center; justify-content:center;
     }
-    .gl-pl-step strong { display:block; color:#0B1220; margin-bottom:.25rem; }
+    .gl-pl-step strong { display:block; color:#2E234A; margin-bottom:.25rem; }
     .gl-pl-step span { font-size:.8rem; color:#5B6577; line-height:1.65; }
 
     /* Private custom builder */
     .gl-pv { display:grid; gap:1.15rem; align-items:start; }
     @media (min-width:980px) { .gl-pv { grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr); } }
     .gl-pv-panel {
-      background:#fff; border:1.5px solid #D7DDE6; border-radius:20px;
-      padding:1.15rem 1.2rem 1.3rem; box-shadow:0 14px 34px -26px rgba(11,61,145,.45);
+      background:#fff; border:1.5px solid #E8DFC8; border-radius:20px;
+      padding:1.15rem 1.2rem 1.3rem; box-shadow:0 14px 34px -26px rgba(75,58,120,.45);
     }
     .gl-pv-label { display:block; margin:0 0 .55rem; font-size:.78rem; font-weight:800; color:#5B6577; }
     .gl-pv-choices { display:grid; gap:.55rem; grid-template-columns:repeat(2,1fr); }
     .gl-pv-choices.is-4 { grid-template-columns:repeat(4,1fr); }
     @media (max-width:520px) { .gl-pv-choices.is-4 { grid-template-columns:repeat(2,1fr); } }
     .gl-pv-choice {
-      position:relative; border:1.5px solid #D7DDE6; background:#F8FAFC; border-radius:14px;
+      position:relative; border:1.5px solid #E8DFC8; background:#F8FAFC; border-radius:14px;
       padding:.85rem .6rem; text-align:center; cursor:pointer; font-weight:800; color:#5B6577;
     }
     .gl-pv-choice input { position:absolute; opacity:0; pointer-events:none; }
     .gl-pv-choice.is-on, .gl-pv-choice:has(input:checked) {
-      border-color:#0B3D91; background:#EEF3FF; color:#0B3D91;
+      border-color:#4B3A78; background:#EEF3FF; color:#4B3A78;
     }
     .gl-pv-choice strong { display:block; font-size:.95rem; }
     .gl-pv-choice small { display:block; margin-top:.2rem; font-size:.68rem; font-weight:700; opacity:.85; }
-    .gl-pv-summary__price { font-family:Cairo,sans-serif; font-size:2rem; font-weight:900; color:#0B3D91; direction:ltr; }
+    .gl-pv-summary__price { font-family:Cairo,sans-serif; font-size:2rem; font-weight:900; color:#4B3A78; direction:ltr; }
     .gl-pv-summary__old { color:#94A3B8; text-decoration:line-through; direction:ltr; font-size:.85rem; margin-inline-start:.35rem; }
     .gl-pv-summary__save {
       display:none; margin-top:.55rem; padding:.4rem .65rem; border-radius:10px;
@@ -157,9 +157,9 @@
     .gl-pv-lines li { display:flex; justify-content:space-between; gap:.75rem; font-size:.82rem; border-bottom:1px solid #F1F4F9; padding:.4rem 0; }
     .gl-pv-lines li:last-child { border-bottom:0; }
     .gl-pv-lines span { color:#5B6577; font-weight:700; }
-    .gl-pv-lines strong { color:#0B1220; font-weight:900; }
+    .gl-pv-lines strong { color:#2E234A; font-weight:900; }
     .gl-pv-pay { display:grid; gap:.45rem; margin-top:.85rem; }
-    .gl-pv-select { width:100%; height:42px; border:1.5px solid #D7DDE6; border-radius:12px; padding:0 .75rem; font-weight:700; background:#fff; }
+    .gl-pv-select { width:100%; height:42px; border:1.5px solid #E8DFC8; border-radius:12px; padding:0 .75rem; font-weight:700; background:#fff; }
   </style>
 </head>
 <body class="sana-home sana-courses-page sana-pricing-page">
@@ -442,7 +442,7 @@
               <span class="gl-pv-label">3) {{ $isRtl ? 'الدفع' : 'Payment' }}</span>
               <div class="gl-pv-pay">
                 @if(!empty($fawaterakUseGateway))
-                  <p style="margin:0;font-size:.8rem;color:#0B3D91;font-weight:800;line-height:1.65">
+                  <p style="margin:0;font-size:.8rem;color:#4B3A78;font-weight:800;line-height:1.65">
                     <i class="fas fa-lock"></i>
                     {{ $isRtl ? 'بعد تأكيد الباقة ستنتقل مباشرة لبوابة فواتيرك لإتمام الدفع.' : 'After confirming, you will continue to Fawaterak to complete payment.' }}
                   </p>

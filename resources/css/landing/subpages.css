@@ -2,12 +2,12 @@
 .sana-sub-page { padding-top: 72px; background: var(--bg); }
 @media (max-width: 991px) { .sana-sub-page { padding-top: 64px; } }
 
-.sana-btn--purple { background: linear-gradient(135deg, var(--p-dark), var(--p-light)); color: #fff; box-shadow: 0 10px 28px rgba(11,61,145,0.35); }
+.sana-btn--purple { background: linear-gradient(135deg, var(--p-dark), var(--p-light)); color: #fff; box-shadow: 0 10px 28px rgba(75,58,120,0.35); }
 .sana-btn--purple:hover { transform: translateY(-2px); }
 .sana-btn--ghost-light { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.28); }
 .sana-btn--ghost-light:hover { background: rgba(255,255,255,0.18); transform: translateY(-2px); }
-.sana-btn--outline-purple { background: #fff; color: var(--p-dark); border: 2px solid #C5D4F0; }
-.sana-btn--outline-purple:hover { background: #EEF3FB; border-color: var(--p-light); transform: translateY(-2px); }
+.sana-btn--outline-purple { background: #fff; color: var(--p-dark); border: 2px solid #E2D0FF; }
+.sana-btn--outline-purple:hover { background: #F6F0FF; border-color: var(--p-light); transform: translateY(-2px); }
 .sana-section--soft { background: var(--bg); }
 .sana-head--center { text-align: center; }
 .sana-head__eyebrow { display: inline-block; font-size: 0.75rem; font-weight: 800; color: var(--p); margin-bottom: 8px; }
@@ -18,8 +18,8 @@
     position: relative; overflow: hidden;
     padding: clamp(44px, 7vw, 72px) 0 clamp(48px, 7vw, 80px);
     background:
-        radial-gradient(circle at 85% 20%, rgba(245,184,0,0.12), transparent 45%),
-        linear-gradient(168deg, #051F4D 0%, #0B3D91 50%, #1A56B0 100%);
+        radial-gradient(circle at 85% 20%, rgba(255,183,165,0.12), transparent 45%),
+        linear-gradient(168deg, #2E234A 0%, #4B3A78 50%, #5C4A8C 100%);
 }
 .sana-sub-hero__grid { display: grid; gap: 32px; align-items: center; }
 @media (min-width: 992px) { .sana-sub-hero__grid { grid-template-columns: 1fr auto; gap: 40px; } }
@@ -35,7 +35,7 @@
     display: inline-flex; align-items: center; gap: 8px;
     padding: 7px 16px; border-radius: 999px; margin-bottom: 14px;
     background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
-    font-size: 0.78rem; font-weight: 800; color: #FFE9A8;
+    font-size: 0.78rem; font-weight: 800; color: #FFE4DC;
 }
 .sana-sub-hero__title { font-size: clamp(1.85rem, 5vw, 2.75rem); font-weight: 900; color: #fff; line-height: 1.2; margin: 0 0 12px; }
 .sana-sub-hero__title .hl { color: var(--gold); }
@@ -66,12 +66,12 @@
 }
 .sana-sub-search input {
     width: 100%; padding: 14px 16px 14px 44px; border-radius: 999px;
-    border: 1.5px solid #E8EEF8; background: #fff;
+    border: 1.5px solid #F3E9FF; background: #fff;
     font-family: inherit; font-size: 0.88rem; font-weight: 600; color: var(--text);
-    box-shadow: 0 8px 24px -12px rgba(11,61,145,0.12);
+    box-shadow: 0 8px 24px -12px rgba(75,58,120,0.12);
     outline: none; transition: border-color 0.2s, box-shadow 0.2s;
 }
-.sana-sub-search input:focus { border-color: var(--p-light); box-shadow: 0 0 0 4px rgba(11,61,145,0.1); }
+.sana-sub-search input:focus { border-color: var(--p-light); box-shadow: 0 0 0 4px rgba(75,58,120,0.1); }
 .sana-sub-search i { position: absolute; top: 50%; transform: translateY(-50%); right: 16px; color: var(--muted); pointer-events: none; }
 .sana-sub-toolbar p { font-size: 0.82rem; color: var(--muted); font-weight: 600; line-height: 1.65; margin: 0; max-width: 480px; }
 .sana-sub-toolbar--search-only { justify-content: flex-end; }
@@ -85,12 +85,12 @@
 @media (min-width: 1200px) { .sana-inst-grid { grid-template-columns: repeat(4, 1fr); } }
 .sana-inst-card {
     border-radius: 22px; overflow: hidden;
-    background: #fff; border: 1px solid #E8EEF8;
-    box-shadow: 0 10px 32px -14px rgba(11,61,145,0.12);
+    background: #fff; border: 1px solid #F3E9FF;
+    box-shadow: 0 10px 32px -14px rgba(75,58,120,0.12);
     transition: transform 0.28s, box-shadow 0.28s;
     color: inherit; display: flex; flex-direction: column; height: 100%;
 }
-.sana-inst-card:hover { transform: translateY(-6px); box-shadow: 0 22px 48px -16px rgba(11,61,145,0.22); }
+.sana-inst-card:hover { transform: translateY(-6px); box-shadow: 0 22px 48px -16px rgba(75,58,120,0.22); }
 .sana-inst-card__main {
     text-decoration: none !important; color: inherit;
     display: flex; flex-direction: column; flex: 1;
@@ -105,7 +105,7 @@
 .sana-inst-card__pill--book { color: #047857; background: rgba(209,250,229,0.95); }
 .sana-inst-card__photo {
     aspect-ratio: 1; overflow: hidden; position: relative;
-    background: linear-gradient(135deg, #EEF3FB, #E8EEF8);
+    background: linear-gradient(135deg, #F6F0FF, #F3E9FF);
     display: flex; align-items: center; justify-content: center;
 }
 .sana-inst-card__photo img { width: 100%; height: 100%; object-fit: cover; }
@@ -132,7 +132,7 @@
 .sana-inst-card__skills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
 .sana-inst-card__skills span {
     font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 999px;
-    background: #EEF3FB; color: var(--p-dark);
+    background: #F6F0FF; color: var(--p-dark);
 }
 .sana-inst-card__meta { margin-bottom: 8px; }
 .sana-inst-card__meta-label {
@@ -149,11 +149,11 @@
 /* Empty state */
 .sana-sub-empty {
     text-align: center; padding: 48px 24px; border-radius: 24px;
-    background: #fff; border: 1px dashed #C5D4F0;
+    background: #fff; border: 1px dashed #E2D0FF;
 }
 .sana-sub-empty__icon {
     width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 18px;
-    background: #EEF3FB; color: var(--p); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+    background: #F6F0FF; color: var(--p); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
 }
 
 /* Certificate cards */
@@ -161,8 +161,8 @@
 @media (min-width: 768px) { .sana-cert-grid { grid-template-columns: repeat(2, 1fr); max-width: 900px; margin-inline: auto; } }
 .sana-cert-card {
     padding: 32px 28px; border-radius: 24px; text-align: center;
-    background: #fff; border: 1px solid #E8EEF8;
-    box-shadow: 0 12px 40px -16px rgba(11,61,145,0.12);
+    background: #fff; border: 1px solid #F3E9FF;
+    box-shadow: 0 12px 40px -16px rgba(75,58,120,0.12);
     transition: transform 0.25s;
 }
 .sana-cert-card:hover { transform: translateY(-4px); }
@@ -186,8 +186,8 @@
 @media (min-width: 768px) { .sana-cert-steps { grid-template-columns: repeat(3, 1fr); max-width: 960px; margin-inline: auto; } }
 .sana-cert-step {
     text-align: center; padding: 28px 20px; border-radius: 22px;
-    background: #fff; border: 1px solid #E8EEF8;
-    box-shadow: 0 8px 28px -12px rgba(11,61,145,0.1);
+    background: #fff; border: 1px solid #F3E9FF;
+    box-shadow: 0 8px 28px -12px rgba(75,58,120,0.1);
     position: relative;
 }
 .sana-cert-step__num {
@@ -199,7 +199,7 @@
 }
 .sana-cert-step__icon {
     width: 48px; height: 48px; margin: 8px auto 14px; border-radius: 14px;
-    background: #EEF3FB; color: var(--p);
+    background: #F6F0FF; color: var(--p);
     display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
 }
 .sana-cert-step strong { display: block; font-size: 0.92rem; font-weight: 900; margin-bottom: 8px; color: var(--text); }
@@ -208,15 +208,15 @@
 .sana-cert-verify-box {
     padding: clamp(28px, 5vw, 40px); border-radius: 28px; text-align: center;
     background: linear-gradient(145deg, #fff, #FAFAFF);
-    border: 1px solid #E8EEF8;
-    box-shadow: 0 16px 48px -20px rgba(11,61,145,0.15);
+    border: 1px solid #F3E9FF;
+    box-shadow: 0 16px 48px -20px rgba(75,58,120,0.15);
     max-width: 640px; margin-inline: auto;
 }
 .sana-cert-disclaimer {
     display: flex; flex-direction: column; gap: 14px; align-items: flex-start;
     max-width: 820px; margin-inline: auto; padding: 22px 24px; border-radius: 20px;
     background: linear-gradient(135deg, #FFFBEB, #FEF3C7);
-    border: 1.5px solid #FFE9A8;
+    border: 1.5px solid #FFE4DC;
 }
 @media (min-width: 768px) {
     .sana-cert-disclaimer { flex-direction: row; align-items: flex-start; gap: 18px; }
@@ -224,7 +224,7 @@
 .sana-cert-disclaimer__icon {
     width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    background: #F5B800; color: #92400E; font-size: 1.2rem;
+    background: #FFB7A5; color: #92400E; font-size: 1.2rem;
 }
 .sana-cert-disclaimer h2 {
     margin: 0 0 8px; font-size: 1rem; font-weight: 900; color: #92400E;
@@ -246,8 +246,8 @@
 /* Privacy controller panel */
 .sana-privacy-controller {
     max-width: 900px; margin-inline: auto; padding: 24px 26px; border-radius: 22px;
-    background: #fff; border: 1px solid #E8EEF8;
-    box-shadow: 0 12px 40px -18px rgba(11,61,145,0.14);
+    background: #fff; border: 1px solid #F3E9FF;
+    box-shadow: 0 12px 40px -18px rgba(75,58,120,0.14);
 }
 .sana-privacy-controller__title {
     margin: 0 0 18px; font-size: 1.05rem; font-weight: 900; color: var(--text);
@@ -282,7 +282,7 @@
 .sana-privacy-retention strong { color: var(--text); }
 .sana-privacy-deletion {
     padding: 16px 18px; border-radius: 16px; background: linear-gradient(135deg, #FFFBEB, #FEF3C7);
-    border: 1px solid #FFE9A8;
+    border: 1px solid #FFE4DC;
 }
 .sana-privacy-deletion h3 {
     margin: 0 0 8px; font-size: 0.92rem; font-weight: 900; color: #92400E;
@@ -299,7 +299,7 @@
 .sana-policy-applicant-notice i { margin-top: 3px; flex-shrink: 0; }
 .sana-policy-contract-extra {
     max-width: 960px; margin-inline: auto; border-radius: 18px;
-    border: 1px solid #E8EEF8; background: #fff; overflow: hidden;
+    border: 1px solid #F3E9FF; background: #fff; overflow: hidden;
 }
 .sana-policy-contract-extra summary {
     cursor: pointer; padding: 16px 20px; list-style: none;
@@ -320,7 +320,7 @@
 .sana-faq-sidebar { position: sticky; top: 88px; }
 .sana-faq-filters { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
 .sana-faq-filter {
-    padding: 12px 16px; border-radius: 12px; border: 1.5px solid #E8EEF8;
+    padding: 12px 16px; border-radius: 12px; border: 1.5px solid #F3E9FF;
     background: #fff; font-family: inherit; font-size: 0.82rem; font-weight: 800;
     color: var(--muted); cursor: pointer; text-align: right; transition: all 0.2s;
 }
@@ -338,7 +338,7 @@
 
 .sana-faq-side-panel {
     padding: 22px; border-radius: 20px;
-    background: linear-gradient(135deg, #051F4D, #0B3D91);
+    background: linear-gradient(135deg, #2E234A, #4B3A78);
     color: #fff;
 }
 .sana-faq-side-panel h4 { font-size: 0.72rem; font-weight: 800; opacity: 0.7; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -364,7 +364,7 @@
 /* Final CTA */
 .sana-sub-final {
     padding: clamp(48px, 7vw, 72px) 0;
-    background: linear-gradient(135deg, #051F4D, #0B3D91 55%, #1A56B0);
+    background: linear-gradient(135deg, #2E234A, #4B3A78 55%, #5C4A8C);
 }
 .sana-sub-final__box {
     text-align: center; color: #fff; padding: clamp(32px, 5vw, 48px);
@@ -380,8 +380,8 @@
 .sana-legal-intro {
     display: flex; flex-direction: column; gap: 18px; align-items: flex-start;
     padding: clamp(24px, 4vw, 32px); border-radius: 24px;
-    background: #fff; border: 1px solid #E8EEF8;
-    box-shadow: 0 12px 40px -16px rgba(11,61,145,0.12);
+    background: #fff; border: 1px solid #F3E9FF;
+    box-shadow: 0 12px 40px -16px rgba(75,58,120,0.12);
     max-width: 860px; margin-inline: auto;
 }
 @media (min-width: 768px) { .sana-legal-intro { flex-direction: row; align-items: center; gap: 22px; } }
@@ -397,11 +397,11 @@
 @media (min-width: 768px) { .sana-legal-grid { grid-template-columns: repeat(2, 1fr); gap: 18px; } }
 .sana-legal-card {
     padding: 24px 22px; border-radius: 22px;
-    background: #fff; border: 1px solid #E8EEF8;
-    box-shadow: 0 8px 28px -12px rgba(11,61,145,0.1);
+    background: #fff; border: 1px solid #F3E9FF;
+    box-shadow: 0 8px 28px -12px rgba(75,58,120,0.1);
     transition: transform 0.25s, box-shadow 0.25s;
 }
-.sana-legal-card:hover { transform: translateY(-3px); box-shadow: 0 16px 40px -14px rgba(11,61,145,0.16); }
+.sana-legal-card:hover { transform: translateY(-3px); box-shadow: 0 16px 40px -14px rgba(75,58,120,0.16); }
 .sana-legal-card.is-wide { grid-column: 1 / -1; }
 @media (min-width: 768px) { .sana-legal-card.is-wide { max-width: 100%; } }
 .sana-legal-card__head {
@@ -431,11 +431,11 @@
 .sana-legal-links a {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 10px 18px; border-radius: 999px;
-    background: #EEF3FB; color: var(--p-dark);
+    background: #F6F0FF; color: var(--p-dark);
     font-size: 0.8rem; font-weight: 800; text-decoration: none !important;
-    border: 1px solid #C5D4F0; transition: background 0.2s, transform 0.2s;
+    border: 1px solid #E2D0FF; transition: background 0.2s, transform 0.2s;
 }
-.sana-legal-links a:hover { background: #E8EEF8; transform: translateY(-2px); }
+.sana-legal-links a:hover { background: #F3E9FF; transform: translateY(-2px); }
 .sana-legal-links a i { color: var(--p); }
 
 .sana-legal-related { max-width: 960px; margin-inline: auto; }
@@ -444,15 +444,15 @@
 .sana-legal-related-card {
     display: flex; flex-direction: column; align-items: center; text-align: center;
     padding: 22px 16px; border-radius: 20px;
-    background: #fff; border: 1px solid #E8EEF8;
-    box-shadow: 0 8px 24px -12px rgba(11,61,145,0.1);
+    background: #fff; border: 1px solid #F3E9FF;
+    box-shadow: 0 8px 24px -12px rgba(75,58,120,0.1);
     text-decoration: none !important; color: inherit;
     transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
 }
 .sana-legal-related-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 16px 40px -14px rgba(11,61,145,0.18);
-    border-color: #C5D4F0;
+    box-shadow: 0 16px 40px -14px rgba(75,58,120,0.18);
+    border-color: #E2D0FF;
 }
 .sana-legal-related-card__icon {
     width: 44px; height: 44px; border-radius: 14px; margin-bottom: 12px;
@@ -479,8 +479,8 @@
 .sana-policy-toc {
     position: sticky; top: 96px;
     padding: 18px; border-radius: 18px;
-    background: #fff; border: 1px solid rgba(11,61,145,0.1);
-    box-shadow: 0 10px 32px -18px rgba(11,61,145,0.18);
+    background: #fff; border: 1px solid rgba(75,58,120,0.1);
+    box-shadow: 0 10px 32px -18px rgba(75,58,120,0.18);
 }
 .sana-policy-toc strong {
     display: flex; align-items: center; gap: 8px;
@@ -492,7 +492,7 @@
     font-size: 0.78rem; font-weight: 700; color: var(--muted);
     padding: 8px 10px; border-radius: 10px; transition: .2s;
 }
-.sana-policy-toc a:hover { background: #E8EEF8; color: var(--p); }
+.sana-policy-toc a:hover { background: #F3E9FF; color: var(--p); }
 
 .sana-policy-list {
     margin: 14px 0 0; padding: 0; list-style: none;
@@ -508,7 +508,7 @@
 }
 .sana-policy-footer-note {
     margin-top: 14px !important; padding-top: 12px;
-    border-top: 1px dashed rgba(11,61,145,0.15);
+    border-top: 1px dashed rgba(75,58,120,0.15);
     font-weight: 800 !important; color: var(--p) !important;
 }
 
@@ -521,15 +521,15 @@
 
 .sana-policy-sign, .sana-policy-digital, .sana-policy-refs {
     background: #fff; border-radius: 20px;
-    border: 1px solid rgba(11,61,145,0.1);
-    box-shadow: 0 14px 40px -20px rgba(11,61,145,0.16);
+    border: 1px solid rgba(75,58,120,0.1);
+    box-shadow: 0 14px 40px -20px rgba(75,58,120,0.16);
     padding: 24px;
 }
 .sana-policy-sign__head { display: flex; gap: 14px; margin-bottom: 18px; }
 .sana-policy-sign__head span {
     width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, #E8EEF8, #C5D4F0); color: var(--p); font-size: 1.15rem;
+    background: linear-gradient(135deg, #F3E9FF, #E2D0FF); color: var(--p); font-size: 1.15rem;
 }
 .sana-policy-sign__head h2 { margin: 0 0 8px; font-size: 1.05rem; font-weight: 900; color: var(--text); }
 .sana-policy-sign__head p { margin: 0; font-size: 0.86rem; line-height: 1.8; color: var(--muted); font-weight: 600; }
@@ -543,7 +543,7 @@
 }
 .sana-policy-sign__field span {
     display: block; height: 38px; border-radius: 10px;
-    border: 1.5px dashed rgba(11,61,145,0.25); background: #FAFAFA;
+    border: 1.5px dashed rgba(75,58,120,0.25); background: #FAFAFA;
 }
 .sana-policy-sign__hint {
     margin: 16px 0 0; font-size: 0.75rem; font-weight: 700; color: var(--muted);
@@ -582,8 +582,8 @@
 @media (min-width: 768px) { .sana-audience__grid { grid-template-columns: 1fr 1fr; gap: 22px; } }
 .sana-audience__card {
     background: #fff; border-radius: 22px; padding: 24px 22px;
-    border: 1px solid rgba(11,61,145,0.12);
-    box-shadow: 0 14px 40px -18px rgba(11,61,145,0.14);
+    border: 1px solid rgba(75,58,120,0.12);
+    box-shadow: 0 14px 40px -18px rgba(75,58,120,0.14);
     display: flex; flex-direction: column; height: 100%;
 }
 .sana-audience__card--student { border-top: 4px solid var(--gold); }
@@ -618,13 +618,13 @@
     justify-content: center;
 }
 .sana-help-audience__toggle button {
-    border: 1.5px solid #E8EEF8; background: #fff; color: var(--muted);
+    border: 1.5px solid #F3E9FF; background: #fff; color: var(--muted);
     padding: 12px 20px; border-radius: 999px; font-weight: 800; font-size: 0.88rem;
     cursor: pointer; transition: .2s; display: inline-flex; align-items: center; gap: 8px;
 }
 .sana-help-audience__toggle button.is-active {
     background: var(--p); border-color: var(--p); color: #fff;
-    box-shadow: 0 8px 24px -8px rgba(11,61,145,0.45);
+    box-shadow: 0 8px 24px -8px rgba(75,58,120,0.45);
 }
 .sana-help-audience__intro {
     text-align: center; max-width: 640px; margin: 0 auto 22px;
@@ -637,14 +637,14 @@
 @media (min-width: 768px) { .sana-help-cards { grid-template-columns: repeat(3, 1fr); } }
 .sana-help-card {
     display: block; padding: 18px; border-radius: 18px; background: #fff;
-    border: 1px solid #E8EEF8; text-decoration: none !important; color: inherit;
+    border: 1px solid #F3E9FF; text-decoration: none !important; color: inherit;
     transition: transform .2s, box-shadow .2s;
 }
 .sana-help-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 .sana-help-card__icon {
     width: 44px; height: 44px; border-radius: 14px; display: flex;
     align-items: center; justify-content: center; margin-bottom: 12px;
-    background: linear-gradient(135deg, #E8EEF8, #C5D4F0); color: var(--p);
+    background: linear-gradient(135deg, #F3E9FF, #E2D0FF); color: var(--p);
 }
 .sana-help-card strong { display: block; font-size: 0.95rem; margin-bottom: 6px; color: var(--text); }
 .sana-help-card p { margin: 0; font-size: 0.8rem; line-height: 1.65; color: var(--muted); font-weight: 600; }
@@ -660,9 +660,9 @@
 .sana-help-topic__icon {
     width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(245,184,0,0.2); color: #B45309;
+    background: rgba(255,183,165,0.2); color: #B45309;
 }
-.sana-help-topic__icon--teacher { background: rgba(11,61,145,0.12); color: var(--p); }
+.sana-help-topic__icon--teacher { background: rgba(75,58,120,0.12); color: var(--p); }
 .sana-help-topic h3 { margin: 0 0 6px; font-size: 0.92rem; font-weight: 900; color: var(--text); }
 .sana-help-topic p { margin: 0; font-size: 0.82rem; line-height: 1.7; color: var(--muted); font-weight: 600; }
 .sana-help-steps {
@@ -671,7 +671,7 @@
 }
 .sana-help-steps li {
     counter-increment: helpstep; position: relative; padding: 14px 16px 14px 52px;
-    border-radius: 14px; background: #fff; border: 1px solid #E8EEF8;
+    border-radius: 14px; background: #fff; border: 1px solid #F3E9FF;
 }
 .sana-help-steps li::before {
     content: counter(helpstep); position: absolute; right: 14px; top: 50%; transform: translateY(-50%);

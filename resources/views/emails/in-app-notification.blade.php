@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $notification->title }}</title>
 </head>
-<body style="margin:0;padding:0;background:#f4f7fc;font-family:Tahoma,Arial,sans-serif;color:#0f172a;">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f7fc;padding:24px 12px;">
+<body style="margin:0;padding:0;background:#FFFBE6;font-family:Tahoma,Arial,sans-serif;color:#0f172a;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#FFFBE6;padding:24px 12px;">
     <tr>
         <td align="center">
             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;">
                 <tr>
-                    <td style="background:linear-gradient(135deg,#0B3D91,#0997d9);padding:18px 22px;color:#fff;">
+                    <td style="background:linear-gradient(135deg,#4B3A78,#B77CFF);padding:18px 22px;color:#fff;">
                         <div style="font-size:13px;opacity:.9;">{{ config('app.name', 'Glottical') }}</div>
                         <div style="font-size:18px;font-weight:700;margin-top:4px;">{{ $notification->title }}</div>
                     </td>
@@ -30,7 +30,7 @@
                                 : route('notifications');
                             $label = $notification->action_text ?: 'عرض الإشعار';
                         @endphp
-                        <a href="{{ $url }}" style="display:inline-block;background:#0B3D91;color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px;font-size:14px;font-weight:700;">
+                        <a href="{{ $url }}" style="display:inline-block;background:#4B3A78;color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px;font-size:14px;font-weight:700;">
                             {{ $label }}
                         </a>
                         <p style="margin:18px 0 0;font-size:12px;color:#94a3b8;">

@@ -309,7 +309,7 @@ class LibraryMaterialsAccessMatrixTest extends TestCase
         $this->assertFalse($ids->contains($folderB->id));
     }
 
-    public function test_package_gates_admin_folder_and_unfoldered_video(): void
+    public function test_package_gates_admin_materials_while_videos_stay_free(): void
     {
         $student = User::factory()->create(['role' => 'student', 'is_active' => true, 'password' => Hash::make('password')]);
 
@@ -332,14 +332,15 @@ class LibraryMaterialsAccessMatrixTest extends TestCase
         ]);
 
         $video = LibraryVideo::create([
-            'title' => 'فيديو باقة',
+            'title' => 'فيديو مجاني',
             'external_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
             'audience' => LibraryVideo::AUDIENCE_GENERAL,
             'is_published' => true,
         ]);
 
+        // الماتريال يبقى مقفول بالباقة — الفيديوهات العامة مجانية
         $this->assertFalse(LibraryFolderAccessService::canAccessFolder($student, $gated));
-        $this->assertFalse(LibraryFolderAccessService::canAccessVideo($student, $video));
+        $this->assertTrue(LibraryFolderAccessService::canAccessVideo($student, $video));
         $this->actingAs($student)
             ->get(route('student.library.materials'))
             ->assertOk()
@@ -347,7 +348,7 @@ class LibraryMaterialsAccessMatrixTest extends TestCase
         $this->actingAs($student)
             ->get(route('student.library.videos'))
             ->assertOk()
-            ->assertDontSee('فيديو باقة', false);
+            ->assertSee('فيديو مجاني', false);
 
         StudentServiceEntitlement::create([
             'user_id' => $student->id,
@@ -367,7 +368,7 @@ class LibraryMaterialsAccessMatrixTest extends TestCase
         $this->actingAs($student)
             ->get(route('student.library.videos'))
             ->assertOk()
-            ->assertSee('فيديو باقة', false);
+            ->assertSee('فيديو مجاني', false);
     }
 
     public function test_admin_materials_query_includes_teacher_uploads(): void

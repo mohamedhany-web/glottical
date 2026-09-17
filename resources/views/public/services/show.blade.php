@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <title>{{ $pageTitle }}</title>
   <meta name="description" content="{{ $metaDesc }}">
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   <link rel="canonical" href="{{ $pageUrl }}">
   <meta property="og:type" content="article">
   <meta property="og:url" content="{{ $pageUrl }}">
@@ -33,9 +33,9 @@
   <style>
     .gl-svc {
       background:
-        radial-gradient(ellipse 80% 50% at 100% 0%, rgba(11,61,145,.08), transparent 55%),
-        radial-gradient(ellipse 60% 40% at 0% 30%, rgba(245,184,0,.07), transparent 50%),
-        var(--bg, #F4F7FC);
+        radial-gradient(ellipse 80% 50% at 100% 0%, rgba(75,58,120,.08), transparent 55%),
+        radial-gradient(ellipse 60% 40% at 0% 30%, rgba(255,183,165,.07), transparent 50%),
+        var(--bg, #FFFBE6);
       min-height: 60vh;
       /* clear fixed navbar (72px desktop / 64px mobile) */
       padding-top: 72px;
@@ -52,7 +52,7 @@
       display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
       font-size: .72rem; font-weight: 700; color: #5B6577; margin-bottom: 1rem;
     }
-    .gl-svc-crumb a { color: #0B3D91; text-decoration: none !important; }
+    .gl-svc-crumb a { color: #4B3A78; text-decoration: none !important; }
     .gl-svc-crumb a:hover { text-decoration: underline !important; }
     .gl-svc-layout {
       display: grid; gap: 1rem;
@@ -66,9 +66,9 @@
     }
     .gl-svc-hero {
       position: relative; overflow: hidden; border-radius: 18px;
-      background: linear-gradient(145deg, #051F4D, #0B3D91);
+      background: linear-gradient(145deg, #2E234A, #4B3A78);
       min-height: 200px;
-      box-shadow: 0 16px 40px -24px rgba(11,61,145,.45);
+      box-shadow: 0 16px 40px -24px rgba(75,58,120,.45);
     }
     .gl-svc-hero--img { min-height: 0; aspect-ratio: 16 / 9; }
     .gl-svc-hero img {
@@ -104,20 +104,20 @@
       display: block; margin-top: .35rem;
       font-family: Cairo, Tajawal, sans-serif;
       font-size: clamp(1rem, 2.2vw, 1.25rem); font-weight: 900;
-      color: #F5B800; line-height: 1.2;
+      color: #FFB7A5; line-height: 1.2;
     }
     .gl-svc-lead {
       margin: .75rem 0 0; font-size: .88rem; line-height: 1.7;
       color: rgba(255,255,255,.88); font-weight: 600; max-width: 42rem;
     }
     .gl-svc-card {
-      background: #fff; border: 1.5px solid #D7DDE6; border-radius: 16px;
+      background: #fff; border: 1.5px solid #E8DFC8; border-radius: 16px;
       padding: 1.15rem 1.2rem 1.25rem;
-      box-shadow: 0 10px 28px -20px rgba(11,61,145,.28);
+      box-shadow: 0 10px 28px -20px rgba(75,58,120,.28);
     }
     .gl-svc-card h2 {
       margin: 0 0 .75rem; font-family: Cairo, Tajawal, sans-serif;
-      font-size: 1.05rem; font-weight: 900; color: #0B1220;
+      font-size: 1.05rem; font-weight: 900; color: #2E234A;
     }
     .gl-svc-prose {
       font-size: .9rem; line-height: 1.85; color: #3D4656; font-weight: 600;
@@ -125,16 +125,16 @@
     .gl-svc-prose p { margin: 0 0 1rem; }
     .gl-svc-prose p:last-child { margin-bottom: 0; }
     .gl-svc-side {
-      background: #fff; border: 1.5px solid #D7DDE6; border-radius: 16px;
+      background: #fff; border: 1.5px solid #E8DFC8; border-radius: 16px;
       padding: 1rem 1.05rem 1.1rem;
-      box-shadow: 0 10px 28px -20px rgba(11,61,145,.28);
+      box-shadow: 0 10px 28px -20px rgba(75,58,120,.28);
     }
     @media (min-width: 992px) {
       .gl-svc-side { position: sticky; top: 88px; }
     }
     .gl-svc-side h3 {
       margin: 0 0 .35rem; font-family: Cairo, Tajawal, sans-serif;
-      font-size: .95rem; font-weight: 900; color: #0B1220;
+      font-size: .95rem; font-weight: 900; color: #2E234A;
     }
     .gl-svc-side > p {
       margin: 0 0 .85rem; font-size: .76rem; line-height: 1.55; color: #5B6577; font-weight: 600;
@@ -148,7 +148,7 @@
     }
     .gl-svc-trust {
       display: grid; gap: .4rem; margin-top: .85rem; padding-top: .85rem;
-      border-top: 1px solid #E8EEF8;
+      border-top: 1px solid #F3E9FF;
     }
     .gl-svc-trust__row {
       display: flex; align-items: center; gap: 8px;
@@ -157,7 +157,7 @@
     .gl-svc-trust__row i {
       width: 28px; height: 28px; border-radius: 8px;
       display: grid; place-items: center;
-      background: #E8EEF8; color: #0B3D91; font-size: .75rem; flex-shrink: 0;
+      background: #F3E9FF; color: #4B3A78; font-size: .75rem; flex-shrink: 0;
     }
     .gl-svc-more { margin-top: 1.35rem; }
     .gl-svc-more__head {
@@ -166,10 +166,10 @@
     }
     .gl-svc-more__head h2 {
       margin: 0; font-family: Cairo, Tajawal, sans-serif;
-      font-size: 1.1rem; font-weight: 900; color: #0B1220;
+      font-size: 1.1rem; font-weight: 900; color: #2E234A;
     }
     .gl-svc-more__head a {
-      font-size: .76rem; font-weight: 800; color: #0B3D91; text-decoration: none !important;
+      font-size: .76rem; font-weight: 800; color: #4B3A78; text-decoration: none !important;
     }
     .gl-svc-more__grid {
       display: grid; gap: .65rem;
@@ -184,25 +184,25 @@
     .gl-svc-tile {
       display: flex; flex-direction: column; gap: .45rem;
       padding: .85rem; border-radius: 14px;
-      background: #fff; border: 1.5px solid #D7DDE6;
+      background: #fff; border: 1.5px solid #E8DFC8;
       text-decoration: none !important; color: inherit;
       transition: border-color .2s, box-shadow .2s, transform .2s;
     }
     .gl-svc-tile:hover {
-      border-color: rgba(11,61,145,.35);
-      box-shadow: 0 12px 28px -20px rgba(11,61,145,.35);
+      border-color: rgba(75,58,120,.35);
+      box-shadow: 0 12px 28px -20px rgba(75,58,120,.35);
       transform: translateY(-2px);
     }
     .gl-svc-tile__media {
       height: 96px; border-radius: 10px; overflow: hidden;
-      background: linear-gradient(145deg, #051F4D, #0B3D91);
+      background: linear-gradient(145deg, #2E234A, #4B3A78);
       display: grid; place-items: center; color: rgba(255,255,255,.4); font-size: 1.5rem;
     }
     .gl-svc-tile__media img {
       width: 100%; height: 100%; object-fit: cover; display: block;
     }
     .gl-svc-tile strong {
-      display: block; font-size: .86rem; font-weight: 900; color: #0B1220; line-height: 1.35;
+      display: block; font-size: .86rem; font-weight: 900; color: #2E234A; line-height: 1.35;
     }
     .gl-svc-tile span {
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
@@ -212,9 +212,9 @@
       margin-top: 1.5rem;
       border-radius: 18px;
       padding: clamp(1.25rem, 3vw, 1.75rem);
-      background: linear-gradient(135deg, #051F4D 0%, #0B3D91 55%, #072A66 100%);
+      background: linear-gradient(135deg, #2E234A 0%, #4B3A78 55%, #3A2C5C 100%);
       color: #fff; text-align: center;
-      box-shadow: 0 16px 40px -24px rgba(11,61,145,.5);
+      box-shadow: 0 16px 40px -24px rgba(75,58,120,.5);
     }
     .gl-svc-final h2 {
       margin: 0 0 .4rem; font-family: Cairo, Tajawal, sans-serif;
@@ -232,9 +232,9 @@
     }
     .gl-svc-back {
       display: inline-flex; align-items: center; gap: 6px; margin-top: 1.15rem;
-      font-size: .8rem; font-weight: 800; color: #0B3D91; text-decoration: none !important;
+      font-size: .8rem; font-weight: 800; color: #4B3A78; text-decoration: none !important;
     }
-    .gl-svc-back:hover { color: #072A66; }
+    .gl-svc-back:hover { color: #3A2C5C; }
   </style>
 </head>
 <body class="sana-home sana-courses-page gl-svc-page">

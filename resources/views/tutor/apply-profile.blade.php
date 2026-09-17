@@ -15,7 +15,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{{ $form->title ?? ($isRtl ? 'إكمال بيانات المعلم' : 'Complete teacher profile') }} — {{ $brand }}</title>
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme', 'instructor-profile']])
 </head>
@@ -52,7 +52,7 @@
 
     @foreach($fields as $field)
       @if($field->isSection())
-        <div class="ta-card" style="background:linear-gradient(135deg,#EEF3FB,#fff);border-style:dashed">
+        <div class="ta-card" style="background:linear-gradient(135deg,#F6F0FF,#fff);border-style:dashed">
           <h2 style="margin:0">{{ $field->label }}</h2>
           @if($field->help_text)<p class="ta-hint" style="margin-top:.35rem">{{ $field->help_text }}</p>@endif
         </div>

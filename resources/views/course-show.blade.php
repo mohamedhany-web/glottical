@@ -47,7 +47,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <title>{{ $courseTitle }}</title>
     <meta name="description" content="{{ $courseDesc }}">
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   <link rel="canonical" href="{{ $courseUrl }}">
   <meta property="og:type" content="article">
   <meta property="og:url" content="{{ $courseUrl }}">
@@ -59,7 +59,7 @@
     @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog']])
     <style>
-    .gl-cs { background: var(--bg,#F4F7FC); }
+    .gl-cs { background: var(--bg,#FFFBE6); }
     .gl-cs-wrap.sana-container {
       max-width: 1180px;
       padding-top: 14px;
@@ -69,7 +69,7 @@
       display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
       font-size: .72rem; font-weight: 700; color: #5B6577; margin-bottom: .65rem;
     }
-    .gl-cs-crumb a { color: #0B3D91; text-decoration: none !important; }
+    .gl-cs-crumb a { color: #4B3A78; text-decoration: none !important; }
     .gl-cs-crumb a:hover { text-decoration: underline !important; }
     .gl-cs-layout {
       display: grid; gap: .85rem;
@@ -83,8 +83,8 @@
     }
     .gl-cs-media {
       position: relative; overflow: hidden; border-radius: 14px;
-      background: #0B1220; aspect-ratio: 16/9;
-      box-shadow: 0 10px 24px -16px rgba(11,61,145,.32);
+      background: #2E234A; aspect-ratio: 16/9;
+      box-shadow: 0 10px 24px -16px rgba(75,58,120,.32);
     }
     .gl-cs-media iframe,
     .gl-cs-media video,
@@ -92,43 +92,43 @@
       position: absolute; inset: 0; width: 100%; height: 100%;
       border: 0; object-fit: cover; display: block;
     }
-    .gl-cs-media video { object-fit: contain; background: #0B1220; }
+    .gl-cs-media video { object-fit: contain; background: #2E234A; }
     .gl-cs-media__empty {
       position: absolute; inset: 0; display: grid; place-items: center;
-      background: linear-gradient(145deg,#051F4D,#0B3D91); color: rgba(255,255,255,.35); font-size: 2.2rem;
+      background: linear-gradient(145deg,#2E234A,#4B3A78); color: rgba(255,255,255,.35); font-size: 2.2rem;
     }
     .gl-cs-badge {
       position: absolute; top: 10px; inset-inline-start: 10px; z-index: 2;
       display: inline-flex; align-items: center; gap: 5px;
       padding: 4px 9px; border-radius: 999px;
-      background: rgba(255,255,255,.95); color: #0B3D91;
+      background: rgba(255,255,255,.95); color: #4B3A78;
       font-size: .68rem; font-weight: 800;
     }
     .gl-cs-panel {
-      background: #fff; border: 1.5px solid #D7DDE6; border-radius: 14px;
+      background: #fff; border: 1.5px solid #E8DFC8; border-radius: 14px;
       padding: .8rem .85rem .9rem;
-      box-shadow: 0 8px 22px -16px rgba(11,61,145,.28);
+      box-shadow: 0 8px 22px -16px rgba(75,58,120,.28);
     }
     @media (min-width: 992px) {
       .gl-cs-panel { position: sticky; top: 84px; }
     }
     .gl-cs-instructor {
       display: inline-flex; align-items: center; gap: 6px;
-      color: #0B3D91; font-size: .74rem; font-weight: 800;
+      color: #4B3A78; font-size: .74rem; font-weight: 800;
       text-decoration: none !important; margin-bottom: .3rem;
     }
     .gl-cs-title {
       margin: 0 0 .4rem; font-family: Cairo,Tajawal,sans-serif;
       font-size: clamp(1.05rem, 1.8vw, 1.22rem); font-weight: 900;
-      color: #0B1220; line-height: 1.3;
+      color: #2E234A; line-height: 1.3;
     }
     .gl-cs-tags { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .4rem; }
     .gl-cs-tag {
       display: inline-flex; align-items: center; padding: 3px 8px;
       border-radius: 999px; font-size: .66rem; font-weight: 800;
-      background: #E8EEF8; color: #0B3D91;
+      background: #F3E9FF; color: #4B3A78;
     }
-    .gl-cs-tag--gold { background: #FFF6D6; color: #9A7200; }
+    .gl-cs-tag--gold { background: #FFF0EB; color: #9A7200; }
     .gl-cs-tag--green { background: #D1FAE5; color: #047857; }
     .gl-cs-tag--red { background: #FEE2E2; color: #B91C1C; }
     .gl-cs-lead {
@@ -136,11 +136,11 @@
       display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
     }
     .gl-cs-price-box {
-      background: #F4F7FC; border: 1.5px solid #C5D4F0; border-radius: 10px;
+      background: #FFFBE6; border: 1.5px solid #E2D0FF; border-radius: 10px;
       padding: .6rem .7rem; margin-bottom: .55rem;
     }
     .gl-cs-price {
-      margin: 0; font-size: 1.2rem; font-weight: 900; color: #0B3D91; line-height: 1.2;
+      margin: 0; font-size: 1.2rem; font-weight: 900; color: #4B3A78; line-height: 1.2;
     }
     .gl-cs-price small { font-size: .8rem; font-weight: 700; color: #5B6577; }
     .gl-cs-price-old {
@@ -161,10 +161,10 @@
       display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin-bottom: .55rem;
     }
     .gl-cs-spec {
-      background: #F4F7FC; border: 1px solid #E2E8F0; border-radius: 8px; padding: .45rem .55rem;
+      background: #FFFBE6; border: 1px solid #E2E8F0; border-radius: 8px; padding: .45rem .55rem;
     }
     .gl-cs-spec dt { margin: 0; font-size: .6rem; font-weight: 700; color: #5B6577; }
-    .gl-cs-spec dd { margin: .1rem 0 0; font-size: .72rem; font-weight: 800; color: #0B1220; }
+    .gl-cs-spec dd { margin: .1rem 0 0; font-size: .72rem; font-weight: 800; color: #2E234A; }
     .gl-cs-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .5rem; }
     .gl-cs-actions .sana-btn {
       flex: 1; min-width: 120px; justify-content: center; text-align: center;
@@ -175,21 +175,21 @@
     .gl-cs-actions form .sana-btn { width: 100%; }
     .gl-cs-back {
       display: inline-flex; align-items: center; gap: 6px;
-      color: #0B3D91; font-size: .76rem; font-weight: 800; text-decoration: none !important;
+      color: #4B3A78; font-size: .76rem; font-weight: 800; text-decoration: none !important;
     }
-    .gl-cs-back:hover { color: #072A66; }
+    .gl-cs-back:hover { color: #3A2C5C; }
     .gl-cs-trust {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: .35rem; margin-top: .55rem;
     }
     .gl-cs-trust__item {
       display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px;
-      padding: .45rem .3rem; border-radius: 8px; background: #F4F7FC; border: 1px solid #E8EEF8;
+      padding: .45rem .3rem; border-radius: 8px; background: #FFFBE6; border: 1px solid #F3E9FF;
     }
     .gl-cs-trust__icon {
       width: 24px; height: 24px; border-radius: 7px;
-      display: grid; place-items: center; background: #E8EEF8; color: #0B3D91; font-size: .7rem;
+      display: grid; place-items: center; background: #F3E9FF; color: #4B3A78; font-size: .7rem;
     }
-    .gl-cs-trust__item strong { display: block; font-size: .62rem; font-weight: 900; color: #0B1220; line-height: 1.3; }
+    .gl-cs-trust__item strong { display: block; font-size: .62rem; font-weight: 900; color: #2E234A; line-height: 1.3; }
     .gl-cs-trust__item span { display: none; }
     .gl-cs-sections {
       display: grid; gap: .75rem; margin-top: 1rem;
@@ -198,22 +198,22 @@
       .gl-cs-sections { grid-template-columns: 1.2fr .8fr; gap: .85rem; }
     }
     .gl-cs-card {
-      background: #fff; border: 1.5px solid #D7DDE6; border-radius: 14px;
+      background: #fff; border: 1.5px solid #E8DFC8; border-radius: 14px;
       padding: .95rem 1rem 1.05rem;
-      box-shadow: 0 8px 22px -18px rgba(11,61,145,.28);
+      box-shadow: 0 8px 22px -18px rgba(75,58,120,.28);
     }
     .gl-cs-card h2 {
       margin: 0 0 .65rem; font-family: Cairo,Tajawal,sans-serif;
-      font-size: 1rem; font-weight: 900; color: #0B1220;
+      font-size: 1rem; font-weight: 900; color: #2E234A;
     }
     .gl-cs-card h3 {
-      margin: .9rem 0 .4rem; font-size: .84rem; font-weight: 900; color: #0B1220;
+      margin: .9rem 0 .4rem; font-size: .84rem; font-weight: 900; color: #2E234A;
     }
     .gl-cs-card p {
       margin: 0; font-size: .8rem; line-height: 1.7; color: #5B6577; font-weight: 600; white-space: pre-line;
     }
     .gl-cs-card .box {
-      margin-top: .3rem; background: #F4F7FC; border-radius: 10px; padding: .7rem .8rem;
+      margin-top: .3rem; background: #FFFBE6; border-radius: 10px; padding: .7rem .8rem;
       font-size: .78rem; line-height: 1.7; color: #5B6577; font-weight: 600; white-space: pre-line;
     }
     .gl-cs-learn { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
@@ -221,43 +221,43 @@
       display: flex; gap: 8px; align-items: flex-start;
       font-size: .78rem; color: #5B6577; font-weight: 600; line-height: 1.5;
     }
-    .gl-cs-learn li i { color: #0B3D91; margin-top: 2px; flex-shrink: 0; font-size: .8rem; }
+    .gl-cs-learn li i { color: #4B3A78; margin-top: 2px; flex-shrink: 0; font-size: .8rem; }
     .gl-cs-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
-    .gl-cs-table th, .gl-cs-table td { padding: .55rem 0; border-bottom: 1px solid #E8EEF8; text-align: start; vertical-align: top; }
+    .gl-cs-table th, .gl-cs-table td { padding: .55rem 0; border-bottom: 1px solid #F3E9FF; text-align: start; vertical-align: top; }
     .gl-cs-table tr:last-child th, .gl-cs-table tr:last-child td { border-bottom: 0; }
     .gl-cs-table th { width: 42%; color: #5B6577; font-weight: 700; }
-    .gl-cs-table td { color: #0B1220; font-weight: 800; }
-    .gl-cs-table a { color: #0B3D91; text-decoration: none !important; }
+    .gl-cs-table td { color: #2E234A; font-weight: 800; }
+    .gl-cs-table a { color: #4B3A78; text-decoration: none !important; }
     .gl-cs-related { margin-top: 1.5rem; }
     .gl-cs-related__head {
       display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
       gap: .55rem; margin-bottom: .75rem;
     }
     .gl-cs-related__head h2 {
-      margin: 0; font-family: Cairo,Tajawal,sans-serif; font-size: 1.05rem; font-weight: 900; color: #0B1220;
+      margin: 0; font-family: Cairo,Tajawal,sans-serif; font-size: 1.05rem; font-weight: 900; color: #2E234A;
     }
     .gl-cs-related__head p { margin: .15rem 0 0; font-size: .74rem; color: #5B6577; font-weight: 600; }
     .gl-cs-related__grid {
       display: grid; gap: .7rem; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
     .gl-cs-rel {
-      background: #fff; border: 1.5px solid #D7DDE6; border-radius: 14px; overflow: hidden;
+      background: #fff; border: 1.5px solid #E8DFC8; border-radius: 14px; overflow: hidden;
       text-decoration: none !important; color: inherit;
       transition: transform .2s ease, border-color .2s ease;
     }
-    .gl-cs-rel:hover { transform: translateY(-2px); border-color: rgba(11,61,145,.3); }
-    .gl-cs-rel__media { aspect-ratio: 16/10; background: #E8EEF8; overflow: hidden; }
+    .gl-cs-rel:hover { transform: translateY(-2px); border-color: rgba(75,58,120,.3); }
+    .gl-cs-rel__media { aspect-ratio: 16/10; background: #F3E9FF; overflow: hidden; }
     .gl-cs-rel__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .gl-cs-rel__body { padding: .65rem .75rem .8rem; }
-    .gl-cs-rel__body h3 { margin: 0 0 .2rem; font-size: .82rem; font-weight: 900; color: #0B1220; line-height: 1.35; }
+    .gl-cs-rel__body h3 { margin: 0 0 .2rem; font-size: .82rem; font-weight: 900; color: #2E234A; line-height: 1.35; }
     .gl-cs-rel__body p { margin: 0; font-size: .7rem; color: #5B6577; font-weight: 600; }
     .gl-cs-cta {
       margin-top: 1.5rem;
       border-radius: 16px; padding: 1.1rem 1.25rem;
       background:
-        radial-gradient(circle at 90% 0%, rgba(245,184,0,.2), transparent 42%),
-        linear-gradient(145deg, #051F4D 0%, #0B3D91 55%, #1A56B0 100%);
-      color: #fff; box-shadow: 0 14px 36px -18px rgba(11,61,145,.4);
+        radial-gradient(circle at 90% 0%, rgba(255,183,165,.2), transparent 42%),
+        linear-gradient(145deg, #2E234A 0%, #4B3A78 55%, #5C4A8C 100%);
+      color: #fff; box-shadow: 0 14px 36px -18px rgba(75,58,120,.4);
     }
     .gl-cs-cta__inner {
       display: flex; flex-wrap: wrap; gap: .85rem 1.15rem; align-items: center; justify-content: space-between;
@@ -269,26 +269,26 @@
     .gl-cs-flash {
       display: flex; align-items: flex-start; gap: .6rem;
       margin-bottom: .75rem; padding: .7rem .85rem; border-radius: 12px;
-      background: #fff; border: 1.5px solid #D7DDE6; font-size: .8rem; font-weight: 700; color: #0B1220;
+      background: #fff; border: 1.5px solid #E8DFC8; font-size: .8rem; font-weight: 700; color: #2E234A;
     }
     .gl-cs-flash--ok { border-color: #A7F3D0; background: #ECFDF5; }
     .gl-cs-flash--err { border-color: #FECACA; background: #FEF2F2; }
-    .gl-cs-flash--info { border-color: #C5D4F0; background: #E8EEF8; }
+    .gl-cs-flash--info { border-color: #E2D0FF; background: #F3E9FF; }
     .gl-cs-delivery {
       margin: 0 0 .85rem;
       padding: .7rem .8rem;
       border-radius: 12px;
-      background: #EEF3FB;
-      border: 1.5px solid #C5D4F0;
+      background: #F6F0FF;
+      border: 1.5px solid #E2D0FF;
     }
     .gl-cs-delivery--solo {
-      background: #FFF8E6;
+      background: #FFFBE6;
       border-color: #F5D76E;
     }
     .gl-cs-delivery__title {
       display: flex; align-items: center; gap: 8px;
       margin: 0 0 .35rem;
-      font-size: .78rem; font-weight: 900; color: #0B3D91;
+      font-size: .78rem; font-weight: 900; color: #4B3A78;
     }
     .gl-cs-delivery--solo .gl-cs-delivery__title { color: #9A7200; }
     .gl-cs-delivery p {

@@ -1306,11 +1306,15 @@ class User extends Authenticatable
     }
 
     /**
-     * وصول كامل لمكتبة المناهج التفاعلية: باقة مكتبات للطالب، أو معلم معتمد شغّال.
+     * وصول كامل لمكتبة المناهج التفاعلية: مجانية للكل، أو معلم معتمد شغّال.
      */
     public function hasCurriculumLibraryAccess(): bool
     {
         if ($this->isAcademyWorkingInstructor()) {
+            return true;
+        }
+
+        if (\App\Services\LibraryFolderAccessService::curriculumAndVideosAreFree()) {
             return true;
         }
 

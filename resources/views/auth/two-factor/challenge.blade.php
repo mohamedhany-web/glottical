@@ -78,9 +78,9 @@
   .gl-auth-badge {
     width: 3.25rem; height: 3.25rem; margin: 0 auto .9rem;
     border-radius: 16px; display: grid; place-items: center;
-    background: linear-gradient(145deg, #0B3D91, #072A66);
+    background: linear-gradient(145deg, #4B3A78, #3A2C5C);
     color: #fff; font-size: 1.15rem;
-    box-shadow: 0 12px 28px -10px rgba(11,61,145,.55);
+    box-shadow: 0 12px 28px -10px rgba(75,58,120,.55);
   }
   .gl-auth-input--otp {
     letter-spacing: .42em;
@@ -89,8 +89,8 @@
     text-align: center;
     padding-inline: 2.55rem !important;
   }
-  .gl-auth-foot strong { color: #0B1220; font-weight: 800; }
-  .gl-auth-foot a { color: #0B3D91; font-weight: 800; text-decoration: none; }
+  .gl-auth-foot strong { color: #2E234A; font-weight: 800; }
+  .gl-auth-foot a { color: #4B3A78; font-weight: 800; text-decoration: none; }
   .gl-auth-foot a:hover { text-decoration: underline; }
 </style>
 @endpush

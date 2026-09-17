@@ -14,7 +14,7 @@
   <title>{{ $isApproved
     ? ($isRtl ? 'بانتظار تفعيل الإدارة' : 'Waiting for admin activation')
     : ($isRtl ? 'طلبك قيد المراجعة' : 'Application under review') }} — {{ $brand }}</title>
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme', 'instructor-profile']])
 </head>
@@ -34,9 +34,9 @@
   <section class="ta-status__panel">
     <div class="ta-status__icon" aria-hidden="true">
       <svg viewBox="0 0 64 64" width="56" height="56" fill="none">
-        <circle cx="32" cy="32" r="30" stroke="#F5B800" stroke-width="3" opacity=".35"/>
-        <circle cx="32" cy="32" r="22" fill="#FFF8E6"/>
-        <path d="M32 18v16l10 6" stroke="#0B3D91" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="32" cy="32" r="30" stroke="#FFB7A5" stroke-width="3" opacity=".35"/>
+        <circle cx="32" cy="32" r="22" fill="#FFFBE6"/>
+        <path d="M32 18v16l10 6" stroke="#4B3A78" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
 

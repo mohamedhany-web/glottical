@@ -1,17 +1,17 @@
 ﻿/* Extracted from resources/views/auth/partials/geometric-styles.blade.php + brand-vars */
 :root {
-    /* Glottical brand: blue #0B3D91 + yellow #F5B800 (from designs/public-pages structure) */
-  --edu-primary: #0B3D91;
-  --edu-primary-dark: #072A66;
+    /* Glottical brand: #4B3A78 · #B77CFF · #FFFBE6 · #C9FFD8 · #FFB7A5 */
+  --edu-primary: #4B3A78;
+  --edu-primary-dark: #3A2C5C;
   --edu-primary-light: #E8EEFB;
   --edu-primary-rgb: 29, 78, 219;
-  --edu-purple: #0B3D91;
-  --edu-purple-dark: #072A66;
-  --edu-purple-light: #E8EEF8;
+  --edu-purple: #4B3A78;
+  --edu-purple-dark: #3A2C5C;
+  --edu-purple-light: #F3E9FF;
   --edu-purple-rgb: 106, 44, 255;
-  --edu-accent: #F5B800;
-  --edu-accent-dark: #D99E00;
-  --edu-accent-light: #FFF8E6;
+  --edu-accent: #FFB7A5;
+  --edu-accent-dark: #F59A84;
+  --edu-accent-light: #FFFBE6;
   --edu-accent-rgb: 244, 176, 0;
   --edu-navy: #0f172a;
   --edu-text: #1e293b;
@@ -21,8 +21,8 @@
   --edu-radius-sm: 16px;
   --edu-shadow: 0 12px 40px -12px rgba(29, 78, 219, 0.22);
   --edu-font: 'Cairo', 'Tajawal', system-ui, sans-serif;
-  --edu-gradient-cta: linear-gradient(135deg, #0B3D91 0%, #0B3D91 55%, #5b8ef5 100%);
-  --edu-gradient-auth: linear-gradient(145deg, #0b1f3a 0%, #0B3D91 42%, #0B3D91 100%);
+  --edu-gradient-cta: linear-gradient(135deg, #4B3A78 0%, #5C4A8C 55%, #B77CFF 100%);
+  --edu-gradient-auth: linear-gradient(145deg, #2E234A 0%, #4B3A78 42%, #B77CFF 100%);
 }
 *, *::before, *::after { box-sizing: border-box; font-family: var(--edu-font); }
     html, body { margin: 0; padding: 0; min-height: 100%; background: #fff; color: var(--edu-navy); }

@@ -19,7 +19,7 @@
     }
     .help-hub-card:hover {
         transform: translateY(-4px);
-        border-color: rgba(245, 184, 0, 0.35);
+        border-color: rgba(255, 183, 165, 0.35);
         box-shadow: 0 22px 48px -24px rgba(0, 0, 0, 0.45);
     }
     .help-topic-row {

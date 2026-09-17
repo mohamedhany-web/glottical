@@ -12,7 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>@yield('title') — {{ config('app.name') }}</title>
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   <meta name="robots" content="noindex, nofollow">
   @include('partials.favicon-links')
   <link rel="preload" as="image" href="{{ $authBg }}" fetchpriority="high">
@@ -22,11 +22,11 @@
       var base = (typeof tailwind !== 'undefined' && tailwind.config) ? tailwind.config : {};
       var extend = (base.theme && base.theme.extend) ? base.theme.extend : {};
       var colors = Object.assign({}, extend.colors || {}, {
-        accent: '#0B3D91',
-        'accent-soft': '#E8EEF8',
-        metal: '#F5B800',
-        canvas: '#F4F7FC',
-        'canvas-muted': '#E8EEF8',
+        accent: '#4B3A78',
+        'accent-soft': '#F3E9FF',
+        metal: '#FFB7A5',
+        canvas: '#FFFBE6',
+        'canvas-muted': '#F3E9FF',
       });
       tailwind.config = Object.assign({}, base, {
         theme: Object.assign({}, base.theme || {}, {
@@ -45,31 +45,31 @@
     }
     /* Glottical brand tokens — auth shell only */
     body.auth-glottical{
-      --atheer-accent:#0B3D91;
-      --atheer-metal:#F5B800;
-      --atheer-canvas:#F4F7FC;
-      background:#F4F7FC;
+      --atheer-accent:#4B3A78;
+      --atheer-metal:#FFB7A5;
+      --atheer-canvas:#FFFBE6;
+      background:#FFFBE6;
       overflow-x:clip;
     }
-    body.auth-glottical .bg-accent{background-color:#0B3D91!important}
-    body.auth-glottical .bg-accent-soft{background-color:#E8EEF8!important}
-    body.auth-glottical .text-accent{color:#0B3D91!important}
-    body.auth-glottical .text-metal{color:#F5B800!important}
-    body.auth-glottical .bg-metal\/15{background-color:rgba(245,184,0,.15)!important}
+    body.auth-glottical .bg-accent{background-color:#4B3A78!important}
+    body.auth-glottical .bg-accent-soft{background-color:#F3E9FF!important}
+    body.auth-glottical .text-accent{color:#4B3A78!important}
+    body.auth-glottical .text-metal{color:#FFB7A5!important}
+    body.auth-glottical .bg-metal\/15{background-color:rgba(255,183,165,.15)!important}
     body.auth-glottical .auth-brand-panel{
       background:
-        radial-gradient(ellipse 80% 60% at 10% 0%, rgba(11,61,145,.58), transparent 55%),
-        radial-gradient(ellipse 70% 50% at 100% 100%, rgba(245,184,0,.22), transparent 50%),
-        #0b1220;
+        radial-gradient(ellipse 80% 60% at 10% 0%, rgba(75,58,120,.58), transparent 55%),
+        radial-gradient(ellipse 70% 50% at 100% 100%, rgba(255,183,165,.22), transparent 50%),
+        #2E234A;
     }
     body.auth-glottical .auth-input:focus,
     body.auth-glottical .auth-phone:focus-within{
-      border-color:#0B3D91;
-      box-shadow:0 0 0 3px rgba(11,61,145,.16);
+      border-color:#4B3A78;
+      box-shadow:0 0 0 3px rgba(75,58,120,.16);
     }
     body.auth-glottical .auth-input[type="checkbox"],
     body.auth-glottical input[type="checkbox"].text-accent{
-      accent-color:#0B3D91;
+      accent-color:#4B3A78;
     }
     /* Responsive polish */
     body.auth-glottical .auth-shell{

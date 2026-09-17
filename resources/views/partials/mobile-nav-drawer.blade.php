@@ -33,10 +33,10 @@
                         <img src="{{ $navbarLogoUrl }}" alt="" class="h-full w-full object-cover" decoding="async" fetchpriority="high" onerror="this.onerror=null;this.src='{{ \App\Services\AdminPanelBranding::inlineFallbackDataUri() }}';">
                     </span>
                 @else
-                    <span class="h-10 w-10 shrink-0 rounded-full flex items-center justify-center bg-[#F5B800] text-[#0B3D91] font-black text-lg shadow-lg">G</span>
+                    <span class="h-10 w-10 shrink-0 rounded-full flex items-center justify-center bg-[#FFB7A5] text-[#4B3A78] font-black text-lg shadow-lg">G</span>
                 @endif
                 <div class="min-w-0">
-                    <p class="text-white font-black text-base leading-tight truncate group-hover:text-[#F5B800] transition-colors">Glottical</p>
+                    <p class="text-white font-black text-base leading-tight truncate group-hover:text-[#FFB7A5] transition-colors">Glottical</p>
                     <p class="text-white/50 text-[11px] font-semibold truncate">{{ $navbarBrandTagline }}</p>
                 </div>
             </a>
@@ -95,7 +95,7 @@
                         </a>
                         @endforeach
                         <a href="{{ route('public.courses') }}" class="mob-menu-subitem mob-menu-subitem--cta">
-                            <span class="flex-1 text-center text-sm font-extrabold text-[#F5B800]">{{ __('landing.academy.mega_see_all') }}</span>
+                            <span class="flex-1 text-center text-sm font-extrabold text-[#FFB7A5]">{{ __('landing.academy.mega_see_all') }}</span>
                         </a>
                     </div>
                 </details>
@@ -143,7 +143,7 @@
             </div>
 
             @if(! $isHome)
-            <a href="{{ route('home') }}" class="flex items-center justify-center gap-2 py-2 text-sm font-semibold text-white/45 hover:text-[#F5B800] transition-colors mob-menu-safe-bottom">
+            <a href="{{ route('home') }}" class="flex items-center justify-center gap-2 py-2 text-sm font-semibold text-white/45 hover:text-[#FFB7A5] transition-colors mob-menu-safe-bottom">
                 <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }} text-xs"></i>
                 {{ __('auth.back_to_home') }}
             </a>
@@ -153,7 +153,7 @@
         @auth
         <div class="relative shrink-0 px-4 py-4 border-t border-white/10 bg-[#0d1528]/90 mob-menu-safe-bottom">
             <div class="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/[0.05]">
-                <span class="w-11 h-11 rounded-full flex items-center justify-center text-[#0B3D91] font-black text-sm shrink-0 bg-[#F5B800]">
+                <span class="w-11 h-11 rounded-full flex items-center justify-center text-[#4B3A78] font-black text-sm shrink-0 bg-[#FFB7A5]">
                     {{ mb_substr(auth()->user()->name, 0, 1) }}
                 </span>
                 <div class="flex-1 min-w-0 text-start">

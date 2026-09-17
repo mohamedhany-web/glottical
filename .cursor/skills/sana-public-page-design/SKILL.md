@@ -26,26 +26,23 @@ For Blade implementation workflow, also load `sana-landing-blade-implement`.
 
 ## Brand tokens (marketing)
 
-From `assets/sana-theme.css` `:root`:
+Production (`config/academy-theme.php` + `public/css/landing/theme.css`):
 
 | Role | CSS var | Hex |
 |------|---------|-----|
-| Purple | `--p` | `#6D28D9` |
-| Purple dark | `--p-dark` | `#5B21B6` |
-| Purple deep | `--p-deep` | `#4C1D95` |
-| Purple light | `--p-light` | `#8B5CF6` |
-| Gold CTA | `--gold` | `#FBBF24` |
-| Gold dark | `--gold-dark` | `#F59E0B` |
-| Canvas | `--bg` | `#F8F7FC` |
-| Text | `--text` | `#1e1b4b` |
-| Muted | `--muted` | `#64748b` |
+| Primary | `--p` | `#4B3A78` |
+| Primary dark | `--p-dark` | `#3A2C5C` |
+| Lavender | `--p-light` | `#B77CFF` |
+| Peach CTA | `--gold` | `#FFB7A5` |
+| Cream canvas | `--bg` | `#FFFBE6` |
+| Mint | `--mint` | `#C9FFD8` |
+| Text | `--text` | `#2E234A` |
+| Muted | `--muted` | `#6B6280` |
 | Radius | `--radius` | `24px` |
-| Shadow | `--shadow` | purple soft lift |
-| Max width | `.sana-container` | `1200px` |
 
-`theme-color` on marketing pages: `#5B21B6`.
+`theme-color` on marketing pages: `#4B3A78`.
 
-Highlight in titles: `<span class="hl">…</span>` (gold on purple heroes).
+Highlight in titles: `<span class="hl">…</span>` (peach/lavender on purple heroes).
 
 ## Auth tokens (separate system)
 

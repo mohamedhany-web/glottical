@@ -10,7 +10,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{{ $isRtl ? 'إنشاء حساب معلّم' : 'Create teacher account' }} — {{ $brand }}</title>
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   <link rel="canonical" href="{{ route('public.tutor.apply') }}">
   @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme', 'instructor-profile']])
@@ -73,7 +73,7 @@
     </button>
     <p class="ta-hint" style="margin-top:.85rem;text-align:center">
       {{ $isRtl ? 'لديك حساب؟' : 'Already have an account?' }}
-      <a href="{{ route('login', ['redirect' => route('public.tutor.apply.profile')]) }}" style="color:#0B3D91;font-weight:800">{{ $isRtl ? 'تسجيل الدخول' : 'Log in' }}</a>
+      <a href="{{ route('login', ['redirect' => route('public.tutor.apply.profile')]) }}" style="color:#4B3A78;font-weight:800">{{ $isRtl ? 'تسجيل الدخول' : 'Log in' }}</a>
     </p>
   </form>
 </main>

@@ -13,9 +13,19 @@ use Illuminate\Support\Facades\Schema;
  * بوابة ظهور فولدرات المكتبة (ماتريال/فيديو):
  * - عام من الإدارة: باقة المكتبات / مجاني
  * - فولدر معلم: لطلاب هذا المعلم فقط (وليس للعامة)
+ * - مكتبة المناهج + فيديوهات الأكاديمية العامة: مجانية لكل طالب مسجّل (بدون باقة)
  */
 class LibraryFolderAccessService
 {
+    /**
+     * المناهج التفاعلية وفيديوهات المكتبة العامة مجانية للكل (بدون اشتراك باقة).
+     * ماتريال المحاضرات يبقى مربوطاً بـ includes_libraries.
+     */
+    public static function curriculumAndVideosAreFree(): bool
+    {
+        return true;
+    }
+
     public static function canAccessFolder(?User $user, LibraryFolder $folder): bool
     {
         if (! $user || ! $folder->is_active) {
@@ -25,6 +35,11 @@ class LibraryFolderAccessService
         // فولدر معلم → طلاب هذا المعلم فقط
         if ($folder->instructor_id) {
             return StudentTeacherLinkService::studentStudiesWith($user, (int) $folder->instructor_id);
+        }
+
+        // فولدرات فيديو الأكاديمية العامة مجانية
+        if (self::curriculumAndVideosAreFree() && self::folderIsVideoLibrary($folder)) {
+            return true;
         }
 
         if (! Schema::hasColumn('library_folders', 'requires_library_entitlement')) {
@@ -56,8 +71,18 @@ class LibraryFolderAccessService
             return self::canAccessFolder($user, $video->folder);
         }
 
-        // فيديو عام بدون مجلد: ضمن باقة المكتبات فقط
+        // فيديو عام بدون مجلد: مجاني مع سياسة المناهج/الفيديوهات الحرة
+        if (self::curriculumAndVideosAreFree()) {
+            return true;
+        }
+
         return self::hasAnyLibraryEntitlement($user);
+    }
+
+    protected static function folderIsVideoLibrary(LibraryFolder $folder): bool
+    {
+        // لا نفتح KIND_BOTH هنا حتى لا يُفتح ماتريال داخل مجلد مشترك بدون باقة
+        return (string) ($folder->kind ?? '') === LibraryFolder::KIND_VIDEOS;
     }
 
     /**
@@ -140,11 +165,18 @@ class LibraryFolderAccessService
 
         $teacherIds = StudentTeacherLinkService::instructorIdsForStudent($user);
         $years = self::accessibleYearIds($user);
+        $videosFree = self::curriculumAndVideosAreFree()
+            && $kind === LibraryFolder::KIND_VIDEOS;
 
-        return $q->where(function (Builder $outer) use ($years, $teacherIds) {
+        return $q->where(function (Builder $outer) use ($years, $teacherIds, $videosFree) {
             // 1) فولدرات الإدارة العامة (بدون معلم)
-            $outer->where(function (Builder $general) use ($years) {
+            $outer->where(function (Builder $general) use ($years, $videosFree) {
                 $general->whereNull('instructor_id');
+
+                // فيديوهات الأكاديمية: كل المجلدات العامة ظاهرة بدون باقة
+                if ($videosFree) {
+                    return;
+                }
 
                 if (! Schema::hasColumn('library_folders', 'requires_library_entitlement')) {
                     return;
@@ -175,31 +207,31 @@ class LibraryFolderAccessService
     }
 
     /**
-     * استعلام فيديوهات ظاهرة للطالب: عام من الإدارة (باقة) + من معلميه.
+     * استعلام فيديوهات ظاهرة للطالب: عام من الإدارة (+ مجاني بدون باقة) + من معلميه.
      */
     public static function videosVisibleTo(User $user): Builder
     {
         $teacherIds = StudentTeacherLinkService::instructorIdsForStudent($user);
         $allowedFolderIds = self::foldersVisibleTo($user, LibraryFolder::KIND_VIDEOS)->pluck('id');
-        $hasLibraryEntitlement = self::hasAnyLibraryEntitlement($user);
+        $allowFolderless = self::curriculumAndVideosAreFree() || self::hasAnyLibraryEntitlement($user);
 
         return LibraryVideo::query()
             ->published()
-            ->where(function (Builder $q) use ($teacherIds, $allowedFolderIds, $hasLibraryEntitlement) {
+            ->where(function (Builder $q) use ($teacherIds, $allowedFolderIds, $allowFolderless) {
                 // عام من الإدارة داخل مجلدات مسموحة
-                $q->where(function (Builder $general) use ($allowedFolderIds, $hasLibraryEntitlement) {
+                $q->where(function (Builder $general) use ($allowedFolderIds, $allowFolderless) {
                     $general->where(function ($a) {
                         $a->where('audience', LibraryVideo::AUDIENCE_GENERAL)
                             ->orWhereNull('audience');
-                    })->where(function ($folderQ) use ($allowedFolderIds, $hasLibraryEntitlement) {
+                    })->where(function ($folderQ) use ($allowedFolderIds, $allowFolderless) {
                         if ($allowedFolderIds->isNotEmpty()) {
                             $folderQ->whereIn('library_folder_id', $allowedFolderIds);
                         } else {
                             $folderQ->whereRaw('1 = 0');
                         }
 
-                        // بدون مجلد: يتطلب باقة مكتبات
-                        if ($hasLibraryEntitlement) {
+                        // بدون مجلد: مجاني أو باقة مكتبات
+                        if ($allowFolderless) {
                             $folderQ->orWhereNull('library_folder_id');
                         }
                     });

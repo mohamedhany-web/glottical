@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <title>{{ $group->title }} — {{ $brand }}</title>
   <meta name="description" content="{{ \Illuminate\Support\Str::limit(strip_tags((string) $group->description), 160) }}">
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   <link rel="canonical" href="{{ route('public.groups.show', $group->slug) }}">
   @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog']])
@@ -27,29 +27,29 @@
     .gl-gs { padding: clamp(24px, 4vw, 40px) 0 64px; }
     .gl-gs-grid { display: grid; gap: 1.25rem; }
     @media (min-width: 960px) { .gl-gs-grid { grid-template-columns: 1.1fr .9fr; align-items: start; } }
-    .gl-gs-card { background:#fff; border:1.5px solid #D7DDE6; border-radius:18px; overflow:hidden; box-shadow:0 12px 28px -20px rgba(11,61,145,.35); }
-    .gl-gs-card__media { aspect-ratio:16/10; background:#E8EEF8; }
+    .gl-gs-card { background:#fff; border:1.5px solid #E8DFC8; border-radius:18px; overflow:hidden; box-shadow:0 12px 28px -20px rgba(75,58,120,.35); }
+    .gl-gs-card__media { aspect-ratio:16/10; background:#F3E9FF; }
     .gl-gs-card__media img { width:100%; height:100%; object-fit:cover; display:block; }
     .gl-gs-card__body { padding:1.1rem 1.15rem 1.25rem; }
-    .gl-gs-badge { display:inline-flex; align-items:center; gap:.35rem; padding:.3rem .65rem; border-radius:999px; background:#0B3D91; color:#fff; font-size:.7rem; font-weight:800; }
-    .gl-gs-badge--gold { background:linear-gradient(180deg,#FFD24D,#F5B800); color:#0B1220; }
-    .gl-gs-card__body h1 { margin:.7rem 0 .35rem; font-family:Cairo,Tajawal,sans-serif; font-size:clamp(1.25rem,2.5vw,1.65rem); font-weight:900; color:#0B1220; }
+    .gl-gs-badge { display:inline-flex; align-items:center; gap:.35rem; padding:.3rem .65rem; border-radius:999px; background:#4B3A78; color:#fff; font-size:.7rem; font-weight:800; }
+    .gl-gs-badge--gold { background:linear-gradient(180deg,#FFCDBE,#FFB7A5); color:#2E234A; }
+    .gl-gs-card__body h1 { margin:.7rem 0 .35rem; font-family:Cairo,Tajawal,sans-serif; font-size:clamp(1.25rem,2.5vw,1.65rem); font-weight:900; color:#2E234A; }
     .gl-gs-meta { display:flex; flex-wrap:wrap; gap:.5rem .9rem; margin:.75rem 0; color:#5B6577; font-size:.82rem; font-weight:700; }
     .gl-gs-desc { color:#3A4454; font-size:.9rem; line-height:1.75; white-space:pre-line; }
-    .gl-gs-price { margin-top:1rem; font-size:1.15rem; font-weight:900; color:#0B3D91; }
+    .gl-gs-price { margin-top:1rem; font-size:1.15rem; font-weight:900; color:#4B3A78; }
     .gl-gs-form { padding:1.1rem 1.15rem 1.25rem; }
-    .gl-gs-form h2 { margin:0 0 .75rem; font-size:1.05rem; font-weight:900; color:#0B1220; }
+    .gl-gs-form h2 { margin:0 0 .75rem; font-size:1.05rem; font-weight:900; color:#2E234A; }
     .gl-gs-label { display:block; margin-bottom:.35rem; font-size:.75rem; font-weight:700; color:#5B6577; }
     .gl-gs-input, .gl-gs-select, .gl-gs-area {
-      width:100%; border:1.5px solid #D7DDE6; border-radius:12px; padding:.7rem .85rem;
-      font-size:.9rem; background:#fff; color:#0B1220; margin-bottom:.85rem;
+      width:100%; border:1.5px solid #E8DFC8; border-radius:12px; padding:.7rem .85rem;
+      font-size:.9rem; background:#fff; color:#2E234A; margin-bottom:.85rem;
     }
     .gl-gs-slots { display:grid; gap:.45rem; max-height:220px; overflow:auto; margin-bottom:.85rem; }
     .gl-gs-slot {
       display:flex; align-items:center; gap:.55rem; padding:.55rem .7rem; border-radius:10px;
-      border:1.5px solid #D7DDE6; cursor:pointer; font-size:.82rem; font-weight:700; color:#0B1220;
+      border:1.5px solid #E8DFC8; cursor:pointer; font-size:.82rem; font-weight:700; color:#2E234A;
     }
-    .gl-gs-slot:has(input:checked) { border-color:#0B3D91; background:#F0F5FF; }
+    .gl-gs-slot:has(input:checked) { border-color:#4B3A78; background:#F0F5FF; }
     .gl-gs-alert { padding:.75rem 1rem; border-radius:12px; margin-bottom:1rem; font-size:.86rem; font-weight:700; }
     .gl-gs-alert--ok { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
     .gl-gs-alert--err { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
@@ -116,10 +116,10 @@
             <h2>{{ $isRtl ? 'الدفعات المتاحة' : 'Available cohorts' }}</h2>
             <div style="display:grid;gap:.75rem;@media(min-width:768px){grid-template-columns:1fr 1fr}">
               @foreach($cohorts as $cohort)
-                <div style="border:1.5px solid #D7DDE6;border-radius:14px;padding:1rem;background:{{ $cohort->isEnrollmentOpen() ? '#fff' : '#F8FAFC' }}">
+                <div style="border:1.5px solid #E8DFC8;border-radius:14px;padding:1rem;background:{{ $cohort->isEnrollmentOpen() ? '#fff' : '#F8FAFC' }}">
                   <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:flex-start">
-                    <strong style="font-size:.95rem;color:#0B1220">{{ $cohort->title }}</strong>
-                    <span style="font-size:.68rem;font-weight:800;padding:.2rem .55rem;border-radius:999px;background:#E8EEF8;color:#0B3D91">{{ $cohort->statusLabel() }}</span>
+                    <strong style="font-size:.95rem;color:#2E234A">{{ $cohort->title }}</strong>
+                    <span style="font-size:.68rem;font-weight:800;padding:.2rem .55rem;border-radius:999px;background:#F3E9FF;color:#4B3A78">{{ $cohort->statusLabel() }}</span>
                   </div>
                   <p style="margin:.45rem 0;font-size:.8rem;color:#5B6577;font-weight:600">
                     {{ $cohort->starts_at?->timezone($cohort->timezone ?: 'Africa/Cairo')->format('Y-m-d H:i') ?: '—' }}
@@ -155,7 +155,7 @@
             <h2>{{ $isRtl ? 'باقات الحصص الفردية' : 'Private session packages' }}</h2>
             <div style="display:grid;gap:.75rem;grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
               @foreach($packages as $package)
-                <div style="border:1.5px solid {{ $package->is_featured ? '#F5B800' : '#D7DDE6' }};border-radius:14px;padding:1rem;{{ $package->is_featured ? 'box-shadow:0 8px 24px rgba(245,184,0,.25)' : '' }}">
+                <div style="border:1.5px solid {{ $package->is_featured ? '#FFB7A5' : '#E8DFC8' }};border-radius:14px;padding:1rem;{{ $package->is_featured ? 'box-shadow:0 8px 24px rgba(255,183,165,.25)' : '' }}">
                   @if($package->is_featured)
                     <span style="font-size:.65rem;font-weight:900;color:#9A7200">{{ $isRtl ? 'الأكثر طلباً' : 'Popular' }}</span>
                   @endif
@@ -163,7 +163,7 @@
                   @if($package->formattedOriginalPrice())
                     <div style="text-decoration:line-through;color:#94A3B8;font-size:.8rem">{{ $package->formattedOriginalPrice() }}</div>
                   @endif
-                  <div style="font-size:1.2rem;font-weight:900;color:#0B3D91">{{ $package->formattedPrice() }}</div>
+                  <div style="font-size:1.2rem;font-weight:900;color:#4B3A78">{{ $package->formattedPrice() }}</div>
                   @if($package->savingsPercent() > 0)
                     <div style="font-size:.72rem;font-weight:800;color:#059669">{{ $isRtl ? 'وفر' : 'Save' }} {{ $package->savingsPercent() }}%</div>
                   @endif
@@ -199,9 +199,9 @@
             </p>
             <div style="display:grid;gap:.75rem;grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
               @foreach($servicePackages as $package)
-                <div style="border:1.5px solid {{ $package->is_featured ? '#F5B800' : '#D7DDE6' }};border-radius:14px;padding:1rem">
+                <div style="border:1.5px solid {{ $package->is_featured ? '#FFB7A5' : '#E8DFC8' }};border-radius:14px;padding:1rem">
                   <strong style="display:block;margin:.25rem 0;font-size:.95rem">{{ $package->name }}</strong>
-                  <div style="font-size:1.15rem;font-weight:900;color:#0B3D91">{{ $package->formattedPrice() }}</div>
+                  <div style="font-size:1.15rem;font-weight:900;color:#4B3A78">{{ $package->formattedPrice() }}</div>
                   <p style="margin:.5rem 0 .85rem;font-size:.75rem;color:#5B6577;font-weight:600">
                     {{ $package->units_count }} {{ $isRtl ? 'حصة' : 'sessions' }}
                     · {{ $package->sessionMinutes() }} {{ $isRtl ? 'د' : 'min' }}
@@ -220,7 +220,7 @@
                 'year' => $group->academic_year_id,
                 'subject' => $group->academic_subject_id,
                 'scope' => 'tutoring_collective',
-              ])) }}" style="color:#0B3D91;text-decoration:underline;font-weight:800">
+              ])) }}" style="color:#4B3A78;text-decoration:underline;font-weight:800">
                 {{ $isRtl ? 'عرض كل الباقات المناسبة' : 'See all matching packages' }}
               </a>
             </p>
@@ -254,7 +254,7 @@
                 'year' => $group->academic_year_id,
                 'subject' => $group->academic_subject_id,
                 'scope' => $group->isCollective() ? 'tutoring_collective' : 'tutoring_individual',
-              ])) }}" style="color:#0B3D91;text-decoration:underline">{{ $isRtl ? 'اشترِ باقة مناسبة' : 'Buy a matching package' }}</a>
+              ])) }}" style="color:#4B3A78;text-decoration:underline">{{ $isRtl ? 'اشترِ باقة مناسبة' : 'Buy a matching package' }}</a>
               {{ $isRtl ? 'أو أرسل طلب مراجعة أدناه.' : 'or send a review request below.' }}
             </p>
           @endif

@@ -18,13 +18,13 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{{ $isRtl ? 'متابعة ولي الأمر' : 'Parent progress' }} — {{ $brand }}</title>
   <meta name="description" content="{{ $isRtl ? 'أدخل رقم دخول الطالب لعرض تقارير الحضور والتقدّم والامتحانات والحصص.' : 'Enter the student entry ID to view attendance, progress, exams, and class reports.' }}">
-  <meta name="theme-color" content="#0B3D91">
+  <meta name="theme-color" content="#4B3A78">
   <meta name="robots" content="noindex,follow">
   <link rel="canonical" href="{{ route('public.parent-progress') }}">
   @include('partials.favicon-links')
   @include('partials.landing.head', ['landingCss' => ['theme', 'courses-catalog', 'contact']])
   <style>
-    .gl-pp-page { background: var(--bg, #F4F7FC); }
+    .gl-pp-page { background: var(--bg, #FFFBE6); }
     .gl-pp-main { padding-top: 72px; }
     @media (max-width: 991px) { .gl-pp-main { padding-top: 64px; } }
 
@@ -33,8 +33,8 @@
       overflow: hidden;
       padding: clamp(36px, 6vw, 56px) 0 clamp(72px, 10vw, 96px);
       background:
-        radial-gradient(ellipse 60% 80% at 100% 0%, rgba(245,184,0,.22), transparent 50%),
-        linear-gradient(145deg, #051F4D 0%, #0B3D91 48%, #1A56B0 100%);
+        radial-gradient(ellipse 60% 80% at 100% 0%, rgba(255,183,165,.22), transparent 50%),
+        linear-gradient(145deg, #2E234A 0%, #4B3A78 48%, #5C4A8C 100%);
       color: #fff;
     }
     .gl-pp-hero__grid {
@@ -51,13 +51,13 @@
       background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
       font-size: .72rem; font-weight: 800; margin-bottom: .9rem;
     }
-    .gl-pp-hero__eyebrow i { color: var(--gold, #F5B800); }
+    .gl-pp-hero__eyebrow i { color: var(--gold, #FFB7A5); }
     .gl-pp-hero h1 {
       font-family: var(--font-display, Cairo, sans-serif);
       font-size: clamp(1.7rem, 4vw, 2.5rem);
       font-weight: 900; line-height: 1.25; margin: 0 0 .7rem;
     }
-    .gl-pp-hero h1 .hl { color: var(--gold, #F5B800); }
+    .gl-pp-hero h1 .hl { color: var(--gold, #FFB7A5); }
     .gl-pp-hero__sub {
       margin: 0; max-width: 34rem;
       color: rgba(255,255,255,.88); font-size: .92rem; line-height: 1.8; font-weight: 600;
@@ -71,18 +71,18 @@
       background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16);
       font-size: .68rem; font-weight: 800;
     }
-    .gl-pp-hero__trust i { color: var(--gold, #F5B800); }
+    .gl-pp-hero__trust i { color: var(--gold, #FFB7A5); }
 
     .gl-pp-search {
       background: #fff;
-      color: #0B1220;
+      color: #2E234A;
       border-radius: 20px;
       padding: 1.15rem 1.15rem 1.25rem;
       border: 1px solid rgba(255,255,255,.35);
       box-shadow: 0 18px 40px rgba(5, 31, 77, .28);
     }
     .gl-pp-search h2 {
-      margin: 0 0 .35rem; font-size: 1rem; font-weight: 900; color: #0B3D91;
+      margin: 0 0 .35rem; font-size: 1rem; font-weight: 900; color: #4B3A78;
     }
     .gl-pp-search p {
       margin: 0 0 1rem; font-size: .78rem; color: #7b8499; line-height: 1.6; font-weight: 600;
@@ -99,18 +99,18 @@
       width: 100%; min-height: 3.05rem; border-radius: 14px;
       border: 1.5px solid #d7deea; background: #F8FAFD;
       padding: 0 1rem; font-size: 1.05rem; font-weight: 800;
-      font-variant-numeric: tabular-nums; color: #0B1220; outline: none;
+      font-variant-numeric: tabular-nums; color: #2E234A; outline: none;
     }
     .gl-pp-search input:focus {
-      border-color: #0B3D91; background: #fff;
-      box-shadow: 0 0 0 3px rgba(11,61,145,.12);
+      border-color: #4B3A78; background: #fff;
+      box-shadow: 0 0 0 3px rgba(75,58,120,.12);
     }
     .gl-pp-search button {
       min-height: 3.05rem; border: 0; border-radius: 14px;
-      padding: 0 1.35rem; background: #0B3D91; color: #fff;
+      padding: 0 1.35rem; background: #4B3A78; color: #fff;
       font-weight: 800; cursor: pointer; white-space: nowrap;
     }
-    .gl-pp-search button:hover { background: #072A66; }
+    .gl-pp-search button:hover { background: #3A2C5C; }
 
     .gl-pp-body {
       margin-top: -48px;
@@ -136,12 +136,12 @@
       gap: .75rem; margin-bottom: .95rem;
     }
     .gl-pp-card__head h2 {
-      margin: 0; font-size: 1.02rem; font-weight: 900; color: #0B3D91;
+      margin: 0; font-size: 1.02rem; font-weight: 900; color: #4B3A78;
       display: flex; align-items: center; gap: .5rem;
     }
     .gl-pp-card__head h2::before {
       content: ""; width: .55rem; height: .55rem; border-radius: 50%;
-      background: #F5B800; flex: 0 0 auto;
+      background: #FFB7A5; flex: 0 0 auto;
     }
 
     .gl-pp-profile {
@@ -152,21 +152,21 @@
     }
     .gl-pp-avatar {
       width: 68px; height: 68px; border-radius: 18px; object-fit: cover;
-      background: #eef3fb; border: 2px solid #F5B800;
+      background: #F6F0FF; border: 2px solid #FFB7A5;
     }
     .gl-pp-avatar--ph {
       display: grid; place-items: center;
-      font-weight: 900; color: #0B3D91; font-size: 1.45rem;
+      font-weight: 900; color: #4B3A78; font-size: 1.45rem;
     }
     .gl-pp-id {
       display: inline-flex; align-items: center;
-      background: #0B3D91; color: #fff; border-radius: 999px;
+      background: #4B3A78; color: #fff; border-radius: 999px;
       padding: .28rem .75rem; font-size: .76rem; font-weight: 800;
       font-variant-numeric: tabular-nums; margin-bottom: .35rem;
     }
     .gl-pp-name {
       margin: 0 0 .2rem; font-size: clamp(1.15rem, 2.5vw, 1.4rem);
-      font-weight: 900; color: #0B1220; line-height: 1.3;
+      font-weight: 900; color: #2E234A; line-height: 1.3;
     }
     .gl-pp-meta { margin: 0; color: #7b8499; font-size: .82rem; font-weight: 700; }
 
@@ -184,7 +184,7 @@
     }
     .gl-pp-stat strong {
       display: block; font-size: clamp(1.15rem, 2.5vw, 1.4rem);
-      font-weight: 900; color: #0B3D91; font-variant-numeric: tabular-nums;
+      font-weight: 900; color: #4B3A78; font-variant-numeric: tabular-nums;
       line-height: 1.2; word-break: break-word;
     }
     .gl-pp-stat small {
@@ -224,7 +224,7 @@
       color: #7b8499; font-size: .7rem; font-weight: 800;
       white-space: nowrap;
     }
-    .gl-pp-table td strong { display: block; color: #0B1220; }
+    .gl-pp-table td strong { display: block; color: #2E234A; }
     .gl-pp-table td .sub {
       display: block; margin-top: .15rem;
       color: #7b8499; font-size: .72rem; font-weight: 600;
@@ -236,7 +236,7 @@
       display: inline-flex; align-items: center;
       border-radius: 999px; padding: .18rem .55rem;
       font-size: .68rem; font-weight: 800;
-      background: #eef4ff; color: #0B3D91; white-space: nowrap;
+      background: #eef4ff; color: #4B3A78; white-space: nowrap;
     }
     .gl-pp-pill--ok { background: #e8f8ef; color: #047857; }
     .gl-pp-pill--warn { background: #fff6e5; color: #b45309; }
@@ -250,7 +250,7 @@
       margin: .25rem 0 0; font-size: .78rem; color: #7b8499; line-height: 1.7;
     }
     .gl-pp-link {
-      color: #0B3D91; font-weight: 800; font-size: .78rem; text-decoration: none;
+      color: #4B3A78; font-weight: 800; font-size: .78rem; text-decoration: none;
     }
     .gl-pp-link:hover { text-decoration: underline; }
   </style>
