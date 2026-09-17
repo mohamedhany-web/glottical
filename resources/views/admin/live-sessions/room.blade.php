@@ -52,6 +52,7 @@
             'livekitToken' => $livekitToken,
             'user' => $user,
             'lkRole' => 'host',
+            'lkTheme' => 'instructor',
             'lkLeaveUrl' => route('admin.live-sessions.show', $liveSession),
             'lkHostEndFormId' => 'admin-end-session-form',
             'lkStartAudio' => true,

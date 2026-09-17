@@ -193,7 +193,36 @@
         @media (max-width: 720px) {
             .su-live-meta__title { max-width: 36vw; }
             .su-live-btn span.lbl { display: none; }
+            .su-live-body { padding: 6px; }
+            .su-live-top {
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 8px 10px;
+                min-height: 0;
+            }
+            .su-live-actions { width: 100%; justify-content: flex-end; }
+            .su-live-stage {
+                overflow: hidden;
+                border-radius: 12px;
+            }
+            /* غرفة البث تملأ المساحة وتبقي شريط الشير/العائمة ظاهراً */
+            #lk-room-shell {
+                min-height: 0;
+                height: 100%;
+            }
+            #lk-room-shell .lk-toolbar {
+                position: sticky;
+                bottom: 0;
+                z-index: 60;
+            }
+        }
+        @media (min-width: 721px) and (max-width: 1024px) {
             .su-live-body { padding: 8px; }
+            #lk-room-shell .lk-toolbar {
+                position: sticky;
+                bottom: 0;
+                z-index: 60;
+            }
         }
     </style>
 </head>

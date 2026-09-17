@@ -90,9 +90,9 @@
         <button type="button" id="lk-toggle-mic" class="lk-btn{{ $lkStartAudio ? ' is-on-active' : ' is-off' }}" aria-pressed="{{ $lkStartAudio ? 'true' : 'false' }}" title="{{ $lkStartAudio ? 'إيقاف الميكروفون' : 'تشغيل الميكروفون' }}"><i class="fas fa-{{ $lkStartAudio ? 'microphone' : 'microphone-slash' }}"></i><span>{{ $lkStartAudio ? 'ميكروفون' : 'ميكروفون مقفول' }}</span></button>
         <button type="button" id="lk-toggle-cam" class="lk-btn{{ $lkStartVideo ? ' is-on-active' : ' is-off' }}" aria-pressed="{{ $lkStartVideo ? 'true' : 'false' }}" title="{{ $lkStartVideo ? 'إيقاف الكاميرا' : 'تشغيل الكاميرا' }}"><i class="fas fa-{{ $lkStartVideo ? 'video' : 'video-slash' }}"></i><span>{{ $lkStartVideo ? 'كاميرا' : 'كاميرا مقفولة' }}</span></button>
         @if($lkAllowScreenShare)
-        <button type="button" id="lk-toggle-screen" class="lk-btn"><i class="fas fa-desktop"></i><span>مشاركة الشاشة</span></button>
+        <button type="button" id="lk-toggle-screen" class="lk-btn lk-host-essential" title="مشاركة الشاشة"><i class="fas fa-desktop"></i><span>مشاركة الشاشة</span></button>
         @endif
-        <button type="button" id="lk-toggle-os-pip" class="lk-btn" title="نافذة عائمة للكاميرات فوق الجهاز كله"><i class="fas fa-external-link-alt"></i><span>عائمة</span></button>
+        <button type="button" id="lk-toggle-os-pip" class="lk-btn lk-host-essential" title="نافذة عائمة للكاميرات فوق الجهاز كله"><i class="fas fa-external-link-alt"></i><span>عائمة</span></button>
         @if(!empty($lkHostEndFormId) && ($lkRole ?? '') === 'host')
         <button type="button" id="lk-host-end" class="lk-btn lk-btn--danger" title="إنهاء البث للجميع"><i class="fas fa-stop"></i><span>إنهاء البث</span></button>
         @endif
@@ -251,17 +251,83 @@
 .lk-btn--accent{background:var(--lk-accent);border-color:var(--lk-accent);color:#fff}
 .lk-theme-student .lk-btn--accent,.lk-theme-student .lk-btn.is-sharing{background:linear-gradient(135deg,#0B3D91,#0997d9);border:0}
 .lk-theme-instructor .lk-btn{border-radius:12px}
+.lk-theme-instructor .lk-toolbar,
+.lk-room[data-lk-role="host"] .lk-toolbar{
+  position:sticky;
+  bottom:0;
+  z-index:55;
+  flex-shrink:0;
+  background:color-mix(in srgb, var(--lk-panel) 94%, #000);
+  box-shadow:0 -10px 28px rgba(0,0,0,.28);
+}
 #lk-toggle-screen{order:3}
-.lk-theme-instructor #lk-toggle-screen{
+.lk-theme-instructor #lk-toggle-screen,
+.lk-theme-instructor #lk-toggle-os-pip,
+.lk-room[data-lk-role="host"] #lk-toggle-screen,
+.lk-room[data-lk-role="host"] #lk-toggle-os-pip{
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+.lk-theme-instructor #lk-toggle-screen,
+.lk-room[data-lk-role="host"] #lk-toggle-screen{
+  order:1;
   background:color-mix(in srgb, var(--lk-gold) 18%, var(--lk-surface));
   border-color:color-mix(in srgb, var(--lk-gold) 55%, var(--lk-line));
   color:#fff;
 }
+.lk-theme-instructor #lk-toggle-os-pip,
+.lk-room[data-lk-role="host"] #lk-toggle-os-pip{
+  order:2;
+  background:color-mix(in srgb, var(--lk-accent) 22%, var(--lk-surface));
+  border-color:color-mix(in srgb, var(--lk-accent) 50%, var(--lk-line));
+}
+@media(max-width:1024px){
+  .lk-theme-instructor .lk-toolbar,
+  .lk-room[data-lk-role="host"] .lk-toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.4rem;
+    justify-content:center;
+    padding:.55rem .55rem calc(.7rem + env(safe-area-inset-bottom,0px));
+  }
+  .lk-theme-instructor .lk-btn span,
+  .lk-room[data-lk-role="host"] .lk-btn span{display:none}
+  .lk-theme-instructor #lk-toggle-screen span,
+  .lk-theme-instructor #lk-toggle-os-pip span,
+  .lk-room[data-lk-role="host"] #lk-toggle-screen span,
+  .lk-room[data-lk-role="host"] #lk-toggle-os-pip span{display:inline!important}
+  .lk-theme-instructor #lk-toggle-screen,
+  .lk-theme-instructor #lk-toggle-os-pip,
+  .lk-room[data-lk-role="host"] #lk-toggle-screen,
+  .lk-room[data-lk-role="host"] #lk-toggle-os-pip{
+    flex:1 1 calc(50% - .5rem);
+    min-width:9.5rem;
+    max-width:100%;
+    justify-content:center;
+    padding:.7rem .85rem;
+    font-size:.78rem;
+    min-height:2.75rem;
+  }
+  .lk-theme-instructor #lk-toggle-mic,
+  .lk-theme-instructor #lk-toggle-cam,
+  .lk-room[data-lk-role="host"] #lk-toggle-mic,
+  .lk-room[data-lk-role="host"] #lk-toggle-cam{order:10}
+  .lk-theme-instructor #lk-host-end,
+  .lk-theme-instructor #lk-leave,
+  .lk-room[data-lk-role="host"] #lk-host-end,
+  .lk-room[data-lk-role="host"] #lk-leave{order:20}
+  .lk-theme-instructor .lk-pip,
+  .lk-room[data-lk-role="host"] .lk-pip{
+    width:min(280px,78vw);
+    bottom:calc(118px + env(safe-area-inset-bottom,0px));
+    z-index:70;
+  }
+}
 @media(max-width:640px){
   .lk-btn span{display:none}
-  /* على التابلت/الموبايل: أبقِ نص الشير ظاهراً للمدرس حتى يسهل إيجاده */
-  .lk-theme-instructor #lk-toggle-screen span{display:inline}
-  .lk-theme-instructor #lk-toggle-screen{padding:.55rem .85rem;font-size:.72rem}
+  .lk-theme-instructor #lk-toggle-screen span,
+  .lk-theme-instructor #lk-toggle-os-pip span{display:inline!important}
   .lk-pip{width:min(240px,68vw)}
   .lk-pip__grid-switch .lk-icon-btn[data-pip-cols="3"]{display:none}
   .lk-zoom-slider{width:min(88px,24vw)}
@@ -270,10 +336,10 @@
   .lk-stage.layout-trio,
   .lk-stage.layout-class{grid-template-columns:1fr;grid-template-rows:none;grid-auto-rows:minmax(160px,1fr);overflow:auto}
   .lk-toolbar{padding:.55rem .55rem calc(.55rem + env(safe-area-inset-bottom,0px));gap:.35rem}
+  .lk-theme-instructor .lk-toolbar{padding:.55rem .5rem calc(.75rem + env(safe-area-inset-bottom,0px))}
 }
 @media(min-width:641px) and (max-width:1024px){
   .lk-toolbar{flex-wrap:wrap;gap:.4rem;padding:.6rem .65rem calc(.6rem + env(safe-area-inset-bottom,0px))}
-  .lk-theme-instructor #lk-toggle-screen span{display:inline}
 }
 .lk-room.is-screen-focus .lk-main{min-height:0}
 .lk-theme-student.is-screen-focus .lk-main{min-height:min(78vh,780px)}
@@ -1472,7 +1538,7 @@
             }
             await room.connect(url, token);
             connected = true;
-            try { ensureHostScreenBtnVisible(); } catch (eBtn) {}
+            try { ensureHostLiveControlsVisible(); } catch (eBtn) {}
             await ensureAudioPlayback();
             resubscribeAllRemoteAudio();
             attachExistingRemoteTracks();
@@ -2285,12 +2351,28 @@
         const api = getDocPiP();
         if (api && api.window) {
             try { api.window.close(); } catch (e) {}
-            return;
         }
         if (document.pictureInPictureElement) {
-            await document.exitPictureInPicture();
+            try { await document.exitPictureInPicture(); } catch (ePip) {}
         }
         restoreOsPipDom();
+        updateOsPipButtons(false);
+    }
+    function openInPageFloatingCameras() {
+        rebuildPip();
+        updateOsPipButtons(true);
+        if (pip) {
+            pip.classList.remove('hidden');
+            pip.classList.remove('is-collapsed');
+        }
+        syncFloatingPipExclusive();
+        setStatus(
+            isLikelyMobileDevice()
+                ? 'شريط الكاميرات ظاهر داخل الصفحة — نافذة النظام متاحة على الكمبيوتر فقط'
+                : 'شريط الكاميرات ظاهر داخل الصفحة'
+        , false);
+        hideStatusSoon();
+        return true;
     }
     async function openVideoPiP() {
         const video = (shell?.classList.contains('is-screen-focus') && focusVideo?.srcObject)
@@ -2318,20 +2400,14 @@
         const camerasOnly = !!opts.camerasOnly || (lkTheme === 'instructor' || role === 'host');
         // للكاميرات فقط: لا نفتح Video PiP للشاشة (يتسبب بنافذتين)
             if (!supportsDocumentPiP()) {
-                if (camerasOnly) {
-                    syncFloatingPipExclusive();
-                    setStatus('شريط الكاميرات داخل الصفحة — نافذة النظام غير متاحة هنا', false);
-                    hideStatusSoon();
-                    return false;
+                if (camerasOnly || isHostUi) {
+                    return openInPageFloatingCameras();
                 }
                 // Video PiP أيضاً غالباً محدود على الموبايل — لا نرمي خطأ أحمر
                 try {
                     return await openVideoPiP();
                 } catch (eVid) {
-                    syncFloatingPipExclusive();
-                    setStatus('شريط الكاميرات داخل الصفحة', false);
-                    hideStatusSoon();
-                    return false;
+                    return openInPageFloatingCameras();
                 }
             }
         const docPipApi = getDocPiP();
@@ -2441,14 +2517,9 @@
                 syncFloatingPipExclusive();
                 return;
             }
+            // موبايل/تابلت غالباً بدون Document PiP — نفعّل شريط الكاميرات داخل الصفحة
             if (!supportsDocumentPiP()) {
-                syncFloatingPipExclusive();
-                setStatus(
-                    (lkTheme === 'instructor' || role === 'host')
-                        ? 'شريط الكاميرات داخل الصفحة — لنافذة النظام استخدم Chrome على الكمبيوتر'
-                        : 'شريط الكاميرات داخل الصفحة'
-                , false);
-                hideStatusSoon();
+                openInPageFloatingCameras();
                 return;
             }
             await openDocumentPiP({
@@ -2456,22 +2527,18 @@
             });
         } catch (err) {
             if (err?.name === 'NotAllowedError') {
+                // حتى لو النظام رفض PiP: أظهر الشريط داخل الصفحة للمدرس
+                if (isHostUi) {
+                    openInPageFloatingCameras();
+                    return;
+                }
                 setStatus('اسمح للموقع بفتح النافذة العائمة من إعدادات المتصفح', true);
                 syncFloatingPipExclusive();
                 return;
             }
             console.warn(err);
-            syncFloatingPipExclusive();
-            const msg = String(err?.message || err || '');
-            if (/documentPictureInPicture|not defined|not supported|requestWindow/i.test(msg)) {
-                setStatus('شريط الكاميرات داخل الصفحة', false);
-                hideStatusSoon();
-                return;
-            }
-            // لا نفتح Video PiP كبديل للمدرب حتى لا تتكرر النوافذ مع شريط الكاميرات
-            if (lkTheme === 'instructor' || role === 'host' || forceCamerasOnly === true) {
-                setStatus('شريط الكاميرات داخل الصفحة', false);
-                hideStatusSoon();
+            if (isHostUi || forceCamerasOnly === true) {
+                openInPageFloatingCameras();
                 return;
             }
             try { await openVideoPiP(); } catch (e2) {
@@ -2498,8 +2565,7 @@
         });
     }
 
-    // الشير والنافذة العائمة للمدرس تبقى ظاهرة.
-    // نخفي فقط ما هو غير مدعوم فعلياً، أو للطالب على موبايل بدون Document PiP.
+    // الشير والنافذة العائمة للمدرس تبقى ظاهرة على كل الأجهزة (تابلت/موبايل/لابتوب).
     function ensureHostScreenBtnVisible() {
         if (!screenBtn) return;
         if (!allowScreenShare) {
@@ -2511,14 +2577,12 @@
         }
         if (isHostUi) {
             screenBtn.classList.remove('hidden');
-            screenBtn.style.display = '';
-            screenBtn.style.visibility = 'visible';
-            screenBtn.style.opacity = '1';
+            screenBtn.style.cssText = 'display:inline-flex!important;visibility:visible!important;opacity:1!important;';
             screenBtn.removeAttribute('aria-hidden');
             screenBtn.tabIndex = 0;
             screenBtn.disabled = false;
             screenBtn.title = isLikelyMobileDevice()
-                ? 'مشاركة الشاشة (تابلت — يُفضّل Chrome)'
+                ? 'مشاركة الشاشة (تابلت/موبايل — يُفضّل Chrome)'
                 : 'مشاركة الشاشة';
             return;
         }
@@ -2533,25 +2597,38 @@
         screenBtn.removeAttribute('aria-hidden');
         screenBtn.tabIndex = 0;
     }
-    if (!supportsDocumentPiP() && !isHostUi && isLikelyMobileDevice()) {
+    function ensureHostFloatBtnVisible() {
         [osPipBtn, osPipFocusBtn, osPipCamBtn].forEach(function (btn) {
             if (!btn) return;
-            btn.classList.add('hidden');
-            btn.setAttribute('aria-hidden', 'true');
-            btn.tabIndex = -1;
+            if (isHostUi) {
+                btn.classList.remove('hidden');
+                if (btn === osPipBtn) {
+                    btn.style.cssText = 'display:inline-flex!important;visibility:visible!important;opacity:1!important;';
+                }
+                btn.removeAttribute('aria-hidden');
+                btn.tabIndex = 0;
+                btn.disabled = false;
+                if (btn === osPipBtn) {
+                    btn.title = isLikelyMobileDevice()
+                        ? 'شريط الكاميرات داخل الصفحة (على الموبايل/التابلت)'
+                        : 'نافذة عائمة للكاميرات فوق الجهاز كله';
+                }
+                return;
+            }
+            if (!supportsDocumentPiP() && isLikelyMobileDevice()) {
+                btn.classList.add('hidden');
+                btn.setAttribute('aria-hidden', 'true');
+                btn.tabIndex = -1;
+            }
         });
     }
-    ensureHostScreenBtnVisible();
-    // تأكيد ظهور أزرار العائمة للمضيف حتى لو المتصفح لا يدعم Document PiP
-    // (الضغط يعرض رسالة عربية هادئة بدل اختفاء الخيار)
-    if (isHostUi) {
-        [osPipBtn, osPipFocusBtn, osPipCamBtn].forEach(function (btn) {
-            if (!btn) return;
-            btn.classList.remove('hidden');
-            btn.removeAttribute('aria-hidden');
-            btn.tabIndex = 0;
-        });
+    function ensureHostLiveControlsVisible() {
+        ensureHostScreenBtnVisible();
+        ensureHostFloatBtnVisible();
     }
+    ensureHostLiveControlsVisible();
+    window.addEventListener('resize', ensureHostLiveControlsVisible);
+    window.addEventListener('orientationchange', ensureHostLiveControlsVisible);
 
     // drag focus viewport while zoomed
     if (focusViewport) {
