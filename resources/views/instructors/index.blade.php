@@ -61,43 +61,9 @@
       </div>
 
       @if($profiles->isNotEmpty())
-        <div class="sana-inst-grid-v2">
+        <div class="gl-tutor-list" id="teachers-cards">
           @foreach($profiles as $p)
-            @php
-              $url = route('public.instructors.show', $p->user);
-              $name = $p->user->name ?? __('public.instructor_fallback');
-              $headline = $p->headline_clean ?: __('public.instructor_fallback');
-              $skills = array_slice($p->skills_list ?? [], 0, 3);
-              $initial = mb_substr($name, 0, 1);
-            @endphp
-            <article class="sana-inst-card-v2 sana-reveal">
-              <a href="{{ $url }}" class="sana-inst-card-v2__main">
-                <div class="sana-inst-card-v2__ring">
-                  @if($p->photo_url)
-                    <img src="{{ $p->photo_url }}" alt="{{ $name }}" loading="lazy">
-                  @else
-                    <span class="av">{{ $initial }}</span>
-                  @endif
-                </div>
-                <h3>{{ $name }}</h3>
-                <p class="sana-inst-card-v2__role">{{ $headline }}</p>
-                @if(count($skills) > 0)
-                  <div class="sana-inst-card-v2__tags">
-                    @foreach($skills as $skill)
-                      <span>{{ $skill }}</span>
-                    @endforeach
-                  </div>
-                @endif
-                <div class="sana-inst-card-v2__badges">
-                  <span><i class="fas fa-book-open"></i> {{ (int) ($p->courses_count ?? 0) }} {{ __('public.instructors_course_many') }}</span>
-                  <span class="is-book"><i class="fas fa-calendar-check"></i> {{ $isRtl ? 'متاح للعرض' : 'View profile' }}</span>
-                </div>
-                <span class="sana-inst-card-v2__link">{{ $isRtl ? 'عرض الملف الشخصي' : 'View profile' }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></span>
-              </a>
-              <a href="{{ $url }}" class="sana-btn sana-btn--yellow sana-btn--sm sana-inst-card-v2__book">
-                <i class="fas fa-calendar-plus"></i> {{ $isRtl ? 'عرض الجدول والحجز' : 'Schedule & book' }}
-              </a>
-            </article>
+            @include('partials.landing.tutor-card', ['profile' => $p])
           @endforeach
         </div>
       @else

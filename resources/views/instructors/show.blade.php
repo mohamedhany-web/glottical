@@ -89,6 +89,7 @@
           @if($hasIntroVideo)
             <div class="sana-inst-hero__actions">
               <button type="button" class="sana-btn sana-btn--yellow sana-btn--sm" id="glTpIntroOpen" aria-haspopup="dialog" aria-controls="glTpIntroModal">
+                <span id="intro-video" class="sr-only">intro</span>
                 <i class="fas fa-play"></i>
                 {{ $isRtl ? 'فيديو تعريفي' : 'Intro video' }}
               </button>
@@ -204,8 +205,8 @@
       </div>
 
       <aside class="gl-tp-aside">
-        <div class="gl-tp-card gl-tp-book-card">
-          <h3>{{ __('public.instructor_availability_title') }}</h3>
+        <div class="gl-tp-card gl-tp-book-card" id="book">
+          <h3 id="schedule">{{ __('public.instructor_availability_title') }}</h3>
           @if(!empty($weeklyCalendar))
             <div class="gl-tp-cal">
               @foreach($weeklyCalendar as $col)

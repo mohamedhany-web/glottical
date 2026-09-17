@@ -26,7 +26,7 @@ class InstructorController extends Controller
                 $q->whereIn('role', ['instructor', 'teacher'])
                     ->where('is_active', true);
             })
-            ->with(['user:id,name,role,is_active'])
+            ->with(['user:id,name,role,is_active,portfolio_intro_video_url,private_teaching_meta'])
             ->orderByDesc('reviewed_at')
             ->orderByDesc('id')
             ->get();

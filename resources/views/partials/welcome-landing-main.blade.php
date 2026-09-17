@@ -391,6 +391,28 @@
   </div>
 </section>
 
+{{-- ===== teachers (Preply-style public cards) ===== --}}
+@php $homeInstructors = $homeInstructors ?? collect(); @endphp
+@if($homeInstructors->isNotEmpty())
+<section class="sana-section" id="instructors">
+  <div class="sana-container">
+    <div class="sana-head-row sana-reveal">
+      <div class="sana-head">
+        <h2 class="sana-head__title">{{ __('public.instructors_section_title') }} <span class="hl">{{ __('public.instructors_section_title_accent') }}</span></h2>
+        <span class="sana-head__line"></span>
+        <p class="sana-head__sub" style="margin-top:10px;max-width:38rem;color:var(--muted);font-weight:700;font-size:.9rem;line-height:1.55">{{ __('public.instructors_section_sub') }}</p>
+      </div>
+      <a href="{{ route('public.instructors.index') }}" class="sana-link-more">{{ __('public.all_instructors_link') }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }}"></i></a>
+    </div>
+    <div class="gl-tutor-list">
+      @foreach($homeInstructors as $p)
+        @include('partials.landing.tutor-card', ['profile' => $p, 'compact' => true])
+      @endforeach
+    </div>
+  </div>
+</section>
+@endif
+
 {{-- ===== courses ===== --}}
 <section class="sana-section sana-section--white" id="courses">
   <div class="sana-container">

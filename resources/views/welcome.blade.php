@@ -119,7 +119,7 @@
     @endif
 
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
-    @include('partials.landing.head', ['landingCss' => ['theme']])
+    @include('partials.landing.head', ['landingCss' => ['theme', 'instructors-catalog']])
     <style>
         [x-cloak]{display:none!important}
         .hidden{display:none !important}

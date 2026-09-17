@@ -106,6 +106,32 @@ class LandingController extends Controller
                     ->get(['id', 'name', 'code', 'slug', 'icon', 'color'])
                 : collect();
 
+            $homeInstructors = collect();
+            if (Schema::hasTable('instructor_profiles')) {
+                $homeInstructors = \App\Models\InstructorProfile::query()
+                    ->approved()
+                    ->whereHas('user', function ($q) {
+                        $q->whereIn('role', ['instructor', 'teacher'])
+                            ->where('is_active', true);
+                    })
+                    ->with(['user:id,name,role,is_active,portfolio_intro_video_url,private_teaching_meta'])
+                    ->orderByDesc('reviewed_at')
+                    ->orderByDesc('id')
+                    ->limit(6)
+                    ->get();
+
+                $homeCourseCounts = AdvancedCourse::query()
+                    ->where('is_active', true)
+                    ->whereIn('instructor_id', $homeInstructors->pluck('user_id')->filter()->unique()->values())
+                    ->selectRaw('instructor_id, COUNT(*) as aggregate')
+                    ->groupBy('instructor_id')
+                    ->pluck('aggregate', 'instructor_id');
+
+                $homeInstructors->each(function ($profile) use ($homeCourseCounts) {
+                    $profile->setAttribute('courses_count', (int) ($homeCourseCounts[$profile->user_id] ?? 0));
+                });
+            }
+
             return compact(
                 'featuredCourses',
                 'oneToOneCourses',
@@ -114,14 +140,15 @@ class LandingController extends Controller
                 'homeStats',
                 'heroSlides',
                 'schoolYears',
-                'schoolSubjects'
+                'schoolSubjects',
+                'homeInstructors'
             );
         };
 
         // في وضع التطوير: بدون كاش حتى تظهر تحديثات التصميم فوراً
         $payload = config('app.debug')
             ? $buildHomePayload()
-            : Cache::remember('landing.home.v14.'.$locale, 180, $buildHomePayload);
+            : Cache::remember('landing.home.v15.'.$locale, 180, $buildHomePayload);
 
         return view('welcome', array_merge($payload, compact('popupAd')));
     }
