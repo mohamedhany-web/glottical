@@ -102,15 +102,21 @@ ufw status
 | VPS واحد = نقطة فشل | 🔴 موجود | LiveKit node ثاني + DNS/LB لاحقاً |
 | Bandwidth / CPU محدود | 🟠 2 cores | ترقية لـ 8 cores قبل حصص 100+ |
 | TURN | 🟢 مفعّل UDP+TLS | راقب شكاوى الشركات/الجامعات |
-| Recording على نفس السيرفر | 🟢 غير مثبت | Egress على VPS منفصل + S3 |
+| Recording على نفس السيرفر | 🟢 غير مثبت (مقصود) | التسجيل من المتصفح → Cloudflare R2 عبر Hostinger |
 | Monitoring | 🟠 metrics محلية فقط | Prometheus+Grafana أو Uptime Kuma |
 | Redis | 🟠 غير موجود | لازم عند multi-node |
+
+### التسجيل (Recording) — ليس على LiveKit VPS
+- **لا يوجد LiveKit Egress** على `187.124.36.228` (لا container ولا binary).
+- المسار الحالي: **Browser MediaRecorder → Presign من Laravel (Hostinger) → رفع مباشر إلى Cloudflare R2** (`live_recordings_r2`).
+- الـ VPS يخدم فقط WebRTC/WSS/TURN؛ ملفات التسجيل لا تُكتب على قرصه.
+- Egress منفصل على VPS آخر يبقى خيار توسع لاحقاً إن احتجنا تسجيل سيرفري مركّب — حالياً غير مطلوب لأن الرفع على R2 يعمل من العميل.
 
 ### مسار توسع مقترح (Mindlytics-style)
 1. الإبقاء على نموذج: مدرس ينشر، طلاب يشاهدون (أقل كاميرات = أقل bandwidth).
 2. ترقية هذا الـ VPS أو فصل LiveKit عن أي خدمات أخرى.
 3. عند نمو الغرف المتزامنة: node 02 + Redis.
-4. Recording فقط عبر Egress منفصل + Object Storage.
+4. عند الحاجة لتسجيل سيرفري مركّب: Egress على VPS منفصل → نفس R2 (ليس على سيرفر LiveKit).
 5. Load test قبل الإطلاق الكبير: `lk load-test` بنفس سيناريو الحصة.
 
 ## ملاحظات تشغيل

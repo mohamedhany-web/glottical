@@ -21,6 +21,12 @@ class ClassroomRecordingR2UploadTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // .env المحلي قد يفرض CACHE_STORE/SESSION_DRIVER=database فيتجاهل phpunit.xml
+        config([
+            'cache.default' => 'array',
+            'session.driver' => 'array',
+        ]);
+        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class);
         $this->buildFeatureSchema();
         $this->ensureTables();
         Storage::fake('live_recordings_r2');
@@ -241,6 +247,7 @@ class ClassroomRecordingR2UploadTest extends TestCase
             ->withoutMiddleware([
                 \App\Http\Middleware\EnsurePermission::class,
                 \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+                \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
             ])
             ->get(route('admin.classroom-recordings.index'))
             ->assertOk()
@@ -251,6 +258,7 @@ class ClassroomRecordingR2UploadTest extends TestCase
             ->withoutMiddleware([
                 \App\Http\Middleware\EnsurePermission::class,
                 \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+                \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
             ])
             ->from(route('admin.classroom-recordings.index'))
             ->delete($destroyUrl)
@@ -270,6 +278,7 @@ class ClassroomRecordingR2UploadTest extends TestCase
             ->withoutMiddleware([
                 \App\Http\Middleware\EnsurePermission::class,
                 \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+                \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
             ])
             ->get(route('admin.classroom-recordings.index'))
             ->assertOk()
@@ -299,6 +308,7 @@ class ClassroomRecordingR2UploadTest extends TestCase
             ->withoutMiddleware([
                 \App\Http\Middleware\EnsurePermission::class,
                 \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+                \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
             ])
             ->get(route('admin.classroom-recordings.index', ['status' => 'live']))
             ->assertOk()
@@ -309,6 +319,7 @@ class ClassroomRecordingR2UploadTest extends TestCase
             ->withoutMiddleware([
                 \App\Http\Middleware\EnsurePermission::class,
                 \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+                \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
             ])
             ->get($observeUrl);
 
@@ -345,6 +356,7 @@ class ClassroomRecordingR2UploadTest extends TestCase
             ->withoutMiddleware([
                 \App\Http\Middleware\EnsurePermission::class,
                 \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
+                \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
             ])
             ->get(route('admin.classroom-recordings.observe', $meeting))
             ->assertRedirect(route('admin.classroom-recordings.index', ['status' => 'live']))
