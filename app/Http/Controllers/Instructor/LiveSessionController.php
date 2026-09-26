@@ -364,12 +364,7 @@ class LiveSessionController extends Controller
         }
 
         $disk = Storage::disk('live_recordings_r2');
-        if (! $disk->providesTemporaryUploadUrls()) {
-            return response()->json([
-                'direct_upload' => false,
-                'message' => 'التخزين الحالي لا يدعم الرفع المباشر. تحقق من إعدادات R2.',
-            ], 503);
-        }
+        // لا تعتمد على providesTemporaryUploadUrls() مع R2 — temporaryUploadUrl يعمل مباشرة.
 
         $validated = $request->validate([
             'content_type' => ['nullable', 'string', 'max:191'],

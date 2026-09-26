@@ -1,5 +1,8 @@
 # تشغيل LiveKit لـ Glottical على VPS 187.124.36.228
 
+> **الدليل الكامل (تجهيز من الصفر + Docker + Nginx + TURN + تسجيل R2 + استكشاف أعطال):**  
+> [`docs/LIVEKIT-COMPLETE-GUIDE.md`](LIVEKIT-COMPLETE-GUIDE.md)
+
 ## الهدف
 - `live.glottical.com` هو نطاق LiveKit لمنصة Glottical.
 - كل غرف البث وClassroom تعمل عبر LiveKit فقط.

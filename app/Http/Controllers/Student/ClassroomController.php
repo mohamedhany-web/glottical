@@ -1019,12 +1019,8 @@ class ClassroomController extends Controller
         }
 
         $disk = Storage::disk('live_recordings_r2');
-        if (! $disk->providesTemporaryUploadUrls()) {
-            return response()->json([
-                'direct_upload' => false,
-                'message' => 'التخزين الحالي لا يدعم الرفع المباشر؛ سيتم الرفع عبر الخادم.',
-            ]);
-        }
+        // لا تعتمد على providesTemporaryUploadUrls(): على R2/S3 ترجع false
+        // رغم أن temporaryUploadUrl() يعمل عبر AwsS3V3Adapter.
 
         $validated = $request->validate([
             'content_type' => ['nullable', 'string', 'max:191'],
@@ -1180,12 +1176,7 @@ class ClassroomController extends Controller
         }
 
         $disk = Storage::disk('live_recordings_r2');
-        if (! $disk->providesTemporaryUploadUrls()) {
-            return response()->json([
-                'direct_upload' => false,
-                'message' => 'التخزين الحالي لا يدعم الرفع المباشر.',
-            ]);
-        }
+        // انظر ملاحظة presignRecordingUpload بخصوص providesTemporaryUploadUrls.
 
         $validated = $request->validate([
             'content_type' => ['nullable', 'string', 'max:191'],
